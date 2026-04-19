@@ -1,0 +1,55 @@
+/* ─── Responsive ─────────────────────────────── */
+@media (max-width: 768px) {
+  body { padding: 1rem; }
+
+  .hint { display: none; }
+  .header__title { font-size: 2.5rem; }
+
+  .grid-primary { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+  .tools-grid { grid-template-columns: 1fr; }
+  .bots-grid { gap: 1.25rem; }
+  .bot-profile { width: 90px; }
+
+  /* Restore touch-friendly tap targets on mobile for the signal mesh only */
+  .item-ext { min-height: var(--touch-min); }
+
+  .ext-container { grid-template-columns: repeat(2, 1fr); }
+  .ext-list { grid-template-columns: 1fr; gap: 1rem; }
+
+  /* Tooltips break on small viewports — hide on touch */
+  .tooltip-data,
+  .agent-tooltip { display: none; }
+
+  /* Footer Mobile Fixes */
+  .site-footer__grid { 
+    grid-template-columns: 1fr; 
+    gap: 2rem; 
+  }
+  .site-footer__meta { 
+    align-items: flex-start; 
+  }
+  
+  .flip-card { min-width: 240px; }
+
+  .llm-shell__messages { min-height: 260px; max-height: 400px; }
+  .llm-shell__toolbar { gap: 0.6rem; }
+  .llm-status__right { display: none; }
+  .llm-panel__grid { grid-template-columns: 1fr; }
+  .llm-sessions__toolbar { gap: 0.35rem; }
+  .llm-sessions__btn { padding: 0.3rem 0.45rem; }
+  .llm-keybar { padding: 0.4rem 0.75rem; }
+  .llm-shell--bubbles .llm-msg__body { max-width: 92%; }
+}
+
+@media (max-width: 480px) {
+  .grid-primary { grid-template-columns: 1fr; }
+  .ext-container { grid-template-columns: 1fr; }
+  .carousel__arrow { display: none; }
+
+  .site-footer__bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  .site-footer__bar-sep { display: none; }
+}

@@ -1,0 +1,51 @@
+{
+  "domain": "FLEET",
+  "visual_class": "neon-cyan",
+  "manifest": {
+    "0": {
+      "name": "Zenith",
+      "shortcut": "F0",
+      "icon": "bot",
+      "chat_url": null,
+      "repo_url": "https://git.trap.lol/trap/tg-trap-bots",
+      "status": "offline",
+      "description": "TSH interface to bridge CLI and frontend"
+    },
+    "1": {
+      "name": "Carbon",
+      "shortcut": "F1",
+      "icon": "cpu",
+      "chat_url": null,
+      "repo_url": "https://git.trap.lol/trap/tg-trap-bots",
+      "status": "offline",
+      "description": "VPS management through Telegram"
+    },
+    "2": {
+      "name": "Backup SIMP",
+      "shortcut": "F2",
+      "icon": "archive",
+      "chat_url": null,
+      "repo_url": "https://git.trap.lol/trap/tg-trap-bots",
+      "status": "offline",
+      "description": "Automated backup orchestration and verification"
+    },
+    "3": {
+      "name": "xPay",
+      "shortcut": "F3",
+      "icon": "coins",
+      "chat_url": null,
+      "repo_url": "https://git.trap.lol/trap/tg-trap-bots",
+      "status": "offline",
+      "description": "Telegram XNO Nano crypto currency facilitator"
+    },
+    "4": {
+      "name": "Paintedd Art",
+      "shortcut": "F4",
+      "icon": "palette",
+      "chat_url": null,
+      "repo_url": "https://git.trap.lol/trap/tg-trap-bots",
+      "status": "offline",
+      "description": "Paintedd Community Interface"
+    }
+  }
+}

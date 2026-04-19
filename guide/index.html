@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>trap.lol // docs</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2306040A'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%23BE29EC' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23BE29EC'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="../glass/style/style.css">
+</head>
+<body class="guide">
+    <a href="../index.html" class="guide__back"><i data-lucide="arrow-left"></i> Return to Hub</a>
+
+    <div id="md-content" class="guide__content">
+        <div class="guide__loader">
+            <i data-lucide="loader-circle"></i> Parsing uplink data...
+        </div>
+    </div>
+
+    <script>
+        (async () => {
+            const contentDiv = document.getElementById('md-content');
+
+            function loadScript(src) {
+                return new Promise((resolve, reject) => {
+                    const s = document.createElement('script');
+                    s.src = src;
+                    s.onload = resolve;
+                    s.onerror = () => reject(new Error('Failed to load shard: ' + src));
+                    document.head.appendChild(s);
+                });
+            }
+
+            let config;
+            try {
+                const res = await fetch('../glass/data/config.json');
+                if (!res.ok) throw new Error(res.status + ' ' + res.statusText);
+                config = await res.json();
+            } catch (e) {
+                contentDiv.innerHTML = '<span style="color:#f87171;">ERR: Could not load config.</span>';
+                console.error('[boot] config.json failed:', e);
+                return;
+            }
+
+            try {
+                await Promise.all([
+                    loadScript(config.shards.lucide),
+                    loadScript(config.shards.marked),
+                ]);
+            } catch (e) {
+                contentDiv.innerHTML = '<span style="color:#f87171;">ERR: Could not load required shards.</span>';
+                console.error('[boot] shard load failed:', e);
+                return;
+            }
+
+            // First pass: render static page icons (back button, loader)
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+
+            const mdFile = new URLSearchParams(window.location.search).get('md');
+            if (!mdFile) {
+                contentDiv.innerHTML = '<span style="color:#f87171;">ERR: No document specified.</span>';
+                return;
+            }
+
+            try {
+                const res = await fetch('../glass/markdown/' + mdFile);
+                if (!res.ok) throw new Error('File not found');
+                contentDiv.innerHTML = marked.parse(await res.text());
+                // Second pass: render any lucide icons injected by markdown
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            } catch (e) {
+                contentDiv.innerHTML = '<span style="color:#f87171;">ERR: Could not retrieve ' + mdFile + '.</span>';
+                console.error('[guide] markdown fetch failed:', e);
+            }
+        })();
+    </script>
+</body>
+</html>

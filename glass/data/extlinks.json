@@ -1,0 +1,114 @@
+{
+  "U": {
+    "domain": "UTIL",
+    "category": "External Web Utilities & Logic",
+    "visual_class": "neon-cyan",
+    "manifest": {
+      "0": {
+        "name": "claude.ai",
+        "shortcut": "U0",
+        "url": "https://claude.ai",
+        "trust_level": "Vetted",
+        "info": "Best-in-class for reasoning and code logic generation. Do not feed sensitive keys."
+      },
+      "1": {
+        "name": "cobalt.tools",
+        "shortcut": "U1",
+        "url": "https://cobalt.tools",
+        "trust_level": "High",
+        "info": "Tracker-free media extraction. For when you are away from your yt-dlp terminal."
+      },
+      "2": {
+        "name": "cyberchef",
+        "shortcut": "U2",
+        "url": "https://gchq.github.io/CyberChef/",
+        "trust_level": "High",
+        "info": "Client-side data surgery. Hex, base64, JWT, and cryptographic manipulation."
+      },
+      "3": {
+        "name": "lokaltools",
+        "shortcut": "U3",
+        "url": "https://lokaltools.com",
+        "trust_level": "High",
+        "info": "Client-side WASM dev utilities. Ephemeral data formatting without hitting a remote server."
+      },
+      "4": {
+        "name": "venice.ai",
+        "shortcut": "U4",
+        "url": "https://venice.ai",
+        "trust_level": "High",
+        "info": "Private, uncensored AI inference. Zero conversation logging."
+      }
+    }
+  },
+  "I": {
+    "domain": "INTEL",
+    "category": "Hardware & Systems Telemetry",
+    "visual_class": "neon-green",
+    "manifest": {
+      "0": {
+        "name": "arch-wiki",
+        "shortcut": "I0",
+        "url": "https://wiki.archlinux.org",
+        "trust_level": "High",
+        "info": "The singular source of truth for host operating system architecture."
+      },
+      "1": {
+        "name": "distrowatch",
+        "shortcut": "I1",
+        "url": "https://distrowatch.com",
+        "trust_level": "High",
+        "info": "News and tracking for the Linux distribution ecosystem."
+      },
+      "2": {
+        "name": "passmark",
+        "shortcut": "I2",
+        "url": "https://www.passmark.com",
+        "trust_level": "Vetted",
+        "info": "Objective hardware benchmarks. The industry standard for comparing raw power."
+      },
+      "3": {
+        "name": "rtings",
+        "shortcut": "I3",
+        "url": "https://www.rtings.com",
+        "trust_level": "High",
+        "info": "Objective, instrument-measured data for displays, audio, and peripherals."
+      }
+    }
+  },
+  "D": {
+    "domain": "DSGN",
+    "category": "UI/UX & Frontend Assets",
+    "visual_class": "neon-violet",
+    "manifest": {
+      "0": {
+        "name": "coolors",
+        "shortcut": "D0",
+        "url": "https://coolors.co",
+        "trust_level": "High",
+        "info": "Instant color palette generation. Useful for conceptualizing new visual facades."
+      },
+      "1": {
+        "name": "feathericons",
+        "shortcut": "D1",
+        "url": "https://feathericons.com",
+        "trust_level": "High",
+        "info": "Simply beautiful open-source icons for clean frontend architectures."
+      },
+      "2": {
+        "name": "lucide",
+        "shortcut": "D2",
+        "url": "https://lucide.dev",
+        "trust_level": "High",
+        "info": "Clean, consistent, and customizable SVG icons for your graffiti-tech dashboards."
+      },
+      "3": {
+        "name": "nerdfonts",
+        "shortcut": "D3",
+        "url": "https://www.nerdfonts.com",
+        "trust_level": "High",
+        "info": "Patched fonts for terminal icons. Essential for the Arcane aesthetic."
+      }
+    }
+  }
+}
