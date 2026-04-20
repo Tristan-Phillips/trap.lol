@@ -1,5 +1,5 @@
 // --- UPLINK CONFIGURATION ---
-const RADAR_URL = 'https://radar.trap.lol'; 
+let CONFIG = null;
 let PROXY_SECRET = '';
 let TORBOX_KEY = '';
 let globalData = [];
@@ -12,9 +12,31 @@ const resultsGrid = document.getElementById('resultsGrid');
 const searchInput = document.getElementById('searchInput');
 const sortSelect = document.getElementById('sortSelect');
 const filterBtns = document.querySelectorAll('.filter-btn');
+const authForm = document.getElementById('authForm');
 
-// --- AUTH LOGIC ---
-document.getElementById('authBtn').addEventListener('click', () => {
+// --- INITIALIZATION ---
+window.addEventListener('DOMContentLoaded', initializeProtocol);
+
+async function initializeProtocol() {
+    try {
+        const res = await fetch('glass/data/config.json');
+        if (!res.ok) throw new Error('CONFIG MATRIX MISSING.');
+        CONFIG = await res.json();
+        console.log('[ TELEMETRY SECURED. CONFIG LOADED. ]');
+    } catch (e) {
+        authForm.innerHTML = `
+            <h2 class="glitch-text" data-text="FATAL ERROR">FATAL ERROR</h2>
+            <p class="warning-text" style="color: var(--hot-pink);">FAILED TO LOAD CORE CONFIGURATION. CHECK CONSOLE.</p>
+        `;
+        console.error(e);
+    }
+}
+
+// --- AUTH LOGIC (Password Manager Native) ---
+authForm.addEventListener('submit', (e) => {
+    e.preventDefault(); // Prevents the form from refreshing the page
+    if (!CONFIG) return alert('[ SYSTEM NOT READY. WAITING FOR CONFIG. ]');
+
     PROXY_SECRET = document.getElementById('proxyKeyInput').value.trim();
     TORBOX_KEY = document.getElementById('torboxKeyInput').value.trim();
     
@@ -50,9 +72,9 @@ async function executeScan() {
     resultsGrid.innerHTML = `<div class="glitch-text" style="font-size: 1.5rem;">[ PROBING THE DARKNET... ]</div>`;
     
     try {
-        // 1. Fetch from APIBay via Omni-Relay
-        const targetTracker = `https://apibay.org/q.php?q=${encodeURIComponent(query)}`;
-        const proxyRes = await fetch(`${RADAR_URL}/api/relay`, {
+        // 1. Fetch from Tracker via Omni-Relay using Config Matrix
+        const targetTracker = `${CONFIG.trackers.primary.searchEndpoint}${encodeURIComponent(query)}`;
+        const proxyRes = await fetch(CONFIG.proxy.url, {
             headers: { 
                 'Authorization': `Bearer ${PROXY_SECRET}`,
                 'X-Target-Url': targetTracker
@@ -64,13 +86,12 @@ async function executeScan() {
         
         const rawResults = await proxyRes.json();
         
-        // Trap APIBay's fake "0" ID response for empty searches
         if (!rawResults || rawResults.length === 0 || rawResults[0].id === '0') {
             resultsGrid.innerHTML = `<div class="sultry-text">[ GHOST TOWN. NOTHING FOUND. ]</div>`;
             return;
         }
 
-        // 2. Normalize Data
+        // 2. Normalize Data using Config Settings
         let items = rawResults
             .filter(r => r.info_hash && r.info_hash !== "0000000000000000000000000000000000000000")
             .map(item => {
@@ -81,37 +102,36 @@ async function executeScan() {
                 return {
                     title: item.name,
                     infoHash: item.info_hash,
-                    magnetUrl: `magnet:?xt=urn:btih:${item.info_hash}&dn=${encodeURIComponent(item.name)}&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337`,
+                    magnetUrl: `magnet:?xt=urn:btih:${item.info_hash}&dn=${encodeURIComponent(item.name)}${CONFIG.trackers.magnetAppend}`,
                     seeders: s,
                     leechers: parseInt(item.leechers) || 0,
                     size: parseInt(item.size) || 0,
                     resolution: resolution === '4k' ? '2160p' : resolution,
                     qualityScore: calculateQuality(s, resolution === '4k' ? '2160p' : resolution),
-                    cached: false // default state
+                    cached: false 
                 };
             })
             .filter(item => item.seeders > 0);
 
-        // Sort by swarm health to grab the top tier
         items.sort((a, b) => b.seeders - a.seeders);
 
-        // Cap at top 100 to prevent TorBox from throwing a 414 URI Too Long error
-        globalData = items.slice(0, 100);
+        // Cap array via Config limit
+        globalData = items.slice(0, CONFIG.engineLimits.maxPayloadHashes);
 
         if (globalData.length === 0) {
             resultsGrid.innerHTML = `<div class="sultry-text">[ ALL TARGETS DEAD. NO SEEDERS. ]</div>`;
             return;
         }
 
-        // 3. Ping TorBox Cache via Omni-Relay
+        // 3. Ping TorBox Cache via Omni-Relay using Config Matrix
         const hashes = globalData.map(i => i.infoHash).join(',');
         let cachedMap = {};
         
         try {
-            const cacheRes = await fetch(`${RADAR_URL}/api/relay`, {
+            const cacheRes = await fetch(CONFIG.proxy.url, {
                 headers: { 
                     'Authorization': `Bearer ${PROXY_SECRET}`,
-                    'X-Target-Url': `https://api.torbox.app/v1/api/torrents/checkcached?hash=${hashes}&format=list`,
+                    'X-Target-Url': `${CONFIG.torbox.baseUrl}/checkcached?hash=${hashes}&format=list`,
                     'X-Target-Auth': TORBOX_KEY
                 }
             });
@@ -122,15 +142,13 @@ async function executeScan() {
                     cachedMap = cacheData.data;
                 }
             } else {
-                console.warn("TorBox rejected cache ping. Status:", cacheRes.status);
+                console.warn("TorBox rejected cache ping.");
             }
         } catch (e) {
             console.warn("TorBox cache ping failed. Assuming uncached.");
         }
 
-        // Apply cache state
         globalData.forEach(item => { item.cached = !!cachedMap[item.infoHash]; });
-
         renderGrid();
     } catch (error) {
         resultsGrid.innerHTML = `<div class="glitch-text" style="font-size: 1.2rem; color: var(--hot-pink);">[ FATAL: ${error.message} ]</div>`;
@@ -148,7 +166,6 @@ function renderGrid() {
     if (!globalData || globalData.length === 0) return;
     resultsGrid.innerHTML = '';
 
-    // 1. Filter
     let displayData = globalData.filter(item => {
         if (currentFilter === 'cached') return item.cached;
         if (currentFilter === '4k') return item.resolution === '2160p';
@@ -156,7 +173,6 @@ function renderGrid() {
         return true;
     });
 
-    // 2. Sort
     const sortMode = sortSelect.value;
     displayData.sort((a, b) => {
         if (sortMode === 'seeders') return b.seeders - a.seeders;
@@ -196,10 +212,10 @@ function renderGrid() {
 async function accessVault() {
     resultsGrid.innerHTML = `<div class="glitch-text" style="font-size: 1.5rem; color: var(--acid-cyan);">[ DECRYPTING VAULT CONTENTS... ]</div>`;
     try {
-        const res = await fetch(`${RADAR_URL}/api/relay`, {
+        const res = await fetch(CONFIG.proxy.url, {
             headers: { 
                 'Authorization': `Bearer ${PROXY_SECRET}`,
-                'X-Target-Url': 'https://api.torbox.app/v1/api/torrents/mylist',
+                'X-Target-Url': `${CONFIG.torbox.baseUrl}/mylist`,
                 'X-Target-Auth': TORBOX_KEY
             }
         });
@@ -208,7 +224,6 @@ async function accessVault() {
         if (!res.ok) throw new Error('TORBOX ENGINE UNREACHABLE.');
 
         const vault = await res.json();
-        
         resultsGrid.innerHTML = '';
         const frag = document.createDocumentFragment();
 
@@ -239,30 +254,25 @@ async function accessVault() {
 
 // --- UTILITIES ---
 function copyMagnet(magnet) {
-    navigator.clipboard.writeText(magnet).then(() => {
-        alert('[ MAGNET SECURED. ]');
-    });
+    navigator.clipboard.writeText(magnet).then(() => alert('[ MAGNET SECURED. ]'));
 }
 
 async function ignitePayload(magnet) {
     try {
         const fd = new FormData();
         fd.append('magnet', magnet);
-        const res = await fetch(`${RADAR_URL}/api/relay`, {
+        const res = await fetch(CONFIG.proxy.url, {
             method: 'POST',
             headers: { 
                 'Authorization': `Bearer ${PROXY_SECRET}`,
-                'X-Target-Url': 'https://api.torbox.app/v1/api/torrents/createtorrent',
+                'X-Target-Url': `${CONFIG.torbox.baseUrl}/createtorrent`,
                 'X-Target-Auth': TORBOX_KEY
             },
             body: fd
         });
         
-        if (res.ok) {
-            alert('[ PAYLOAD INJECTED. TORBOX ENGINE IGNITED. ]');
-        } else {
-            throw new Error('TARGET REJECTED.');
-        }
+        if (res.ok) alert('[ PAYLOAD INJECTED. TORBOX ENGINE IGNITED. ]');
+        else throw new Error('TARGET REJECTED.');
     } catch (e) {
         alert(`[ IGNITION FAILED: ${e.message} ]`);
     }
@@ -270,19 +280,17 @@ async function ignitePayload(magnet) {
 
 async function getLink(tId, fId) {
     try {
-        const res = await fetch(`${RADAR_URL}/api/relay`, {
+        const res = await fetch(CONFIG.proxy.url, {
             headers: { 
                 'Authorization': `Bearer ${PROXY_SECRET}`,
-                'X-Target-Url': `https://api.torbox.app/v1/api/torrents/requestdl?token=${tId}&file_id=${fId}`,
+                'X-Target-Url': `${CONFIG.torbox.baseUrl}/requestdl?token=${tId}&file_id=${fId}`,
                 'X-Target-Auth': TORBOX_KEY
             }
         });
         const data = await res.json();
         
         if (data.data) {
-            navigator.clipboard.writeText(data.data).then(() => {
-                alert('[ DIRECT LINK STRIPPED. READY FOR DOWNLOAD. ]');
-            });
+            navigator.clipboard.writeText(data.data).then(() => alert('[ DIRECT LINK STRIPPED. READY FOR DOWNLOAD. ]'));
         }
     } catch (e) { 
         alert('[ LINK EXTRACTION FAILED. ]'); 

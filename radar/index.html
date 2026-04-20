@@ -15,23 +15,23 @@
     <div class="scanlines"></div>
     
     <div id="authOverlay" class="overlay active">
-        <div class="auth-box">
+        <form id="authForm" class="auth-box">
             <h2 class="glitch-text" data-text="ACCESS RESTRICTED">ACCESS RESTRICTED</h2>
             <p class="sultry-text">Insert the keys. Open the gateway.</p>
             
             <div class="input-group">
                 <label>PROXY SECRET (radar.trap.lol)</label>
-                <input type="password" id="proxyKeyInput" placeholder="••••••••••••" autocomplete="off">
+                <input type="password" id="proxyKeyInput" name="username" autocomplete="username" placeholder="••••••••••••" required>
             </div>
             
             <div class="input-group">
                 <label>TORBOX PRO API KEY</label>
-                <input type="password" id="torboxKeyInput" placeholder="••••••••••••" autocomplete="off">
+                <input type="password" id="torboxKeyInput" name="password" autocomplete="current-password" placeholder="••••••••••••" required>
             </div>
             
-            <button id="authBtn" class="chaotic-btn">ESTABLISH UPLINK</button>
+            <button type="submit" id="authBtn" class="chaotic-btn">ESTABLISH UPLINK</button>
             <p class="warning-text">Keys reside in volatile memory. Close the tab, and it all burns.</p>
-        </div>
+        </form>
     </div>
 
     <div id="mainInterface" class="hidden">
