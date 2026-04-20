@@ -166,6 +166,49 @@ body {
 .card.cached .action-btn.primary { border-color: var(--toxic-green); color: var(--toxic-green); }
 .card.cached .action-btn.primary:hover { background: var(--toxic-green); color: var(--bg-void); box-shadow: 0 0 15px var(--toxic-green); }
 
+/* Busy button state */
+.chaotic-btn.btn--busy { opacity: 0.6; cursor: not-allowed; }
+.action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Cached badge inline */
+.badge.cached-badge { border-color: var(--toxic-green); color: var(--toxic-green); }
+
+/* Grid messages */
+.grid-msg { padding: 40px 20px; font-size: 1.2rem; text-align: center; color: var(--acid-cyan); grid-column: 1 / -1; }
+.grid-msg--muted { color: var(--text-muted); }
+.grid-msg--error { color: var(--hot-pink); text-shadow: 0 0 8px var(--hot-pink); }
+
+/* Toast */
+.radar-toast {
+    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: rgba(15, 10, 20, 0.95); border: 1px solid var(--deep-purple);
+    color: #e0dced; font-family: var(--font-mono); font-size: 0.85rem;
+    padding: 12px 24px; z-index: 9999; pointer-events: none;
+    opacity: 0; transition: opacity 0.25s, transform 0.25s;
+    max-width: 90vw; text-align: center;
+    clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+}
+.radar-toast--show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.radar-toast--ok  { border-color: var(--toxic-green); color: var(--toxic-green); }
+.radar-toast--err { border-color: var(--hot-pink);    color: var(--hot-pink); }
+.radar-toast--warn{ border-color: var(--acid-cyan);   color: var(--acid-cyan); }
+
+/* Direct link reveal overlay */
+.link-reveal {
+    position: absolute; inset: 0;
+    background: rgba(5, 3, 8, 0.95); backdrop-filter: blur(4px);
+    display: flex; flex-direction: column; gap: 12px;
+    padding: 20px; justify-content: center; align-items: flex-start;
+    z-index: 10;
+}
+.link-reveal__label { font-size: 0.75rem; color: var(--toxic-green); text-transform: uppercase; letter-spacing: 1px; }
+.link-reveal__url {
+    color: var(--acid-cyan); font-size: 0.8rem; word-break: break-all;
+    text-decoration: none; border-bottom: 1px solid var(--acid-cyan);
+}
+.link-reveal__url:hover { color: var(--hot-pink); border-color: var(--hot-pink); }
+.link-reveal__close { align-self: flex-end; }
+
 /* Edge Cases */
 @media (max-width: 600px) {
     .chaos-header h1 { font-size: 2.5rem; }
