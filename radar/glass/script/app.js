@@ -50,41 +50,80 @@ async function executeScan() {
     resultsGrid.innerHTML = `<div class="glitch-text" style="font-size: 1.5rem;">[ PROBING THE DARKNET... ]</div>`;
     
     try {
-        const proxyRes = await fetch(`${RADAR_URL}/api/search?q=${encodeURIComponent(query)}`, {
-            headers: { 'Authorization': `Bearer ${PROXY_SECRET}` }
+        // 1. Fetch from APIBay via Omni-Relay
+        const targetTracker = `https://apibay.org/q.php?q=${encodeURIComponent(query)}`;
+        const proxyRes = await fetch(`${RADAR_URL}/api/relay`, {
+            headers: { 
+                'Authorization': `Bearer ${PROXY_SECRET}`,
+                'X-Target-Url': targetTracker
+            }
         });
         
         if (proxyRes.status === 401) throw new Error('PROXY REJECTED UPLINK. INVALID SECRET.');
         if (!proxyRes.ok) throw new Error('RADAR ANOMALY. CONNECTION SEVERED.');
         
-        const items = await proxyRes.json();
+        const rawResults = await proxyRes.json();
         
-        if (!items || items.length === 0) {
+        // Trap APIBay's fake "0" ID response for empty searches
+        if (!rawResults || rawResults.length === 0 || rawResults[0].id === '0') {
             resultsGrid.innerHTML = `<div class="sultry-text">[ GHOST TOWN. NOTHING FOUND. ]</div>`;
             return;
         }
 
-        // Extract metadata & filter dead torrents
-        globalData = items.map(item => {
-            const resMatch = item.title.match(/(2160p|1080p|720p|4k)/i);
-            const resolution = resMatch ? resMatch[0].toLowerCase() : 'unknown';
-            return {
-                ...item,
-                resolution: resolution === '4k' ? '2160p' : resolution,
-                qualityScore: calculateQuality(item.seeders, resolution)
-            };
-        }).filter(item => item.seeders > 0);
+        // 2. Normalize Data
+        let items = rawResults
+            .filter(r => r.info_hash && r.info_hash !== "0000000000000000000000000000000000000000")
+            .map(item => {
+                const resMatch = item.name.match(/(2160p|1080p|720p|4k)/i);
+                const resolution = resMatch ? resMatch[0].toLowerCase() : 'unknown';
+                const s = parseInt(item.seeders) || 0;
+                
+                return {
+                    title: item.name,
+                    infoHash: item.info_hash,
+                    magnetUrl: `magnet:?xt=urn:btih:${item.info_hash}&dn=${encodeURIComponent(item.name)}&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337`,
+                    seeders: s,
+                    leechers: parseInt(item.leechers) || 0,
+                    size: parseInt(item.size) || 0,
+                    resolution: resolution === '4k' ? '2160p' : resolution,
+                    qualityScore: calculateQuality(s, resolution === '4k' ? '2160p' : resolution),
+                    cached: false // default state
+                };
+            })
+            .filter(item => item.seeders > 0);
 
-        // Ping TorBox directly from client for cache verification
+        // Sort by swarm health to grab the top tier
+        items.sort((a, b) => b.seeders - a.seeders);
+
+        // Cap at top 100 to prevent TorBox from throwing a 414 URI Too Long error
+        globalData = items.slice(0, 100);
+
+        if (globalData.length === 0) {
+            resultsGrid.innerHTML = `<div class="sultry-text">[ ALL TARGETS DEAD. NO SEEDERS. ]</div>`;
+            return;
+        }
+
+        // 3. Ping TorBox Cache via Omni-Relay
         const hashes = globalData.map(i => i.infoHash).join(',');
         let cachedMap = {};
         
         try {
-            const cacheRes = await fetch(`https://api.torbox.app/v1/api/torrents/checkcached?hash=${hashes}&format=list`, {
-                headers: { 'Authorization': `Bearer ${TORBOX_KEY}` }
+            const cacheRes = await fetch(`${RADAR_URL}/api/relay`, {
+                headers: { 
+                    'Authorization': `Bearer ${PROXY_SECRET}`,
+                    'X-Target-Url': `https://api.torbox.app/v1/api/torrents/checkcached?hash=${hashes}&format=list`,
+                    'X-Target-Auth': TORBOX_KEY
+                }
             });
-            const cacheData = await cacheRes.json();
-            if (cacheData.success && cacheData.data) cachedMap = cacheData.data;
+            
+            if (cacheRes.ok) {
+                const cacheData = await cacheRes.json();
+                if (cacheData.success && cacheData.data) {
+                    cachedMap = cacheData.data;
+                }
+            } else {
+                console.warn("TorBox rejected cache ping. Status:", cacheRes.status);
+            }
         } catch (e) {
             console.warn("TorBox cache ping failed. Assuming uncached.");
         }
@@ -157,11 +196,17 @@ function renderGrid() {
 async function accessVault() {
     resultsGrid.innerHTML = `<div class="glitch-text" style="font-size: 1.5rem; color: var(--acid-cyan);">[ DECRYPTING VAULT CONTENTS... ]</div>`;
     try {
-        const res = await fetch('https://api.torbox.app/v1/api/torrents/mylist', {
-            headers: { 'Authorization': `Bearer ${TORBOX_KEY}` }
+        const res = await fetch(`${RADAR_URL}/api/relay`, {
+            headers: { 
+                'Authorization': `Bearer ${PROXY_SECRET}`,
+                'X-Target-Url': 'https://api.torbox.app/v1/api/torrents/mylist',
+                'X-Target-Auth': TORBOX_KEY
+            }
         });
         
-        if (res.status === 401) throw new Error('TORBOX REJECTED UPLINK. INVALID API KEY.');
+        if (res.status === 401) throw new Error('PROXY REJECTED UPLINK. INVALID API KEY.');
+        if (!res.ok) throw new Error('TORBOX ENGINE UNREACHABLE.');
+
         const vault = await res.json();
         
         resultsGrid.innerHTML = '';
@@ -203,9 +248,13 @@ async function ignitePayload(magnet) {
     try {
         const fd = new FormData();
         fd.append('magnet', magnet);
-        const res = await fetch('https://api.torbox.app/v1/api/torrents/createtorrent', {
+        const res = await fetch(`${RADAR_URL}/api/relay`, {
             method: 'POST',
-            headers: { 'Authorization': `Bearer ${TORBOX_KEY}` },
+            headers: { 
+                'Authorization': `Bearer ${PROXY_SECRET}`,
+                'X-Target-Url': 'https://api.torbox.app/v1/api/torrents/createtorrent',
+                'X-Target-Auth': TORBOX_KEY
+            },
             body: fd
         });
         
@@ -221,8 +270,12 @@ async function ignitePayload(magnet) {
 
 async function getLink(tId, fId) {
     try {
-        const res = await fetch(`https://api.torbox.app/v1/api/torrents/requestdl?token=${tId}&file_id=${fId}`, {
-            headers: { 'Authorization': `Bearer ${TORBOX_KEY}` }
+        const res = await fetch(`${RADAR_URL}/api/relay`, {
+            headers: { 
+                'Authorization': `Bearer ${PROXY_SECRET}`,
+                'X-Target-Url': `https://api.torbox.app/v1/api/torrents/requestdl?token=${tId}&file_id=${fId}`,
+                'X-Target-Auth': TORBOX_KEY
+            }
         });
         const data = await res.json();
         
