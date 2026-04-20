@@ -1,0 +1,121 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "glass/data/llm-agents/schema.json",
+  "title": "Minimal Resilient Character Card V2",
+  "description": "Schema for llm-agents/*.json character cards. Add filename to index.json to register in the agent dropdown.",
+  "type": "object",
+  "properties": {
+    "spec": {
+      "type": "string",
+      "const": "chara_card_v2",
+      "description": "Must be 'chara_card_v2'."
+    },
+    "spec_version": {
+      "type": "string",
+      "description": "Semantic version string, e.g. '2.0'."
+    },
+    "data": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The character's display name. Used as AI display name in the chat UI."
+        },
+        "description": {
+          "type": "string",
+          "description": "Core persona, physical traits, and background. Used as fallback system prompt if system_prompt is absent."
+        },
+        "first_mes": {
+          "type": "string",
+          "description": "Initial greeting injected as the first assistant message when the agent is selected on a fresh conversation."
+        },
+        "personality": {
+          "type": "string",
+          "description": "Personality traits and behavioural tendencies. Appended to system_prompt composite if system_prompt is absent."
+        },
+        "scenario": {
+          "type": "string",
+          "description": "The situational context or framing for the interaction."
+        },
+        "mes_example": {
+          "type": "string",
+          "description": "Few-shot example exchange in <START> / {{user}} / {{char}} format to anchor the model's response style."
+        },
+        "system_prompt": {
+          "type": "string",
+          "description": "Primary system prompt injected at the top of every request. Takes precedence over description + personality."
+        },
+        "post_history_instructions": {
+          "type": "string",
+          "description": "Instructions appended after the conversation history to reinforce persona throughout long sessions."
+        },
+        "alternate_greetings": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Alternative first_mes strings (not currently used by the UI — reserved for future greeting picker)."
+        },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Categorisation tags. Displayed as tooltip on the dropdown option. Logged to sys-log on agent load."
+        },
+        "creator": {
+          "type": "string",
+          "description": "Author identifier."
+        },
+        "creator_notes": {
+          "type": "string",
+          "description": "Usage notes logged to the chat sys-log when the agent is selected."
+        },
+        "character_version": {
+          "type": "string",
+          "description": "Semantic version of this character card."
+        },
+        "avatar": {
+          "type": "string",
+          "description": "Path or URL to an avatar image. Reserved for future UI use."
+        },
+        "extensions": {
+          "type": "object",
+          "description": "Arbitrary extension data. Reserved for future feature flags or UI hints.",
+          "additionalProperties": true
+        },
+        "character_book": {
+          "type": ["object", "null"],
+          "description": "Lorebook / world-info object. Entries are keyword-triggered and injected into context before each API call.",
+          "properties": {
+            "name":               { "type": "string", "description": "Display name shown in the Lorebook panel." },
+            "description":        { "type": "string" },
+            "scan_depth":         { "type": "number", "description": "How many recent messages to scan for keyword triggers. Default: 4." },
+            "token_budget":       { "type": "number", "description": "Max total chars of lorebook content to inject per turn. Default: 2048." },
+            "recursive_scanning": { "type": "boolean", "description": "Whether matched entry content is also scanned for further triggers." },
+            "entries": {
+              "type": "array",
+              "description": "Array of lorebook entries. Each entry is injected when any of its keys appear in recent messages.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id":               { "type": "number" },
+                  "keys":             { "type": "array", "items": { "type": "string" }, "description": "Trigger keywords. Case-insensitive substring match." },
+                  "secondary_keys":   { "type": "array", "items": { "type": "string" }, "description": "Optional: ALL secondary keys must also match for entry to fire (AND logic)." },
+                  "content":          { "type": "string", "description": "World-state text injected into context when triggered." },
+                  "enabled":          { "type": "boolean", "default": true },
+                  "insertion_order":  { "type": "number", "description": "Lower numbers inject first. Default: 100." },
+                  "position":         { "type": "string", "enum": ["before_char", "after_char"], "description": "Injection position relative to the system prompt." },
+                  "case_sensitive":   { "type": "boolean", "default": false },
+                  "comment":          { "type": "string", "description": "Internal author note — not injected into context." },
+                  "constant":         { "type": "boolean", "description": "If true, always inject regardless of keyword matches." }
+                },
+                "required": ["keys", "content"]
+              }
+            }
+          }
+        }
+      },
+      "required": ["name", "description", "first_mes"],
+      "additionalProperties": true
+    }
+  },
+  "required": ["spec", "spec_version", "data"],
+  "additionalProperties": true
+}

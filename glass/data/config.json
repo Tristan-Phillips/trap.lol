@@ -1,0 +1,22 @@
+{
+  "site": {
+    "title": "trap.lol",
+    "domain": "trap.lol",
+    "tagline": "Sovereign Infrastructure & Spice Routes",
+    "eyebrow": "[ FREMEN UPLINK // CHAOS VECTOR ONLINE ]",
+    "author": "trap",
+    "year": "2026"
+  },
+  "shards": {
+    "lucide": "https://cdn.trap.lol/shards/lucide.min.js",
+    "marked": "https://cdn.trap.lol/shards/marked.min.js",
+    "dompurify": "https://cdn.trap.lol/shards/purify.min.js"
+  },
+  "llm": {
+    "enabled": true,
+    "api_base": "https://nano-gpt.com/api/v1",
+    "api_token": "",
+    "auth_url": "",
+    "system_prompt": "You are a concise, technically precise assistant embedded in trap.lol sovereign infrastructure. Lead with the direct answer. No preamble, no disclaimers, no filler. Use code blocks where relevant. If context is missing, ask one focused question before proceeding."
+  }
+}

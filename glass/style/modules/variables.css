@@ -1,0 +1,80 @@
+/* =============================================
+   trap.lol — Glass/Style
+   Dune × Arcane fusion. Desert-night chaos.
+   GPL-3.0 — trap.lol
+   ============================================= */
+
+/* ─── Variables ──────────────────────────────── */
+:root {
+  /* Base legibility scale */
+  --text-xs:   0.76rem;
+  --text-sm:   0.82rem;
+  --text-base: 0.92rem;
+  /* Backgrounds */
+  --bg-base:        #06040A;
+  --glass-bg:       rgba(14, 8, 22, 0.55);
+  --glass-bg-warm:  rgba(22, 12, 4, 0.5);
+
+  /* Borders */
+  --glass-border:      rgba(190, 41, 236, 0.18);
+  --glass-border-warm: rgba(244, 168, 48, 0.25);
+  --glass-border-mute: rgba(255, 255, 255, 0.06);
+
+  /* Accents (Global Defaults) */
+  --accent:             #BE29EC;
+  --accent-warm:        #F4A830;
+  --accent-glow:        rgba(190, 41, 236, 0.25);
+  --accent-glow-warm:   rgba(244, 168, 48, 0.2);
+  --accent-subtle:      rgba(190, 41, 236, 0.08);
+  --accent-subtle-warm: rgba(244, 168, 48, 0.08);
+
+  /* Dynamic Theme Tokens (Overridden by .neon-* classes) */
+  --theme-accent:       var(--accent);
+  --theme-glow:         var(--accent-glow);
+  --theme-subtle:       var(--accent-subtle);
+
+  /* Text */
+  --text-main:  #EDE8F5;
+  --text-muted: #7D6E92;
+  --text-warm:  #C4A862;
+
+  /* Fonts */
+  --font-mono: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Consolas, monospace;
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+  /* Motion */
+  --transition:       0.18s ease-out;
+  --transition-med:   0.28s cubic-bezier(0.25, 0, 0, 1);
+  --transition-slow:  0.42s cubic-bezier(0.25, 0, 0, 1);
+
+  /* Touch targets */
+  --touch-min: 44px;
+}
+
+/* ─── Dynamic Visual Classes ─────────────────── */
+.neon-magenta {
+  --theme-accent: #BE29EC;
+  --theme-glow:   rgba(190, 41, 236, 0.25);
+  --theme-subtle: rgba(190, 41, 236, 0.08);
+}
+.neon-cyan {
+  --theme-accent: #00f0ff;
+  --theme-glow:   rgba(0, 240, 255, 0.25);
+  --theme-subtle: rgba(0, 240, 255, 0.08);
+}
+.neon-green {
+  --theme-accent: #4ade80;
+  --theme-glow:   rgba(74, 222, 128, 0.25);
+  --theme-subtle: rgba(74, 222, 128, 0.08);
+}
+.neon-violet {
+  --theme-accent: #8b5cf6;
+  --theme-glow:   rgba(139, 92, 246, 0.25);
+  --theme-subtle: rgba(139, 92, 246, 0.08);
+}
+.neon-red {
+  --theme-accent: #ef4444;
+  --theme-glow:   rgba(239, 68, 68, 0.25);
+  --theme-subtle: rgba(239, 68, 68, 0.08);
+}
+
