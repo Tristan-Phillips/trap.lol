@@ -1,0 +1,35 @@
+{
+  "site": {
+    "title": "ECHOES",
+    "eyebrow": "[ SIGNAL // THOUGHT-BLEED ACTIVE ]",
+    "subtitle": "fragments of a mind that refuses to stay quiet"
+  },
+  "manifest": [
+    {
+      "id": "sketch-001",
+      "thumb": "https://file.trap.lol/your-thumb-001.jpg",
+      "src": "https://file.trap.lol/your-full-001.jpg",
+      "medium": "analog",
+      "tags": ["sketch", "charcoal", "portrait"],
+      "description": "The first line was an accident. The rest was inevitability.",
+      "verse": "drawn in the margins of a tuesday\nthat lasted three weeks\ni kept drawing the same jaw\ntrying to remember\nif absence has a shape",
+      "stats": {
+        "mood": "dissociated",
+        "chaos": 72
+      }
+    },
+    {
+      "id": "sketch-002",
+      "thumb": "https://file.trap.lol/your-thumb-002.jpg",
+      "src": "https://file.trap.lol/your-full-002.jpg",
+      "medium": "digital",
+      "tags": ["digital", "linework", "abstract"],
+      "description": null,
+      "verse": "everything is a signal\nif you're tuned wrong enough",
+      "stats": {
+        "mood": "hyperfocused",
+        "chaos": 41
+      }
+    }
+  ]
+}

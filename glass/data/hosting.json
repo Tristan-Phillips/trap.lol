@@ -3,15 +3,6 @@
   "visual_class": "neon-magenta",
   "manifest": {
     "0": {
-      "name": "Infinite Noise",
-      "hosting": "Art Canvas",
-      "shortcut": "N0",
-      "source": "https://git.trap.lol/trap/glass-art-trap-lol",
-      "icon": "pencil",
-      "url": "https://art.trap.lol",
-      "status": "online"
-    },
-    "1": {
       "name": "Version Control",
       "hosting": "Forgejo",
       "shortcut": "N1",
@@ -20,7 +11,7 @@
       "url": "https://git.trap.lol",
       "status": "online"
     },
-    "2": {
+    "1": {
       "name": "PDF Manipulation",
       "hosting": "Stirling PDF",
       "shortcut": "N2",
@@ -29,7 +20,7 @@
       "url": "https://pdf.trap.lol",
       "status": "online"
     },
-    "3": {
+    "2": {
       "name": "Online Dev Tools",
       "hosting": "IT-Tools",
       "shortcut": "N3",

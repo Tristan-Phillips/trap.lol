@@ -45,7 +45,7 @@ export const globalRouter = new Map();
 
 
 export let config;
-export let hostingData, extData, guideData, botsData, toolsData, llmData;
+export let hostingData, extData, guideData, botsData, toolsData, llmData, appsData;
 
 export async function loadCoreData(base = "") {
 // ── 1. Boot: load config, then all data + shard in parallel ─────────────
@@ -61,13 +61,14 @@ export async function loadCoreData(base = "") {
     return null;
   });
 
-  ;[hostingData, extData, guideData, botsData, toolsData, llmData] = await Promise.all([
+  ;[hostingData, extData, guideData, botsData, toolsData, llmData, appsData] = await Promise.all([
     safeJSON(`${base}glass/data/hosting.json`),
     safeJSON(`${base}glass/data/extlinks.json`),
     safeJSON(`${base}glass/data/guides.json`),
     safeJSON(`${base}glass/data/bots.json`),
     safeJSON(`${base}glass/data/tools.json`),
     safeJSON(`${base}glass/data/llm.json`),
+    safeJSON(`${base}glass/data/apps.json`),
   ]);
 
   // Load shards — cdn.trap.lol → /shards/ (local dev) → public CDN (live fallback)

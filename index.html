@@ -25,6 +25,36 @@
     </header>
 
     <main>
+      <!-- ── ECHOES — art portal, intentionally first ── -->
+      <section id="echoes-section" aria-label="Echoes art portal">
+        <a href="/art/" class="echoes-portal" aria-label="Enter Echoes — art gallery">
+          <div class="echoes-portal__bg" aria-hidden="true">
+            <div class="echoes-portal__grain"></div>
+            <div class="echoes-portal__orb echoes-portal__orb--1"></div>
+            <div class="echoes-portal__orb echoes-portal__orb--2"></div>
+            <div class="echoes-portal__orb echoes-portal__orb--3"></div>
+            <div class="echoes-portal__lines" aria-hidden="true"></div>
+          </div>
+          <div class="echoes-portal__body">
+            <div class="echoes-portal__eyebrow">
+              <span class="echoes-portal__signal-dot" aria-hidden="true"></span>
+              THOUGHT-BLEED ACTIVE
+            </div>
+            <h2 class="echoes-portal__title">ECHOES</h2>
+            <p class="echoes-portal__sub">fragments of a mind that refuses to stay quiet</p>
+            <div class="echoes-portal__cta" aria-hidden="true">
+              <span class="echoes-portal__cta-text">enter</span>
+              <svg class="echoes-portal__cta-arrow" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </div>
+          </div>
+          <div class="echoes-portal__corner echoes-portal__corner--tl" aria-hidden="true"></div>
+          <div class="echoes-portal__corner echoes-portal__corner--tr" aria-hidden="true"></div>
+          <div class="echoes-portal__corner echoes-portal__corner--bl" aria-hidden="true"></div>
+          <div class="echoes-portal__corner echoes-portal__corner--br" aria-hidden="true"></div>
+          <div class="echoes-portal__scan" aria-hidden="true"></div>
+        </a>
+      </section>
+
       <section id="hosting-section" aria-labelledby="hosting-title">
         <h2 id="hosting-title" class="section-title">
           <i data-lucide="server"></i> Sovereign Nodes
@@ -52,6 +82,14 @@
           <i data-lucide="terminal-square"></i> Ordnance Depot
         </h2>
         <div id="tools-container" class="tools-grid"></div>
+      </section>
+
+      <section id="apps-section" aria-labelledby="apps-title">
+        <h2 id="apps-title" class="section-title">
+          <i data-lucide="layout-grid"></i> App Uplinks
+          <span class="hint">[Client-side utilities — keys stay in your browser]</span>
+        </h2>
+        <div id="apps-grid" class="apps-grid"></div>
       </section>
 
       <section id="llm-section" aria-labelledby="llm-title" class="hidden">
@@ -252,7 +290,7 @@
         </div>
       </section>
 
-      <!-- <section id="guides-section" aria-labelledby="guides-title">
+      <section id="guides-section" aria-labelledby="guides-title">
         <h2 id="guides-title" class="section-title">
           <i data-lucide="book-open"></i> Sacred Codex
         </h2>
@@ -265,7 +303,7 @@
             <i data-lucide="chevron-right"></i>
           </button>
         </div>
-      </section> -->
+      </section>
     </main>
 
     <footer class="site-footer">

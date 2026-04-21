@@ -166,12 +166,109 @@ body {
 .card.cached .action-btn.primary { border-color: var(--toxic-green); color: var(--toxic-green); }
 .card.cached .action-btn.primary:hover { background: var(--toxic-green); color: var(--bg-void); box-shadow: 0 0 15px var(--toxic-green); }
 
-/* Busy button state */
+/* ── Auth extras ──────────────────────────────────────────────────────────── */
+.label-sub { color: var(--text-muted); font-size: 0.75em; }
+
+.remember-row {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 0.8rem; color: var(--text-muted); cursor: pointer;
+}
+.remember-row input[type="checkbox"] { accent-color: var(--hot-pink); width: 14px; height: 14px; cursor: pointer; }
+
+/* ── Header top row (title + lock btn) ───────────────────────────────────── */
+.header-top-row {
+    display: flex; align-items: center; justify-content: center; gap: 20px;
+    flex-wrap: wrap; margin-bottom: 4px;
+}
+
+.lock-btn {
+    background: transparent; border: 1px solid var(--text-muted); color: var(--text-muted);
+    font-family: var(--font-mono); font-size: 0.75rem; padding: 6px 14px;
+    cursor: pointer; text-transform: uppercase; letter-spacing: 1px; transition: 0.2s;
+}
+.lock-btn:hover { border-color: var(--hot-pink); color: var(--hot-pink); box-shadow: 0 0 10px rgba(255,0,85,0.3); }
+
+/* ── Search input wrap + history dropdown ────────────────────────────────── */
+.search-input-wrap { position: relative; flex: 2; min-width: 250px; }
+.search-input-wrap input { width: 100%; }
+
+.history-dropdown {
+    position: absolute; top: 100%; left: 0; right: 0; z-index: 200;
+    background: rgba(10, 6, 18, 0.98); border: 1px solid var(--deep-purple);
+    border-top: none; max-height: 260px; overflow-y: auto;
+}
+.history-item {
+    padding: 10px 14px; font-size: 0.9rem; color: var(--text-muted);
+    cursor: pointer; border-bottom: 1px solid rgba(112,0,255,0.2);
+    transition: background 0.15s, color 0.15s;
+}
+.history-item:last-child { border-bottom: none; }
+.history-item:hover { background: rgba(112,0,255,0.15); color: var(--acid-cyan); }
+
+/* ── Status bar ──────────────────────────────────────────────────────────── */
+.status-bar {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+    max-width: 1200px; margin: 0 auto 16px auto;
+    font-size: 0.78rem; color: var(--text-muted);
+    border: 1px solid rgba(112,0,255,0.3); padding: 8px 14px;
+    background: rgba(15,10,20,0.6);
+}
+.status-item { white-space: nowrap; }
+.status-item--green { color: var(--toxic-green); }
+.status-sep { color: var(--deep-purple); }
+.status-actions { margin-left: auto; }
+.status-action-btn {
+    background: transparent; border: 1px solid var(--deep-purple); color: var(--text-muted);
+    font-family: var(--font-mono); font-size: 0.75rem; padding: 4px 10px;
+    cursor: pointer; text-transform: uppercase; transition: 0.2s;
+}
+.status-action-btn:hover { border-color: var(--acid-cyan); color: var(--acid-cyan); }
+
+/* ── Control deck right side ─────────────────────────────────────────────── */
+.control-right { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+
+.seeder-filter { display: flex; flex-direction: column; gap: 4px; }
+.seeder-label { font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; }
+.seeder-slider {
+    -webkit-appearance: none; appearance: none;
+    width: 120px; height: 3px; background: var(--deep-purple);
+    border-radius: 2px; outline: none; cursor: pointer;
+}
+.seeder-slider::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 14px; height: 14px;
+    background: var(--hot-pink); border-radius: 50%; cursor: pointer;
+    box-shadow: 0 0 6px var(--hot-pink);
+}
+.seeder-slider::-moz-range-thumb {
+    width: 14px; height: 14px; background: var(--hot-pink);
+    border-radius: 50%; border: none; cursor: pointer;
+}
+
+/* ── Load more ───────────────────────────────────────────────────────────── */
+.load-more-wrap {
+    display: flex; align-items: center; justify-content: center; gap: 16px;
+    max-width: 1200px; margin: 0 auto 40px auto; padding-top: 10px;
+}
+.load-more-count { font-size: 0.8rem; color: var(--text-muted); }
+
+/* ── Vault controls ──────────────────────────────────────────────────────── */
+.vault-controls {
+    display: flex; align-items: center; gap: 16px; justify-content: center;
+    max-width: 1200px; margin: 0 auto 40px auto; padding-top: 10px;
+}
+.vault-countdown { font-size: 0.8rem; color: var(--text-muted); }
+
+/* ── Busy button state ───────────────────────────────────────────────────── */
 .chaotic-btn.btn--busy { opacity: 0.6; cursor: not-allowed; }
 .action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-/* Cached badge inline */
+/* ── Action variants ─────────────────────────────────────────────────────── */
+.action-btn--danger { border-color: var(--hot-pink); color: var(--hot-pink); }
+.action-btn--danger:hover { background: var(--hot-pink); color: var(--bg-void); box-shadow: 0 0 12px var(--hot-pink); }
+
+/* ── Cached badge inline ─────────────────────────────────────────────────── */
 .badge.cached-badge { border-color: var(--toxic-green); color: var(--toxic-green); }
+.badge.badge--progress { border-color: var(--acid-cyan); color: var(--acid-cyan); }
 
 /* Grid messages */
 .grid-msg { padding: 40px 20px; font-size: 1.2rem; text-align: center; color: var(--acid-cyan); grid-column: 1 / -1; }
@@ -209,10 +306,16 @@ body {
 .link-reveal__url:hover { color: var(--hot-pink); border-color: var(--hot-pink); }
 .link-reveal__close { align-self: flex-end; }
 
-/* Edge Cases */
+/* ── Responsive ──────────────────────────────────────────────────────────── */
 @media (max-width: 600px) {
     .chaos-header h1 { font-size: 2.5rem; }
     .graffiti-accent { font-size: 6rem; top: -30px; }
     .search-matrix { flex-direction: column; }
+    .search-input-wrap { min-width: 0; width: 100%; }
     .control-deck { flex-direction: column; align-items: flex-start; }
+    .control-right { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .status-bar { font-size: 0.72rem; }
+    .status-actions { margin-left: 0; width: 100%; }
+    .status-action-btn { width: 100%; }
+    .header-top-row { flex-direction: column; gap: 10px; }
 }

@@ -1,4 +1,4 @@
-import { config, hostingData, toolsData, botsData, extData, guideData, esc, renderError, globalRouter, IS_TOUCH } from './core.js';
+import { config, hostingData, toolsData, botsData, extData, guideData, appsData, esc, renderError, globalRouter, IS_TOUCH } from './core.js';
 
 export function renderUI() {
 
@@ -295,6 +295,60 @@ export function renderUI() {
     } catch (e) {
       renderError($guidesTrack, "Failed to render codex.");
       console.error("[render] guides:", e);
+    }
+  }
+
+  // ── 8b. App Uplinks ──────────────────────────────────────────────────────
+  const $appsGrid = document.getElementById("apps-grid");
+  if ($appsGrid && appsData?.manifest) {
+    try {
+      let html = "";
+      Object.values(appsData.manifest).forEach((app) => {
+        const statusClass = esc(app.status || "planned");
+        const statusLabel = { live: "LIVE", wip: "WIP", planned: "PLANNED" }[app.status] ?? "—";
+        const tagsHtml = (app.tags ?? [])
+          .map(t => `<span class="app-card__tag">${esc(t)}</span>`)
+          .join("");
+        const keyBadge = app.keyed
+          ? `<span class="app-card__keyed" title="Requires your own API key"><i data-lucide="key-round"></i> API key</span>`
+          : `<span class="app-card__keyed app-card__keyed--free" title="No key required"><i data-lucide="unlock"></i> No key</span>`;
+        const isLive = app.status === "live";
+        const href   = esc(app.path);
+
+        html += `
+          <a
+            href="${href}"
+            class="app-card app-card--${statusClass}"
+            aria-label="${esc(app.name)}"
+            ${!isLive ? 'aria-disabled="true" tabindex="0"' : ""}
+          >
+            <div class="app-card__header">
+              <i data-lucide="${esc(app.icon)}" class="app-card__icon"></i>
+              <span class="app-card__name">${esc(app.name)}</span>
+              <span class="app-card__status app-card__status--${statusClass}">${statusLabel}</span>
+            </div>
+            <p class="app-card__desc">${esc(app.description)}</p>
+            <div class="app-card__footer">
+              <div class="app-card__tags">${tagsHtml}</div>
+              ${keyBadge}
+            </div>
+          </a>`;
+      });
+      $appsGrid.innerHTML = html;
+
+      // Prevent navigation on non-live apps while still being keyboard-accessible
+      $appsGrid.addEventListener("click", (e) => {
+        const $a = e.target.closest(".app-card");
+        if ($a && $a.getAttribute("aria-disabled") === "true") e.preventDefault();
+      });
+      $appsGrid.addEventListener("keydown", (e) => {
+        if (e.key !== "Enter" && e.key !== " ") return;
+        const $a = e.target.closest(".app-card");
+        if ($a && $a.getAttribute("aria-disabled") === "true") e.preventDefault();
+      });
+    } catch (e) {
+      renderError($appsGrid, "Failed to render app uplinks.");
+      console.error("[render] apps:", e);
     }
   }
 

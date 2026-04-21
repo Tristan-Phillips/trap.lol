@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>trap.lol // echoes</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2306040A'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%23BE29EC' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23BE29EC'/%3E%3C/svg%3E" />
+    <meta name="description" content="Echoes — fragments of a mind that refuses to stay quiet." />
+    <link rel="stylesheet" href="glass/style/style.css" />
+  </head>
+  <body>
+
+    <!-- Cursor follower -->
+    <div id="cursor-orb" class="cursor-orb" aria-hidden="true"></div>
+
+    <!-- Ambient particles -->
+    <canvas id="particle-canvas" class="particle-canvas" aria-hidden="true"></canvas>
+
+    <header class="art-header">
+      <a href="/" class="back-link" aria-label="Back to trap.lol">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+      </a>
+      <div class="art-header__inner">
+        <div id="art-eyebrow" class="art-header__eyebrow"></div>
+        <h1 id="art-title" class="art-header__title"></h1>
+        <p id="art-subtitle" class="art-header__subtitle"></p>
+      </div>
+      <div class="art-header__controls">
+        <button id="filter-all" class="filter-btn active" data-filter="all" title="All works">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
+        </button>
+        <button id="filter-analog" class="filter-btn" data-filter="analog" title="Analog / traditional">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="m2 2 7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>
+        </button>
+        <button id="filter-digital" class="filter-btn" data-filter="digital" title="Digital works">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <main id="art-grid" class="art-grid" aria-label="Art gallery"></main>
+
+    <!-- Lightbox -->
+    <div id="lightbox" class="lightbox hidden" role="dialog" aria-modal="true" aria-label="Artwork viewer">
+      <button class="lightbox__close" id="lb-close" aria-label="Close">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <button class="lightbox__nav lightbox__nav--prev" id="lb-prev" aria-label="Previous">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+      </button>
+      <button class="lightbox__nav lightbox__nav--next" id="lb-next" aria-label="Next">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+      </button>
+      <div class="lightbox__inner">
+        <div class="lightbox__image-wrap">
+          <img id="lb-img" class="lightbox__image" src="" alt="" loading="lazy" />
+          <div class="lightbox__img-overlay" aria-hidden="true"></div>
+        </div>
+        <aside class="lightbox__panel" id="lb-panel">
+          <div class="lightbox__panel-tags" id="lb-tags"></div>
+          <div class="lightbox__panel-medium" id="lb-medium"></div>
+          <div class="lightbox__panel-desc" id="lb-desc"></div>
+          <div class="lightbox__panel-verse" id="lb-verse"></div>
+          <div class="lightbox__panel-stats" id="lb-stats"></div>
+          <a id="lb-download" class="lightbox__download" href="#" target="_blank" rel="noopener" aria-label="Open original">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </a>
+        </aside>
+      </div>
+    </div>
+
+    <footer class="art-footer">
+      <span class="art-footer__copy">© 2026 trap.lol</span>
+      <span class="art-footer__sep">//</span>
+      <span class="art-footer__signal">[ ECHOES ONLINE ]</span>
+    </footer>
+
+    <script type="module" src="glass/script/app.js"></script>
+  </body>
+</html>
