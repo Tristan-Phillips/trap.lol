@@ -1,4 +1,20 @@
 {
+  "referrals": {
+    "torbox": {
+      "name": "TorBox",
+      "code": "cae5af77-0ef0-4333-aec2-46f3d768803d",
+      "referral_url": "https://torbox.app/subscription?referral=cae5af77-0ef0-4333-aec2-46f3d768803d",
+      "direct_url": "https://torbox.app/subscription",
+      "description": "Cloud torrent & debrid service powering RADAR. Cached downloads, no seeding required."
+    },
+    "nano_gpt": {
+      "name": "nano-gpt",
+      "code": "ACDtKPdM",
+      "referral_url": "https://nano-gpt.com/subscription/ACDtKPdM",
+      "direct_url": "https://nano-gpt.com",
+      "description": "Subscription access to 20+ models — DeepSeek R1, Claude, GPT, Llama — flat monthly cost, no per-token billing."
+    }
+  },
   "site": {
     "title": "trap.lol",
     "domain": "trap.lol",

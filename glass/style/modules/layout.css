@@ -123,7 +123,7 @@ header {
 /* ─── Scroll-to-Top ──────────────────────────── */
 .scroll-top {
   position: fixed;
-  bottom: 2rem; right: 2rem;
+  bottom: 2rem; right: 5.5rem;
   width: var(--touch-min);
   height: var(--touch-min);
   display: flex;
@@ -268,7 +268,7 @@ header {
 .site-footer__signal {
   font-family: var(--font-mono);
   font-size: var(--text-xs);
-  color: #4ade80;
+  color: var(--status-online);
   letter-spacing: 0.15em;
   display: flex;
   align-items: center;
@@ -278,16 +278,16 @@ header {
   content: '';
   width: 6px;
   height: 6px;
-  background: #4ade80;
+  background: var(--status-online);
   border-radius: 50%;
-  box-shadow: 0 0 8px #4ade80;
+  box-shadow: 0 0 8px var(--status-online);
   animation: signal-pulse 2s infinite;
 }
 
 @keyframes signal-pulse {
-  0% { opacity: 1; box-shadow: 0 0 8px #4ade80; }
-  50% { opacity: 0.4; box-shadow: 0 0 2px #4ade80; }
-  100% { opacity: 1; box-shadow: 0 0 8px #4ade80; }
+  0% { opacity: 1; box-shadow: 0 0 8px var(--status-online); }
+  50% { opacity: 0.4; box-shadow: 0 0 2px var(--status-online); }
+  100% { opacity: 1; box-shadow: 0 0 8px var(--status-online); }
 }
 
 .site-footer__bar {

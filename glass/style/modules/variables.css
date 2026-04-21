@@ -49,6 +49,10 @@
 
   /* Touch targets */
   --touch-min: 44px;
+
+  /* Status colors */
+  --status-online:  #4ade80;
+  --status-offline: #ef4444;
 }
 
 /* ─── Dynamic Visual Classes ─────────────────── */

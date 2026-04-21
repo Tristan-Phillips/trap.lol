@@ -5,59 +5,19 @@
       "slug": "radar",
       "path": "/radar/",
       "icon": "radar",
-      "description": "Torrent scanner and TorBox cache interface. Hunt the darknet, ignite the cache, pull direct links.",
+      "description": "Torrent scanner and TorBox cache interface. Search, queue and pull direct links",
       "tags": ["torrent", "media", "torbox"],
       "keyed": true,
       "status": "live"
     },
     "1": {
-      "name": "ROLEPLAY",
-      "slug": "roleplay",
-      "path": "/roleplay/",
-      "icon": "drama",
-      "description": "Client-side character roleplay shell. Load any CharacterCard v2 persona and converse over your own API key.",
-      "tags": ["llm", "characters", "api-key"],
+      "name": "LLM Playground",
+      "slug": "playground",
+      "path": "/playground/",
+      "icon": "boom-box",
+      "description": "A playground for experimenting with large language models",
+      "tags": ["ai", "llm", "playground"],
       "keyed": true,
-      "status": "wip"
-    },
-    "2": {
-      "name": "LLM CHAT",
-      "slug": "llmchat",
-      "path": "/llmchat/",
-      "icon": "message-square-code",
-      "description": "Minimal, stateless LLM chat interface. No tracking, no server — just your key and the model.",
-      "tags": ["llm", "chat", "api-key"],
-      "keyed": true,
-      "status": "wip"
-    },
-    "3": {
-      "name": "CIPHER",
-      "slug": "cipher",
-      "path": "/cipher/",
-      "icon": "lock-keyhole",
-      "description": "Client-side encryption toolkit. XOR, AES, base64 encode/decode, hash generation — all in-browser, zero egress.",
-      "tags": ["crypto", "encoding", "offline"],
-      "keyed": false,
-      "status": "planned"
-    },
-    "4": {
-      "name": "DISPATCH",
-      "slug": "dispatch",
-      "path": "/dispatch/",
-      "icon": "send-horizontal",
-      "description": "Webhook and HTTP request dispatcher. Fire arbitrary payloads at endpoints via the relay. Inspect responses inline.",
-      "tags": ["http", "webhooks", "relay"],
-      "keyed": true,
-      "status": "planned"
-    },
-    "5": {
-      "name": "ECHOES",
-      "slug": "art",
-      "path": "/art/",
-      "icon": "aperture",
-      "description": "Fragments of a mind that refuses to stay quiet. Analog and digital works — sketches, scans, signals.",
-      "tags": ["art", "gallery", "sketchbook"],
-      "keyed": false,
       "status": "live"
     }
   }

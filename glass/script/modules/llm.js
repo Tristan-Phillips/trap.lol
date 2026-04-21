@@ -5,9 +5,9 @@ import { _pack, _unpack, syncToggle, persistSettings, restoreSettings, initSetti
 import { getSessions, saveSessions, persistHistory, sessionSnapshot, initSessions, restoreHistory as _restoreHistory, HISTORY_KEY } from './llm-sessions.js';
 import { sanitizeHtml, renderMarkdown, appendSysLog as _appendSysLog, appendSysLogHTML as _appendSysLogHTML, appendMessage as _appendMessage, initChatEvents, sendMessage as _sendMessage } from './llm-chat.js';
 
-export function initLLM() {
+export function initLLM({ base = "" } = {}) {
   const llm         = config.llm;
-  const $llmSection = document.getElementById("llm-section");
+  const $llmSection = document.getElementById("playground-section") ?? document.getElementById("llm-section");
 
   if (!(llm && llm.enabled && $llmSection && llmData)) return;
   $llmSection.classList.remove("hidden");
@@ -232,6 +232,7 @@ export function initLLM() {
     $keybarGetkey, $keybarLocked, $keybarUnlock,
     $input, $sendBtn,
     setKeybarLocked, setStatus, restoreHistory, appendSysLog,
+    referralConfig: config.referrals?.nano_gpt,
   });
 
   // ── Settings controls ─────────────────────────────────────────────────────
@@ -291,7 +292,7 @@ export function initLLM() {
     $syspromptInput.value = cfg.systemPrompt;
   }
 
-  fetchJSON("glass/data/llm-agents/default.json")
+  fetchJSON(`${base}glass/data/llm-agents/default.json`)
     .then((card) => {
       const data = card.spec ? card.data : card;
       agentMap.set("default", { id: "default", name: data.name ?? "Default", data, raw: card });
@@ -299,12 +300,12 @@ export function initLLM() {
     })
     .catch(() => console.log("[llm] default.json not found — using config system_prompt"));
 
-  fetchJSON("glass/data/llm-agents/index.json")
+  fetchJSON(`${base}glass/data/llm-agents/index.json`)
     .then((filenames) => {
       if (!Array.isArray(filenames) || !filenames.length) return;
       return Promise.allSettled(
         filenames.filter((f) => f.replace(/\.json$/i, "") !== "default").map((f) =>
-          fetchJSON(`glass/data/llm-agents/${f}`).then((card) => ({ f, card }))
+          fetchJSON(`${base}glass/data/llm-agents/${f}`).then((card) => ({ f, card }))
         )
       );
     })

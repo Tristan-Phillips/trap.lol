@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>trap.lol // neural uplink</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2306040A'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%23BE29EC' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23BE29EC'/%3E%3C/svg%3E" />
+    <meta name="description" content="Neural Uplink — multi-model AI interface on trap.lol sovereign infrastructure." />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="trap.lol" />
+    <meta property="og:title" content="trap.lol // neural uplink" />
+    <meta property="og:description" content="Neural Uplink — multi-model AI interface." />
+    <meta property="og:url" content="https://trap.lol/playground/" />
+    <link rel="stylesheet" href="../glass/style/style.css" />
+  </head>
+  <body class="playground-page">
+
+    <a href="../index.html" class="playground-page__back">
+      <i data-lucide="arrow-left"></i> Hub
+    </a>
+
+    <main class="playground-page__main">
+      <header class="playground-page__header">
+        <div class="playground-page__eyebrow">
+          <span class="playground-page__signal-dot" aria-hidden="true"></span>
+          NEURAL UPLINK
+        </div>
+        <h1 class="playground-page__title">trap.lol <span class="playground-page__title-sep">//</span> playground</h1>
+      </header>
+
+      <section id="playground-section" aria-labelledby="playground-title">
+        <div class="llm-shell" id="llm-shell">
+
+          <!-- ── API Key Bar ── -->
+          <div id="llm-keybar" class="llm-keybar">
+            <div id="llm-keybar-input-wrap" class="llm-keybar__input-wrap">
+              <i data-lucide="key-round" class="llm-keybar__icon"></i>
+              <input id="llm-keybar-input" type="password" class="llm-keybar__input" placeholder="Paste nano-gpt API key to unlock…" autocomplete="off" spellcheck="false" />
+              <button id="llm-keybar-toggle" class="llm-shell__action-btn" aria-label="Show/hide key" title="Toggle visibility">
+                <i data-lucide="eye"></i>
+              </button>
+              <button id="llm-keybar-save" class="llm-keybar__save-btn" aria-label="Lock key">
+                <i data-lucide="lock"></i> Lock
+              </button>
+              <button id="llm-keybar-getkey" class="llm-keybar__getkey-btn" aria-label="Get a nano-gpt API key" title="Get a nano-gpt API key">
+                <i data-lucide="external-link"></i> Get Key
+              </button>
+            </div>
+            <div id="llm-keybar-locked" class="llm-keybar__locked" hidden>
+              <i data-lucide="shield-check" class="llm-keybar__locked-icon"></i>
+              <span class="llm-keybar__locked-label" data-valid="false">No Key</span>
+              <button id="llm-keybar-unlock" class="llm-keybar__unlock-btn" title="Change or remove key">
+                <i data-lucide="unlock"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- ── Toolbar ── -->
+          <div class="llm-shell__toolbar">
+            <div class="llm-shell__model-wrap">
+              <i data-lucide="layers" class="llm-shell__model-icon"></i>
+              <select id="llm-model-select" class="llm-shell__model-select" aria-label="Select model"></select>
+            </div>
+            <div class="llm-shell__meta">
+              <span id="llm-provider-badge" class="llm-shell__provider"></span>
+              <div class="llm-shell__actions">
+                <button id="llm-new-btn" class="llm-shell__action-btn" aria-label="New conversation" title="New conversation">
+                  <i data-lucide="square-pen"></i>
+                </button>
+                <button id="llm-quicksave-btn" class="llm-shell__action-btn" aria-label="Quick-save conversation" title="Quick-save conversation">
+                  <i data-lucide="bookmark-plus"></i>
+                </button>
+                <button id="llm-sessions-btn" class="llm-shell__action-btn" aria-label="Sessions" title="Sessions">
+                  <i data-lucide="folder-open"></i>
+                </button>
+                <button id="llm-settings-btn" class="llm-shell__action-btn" aria-label="Settings" title="Settings">
+                  <i data-lucide="settings-2"></i>
+                </button>
+                <button id="llm-clear-btn" class="llm-shell__action-btn llm-shell__action-btn--danger" aria-label="Clear conversation" title="Clear conversation">
+                  <i data-lucide="trash-2"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Settings Panel ── -->
+          <div id="llm-settings-panel" class="llm-panel" hidden>
+            <div class="llm-panel__grid">
+
+              <div class="llm-panel__group llm-panel__group--full">
+                <label class="llm-panel__label" for="llm-agent-select">
+                  <i data-lucide="cpu"></i> Agent Persona
+                  <span class="llm-panel__label-hint">Loaded from llm-agents.json when available</span>
+                </label>
+                <select id="llm-agent-select" class="llm-panel__select">
+                  <option value="">— Default (config system prompt) —</option>
+                </select>
+              </div>
+
+              <div class="llm-panel__group llm-panel__group--full">
+                <label class="llm-panel__label" for="llm-sysprompt-input">
+                  <i data-lucide="terminal"></i> System Prompt Override
+                  <span class="llm-panel__label-hint">Overrides agent and config defaults when filled</span>
+                </label>
+                <textarea id="llm-sysprompt-input" class="llm-panel__textarea" rows="3" placeholder="Override system prompt…" spellcheck="false"></textarea>
+              </div>
+
+              <div class="llm-panel__group">
+                <label class="llm-panel__label" for="llm-temp-input">
+                  <i data-lucide="thermometer"></i> Temperature
+                  <span id="llm-temp-val" class="llm-panel__badge">auto</span>
+                </label>
+                <input id="llm-temp-input" type="range" class="llm-panel__range" min="0" max="2" step="0.05" />
+              </div>
+
+              <div class="llm-panel__group">
+                <label class="llm-panel__label" for="llm-ctx-input">
+                  <i data-lucide="database"></i> Max Context Turns
+                  <span id="llm-ctx-val" class="llm-panel__badge">unlimited</span>
+                </label>
+                <input id="llm-ctx-input" type="range" class="llm-panel__range" min="2" max="40" step="2" />
+              </div>
+
+              <div class="llm-panel__group">
+                <div class="llm-panel__label"><i data-lucide="radio"></i> Streaming</div>
+                <button id="llm-toggle-stream" class="llm-panel__toggle" data-active="true" role="switch" aria-checked="true">
+                  <span class="llm-panel__toggle-knob"></span>
+                  <span class="llm-panel__toggle-label">On</span>
+                </button>
+              </div>
+
+              <div class="llm-panel__group">
+                <div class="llm-panel__label"><i data-lucide="corner-down-left"></i> Enter to Send</div>
+                <button id="llm-toggle-enter" class="llm-panel__toggle" data-active="true" role="switch" aria-checked="true">
+                  <span class="llm-panel__toggle-knob"></span>
+                  <span class="llm-panel__toggle-label">On</span>
+                </button>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- ── Sessions Panel ── -->
+          <div id="llm-sessions-panel" class="llm-panel" hidden>
+            <div class="llm-sessions__toolbar">
+              <button id="llm-session-save" class="llm-sessions__btn" title="Save current conversation">
+                <i data-lucide="save"></i> Save
+              </button>
+              <button id="llm-session-export-json" class="llm-sessions__btn" title="Export as JSON">
+                <i data-lucide="file-json"></i> JSON
+              </button>
+              <button id="llm-session-export-md" class="llm-sessions__btn" title="Export as Markdown">
+                <i data-lucide="file-text"></i> MD
+              </button>
+              <label class="llm-sessions__btn" title="Import a saved session JSON" style="cursor:pointer;">
+                <i data-lucide="upload"></i> Import
+                <input id="llm-session-import" type="file" accept=".json" hidden />
+              </label>
+            </div>
+            <div class="llm-sessions__bulk" id="llm-sessions-bulk" hidden>
+              <label class="llm-sessions__select-all">
+                <input type="checkbox" id="llm-sessions-select-all" /> All
+              </label>
+              <span class="llm-sessions__bulk-count" id="llm-sessions-bulk-count">0 selected</span>
+              <button id="llm-sessions-bulk-delete" class="llm-sessions__btn llm-sessions__btn--danger" title="Delete selected">
+                <i data-lucide="trash-2"></i> Delete
+              </button>
+            </div>
+            <div id="llm-session-list" class="llm-sessions__list">
+              <span class="llm-sessions__empty">No saved sessions.</span>
+            </div>
+          </div>
+
+          <!-- ── Status Bar ── -->
+          <div class="llm-shell__statusbar" id="llm-statusbar">
+            <div class="llm-status__left">
+              <span class="llm-status__dot" id="llm-status-dot"></span>
+              <span class="llm-status__label" id="llm-status-label">READY</span>
+            </div>
+            <div class="llm-status__right">
+              <span class="llm-status__stat" id="llm-stat-turns" title="Conversation turns"><i data-lucide="messages-square"></i> <span>0</span> turns</span>
+              <span class="llm-status__sep">//</span>
+              <span class="llm-status__stat" id="llm-stat-tokens" title="Approximate tokens in context"><i data-lucide="hash"></i> <span>0</span> tok</span>
+              <span class="llm-status__sep">//</span>
+              <span class="llm-status__stat llm-status__stat--chars" id="llm-stat-chars" title="Characters in input"><i data-lucide="pencil-line"></i> <span>0</span></span>
+            </div>
+          </div>
+
+          <!-- ── Messages ── -->
+          <div id="llm-messages" class="llm-shell__messages" aria-live="polite" aria-label="Conversation">
+            <div class="llm-msg llm-msg--system">
+              <span class="llm-msg__role">SYS</span>
+              <div class="llm-msg__body">
+                <p class="llm-msg__text">Neural uplink established.</p>
+                <div class="llm-msg__sys-footer">
+                  <span class="llm-msg__ts" id="llm-boot-ts"></span>
+                  <button class="llm-msg__sys-delete" id="llm-boot-dismiss" title="Dismiss" aria-label="Dismiss system message">
+                    <i data-lucide="x"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Input Row ── -->
+          <form id="llm-form" class="llm-shell__input-row" autocomplete="off">
+            <textarea
+              id="llm-input"
+              class="llm-shell__textarea"
+              rows="1"
+              placeholder="Transmit query… (Enter ↵ send · Shift+Enter newline)"
+              aria-label="Message input"
+              maxlength="8000"
+            ></textarea>
+            <button type="submit" id="llm-send-btn" class="llm-shell__send" aria-label="Send">
+              <i data-lucide="send"></i>
+            </button>
+          </form>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="./script/main.js"></script>
+  </body>
+</html>

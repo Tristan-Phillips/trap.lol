@@ -257,6 +257,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   loadHistory();
+  initTorboxGetkey();
 
   // Auto-login from cookie
   const saved = loadSession();
@@ -267,6 +268,46 @@ window.addEventListener('DOMContentLoaded', async () => {
     toast('[ SESSION RESTORED — UPLINK ACTIVE. ]', 'ok');
   }
 });
+
+// ── TorBox get-key referral modal ─────────────────────────────────────────────
+
+function initTorboxGetkey() {
+  const $btn = document.getElementById('torboxGetkeyBtn');
+  if (!$btn) return;
+
+  $btn.addEventListener('click', () => {
+    const ref = CONFIG?.referrals?.torbox;
+    const referralUrl = ref?.referral_url ?? 'https://torbox.app/subscription';
+    const directUrl   = ref?.direct_url   ?? 'https://torbox.app/subscription';
+    const desc        = ref?.description  ?? 'Cloud torrent & debrid service. Cached downloads, no seeding required.';
+
+    const $modal = document.createElement('div');
+    $modal.className = 'ref-modal';
+    $modal.innerHTML = `
+      <div class="ref-modal__box">
+        <div class="ref-modal__title">GET TORBOX API KEY</div>
+        <p class="ref-modal__body">${esc(desc)}</p>
+        <p class="ref-modal__body ref-modal__body--muted">
+          Use the referral link? It costs you nothing and supports this infrastructure.
+        </p>
+        <div class="ref-modal__actions">
+          <button class="ref-modal__btn ref-modal__btn--primary" data-action="referral">⚡ Use Referral Link</button>
+          <button class="ref-modal__btn ref-modal__btn--secondary" data-action="direct">Go Direct (no referral)</button>
+          <button class="ref-modal__btn ref-modal__btn--ghost" data-action="close">Cancel</button>
+        </div>
+      </div>`;
+
+    document.body.appendChild($modal);
+
+    $modal.addEventListener('click', (e) => {
+      const action = e.target.closest('[data-action]')?.dataset.action;
+      if (!action) return;
+      if (action === 'referral') window.open(referralUrl, '_blank', 'noopener');
+      if (action === 'direct')   window.open(directUrl,   '_blank', 'noopener');
+      $modal.remove();
+    });
+  });
+}
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 

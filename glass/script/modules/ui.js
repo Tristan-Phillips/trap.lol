@@ -1,4 +1,4 @@
-import { config, hostingData, toolsData, botsData, extData, guideData, appsData, esc, renderError, globalRouter, IS_TOUCH } from './core.js';
+import { config, hostingData, toolsData, botsData, extData, guideData, appsData, llmData, fetchJSON, esc, renderError, globalRouter, IS_TOUCH } from './core.js';
 
 export function renderUI() {
 
@@ -76,36 +76,54 @@ export function renderUI() {
   const $toolsContainer = document.getElementById("tools-container");
   if ($toolsContainer && toolsData.manifest) {
     try {
-      let html = "";
-      Object.values(toolsData.manifest).forEach((tool) => {
-        
+      const tools = Object.values(toolsData.manifest);
+      let cards = "";
+      tools.forEach((tool) => {
+
         // Register atomic command to Global Router
         if (tool.shortcut) {
           globalRouter.set(tool.shortcut.toLowerCase(), { type: 'copy', payload: tool.install_cmd });
         }
 
-        html += `
-          <div class="tool-card">
-            <div class="tool-card__header">
-              <i data-lucide="${esc(tool.icon)}"></i>
-              <span class="tool-card__name">${esc(tool.name)}</span>
-              ${tool.shortcut ? `<span class="tool-card__shortcut">[${esc(tool.shortcut)}]</span>` : ""}
-              <span class="tool-card__target">${esc(tool.target)}</span>
+        cards += `
+          <div class="tool-entry">
+            <div class="tool-entry__header">
+              <span class="tool-entry__icon"><i data-lucide="${esc(tool.icon)}"></i></span>
+              <span class="tool-entry__name">${esc(tool.name)}${tool.shortcut ? `<span class="tool-entry__shortcut">[${esc(tool.shortcut)}]</span>` : ""}</span>
+              <span class="tool-entry__target">${esc(tool.target)}</span>
             </div>
-            <p class="tool-card__desc">${esc(tool.description)}</p>
-            <div class="tool-card__cmd">
+            <p class="tool-entry__desc">${esc(tool.description)}</p>
+            <div class="tool-entry__cmd">
               <code>${esc(tool.install_cmd)}</code>
-              <button class="tool-card__copy" aria-label="Copy install command" data-cmd="${esc(tool.install_cmd)}">
+              <button class="tool-entry__copy" aria-label="Copy install command" data-cmd="${esc(tool.install_cmd)}">
                 <i data-lucide="copy"></i>
               </button>
             </div>
-            <a href="${esc(tool.repo_url)}" target="_blank" rel="noopener" class="tool-card__link" aria-label="View ${esc(tool.name)} source on Forgejo">
-              <i data-lucide="git-branch"></i> Source
-            </a>
+            <div class="tool-entry__footer">
+              <a href="${esc(tool.repo_url)}" target="_blank" rel="noopener" class="tool-entry__link" aria-label="View ${esc(tool.name)} source">
+                <i data-lucide="git-branch"></i> source
+              </a>
+            </div>
           </div>
         `;
       });
-      $toolsContainer.innerHTML = html;
+
+      // Wrap grid in a <details> for collapse with animated reveal
+      const $details = document.createElement('details');
+      $details.className = 'tools-details';
+      $details.open = true;
+      $details.innerHTML = `
+        <summary class="tools-summary">
+          <svg class="tools-summary__chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          <span class="tools-summary__count">${tools.length} payloads</span>
+        </summary>
+        <div class="tools-details__body">
+          <div class="tools-details__body-inner">
+            <div class="tools-grid">${cards}</div>
+          </div>
+        </div>
+      `;
+      $toolsContainer.appendChild($details);
     } catch (e) {
       renderError($toolsContainer, "Failed to render ordnance depot.");
       console.error("[render] tools:", e);
@@ -124,13 +142,14 @@ export function renderUI() {
           globalRouter.set(bot.shortcut.toLowerCase(), { type: 'link', payload: bot.chat_url });
         }
 
+        const botTooltipId = `bot-tip-${esc(bot.name.toLowerCase().replace(/\s+/g, '-'))}`;
         html += `
           <div class="bot-profile">
-            <div class="bot-avatar" tabindex="0" aria-label="${esc(bot.name)}: ${esc(bot.description)}">
+            <div class="bot-avatar" role="img" aria-label="${esc(bot.name)}" aria-describedby="${botTooltipId}">
               <i data-lucide="${esc(bot.icon)}"></i>
               <div class="bot-status ${esc(bot.status)}"></div>
             </div>
-            <div class="agent-tooltip" role="tooltip">
+            <div class="agent-tooltip" id="${botTooltipId}" role="tooltip">
               <span class="agent-id">ID: ${esc(bot.name.toUpperCase())} ${bot.shortcut ? `[${esc(bot.shortcut)}]` : ""}</span>
               <p>${esc(bot.description)}</p>
             </div>
@@ -194,10 +213,7 @@ export function renderUI() {
           <div class="ext-category__body" id="${catId}-body" role="region">
             <div class="ext-category__body-inner">
               <div class="ext-list">
-                <div class="ext-zone">
-                  <div class="ext-zone-title"><i data-lucide="skull"></i> Undercity</div>
-                  ${linksHTML}
-                </div>
+                ${linksHTML}
               </div>
             </div>
           </div>
@@ -213,11 +229,18 @@ export function renderUI() {
   // ── 7b. Accordion overlay toggle ─────────────────────────────────────────
   if ($extContainer) {
     function positionOverlay($cat) {
-      const $body       = $cat.querySelector(".ext-category__body");
+      const $body         = $cat.querySelector(".ext-category__body");
       const containerRect = $extContainer.getBoundingClientRect();
       const catRect       = $cat.getBoundingClientRect();
-      $body.style.left  = `${containerRect.left - catRect.left}px`;
+      // Offset left relative to the card, clamped so the overlay never leaves the container
+      const leftOffset = containerRect.left - catRect.left;
+      $body.style.left  = `${leftOffset}px`;
       $body.style.width = `${containerRect.width}px`;
+      // Ensure overlay doesn't overflow viewport bottom
+      const spaceBelow = window.innerHeight - catRect.bottom;
+      const overlayH   = Math.min(400, spaceBelow - 8);
+      $body.style.maxHeight = overlayH > 80 ? `${overlayH}px` : "80vh";
+      $body.style.overflowY = "auto";
     }
 
     function closeAll() {
@@ -313,7 +336,7 @@ export function renderUI() {
           ? `<span class="app-card__keyed" title="Requires your own API key"><i data-lucide="key-round"></i> API key</span>`
           : `<span class="app-card__keyed app-card__keyed--free" title="No key required"><i data-lucide="unlock"></i> No key</span>`;
         const isLive = app.status === "live";
-        const href   = esc(app.path);
+        const href   = isLive ? esc(app.path) : "#";
 
         html += `
           <a
@@ -352,6 +375,9 @@ export function renderUI() {
     }
   }
 
+  // ── 8c. Uplink Launchpad ─────────────────────────────────────────────────
+  renderUplinkLaunchpad();
+
   // ── 9. Init Lucide icons ─────────────────────────────────────────────────
   if (typeof lucide !== "undefined") {
     lucide.createIcons();
@@ -364,15 +390,15 @@ export function renderUI() {
 
   // ── 10. Copy-to-clipboard (Ordnance Depot) ───────────────────────────────
   document.addEventListener("click", (e) => {
-    const $btn = e.target.closest(".tool-card__copy");
+    const $btn = e.target.closest(".tool-entry__copy");
     if (!$btn) return;
     const cmd = $btn.dataset.cmd;
     navigator.clipboard
       .writeText(cmd)
       .then(() => {
-        $btn.classList.add("tool-card__copy--copied");
+        $btn.classList.add("tool-entry__copy--copied");
         setTimeout(
-          () => $btn.classList.remove("tool-card__copy--copied"),
+          () => $btn.classList.remove("tool-entry__copy--copied"),
           1800,
         );
       })
@@ -523,4 +549,148 @@ export function renderUI() {
     }
   }
 
+}
+
+/* ═══════════════════════════════════════════════
+   ── Uplink Launchpad ─────────────────────────
+   Live telemetry + prompt probe. Hands off to
+   /playground/?q=…&agent=… for prefill-only flow.
+   ═══════════════════════════════════════════════ */
+function renderUplinkLaunchpad() {
+  const $root = document.getElementById("uplink-launch");
+  if (!$root || !llmData || !llmData.routing_table) return;
+
+  const $telemetry    = document.getElementById("uplink-telemetry");
+  const $agentSelect  = document.getElementById("uplink-agent");
+  const $modelPreview = document.getElementById("uplink-model-preview");
+  const $prompt       = document.getElementById("uplink-prompt");
+  const $form         = document.getElementById("uplink-probe");
+  const $signalDot    = document.getElementById("uplink-signal-dot");
+  const $signalLabel  = document.getElementById("uplink-signal-label");
+  const $eyebrow      = $signalDot?.parentElement;
+
+  // ── Telemetry ───────────────────────────────────────────────────────────
+  try {
+    const familyCount = Array.isArray(llmData._index) ? llmData._index.length : 0;
+    const models      = Object.values(llmData.routing_table);
+    const modelCount  = models.length;
+    const subCount    = models.filter(m => !m.pay_per_token).length;
+    const paidCount   = modelCount - subCount;
+    const defaultId   = llmData.default_routing;
+    const defaultLbl  = llmData.routing_table[defaultId]?.label ?? defaultId ?? "—";
+    const defaultProv = llmData.routing_table[defaultId]?.provider ?? "";
+
+    $modelPreview.textContent = defaultLbl;
+    $modelPreview.title       = defaultProv ? `${defaultLbl} · ${defaultProv}` : defaultLbl;
+
+    $telemetry.innerHTML = `
+      <div class="uplink-tele">
+        <span class="uplink-tele__label"><i data-lucide="layers"></i> models</span>
+        <span class="uplink-tele__value uplink-tele__value--accent">${modelCount}</span>
+        <span class="uplink-tele__sub">${familyCount} families</span>
+      </div>
+      <div class="uplink-tele">
+        <span class="uplink-tele__label"><i data-lucide="zap"></i> default</span>
+        <span class="uplink-tele__value uplink-tele__value--cyan" title="${esc(defaultLbl)}">${esc(defaultLbl)}</span>
+        <span class="uplink-tele__sub">${esc(defaultProv)}</span>
+      </div>
+      <div class="uplink-tele">
+        <span class="uplink-tele__label"><i data-lucide="infinity"></i> subscription</span>
+        <span class="uplink-tele__value uplink-tele__value--green">${subCount}</span>
+        <span class="uplink-tele__sub">included</span>
+      </div>
+      <div class="uplink-tele">
+        <span class="uplink-tele__label"><i data-lucide="coins"></i> pay-per-token</span>
+        <span class="uplink-tele__value uplink-tele__value--warm">${paidCount}</span>
+        <span class="uplink-tele__sub">metered</span>
+      </div>
+      <div class="uplink-tele">
+        <span class="uplink-tele__label"><i data-lucide="user-cog"></i> agents</span>
+        <span class="uplink-tele__value" id="uplink-tele-agent-count">…</span>
+        <span class="uplink-tele__sub">personas</span>
+      </div>
+    `;
+  } catch (e) {
+    renderError($telemetry, "Telemetry offline.");
+    console.error("[uplink] telemetry:", e);
+  }
+
+  // ── Uplink mode probe ───────────────────────────────────────────────────
+  // NOTE: API keys are session-scoped inside the playground (never written
+  // to localStorage by design — see llm-auth.js). So the hub cannot observe
+  // key state. We only distinguish PROXY MODE vs DIRECT MODE here.
+  const llmCfg     = config.llm ?? {};
+  const PROXY_MODE = !!(llmCfg.api_base && !llmCfg.api_base.includes("nano-gpt.com"));
+
+  if (PROXY_MODE) {
+    if ($signalDot)   $signalDot.dataset.state = "proxy";
+    if ($eyebrow)     $eyebrow.dataset.state   = "proxy";
+    if ($signalLabel) $signalLabel.textContent = "SOVEREIGN PROXY";
+  } else {
+    if ($signalDot)   $signalDot.dataset.state = "armed";
+    if ($eyebrow)     $eyebrow.dataset.state   = "armed";
+    if ($signalLabel) $signalLabel.textContent = "UPLINK READY";
+  }
+
+  // ── Agent roster ────────────────────────────────────────────────────────
+  (async () => {
+    const $agentCountCell = document.getElementById("uplink-tele-agent-count");
+    try {
+      const filenames = await fetchJSON("glass/data/llm-agents/index.json");
+      if (!Array.isArray(filenames) || !filenames.length) {
+        if ($agentCountCell) $agentCountCell.textContent = "0";
+        return;
+      }
+      const results = await Promise.allSettled(
+        filenames
+          .filter(f => f.replace(/\.json$/i, "") !== "default")
+          .map(f => fetchJSON(`glass/data/llm-agents/${f}`).then(card => ({ f, card })))
+      );
+      let added = 0;
+      results.forEach((r) => {
+        if (r.status !== "fulfilled") return;
+        const { f, card } = r.value;
+        const data = card.spec ? card.data : card;
+        const id   = f.replace(/\.json$/i, "");
+        const name = data.name ?? id;
+        const opt  = document.createElement("option");
+        opt.value = id;
+        opt.textContent = name;
+        if (data.tags?.length) opt.title = data.tags.join(", ");
+        $agentSelect.appendChild(opt);
+        added++;
+      });
+      if ($agentCountCell) $agentCountCell.textContent = String(added);
+    } catch (e) {
+      if ($agentCountCell) $agentCountCell.textContent = "0";
+      console.warn("[uplink] agent roster unavailable:", e.message);
+    }
+  })();
+
+  // ── Auto-resize prompt textarea ─────────────────────────────────────────
+  $prompt.addEventListener("input", () => {
+    $prompt.style.height = "auto";
+    $prompt.style.height = Math.min($prompt.scrollHeight, 160) + "px";
+  });
+
+  // ── Enter-to-transmit (Shift+Enter = newline) ───────────────────────────
+  $prompt.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      $form.requestSubmit();
+    }
+  });
+
+  // ── Submit — hand off to /playground/ with URL params ───────────────────
+  $form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const params = new URLSearchParams();
+    const text   = $prompt.value.trim();
+    const agent  = $agentSelect.value;
+    if (text)  params.set("q", text);
+    if (agent) params.set("agent", agent);
+    const qs   = params.toString();
+    const href = qs ? `/playground/?${qs}` : "/playground/";
+    window.location.href = href;
+  });
 }

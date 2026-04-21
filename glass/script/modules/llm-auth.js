@@ -27,6 +27,7 @@ export function initKeybar({
   $keybarGetkey, $keybarLocked, $keybarUnlock,
   $input, $sendBtn,
   setKeybarLocked, setStatus, restoreHistory, appendSysLog,
+  referralConfig,
 }) {
   const $keybarLabel = $keybarLocked.querySelector(".llm-keybar__locked-label");
 
@@ -90,8 +91,9 @@ export function initKeybar({
     appendSysLog("API key removed. Enter a new key to re-authenticate.");
   });
 
-  const REFERRAL_URL = "https://nano-gpt.com/subscription/ACDtKPdM";
-  const DIRECT_URL   = "https://nano-gpt.com";
+  const REFERRAL_URL = referralConfig?.referral_url ?? "https://nano-gpt.com/subscription/ACDtKPdM";
+  const DIRECT_URL   = referralConfig?.direct_url   ?? "https://nano-gpt.com";
+  const SVC_DESC     = referralConfig?.description  ?? "nano-gpt provides subscription-based access to 20+ models including DeepSeek R1, Claude, GPT, and Llama — at flat monthly cost, no per-token billing for included models.";
 
   $keybarGetkey.addEventListener("click", () => {
     const $modal = document.createElement("div");
@@ -103,7 +105,7 @@ export function initKeybar({
           <span class="llm-keymodal__title">Get a nano-gpt API Key</span>
         </div>
         <p class="llm-keymodal__body">
-          nano-gpt provides subscription-based access to 20+ models including DeepSeek R1, Claude, GPT, and Llama — at flat monthly cost, no per-token billing for included models.
+          ${esc(SVC_DESC)}
         </p>
         <p class="llm-keymodal__body llm-keymodal__body--muted">
           Would you like to use the site owner's referral link? It costs you nothing and supports this infrastructure.

@@ -28,24 +28,6 @@
       "repo_url": "https://git.trap.lol/trap/tg-trap-bots",
       "status": "offline",
       "description": "Automated backup orchestration and verification"
-    },
-    "3": {
-      "name": "xPay",
-      "shortcut": "F3",
-      "icon": "coins",
-      "chat_url": null,
-      "repo_url": "https://git.trap.lol/trap/tg-trap-bots",
-      "status": "offline",
-      "description": "Telegram XNO Nano crypto currency facilitator"
-    },
-    "4": {
-      "name": "Paintedd Art",
-      "shortcut": "F4",
-      "icon": "palette",
-      "chat_url": null,
-      "repo_url": "https://git.trap.lol/trap/tg-trap-bots",
-      "status": "offline",
-      "description": "Paintedd Community Interface"
     }
   }
 }
