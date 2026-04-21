@@ -7,63 +7,109 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Rubik+Glitch&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-    
     <link rel="stylesheet" href="glass/style/style.css">
 </head>
 <body>
     <div class="mesh-background"></div>
     <div class="scanlines"></div>
-    
+
+    <!-- ── Auth overlay ────────────────────────────────────── -->
     <div id="authOverlay" class="overlay active">
         <form id="authForm" class="auth-box">
             <h2 class="glitch-text" data-text="ACCESS RESTRICTED">ACCESS RESTRICTED</h2>
             <p class="sultry-text">Insert the keys. Open the gateway.</p>
-            
+
             <div class="input-group">
-                <label>PROXY SECRET (radar.trap.lol)</label>
+                <label for="proxyKeyInput">PROXY SECRET <span class="label-sub">(radar.trap.lol)</span></label>
                 <input type="password" id="proxyKeyInput" name="username" autocomplete="username" placeholder="••••••••••••" required>
             </div>
-            
+
             <div class="input-group">
-                <label>TORBOX PRO API KEY</label>
+                <label for="torboxKeyInput">TORBOX API KEY</label>
                 <input type="password" id="torboxKeyInput" name="password" autocomplete="current-password" placeholder="••••••••••••" required>
             </div>
-            
+
+            <label class="remember-row">
+                <input type="checkbox" id="rememberCheck" checked>
+                <span>Remember for 30 days</span>
+            </label>
+
             <button type="submit" id="authBtn" class="chaotic-btn">ESTABLISH UPLINK</button>
-            <p class="warning-text">Keys reside in volatile memory. Close the tab, and it all burns.</p>
+            <p class="warning-text" id="authWarning">Keys stored in encrypted session cookie.</p>
         </form>
     </div>
 
+    <!-- ── Main interface ──────────────────────────────────── -->
     <div id="mainInterface" class="hidden">
+
         <header class="chaos-header">
             <div class="graffiti-accent">X</div>
-            <h1>[ RADAR // ANOMALY ]</h1>
+            <div class="header-top-row">
+                <h1>[ RADAR // ANOMALY ]</h1>
+                <button id="lockBtn" class="lock-btn" title="Lock session and clear saved keys">
+                    <span class="lock-icon">⚿</span> LOCK
+                </button>
+            </div>
             <p class="subtitle">Scour the void. Ignite the cache.</p>
-            
+
             <div class="search-matrix">
-                <input type="text" id="searchInput" placeholder="ENTER TARGET DESIGNATION..." autocomplete="off">
+                <div class="search-input-wrap">
+                    <input type="text" id="searchInput" placeholder="ENTER TARGET DESIGNATION… (Press /)" autocomplete="off" spellcheck="false">
+                    <div id="historyDropdown" class="history-dropdown hidden"></div>
+                </div>
                 <button id="searchBtn" class="chaotic-btn">HUNT</button>
                 <button id="vaultBtn" class="chaotic-btn alt-btn">STRIP VAULT</button>
             </div>
         </header>
 
+        <!-- ── Status bar ── -->
+        <div id="statusBar" class="status-bar hidden">
+            <span id="statusCount" class="status-item"></span>
+            <span class="status-sep">//</span>
+            <span id="statusCached" class="status-item status-item--green"></span>
+            <span class="status-sep">//</span>
+            <span id="statusShowing" class="status-item"></span>
+            <div class="status-actions">
+                <button id="copyAllBtn" class="status-action-btn" title="Copy all visible magnet links">COPY ALL MAGNETS</button>
+            </div>
+        </div>
+
+        <!-- ── Control deck ── -->
         <section class="control-deck">
             <div class="filters">
                 <button class="filter-btn active" data-filter="all">ALL</button>
-                <button class="filter-btn" data-filter="cached">CACHED READY</button>
-                <button class="filter-btn" data-filter="4k">2160p / 4K</button>
+                <button class="filter-btn" data-filter="cached">CACHED</button>
+                <button class="filter-btn" data-filter="4k">4K</button>
                 <button class="filter-btn" data-filter="1080p">1080p</button>
+                <button class="filter-btn" data-filter="720p">720p</button>
             </div>
-            <div class="sort-matrix">
+            <div class="control-right">
+                <div class="seeder-filter">
+                    <label for="minSeeders" class="seeder-label">MIN SWARM: <span id="minSeedersVal">1</span></label>
+                    <input type="range" id="minSeedersSlider" min="1" max="500" step="1" value="1" class="seeder-slider">
+                </div>
                 <select id="sortSelect">
-                    <option value="seeders">Swarm Health (High to Low)</option>
-                    <option value="size">Mass (Large to Small)</option>
-                    <option value="quality">Fidelity (High to Low)</option>
+                    <option value="seeders">Swarm (High→Low)</option>
+                    <option value="size">Mass (Large→Small)</option>
+                    <option value="quality">Fidelity (High→Low)</option>
                 </select>
             </div>
         </section>
 
+        <!-- ── Results ── -->
         <main id="resultsGrid" class="results-grid"></main>
+
+        <!-- ── Load more ── -->
+        <div id="loadMoreWrap" class="load-more-wrap hidden">
+            <button id="loadMoreBtn" class="chaotic-btn alt-btn">LOAD MORE</button>
+            <span id="loadMoreCount" class="load-more-count"></span>
+        </div>
+
+        <!-- ── Vault controls ── -->
+        <div id="vaultControls" class="vault-controls hidden">
+            <button id="vaultRefreshBtn" class="chaotic-btn alt-btn">REFRESH VAULT</button>
+            <span id="vaultCountdown" class="vault-countdown"></span>
+        </div>
     </div>
 
     <script src="glass/script/app.js"></script>
