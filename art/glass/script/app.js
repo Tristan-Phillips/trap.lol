@@ -48,12 +48,38 @@ async function loadData() {
     if (!res.ok) throw new Error(res.status);
     const data = await res.json();
 
-    const site = data.site || {};
+    const meta = data.meta || {};
+    const site = meta.site || {};
+    const baseUrl = (meta.baseUrl || "").replace(/\/$/, "");
+
     qs("#art-eyebrow").textContent  = site.eyebrow  || "";
     qs("#art-title").textContent    = site.title     || "ECHOES";
     qs("#art-subtitle").textContent = site.subtitle  || "";
 
-    manifest = Array.isArray(data.manifest) ? data.manifest : [];
+    /* Flatten all collections into one manifest, resolving URLs and
+       normalising fields so the rest of the pipeline is format-agnostic. */
+    manifest = (data.collections || []).flatMap(col =>
+      (col.artifacts || []).map(a => {
+        const m = a.metadata || {};
+        return {
+          _id:         a.compositeId || a.id,
+          thumb:       baseUrl ? `${baseUrl}/${a.src.small}`    : a.src.small,
+          src:         baseUrl ? `${baseUrl}/${a.src.original}` : a.src.original,
+          tags:        Array.isArray(a.tags) ? a.tags : [],
+          uploadDate:  a.uploadDate  || null,
+          collection:  col.name      || col.id,
+          /* metadata fields */
+          medium:      m.medium      || null,
+          description: m.description || null,
+          verse:       m.verse       || null,
+          stats: (m.mood != null || m.chaos != null) ? {
+            mood:  m.mood  ?? null,
+            chaos: m.chaos ?? null,
+          } : null,
+        };
+      })
+    );
+
     applyFilter(activeFilter);
   } catch (e) {
     console.error("[echoes] Failed to load detention.json:", e);
@@ -259,6 +285,16 @@ function populateLightbox(piece) {
   }
 
   if (typeof lucide !== "undefined") lucide.createIcons({ nodes: [$stats, $med] });
+
+  /* hide panel when there is no metadata to show */
+  const hasContent =
+    (piece.tags && piece.tags.length > 0) ||
+    piece.medium ||
+    piece.description ||
+    piece.verse ||
+    piece.stats;
+  const $panel = qs("#lb-panel");
+  $panel.classList.toggle("lightbox__panel--hidden", !hasContent);
 }
 
 /* ══════════════════════════════════════════════════

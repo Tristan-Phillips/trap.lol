@@ -141,6 +141,13 @@
   transition: var(--transition);
   padding: 0;
   flex-shrink: 0;
+  /* Expand touch area to 44px minimum */
+  position: relative;
+}
+.llm-shell__clear::before {
+  content: '';
+  position: absolute;
+  inset: -8px;
 }
 
 .llm-shell__clear svg { width: 0.75rem; height: 0.75rem; }
@@ -4460,6 +4467,16 @@
 @media (max-width: 460px) {
   .uplink-launch__fire-text { display: none; }
   .uplink-launch__fire { padding: 0 0.8rem; }
+}
+
+/* ── Mobile font-size fixes (prevent iOS auto-zoom on focus) ── */
+@media (max-width: 768px) {
+  .llm-shell__textarea,
+  .uplink-launch__prompt { font-size: 1rem; }
+
+  .llm-keybar__input,
+  .llm-shell__model-select,
+  .uplink-launch__agent { font-size: 1rem; }
 }
 
 /* ── Footer hint ──────────────────────────────── */

@@ -78,6 +78,11 @@ header {
   letter-spacing: 0.05em;
 }
 
+/* ─── Scroll-to-Top (mobile position override) ─── */
+@media (max-width: 768px) {
+  .scroll-top { right: 1rem; }
+}
+
 /* ─── Section Title ──────────────────────────── */
 .section-title {
   font-size: 0.9rem;

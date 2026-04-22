@@ -47,6 +47,20 @@
   .ext-container { grid-template-columns: 1fr; }
   .carousel__arrow { display: none; }
 
+  /* Flip cards: release fixed min-width so they fill the track on narrow screens */
+  .flip-card { min-width: min(260px, calc(100vw - 3rem)); }
+
+  /* LLM shell: cap message area so it doesn't eat the full viewport */
+  .llm-shell__messages { min-height: 200px; max-height: 320px; }
+
+  /* Bot grid: tighten gap on very small screens */
+  .bots-grid { gap: 1rem; }
+  .bot-profile { width: 80px; }
+  .bot-avatar { width: 56px; height: 56px; }
+
+  /* Signal Mesh overlay: cap height so it doesn't cover the whole screen */
+  .ext-category__body { max-height: 60vh; overflow-y: auto; }
+
   .site-footer__bar {
     flex-direction: column;
     align-items: flex-start;

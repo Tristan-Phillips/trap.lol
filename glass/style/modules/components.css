@@ -328,7 +328,7 @@
   outline: none;
 }
 
-/* copy button */
+/* copy button — visual size is 28px but touch area padded to 44px minimum */
 .tool-entry__copy {
   flex-shrink: 0;
   width: 28px; height: 28px;
@@ -342,6 +342,13 @@
   cursor: pointer;
   transition: var(--transition);
   padding: 0;
+  /* Expand touch area without changing visual size */
+  position: relative;
+}
+.tool-entry__copy::before {
+  content: '';
+  position: absolute;
+  inset: -8px;
 }
 .tool-entry__copy svg { width: 0.75rem; height: 0.75rem; }
 .tool-entry__copy:hover,
@@ -1347,6 +1354,17 @@
 @media (max-width: 600px) {
   .echoes-portal__body { padding: 1.75rem 1.5rem; }
   .echoes-portal__cta  { right: 1.5rem; bottom: 1.5rem; }
+}
+
+@media (max-width: 480px) {
+  /* Always show the CTA on touch (no hover state available) */
+  .echoes-portal__cta {
+    opacity: 1;
+    transform: translateX(0);
+    right: 1rem;
+    bottom: 1rem;
+  }
+  .echoes-portal__body { padding: 1.25rem 1rem; }
 }
 
 /* ─── Keystroke Overlay ──────────────────────── */
