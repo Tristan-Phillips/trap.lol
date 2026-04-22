@@ -755,6 +755,45 @@ body {
   border-radius: 14px;
 }
 
+/* Travelling streak — single purple light orbiting the border */
+.pull-btn::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 13px;
+  padding: 1px;
+  background: conic-gradient(
+    from var(--_streak, 0deg),
+    transparent 0deg,
+    transparent 310deg,
+    rgba(190,41,236,0.15) 330deg,
+    rgba(190,41,236,0.70) 348deg,
+    rgba(220,160,255,0.90) 354deg,
+    rgba(190,41,236,0.70) 358deg,
+    rgba(190,41,236,0.15) 360deg
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: streak-orbit 2.8s linear infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+@property --_streak {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+@keyframes streak-orbit {
+  to { --_streak: 360deg; }
+}
+.pull-btn--rolling::before,
+.pull-btn--trace::before,
+.pull-btn--veil::before,
+.pull-btn--cipher::before,
+.pull-btn--spice::before,
+.pull-btn--abyss::before { opacity: 0; transition: opacity 0.3s ease; }
+
 /* Glass background layer */
 .pull-btn__bg {
   position: absolute;
