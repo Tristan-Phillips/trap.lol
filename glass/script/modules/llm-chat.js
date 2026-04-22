@@ -427,27 +427,14 @@ export async function sendMessage({
     updateStats();
     console.error("[llm] request failed:", e.message);
 
-    const fallbackId = m.fallback_id;
-    if (PROXY_MODE || !fallbackId || !modelMap.has(fallbackId)) {
-      if (e._authFragment) {
-        _appendSysLogHTML(`${esc(e.message)}${e._authFragment}`);
-      } else {
-        _appendSysLog(`Error: ${e.message} — your message has been restored to the input.`);
-      }
-      $input.value = userText;
-      $input.style.height = "auto";
-      $input.style.height = Math.min($input.scrollHeight, 200) + "px";
+    if (e._authFragment) {
+      _appendSysLogHTML(`${esc(e.message)}${e._authFragment}`);
     } else {
-      const fb = modelMap.get(fallbackId);
-      _appendSysLog(`Request failed — falling back to ${fb.label}. Your message has been restored.`);
-      $modelSelect.value = fallbackId;
-      updateProviderBadge();
-      $input.value = userText;
-      $input.style.height = "auto";
-      $input.style.height = Math.min($input.scrollHeight, 200) + "px";
-      if ($statChars) $statChars.textContent = userText.length;
-      if ($charStat)  $charStat.dataset.warn  = userText.length > 6000 ? "critical" : userText.length > 3000 ? "warn" : "";
+      _appendSysLog(`Error: ${e.message} — your message has been restored to the input.`);
     }
+    $input.value = userText;
+    $input.style.height = "auto";
+    $input.style.height = Math.min($input.scrollHeight, 200) + "px";
     setTimeout(() => {
       const $shell = document.getElementById("llm-shell");
       if ($shell?.dataset.state === "error") setStatus("ready", "READY");

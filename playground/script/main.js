@@ -54,6 +54,7 @@ async function boot() {
 
   document.getElementById('playground-section')?.classList.remove('hidden');
   initLLM({ base: '../' });
+  if (typeof lucide !== 'undefined') lucide.createIcons();
   applyInboundPrefill();
 }
 

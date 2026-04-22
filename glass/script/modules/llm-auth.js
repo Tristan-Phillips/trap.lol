@@ -13,13 +13,39 @@ export function purgeLegacyKeyStorage() {
   });
 }
 
-// API key is session-scoped only — never written to localStorage
+// Cookie helpers — 24h, SameSite=Strict, no Secure flag needed (works on localhost too)
+const COOKIE_NAME = "llm_ak";
+
+function _saveCookie(val) {
+  const expires = new Date(Date.now() + 86400_000).toUTCString();
+  document.cookie = `${COOKIE_NAME}=${encodeURIComponent(val)}; expires=${expires}; path=/; SameSite=Strict`;
+}
+
+function _loadCookie() {
+  const match = document.cookie.split("; ").find(c => c.startsWith(`${COOKIE_NAME}=`));
+  if (!match) return "";
+  try { return decodeURIComponent(match.split("=").slice(1).join("=")); } catch { return ""; }
+}
+
+function _clearCookie() {
+  document.cookie = `${COOKIE_NAME}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Strict`;
+}
+
+// API key — persisted in a 24h cookie, held in memory at runtime
 let _apiKey = "";
 
-export function getApiKey()       { return _apiKey; }
-export function setApiKey(k)      { _apiKey = k; }
-export function clearApiKey()     { _apiKey = ""; }
-export function hasStoredKey()    { return !!_apiKey && isValidKeyFormat(_apiKey); }
+export function getApiKey()    { return _apiKey; }
+export function setApiKey(k)   { _apiKey = k; _saveCookie(k); }
+export function clearApiKey()  { _apiKey = ""; _clearCookie(); }
+export function hasStoredKey() { return !!_apiKey && isValidKeyFormat(_apiKey); }
+
+// Attempt to restore key from cookie on module load
+export function restoreKeyFromCookie() {
+  const stored = _loadCookie();
+  if (stored && isValidKeyFormat(stored)) { _apiKey = stored; return true; }
+  _clearCookie();
+  return false;
+}
 
 export function initKeybar({
   llm, PROXY_MODE, hasValidKey,
@@ -42,6 +68,7 @@ export function initKeybar({
       $keybarLabel.dataset.valid = valid ? "true" : "false";
       $keybarLabel.textContent   = valid ? "Key Active" : "Invalid Key";
     }
+    if (locked && typeof lucide !== "undefined") lucide.createIcons({ nodes: [$keybarLocked] });
     setKeybarLocked(locked);
   }
 
@@ -63,7 +90,7 @@ export function initKeybar({
     const isPass = $keybarInput.type === "password";
     $keybarInput.type = isPass ? "text" : "password";
     $keybarToggle.innerHTML = `<i data-lucide="${isPass ? "eye-off" : "eye"}"></i>`;
-    if (typeof lucide !== "undefined") lucide.createIcons();
+    if (typeof lucide !== "undefined") lucide.createIcons({ nodes: [$keybarToggle] });
   });
 
   $keybarSave.addEventListener("click", () => {
@@ -78,7 +105,6 @@ export function initKeybar({
     $keybarInput.value = "";
     $keybarInput.dataset.valid = "";
     _setKeybarLocked(true);
-    if (typeof lucide !== "undefined") lucide.createIcons();
     setStatus("ready", "READY");
     restoreHistory();
     appendSysLog("API key validated and locked. Uplink authenticated — ready to transmit.");

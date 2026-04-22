@@ -1,6 +1,6 @@
 // Neural Uplink — orchestrator
 import { config, llmData, fetchJSON, esc } from './core.js';
-import { isValidKeyFormat, purgeLegacyKeyStorage, getApiKey, setApiKey, clearApiKey, hasStoredKey, initKeybar } from './llm-auth.js';
+import { isValidKeyFormat, purgeLegacyKeyStorage, getApiKey, setApiKey, clearApiKey, hasStoredKey, initKeybar, restoreKeyFromCookie } from './llm-auth.js';
 import { _pack, _unpack, syncToggle, persistSettings, restoreSettings, initSettingsControls } from './llm-settings.js';
 import { getSessions, saveSessions, persistHistory, sessionSnapshot, initSessions, restoreHistory as _restoreHistory, HISTORY_KEY } from './llm-sessions.js';
 import { sanitizeHtml, renderMarkdown, appendSysLog as _appendSysLog, appendSysLogHTML as _appendSysLogHTML, appendMessage as _appendMessage, initChatEvents, sendMessage as _sendMessage } from './llm-chat.js';
@@ -120,6 +120,9 @@ export function initLLM({ base = "" } = {}) {
 
   // ── Purge any stale key storage from prior versions ───────────────────────
   purgeLegacyKeyStorage();
+
+  // ── Restore key from 24h cookie if present ────────────────────────────────
+  if (!PROXY_MODE) restoreKeyFromCookie();
 
   // ── Keybar state tracker (for shell class) ────────────────────────────────
   let _keybarLocked = false;
