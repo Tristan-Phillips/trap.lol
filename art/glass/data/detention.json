@@ -1,1310 +1,1310 @@
 {
-  "meta": {
-    "version": "tbot_2.0",
-    "lastUpdated": "2026/04/22",
-    "baseUrl": "https://file.trap.lol/get",
-    "site": {
-      "title": "ECHOES",
-      "eyebrow": "[ SIGNAL // THOUGHT-BLEED ACTIVE ]",
-      "subtitle": "fragments of a mind that refuses to stay quiet"
-    }
-  },
-  "collections": [
-    {
-      "id": "C4A692",
-      "name": "echo_sketchbook-01",
-      "defaults": {
-        "nsfw": false
-      },
-      "artifacts": [
-        {
-          "id": "D9C8E8",
-          "compositeId": "C4A692::D9C8E8",
-          "src": {
-            "small": "iWnj6kiyRgFR/D9C8E8_t.webp",
-            "original": "vf3OcJ0SW4UX/D9C8E8.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "A5D427",
-          "compositeId": "C4A692::A5D427",
-          "src": {
-            "small": "LGxFhx0BKpEd/A5D427_t.webp",
-            "original": "NJwShWyF0YpR/A5D427.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "C53A5C",
-          "compositeId": "C4A692::C53A5C",
-          "src": {
-            "small": "NC2Mvy8mfIiv/C53A5C_t.webp",
-            "original": "ztifhBrNpc7g/C53A5C.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "135965",
-          "compositeId": "C4A692::135965",
-          "src": {
-            "small": "XA2zx7PF4gpJ/135965_t.webp",
-            "original": "7bPILeYnP6ji/135965.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "1D1172",
-          "compositeId": "C4A692::1D1172",
-          "src": {
-            "small": "YJu6DrYSxRGP/1D1172_t.webp",
-            "original": "aqo4391ql8i3/1D1172.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "BEF380",
-          "compositeId": "C4A692::BEF380",
-          "src": {
-            "small": "8eR8naDt2mlp/BEF380_t.webp",
-            "original": "HxmWimv7V7ma/BEF380.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "B8D1DD",
-          "compositeId": "C4A692::B8D1DD",
-          "src": {
-            "small": "xlIo9p5ToXta/B8D1DD_t.webp",
-            "original": "no80tdhomfKG/B8D1DD.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "6FA9C1",
-          "compositeId": "C4A692::6FA9C1",
-          "src": {
-            "small": "xEQq5UNw3b6Q/6FA9C1_t.webp",
-            "original": "OQrC6xqPGKNW/6FA9C1.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "4E6EED",
-          "compositeId": "C4A692::4E6EED",
-          "src": {
-            "small": "uLYhA2iLF6XX/4E6EED_t.webp",
-            "original": "YJa3sAdsPIi7/4E6EED.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "C56C25",
-          "compositeId": "C4A692::C56C25",
-          "src": {
-            "small": "UfnaH5yrEqz1/C56C25_t.webp",
-            "original": "2MjcG9uYrDGU/C56C25.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "F66D45",
-          "compositeId": "C4A692::F66D45",
-          "src": {
-            "small": "U5NJKtIkGlrI/F66D45_t.webp",
-            "original": "BR3HAdzPntn2/F66D45.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "FD8EFD",
-          "compositeId": "C4A692::FD8EFD",
-          "src": {
-            "small": "EAacg3FSziaH/FD8EFD_t.webp",
-            "original": "BWXHHAImge0U/FD8EFD.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "1DC508",
-          "compositeId": "C4A692::1DC508",
-          "src": {
-            "small": "u6i3q8TsSUsh/1DC508_t.webp",
-            "original": "dqaylJJKETFL/1DC508.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "60BDCF",
-          "compositeId": "C4A692::60BDCF",
-          "src": {
-            "small": "jeh27zCMRTpN/60BDCF_t.webp",
-            "original": "mMm9O2RcTYss/60BDCF.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "A7D5E4",
-          "compositeId": "C4A692::A7D5E4",
-          "src": {
-            "small": "bViRSawPvcNM/A7D5E4_t.webp",
-            "original": "IuzRDEvs97ON/A7D5E4.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "16C5ED",
-          "compositeId": "C4A692::16C5ED",
-          "src": {
-            "small": "GbRqeTjUmVkI/16C5ED_t.webp",
-            "original": "ex3NKUQARHHv/16C5ED.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "365704",
-          "compositeId": "C4A692::365704",
-          "src": {
-            "small": "1EGHmsG62B68/365704_t.webp",
-            "original": "KgsqwBWS1oEH/365704.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "5653E3",
-          "compositeId": "C4A692::5653E3",
-          "src": {
-            "small": "nDXK85qf9dAA/5653E3_t.webp",
-            "original": "yR2su5hWcHBF/5653E3.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "AF0D7F",
-          "compositeId": "C4A692::AF0D7F",
-          "src": {
-            "small": "ycEmvcRuliVT/AF0D7F_t.webp",
-            "original": "di5SJ8iOUa5D/AF0D7F.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "6ED883",
-          "compositeId": "C4A692::6ED883",
-          "src": {
-            "small": "F6xgd5oWTkwM/6ED883_t.webp",
-            "original": "lMXTHBFCdGOJ/6ED883.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "489A8A",
-          "compositeId": "C4A692::489A8A",
-          "src": {
-            "small": "Avjf3XpkDkY6/489A8A_t.webp",
-            "original": "obcvY1hbplaf/489A8A.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "F85370",
-          "compositeId": "C4A692::F85370",
-          "src": {
-            "small": "krHCk42tdkqN/F85370_t.webp",
-            "original": "GHiklmbOXhSA/F85370.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "9EDCA7",
-          "compositeId": "C4A692::9EDCA7",
-          "src": {
-            "small": "QfmWQ7nLDBc6/9EDCA7_t.webp",
-            "original": "cyvC2dWV9Rrl/9EDCA7.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "A16194",
-          "compositeId": "C4A692::A16194",
-          "src": {
-            "small": "dvnvwCHC1eOH/A16194_t.webp",
-            "original": "wPxGJjGrwh3j/A16194.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "D0DF43",
-          "compositeId": "C4A692::D0DF43",
-          "src": {
-            "small": "0L1jzx8q7pff/D0DF43_t.webp",
-            "original": "R4EGB7P6EBDW/D0DF43.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "662FC3",
-          "compositeId": "C4A692::662FC3",
-          "src": {
-            "small": "KcxYM0moEJjC/662FC3_t.webp",
-            "original": "wHoOvEtGKLIo/662FC3.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "7D226D",
-          "compositeId": "C4A692::7D226D",
-          "src": {
-            "small": "zXyFP3URMwqx/7D226D_t.webp",
-            "original": "q40MQtULWrD8/7D226D.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "2ECB6F",
-          "compositeId": "C4A692::2ECB6F",
-          "src": {
-            "small": "GIasQQ7oF1hV/2ECB6F_t.webp",
-            "original": "ViDRQgXJWv43/2ECB6F.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "01461C",
-          "compositeId": "C4A692::01461C",
-          "src": {
-            "small": "GY17iXRqPoCz/01461C_t.webp",
-            "original": "hlAW745Dwy5c/01461C.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "54B8A9",
-          "compositeId": "C4A692::54B8A9",
-          "src": {
-            "small": "XlORcIsvR2Yo/54B8A9_t.webp",
-            "original": "GoHkTntnagne/54B8A9.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "70034E",
-          "compositeId": "C4A692::70034E",
-          "src": {
-            "small": "sUqo3z26EBdF/70034E_t.webp",
-            "original": "C64IBSjWik2m/70034E.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "1E84D4",
-          "compositeId": "C4A692::1E84D4",
-          "src": {
-            "small": "i4UJpW32fFi2/1E84D4_t.webp",
-            "original": "4qekGdEmjBFP/1E84D4.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "688BCF",
-          "compositeId": "C4A692::688BCF",
-          "src": {
-            "small": "r5DUIlKDl0l7/688BCF_t.webp",
-            "original": "DYHFGrYPK2MP/688BCF.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "A30651",
-          "compositeId": "C4A692::A30651",
-          "src": {
-            "small": "YqV7nYdLSlsx/A30651_t.webp",
-            "original": "0oepXon4873Y/A30651.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "2A4457",
-          "compositeId": "C4A692::2A4457",
-          "src": {
-            "small": "QM8ys8DHnJhl/2A4457_t.webp",
-            "original": "0GeKMAEfmmjL/2A4457.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "34A92F",
-          "compositeId": "C4A692::34A92F",
-          "src": {
-            "small": "HVu6tXSq3j3T/34A92F_t.webp",
-            "original": "qWBR6mXB2rNh/34A92F.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "FD5925",
-          "compositeId": "C4A692::FD5925",
-          "src": {
-            "small": "2vm4v8qmWFCJ/FD5925_t.webp",
-            "original": "qz0Rjx54riko/FD5925.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "F41349",
-          "compositeId": "C4A692::F41349",
-          "src": {
-            "small": "hBT0tsRbE516/F41349_t.webp",
-            "original": "FuBIeyO7MO2G/F41349.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "A23AA2",
-          "compositeId": "C4A692::A23AA2",
-          "src": {
-            "small": "mtTln0fzc4yU/A23AA2_t.webp",
-            "original": "R5kb7Dm3386r/A23AA2.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "2EE008",
-          "compositeId": "C4A692::2EE008",
-          "src": {
-            "small": "OOsMJGHVMqfx/2EE008_t.webp",
-            "original": "YsVrd43oGu7i/2EE008.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "2AA486",
-          "compositeId": "C4A692::2AA486",
-          "src": {
-            "small": "HLASMjiyPGn8/2AA486_t.webp",
-            "original": "knV7c82I24AA/2AA486.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "3A5C12",
-          "compositeId": "C4A692::3A5C12",
-          "src": {
-            "small": "kchyuKkFOL7c/3A5C12_t.webp",
-            "original": "IDlUhNtPs1Mu/3A5C12.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "450569",
-          "compositeId": "C4A692::450569",
-          "src": {
-            "small": "cNzfgleFQqeq/450569_t.webp",
-            "original": "LoKhEVYX0ReT/450569.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "3D93BD",
-          "compositeId": "C4A692::3D93BD",
-          "src": {
-            "small": "Hd49E23qTxzb/3D93BD_t.webp",
-            "original": "73CiS2u0keys/3D93BD.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "3CA93B",
-          "compositeId": "C4A692::3CA93B",
-          "src": {
-            "small": "KQffLPqWDqEq/3CA93B_t.webp",
-            "original": "uUHIDpwk0GG9/3CA93B.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "C8554B",
-          "compositeId": "C4A692::C8554B",
-          "src": {
-            "small": "kpHADwh1WmXj/C8554B_t.webp",
-            "original": "QUQ5RWvCQsp4/C8554B.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "606985",
-          "compositeId": "C4A692::606985",
-          "src": {
-            "small": "WuYTfeNw1NGO/606985_t.webp",
-            "original": "FmqF3tr73T4K/606985.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "4A7DD5",
-          "compositeId": "C4A692::4A7DD5",
-          "src": {
-            "small": "orIRHJllsev5/4A7DD5_t.webp",
-            "original": "gJOAHns0PcrA/4A7DD5.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "9F2BEF",
-          "compositeId": "C4A692::9F2BEF",
-          "src": {
-            "small": "G2EC2OiSpmWR/9F2BEF_t.webp",
-            "original": "SA0pIybg0Hs9/9F2BEF.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "83DCC1",
-          "compositeId": "C4A692::83DCC1",
-          "src": {
-            "small": "gJ9FQzcU7Tl8/83DCC1_t.webp",
-            "original": "8AaPAf6KbEK8/83DCC1.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "C569D9",
-          "compositeId": "C4A692::C569D9",
-          "src": {
-            "small": "XKwRDIH5t8xp/C569D9_t.webp",
-            "original": "LFQpvaKbA02h/C569D9.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "32634E",
-          "compositeId": "C4A692::32634E",
-          "src": {
-            "small": "Cews0LCzTA0A/32634E_t.webp",
-            "original": "w6CsHmDFVED8/32634E.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "706E3C",
-          "compositeId": "C4A692::706E3C",
-          "src": {
-            "small": "pwdt9kqRmUtn/706E3C_t.webp",
-            "original": "Iy18iq2XAHf5/706E3C.webp"
-          },
-          "uploadDate": "2026/04/21",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "sketch",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
+    "meta": {
+        "version": "tbot_2.0",
+        "lastUpdated": "2026/04/22",
+        "baseUrl": "https://file.trap.lol/get",
+        "site": {
+            "title": "ECHOES",
+            "eyebrow": "[ SIGNAL // THOUGHT-BLEED ACTIVE ]",
+            "subtitle": "fragments of a mind that refuses to stay quiet"
         }
-      ]
     },
-    {
-      "id": "3E4824",
-      "name": "digi_incomp-collection-001",
-      "defaults": {
-        "nsfw": false
-      },
-      "artifacts": [
+    "collections": [
         {
-          "id": "25EF7C",
-          "compositeId": "3E4824::25EF7C",
-          "src": {
-            "small": "BTwkbT4yf5Sg/25EF7C_t.webp",
-            "original": "ocRoqjNE2jei/25EF7C.webp"
-          },
-          "uploadDate": "2026/04/22",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "digital",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
+            "id": "62E9D1",
+            "name": "echo_sketchbook-01",
+            "defaults": {
+                "nsfw": false
+            },
+            "artifacts": [
+                {
+                    "id": "D88A40",
+                    "compositeId": "62E9D1::D88A40",
+                    "src": {
+                        "small": "XGRwc0llyBSm/D88A40_t.webp",
+                        "original": "JDFEC2wmoSsb/D88A40.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "FF6E77",
+                    "compositeId": "62E9D1::FF6E77",
+                    "src": {
+                        "small": "TNcsSayIkVtn/FF6E77_t.webp",
+                        "original": "mqwO5P7OkNxt/FF6E77.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "927FF0",
+                    "compositeId": "62E9D1::927FF0",
+                    "src": {
+                        "small": "epaBINXgV4R9/927FF0_t.webp",
+                        "original": "MvNLfpv2WEzx/927FF0.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "7DC44D",
+                    "compositeId": "62E9D1::7DC44D",
+                    "src": {
+                        "small": "L1IVky19TdaH/7DC44D_t.webp",
+                        "original": "9rHRTPQWxGl2/7DC44D.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "D15E9A",
+                    "compositeId": "62E9D1::D15E9A",
+                    "src": {
+                        "small": "Brbk3Vm7UmSu/D15E9A_t.webp",
+                        "original": "UnGgvjTYIMk5/D15E9A.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "8010C9",
+                    "compositeId": "62E9D1::8010C9",
+                    "src": {
+                        "small": "ONyXK2DhIrx5/8010C9_t.webp",
+                        "original": "n7lYSkFBCiFd/8010C9.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "C1152D",
+                    "compositeId": "62E9D1::C1152D",
+                    "src": {
+                        "small": "E16X22lQsmGP/C1152D_t.webp",
+                        "original": "cRRsoB4zFYlQ/C1152D.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "51200C",
+                    "compositeId": "62E9D1::51200C",
+                    "src": {
+                        "small": "p6HritefCNge/51200C_t.webp",
+                        "original": "3xgz6c2pNydo/51200C.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "270641",
+                    "compositeId": "62E9D1::270641",
+                    "src": {
+                        "small": "jWiPbWlDSOmM/270641_t.webp",
+                        "original": "vzNB5wfW7UbP/270641.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "B98C34",
+                    "compositeId": "62E9D1::B98C34",
+                    "src": {
+                        "small": "ejzg3I6ezpzF/B98C34_t.webp",
+                        "original": "9OwQ73VJ9Wsk/B98C34.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "432835",
+                    "compositeId": "62E9D1::432835",
+                    "src": {
+                        "small": "OLWHJmEzd1ta/432835_t.webp",
+                        "original": "kiOUOXMSSYyh/432835.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "036C24",
+                    "compositeId": "62E9D1::036C24",
+                    "src": {
+                        "small": "gTC998jMRzLy/036C24_t.webp",
+                        "original": "7Ouw4S7bUT5b/036C24.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "82DBF5",
+                    "compositeId": "62E9D1::82DBF5",
+                    "src": {
+                        "small": "thzm1rwEFjCk/82DBF5_t.webp",
+                        "original": "GJdHcSDnlez1/82DBF5.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "BBA4D8",
+                    "compositeId": "62E9D1::BBA4D8",
+                    "src": {
+                        "small": "3nOx1p9JHUS0/BBA4D8_t.webp",
+                        "original": "j5q9CoirGBmX/BBA4D8.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "11CE47",
+                    "compositeId": "62E9D1::11CE47",
+                    "src": {
+                        "small": "opfGgmE5oRdt/11CE47_t.webp",
+                        "original": "mIAVh2QwhS6w/11CE47.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "F7590F",
+                    "compositeId": "62E9D1::F7590F",
+                    "src": {
+                        "small": "c5jP1IDbQwoQ/F7590F_t.webp",
+                        "original": "IkbpKHkfazS6/F7590F.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "493A85",
+                    "compositeId": "62E9D1::493A85",
+                    "src": {
+                        "small": "wrQ7YFcGlYuM/493A85_t.webp",
+                        "original": "CItVoqDBvibR/493A85.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "F8213E",
+                    "compositeId": "62E9D1::F8213E",
+                    "src": {
+                        "small": "rgJ9OdlhVlax/F8213E_t.webp",
+                        "original": "5e3AtJpOC8zD/F8213E.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "19B6C3",
+                    "compositeId": "62E9D1::19B6C3",
+                    "src": {
+                        "small": "q27XObkm3I4N/19B6C3_t.webp",
+                        "original": "lUYVVzErzmNE/19B6C3.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "AEACE8",
+                    "compositeId": "62E9D1::AEACE8",
+                    "src": {
+                        "small": "rLUaciFJG4wK/AEACE8_t.webp",
+                        "original": "2QwlkDL5epHa/AEACE8.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "90E9B6",
+                    "compositeId": "62E9D1::90E9B6",
+                    "src": {
+                        "small": "7lMkuPrJxexw/90E9B6_t.webp",
+                        "original": "xgXfEAHk5Bgh/90E9B6.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "2EE23D",
+                    "compositeId": "62E9D1::2EE23D",
+                    "src": {
+                        "small": "KGyXxTsOi5xU/2EE23D_t.webp",
+                        "original": "Bweatyn2RwHn/2EE23D.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "DC0224",
+                    "compositeId": "62E9D1::DC0224",
+                    "src": {
+                        "small": "hieBPC7g6De1/DC0224_t.webp",
+                        "original": "rTRviHa21OCk/DC0224.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "21F3F5",
+                    "compositeId": "62E9D1::21F3F5",
+                    "src": {
+                        "small": "sgsvAaD6x4H0/21F3F5_t.webp",
+                        "original": "O30as3Qiw67H/21F3F5.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "6D9976",
+                    "compositeId": "62E9D1::6D9976",
+                    "src": {
+                        "small": "KQB7UFF9Gaxl/6D9976_t.webp",
+                        "original": "IdtvKxDuyGAh/6D9976.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "67B889",
+                    "compositeId": "62E9D1::67B889",
+                    "src": {
+                        "small": "GmwjCfTWYtKj/67B889_t.webp",
+                        "original": "e4E7yAipWx2w/67B889.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "71E8F8",
+                    "compositeId": "62E9D1::71E8F8",
+                    "src": {
+                        "small": "VulyIkJn6IsP/71E8F8_t.webp",
+                        "original": "6QToo6tjjrUQ/71E8F8.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "4F8ABB",
+                    "compositeId": "62E9D1::4F8ABB",
+                    "src": {
+                        "small": "AuzAwJ3RQUsI/4F8ABB_t.webp",
+                        "original": "paRSmtDeb9Bp/4F8ABB.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "3FE288",
+                    "compositeId": "62E9D1::3FE288",
+                    "src": {
+                        "small": "t0sxvJzIhoI1/3FE288_t.webp",
+                        "original": "aMlkfFcCnd4E/3FE288.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "39C9A8",
+                    "compositeId": "62E9D1::39C9A8",
+                    "src": {
+                        "small": "nMNQ3bE80H1H/39C9A8_t.webp",
+                        "original": "kAR7taP6ITia/39C9A8.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "C97C67",
+                    "compositeId": "62E9D1::C97C67",
+                    "src": {
+                        "small": "G5eQbYv50od0/C97C67_t.webp",
+                        "original": "I7mkC9RwriS5/C97C67.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "8761F8",
+                    "compositeId": "62E9D1::8761F8",
+                    "src": {
+                        "small": "VXoLgg2fTPh5/8761F8_t.webp",
+                        "original": "PAFyVcX3HyMv/8761F8.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "EEEA8E",
+                    "compositeId": "62E9D1::EEEA8E",
+                    "src": {
+                        "small": "JJfT3oqyEkWr/EEEA8E_t.webp",
+                        "original": "1Gz3XDqF8Ftu/EEEA8E.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "D1F9C7",
+                    "compositeId": "62E9D1::D1F9C7",
+                    "src": {
+                        "small": "78YyxpFWQ1Ev/D1F9C7_t.webp",
+                        "original": "ulo5ik5RiUef/D1F9C7.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "59E9B6",
+                    "compositeId": "62E9D1::59E9B6",
+                    "src": {
+                        "small": "1ljAvuhnuLHw/59E9B6_t.webp",
+                        "original": "LD8zsMee33fO/59E9B6.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "A0D086",
+                    "compositeId": "62E9D1::A0D086",
+                    "src": {
+                        "small": "Fhxwo6WxefBW/A0D086_t.webp",
+                        "original": "iggcl49rkLvL/A0D086.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "07F3D1",
+                    "compositeId": "62E9D1::07F3D1",
+                    "src": {
+                        "small": "dnwluBPToNB1/07F3D1_t.webp",
+                        "original": "N10pGnKUC3mV/07F3D1.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "13B11F",
+                    "compositeId": "62E9D1::13B11F",
+                    "src": {
+                        "small": "tyN1zrpdjiCR/13B11F_t.webp",
+                        "original": "LvvQvHxa5XBq/13B11F.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "B138C5",
+                    "compositeId": "62E9D1::B138C5",
+                    "src": {
+                        "small": "T93rdJGtGmko/B138C5_t.webp",
+                        "original": "lyOSO8olP7MR/B138C5.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "85900F",
+                    "compositeId": "62E9D1::85900F",
+                    "src": {
+                        "small": "n8gMeCsgugFP/85900F_t.webp",
+                        "original": "AnbTtB4mbFO9/85900F.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "3C6068",
+                    "compositeId": "62E9D1::3C6068",
+                    "src": {
+                        "small": "bN59qRQvPwSP/3C6068_t.webp",
+                        "original": "hOmzqV7QPKxo/3C6068.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "44BB08",
+                    "compositeId": "62E9D1::44BB08",
+                    "src": {
+                        "small": "baDiLnchnYRL/44BB08_t.webp",
+                        "original": "YRQv6RVUGUyk/44BB08.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "3DCCB3",
+                    "compositeId": "62E9D1::3DCCB3",
+                    "src": {
+                        "small": "TwxhCrvfhPer/3DCCB3_t.webp",
+                        "original": "v03OsTtOKoF3/3DCCB3.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "8D999B",
+                    "compositeId": "62E9D1::8D999B",
+                    "src": {
+                        "small": "VQh21CBBIX6O/8D999B_t.webp",
+                        "original": "naeAvoGSAWG9/8D999B.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "9F7D98",
+                    "compositeId": "62E9D1::9F7D98",
+                    "src": {
+                        "small": "1sR0yU8uvgFb/9F7D98_t.webp",
+                        "original": "cLfhKwE0FyGF/9F7D98.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "69368F",
+                    "compositeId": "62E9D1::69368F",
+                    "src": {
+                        "small": "yf30UPG9Dqgm/69368F_t.webp",
+                        "original": "2G8COir6J1ph/69368F.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "387276",
+                    "compositeId": "62E9D1::387276",
+                    "src": {
+                        "small": "xeYumdonAfcy/387276_t.webp",
+                        "original": "y62osvpzn2AS/387276.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "F9EE0D",
+                    "compositeId": "62E9D1::F9EE0D",
+                    "src": {
+                        "small": "9RrsK4eTUQ2f/F9EE0D_t.webp",
+                        "original": "EKlHEc5Yh4bG/F9EE0D.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "0D62F0",
+                    "compositeId": "62E9D1::0D62F0",
+                    "src": {
+                        "small": "O85RIDGnbHel/0D62F0_t.webp",
+                        "original": "TfgPPX5fJ7QJ/0D62F0.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "167C01",
+                    "compositeId": "62E9D1::167C01",
+                    "src": {
+                        "small": "F3JwFkNcTPy2/167C01_t.webp",
+                        "original": "vU7n1ehEznVW/167C01.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "187E57",
+                    "compositeId": "62E9D1::187E57",
+                    "src": {
+                        "small": "qM9wDH81ndq5/187E57_t.webp",
+                        "original": "V7K7u9sS5QkV/187E57.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "397A0F",
+                    "compositeId": "62E9D1::397A0F",
+                    "src": {
+                        "small": "cadL7i6AvEJ9/397A0F_t.webp",
+                        "original": "8cJ3M6f7rJhl/397A0F.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "947317",
+                    "compositeId": "62E9D1::947317",
+                    "src": {
+                        "small": "X4v82FWjWP4z/947317_t.webp",
+                        "original": "khcScuahGf8P/947317.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "sketch",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                }
+            ]
         },
         {
-          "id": "DAB2A3",
-          "compositeId": "3E4824::DAB2A3",
-          "src": {
-            "small": "QyA9aD7W6wAw/DAB2A3_t.webp",
-            "original": "H7cbLBEJ3Bl1/DAB2A3.webp"
-          },
-          "uploadDate": "2026/04/22",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "digital",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "BD820D",
-          "compositeId": "3E4824::BD820D",
-          "src": {
-            "small": "3eh2vIsKyTYl/BD820D_t.webp",
-            "original": "MgeFCrBYg9jr/BD820D.webp"
-          },
-          "uploadDate": "2026/04/22",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "digital",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "34E816",
-          "compositeId": "3E4824::34E816",
-          "src": {
-            "small": "WRo0egIG5psx/34E816_t.webp",
-            "original": "8utnCvBheIeU/34E816.webp"
-          },
-          "uploadDate": "2026/04/22",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "digital",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "1CE7E5",
-          "compositeId": "3E4824::1CE7E5",
-          "src": {
-            "small": "JQb1devte1HO/1CE7E5_t.webp",
-            "original": "GuLAjhKajIGy/1CE7E5.webp"
-          },
-          "uploadDate": "2026/04/22",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "digital",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "220584",
-          "compositeId": "3E4824::220584",
-          "src": {
-            "small": "VbTichqYSfkK/220584_t.webp",
-            "original": "PpPEIzj3vdyP/220584.webp"
-          },
-          "uploadDate": "2026/04/22",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "digital",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "564C46",
-          "compositeId": "3E4824::564C46",
-          "src": {
-            "small": "Y4ne3woCvG5M/564C46_t.webp",
-            "original": "CyMi3uueuT2j/564C46.webp"
-          },
-          "uploadDate": "2026/04/22",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "digital",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "4B7441",
-          "compositeId": "3E4824::4B7441",
-          "src": {
-            "small": "bV5aG0yrtwFy/4B7441_t.webp",
-            "original": "zdHFuNBNNU66/4B7441.webp"
-          },
-          "uploadDate": "2026/04/22",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "digital",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "11C7C1",
-          "compositeId": "3E4824::11C7C1",
-          "src": {
-            "small": "G2OECduXlhwy/11C7C1_t.webp",
-            "original": "U01wxRGqbthk/11C7C1.webp"
-          },
-          "uploadDate": "2026/04/22",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "digital",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "9AFFF3",
-          "compositeId": "3E4824::9AFFF3",
-          "src": {
-            "small": "UQm736aD6qIc/9AFFF3_t.webp",
-            "original": "QRlHFU2QGtwq/9AFFF3.webp"
-          },
-          "uploadDate": "2026/04/22",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "digital",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "3B1D1A",
-          "compositeId": "3E4824::3B1D1A",
-          "src": {
-            "small": "W9dHl8vuGK84/3B1D1A_t.webp",
-            "original": "3m1bAFDMwSeS/3B1D1A.webp"
-          },
-          "uploadDate": "2026/04/22",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "digital",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "CCBFDD",
-          "compositeId": "3E4824::CCBFDD",
-          "src": {
-            "small": "g62Ads3Xpl9m/CCBFDD_t.webp",
-            "original": "2tAMhqluivfA/CCBFDD.webp"
-          },
-          "uploadDate": "2026/04/22",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "digital",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "990AE4",
-          "compositeId": "3E4824::990AE4",
-          "src": {
-            "small": "1M2U9XBmPA1H/990AE4_t.webp",
-            "original": "WwdukVDE2FO4/990AE4.webp"
-          },
-          "uploadDate": "2026/04/22",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "digital",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "D9A2F3",
-          "compositeId": "3E4824::D9A2F3",
-          "src": {
-            "small": "054ya2DGkist/D9A2F3_t.webp",
-            "original": "oqiqtQDnmnkk/D9A2F3.webp"
-          },
-          "uploadDate": "2026/04/22",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "digital",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "1CD8C0",
-          "compositeId": "3E4824::1CD8C0",
-          "src": {
-            "small": "MBQzTteKLrhh/1CD8C0_t.webp",
-            "original": "C6IxJShgKwo8/1CD8C0.webp"
-          },
-          "uploadDate": "2026/04/22",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "digital",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "06ABE5",
-          "compositeId": "3E4824::06ABE5",
-          "src": {
-            "small": "Ep2ox4QCcH0r/06ABE5_t.webp",
-            "original": "xvQxfPbhAWKK/06ABE5.webp"
-          },
-          "uploadDate": "2026/04/22",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "digital",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "BECA41",
-          "compositeId": "3E4824::BECA41",
-          "src": {
-            "small": "0vdj2AYRUw6D/BECA41_t.webp",
-            "original": "zmhiFol2cadS/BECA41.webp"
-          },
-          "uploadDate": "2026/04/22",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "digital",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
-        },
-        {
-          "id": "E87851",
-          "compositeId": "3E4824::E87851",
-          "src": {
-            "small": "Qfsn8qOYMVed/E87851_t.webp",
-            "original": "uvaKe6GpSrub/E87851.webp"
-          },
-          "uploadDate": "2026/04/22",
-          "tags": [],
-          "type": "art",
-          "metadata": {
-            "medium": "digital",
-            "description": null,
-            "verse": null,
-            "mood": null,
-            "chaos": null
-          }
+            "id": "E4FFEC",
+            "name": "digital_unfinished-collection-001",
+            "defaults": {
+                "nsfw": false
+            },
+            "artifacts": [
+                {
+                    "id": "521CD3",
+                    "compositeId": "E4FFEC::521CD3",
+                    "src": {
+                        "small": "HcVIkmYHcMxn/521CD3_t.webp",
+                        "original": "RIrbWcvILpD3/521CD3.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "digital",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "B28E3E",
+                    "compositeId": "E4FFEC::B28E3E",
+                    "src": {
+                        "small": "HqnrRr511aiJ/B28E3E_t.webp",
+                        "original": "40ChbRiom9dW/B28E3E.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "digital",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "55DA43",
+                    "compositeId": "E4FFEC::55DA43",
+                    "src": {
+                        "small": "g5TmWOWy6UQE/55DA43_t.webp",
+                        "original": "RWQEwpbJAkDg/55DA43.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "digital",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "941CBC",
+                    "compositeId": "E4FFEC::941CBC",
+                    "src": {
+                        "small": "NtRecRCdDhN3/941CBC_t.webp",
+                        "original": "U1s8PFGwohvg/941CBC.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "digital",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "0EDD05",
+                    "compositeId": "E4FFEC::0EDD05",
+                    "src": {
+                        "small": "PViDtnY9xd7n/0EDD05_t.webp",
+                        "original": "YdJYN4WGMfg4/0EDD05.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "digital",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "A37571",
+                    "compositeId": "E4FFEC::A37571",
+                    "src": {
+                        "small": "eGmooEatCKh3/A37571_t.webp",
+                        "original": "GdaAmxdadL9z/A37571.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "digital",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "09D9D4",
+                    "compositeId": "E4FFEC::09D9D4",
+                    "src": {
+                        "small": "NdUD1aYPacgp/09D9D4_t.webp",
+                        "original": "HsUimB3sCqyD/09D9D4.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "digital",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "604232",
+                    "compositeId": "E4FFEC::604232",
+                    "src": {
+                        "small": "8KePiEaorMpR/604232_t.webp",
+                        "original": "jit5oGYcHVi5/604232.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "digital",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "A70F77",
+                    "compositeId": "E4FFEC::A70F77",
+                    "src": {
+                        "small": "F0C5hbD6tmE0/A70F77_t.webp",
+                        "original": "hG24LYi6Bnjl/A70F77.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "digital",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "CCCB09",
+                    "compositeId": "E4FFEC::CCCB09",
+                    "src": {
+                        "small": "tEihDOenTQgh/CCCB09_t.webp",
+                        "original": "SdqWbiOqqiDd/CCCB09.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "digital",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "7E9194",
+                    "compositeId": "E4FFEC::7E9194",
+                    "src": {
+                        "small": "2k8AIVznPiVW/7E9194_t.webp",
+                        "original": "j4pBdcVivaUR/7E9194.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "digital",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "21C76F",
+                    "compositeId": "E4FFEC::21C76F",
+                    "src": {
+                        "small": "8mQXYAvKky6v/21C76F_t.webp",
+                        "original": "9ADg5XOiN44n/21C76F.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "digital",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "8B7835",
+                    "compositeId": "E4FFEC::8B7835",
+                    "src": {
+                        "small": "BldrHBHoSqeO/8B7835_t.webp",
+                        "original": "WMQbPD3dvLJm/8B7835.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "digital",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "C726D4",
+                    "compositeId": "E4FFEC::C726D4",
+                    "src": {
+                        "small": "wKHBtkks7BbX/C726D4_t.webp",
+                        "original": "hfb3uk4rxBkI/C726D4.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "digital",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "78E838",
+                    "compositeId": "E4FFEC::78E838",
+                    "src": {
+                        "small": "d9HRw9lDUYRl/78E838_t.webp",
+                        "original": "i6GeVkHjsk17/78E838.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "digital",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "7D5596",
+                    "compositeId": "E4FFEC::7D5596",
+                    "src": {
+                        "small": "eqlnyGyFa7De/7D5596_t.webp",
+                        "original": "hFVm4tweUMc7/7D5596.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "digital",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "D50E59",
+                    "compositeId": "E4FFEC::D50E59",
+                    "src": {
+                        "small": "vG4SiMcTw9ee/D50E59_t.webp",
+                        "original": "nBCcQQN4PFuq/D50E59.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "digital",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                },
+                {
+                    "id": "448546",
+                    "compositeId": "E4FFEC::448546",
+                    "src": {
+                        "small": "X302fbmomOh2/448546_t.webp",
+                        "original": "30kor4unNNml/448546.webp"
+                    },
+                    "uploadDate": "2026/04/22",
+                    "tags": [],
+                    "type": "art",
+                    "metadata": {
+                        "medium": "digital",
+                        "description": null,
+                        "verse": null,
+                        "mood": null,
+                        "chaos": null
+                    }
+                }
+            ]
         }
-      ]
-    }
-  ]
+    ]
 }
