@@ -3866,75 +3866,331 @@
 }
 
 /* ─── Neural Uplink — standalone page (trap.lol/playground/) ── */
+
+/* Full-viewport layout shell — override body's max-width/padding/margin */
+/* ═══════════════════════════════════════════════
+   PLAYGROUND PAGE — full-viewport chat shell
+   Dune × Arcane × vice-signal aesthetic.
+   Mobile-first. Zero scroll on body.
+   ═══════════════════════════════════════════════ */
+
 .playground-page {
-  min-height: 100vh;
-  padding: 0;
+  min-height: 100dvh;
+  max-height: 100dvh;
+  padding: 0 !important;
+  max-width: 100vw !important;
+  margin: 0 !important;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  /* Ambient background — subtly different from hub */
+  background-image:
+    radial-gradient(ellipse 100% 50% at 0% 0%,   rgba(190, 41, 236, 0.07) 0%, transparent 55%),
+    radial-gradient(ellipse 80%  60% at 100% 20%, rgba(0, 240, 255, 0.04)  0%, transparent 50%),
+    radial-gradient(ellipse 90%  55% at 50% 110%, rgba(196, 86, 42, 0.08)  0%, transparent 55%);
+}
+
+.playground-page__layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+}
+
+/* ── Top Bar ─────────────────────────────────── */
+.playground-page__topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0.875rem;
+  height: 50px;
+  min-height: 50px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 10;
+  /* Glass with subtle warm border bottom */
+  background: rgba(6, 4, 10, 0.94);
+  border-bottom: 1px solid rgba(190, 41, 236, 0.12);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  /* Hairline glow at bottom edge */
+  box-shadow: 0 1px 0 rgba(190, 41, 236, 0.08), 0 2px 16px rgba(0, 0, 0, 0.3);
+}
+
+/* Top-bar accent line */
+.playground-page__topbar::after {
+  content: '';
+  position: absolute;
+  bottom: -1px; left: 15%; right: 15%;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(190, 41, 236, 0.3) 40%,
+    rgba(244, 168, 48, 0.15) 70%,
+    transparent
+  );
+  pointer-events: none;
 }
 
 .playground-page__back {
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.35rem;
   font-family: var(--font-mono);
-  font-size: var(--text-sm);
+  font-size: var(--text-xs);
+  letter-spacing: 0.07em;
   color: var(--text-muted);
   text-decoration: none;
-  padding: 0.9rem 1.5rem 0;
-  transition: color var(--transition);
+  border-radius: 6px;
+  border: 1px solid transparent;
+  padding: 0.4rem 0.5rem;
+  margin: -0.4rem -0.5rem;
+  min-width: var(--touch-min);
+  min-height: var(--touch-min);
+  justify-content: flex-start;
+  flex-shrink: 0;
+  transition: color var(--transition), border-color var(--transition),
+              background var(--transition);
 }
-.playground-page__back svg { width: 0.85rem; height: 0.85rem; }
+.playground-page__back svg { width: 0.8rem; height: 0.8rem; flex-shrink: 0; }
 .playground-page__back:hover,
 .playground-page__back:focus-visible {
-  color: var(--accent);
+  color: var(--text-main);
+  border-color: var(--glass-border-mute);
+  background: rgba(255, 255, 255, 0.04);
   outline: none;
 }
 
-.playground-page__main {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 1.5rem 1.5rem 4rem;
-}
-
-.playground-page__header {
-  margin-bottom: 1.75rem;
-}
-
-.playground-page__eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
+.playground-page__back-label {
   font-family: var(--font-mono);
   font-size: var(--text-xs);
-  color: var(--accent-warm);
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  opacity: 0.75;
-  margin-bottom: 0.5rem;
+  letter-spacing: 0.1em;
+  opacity: 0.7;
+}
+
+/* Centred identity block */
+.playground-page__identity {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  pointer-events: none;
 }
 
 .playground-page__signal-dot {
   width: 6px;
   height: 6px;
-  background: var(--status-online);
   border-radius: 50%;
-  box-shadow: 0 0 6px var(--status-online);
-  animation: signal-pulse 2s infinite;
+  background: var(--status-online);
+  box-shadow: 0 0 7px var(--status-online);
+  flex-shrink: 0;
+  animation: pg-signal 2.4s ease-in-out infinite;
+}
+@keyframes pg-signal {
+  0%, 100% { opacity: 1;   box-shadow: 0 0 7px var(--status-online); }
+  50%       { opacity: 0.35; box-shadow: 0 0 2px var(--status-online); }
+}
+
+.playground-page__eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent-warm);
+  opacity: 0.75;
+}
+
+.playground-page__topbar-spacer {
+  min-width: var(--touch-min);
   flex-shrink: 0;
 }
 
-.playground-page__title {
-  font-family: var(--font-mono);
-  font-size: clamp(1.4rem, 3vw, 2rem);
-  font-weight: 600;
-  letter-spacing: -0.5px;
-  color: var(--text-main);
-  margin: 0;
+/* ── Main / Shell wrapper ────────────────────── */
+.playground-page__main {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  max-width: 960px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0.75rem 0.75rem 0;
 }
 
-.playground-page__title-sep {
-  color: var(--accent);
-  opacity: 0.6;
-  margin: 0 0.2em;
+/* Shell fills all remaining height */
+.playground-page__main .llm-shell {
+  flex: 1;
+  min-height: 0;
+  margin-bottom: 0;
+  border-radius: 10px 10px 0 0;
+  /* Richer border + shadow on the playground specifically */
+  border-color: rgba(190, 41, 236, 0.16);
+  box-shadow:
+    0 0 0 1px rgba(190, 41, 236, 0.04) inset,
+    0 -4px 40px rgba(190, 41, 236, 0.06);
+}
+
+/* Messages fill the shell */
+.playground-page__main .llm-shell__messages {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+}
+
+/* ── Playground-scoped component overrides ────
+   These only apply on the playground page, so
+   the hub embedded shell is untouched.
+   ────────────────────────────────────────────── */
+
+/* Keybar — "enter the cipher" feel */
+.playground-page .llm-keybar {
+  background: rgba(0, 0, 0, 0.55);
+  border-bottom-color: rgba(190, 41, 236, 0.1);
+  padding: 0.45rem 0.875rem;
+}
+.playground-page .llm-keybar[data-locked="true"]:has([data-valid="true"]) {
+  background: rgba(74, 222, 128, 0.03);
+  border-bottom-color: rgba(74, 222, 128, 0.12);
+}
+.playground-page .llm-keybar__input {
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+}
+.playground-page .llm-keybar__input::placeholder {
+  letter-spacing: 0.06em;
+  font-style: italic;
+}
+
+/* Toolbar — tighter, heavier */
+.playground-page .llm-shell__toolbar {
+  padding: 0.5rem 0.875rem;
+  background: rgba(0, 0, 0, 0.32);
+  border-bottom-color: rgba(255, 255, 255, 0.05);
+  gap: 0.6rem;
+}
+
+/* Action buttons — larger tap targets */
+.playground-page .llm-shell__action-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 7px;
+  border-color: rgba(255, 255, 255, 0.06);
+  transition: color var(--transition), border-color var(--transition),
+              background var(--transition), box-shadow var(--transition);
+}
+.playground-page .llm-shell__action-btn:hover:not(:disabled),
+.playground-page .llm-shell__action-btn:focus-visible:not(:disabled) {
+  border-color: rgba(190, 41, 236, 0.35);
+  background: rgba(190, 41, 236, 0.07);
+  box-shadow: 0 0 12px rgba(190, 41, 236, 0.15);
+}
+
+/* Status bar — compact + atmospheric */
+.playground-page .llm-shell__statusbar {
+  padding: 0.25rem 0.875rem;
+  background: rgba(0, 0, 0, 0.4);
+  border-bottom-color: rgba(255, 255, 255, 0.04);
+}
+
+/* Messages — tighter padding */
+.playground-page .llm-shell__messages {
+  padding: 1rem 0.875rem 0.5rem;
+  gap: 0.75rem;
+}
+
+/* Input row — the "transmit" zone */
+.playground-page .llm-shell__input-row {
+  padding: 0.65rem 0.75rem;
+  background: rgba(0, 0, 0, 0.28);
+  border-top-color: rgba(190, 41, 236, 0.1);
+  gap: 0.5rem;
+}
+
+/* Textarea — 1rem minimum prevents iOS zoom */
+.playground-page .llm-shell__textarea {
+  font-size: 1rem;
+  border-color: rgba(255, 255, 255, 0.07);
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+}
+.playground-page .llm-shell__textarea:focus {
+  border-color: rgba(190, 41, 236, 0.4);
+  box-shadow: 0 0 0 2px rgba(190, 41, 236, 0.07),
+              0 0 20px rgba(190, 41, 236, 0.06);
+}
+
+/* Send button — weighted, glowing */
+.playground-page .llm-shell__send {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: rgba(190, 41, 236, 0.1);
+  border-color: rgba(190, 41, 236, 0.28);
+  flex-shrink: 0;
+}
+.playground-page .llm-shell__send:hover:not(:disabled),
+.playground-page .llm-shell__send:focus-visible:not(:disabled) {
+  background: rgba(190, 41, 236, 0.22);
+  box-shadow: 0 0 20px rgba(190, 41, 236, 0.35),
+              0 0 6px rgba(190, 41, 236, 0.15) inset;
+}
+.playground-page .llm-shell__send svg { width: 1rem; height: 1rem; }
+
+/* ── Mobile overrides (≤768px) ───────────────── */
+@media (max-width: 768px) {
+  .playground-page__topbar { padding: 0 0.75rem; }
+  .playground-page__eyebrow { font-size: 0.6rem; letter-spacing: 0.16em; }
+
+  .playground-page__main {
+    padding: 0;
+    max-width: 100%;
+  }
+  .playground-page__main .llm-shell {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+  }
+
+  /* Provider badge hidden on mobile — text label wastes space */
+  .playground-page .llm-shell__provider { display: none; }
+
+  /* Keybar label text hidden — keep icons + input */
+  .playground-page .llm-keybar__save-label,
+  .playground-page .llm-keybar__getkey-label { display: none; }
+
+  /* Status right stats hidden on mobile — just dot + label */
+  .playground-page .llm-status__right { display: none; }
+
+  /* Tighter toolbar */
+  .playground-page .llm-shell__toolbar { padding: 0.45rem 0.65rem; gap: 0.45rem; }
+
+  /* Input row — more breathing room thumb zone */
+  .playground-page .llm-shell__input-row { padding: 0.65rem 0.65rem; }
+
+  /* Send — full 44px tap target */
+  .playground-page .llm-shell__send { width: 44px; height: 44px; }
+}
+
+/* ── Narrow mobile (≤480px) ──────────────────── */
+@media (max-width: 480px) {
+  .playground-page__topbar { height: 48px; min-height: 48px; }
+
+  /* Back label hidden at very narrow — arrow icon only */
+  .playground-page__back-label { display: none; }
+
+  .playground-page .llm-shell__action-btn { width: 34px; height: 34px; }
+  .playground-page .llm-shell__input-row  { padding: 0.55rem 0.5rem; }
+  .playground-page .llm-shell__messages   { padding: 0.75rem 0.65rem 0.5rem; }
+
+  /* Sessions + keybar buttons compact */
+  .playground-page .llm-sessions__btn { padding: 0.3rem 0.4rem; font-size: 0.62rem; }
+  .playground-page .llm-keybar { padding: 0.4rem 0.65rem; }
 }
 
 /* ─── Playground Portal card (on hub index.html) ─── */

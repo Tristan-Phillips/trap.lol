@@ -8,7 +8,7 @@
       "icon": "bot",
       "chat_url": null,
       "repo_url": "https://git.trap.lol/trap/tg-trap-bots",
-      "status": "offline",
+      "status": "online",
       "description": "TSH interface to bridge CLI and frontend"
     },
     "1": {
@@ -21,7 +21,7 @@
       "description": "VPS management through Telegram"
     },
     "2": {
-      "name": "Backup SIMP",
+      "name": "Bkup SIMP",
       "shortcut": "F2",
       "icon": "archive",
       "chat_url": null,

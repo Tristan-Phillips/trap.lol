@@ -1,6 +1,8 @@
 /* ─── Responsive ─────────────────────────────── */
 @media (max-width: 768px) {
   body { padding: 1rem; }
+  /* Playground needs zero body padding — layout is self-contained */
+  body.playground-page { padding: 0; overflow: hidden; }
 
   .hint { display: none; }
   .header__title { font-size: 2.5rem; }
@@ -32,6 +34,7 @@
   
   .flip-card { min-width: 240px; }
 
+  /* LLM shell — embedded hub context only (playground is self-contained in neural-uplink.css) */
   .llm-shell__messages { min-height: 260px; max-height: 400px; }
   .llm-shell__toolbar { gap: 0.6rem; }
   .llm-status__right { display: none; }
@@ -40,6 +43,8 @@
   .llm-sessions__btn { padding: 0.3rem 0.45rem; }
   .llm-keybar { padding: 0.4rem 0.75rem; }
   .llm-shell--bubbles .llm-msg__body { max-width: 92%; }
+
+  /* Playground page mobile overrides live in neural-uplink.css — scoped @media blocks */
 }
 
 @media (max-width: 480px) {
@@ -50,7 +55,7 @@
   /* Flip cards: release fixed min-width so they fill the track on narrow screens */
   .flip-card { min-width: min(260px, calc(100vw - 3rem)); }
 
-  /* LLM shell: cap message area so it doesn't eat the full viewport */
+  /* LLM shell: cap message area so it doesn't eat the full viewport (non-playground) */
   .llm-shell__messages { min-height: 200px; max-height: 320px; }
 
   /* Bot grid: tighten gap on very small screens */

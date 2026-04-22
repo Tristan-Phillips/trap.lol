@@ -16,6 +16,110 @@ let _lb_open    = false;
 let activeFilter = "all";
 
 /* ══════════════════════════════════════════════════
+   PULL — RNG GACHA WITH RARITY + PITY
+   ══════════════════════════════════════════════════
+   Rarity tiers — player sees the tier AFTER the roll resolves.
+   The count revealed is random within each tier's range.
+   Pity silently adjusts weights; nothing is telegraphed.
+
+   TRACE   — teal/green  — weight 50  — 3–6   imgs  — "a whisper through the sand"
+   VEIL    — blue        — weight 28  — 6–10  imgs  — "something peers back"
+   CIPHER  — purple      — weight 15  — 10–16 imgs  — "the seal is warm"
+   SPICE   — gold        — weight  6  — 16–24 imgs  — "you found the source"
+   ABYSS   — crimson     — weight  1  — all   imgs  — "there is no floor"
+
+   Pity rules (silent, never displayed):
+   • After 4 consecutive pulls below CIPHER, next pull is at minimum CIPHER.
+   • After 7 consecutive pulls below SPICE,  next pull is at minimum SPICE.
+   These floors reset once a qualifying tier lands.
+*/
+const TIERS = {
+  TRACE:  {
+    id: "trace",  weight: 50, min: 3,   max: 6,
+    icon: "droplets",   color: "#2dd4a0",
+    copy:    ["peek", "just a taste", "open one eye", "barely"],
+    reveal:  ["a tremor in the dune", "something exhaled", "the sand shifted", "noticed"],
+    whisper: ["you were not supposed to look", "stop. or don't.", "the air is different here", "hush"],
+  },
+  VEIL:   {
+    id: "veil",   weight: 28, min: 6,   max: 10,
+    icon: "eye",         color: "#5b8ef0",
+    copy:    ["look closer", "pull it back", "go on", "you want to"],
+    reveal:  ["the veil lifted", "more than expected", "it saw you too", "familiar"],
+    whisper: ["don't tell anyone", "this is becoming a habit", "again?", "quietly now"],
+  },
+  CIPHER: {
+    id: "cipher", weight: 15, min: 10,  max: 16,
+    icon: "lock-keyhole", color: "#a855f7",
+    copy:    ["crack it", "you shouldn't", "forbidden", "break the wax"],
+    reveal:  ["the cipher broke open", "sealed no longer", "contraband", "you cracked it"],
+    whisper: ["your pulse just changed", "warm hands on cold glass", "they'd kill for this", "breathe"],
+  },
+  SPICE:  {
+    id: "spice",  weight: 6,  min: 16,  max: 24,
+    icon: "flame",       color: "#f4a830",
+    copy:    ["the source", "take it all", "melt into it", "burn"],
+    reveal:  ["the spice flows", "golden ruin", "worth the risk", "intoxicating"],
+    whisper: ["your eyes have changed colour", "there is no going back", "you knew this would happen", "gorgeous"],
+  },
+  ABYSS:  {
+    id: "abyss",  weight: 1,  min: 999, max: 999,
+    icon: "skull",       color: "#c41a1a",
+    copy:    ["everything", "dissolve"],
+    reveal:  ["total dissolution", "the floor is gone", "consumed", "there is no surface"],
+    whisper: ["", ""],
+  },
+};
+
+const TIER_ORDER = ["TRACE", "VEIL", "CIPHER", "SPICE", "ABYSS"];
+
+/* Pity counters */
+let pullCount        = 0;   /* total pulls made */
+let sinceGeCipher    = 0;   /* pulls since last CIPHER or better */
+let sinceGeSpice     = 0;   /* pulls since last SPICE or better */
+let visibleCount     = 0;
+
+function pickRandom(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+/* Roll rarity tier — applies pity floors silently */
+function rollTier() {
+  const remaining = filtered.length - visibleCount;
+  if (remaining <= 0) return null;
+
+  /* Pity: force minimum tier if thresholds hit */
+  let minTier = 0;
+  if (sinceGeCipher >= 4) minTier = 2; /* at least CIPHER */
+  if (sinceGeSpice  >= 7) minTier = 3; /* at least SPICE  */
+  /* ABYSS special: if all remaining fits in a small pull, offer ABYSS sooner */
+  if (remaining <= 8 && pullCount >= 2) minTier = Math.max(minTier, 4);
+
+  /* Build weighted pool respecting minimum tier */
+  const pool = [];
+  TIER_ORDER.forEach((key, idx) => {
+    if (idx < minTier) return;
+    const t = TIERS[key];
+    for (let i = 0; i < t.weight; i++) pool.push(key);
+  });
+
+  const rolledKey = pool[Math.floor(Math.random() * pool.length)];
+  const tier      = TIERS[rolledKey];
+  const tierIdx   = TIER_ORDER.indexOf(rolledKey);
+
+  /* Update pity counters */
+  if (tierIdx >= 2) sinceGeCipher = 0; else sinceGeCipher++;
+  if (tierIdx >= 3) sinceGeSpice  = 0; else sinceGeSpice++;
+
+  /* Calculate chunk */
+  const count = tier.min >= 999
+    ? remaining
+    : Math.min(tier.min + Math.floor(Math.random() * (tier.max - tier.min + 1)), remaining);
+
+  return { key: rolledKey, tier, count };
+}
+
+/* ══════════════════════════════════════════════════
    BOOT
 ══════════════════════════════════════════════════ */
 document.addEventListener("DOMContentLoaded", async () => {
@@ -91,15 +195,30 @@ async function loadData() {
 /* ══════════════════════════════════════════════════
    RENDER
 ══════════════════════════════════════════════════ */
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 function applyFilter(filter) {
   activeFilter = filter;
-  filtered = filter === "all"
+  filtered = shuffle(filter === "all"
     ? [...manifest]
-    : manifest.filter(p => p.medium === filter);
+    : manifest.filter(p => p.medium === filter));
+  visibleCount  = 0;
+  pullCount     = 0;
+  sinceGeCipher = 0;
+  sinceGeSpice  = 0;
   renderGrid();
 }
 
 function renderGrid() {
+  const old = qs("#pull-zone");
+  if (old) old.remove();
+
   const $grid = qs("#art-grid");
   $grid.innerHTML = "";
 
@@ -108,12 +227,162 @@ function renderGrid() {
     return;
   }
 
+  /* Initial load: 18 fixed, no tier, no fanfare */
+  visibleCount = Math.min(18, filtered.length);
+
   const frag = document.createDocumentFragment();
-  filtered.forEach((piece, i) => frag.appendChild(makeCard(piece, i)));
+  for (let i = 0; i < visibleCount; i++) frag.appendChild(makeCard(filtered[i], i));
   $grid.appendChild(frag);
 
   if (typeof lucide !== "undefined") lucide.createIcons();
   initCardEntrance();
+  renderPullZone();
+}
+
+function renderPullZone() {
+  const old = qs("#pull-zone");
+  if (old) old.remove();
+
+  const remaining = filtered.length - visibleCount;
+  if (remaining <= 0) return;
+
+  /* Pre-roll copy is always generic — rarity is unknown until the pull */
+  const preWhisper = pickRandom([
+    "something waits beneath the fold",
+    "don't look if you can't handle it",
+    "you already know you're going to",
+    "the surface is a lie",
+    "reach in",
+  ]);
+
+  const $zone = document.createElement("div");
+  $zone.id        = "pull-zone";
+  $zone.className = "pull-zone";
+
+  $zone.innerHTML = `
+    <div class="pull-zone__scan" aria-hidden="true">
+      <span class="pull-zone__scan-line"></span>
+      <span class="pull-zone__scan-line"></span>
+      <span class="pull-zone__scan-line"></span>
+    </div>
+
+    <button class="pull-btn" id="pull-btn" aria-label="Reveal more artwork">
+      <span class="pull-btn__bg"        aria-hidden="true"></span>
+      <span class="pull-btn__halo"      aria-hidden="true"></span>
+      <span class="pull-btn__inner">
+        <span class="pull-btn__rarity-wrap" aria-hidden="true">
+          <i data-lucide="help-circle" class="pull-btn__rarity-icon"></i>
+        </span>
+        <span class="pull-btn__cta">reach in</span>
+        <span class="pull-btn__count-wrap">
+          <span class="pull-btn__count">?</span>
+          <span class="pull-btn__count-label">fragments</span>
+        </span>
+      </span>
+      <span class="pull-btn__sweep" aria-hidden="true"></span>
+    </button>
+
+    <p class="pull-zone__whisper" id="pull-whisper">${preWhisper}</p>
+    <p class="pull-zone__remain"  id="pull-remain" aria-label="${remaining} images remaining">${remaining} in the dark</p>
+  `;
+
+  qs("#art-grid").after($zone);
+  requestAnimationFrame(() => $zone.classList.add("pull-zone--visible"));
+
+  qs("#pull-btn").addEventListener("click", executePull);
+}
+
+function executePull() {
+  const $btn     = qs("#pull-btn");
+  const $zone    = qs("#pull-zone");
+  const $whisper = qs("#pull-whisper");
+  const $count   = $btn && $btn.querySelector(".pull-btn__count");
+  const $cta     = $btn && $btn.querySelector(".pull-btn__cta");
+  const $icon    = $btn && $btn.querySelector(".pull-btn__rarity-icon");
+
+  if (!$btn || $btn.disabled) return;
+  $btn.disabled = true;
+  $btn.classList.add("pull-btn--rolling");
+
+  /* Spin glyphs while rolling */
+  const GLYPHS = ["✦", "◈", "⬡", "✧", "◆", "⬟", "✵", "✴"];
+  let gf = 0;
+  const spin = setInterval(() => {
+    if ($count) $count.textContent = GLYPHS[gf++ % GLYPHS.length];
+  }, 60);
+
+  /* Whisper cycles while rolling */
+  const ROLLING_WHISPERS = [
+    "reaching…", "finding…", "it knows…", "hold still…", "almost…",
+  ];
+  let wf = 0;
+  const wSpin = setInterval(() => {
+    if ($whisper) $whisper.textContent = ROLLING_WHISPERS[wf++ % ROLLING_WHISPERS.length];
+  }, 200);
+
+  /* Roll happens NOW — result hidden until timeout */
+  const result = rollTier();
+
+  setTimeout(() => {
+    clearInterval(spin);
+    clearInterval(wSpin);
+
+    if (!result) { renderPullZone(); return; }
+
+    const { tier, count } = result;
+
+    /* Reveal rarity — update button styling */
+    $btn.classList.remove("pull-btn--rolling");
+    $btn.classList.add(`pull-btn--${tier.id}`, "pull-btn--revealed");
+    if ($zone) $zone.classList.add(`pull-zone--${tier.id}`);
+
+    /* Swap icon to tier icon */
+    if ($icon) {
+      $icon.setAttribute("data-lucide", tier.icon);
+      if (typeof lucide !== "undefined") lucide.createIcons({ nodes: [$icon.parentElement] });
+    }
+
+    /* Show count + tier copy */
+    if ($count) $count.textContent = `+${count}`;
+    if ($cta)   $cta.textContent   = pickRandom(tier.copy);
+    if ($whisper) $whisper.textContent = pickRandom(tier.reveal);
+
+    /* Flash the rarity colour across the zone */
+    flashRarity($zone, tier.color);
+
+    /* Inject cards after reading the reveal */
+    setTimeout(() => {
+      const $grid = qs("#art-grid");
+      const start = visibleCount;
+      const end   = start + count;
+      const frag  = document.createDocumentFragment();
+
+      for (let i = start; i < end; i++) frag.appendChild(makeCard(filtered[i], i));
+      $grid.appendChild(frag);
+
+      visibleCount = end;
+      pullCount++;
+
+      if (typeof lucide !== "undefined") lucide.createIcons();
+      initCardEntrance();
+
+      /* Scroll so first new card just enters view */
+      const firstNew = $grid.querySelectorAll(".art-card")[start];
+      if (firstNew) firstNew.scrollIntoView({ behavior: "smooth", block: "nearest" });
+
+      renderPullZone();
+    }, 480);
+  }, 780);
+}
+
+/* Brief colour flash behind the zone on reveal */
+function flashRarity($zone, color) {
+  if (!$zone) return;
+  const $flash = document.createElement("span");
+  $flash.className = "pull-zone__flash";
+  $flash.style.setProperty("--flash-color", color);
+  $zone.appendChild($flash);
+  $flash.addEventListener("animationend", () => $flash.remove());
 }
 
 function makeCard(piece, idx) {

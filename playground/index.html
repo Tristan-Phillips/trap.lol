@@ -15,20 +15,25 @@
   </head>
   <body class="playground-page">
 
-    <a href="../index.html" class="playground-page__back">
-      <i data-lucide="arrow-left"></i> Hub
-    </a>
+    <div class="playground-page__layout">
 
-    <main class="playground-page__main">
-      <header class="playground-page__header">
-        <div class="playground-page__eyebrow">
+      <!-- ── Top Bar (mobile nav + identity) ── -->
+      <header class="playground-page__topbar">
+        <a href="../index.html" class="playground-page__back" aria-label="Back to Hub">
+          <i data-lucide="arrow-left"></i>
+          <span class="playground-page__back-label">Hub</span>
+        </a>
+
+        <div class="playground-page__identity">
           <span class="playground-page__signal-dot" aria-hidden="true"></span>
-          NEURAL UPLINK
+          <span class="playground-page__eyebrow">NEURAL UPLINK</span>
         </div>
-        <h1 class="playground-page__title">trap.lol <span class="playground-page__title-sep">//</span> playground</h1>
+
+        <div class="playground-page__topbar-spacer" aria-hidden="true"></div>
       </header>
 
-      <section id="playground-section" aria-labelledby="playground-title">
+      <!-- ── LLM Shell ── -->
+      <main class="playground-page__main" id="playground-section">
         <div class="llm-shell" id="llm-shell">
 
           <!-- ── API Key Bar ── -->
@@ -40,10 +45,10 @@
                 <i data-lucide="eye"></i>
               </button>
               <button id="llm-keybar-save" class="llm-keybar__save-btn" aria-label="Lock key">
-                <i data-lucide="lock"></i> Lock
+                <i data-lucide="lock"></i> <span class="llm-keybar__save-label">Lock</span>
               </button>
               <button id="llm-keybar-getkey" class="llm-keybar__getkey-btn" aria-label="Get a nano-gpt API key" title="Get a nano-gpt API key">
-                <i data-lucide="external-link"></i> Get Key
+                <i data-lucide="external-link"></i> <span class="llm-keybar__getkey-label">Get Key</span>
               </button>
             </div>
             <div id="llm-keybar-locked" class="llm-keybar__locked" hidden>
@@ -208,7 +213,7 @@
               id="llm-input"
               class="llm-shell__textarea"
               rows="1"
-              placeholder="Transmit query… (Enter ↵ send · Shift+Enter newline)"
+              placeholder="Transmit query…"
               aria-label="Message input"
               maxlength="8000"
             ></textarea>
@@ -217,8 +222,9 @@
             </button>
           </form>
         </div>
-      </section>
-    </main>
+      </main>
+
+    </div>
 
     <script type="module" src="./script/main.js"></script>
   </body>

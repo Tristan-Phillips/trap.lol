@@ -972,6 +972,339 @@
           }
         }
       ]
+    },
+    {
+      "id": "3E4824",
+      "name": "digi_incomp-collection-001",
+      "defaults": {
+        "nsfw": false
+      },
+      "artifacts": [
+        {
+          "id": "25EF7C",
+          "compositeId": "3E4824::25EF7C",
+          "src": {
+            "small": "BTwkbT4yf5Sg/25EF7C_t.webp",
+            "original": "ocRoqjNE2jei/25EF7C.webp"
+          },
+          "uploadDate": "2026/04/22",
+          "tags": [],
+          "type": "art",
+          "metadata": {
+            "medium": "digital",
+            "description": null,
+            "verse": null,
+            "mood": null,
+            "chaos": null
+          }
+        },
+        {
+          "id": "DAB2A3",
+          "compositeId": "3E4824::DAB2A3",
+          "src": {
+            "small": "QyA9aD7W6wAw/DAB2A3_t.webp",
+            "original": "H7cbLBEJ3Bl1/DAB2A3.webp"
+          },
+          "uploadDate": "2026/04/22",
+          "tags": [],
+          "type": "art",
+          "metadata": {
+            "medium": "digital",
+            "description": null,
+            "verse": null,
+            "mood": null,
+            "chaos": null
+          }
+        },
+        {
+          "id": "BD820D",
+          "compositeId": "3E4824::BD820D",
+          "src": {
+            "small": "3eh2vIsKyTYl/BD820D_t.webp",
+            "original": "MgeFCrBYg9jr/BD820D.webp"
+          },
+          "uploadDate": "2026/04/22",
+          "tags": [],
+          "type": "art",
+          "metadata": {
+            "medium": "digital",
+            "description": null,
+            "verse": null,
+            "mood": null,
+            "chaos": null
+          }
+        },
+        {
+          "id": "34E816",
+          "compositeId": "3E4824::34E816",
+          "src": {
+            "small": "WRo0egIG5psx/34E816_t.webp",
+            "original": "8utnCvBheIeU/34E816.webp"
+          },
+          "uploadDate": "2026/04/22",
+          "tags": [],
+          "type": "art",
+          "metadata": {
+            "medium": "digital",
+            "description": null,
+            "verse": null,
+            "mood": null,
+            "chaos": null
+          }
+        },
+        {
+          "id": "1CE7E5",
+          "compositeId": "3E4824::1CE7E5",
+          "src": {
+            "small": "JQb1devte1HO/1CE7E5_t.webp",
+            "original": "GuLAjhKajIGy/1CE7E5.webp"
+          },
+          "uploadDate": "2026/04/22",
+          "tags": [],
+          "type": "art",
+          "metadata": {
+            "medium": "digital",
+            "description": null,
+            "verse": null,
+            "mood": null,
+            "chaos": null
+          }
+        },
+        {
+          "id": "220584",
+          "compositeId": "3E4824::220584",
+          "src": {
+            "small": "VbTichqYSfkK/220584_t.webp",
+            "original": "PpPEIzj3vdyP/220584.webp"
+          },
+          "uploadDate": "2026/04/22",
+          "tags": [],
+          "type": "art",
+          "metadata": {
+            "medium": "digital",
+            "description": null,
+            "verse": null,
+            "mood": null,
+            "chaos": null
+          }
+        },
+        {
+          "id": "564C46",
+          "compositeId": "3E4824::564C46",
+          "src": {
+            "small": "Y4ne3woCvG5M/564C46_t.webp",
+            "original": "CyMi3uueuT2j/564C46.webp"
+          },
+          "uploadDate": "2026/04/22",
+          "tags": [],
+          "type": "art",
+          "metadata": {
+            "medium": "digital",
+            "description": null,
+            "verse": null,
+            "mood": null,
+            "chaos": null
+          }
+        },
+        {
+          "id": "4B7441",
+          "compositeId": "3E4824::4B7441",
+          "src": {
+            "small": "bV5aG0yrtwFy/4B7441_t.webp",
+            "original": "zdHFuNBNNU66/4B7441.webp"
+          },
+          "uploadDate": "2026/04/22",
+          "tags": [],
+          "type": "art",
+          "metadata": {
+            "medium": "digital",
+            "description": null,
+            "verse": null,
+            "mood": null,
+            "chaos": null
+          }
+        },
+        {
+          "id": "11C7C1",
+          "compositeId": "3E4824::11C7C1",
+          "src": {
+            "small": "G2OECduXlhwy/11C7C1_t.webp",
+            "original": "U01wxRGqbthk/11C7C1.webp"
+          },
+          "uploadDate": "2026/04/22",
+          "tags": [],
+          "type": "art",
+          "metadata": {
+            "medium": "digital",
+            "description": null,
+            "verse": null,
+            "mood": null,
+            "chaos": null
+          }
+        },
+        {
+          "id": "9AFFF3",
+          "compositeId": "3E4824::9AFFF3",
+          "src": {
+            "small": "UQm736aD6qIc/9AFFF3_t.webp",
+            "original": "QRlHFU2QGtwq/9AFFF3.webp"
+          },
+          "uploadDate": "2026/04/22",
+          "tags": [],
+          "type": "art",
+          "metadata": {
+            "medium": "digital",
+            "description": null,
+            "verse": null,
+            "mood": null,
+            "chaos": null
+          }
+        },
+        {
+          "id": "3B1D1A",
+          "compositeId": "3E4824::3B1D1A",
+          "src": {
+            "small": "W9dHl8vuGK84/3B1D1A_t.webp",
+            "original": "3m1bAFDMwSeS/3B1D1A.webp"
+          },
+          "uploadDate": "2026/04/22",
+          "tags": [],
+          "type": "art",
+          "metadata": {
+            "medium": "digital",
+            "description": null,
+            "verse": null,
+            "mood": null,
+            "chaos": null
+          }
+        },
+        {
+          "id": "CCBFDD",
+          "compositeId": "3E4824::CCBFDD",
+          "src": {
+            "small": "g62Ads3Xpl9m/CCBFDD_t.webp",
+            "original": "2tAMhqluivfA/CCBFDD.webp"
+          },
+          "uploadDate": "2026/04/22",
+          "tags": [],
+          "type": "art",
+          "metadata": {
+            "medium": "digital",
+            "description": null,
+            "verse": null,
+            "mood": null,
+            "chaos": null
+          }
+        },
+        {
+          "id": "990AE4",
+          "compositeId": "3E4824::990AE4",
+          "src": {
+            "small": "1M2U9XBmPA1H/990AE4_t.webp",
+            "original": "WwdukVDE2FO4/990AE4.webp"
+          },
+          "uploadDate": "2026/04/22",
+          "tags": [],
+          "type": "art",
+          "metadata": {
+            "medium": "digital",
+            "description": null,
+            "verse": null,
+            "mood": null,
+            "chaos": null
+          }
+        },
+        {
+          "id": "D9A2F3",
+          "compositeId": "3E4824::D9A2F3",
+          "src": {
+            "small": "054ya2DGkist/D9A2F3_t.webp",
+            "original": "oqiqtQDnmnkk/D9A2F3.webp"
+          },
+          "uploadDate": "2026/04/22",
+          "tags": [],
+          "type": "art",
+          "metadata": {
+            "medium": "digital",
+            "description": null,
+            "verse": null,
+            "mood": null,
+            "chaos": null
+          }
+        },
+        {
+          "id": "1CD8C0",
+          "compositeId": "3E4824::1CD8C0",
+          "src": {
+            "small": "MBQzTteKLrhh/1CD8C0_t.webp",
+            "original": "C6IxJShgKwo8/1CD8C0.webp"
+          },
+          "uploadDate": "2026/04/22",
+          "tags": [],
+          "type": "art",
+          "metadata": {
+            "medium": "digital",
+            "description": null,
+            "verse": null,
+            "mood": null,
+            "chaos": null
+          }
+        },
+        {
+          "id": "06ABE5",
+          "compositeId": "3E4824::06ABE5",
+          "src": {
+            "small": "Ep2ox4QCcH0r/06ABE5_t.webp",
+            "original": "xvQxfPbhAWKK/06ABE5.webp"
+          },
+          "uploadDate": "2026/04/22",
+          "tags": [],
+          "type": "art",
+          "metadata": {
+            "medium": "digital",
+            "description": null,
+            "verse": null,
+            "mood": null,
+            "chaos": null
+          }
+        },
+        {
+          "id": "BECA41",
+          "compositeId": "3E4824::BECA41",
+          "src": {
+            "small": "0vdj2AYRUw6D/BECA41_t.webp",
+            "original": "zmhiFol2cadS/BECA41.webp"
+          },
+          "uploadDate": "2026/04/22",
+          "tags": [],
+          "type": "art",
+          "metadata": {
+            "medium": "digital",
+            "description": null,
+            "verse": null,
+            "mood": null,
+            "chaos": null
+          }
+        },
+        {
+          "id": "E87851",
+          "compositeId": "3E4824::E87851",
+          "src": {
+            "small": "Qfsn8qOYMVed/E87851_t.webp",
+            "original": "uvaKe6GpSrub/E87851.webp"
+          },
+          "uploadDate": "2026/04/22",
+          "tags": [],
+          "type": "art",
+          "metadata": {
+            "medium": "digital",
+            "description": null,
+            "verse": null,
+            "mood": null,
+            "chaos": null
+          }
+        }
+      ]
     }
   ]
 }
