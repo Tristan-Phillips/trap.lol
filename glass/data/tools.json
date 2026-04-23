@@ -8,62 +8,26 @@
       "icon": "scan-text",
       "description": "AI context orchestrator. Extracts a zero-ambiguity, secret-scrubbed, semantically ordered dump of any repository for LLM ingestion.",
       "target": "Arch / Debian",
-      "repo_url": "https://git.trap.lol/trap/payloads/src/branch/main/tools/dir-context-gen",
-      "install_cmd": "curl -fsSL https://git.trap.lol/trap/payloads/raw/branch/main/tools/dir-context-gen/setup_ctxdump.sh > /tmp/setup_ctx.sh && bash /tmp/setup_ctx.sh && rm /tmp/setup_ctx.sh"
+      "repo_url": "https://git.trap.lol/trap/payloads/src/branch/main/backend-only/dir-context-gen",
+      "install_cmd": "curl -fsSL https://git.trap.lol/trap/payloads/src/branch/main/backend-only/dir-context-gen/setup_ctxdump.sh > /tmp/setup_ctx.sh && bash /tmp/setup_ctx.sh && rm /tmp/setup_ctx.sh"
     },
     "1": {
-      "name": "cdn-static",
+      "name": "wbc",
       "shortcut": "X1",
-      "icon": "upload-cloud",
-      "description": "Stateless CLI to manage a self-hosted CDN vault over SSH. Pushes local files or remote URLs to a VPS, mutates the remote manifest, and restarts the serving container.",
-      "target": "Arch",
-      "repo_url": "https://git.trap.lol/trap/payloads/src/branch/main/tools/cdn-upload",
-      "install_cmd": "curl -fsSL https://git.trap.lol/trap/payloads/raw/branch/main/tools/cdn-upload/setup_cdn-push.sh > /tmp/setup_cdn.sh && bash /tmp/setup_cdn.sh && rm /tmp/setup_cdn.sh"
+      "icon": "archive",
+      "description": "Submits URLs to the Wayback Machine and tracks job status with atomic local state.",
+      "target": "Arch / Debian",
+      "repo_url": "https://git.trap.lol/trap/payloads/src/branch/main/backend-only/web-archive",
+      "install_cmd": "curl -fsSL https://git.trap.lol/trap/payloads/src/branch/main/backend-only/web-archive/setup_wbc.sh > /tmp/setup_wbc.sh && bash /tmp/setup_wbc.sh && rm /tmp/setup_wbc.sh"
     },
     "2": {
-      "name": "wbc",
+      "name": "OIDC-Bridge",
       "shortcut": "X2",
-      "icon": "archive",
-      "description": "Archival engine. Submits URLs to the Wayback Machine and tracks job status with atomic local state. Optional gum-powered TUI command center.",
+      "icon": "refrigerator",
+      "description": "A lightweight, sovereign, standalone OpenID Connect (OIDC) provider bridge.",
       "target": "Arch / Debian",
-      "repo_url": "https://git.trap.lol/trap/payloads/src/branch/main/tools/web-archive",
-      "install_cmd": "curl -fsSL https://git.trap.lol/trap/payloads/raw/branch/main/tools/web-archive/setup_wbc.sh > /tmp/setup_wbc.sh && bash /tmp/setup_wbc.sh && rm /tmp/setup_wbc.sh"
-    },
-    "3": {
-      "name": "gtrap",
-      "shortcut": "X3",
-      "icon": "key-round",
-      "description": "Sovereign identity provisioner. Generates Ed25519 SSH + GPG keypairs, configures ~/.ssh/config, installs a persistent systemd SSH agent, and registers tokens with Forgejo.",
-      "target": "Arch / Debian",
-      "repo_url": "https://git.trap.lol/trap/payloads/src/branch/main/tools/gtrap-git-deploy",
-      "install_cmd": "curl -fsSL https://git.trap.lol/trap/payloads/raw/branch/main/tools/gtrap-git-deploy/setup_gtrap.sh > /tmp/setup_gtrap.sh && bash /tmp/setup_gtrap.sh && rm /tmp/setup_gtrap.sh"
-    },
-    "4": {
-      "name": "audit-fs",
-      "shortcut": "X4",
-      "icon": "folder-search",
-      "description": "Static filesystem auditor. Enforces naming conventions across a project tree. Supports JSON output, depth limiting, and .auditignore exclusion files.",
-      "target": "Arch / Debian",
-      "repo_url": "https://git.trap.lol/trap/payloads/src/branch/main/tools/file-folder-naming-audit",
-      "install_cmd": "curl -fsSL https://git.trap.lol/trap/payloads/raw/branch/main/tools/file-folder-naming-audit/setup_audit.sh > /tmp/setup_audit.sh && bash /tmp/setup_audit.sh && rm /tmp/setup_audit.sh"
-    },
-    "5": {
-      "name": "dock-val",
-      "shortcut": "X5",
-      "icon": "shield-check",
-      "description": "Pre-commit validation engine. Runs shellcheck purity checks, Docker Compose syntax validation, and hardcoded secret detection against staged files.",
-      "target": "Arch / Debian",
-      "repo_url": "https://git.trap.lol/trap/payloads/src/branch/main/validations",
-      "install_cmd": "curl -fsSL https://git.trap.lol/trap/payloads/raw/branch/main/validations/docker_compose_validate.sh > /tmp/dock_val.sh && bash /tmp/dock_val.sh && rm /tmp/dock_val.sh"
-    },
-    "6": {
-      "name": "harvester",
-      "shortcut": "X6",
-      "icon": "activity",
-      "description": "Go binary that polls docker stats every minute via cron and writes container CPU/memory telemetry to a JSON state file served over a zero-trust tunnel.",
-      "target": "Debian VPS",
-      "repo_url": "https://git.trap.lol/trap/payloads/src/branch/main/tools/harvester",
-      "install_cmd": "curl -fsSL https://git.trap.lol/trap/payloads/raw/branch/main/tools/harvester/setup_vps-monitor.sh > /tmp/setup_harv.sh && bash /tmp/setup_harv.sh && rm /tmp/setup_harv.sh"
+      "repo_url": "https://git.trap.lol/trap/payloads/src/branch/main/backend-only/oidc-bridge",
+      "install_cmd": "git clone https://git.trap.lol/trap/oidc-bridge.git"
     }
   }
 }
