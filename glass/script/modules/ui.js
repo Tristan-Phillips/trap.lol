@@ -109,14 +109,16 @@ export function renderUI() {
         `;
       });
 
-      // Wrap grid in a <details> for collapse with animated reveal
+      // Wrap grid in a <details> — collapsed by default
       const $details = document.createElement('details');
       $details.className = 'tools-details';
-      $details.open = true;
       $details.innerHTML = `
         <summary class="tools-summary">
+          <span class="tools-summary__domain">EXEC</span>
+          <span class="tools-summary__label">Ordnance Depot</span>
+          <span class="tools-summary__meta">${tools.length} payloads</span>
+          <span class="tools-summary__status tools-summary__status--sealed">SEALED</span>
           <svg class="tools-summary__chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-          <span class="tools-summary__count">${tools.length} payloads</span>
         </summary>
         <div class="tools-details__body">
           <div class="tools-details__body-inner">
@@ -124,6 +126,14 @@ export function renderUI() {
           </div>
         </div>
       `;
+      $details.addEventListener('toggle', () => {
+        const $status = $details.querySelector('.tools-summary__status');
+        if ($status) {
+          $status.textContent = $details.open ? 'OPEN' : 'SEALED';
+          $status.classList.toggle('tools-summary__status--sealed', !$details.open);
+          $status.classList.toggle('tools-summary__status--open', $details.open);
+        }
+      });
       $toolsContainer.appendChild($details);
     } catch (e) {
       renderError($toolsContainer, "Failed to render ordnance depot.");
@@ -410,15 +420,23 @@ export function renderUI() {
   document.addEventListener("click", (e) => {
     const $btn = e.target.closest(".tool-entry__copy");
     if (!$btn) return;
+    if ($btn.classList.contains("tool-entry__copy--copied")) return;
     const cmd = $btn.dataset.cmd;
+    const $icon = $btn.querySelector("svg");
     navigator.clipboard
       .writeText(cmd)
       .then(() => {
         $btn.classList.add("tool-entry__copy--copied");
-        setTimeout(
-          () => $btn.classList.remove("tool-entry__copy--copied"),
-          1800,
-        );
+        if ($icon) {
+          $icon.outerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+        }
+        setTimeout(() => {
+          $btn.classList.remove("tool-entry__copy--copied");
+          const $check = $btn.querySelector("svg");
+          if ($check) {
+            $check.outerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>';
+          }
+        }, 1800);
       })
       .catch(() => {
         console.warn("[clipboard] write failed");

@@ -19,18 +19,18 @@
     filter: brightness(0.4) saturate(0.3);
     box-shadow: none;
   }
-  /* Hard overcurrent — the tube catches */
-  6%   {
+  /* Hard overcurrent — the tube catches (slower ramp, ~110ms at 1.1s) */
+  10%  {
     opacity: 1;
-    filter: brightness(2.4) saturate(1.8);
+    filter: brightness(2.0) saturate(1.6);
     box-shadow:
       0 0 0 1px rgba(190, 41, 236, 0.9),
-      0 0 40px rgba(190, 41, 236, 0.6),
-      0 0 80px rgba(190, 41, 236, 0.25),
-      inset 0 0 30px rgba(190, 41, 236, 0.12);
+      0 0 40px rgba(190, 41, 236, 0.5),
+      0 0 80px rgba(190, 41, 236, 0.2),
+      inset 0 0 30px rgba(190, 41, 236, 0.1);
   }
   /* First damp */
-  15%  {
+  20%  {
     opacity: 1;
     filter: brightness(1.2) saturate(1.2);
     box-shadow:
@@ -38,13 +38,13 @@
       0 0 20px rgba(190, 41, 236, 0.2);
   }
   /* Stutter — one ghost drop, the arc not quite holding */
-  22%  {
-    opacity: 0.75;
-    filter: brightness(0.6) saturate(0.8);
+  30%  {
+    opacity: 0.78;
+    filter: brightness(0.65) saturate(0.8);
     box-shadow: none;
   }
   /* Catches — locked on */
-  30%  {
+  42%  {
     opacity: 1;
     filter: brightness(1.1) saturate(1.1);
     box-shadow:
@@ -62,20 +62,20 @@
 /* ── Section title ignition — no box-shadow, just brightness ── */
 @keyframes tl-ignite-title {
   0%   { opacity: 0.18; filter: brightness(0.4) saturate(0.3); }
-  6%   { opacity: 1;    filter: brightness(2.2) saturate(2); }
-  16%  { opacity: 1;    filter: brightness(1.1) saturate(1.2); }
-  22%  { opacity: 0.7;  filter: brightness(0.55); }
-  30%  { opacity: 1;    filter: brightness(1.05); }
+  10%  { opacity: 1;    filter: brightness(1.9) saturate(1.8); }
+  22%  { opacity: 1;    filter: brightness(1.1) saturate(1.2); }
+  32%  { opacity: 0.72; filter: brightness(0.6); }
+  44%  { opacity: 1;    filter: brightness(1.05); }
   100% { opacity: 1;    filter: brightness(1) saturate(1); }
 }
 
 /* ── Lit ───────────────────────────────────────────────────── */
 .tl-lamp--lit {
-  animation: tl-ignite 0.75s cubic-bezier(0.0, 0.0, 0.2, 1) forwards;
+  animation: tl-ignite 1.1s cubic-bezier(0.0, 0.0, 0.2, 1) forwards;
 }
 
 .section-title.tl-lamp--lit {
-  animation: tl-ignite-title 0.5s cubic-bezier(0.0, 0.0, 0.2, 1) forwards;
+  animation: tl-ignite-title 0.75s cubic-bezier(0.0, 0.0, 0.2, 1) forwards;
 }
 
 /* ── Reduced motion — skip straight to on ─────────────────── */
