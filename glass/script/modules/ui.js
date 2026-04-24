@@ -272,7 +272,7 @@ export function renderUI() {
 
       closeAll();
       if (!isOpen) {
-        if (window.innerWidth > 768) positionOverlay($cat);
+        if (window.innerWidth > 900) positionOverlay($cat);
         $cat.classList.add("ext-category--open");
         $btn.setAttribute("aria-expanded", "true");
       }
@@ -283,7 +283,7 @@ export function renderUI() {
     });
 
     window.addEventListener("resize", () => {
-      if (window.innerWidth <= 768) {
+      if (window.innerWidth <= 900) {
         $extContainer.querySelectorAll(".ext-category__body").forEach(($b) => {
           $b.style.left = "";
           $b.style.width = "";

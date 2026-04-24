@@ -1,4 +1,40 @@
 /* ─── Responsive ─────────────────────────────── */
+
+/* Signal Mesh: stack vertically at anything below 900px */
+@media (max-width: 900px) {
+  .ext-container {
+    display: flex;
+    flex-direction: column;
+    grid-template-columns: unset;
+  }
+
+  .ext-list { grid-template-columns: 1fr; gap: 1rem; }
+  .item-ext { min-height: var(--touch-min); }
+
+  .ext-category__body {
+    display: none;
+    position: static !important;
+    transform: none !important;
+    width: 100% !important;
+    left: 0 !important;
+    top: auto !important;
+    max-height: 70vh;
+    overflow-y: auto;
+    opacity: 1;
+    pointer-events: auto;
+    border: 1px solid var(--theme-accent);
+    border-top: none;
+    border-radius: 0 0 5px 5px;
+    box-shadow: none;
+    backdrop-filter: none;
+    padding: 0;
+  }
+
+  .ext-category--open .ext-category__body {
+    display: block;
+  }
+}
+
 @media (max-width: 768px) {
   body { padding: 1rem; }
   /* Playground needs zero body padding — layout is self-contained */
@@ -12,38 +48,6 @@
   .tools-grid { grid-template-columns: 1fr; }
   .bots-grid { gap: 1.25rem; }
   .bot-profile { width: 90px; }
-
-  /* Restore touch-friendly tap targets on mobile for the signal mesh only */
-  .item-ext { min-height: var(--touch-min); }
-
-  .ext-list { grid-template-columns: 1fr; gap: 1rem; }
-
-  /* Signal Mesh: stack vertically, accordion expands inline */
-  .ext-container {
-    display: flex;
-    flex-direction: column;
-    grid-template-columns: unset;
-  }
-
-  .ext-category__body {
-    position: static;
-    transform: none !important;
-    width: 100% !important;
-    left: 0 !important;
-    max-height: 0;
-    overflow: hidden;
-    opacity: 0;
-    transition: max-height 0.32s cubic-bezier(0.0, 0, 0.2, 1), opacity 0.2s ease-out;
-    border-top: none;
-    border-radius: 0 0 5px 5px;
-    box-shadow: none;
-  }
-
-  .ext-category--open .ext-category__body {
-    max-height: 70vh;
-    opacity: 1;
-    overflow-y: auto;
-  }
 
   /* Tooltips break on small viewports — hide on touch */
   .tooltip-data,
@@ -89,10 +93,7 @@
   .bot-profile { width: 80px; }
   .bot-avatar { width: 56px; height: 56px; }
 
-  /* Signal Mesh overlay: cap height so it doesn't cover the whole screen */
-  .ext-category__body { max-height: 60vh; overflow-y: auto; }
-
-  .site-footer__bar {
+.site-footer__bar {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
