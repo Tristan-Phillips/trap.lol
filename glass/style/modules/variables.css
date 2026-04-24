@@ -16,9 +16,9 @@
   --glass-bg-warm:  rgba(22, 12, 4, 0.5);
 
   /* Borders */
-  --glass-border:      rgba(190, 41, 236, 0.18);
-  --glass-border-warm: rgba(244, 168, 48, 0.25);
-  --glass-border-mute: rgba(255, 255, 255, 0.06);
+  --glass-border:      rgba(190, 41, 236, 0.35);
+  --glass-border-warm: rgba(244, 158, 38, 0.40);
+  --glass-border-mute: rgba(190, 41, 236, 0.16);
 
   /* Accents (Global Defaults) */
   --accent:             #BE29EC;

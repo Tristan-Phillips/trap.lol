@@ -1,4 +1,5 @@
 import { config, hostingData, toolsData, botsData, extData, guideData, appsData, llmData, fetchJSON, esc, renderError, globalRouter, IS_TOUCH } from './core.js';
+import { initTunnelLight } from './tunnel-light.js';
 
 export function renderUI() {
 
@@ -399,7 +400,10 @@ export function renderUI() {
     console.warn("[lucide] library not available — icons will not render.");
   }
 
-  // ── 9b. Carousel arrow initial state (after layout) ──────────────────────
+  // ── 9b. Tunnel light — after all HTML + icons are in the DOM ─────────────
+  requestAnimationFrame(() => initTunnelLight());
+
+  // ── 9c. Carousel arrow initial state (after layout) ──────────────────────
   requestAnimationFrame(updateArrows);
 
   // ── 10. Copy-to-clipboard (Ordnance Depot) ───────────────────────────────

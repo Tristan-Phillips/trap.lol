@@ -1,0 +1,48 @@
+/* ─────────────────────────────────────────────────────────────
+   trap.lol — Border Life
+   Single photon crawling the card seams. Nothing else.
+   GPL-3.0 — trap.lol
+   ───────────────────────────────────────────────────────────── */
+
+/* ── Horizontal seam crawl — top edge of cards ────────────── */
+@keyframes bl-arc-crawl {
+  0%   { opacity: 0;   transform: translateX(-100%); }
+  6%   { opacity: 1; }
+  94%  { opacity: 1; }
+  100% { opacity: 0;   transform: translateX(200%); }
+}
+
+/* ── Vertical seam crawl — left accent of tool entries ─────── */
+@keyframes bl-arc-crawl-v {
+  0%   { opacity: 0;   transform: translateY(-100%); }
+  6%   { opacity: 0.7; }
+  94%  { opacity: 0.7; }
+  100% { opacity: 0;   transform: translateY(200%); }
+}
+
+/* ── Sovereign Node Cards — top edge photon ───────────────── */
+.card-primary::after {
+  animation: bl-arc-crawl 18s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  animation-delay: var(--bl-delay, 0s);
+}
+.card-primary-wrap:nth-child(2) .card-primary::after { --bl-delay: -6s; }
+.card-primary-wrap:nth-child(3) .card-primary::after { --bl-delay: -12s; }
+.card-primary-wrap:nth-child(4) .card-primary::after { --bl-delay: -3s; }
+.card-primary-wrap:nth-child(5) .card-primary::after { --bl-delay: -15s; }
+.card-primary-wrap:nth-child(6) .card-primary::after { --bl-delay: -9s; }
+
+.card-primary:hover::after,
+.card-primary:focus-visible::after { animation: none; }
+
+/* ── Ordnance Depot — left seam photon ────────────────────── */
+.tool-entry::before {
+  animation: bl-arc-crawl-v 22s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+.tool-entry:nth-child(2)::before { animation-delay: -7s; }
+.tool-entry:nth-child(3)::before { animation-delay: -14s; }
+
+/* ── Reduced motion ────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .card-primary::after,
+  .tool-entry::before { animation: none; }
+}

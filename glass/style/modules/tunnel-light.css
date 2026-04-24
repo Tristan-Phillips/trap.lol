@@ -1,0 +1,85 @@
+/* ─────────────────────────────────────────────────────────────
+   trap.lol — Tunnel Light
+   Elements dormant, not broken. The scroll ignites them.
+   GPL-3.0 — trap.lol
+   ───────────────────────────────────────────────────────────── */
+
+/* ── Dormant state — dim, present, waiting ─────────────────── */
+.tl-lamp {
+  opacity: 0.18;
+  filter: brightness(0.4) saturate(0.3);
+  transition: none;
+}
+
+/* ── The ignition flash ────────────────────────────────────── */
+@keyframes tl-ignite {
+  /* Dormant */
+  0%   {
+    opacity: 0.18;
+    filter: brightness(0.4) saturate(0.3);
+    box-shadow: none;
+  }
+  /* Hard overcurrent — the tube catches */
+  6%   {
+    opacity: 1;
+    filter: brightness(2.4) saturate(1.8);
+    box-shadow:
+      0 0 0 1px rgba(190, 41, 236, 0.9),
+      0 0 40px rgba(190, 41, 236, 0.6),
+      0 0 80px rgba(190, 41, 236, 0.25),
+      inset 0 0 30px rgba(190, 41, 236, 0.12);
+  }
+  /* First damp */
+  15%  {
+    opacity: 1;
+    filter: brightness(1.2) saturate(1.2);
+    box-shadow:
+      0 0 0 1px rgba(190, 41, 236, 0.45),
+      0 0 20px rgba(190, 41, 236, 0.2);
+  }
+  /* Stutter — one ghost drop, the arc not quite holding */
+  22%  {
+    opacity: 0.75;
+    filter: brightness(0.6) saturate(0.8);
+    box-shadow: none;
+  }
+  /* Catches — locked on */
+  30%  {
+    opacity: 1;
+    filter: brightness(1.1) saturate(1.1);
+    box-shadow:
+      0 0 0 1px rgba(190, 41, 236, 0.3),
+      0 0 12px rgba(190, 41, 236, 0.12);
+  }
+  /* Settled */
+  100% {
+    opacity: 1;
+    filter: brightness(1) saturate(1);
+    box-shadow: none;
+  }
+}
+
+/* ── Section title ignition — no box-shadow, just brightness ── */
+@keyframes tl-ignite-title {
+  0%   { opacity: 0.18; filter: brightness(0.4) saturate(0.3); }
+  6%   { opacity: 1;    filter: brightness(2.2) saturate(2); }
+  16%  { opacity: 1;    filter: brightness(1.1) saturate(1.2); }
+  22%  { opacity: 0.7;  filter: brightness(0.55); }
+  30%  { opacity: 1;    filter: brightness(1.05); }
+  100% { opacity: 1;    filter: brightness(1) saturate(1); }
+}
+
+/* ── Lit ───────────────────────────────────────────────────── */
+.tl-lamp--lit {
+  animation: tl-ignite 0.75s cubic-bezier(0.0, 0.0, 0.2, 1) forwards;
+}
+
+.section-title.tl-lamp--lit {
+  animation: tl-ignite-title 0.5s cubic-bezier(0.0, 0.0, 0.2, 1) forwards;
+}
+
+/* ── Reduced motion — skip straight to on ─────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .tl-lamp      { opacity: 1; filter: none; }
+  .tl-lamp--lit { animation: none; opacity: 1; filter: none; box-shadow: none; }
+}
