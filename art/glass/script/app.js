@@ -464,8 +464,10 @@ function openLightbox(idx) {
   const $lb = qs("#lightbox");
   $lb.classList.remove("hidden");
   $lb.removeAttribute("aria-hidden");
-  qs("#lb-close").focus();
+  document.body.classList.add("lb-open");
   document.body.style.overflow = "hidden";
+  /* Defer focus so the entrance animation has started */
+  requestAnimationFrame(() => qs("#lb-close").focus());
 }
 
 function closeLightbox() {
@@ -473,6 +475,7 @@ function closeLightbox() {
   const $lb = qs("#lightbox");
   $lb.classList.add("hidden");
   $lb.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("lb-open");
   document.body.style.overflow = "";
 }
 
@@ -597,16 +600,78 @@ function bindUI() {
     if (e.key === "ArrowRight") navigate(1);
   });
 
-  /* swipe */
-  let _tx = null;
-  qs("#lightbox").addEventListener("touchstart", e => {
+  /* ── Swipe gestures ──────────────────────────────────────────────
+     Horizontal: navigate prev/next (existing behaviour)
+     Vertical ↓ : drag-to-dismiss — live drag on the inner, close on release
+     The panel scroll area is excluded so the user can still scroll metadata.
+  ─────────────────────────────────────────────────────────────── */
+  const $lb     = qs("#lightbox");
+  const $inner  = qs(".lightbox__inner");
+  let _tx = null, _ty = null;
+  let _dragging = false;
+
+  $lb.addEventListener("touchstart", e => {
+    /* Don't hijack scrollable panel touches */
+    if (e.target.closest(".lightbox__panel")) return;
     _tx = e.touches[0].clientX;
+    _ty = e.touches[0].clientY;
+    _dragging = false;
   }, { passive: true });
-  qs("#lightbox").addEventListener("touchend", e => {
-    if (_tx === null) return;
+
+  $lb.addEventListener("touchmove", e => {
+    if (_ty === null) return;
+    /* Don't hijack panel scroll */
+    if (e.target.closest(".lightbox__panel")) return;
+    const dy = e.touches[0].clientY - _ty;
+    const dx = e.touches[0].clientX - _tx;
+    /* Only activate vertical drag if motion is more downward than horizontal */
+    if (!_dragging && Math.abs(dy) < 8) return;
+    if (!_dragging && Math.abs(dx) > Math.abs(dy)) return; /* horizontal wins → let nav handle */
+    if (dy < 0) return; /* no upward drag */
+    _dragging = true;
+    /* Live drag: translate inner and dim the backdrop */
+    const progress = Math.min(dy / 260, 1);
+    $inner.style.transform  = `translateY(${dy * 0.72}px) scale(${1 - progress * 0.06})`;
+    $inner.style.opacity    = String(1 - progress * 0.55);
+    $inner.style.transition = "none";
+    $lb.style.background    = `rgba(4, 2, 8, ${0.97 - progress * 0.55})`;
+  }, { passive: true });
+
+  $lb.addEventListener("touchend", e => {
+    if (_tx === null || _ty === null) return;
     const dx = e.changedTouches[0].clientX - _tx;
-    if (Math.abs(dx) > 50) navigate(dx < 0 ? 1 : -1);
-    _tx = null;
+    const dy = e.changedTouches[0].clientY - _ty;
+
+    if (_dragging) {
+      /* Dismiss if dragged > 100px down or released with enough velocity */
+      if (dy > 100) {
+        /* Animate out then close */
+        $inner.style.transition = "transform 0.22s cubic-bezier(0.4, 0, 1, 1), opacity 0.22s ease";
+        $inner.style.transform  = "translateY(100%) scale(0.94)";
+        $inner.style.opacity    = "0";
+        setTimeout(() => {
+          closeLightbox();
+          /* Reset inline styles after close */
+          $inner.style.transform  = "";
+          $inner.style.opacity    = "";
+          $inner.style.transition = "";
+          $lb.style.background    = "";
+        }, 220);
+      } else {
+        /* Snap back */
+        $inner.style.transition = "transform 0.35s cubic-bezier(0.34, 1.3, 0.64, 1), opacity 0.25s ease";
+        $inner.style.transform  = "";
+        $inner.style.opacity    = "";
+        $lb.style.background    = "";
+        /* Clean up transition after snap */
+        setTimeout(() => { $inner.style.transition = ""; }, 360);
+      }
+    } else if (!_dragging && Math.abs(dx) > 50 && Math.abs(dy) < 60) {
+      /* Horizontal swipe — navigate */
+      navigate(dx < 0 ? 1 : -1);
+    }
+
+    _tx = null; _ty = null; _dragging = false;
   }, { passive: true });
 }
 

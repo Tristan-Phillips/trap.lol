@@ -8,9 +8,9 @@
 :root {
   --bg-base:             #05030A;
   --glass-bg:            rgba(12, 7, 20, 0.6);
-  --glass-border:        rgba(190, 41, 236, 0.14);
+  --glass-border:        rgba(190, 41, 236, 0.22);
   --glass-border-warm:   rgba(244, 168, 48, 0.2);
-  --glass-border-mute:   rgba(255, 255, 255, 0.05);
+  --glass-border-mute:   rgba(190, 41, 236, 0.10);
 
   --accent:              #BE29EC;
   --accent-warm:         #F4A830;
@@ -100,6 +100,20 @@ body::before {
   background-size: 256px 256px;
 }
 
+/* ─── Scanlines ──────────────────────────────── */
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  z-index: 9989; pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgba(0, 0, 0, 0.022) 3px,
+    rgba(0, 0, 0, 0.022) 4px
+  );
+}
+
 /* ─── Body ───────────────────────────────────── */
 html { height: 100%; }
 body {
@@ -129,30 +143,63 @@ body {
   z-index: 10;
 }
 
+/* Top signal hairline — matches main site's panel accent bar pattern */
+.art-header::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 2.5rem; right: 2.5rem;
+  height: 1px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-warm) 40%, transparent);
+  opacity: 0.25;
+  pointer-events: none;
+}
+
 .back-link {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 36px; height: 36px;
-  border: 1px solid var(--glass-border);
+  border: 1px solid var(--glass-border-mute);
   border-radius: 6px;
   color: var(--text-muted);
   text-decoration: none;
   flex-shrink: 0;
   margin-top: 0.25rem;
-  transition: color var(--t-fast), border-color var(--t-fast), box-shadow var(--t-med);
+  transition: color var(--t-fast), border-color var(--t-fast),
+              box-shadow var(--t-med), background var(--t-fast);
   background: rgba(6, 4, 10, 0.6);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+  position: relative;
+  overflow: hidden;
+}
+/* Subtle sweep — same pattern as main site card-primary::after */
+.back-link::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 100%; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent-warm), transparent);
+  transition: left var(--t-slow);
 }
 .back-link:hover, .back-link:focus-visible {
   color: var(--accent);
-  border-color: rgba(190, 41, 236, 0.4);
-  box-shadow: 0 0 16px var(--accent-glow);
+  border-color: rgba(190, 41, 236, 0.45);
+  box-shadow: 0 0 18px var(--accent-glow), 0 4px 16px rgba(0,0,0,0.4);
+  background: rgba(190, 41, 236, 0.06);
   outline: none;
 }
+.back-link:hover::after, .back-link:focus-visible::after { left: 100%; }
 
-.art-header__inner { flex: 1; min-width: 0; }
+.art-header__inner {
+  flex: 1;
+  min-width: 0;
+  /* Left accent bar — mirrors main site section-title / card-primary vertical stripe */
+  border-left: 2px solid transparent;
+  border-image: linear-gradient(180deg, var(--accent-warm) 0%, var(--accent) 60%, transparent 100%) 1;
+  padding-left: 1rem;
+  margin-left: 0.25rem;
+}
 
 .art-header__eyebrow {
   font-family: var(--font-mono);
@@ -161,7 +208,7 @@ body {
   letter-spacing: 0.18em;
   text-transform: uppercase;
   margin-bottom: 0.45rem;
-  opacity: 0.6;
+  opacity: 0.65;
 }
 
 .art-header__title {
@@ -204,6 +251,10 @@ body {
   gap: 0.45rem;
   padding-top: 0.2rem;
   flex-shrink: 0;
+  /* Vertical separator — mirrors main site's section boundary feel */
+  border-left: 1px solid var(--glass-border-mute);
+  padding-left: 1.25rem;
+  margin-left: 0.25rem;
 }
 
 .filter-btn {
@@ -216,18 +267,33 @@ body {
   background: rgba(6, 4, 10, 0.5);
   color: var(--text-muted);
   transition: color var(--t-fast), border-color var(--t-fast),
-              box-shadow var(--t-med), background var(--t-fast);
+              box-shadow var(--t-med), background var(--t-fast),
+              transform var(--t-fast);
+  position: relative;
+  overflow: hidden;
+}
+/* Sweep on hover — matches back-link and card-primary sweep */
+.filter-btn::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 100%; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  transition: left var(--t-slow);
 }
 .filter-btn:hover, .filter-btn:focus-visible {
   color: var(--text-main);
-  border-color: rgba(190, 41, 236, 0.3);
+  border-color: rgba(190, 41, 236, 0.32);
+  background: rgba(190, 41, 236, 0.04);
+  transform: translateY(-1px);
   outline: none;
 }
+.filter-btn:hover::after, .filter-btn:focus-visible::after { left: 100%; }
 .filter-btn.active {
   color: var(--accent);
-  border-color: rgba(190, 41, 236, 0.45);
-  box-shadow: 0 0 14px var(--accent-glow);
-  background: rgba(190, 41, 236, 0.07);
+  border-color: rgba(190, 41, 236, 0.5);
+  box-shadow: 0 0 16px var(--accent-glow), 0 0 0 1px rgba(190, 41, 236, 0.08);
+  background: rgba(190, 41, 236, 0.09);
 }
 
 /* ─── Grid ───────────────────────────────────── */
@@ -269,22 +335,38 @@ body {
 
 .art-card::before {
   content: '';
-  position: absolute; inset: 0;
-  background: linear-gradient(135deg, rgba(190, 41, 236, 0.07) 0%, transparent 60%);
+  position: absolute;
+  top: 0; left: 0;
+  width: 2px; height: 100%;
+  background: linear-gradient(180deg, var(--accent-warm), var(--accent));
   opacity: 0;
   transition: opacity var(--t-med);
-  z-index: 1;
+  z-index: 4;
+  pointer-events: none;
+}
+
+/* Horizontal signal sweep — card-primary::after equivalent */
+.art-card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 100%; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent-warm), transparent);
+  transition: left var(--t-slow);
+  z-index: 4;
   pointer-events: none;
 }
 
 /* hover — only on pointer devices */
 @media (hover: hover) and (pointer: fine) {
   .art-card:hover {
-    border-color: rgba(190, 41, 236, 0.32);
-    box-shadow: 0 8px 40px rgba(190, 41, 236, 0.14), 0 2px 10px rgba(0,0,0,0.5);
+    border-color: rgba(244, 168, 48, 0.28);
+    box-shadow: 0 12px 40px var(--accent-glow-warm), 0 2px 10px rgba(0,0,0,0.5),
+                0 0 0 1px rgba(244, 168, 48, 0.06);
     transform: translateY(-4px) scale(1.01);
   }
   .art-card:hover::before { opacity: 1; }
+  .art-card:hover::after  { left: 100%; }
   .art-card:hover .art-card__thumb {
     transform: scale(1.05);
     filter: brightness(0.65);
@@ -376,18 +458,45 @@ body {
   grid-column: 1 / -1;
 }
 
+/* ─── Background blur when lightbox is open ─── */
+.art-grid,
+.art-header,
+.art-footer,
+.pull-zone {
+  transition: filter 0.35s cubic-bezier(0.25, 0, 0, 1),
+              opacity 0.35s cubic-bezier(0.25, 0, 0, 1);
+}
+body.lb-open .art-grid,
+body.lb-open .art-header,
+body.lb-open .art-footer,
+body.lb-open .pull-zone {
+  filter: blur(8px) brightness(0.55);
+  opacity: 0.6;
+  pointer-events: none;
+}
+
 /* ─── Lightbox ───────────────────────────────── */
 .lightbox {
-  position: fixed; inset: 0;
+  position: fixed;
+  /* Cover the full screen including notch/home-bar on iOS Safari */
+  top: 0; left: 0; right: 0; bottom: 0;
+  /* Safe-area expansion — fills under notch and home indicator */
+  padding-top:    env(safe-area-inset-top,    0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left:   env(safe-area-inset-left,   0px);
+  padding-right:  env(safe-area-inset-right,  0px);
   z-index: 9000;
-  background: rgba(4, 2, 8, 0.95);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: rgba(4, 2, 8, 0.97);
+  backdrop-filter: blur(24px) saturate(1.2);
+  -webkit-backdrop-filter: blur(24px) saturate(1.2);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1.5rem;
-  transition: opacity var(--t-med), visibility var(--t-med);
+  /* Inner content padding (sits on top of safe-area padding) */
+  --lb-pad: 1.5rem;
+  transition: opacity 0.3s cubic-bezier(0.25, 0, 0, 1),
+              visibility 0.3s cubic-bezier(0.25, 0, 0, 1);
+  will-change: opacity;
 }
 .lightbox.hidden {
   opacity: 0;
@@ -395,21 +504,23 @@ body {
   pointer-events: none;
 }
 .lightbox.hidden .lightbox__inner {
-  transform: scale(0.96) translateY(14px);
+  transform: scale(0.94) translateY(20px);
   opacity: 0;
 }
 
 .lightbox__inner {
   display: flex;
-  width: 100%;
+  width: calc(100% - var(--lb-pad) * 2);
   max-width: 1080px;
-  max-height: 88vh;
+  max-height: calc(88vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
   border: 1px solid var(--glass-border);
   border-radius: 10px;
   overflow: hidden;
-  background: rgba(8, 5, 14, 0.85);
-  box-shadow: 0 0 70px rgba(190, 41, 236, 0.1), 0 32px 64px rgba(0,0,0,0.65);
-  transition: transform var(--t-med), opacity var(--t-med);
+  background: rgba(8, 5, 14, 0.88);
+  box-shadow: 0 0 70px rgba(190, 41, 236, 0.12), 0 32px 64px rgba(0,0,0,0.7);
+  transition: transform 0.35s cubic-bezier(0.34, 1.3, 0.64, 1),
+              opacity 0.28s cubic-bezier(0.25, 0, 0, 1);
+  will-change: transform, opacity;
 }
 
 .lightbox__image-wrap {
@@ -500,6 +611,7 @@ body {
   scrollbar-color: rgba(190, 41, 236, 0.18) transparent;
   position: relative;
 }
+/* Accent hairline + drag-handle pip (pip only visible on mobile via media query) */
 .lightbox__panel::before {
   content: '';
   position: absolute;
@@ -507,6 +619,18 @@ body {
   height: 2px;
   background: linear-gradient(90deg, var(--accent), var(--accent-warm) 50%, transparent);
   opacity: 0.35;
+}
+/* Drag handle pip — mobile sheet affordance */
+.lightbox__panel::after {
+  content: '';
+  position: absolute;
+  top: 0.55rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 36px; height: 3px;
+  background: rgba(190, 41, 236, 0.25);
+  border-radius: 2px;
+  display: none; /* shown only on mobile below */
 }
 
 .lightbox__panel-tags {
@@ -1157,15 +1281,28 @@ body {
   font-family: var(--font-mono);
   font-size: 0.7rem;
   color: var(--text-muted);
-  border-top: 1px dashed var(--glass-border-mute);
+  border-top: 1px solid var(--glass-border-mute);
   position: relative;
   z-index: 5;
 }
-.art-footer__sep { color: var(--accent); font-weight: 700; }
+/* Accent hairline above footer — mirrors the header top-bar */
+.art-footer::before {
+  content: '';
+  position: absolute;
+  top: -1px; left: 2.5rem; right: 2.5rem;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent) 30%, var(--accent-warm) 60%, transparent);
+  opacity: 0.18;
+  pointer-events: none;
+}
+.art-footer__copy { opacity: 0.55; }
+.art-footer__sep { color: var(--accent); font-weight: 700; opacity: 0.7; }
+.art-footer__tagline { opacity: 0.35; letter-spacing: 0.04em; }
 .art-footer__signal {
   color: #4ade80;
   display: flex; align-items: center; gap: 0.35rem;
   letter-spacing: 0.12em;
+  margin-left: auto;
 }
 .art-footer__signal::before {
   content: '';
@@ -1193,13 +1330,13 @@ body {
 @media (max-width: 900px) {
   .lightbox__inner {
     flex-direction: column;
-    max-height: 92vh;
+    max-height: calc(92dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
   }
   .lightbox__panel {
     width: 100%;
     border-left: none;
     border-top: 1px solid var(--glass-border);
-    max-height: 38vh;
+    max-height: 38dvh;
     padding: 1.1rem 1.25rem;
   }
   .lightbox__img-overlay {
@@ -1216,17 +1353,29 @@ body {
     gap: 0.75rem;
     align-items: center;
   }
+  /* Reset decorative left bar — too tight on mobile */
+  .art-header__inner {
+    border-left: none;
+    border-image: none;
+    padding-left: 0;
+    margin-left: 0;
+  }
   .art-header__controls {
     flex-direction: row;
     padding-top: 0;
     align-self: center;
     gap: 0.35rem;
+    border-left: none;
+    padding-left: 0;
+    margin-left: 0;
   }
   .art-header__eyebrow {
     font-size: 0.6rem;
     letter-spacing: 0.14em;
     margin-bottom: 0.3rem;
   }
+  /* Collapse tagline on mobile — keep copyright + signal */
+  .art-footer__tagline { display: none; }
   .art-header__title {
     font-size: clamp(2rem, 9vw, 2.8rem);
     letter-spacing: -0.5px;
@@ -1259,17 +1408,31 @@ body {
   }
 
   /* ── Lightbox — full-screen on mobile ── */
+  /* Override the inner content padding; safe-area insets are handled by the
+     top-level .lightbox rule (env() vars). Stretch to fill the inset-padded area. */
   .lightbox {
-    padding: 0;
+    --lb-pad: 0px;
+    padding-left:   env(safe-area-inset-left,   0px);
+    padding-right:  env(safe-area-inset-right,  0px);
+    padding-top:    env(safe-area-inset-top,    0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
     align-items: stretch;
   }
   .lightbox__inner {
     border-radius: 0;
     border: none;
-    max-height: 100dvh;
-    height: 100dvh;
+    /* Fill the full padded-in area — the overlay already covers safe zones */
     width: 100%;
+    height: 100%;
+    max-height: none;
+    max-width: none;
     flex-direction: column;
+    /* Suppress the spring entrance on mobile — just fade in */
+    transition: opacity 0.28s cubic-bezier(0.25, 0, 0, 1);
+  }
+  .lightbox.hidden .lightbox__inner {
+    transform: none;
+    opacity: 0;
   }
 
   /* Image fills remaining space above panel */
@@ -1280,12 +1443,13 @@ body {
     width: 100%;
   }
 
-  /* Panel at bottom, capped + scrollable */
+  /* Panel at bottom, capped + scrollable.
+     Extra bottom padding absorbs the home indicator safe area. */
   .lightbox__panel {
     max-height: 38dvh;
     flex: none;
     overflow-y: auto;
-    padding: 1rem 1rem 1.5rem;
+    padding: 1rem 1rem calc(1.5rem + env(safe-area-inset-bottom, 0px));
     gap: 0.75rem;
   }
 
@@ -1316,15 +1480,20 @@ body {
     font-size: 0.68rem;
   }
 
-  /* Panel accent bar — subtle grip hint */
+  /* Panel accent bar */
   .lightbox__panel::before {
     height: 3px;
   }
+  /* Show drag pip on mobile — sheet affordance */
+  .lightbox__panel::after {
+    display: block;
+  }
 
-  /* Close button — bigger tap target */
+  /* Close button — bigger tap target, clear of the notch */
   .lightbox__close {
     width: 42px; height: 42px;
-    top: 0.6rem; right: 0.6rem;
+    top: max(0.6rem, env(safe-area-inset-top, 0.6rem));
+    right: 0.6rem;
   }
 
   /* Nav buttons */
