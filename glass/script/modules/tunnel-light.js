@@ -12,7 +12,7 @@ export function initTunnelLight() {
     ".section-title",
     ".card-primary-wrap",
     ".ext-category",
-    ".bot-profile",
+    ".bots-grid",
     ".app-card",
     ".tool-entry",
     ".site-footer",

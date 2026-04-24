@@ -51,10 +51,10 @@
       0 0 0 1px rgba(190, 41, 236, 0.3),
       0 0 12px rgba(190, 41, 236, 0.12);
   }
-  /* Settled */
+  /* Settled — filter: none is critical; brightness(1) still creates a stacking context */
   100% {
     opacity: 1;
-    filter: brightness(1) saturate(1);
+    filter: none;
     box-shadow: none;
   }
 }
@@ -66,7 +66,7 @@
   22%  { opacity: 1;    filter: brightness(1.1) saturate(1.2); }
   32%  { opacity: 0.72; filter: brightness(0.6); }
   44%  { opacity: 1;    filter: brightness(1.05); }
-  100% { opacity: 1;    filter: brightness(1) saturate(1); }
+  100% { opacity: 1;    filter: none; }
 }
 
 /* ── Lit ───────────────────────────────────────────────────── */

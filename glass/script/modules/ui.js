@@ -155,14 +155,10 @@ export function renderUI() {
 
         const botTooltipId = `bot-tip-${esc(bot.name.toLowerCase().replace(/\s+/g, '-'))}`;
         html += `
-          <div class="bot-profile">
+          <div class="bot-profile" data-tip-id="${botTooltipId}">
             <div class="bot-avatar" role="img" aria-label="${esc(bot.name)}" aria-describedby="${botTooltipId}">
               <i data-lucide="${esc(bot.icon)}"></i>
               <div class="bot-status ${esc(bot.status)}"></div>
-            </div>
-            <div class="agent-tooltip" id="${botTooltipId}" role="tooltip">
-              <span class="agent-id">ID: ${esc(bot.name.toUpperCase())} ${bot.shortcut ? `[${esc(bot.shortcut)}]` : ""}</span>
-              <p>${esc(bot.description)}</p>
             </div>
             <span class="bot-name">${esc(bot.name)}</span>
             <div class="bot-actions">
@@ -173,6 +169,13 @@ export function renderUI() {
             </div>
           </div>
         `;
+        // Tooltip lives on body — immune to any stacking context inside bots-grid
+        const $tip = document.createElement('div');
+        $tip.className = 'agent-tooltip';
+        $tip.id = botTooltipId;
+        $tip.setAttribute('role', 'tooltip');
+        $tip.innerHTML = `<span class="agent-id">ID: ${esc(bot.name.toUpperCase())} ${bot.shortcut ? `[${esc(bot.shortcut)}]` : ""}</span><p>${esc(bot.description)}</p>`;
+        document.body.appendChild($tip);
       });
       $botsContainer.innerHTML = html;
     } catch (e) {
@@ -486,7 +489,56 @@ export function renderUI() {
     }
   });
 
-  // ── 13. Scroll-to-top ────────────────────────────────────────────────────
+  // ── 13. Bot tooltips — body-level, positioned via getBoundingClientRect ──────
+  // Tooltips live on <body> to escape stacking contexts inside bots-grid.
+  function showBotTip($profile) {
+    const id = $profile.dataset.tipId;
+    if (!id) return;
+    const $tip = document.getElementById(id);
+    if (!$tip) return;
+    hideBotTips();
+    // Make visible first so the browser lays it out, then measure + position
+    $tip.classList.add('agent-tooltip--visible');
+    requestAnimationFrame(() => {
+      const r   = $profile.getBoundingClientRect();
+      const tipW = $tip.offsetWidth;
+      const tipH = $tip.offsetHeight;
+      let left = r.left + r.width / 2 - tipW / 2;
+      left = Math.max(8, Math.min(left, window.innerWidth - tipW - 8));
+      $tip.style.left = `${left}px`;
+      $tip.style.top  = `${r.top - tipH - 12}px`;
+    });
+  }
+
+  function hideBotTips() {
+    document.querySelectorAll('.agent-tooltip--visible').forEach((t) =>
+      t.classList.remove('agent-tooltip--visible')
+    );
+  }
+
+  // hover — show/hide on mouse enter/leave
+  document.addEventListener('mouseover', (e) => {
+    const $profile = e.target.closest('.bot-profile');
+    if ($profile) showBotTip($profile);
+  });
+  document.addEventListener('mouseout', (e) => {
+    if (!e.target.closest('.bot-profile')) return;
+    if (!e.relatedTarget?.closest('.bot-profile')) hideBotTips();
+  });
+
+  // tap — only toggle if no real mouse is driving (touch synthesises click without a preceding mouseover)
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('.bot-btn')) return;
+    const $profile = e.target.closest('.bot-profile');
+    if (!$profile) { hideBotTips(); return; }
+    // If the tooltip is already visible, a mouse click opened it via hover — leave it alone
+    const id = $profile.dataset.tipId;
+    const $tip = document.getElementById(id);
+    if ($tip?.classList.contains('agent-tooltip--visible')) return;
+    showBotTip($profile);
+  });
+
+  // ── 14. Scroll-to-top ────────────────────────────────────────────────────
   const $scrollTop = document.getElementById("scroll-top");
   if ($scrollTop) {
     let scrollRaf;
