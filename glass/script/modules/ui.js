@@ -378,6 +378,9 @@ export function renderUI() {
   // ── 8c. Uplink Launchpad ─────────────────────────────────────────────────
   renderUplinkLaunchpad();
 
+  // ── 8d. Social Signal Cluster ────────────────────────────────────────────
+  renderSocialCluster();
+
   // ── 9. Init Lucide icons ─────────────────────────────────────────────────
   if (typeof lucide !== "undefined") {
     lucide.createIcons();
@@ -692,5 +695,119 @@ function renderUplinkLaunchpad() {
     const qs   = params.toString();
     const href = qs ? `/playground/?${qs}` : "/playground/";
     window.location.href = href;
+  });
+}
+
+/* ═══════════════════════════════════════════════
+   ── Social Signal Cluster ─────────────────────
+   Fixed floating orbital node group. Reads
+   config.socials and bursts open on click.
+   ═══════════════════════════════════════════════ */
+function renderSocialCluster() {
+  const $root = document.getElementById("social-cluster");
+  if (!$root || !config?.socials) return;
+
+  // Per-platform identity map
+  const PLATFORM = {
+    github:  { label: "GITHUB",  accent: "var(--social-github-accent)",  glow: "var(--social-github-glow)",  subtle: "var(--social-github-subtle)",  icon: "github" },
+    youtube: { label: "YOUTUBE", accent: "var(--social-youtube-accent)", glow: "var(--social-youtube-glow)", subtle: "var(--social-youtube-subtle)", icon: "youtube" },
+    kick:    { label: "KICK",    accent: "var(--social-kick-accent)",    glow: "var(--social-kick-glow)",    subtle: "var(--social-kick-subtle)",    icon: "radio" },
+    "ko-fi": { label: "KO-FI",  accent: "var(--social-kofi-accent)",   glow: "var(--social-kofi-glow)",   subtle: "var(--social-kofi-subtle)",   icon: "coffee" },
+  };
+
+  // Node arc layout — strict quarter-circle, r=110px, 90°→0° in 30° steps.
+  // All buttons are 40px — minimum edge-to-edge gap at 30° step on r=110: ~57px. No overlap.
+  const R = 110;
+  const ARC = [90, 60, 30, 0].map(deg => {
+    const rad = deg * Math.PI / 180;
+    return {
+      x: `${Math.round(R * Math.cos(rad))}px`,
+      y: `${-Math.round(R * Math.sin(rad))}px`,
+    };
+  });
+
+  const socials = Object.entries(config.socials);
+
+  // Build nodes HTML
+  let nodesHTML = "";
+  socials.forEach(([key, url], i) => {
+    const p     = PLATFORM[key] || { label: key.toUpperCase(), accent: "var(--accent)", glow: "var(--accent-glow)", subtle: "var(--accent-subtle)", icon: "external-link" };
+    const arc   = ARC[i] || ARC[ARC.length - 1];
+    const delay = `${i * 35}ms`;
+
+    nodesHTML += `
+      <div
+        class="social-node"
+        style="--sc-x:${arc.x};--sc-y:${arc.y};--sc-delay:${delay};--sc-node-accent:${p.accent};--sc-node-glow:${p.glow};--sc-node-subtle:${p.subtle};"
+        data-platform="${esc(key)}"
+      >
+        <a
+          href="${esc(url)}"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="social-node__btn"
+          aria-label="${esc(p.label)} — ${esc(url)}"
+          tabindex="-1"
+        >
+          <i data-lucide="${esc(p.icon)}"></i>
+          <span class="social-node__pip" aria-hidden="true"></span>
+        </a>
+        <span class="social-node__label" aria-hidden="true">${esc(p.label)}</span>
+      </div>`;
+  });
+
+  $root.innerHTML = `
+    <button
+      class="social-cluster__nucleus"
+      aria-expanded="false"
+      aria-controls="social-cluster-nodes"
+      aria-label="Toggle social links"
+    >
+      <span class="social-cluster__grain" aria-hidden="true"></span>
+      <span class="social-cluster__scan"  aria-hidden="true"></span>
+      <span class="social-cluster__burst" aria-hidden="true"></span>
+      <span class="social-cluster__nucleus-glyph" aria-hidden="true">//</span>
+    </button>
+    <div class="social-cluster__nodes" id="social-cluster-nodes" aria-hidden="true">
+      ${nodesHTML}
+    </div>
+  `;
+
+  const $nucleus = $root.querySelector(".social-cluster__nucleus");
+  const $nodes   = $root.querySelector(".social-cluster__nodes");
+
+  function open() {
+    $root.classList.add("social-cluster--open");
+    $nucleus.setAttribute("aria-expanded", "true");
+    $nodes.setAttribute("aria-hidden", "false");
+    // Make node links keyboard-reachable
+    $nodes.querySelectorAll(".social-node__btn").forEach(a => a.removeAttribute("tabindex"));
+  }
+
+  function close() {
+    $root.classList.remove("social-cluster--open");
+    $nucleus.setAttribute("aria-expanded", "false");
+    $nodes.setAttribute("aria-hidden", "true");
+    $nodes.querySelectorAll(".social-node__btn").forEach(a => a.setAttribute("tabindex", "-1"));
+  }
+
+  function toggle() {
+    $root.classList.contains("social-cluster--open") ? close() : open();
+  }
+
+  $nucleus.addEventListener("click", (e) => { e.stopPropagation(); toggle(); });
+
+  $nucleus.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); }
+  });
+
+  // Close on outside click
+  document.addEventListener("click", (e) => {
+    if (!$root.contains(e.target)) close();
+  });
+
+  // Close on Escape
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && $root.classList.contains("social-cluster--open")) close();
   });
 }

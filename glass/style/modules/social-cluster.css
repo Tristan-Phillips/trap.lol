@@ -1,0 +1,413 @@
+/* ─────────────────────────────────────────────────────────────
+   trap.lol — Social Signal Cluster
+   Fixed floating node group. Collapsed orb → orbital burst.
+   Dune × Arcane. Desert-night chaos.
+   GPL-3.0 — trap.lol
+   ───────────────────────────────────────────────────────────── */
+
+/* ── Platform color signatures ─────────────────────────────── */
+:root {
+  --social-github-accent:  #00f0ff;
+  --social-github-glow:    rgba(0, 240, 255, 0.3);
+  --social-github-subtle:  rgba(0, 240, 255, 0.06);
+
+  --social-youtube-accent: #ef4444;
+  --social-youtube-glow:   rgba(239, 68, 68, 0.3);
+  --social-youtube-subtle: rgba(239, 68, 68, 0.06);
+
+  --social-kick-accent:    #4ade80;
+  --social-kick-glow:      rgba(74, 222, 128, 0.3);
+  --social-kick-subtle:    rgba(74, 222, 128, 0.06);
+
+  --social-kofi-accent:    #F4A830;
+  --social-kofi-glow:      rgba(244, 168, 48, 0.3);
+  --social-kofi-subtle:    rgba(244, 168, 48, 0.06);
+}
+
+/* ── Root cluster wrapper ───────────────────────────────────── */
+.social-cluster {
+  position: fixed;
+  bottom: 2.25rem;
+  left: 2.25rem;
+  z-index: 9800;
+  /* interaction zone expands to hold all nodes when open */
+}
+
+/* ── Nucleus — the collapsed trigger orb ───────────────────── */
+.social-cluster__nucleus {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--glass-bg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(190, 41, 236, 0.3);
+  box-shadow:
+    0 0 0 1px rgba(190, 41, 236, 0.06),
+    0 4px 24px rgba(190, 41, 236, 0.18),
+    inset 0 1px 0 rgba(255,255,255,0.04);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    border-color var(--transition-med),
+    box-shadow var(--transition-med),
+    background var(--transition-med),
+    transform var(--transition-slow);
+  will-change: transform;
+  z-index: 2;
+  outline: none;
+}
+
+.social-cluster__nucleus:focus-visible {
+  border-color: var(--accent);
+  box-shadow:
+    0 0 0 2px rgba(190, 41, 236, 0.35),
+    0 8px 32px rgba(190, 41, 236, 0.28);
+}
+
+/* Nucleus glyph: "//" signal mark */
+.social-cluster__nucleus-glyph {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: -0.05em;
+  color: var(--accent);
+  opacity: 0.85;
+  user-select: none;
+  pointer-events: none;
+  transition: opacity var(--transition), color var(--transition);
+  position: relative;
+  z-index: 1;
+}
+
+/* Nucleus slow-breathing ring — always present */
+.social-cluster__nucleus::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 1px solid rgba(190, 41, 236, 0.18);
+  animation: sc-ring-breathe 3.6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Nucleus rotating arc — always present */
+.social-cluster__nucleus::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  border-top-color: rgba(190, 41, 236, 0.5);
+  border-right-color: rgba(244, 168, 48, 0.2);
+  animation: sc-arc-spin 4s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes sc-ring-breathe {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50%       { opacity: 1;   transform: scale(1.06); }
+}
+
+@keyframes sc-arc-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ── Open state — nucleus transforms ──────────────────────── */
+.social-cluster--open .social-cluster__nucleus {
+  background: rgba(14, 8, 22, 0.8);
+  border-color: rgba(190, 41, 236, 0.5);
+  box-shadow:
+    0 0 0 1px rgba(190, 41, 236, 0.12),
+    0 8px 40px rgba(190, 41, 236, 0.28),
+    0 0 80px rgba(190, 41, 236, 0.08);
+  transform: rotate(45deg) scale(0.92);
+}
+
+.social-cluster--open .social-cluster__nucleus-glyph {
+  opacity: 0;
+}
+
+/* Cross/close glyph drawn via nucleus ::before & ::after when open */
+.social-cluster--open .social-cluster__nucleus::before {
+  inset: -8px;
+  border-color: rgba(190, 41, 236, 0.28);
+  animation: sc-ring-breathe 1.8s ease-in-out infinite;
+}
+
+/* ── Burst flash — fires once on open ─────────────────────── */
+.social-cluster__burst {
+  position: absolute;
+  inset: -40px;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(circle, rgba(190, 41, 236, 0.2) 0%, transparent 70%);
+  z-index: 0;
+}
+
+.social-cluster--open .social-cluster__burst {
+  animation: sc-burst-pop 0.45s cubic-bezier(0.2, 0, 0.3, 1) forwards;
+}
+
+@keyframes sc-burst-pop {
+  0%   { opacity: 0.9; transform: scale(0.6); }
+  60%  { opacity: 0.3; transform: scale(1.2); }
+  100% { opacity: 0;   transform: scale(1.6); }
+}
+
+/* ── Node orbit field ─────────────────────────────────────── */
+.social-cluster__nodes {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  pointer-events: none;
+  width: 0; height: 0;
+}
+
+/* ── Individual social node ───────────────────────────────── */
+.social-node {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(0px, 0px) scale(0.65);
+  /* Sharp mechanical decelerate — no bounce, no spring */
+  transition:
+    opacity 0.18s ease-out,
+    transform 0.22s cubic-bezier(0.0, 0.0, 0.2, 1);
+  transition-delay: var(--sc-delay, 0ms);
+  bottom: 0;
+  left: 0;
+}
+
+/* Node open state */
+.social-cluster--open .social-node {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(var(--sc-x), var(--sc-y)) scale(1);
+}
+
+/* ── Node icon button ─────────────────────────────────────── */
+.social-node__btn {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(14, 8, 22, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--sc-node-border, rgba(190, 41, 236, 0.25));
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.2),
+    0 4px 20px var(--sc-node-glow, rgba(190, 41, 236, 0.18));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  color: var(--sc-node-accent, var(--accent));
+  flex-shrink: 0;
+  transition:
+    border-color var(--transition),
+    box-shadow var(--transition-med),
+    transform var(--transition-med),
+    background var(--transition);
+  will-change: transform;
+  outline: none;
+}
+
+.social-node__btn svg,
+.social-node__btn i {
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+.social-node__btn:hover,
+.social-node__btn:focus-visible {
+  background: rgba(14, 8, 22, 0.9);
+  border-color: var(--sc-node-accent, var(--accent));
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.2),
+    0 6px 28px var(--sc-node-glow, rgba(190, 41, 236, 0.3)),
+    0 0 16px var(--sc-node-glow, rgba(190, 41, 236, 0.2)),
+    inset 0 1px 0 rgba(255,255,255,0.06);
+  transform: scale(1.12);
+  outline: none;
+}
+
+/* Sweep shimmer on hover */
+.social-node__btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle at 50% 0%, var(--sc-node-subtle, rgba(190, 41, 236, 0.06)) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity var(--transition-med);
+  pointer-events: none;
+}
+.social-node__btn:hover::after,
+.social-node__btn:focus-visible::after {
+  opacity: 1;
+}
+
+/* ── Node label — hover tooltip only, never auto-shown ────── */
+.social-node__label {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sc-node-accent, var(--accent));
+  white-space: nowrap;
+  opacity: 0;
+  position: absolute;
+  /* Sit to the right of the icon button */
+  left: calc(100% + 0.6rem);
+  top: 50%;
+  transform: translateY(-50%) translateX(6px);
+  transition:
+    opacity 0.16s ease-out,
+    transform 0.2s cubic-bezier(0.25, 0, 0, 1);
+  pointer-events: none;
+  text-shadow: 0 0 10px var(--sc-node-glow, rgba(190, 41, 236, 0.3));
+  /* Glass pill backing */
+  background: rgba(6, 4, 10, 0.82);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-left-color: var(--sc-node-accent, var(--accent));
+  border-left-width: 1px;
+  padding: 0.2rem 0.5rem 0.2rem 0.45rem;
+  border-radius: 3px;
+}
+
+/* Label only appears on hover/focus — never passively */
+.social-node:hover .social-node__label,
+.social-node:focus-within .social-node__label {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}
+
+/* ── Grain texture overlay on nucleus ─────────────────────── */
+.social-cluster__grain {
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+}
+
+/* ── Radial signal spray from nucleus on open ──────────────── */
+.social-cluster__nodes::before {
+  content: '';
+  position: absolute;
+  inset: -60px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 60%,
+    rgba(190, 41, 236, 0.06) 0%,
+    rgba(190, 41, 236, 0.02) 40%,
+    transparent 70%
+  );
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s ease-out;
+  z-index: -1;
+}
+
+.social-cluster--open .social-cluster__nodes::before {
+  opacity: 1;
+}
+
+/* ── Status pip on node btn ────────────────────────────────── */
+.social-node__pip {
+  position: absolute;
+  bottom: 2px; right: 2px;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--sc-node-accent, var(--accent));
+  box-shadow: 0 0 6px var(--sc-node-glow, rgba(190, 41, 236, 0.5));
+  border: 1.5px solid rgba(6, 4, 10, 0.8);
+  animation: sc-pip-pulse 2.8s ease-in-out infinite;
+  animation-delay: var(--sc-delay, 0ms);
+}
+
+@keyframes sc-pip-pulse {
+  0%, 100% { opacity: 1;    transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(0.8); }
+}
+
+/* ── Cluster scanline texture (nucleus area) ───────────────── */
+.social-cluster__scan {
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 1;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgba(0, 0, 0, 0.035) 3px,
+    rgba(0, 0, 0, 0.035) 4px
+  );
+  opacity: 0;
+  transition: opacity var(--transition-med);
+}
+
+.social-cluster--open .social-cluster__scan {
+  opacity: 1;
+}
+
+/* ── Reduced motion ────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .social-cluster__nucleus::before,
+  .social-cluster__nucleus::after,
+  .social-cluster__burst,
+  .social-node__pip { animation: none; }
+
+  .social-node {
+    transition: opacity 0.15s ease-out, transform 0.15s ease-out;
+  }
+  .social-cluster--open .social-node {
+    transform: translate(var(--sc-x), var(--sc-y)) scale(1);
+  }
+}
+
+/* ── Labels: desktop hover-only, hidden on touch/mobile ────── */
+@media (hover: none) {
+  .social-node__label { display: none; }
+}
+
+/* ── Mobile — tuck lower, smaller nucleus ──────────────────── */
+@media (max-width: 768px) {
+  .social-cluster {
+    bottom: 1.25rem;
+    left: 1.25rem;
+  }
+  .social-cluster__nucleus {
+    width: 38px;
+    height: 38px;
+  }
+  .social-node__btn {
+    width: 36px;
+    height: 36px;
+  }
+  .social-node__label { display: none; }
+}
+
+@media (max-width: 480px) {
+  .social-cluster {
+    bottom: 1rem;
+    left: 1rem;
+  }
+}
