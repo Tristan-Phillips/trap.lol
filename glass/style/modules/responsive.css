@@ -16,8 +16,34 @@
   /* Restore touch-friendly tap targets on mobile for the signal mesh only */
   .item-ext { min-height: var(--touch-min); }
 
-  .ext-container { grid-template-columns: repeat(2, 1fr); }
   .ext-list { grid-template-columns: 1fr; gap: 1rem; }
+
+  /* Signal Mesh: stack vertically, accordion expands inline */
+  .ext-container {
+    display: flex;
+    flex-direction: column;
+    grid-template-columns: unset;
+  }
+
+  .ext-category__body {
+    position: static;
+    transform: none !important;
+    width: 100% !important;
+    left: 0 !important;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: max-height 0.32s cubic-bezier(0.0, 0, 0.2, 1), opacity 0.2s ease-out;
+    border-top: none;
+    border-radius: 0 0 5px 5px;
+    box-shadow: none;
+  }
+
+  .ext-category--open .ext-category__body {
+    max-height: 70vh;
+    opacity: 1;
+    overflow-y: auto;
+  }
 
   /* Tooltips break on small viewports — hide on touch */
   .tooltip-data,
@@ -47,9 +73,9 @@
   /* Playground page mobile overrides live in neural-uplink.css — scoped @media blocks */
 }
 
+
 @media (max-width: 480px) {
   .grid-primary { grid-template-columns: 1fr; }
-  .ext-container { grid-template-columns: 1fr; }
   .carousel__arrow { display: none; }
 
   /* Flip cards: release fixed min-width so they fill the track on narrow screens */

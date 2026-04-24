@@ -94,7 +94,7 @@ export function renderUI() {
             </div>
             <p class="tool-entry__desc">${esc(tool.description)}</p>
             <div class="tool-entry__cmd">
-              <code>${esc(tool.install_cmd)}</code>
+              <div class="tool-entry__cmd-scroll"><code>${esc(tool.install_cmd)}</code></div>
               <button class="tool-entry__copy" aria-label="Copy install command" data-cmd="${esc(tool.install_cmd)}">
                 <i data-lucide="copy"></i>
               </button>
@@ -258,7 +258,7 @@ export function renderUI() {
 
       closeAll();
       if (!isOpen) {
-        positionOverlay($cat);
+        if (window.innerWidth > 768) positionOverlay($cat);
         $cat.classList.add("ext-category--open");
         $btn.setAttribute("aria-expanded", "true");
       }
@@ -267,6 +267,17 @@ export function renderUI() {
     document.addEventListener("click", (e) => {
       if (!$extContainer.contains(e.target)) closeAll();
     });
+
+    window.addEventListener("resize", () => {
+      if (window.innerWidth <= 768) {
+        $extContainer.querySelectorAll(".ext-category__body").forEach(($b) => {
+          $b.style.left = "";
+          $b.style.width = "";
+          $b.style.maxHeight = "";
+          $b.style.overflowY = "";
+        });
+      }
+    }, { passive: true });
 
     $extContainer.addEventListener("keydown", (e) => {
       if (e.key === "Escape") { closeAll(); return; }
