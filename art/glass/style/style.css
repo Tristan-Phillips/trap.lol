@@ -49,30 +49,32 @@
   }
 }
 
-/* ─── Custom Cursor (pointer devices only) ───── */
+/* ─── Custom Cursor (fine pointer only — excludes touch, includes S-Pen/Apple Pencil/BT mouse) ── */
 @media (hover: hover) and (pointer: fine) {
   body { cursor: none; }
   a, button, [role="button"], label { cursor: none; }
 }
 
+/* Hidden by default — JS shows it only when pointer: fine is confirmed */
 .cursor-orb {
   position: fixed;
   width: 13px; height: 13px;
   border-radius: 50%;
+  /* No mix-blend-mode: it vanishes against dark compositing layers (lightbox backdrop-filter) */
   background: var(--accent);
+  opacity: 0;
   pointer-events: none;
-  z-index: 9999;
-  mix-blend-mode: screen;
+  z-index: 10000; /* above lightbox z-index: 9000 and body::before/after overlays */
   transform: translate(-50%, -50%);
   transition: width var(--t-fast), height var(--t-fast), opacity 0.2s ease,
               background var(--t-fast), border var(--t-fast),
               box-shadow var(--t-fast);
-  box-shadow: 0 0 14px var(--accent-glow), 0 0 36px rgba(190, 41, 236, 0.08);
+  box-shadow: 0 0 14px var(--accent-glow), 0 0 36px rgba(190, 41, 236, 0.12);
   will-change: left, top;
 }
 .cursor-orb.pressed {
   width: 18px; height: 18px;
-  opacity: 0.65;
+  opacity: 0.65 !important;
 }
 .cursor-orb.hovering {
   width: 24px; height: 24px;
@@ -1394,10 +1396,13 @@ body.lb-open .pull-zone {
     gap: 0.85rem;
   }
 
-  /* Landscape cards feel better single-column — loosen the ratio slightly */
+  /* Single column — landscape keeps 4/3, portrait images get extra height */
   .art-card {
     aspect-ratio: 4 / 3;
     border-radius: 10px;
+  }
+  .art-card--portrait {
+    aspect-ratio: 3 / 4;
   }
 
   /* ── Footer ── */

@@ -123,8 +123,12 @@ function rollTier() {
    BOOT
 ══════════════════════════════════════════════════ */
 document.addEventListener("DOMContentLoaded", async () => {
-  const isTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
-  if (!isTouch) initCursor();
+  /* Gate on the same media query the CSS uses — correctly handles BT mice,
+     S-Pen, Apple Pencil with hover, and ignores pure-touch devices. */
+  const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)");
+  if (finePointer.matches) initCursor();
+  /* Re-evaluate if device changes (e.g. BT mouse connected mid-session) */
+  finePointer.addEventListener("change", e => { if (e.matches) initCursor(); });
   initParticles();
   await loadShard();
   await loadData();
@@ -399,6 +403,10 @@ function makeCard(piece, idx) {
   $thumb.decoding = "async";
   $thumb.alt = "";
   $thumb.src = piece.thumb || piece.src || "";
+  /* Tag portrait images once dimensions are known — CSS uses this on single-column only */
+  $thumb.addEventListener("load", () => {
+    if ($thumb.naturalHeight > $thumb.naturalWidth) $card.classList.add("art-card--portrait");
+  }, { once: true });
 
   const $medIcon = document.createElement("div");
   $medIcon.className = "art-card__medium-icon";
@@ -682,17 +690,37 @@ function initCursor() {
   const $orb = qs("#cursor-orb");
   if (!$orb) return;
 
+  /* Guard: only run once even if matchMedia fires multiple times */
+  if ($orb.dataset.init) return;
+  $orb.dataset.init = "1";
+
   let mx = -100, my = -100;
   let ax = -100, ay = -100;
   let raf;
+  let visible = false;
 
-  document.addEventListener("mousemove", e => { mx = e.clientX; my = e.clientY; }, { passive: true });
+  function show() {
+    if (visible) return;
+    visible = true;
+    $orb.style.opacity = "1";
+  }
+  function hide() {
+    visible = false;
+    $orb.style.opacity = "0";
+  }
+
+  document.addEventListener("mousemove", e => {
+    mx = e.clientX;
+    my = e.clientY;
+    show(); /* reveal on first actual pointer movement */
+  }, { passive: true });
+
   document.addEventListener("mousedown", () => $orb.classList.add("pressed"));
   document.addEventListener("mouseup",   () => $orb.classList.remove("pressed"));
 
   document.addEventListener("mouseover", e => {
     $orb.classList.toggle("hovering",
-      !!e.target.closest("a, button, [role=button], label, .art-card"));
+      !!e.target.closest("a, button, [role=button], label, .art-card, .lightbox__nav, .lightbox__close, .filter-btn, .back-link"));
   });
 
   function lerp(a, b, t) { return a + (b - a) * t; }
@@ -706,14 +734,8 @@ function initCursor() {
   }
   raf = requestAnimationFrame(tick);
 
-  document.addEventListener("mouseleave", () => {
-    cancelAnimationFrame(raf);
-    $orb.style.opacity = "0";
-  });
-  document.addEventListener("mouseenter", () => {
-    $orb.style.opacity = "1";
-    raf = requestAnimationFrame(tick);
-  });
+  document.addEventListener("mouseleave", hide);
+  document.addEventListener("mouseenter", () => { show(); if (!raf) raf = requestAnimationFrame(tick); });
 }
 
 /* ══════════════════════════════════════════════════
