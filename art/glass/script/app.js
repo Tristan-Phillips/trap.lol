@@ -15,6 +15,23 @@ let currentIdx  = 0;
 let _lb_open    = false;
 let activeFilter = "all";
 
+/* ── Image viewer transform state ── */
+const VIEW = {
+  scale:   1,
+  tx:      0,      /* translate X (px) */
+  ty:      0,      /* translate Y (px) */
+  rot:     0,      /* rotation in degrees */
+  flipH:   false,
+  flipV:   false,
+  fill:    false,  /* fill vs contain */
+};
+
+/* Clamp limits */
+const ZOOM_MIN   = 0.15;
+const ZOOM_MAX   = 8;
+const ZOOM_STEP  = 0.25;  /* keyboard / button step */
+const ZOOM_WHEEL = 0.12;  /* wheel sensitivity */
+
 /* ══════════════════════════════════════════════════
    PULL — RNG GACHA WITH RARITY + PITY
    ══════════════════════════════════════════════════
@@ -133,6 +150,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   await loadShard();
   await loadData();
   bindUI();
+  bindToolbar();
+  initPan();
+  initWheel();
+  initPinch();
 });
 
 /* ── Shard loader ── */
@@ -468,13 +489,19 @@ function initCardEntrance() {
 function openLightbox(idx) {
   currentIdx = idx;
   _lb_open = true;
+  resetView(false);
+  /* Start with panel collapsed — user can open it via toggle or [ I ] */
+  const $inner = qs(".lightbox__inner");
+  if ($inner) $inner.classList.add("lb-panel-collapsed");
+  const $toggle = qs("#lb-panel-toggle");
+  if ($toggle) $toggle.setAttribute("aria-label", "Show info panel");
   populateLightbox(filtered[idx]);
   const $lb = qs("#lightbox");
   $lb.classList.remove("hidden");
   $lb.removeAttribute("aria-hidden");
   document.body.classList.add("lb-open");
   document.body.style.overflow = "hidden";
-  /* Defer focus so the entrance animation has started */
+  showToolbar();
   requestAnimationFrame(() => qs("#lb-close").focus());
 }
 
@@ -485,10 +512,18 @@ function closeLightbox() {
   $lb.setAttribute("aria-hidden", "true");
   document.body.classList.remove("lb-open");
   document.body.style.overflow = "";
+  hideToolbar();
 }
 
 function navigate(dir) {
   currentIdx = (currentIdx + dir + filtered.length) % filtered.length;
+  resetView(false);
+  /* Brief toolbar pulse on nav to signal state cleared */
+  const $tb = qs("#lb-toolbar");
+  if ($tb) {
+    $tb.classList.add("lb-toolbar--nav-flash");
+    setTimeout(() => $tb.classList.remove("lb-toolbar--nav-flash"), 220);
+  }
   populateLightbox(filtered[currentIdx]);
 }
 
@@ -573,8 +608,286 @@ function populateLightbox(piece) {
     piece.description ||
     piece.verse ||
     piece.stats;
-  const $panel = qs("#lb-panel");
+  const $panel  = qs("#lb-panel");
+  const $toggle = qs("#lb-panel-toggle");
   $panel.classList.toggle("lightbox__panel--hidden", !hasContent);
+  if ($toggle) $toggle.style.display = hasContent ? "" : "none";
+}
+
+/* ══════════════════════════════════════════════════
+   IMAGE MANIPULATION ENGINE
+   Manages: zoom, pan, rotate, flip, fill/fit
+   All transforms compose on #lb-viewport.
+   Pan bounds clamp to prevent empty-space drift.
+══════════════════════════════════════════════════ */
+
+/* Keyboard pan step — 80px base, scaled down at higher zoom so movement
+   feels constant in image-space rather than viewport-space. */
+function panStep() { return Math.max(20, 80 / VIEW.scale); }
+
+function applyTransform(animated = true) {
+  const $vp   = qs("#lb-viewport");
+  const $wrap = qs("#lb-wrap");
+  const $tb   = qs("#lb-toolbar");
+  if (!$vp) return;
+
+  const scaleX = VIEW.scale * (VIEW.flipH ? -1 : 1);
+  const scaleY = VIEW.scale * (VIEW.flipV ? -1 : 1);
+
+  $vp.classList.toggle("lb-dragging", !animated);
+  $vp.classList.toggle("lb-fill", VIEW.fill);
+  $vp.style.transform =
+    `translate(${VIEW.tx}px, ${VIEW.ty}px) rotate(${VIEW.rot}deg) scale(${scaleX}, ${scaleY})`;
+
+  if ($wrap) {
+    $wrap.classList.toggle("lb-can-pan", VIEW.scale > 1);
+  }
+
+  const pct = Math.round(VIEW.scale * 100);
+  const $zl = qs("#lbt-zoom-pct");
+  if ($zl) $zl.textContent = pct + "%";
+  if ($tb) $tb.classList.toggle("lb-toolbar--zoomed", VIEW.scale !== 1);
+
+  const $flipH  = qs("#lbt-flip-h");
+  const $flipV  = qs("#lbt-flip-v");
+  const $fit    = qs("#lbt-fit");
+  const $reset  = qs("#lbt-reset");
+  if ($flipH) $flipH.classList.toggle("lb-tool--active", VIEW.flipH);
+  if ($flipV) $flipV.classList.toggle("lb-tool--active", VIEW.flipV);
+  if ($fit)   $fit.classList.toggle("lb-tool--active", VIEW.fill);
+  /* Dim reset when already at default state — signals nothing to undo */
+  const isDefault = VIEW.scale === 1 && VIEW.tx === 0 && VIEW.ty === 0 &&
+                    VIEW.rot === 0 && !VIEW.flipH && !VIEW.flipV && !VIEW.fill;
+  if ($reset) $reset.classList.toggle("lb-tool--dim", isDefault);
+}
+
+function clampPan() {
+  const $wrap = qs("#lb-wrap");
+  if (!$wrap) return;
+  const W = $wrap.offsetWidth;
+  const H = $wrap.offsetHeight;
+  /* When rotated 90/270°, the image's natural axes are transposed.
+     Use the diagonal of the rotated bounding box as the pan budget so
+     the user can't drag into black space at non-0° orientations. */
+  const rad = (VIEW.rot % 360) * Math.PI / 180;
+  const cos = Math.abs(Math.cos(rad));
+  const sin = Math.abs(Math.sin(rad));
+  const effectiveW = W * cos + H * sin;
+  const effectiveH = W * sin + H * cos;
+  const maxX = Math.max(0, (effectiveW * (VIEW.scale - 1)) / 2);
+  const maxY = Math.max(0, (effectiveH * (VIEW.scale - 1)) / 2);
+  VIEW.tx = Math.min(maxX, Math.max(-maxX, VIEW.tx));
+  VIEW.ty = Math.min(maxY, Math.max(-maxY, VIEW.ty));
+}
+
+function resetView(animated = true) {
+  VIEW.scale = 1;
+  VIEW.tx    = 0;
+  VIEW.ty    = 0;
+  VIEW.rot   = 0;
+  VIEW.flipH = false;
+  VIEW.flipV = false;
+  VIEW.fill  = false;
+  applyTransform(animated);
+}
+
+function zoomAt(newScale, focalX, focalY) {
+  const $wrap = qs("#lb-wrap");
+  if (!$wrap) return;
+  newScale = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, newScale));
+  const rect = $wrap.getBoundingClientRect();
+  const ox   = focalX - rect.left - rect.width  / 2;
+  const oy   = focalY - rect.top  - rect.height / 2;
+  const ratio = newScale / VIEW.scale;
+  VIEW.tx     = ox - (ox - VIEW.tx) * ratio;
+  VIEW.ty     = oy - (oy - VIEW.ty) * ratio;
+  VIEW.scale  = newScale;
+  clampPan();
+  applyTransform(false);
+  updateZoomUI(newScale);
+}
+
+function zoomCentre(delta) {
+  const $wrap = qs("#lb-wrap");
+  if (!$wrap) return;
+  const rect = $wrap.getBoundingClientRect();
+  zoomAt(VIEW.scale + delta, rect.left + rect.width / 2, rect.top + rect.height / 2);
+}
+
+let _toastTimer   = null;
+let _toastPending = false;
+function updateZoomUI(scale) {
+  const pct = Math.round(scale * 100);
+  const $t  = qs("#lb-zoom-toast");
+  if (!$t) return;
+  /* Update the text immediately so it's current when the toast fires */
+  $t.textContent = pct + "%";
+  /* Debounce: only play the pop animation once the user pauses zooming.
+     While actively scrolling we clear-and-reset so animation fires on settle,
+     not on every wheel tick. */
+  clearTimeout(_toastTimer);
+  if (_toastPending) {
+    /* Already showing — just keep the timer alive, don't restart the animation */
+    _toastTimer = setTimeout(() => {
+      $t.classList.remove("lb-zoom-toast--show");
+      _toastPending = false;
+    }, 700);
+    return;
+  }
+  /* First tick of a new zoom gesture — wait briefly before showing */
+  _toastTimer = setTimeout(() => {
+    $t.classList.remove("lb-zoom-toast--show");
+    void $t.offsetWidth; /* reflow to restart animation */
+    $t.classList.add("lb-zoom-toast--show");
+    _toastPending = true;
+    _toastTimer = setTimeout(() => {
+      $t.classList.remove("lb-zoom-toast--show");
+      _toastPending = false;
+    }, 700);
+  }, 80);
+}
+
+function togglePanel() {
+  const $inner  = qs(".lightbox__inner");
+  const $toggle = qs("#lb-panel-toggle");
+  if (!$inner) return;
+  const collapsed = $inner.classList.toggle("lb-panel-collapsed");
+  if ($toggle) $toggle.setAttribute("aria-label", collapsed ? "Show info panel" : "Hide info panel");
+}
+
+let _tbTimer = null;
+function showToolbar() {
+  const $tb = qs("#lb-toolbar");
+  if (!$tb) return;
+  clearTimeout(_tbTimer);
+  $tb.classList.add("lb-toolbar--visible");
+}
+function hideToolbar() {
+  const $tb = qs("#lb-toolbar");
+  if (!$tb) return;
+  $tb.classList.remove("lb-toolbar--visible");
+}
+
+function initPan() {
+  const $wrap = qs("#lb-wrap");
+  if (!$wrap) return;
+  let dragging = false, startX, startY, originTx, originTy;
+
+  $wrap.addEventListener("mousedown", e => {
+    if (e.button !== 0) return;
+    if (e.target.closest(".lb-toolbar, .lightbox__nav, .lightbox__close")) return;
+    if (VIEW.scale <= 1) return;
+    dragging = true;
+    startX = e.clientX; startY = e.clientY;
+    originTx = VIEW.tx; originTy = VIEW.ty;
+    $wrap.classList.add("lb-panning");
+    e.preventDefault();
+  });
+
+  window.addEventListener("mousemove", e => {
+    if (!dragging) return;
+    VIEW.tx = originTx + (e.clientX - startX);
+    VIEW.ty = originTy + (e.clientY - startY);
+    clampPan();
+    applyTransform(false);
+  });
+
+  window.addEventListener("mouseup", () => {
+    if (!dragging) return;
+    dragging = false;
+    const $w = qs("#lb-wrap");
+    if ($w) $w.classList.remove("lb-panning");
+  });
+
+  /* Double-click resets view */
+  $wrap.addEventListener("dblclick", e => {
+    if (e.target.closest(".lb-toolbar, .lightbox__nav, .lightbox__close")) return;
+    resetView(true);
+    updateZoomUI(1);
+  });
+}
+
+function initWheel() {
+  const $wrap = qs("#lb-wrap");
+  if (!$wrap) return;
+  $wrap.addEventListener("wheel", e => {
+    e.preventDefault();
+    let delta = e.deltaY;
+    if (e.deltaMode === 1) delta *= 32;
+    if (e.deltaMode === 2) delta *= $wrap.offsetHeight;
+    const dir  = delta > 0 ? -1 : 1;
+    const step = ZOOM_WHEEL * (e.ctrlKey ? 2 : 1);
+    zoomAt(VIEW.scale * (1 + dir * step), e.clientX, e.clientY);
+  }, { passive: false });
+}
+
+function initPinch() {
+  const $wrap = qs("#lb-wrap");
+  if (!$wrap) return;
+  let lastDist = null, lastMidX = null, lastMidY = null;
+  let panStartX = null, panStartY = null, panOriTx = null, panOriTy = null;
+  let isPinching = false;
+
+  const ptDist = (t1, t2) => Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+  const ptMid  = (t1, t2) => ({
+    x: (t1.clientX + t2.clientX) / 2,
+    y: (t1.clientY + t2.clientY) / 2,
+  });
+
+  $wrap.addEventListener("touchstart", e => {
+    if (e.target.closest(".lightbox__panel, .lb-toolbar, .lightbox__nav, .lightbox__close")) return;
+    if (e.touches.length === 2) {
+      isPinching = true;
+      lastDist = ptDist(e.touches[0], e.touches[1]);
+      const m = ptMid(e.touches[0], e.touches[1]);
+      lastMidX = m.x; lastMidY = m.y;
+    } else if (e.touches.length === 1 && VIEW.scale > 1) {
+      panStartX = e.touches[0].clientX;
+      panStartY = e.touches[0].clientY;
+      panOriTx  = VIEW.tx;
+      panOriTy  = VIEW.ty;
+    }
+  }, { passive: true });
+
+  $wrap.addEventListener("touchmove", e => {
+    if (e.target.closest(".lightbox__panel, .lb-toolbar")) return;
+    if (e.touches.length === 2 && isPinching) {
+      e.preventDefault();
+      const d = ptDist(e.touches[0], e.touches[1]);
+      const m = ptMid(e.touches[0], e.touches[1]);
+      if (lastDist) zoomAt(VIEW.scale * (d / lastDist), m.x, m.y);
+      if (lastMidX !== null) {
+        VIEW.tx += m.x - lastMidX;
+        VIEW.ty += m.y - lastMidY;
+        clampPan();
+        applyTransform(false);
+      }
+      lastDist = d; lastMidX = m.x; lastMidY = m.y;
+    } else if (e.touches.length === 1 && VIEW.scale > 1 && panStartX !== null) {
+      e.preventDefault();
+      VIEW.tx = panOriTx + (e.touches[0].clientX - panStartX);
+      VIEW.ty = panOriTy + (e.touches[0].clientY - panStartY);
+      clampPan();
+      applyTransform(false);
+    }
+  }, { passive: false });
+
+  $wrap.addEventListener("touchend", e => {
+    if (e.touches.length < 2) { lastDist = null; lastMidX = null; lastMidY = null; isPinching = false; }
+    if (e.touches.length === 0) { panStartX = null; panStartY = null; }
+  }, { passive: true });
+}
+
+function bindToolbar() {
+  const btn = id => qs(`#${id}`);
+  btn("lbt-zoom-in").addEventListener("click",  () => { zoomCentre(+ZOOM_STEP); });
+  btn("lbt-zoom-out").addEventListener("click", () => { zoomCentre(-ZOOM_STEP); });
+  btn("lbt-rot-ccw").addEventListener("click",  () => { VIEW.rot = (VIEW.rot - 90 + 360) % 360; applyTransform(true); });
+  btn("lbt-rot-cw").addEventListener("click",   () => { VIEW.rot = (VIEW.rot + 90) % 360; applyTransform(true); });
+  btn("lbt-flip-h").addEventListener("click",   () => { VIEW.flipH = !VIEW.flipH; applyTransform(true); });
+  btn("lbt-flip-v").addEventListener("click",   () => { VIEW.flipV = !VIEW.flipV; applyTransform(true); });
+  btn("lbt-fit").addEventListener("click",      () => { VIEW.fill = !VIEW.fill; applyTransform(true); });
+  btn("lbt-reset").addEventListener("click",    () => { resetView(true); updateZoomUI(1); });
 }
 
 /* ══════════════════════════════════════════════════
@@ -597,15 +910,49 @@ function bindUI() {
   qs("#lb-prev").addEventListener("click", () => navigate(-1));
   qs("#lb-next").addEventListener("click", () => navigate(1));
 
+  qs("#lb-panel-toggle").addEventListener("click", togglePanel);
+
   qs("#lightbox").addEventListener("click", e => {
     if (e.target === qs("#lightbox")) closeLightbox();
   });
 
   document.addEventListener("keydown", e => {
     if (!_lb_open) return;
-    if (e.key === "Escape")     closeLightbox();
-    if (e.key === "ArrowLeft")  navigate(-1);
-    if (e.key === "ArrowRight") navigate(1);
+    /* Don't fire nav/close if modifier keys are held (e.g. browser shortcuts) */
+    const noMod = !e.ctrlKey && !e.metaKey && !e.altKey;
+
+    if (e.key === "Escape") { closeLightbox(); return; }
+    if ((e.key === "i" || e.key === "I") && noMod) { togglePanel(); return; }
+
+    /* Navigation — only when not zoomed in (zoomed: arrow keys pan instead) */
+    if (noMod && VIEW.scale <= 1) {
+      if (e.key === "ArrowLeft")  { navigate(-1); return; }
+      if (e.key === "ArrowRight") { navigate(1);  return; }
+    }
+
+    /* Image manipulation shortcuts */
+    if (noMod) {
+      switch (e.key) {
+        case "+": case "=": e.preventDefault(); zoomCentre(+ZOOM_STEP); break;
+        case "-": case "_": e.preventDefault(); zoomCentre(-ZOOM_STEP); break;
+        case "0":           e.preventDefault(); resetView(true); updateZoomUI(1); break;
+        case "q": case "Q": e.preventDefault();
+          VIEW.rot = (VIEW.rot - 90 + 360) % 360; applyTransform(true); break;
+        case "e": case "E": e.preventDefault();
+          VIEW.rot = (VIEW.rot + 90) % 360; applyTransform(true); break;
+        case "h": case "H": e.preventDefault();
+          VIEW.flipH = !VIEW.flipH; applyTransform(true); break;
+        case "v": case "V": e.preventDefault();
+          VIEW.flipV = !VIEW.flipV; applyTransform(true); break;
+        case "f": case "F": e.preventDefault();
+          VIEW.fill = !VIEW.fill; applyTransform(true); break;
+        /* Arrow pan when zoomed — step scales with zoom so it feels consistent */
+        case "ArrowLeft":  if (VIEW.scale > 1) { e.preventDefault(); VIEW.tx -= panStep(); clampPan(); applyTransform(true); } break;
+        case "ArrowRight": if (VIEW.scale > 1) { e.preventDefault(); VIEW.tx += panStep(); clampPan(); applyTransform(true); } break;
+        case "ArrowUp":    if (VIEW.scale > 1) { e.preventDefault(); VIEW.ty -= panStep(); clampPan(); applyTransform(true); } break;
+        case "ArrowDown":  if (VIEW.scale > 1) { e.preventDefault(); VIEW.ty += panStep(); clampPan(); applyTransform(true); } break;
+      }
+    }
   });
 
   /* ── Swipe gestures ──────────────────────────────────────────────
@@ -619,8 +966,9 @@ function bindUI() {
   let _dragging = false;
 
   $lb.addEventListener("touchstart", e => {
-    /* Don't hijack scrollable panel touches */
-    if (e.target.closest(".lightbox__panel")) return;
+    if (e.target.closest(".lightbox__panel, .lb-toolbar, .lightbox__nav, .lightbox__close")) return;
+    /* When zoomed, single-touch is handled by initPinch for panning — don't also start a dismiss drag */
+    if (VIEW.scale > 1 || e.touches.length > 1) return;
     _tx = e.touches[0].clientX;
     _ty = e.touches[0].clientY;
     _dragging = false;
@@ -628,16 +976,14 @@ function bindUI() {
 
   $lb.addEventListener("touchmove", e => {
     if (_ty === null) return;
-    /* Don't hijack panel scroll */
-    if (e.target.closest(".lightbox__panel")) return;
+    if (e.target.closest(".lightbox__panel, .lb-toolbar")) return;
+    if (VIEW.scale > 1) { _tx = null; _ty = null; return; } /* cede to pan handler */
     const dy = e.touches[0].clientY - _ty;
     const dx = e.touches[0].clientX - _tx;
-    /* Only activate vertical drag if motion is more downward than horizontal */
     if (!_dragging && Math.abs(dy) < 8) return;
-    if (!_dragging && Math.abs(dx) > Math.abs(dy)) return; /* horizontal wins → let nav handle */
-    if (dy < 0) return; /* no upward drag */
+    if (!_dragging && Math.abs(dx) > Math.abs(dy)) return;
+    if (dy < 0) return;
     _dragging = true;
-    /* Live drag: translate inner and dim the backdrop */
     const progress = Math.min(dy / 260, 1);
     $inner.style.transform  = `translateY(${dy * 0.72}px) scale(${1 - progress * 0.06})`;
     $inner.style.opacity    = String(1 - progress * 0.55);
@@ -651,31 +997,25 @@ function bindUI() {
     const dy = e.changedTouches[0].clientY - _ty;
 
     if (_dragging) {
-      /* Dismiss if dragged > 100px down or released with enough velocity */
       if (dy > 100) {
-        /* Animate out then close */
         $inner.style.transition = "transform 0.22s cubic-bezier(0.4, 0, 1, 1), opacity 0.22s ease";
         $inner.style.transform  = "translateY(100%) scale(0.94)";
         $inner.style.opacity    = "0";
         setTimeout(() => {
           closeLightbox();
-          /* Reset inline styles after close */
           $inner.style.transform  = "";
           $inner.style.opacity    = "";
           $inner.style.transition = "";
           $lb.style.background    = "";
         }, 220);
       } else {
-        /* Snap back */
         $inner.style.transition = "transform 0.35s cubic-bezier(0.34, 1.3, 0.64, 1), opacity 0.25s ease";
         $inner.style.transform  = "";
         $inner.style.opacity    = "";
         $lb.style.background    = "";
-        /* Clean up transition after snap */
         setTimeout(() => { $inner.style.transition = ""; }, 360);
       }
-    } else if (!_dragging && Math.abs(dx) > 50 && Math.abs(dy) < 60) {
-      /* Horizontal swipe — navigate */
+    } else if (!_dragging && Math.abs(dx) > 50 && Math.abs(dy) < 60 && VIEW.scale <= 1) {
       navigate(dx < 0 ? 1 : -1);
     }
 

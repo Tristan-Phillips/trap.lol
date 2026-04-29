@@ -31,7 +31,8 @@
   --t-med:       0.3s cubic-bezier(0.25, 0, 0, 1);
   --t-slow:      0.5s cubic-bezier(0.25, 0, 0, 1);
 
-  --lb-panel-w:  320px;
+  --lb-panel-w:  280px;
+  --lb-panel-collapsed-w: 0px;
 }
 
 /* ─── Reset ──────────────────────────────────── */
@@ -494,8 +495,7 @@ body.lb-open .pull-zone {
   display: flex;
   align-items: center;
   justify-content: center;
-  /* Inner content padding (sits on top of safe-area padding) */
-  --lb-pad: 1.5rem;
+  --lb-pad: 1rem;
   transition: opacity 0.3s cubic-bezier(0.25, 0, 0, 1),
               visibility 0.3s cubic-bezier(0.25, 0, 0, 1);
   will-change: opacity;
@@ -513,8 +513,8 @@ body.lb-open .pull-zone {
 .lightbox__inner {
   display: flex;
   width: calc(100% - var(--lb-pad) * 2);
-  max-width: 1080px;
-  max-height: calc(88vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  max-width: 1400px;
+  height: calc(94dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
   border: 1px solid var(--glass-border);
   border-radius: 10px;
   overflow: hidden;
@@ -523,28 +523,230 @@ body.lb-open .pull-zone {
   transition: transform 0.35s cubic-bezier(0.34, 1.3, 0.64, 1),
               opacity 0.28s cubic-bezier(0.25, 0, 0, 1);
   will-change: transform, opacity;
+  position: relative;
 }
 
 .lightbox__image-wrap {
   flex: 1;
   position: relative;
-  min-height: 360px;
   overflow: hidden;
   background: #000;
   min-width: 0;
+  min-height: 0;
+  /* panning cursor states */
+  cursor: default;
+  user-select: none;
+  -webkit-user-select: none;
 }
+/* Panning cursor — set by JS when zoomed in */
+.lightbox__image-wrap.lb-panning    { cursor: grabbing !important; }
+.lightbox__image-wrap.lb-can-pan    { cursor: grab; }
+
+/* Viewport: the transform target — JS applies scale/translate here */
+.lb-viewport {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform-origin: center center;
+  will-change: transform;
+  transition: transform 0.22s cubic-bezier(0.25, 0, 0, 1);
+}
+/* During active drag/pinch, suppress transition for direct 1:1 feel */
+.lb-viewport.lb-dragging {
+  transition: none;
+}
+
 .lightbox__image {
-  width: 100%; height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
   object-fit: contain;
   display: block;
-  transition: opacity var(--t-med);
+  pointer-events: none;
+  transition: opacity var(--t-med), filter var(--t-med);
+  will-change: opacity;
 }
 .lightbox__image.loading { opacity: 0; }
+
+/* Fill mode: image expands to cover the wrap */
+.lb-viewport.lb-fill .lightbox__image {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  object-fit: cover;
+}
 
 .lightbox__img-overlay {
   position: absolute; inset: 0;
   background: linear-gradient(to right, transparent 65%, rgba(8, 5, 14, 0.55) 100%);
   pointer-events: none;
+  z-index: 1;
+  transition: opacity var(--t-med);
+}
+/* Dim overlay when user is actively manipulating the image */
+.lightbox__image-wrap.lb-can-pan .lightbox__img-overlay,
+.lightbox__image-wrap.lb-panning .lightbox__img-overlay {
+  opacity: 0;
+}
+
+/* ─── Image Manipulation Toolbar ─────────────────── */
+.lb-toolbar {
+  position: absolute;
+  bottom: 1rem;
+  left: 50%;
+  z-index: 15;
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.3rem 0.45rem;
+  background: rgba(5, 3, 10, 0.82);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(190, 41, 236, 0.18);
+  border-radius: 8px;
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(255, 255, 255, 0.03),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  opacity: 0;
+  transform: translateX(-50%) translateY(8px);
+  transition: opacity 0.28s ease, transform 0.28s cubic-bezier(0.34, 1.3, 0.64, 1);
+  pointer-events: none;
+  white-space: nowrap;
+}
+/* Rises into place when lightbox opens */
+.lb-toolbar--visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+}
+/* Brief dim on image navigation — signals view state was cleared */
+.lb-toolbar--nav-flash {
+  opacity: 0.35;
+  transition: opacity 0.1s ease;
+}
+/* Collapse slightly upward on mobile to avoid nav buttons */
+@media (max-width: 600px) {
+  .lb-toolbar { bottom: 0.6rem; padding: 0.25rem 0.35rem; }
+}
+
+.lb-toolbar__group {
+  display: flex;
+  align-items: center;
+  gap: 0.05rem;
+}
+
+.lb-toolbar__sep {
+  display: block;
+  width: 1px;
+  height: 18px;
+  background: rgba(190, 41, 236, 0.16);
+  margin: 0 0.25rem;
+  flex-shrink: 0;
+}
+
+/* Individual tool button */
+.lb-tool {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: none;
+  color: rgba(255, 255, 255, 0.42);
+  transition:
+    color var(--t-fast),
+    background var(--t-fast),
+    border-color var(--t-fast),
+    box-shadow var(--t-fast),
+    transform 0.12s ease;
+  flex-shrink: 0;
+  position: relative;
+}
+.lb-tool:hover, .lb-tool:focus-visible {
+  color: var(--accent);
+  background: rgba(190, 41, 236, 0.08);
+  border-color: rgba(190, 41, 236, 0.28);
+  box-shadow: 0 0 10px rgba(190, 41, 236, 0.12);
+  outline: none;
+}
+.lb-tool:active {
+  transform: scale(0.82);
+  color: #fff;
+  background: rgba(190, 41, 236, 0.18);
+  transition-duration: 0.06s;
+}
+/* Active/toggled state (flip, fill) */
+.lb-tool--active {
+  color: var(--accent);
+  background: rgba(190, 41, 236, 0.12);
+  border-color: rgba(190, 41, 236, 0.35);
+  box-shadow: 0 0 12px rgba(190, 41, 236, 0.18),
+              inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+.lb-tool--reset:hover, .lb-tool--reset:focus-visible {
+  color: var(--accent-warm);
+  background: rgba(244, 168, 48, 0.08);
+  border-color: rgba(244, 168, 48, 0.28);
+  box-shadow: 0 0 10px rgba(244, 168, 48, 0.12);
+}
+/* Dim state — view is already at default, nothing to reset */
+.lb-tool--dim {
+  opacity: 0.22;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+
+/* Zoom percentage label */
+.lb-tool__zoom-label {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.35);
+  min-width: 3ch;
+  text-align: center;
+  padding: 0 0.18rem;
+  transition: color var(--t-fast);
+  user-select: none;
+  pointer-events: none;
+}
+/* Highlight zoom label when not at 100% */
+.lb-toolbar--zoomed .lb-tool__zoom-label {
+  color: var(--accent);
+}
+
+/* ─── Zoom Toast ──────────────────────────────────── */
+.lb-zoom-toast {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.88);
+  z-index: 20;
+  font-family: var(--font-mono);
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 0 30px rgba(190, 41, 236, 0.8),
+               0 0 60px rgba(190, 41, 236, 0.4);
+  pointer-events: none;
+  opacity: 0;
+  transition: none;
+}
+.lb-zoom-toast.lb-zoom-toast--show {
+  animation: zoom-toast-pop 0.7s cubic-bezier(0.25, 0, 0, 1) forwards;
+}
+@keyframes zoom-toast-pop {
+  0%   { opacity: 0;    transform: translate(-50%, -50%) scale(0.7); }
+  18%  { opacity: 0.9;  transform: translate(-50%, -50%) scale(1.04); }
+  42%  { opacity: 0.85; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0;    transform: translate(-50%, -50%) scale(0.96); }
 }
 
 /* Close button — positioned relative to .lightbox__inner */
@@ -589,7 +791,7 @@ body.lb-open .pull-zone {
   -webkit-backdrop-filter: blur(8px);
 }
 .lightbox__nav--prev { left: 0.75rem; }
-.lightbox__nav--next { right: 0.75rem; }
+.lightbox__nav--next { right: calc(0.75rem + 22px); }
 .lightbox__nav:hover, .lightbox__nav:focus-visible {
   color: var(--accent);
   border-color: rgba(190, 41, 236, 0.45);
@@ -597,6 +799,57 @@ body.lb-open .pull-zone {
   outline: none;
 }
 .lightbox__nav:active { transform: translateY(-50%) scale(0.92); }
+
+/* Panel collapse toggle — sits on the seam between image and panel */
+.lb-panel-toggle {
+  position: absolute;
+  top: 50%;
+  right: var(--lb-panel-w);
+  transform: translateY(-50%);
+  z-index: 25;
+  width: 20px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(8, 5, 14, 0.9);
+  border: 1px solid var(--glass-border);
+  border-right: none;
+  border-radius: 6px 0 0 6px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: right 0.3s var(--ease-out), color var(--t-fast),
+              background var(--t-fast), border-color var(--t-fast);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.lb-panel-toggle:hover, .lb-panel-toggle:focus-visible {
+  color: var(--accent);
+  border-color: rgba(190, 41, 236, 0.4);
+  background: rgba(190, 41, 236, 0.06);
+  outline: none;
+}
+.lb-panel-toggle svg {
+  width: 10px; height: 10px;
+  transition: transform 0.3s var(--ease-out);
+  flex-shrink: 0;
+}
+
+/* Collapsed state — panel slides off, toggle moves with it */
+.lightbox__inner.lb-panel-collapsed .lb-panel-toggle {
+  right: 0;
+}
+.lightbox__inner.lb-panel-collapsed .lb-panel-toggle svg {
+  transform: rotate(180deg);
+}
+.lightbox__inner.lb-panel-collapsed .lightbox__panel {
+  width: 0;
+  padding: 0;
+  border-left: none;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
 
 /* Panel */
 .lightbox__panel {
@@ -612,6 +865,8 @@ body.lb-open .pull-zone {
   scrollbar-width: thin;
   scrollbar-color: rgba(190, 41, 236, 0.18) transparent;
   position: relative;
+  transition: width 0.3s var(--ease-out), opacity 0.2s ease,
+              padding 0.3s var(--ease-out);
 }
 /* Accent hairline + drag-handle pip (pip only visible on mobile via media query) */
 .lightbox__panel::before {
@@ -1332,14 +1587,46 @@ body.lb-open .pull-zone {
 @media (max-width: 900px) {
   .lightbox__inner {
     flex-direction: column;
-    max-height: calc(92dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    height: calc(96dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  }
+  /* Image takes as much space as possible */
+  .lightbox__image-wrap {
+    flex: 1;
+    min-height: 0;
   }
   .lightbox__panel {
     width: 100%;
+    flex: none;
     border-left: none;
     border-top: 1px solid var(--glass-border);
-    max-height: 38dvh;
-    padding: 1.1rem 1.25rem;
+    max-height: 32dvh;
+    padding: 1rem 1.25rem 1.25rem;
+    /* Collapsed on tablet: full width slides down off screen */
+  }
+  .lightbox__inner.lb-panel-collapsed .lightbox__panel {
+    max-height: 0;
+    padding: 0;
+  }
+  /* Toggle sits on the horizontal seam instead of the vertical one */
+  .lb-panel-toggle {
+    top: auto;
+    bottom: var(--lb-panel-h, 32dvh);
+    right: 50%;
+    transform: translateX(50%);
+    width: 48px;
+    height: 20px;
+    border-radius: 6px 6px 0 0;
+    border-bottom: none;
+    border-right: 1px solid var(--glass-border);
+  }
+  .lb-panel-toggle svg { transform: rotate(-90deg); }
+  .lightbox__inner.lb-panel-collapsed .lb-panel-toggle {
+    bottom: 0;
+    right: 50%;
+    transform: translateX(50%);
+  }
+  .lightbox__inner.lb-panel-collapsed .lb-panel-toggle svg {
+    transform: rotate(90deg);
   }
   .lightbox__img-overlay {
     background: linear-gradient(to bottom, transparent 55%, rgba(8,5,14,0.55) 100%);
@@ -1413,8 +1700,6 @@ body.lb-open .pull-zone {
   }
 
   /* ── Lightbox — full-screen on mobile ── */
-  /* Override the inner content padding; safe-area insets are handled by the
-     top-level .lightbox rule (env() vars). Stretch to fill the inset-padded area. */
   .lightbox {
     --lb-pad: 0px;
     padding-left:   env(safe-area-inset-left,   0px);
@@ -1426,13 +1711,11 @@ body.lb-open .pull-zone {
   .lightbox__inner {
     border-radius: 0;
     border: none;
-    /* Fill the full padded-in area — the overlay already covers safe zones */
     width: 100%;
     height: 100%;
     max-height: none;
     max-width: none;
     flex-direction: column;
-    /* Suppress the spring entrance on mobile — just fade in */
     transition: opacity 0.28s cubic-bezier(0.25, 0, 0, 1);
   }
   .lightbox.hidden .lightbox__inner {
@@ -1440,61 +1723,47 @@ body.lb-open .pull-zone {
     opacity: 0;
   }
 
-  /* Image fills remaining space above panel */
+  /* Image fills all available space */
   .lightbox__image-wrap {
     min-height: 0;
-    max-height: none;
     flex: 1;
     width: 100%;
   }
 
-  /* Panel at bottom, capped + scrollable.
-     Extra bottom padding absorbs the home indicator safe area. */
+  /* Panel slides up from bottom — collapsed by default on mobile */
   .lightbox__panel {
-    max-height: 38dvh;
+    max-height: 42dvh;
     flex: none;
     overflow-y: auto;
-    padding: 1rem 1rem calc(1.5rem + env(safe-area-inset-bottom, 0px));
+    padding: 1.25rem 1rem calc(1.5rem + env(safe-area-inset-bottom, 0px));
     gap: 0.75rem;
+    transition: max-height 0.3s var(--ease-out), opacity 0.2s ease,
+                padding 0.3s var(--ease-out);
+  }
+  .lightbox__inner.lb-panel-collapsed .lightbox__panel {
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    opacity: 0;
+    pointer-events: none;
   }
 
-  /* No panel = image fills full screen */
-  .lightbox__panel--hidden {
-    display: none;
-  }
+  /* No metadata = never show panel */
+  .lightbox__panel--hidden { display: none; }
 
   /* Panel type scale */
-  .lb-tag {
-    font-size: 0.6rem;
-    padding: 0.12rem 0.35rem;
-  }
-  .lightbox__panel-medium {
-    font-size: 0.65rem;
-    letter-spacing: 0.11em;
-  }
-  .lightbox__panel-desc {
-    font-size: 0.84rem;
-    line-height: 1.65;
-  }
-  .lightbox__panel-verse {
-    font-size: 0.8rem;
-    line-height: 1.8;
-    padding-left: 0.75rem;
-  }
-  .lb-stat {
-    font-size: 0.68rem;
-  }
+  .lb-tag { font-size: 0.6rem; padding: 0.12rem 0.35rem; }
+  .lightbox__panel-medium { font-size: 0.65rem; letter-spacing: 0.11em; }
+  .lightbox__panel-desc { font-size: 0.84rem; line-height: 1.65; }
+  .lightbox__panel-verse { font-size: 0.8rem; line-height: 1.8; padding-left: 0.75rem; }
+  .lb-stat { font-size: 0.68rem; }
 
   /* Panel accent bar */
-  .lightbox__panel::before {
-    height: 3px;
-  }
+  .lightbox__panel::before { height: 3px; }
   /* Show drag pip on mobile — sheet affordance */
-  .lightbox__panel::after {
-    display: block;
-  }
+  .lightbox__panel::after { display: block; }
 
-  /* Close button — bigger tap target, clear of the notch */
+  /* Close button — bigger tap target */
   .lightbox__close {
     width: 42px; height: 42px;
     top: max(0.6rem, env(safe-area-inset-top, 0.6rem));
@@ -1502,15 +1771,32 @@ body.lb-open .pull-zone {
   }
 
   /* Nav buttons */
-  .lightbox__nav {
-    width: 40px; height: 40px;
-  }
+  .lightbox__nav { width: 40px; height: 40px; }
   .lightbox__nav--prev { left: 0.5rem; }
   .lightbox__nav--next { right: 0.5rem; }
 
   /* Download link */
-  .lightbox__download {
-    width: 36px; height: 36px;
-    bottom: 1rem; right: 1rem;
+  .lightbox__download { width: 36px; height: 36px; bottom: 1rem; right: 1rem; }
+
+  /* Panel toggle on mobile — tab on bottom edge of image area */
+  .lb-panel-toggle {
+    top: auto;
+    bottom: 0;
+    right: 1rem;
+    transform: none;
+    width: 36px;
+    height: 22px;
+    border-radius: 6px 6px 0 0;
+    border-bottom: none;
+    border-right: 1px solid var(--glass-border);
+  }
+  .lb-panel-toggle svg { transform: rotate(-90deg); }
+  .lightbox__inner.lb-panel-collapsed .lb-panel-toggle {
+    bottom: 0;
+    right: 1rem;
+    transform: none;
+  }
+  .lightbox__inner.lb-panel-collapsed .lb-panel-toggle svg {
+    transform: rotate(90deg);
   }
 }

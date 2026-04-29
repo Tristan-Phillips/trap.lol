@@ -797,13 +797,14 @@ function renderSocialCluster() {
     github:  { label: "GITHUB",  accent: "var(--social-github-accent)",  glow: "var(--social-github-glow)",  subtle: "var(--social-github-subtle)",  icon: "github" },
     youtube: { label: "YOUTUBE", accent: "var(--social-youtube-accent)", glow: "var(--social-youtube-glow)", subtle: "var(--social-youtube-subtle)", icon: "youtube" },
     kick:    { label: "KICK",    accent: "var(--social-kick-accent)",    glow: "var(--social-kick-glow)",    subtle: "var(--social-kick-subtle)",    icon: "radio" },
-    "ko-fi": { label: "KO-FI",  accent: "var(--social-kofi-accent)",   glow: "var(--social-kofi-glow)",   subtle: "var(--social-kofi-subtle)",   icon: "coffee" },
+    "ko-fi":    { label: "KO-FI",    accent: "var(--social-kofi-accent)",      glow: "var(--social-kofi-glow)",      subtle: "var(--social-kofi-subtle)",      icon: "coffee" },
+    telegram:   { label: "TELEGRAM", accent: "var(--social-telegram-accent)",  glow: "var(--social-telegram-glow)",  subtle: "var(--social-telegram-subtle)",  icon: "send" },
   };
 
-  // Node arc layout — strict quarter-circle, r=110px, 90°→0° in 30° steps.
-  // All buttons are 40px — minimum edge-to-edge gap at 30° step on r=110: ~57px. No overlap.
-  const R = 110;
-  const ARC = [90, 60, 30, 0].map(deg => {
+  // Node arc layout — strict quarter-circle, r=144px, 90°→0° in 22.5° steps (5 nodes).
+  // chord at 22.5° step on r=144: 2*144*sin(11.25°)≈56px. Edge-to-edge gap on 40px buttons: ~16px.
+  const R = 144;
+  const ARC = [90, 67, 45, 22, 0].map(deg => {
     const rad = deg * Math.PI / 180;
     return {
       x: `${Math.round(R * Math.cos(rad))}px`,

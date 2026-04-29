@@ -36,9 +36,10 @@
     "system_prompt": "You are a concise, technically precise assistant embedded in trap.lol sovereign infrastructure. Lead with the direct answer. No preamble, no disclaimers, no filler. Use code blocks where relevant. If context is missing, ask one focused question before proceeding."
   },
   "socials":{
-    "github": "https://github.com/Tristan-Phillips",
-    "youtube": "https://www.youtube.com/@tphips",
-    "kick": "https://kick.com/trap-lol",
-    "ko-fi": "https://ko-fi.com/traplol"
+    "github":   "https://github.com/Tristan-Phillips",
+    "youtube":  "https://www.youtube.com/@tphips",
+    "kick":     "https://kick.com/trap-lol",
+    "ko-fi":    "https://ko-fi.com/traplol",
+    "telegram": "https://t.me/trapl0l"
   }
 }

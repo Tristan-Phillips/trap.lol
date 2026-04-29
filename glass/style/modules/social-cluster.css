@@ -22,6 +22,10 @@
   --social-kofi-accent:    #F4A830;
   --social-kofi-glow:      rgba(244, 168, 48, 0.3);
   --social-kofi-subtle:    rgba(244, 168, 48, 0.06);
+
+  --social-telegram-accent: #38b2ff;
+  --social-telegram-glow:   rgba(56, 178, 255, 0.32);
+  --social-telegram-subtle: rgba(56, 178, 255, 0.07);
 }
 
 /* ── Root cluster wrapper ───────────────────────────────────── */

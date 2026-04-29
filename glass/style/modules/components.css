@@ -110,7 +110,6 @@
   font-family: var(--font-mono);
   font-size: var(--text-xs);
   color: var(--text-muted);
-  margin-top: 0.1rem;
 }
 
 .card-primary__body { flex: 1; }
