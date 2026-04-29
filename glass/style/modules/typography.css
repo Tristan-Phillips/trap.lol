@@ -1,2 +1,126 @@
 /* ─── Typography ─── */
-/* Headings, paragraphs, code blocks outside specific components */
+
+/* ─── Global Headings ─── */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+/* ─── Header Typography ─── */
+.header__eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--accent-warm);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: var(--space-sm);
+  opacity: 0.75;
+}
+
+.header__title {
+  font-family: var(--font-mono);
+  font-size: var(--h1-size);
+  font-weight: 600;
+  letter-spacing: -2px;
+  color: var(--text-main);
+  position: relative;
+  display: inline-block;
+  animation: glitch 9s infinite;
+}
+
+.header__title::before,
+.header__title::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+}
+
+.header__title::before {
+  color: var(--accent);
+  clip-path: polygon(0 30%, 100% 30%, 100% 50%, 0 50%);
+  animation: glitch-before 9s infinite;
+  opacity: 0;
+}
+
+.header__title::after {
+  color: var(--accent-warm);
+  clip-path: polygon(0 60%, 100% 60%, 100% 75%, 0 75%);
+  animation: glitch-after 9s infinite;
+  opacity: 0;
+}
+
+.header__subtitle {
+  font-family: var(--font-mono);
+  font-size: var(--text-base);
+  color: var(--text-muted);
+  margin-top: var(--space-sm);
+  letter-spacing: 0.05em;
+}
+
+/* ─── Section Title ─── */
+.section-title {
+  font-size: var(--text-base);
+  font-weight: 600;
+  font-family: var(--font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: var(--space-md);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  color: var(--text-warm);
+  padding-left: var(--space-sm);
+  border-left: 2px solid var(--accent-warm);
+  position: relative;
+}
+
+.section-title svg {
+  width: 0.95rem;
+  height: 0.95rem;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.section-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--glass-border-warm), transparent 80%);
+  margin-left: var(--space-sm);
+}
+
+.hint {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  text-transform: none;
+  margin-left: auto;
+}
+
+/* ─── Glitch Animations ─── */
+@keyframes glitch {
+  0%, 96%, 100% { transform: none; }
+  97%            { transform: skewX(-0.4deg) translateX(1px); }
+  98%            { transform: skewX(0.4deg) translateX(-1px); }
+  99%            { transform: none; }
+}
+
+@keyframes glitch-before {
+  0%, 95%, 100%  { opacity: 0; transform: none; }
+  97%            { opacity: 0.8; transform: translateX(-3px); }
+  98%            { opacity: 0.6; transform: translateX(2px); }
+  99%            { opacity: 0; }
+}
+
+@keyframes glitch-after {
+  0%, 95%, 100%  { opacity: 0; transform: none; }
+  97%            { opacity: 0.6; transform: translateX(3px); }
+  98%            { opacity: 0.8; transform: translateX(-2px); }
+  99%            { opacity: 0; }
+}

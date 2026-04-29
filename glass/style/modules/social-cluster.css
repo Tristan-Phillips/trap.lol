@@ -7,21 +7,21 @@
 
 /* ── Platform color signatures ─────────────────────────────── */
 :root {
-  --social-github-accent:  #00f0ff;
-  --social-github-glow:    rgba(0, 240, 255, 0.3);
-  --social-github-subtle:  rgba(0, 240, 255, 0.06);
+  --social-github-accent:  rgb(var(--cyan-rgb));
+  --social-github-glow:    rgba(var(--cyan-rgb), 0.3);
+  --social-github-subtle:  rgba(var(--cyan-rgb), 0.06);
 
-  --social-youtube-accent: #ef4444;
-  --social-youtube-glow:   rgba(239, 68, 68, 0.3);
-  --social-youtube-subtle: rgba(239, 68, 68, 0.06);
+  --social-youtube-accent: rgb(var(--red-rgb));
+  --social-youtube-glow:   rgba(var(--red-rgb), 0.3);
+  --social-youtube-subtle: rgba(var(--red-rgb), 0.06);
 
-  --social-kick-accent:    #4ade80;
-  --social-kick-glow:      rgba(74, 222, 128, 0.3);
-  --social-kick-subtle:    rgba(74, 222, 128, 0.06);
+  --social-kick-accent:    rgb(var(--green-rgb));
+  --social-kick-glow:      rgba(var(--green-rgb), 0.3);
+  --social-kick-subtle:    rgba(var(--green-rgb), 0.06);
 
-  --social-kofi-accent:    #F4A830;
-  --social-kofi-glow:      rgba(244, 168, 48, 0.3);
-  --social-kofi-subtle:    rgba(244, 168, 48, 0.06);
+  --social-kofi-accent:    rgb(var(--accent-warm-rgb));
+  --social-kofi-glow:      rgba(var(--accent-warm-rgb), 0.3);
+  --social-kofi-subtle:    rgba(var(--accent-warm-rgb), 0.06);
 
   --social-telegram-accent: #38b2ff;
   --social-telegram-glow:   rgba(56, 178, 255, 0.32);
@@ -34,7 +34,6 @@
   bottom: 2.25rem;
   left: 2.25rem;
   z-index: 9800;
-  /* interaction zone expands to hold all nodes when open */
 }
 
 /* ── Nucleus — the collapsed trigger orb ───────────────────── */
@@ -46,10 +45,10 @@
   background: var(--glass-bg);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(190, 41, 236, 0.3);
+  border: 1px solid rgba(var(--accent-rgb), 0.3);
   box-shadow:
-    0 0 0 1px rgba(190, 41, 236, 0.06),
-    0 4px 24px rgba(190, 41, 236, 0.18),
+    0 0 0 1px rgba(var(--accent-rgb), 0.06),
+    0 4px 24px rgba(var(--accent-rgb), 0.18),
     inset 0 1px 0 rgba(255,255,255,0.04);
   cursor: pointer;
   display: flex;
@@ -68,8 +67,8 @@
 .social-cluster__nucleus:focus-visible {
   border-color: var(--accent);
   box-shadow:
-    0 0 0 2px rgba(190, 41, 236, 0.35),
-    0 8px 32px rgba(190, 41, 236, 0.28);
+    0 0 0 2px rgba(var(--accent-rgb), 0.35),
+    0 8px 32px rgba(var(--accent-rgb), 0.28);
 }
 
 /* Nucleus glyph: "//" signal mark */
@@ -92,7 +91,7 @@
   position: absolute;
   inset: -6px;
   border-radius: 50%;
-  border: 1px solid rgba(190, 41, 236, 0.18);
+  border: 1px solid rgba(var(--accent-rgb), 0.18);
   animation: sc-ring-breathe 3.6s ease-in-out infinite;
   pointer-events: none;
 }
@@ -104,8 +103,8 @@
   inset: -3px;
   border-radius: 50%;
   border: 1px solid transparent;
-  border-top-color: rgba(190, 41, 236, 0.5);
-  border-right-color: rgba(244, 168, 48, 0.2);
+  border-top-color: rgba(var(--accent-rgb), 0.5);
+  border-right-color: rgba(var(--accent-warm-rgb), 0.2);
   animation: sc-arc-spin 4s linear infinite;
   pointer-events: none;
 }
@@ -123,11 +122,11 @@
 /* ── Open state — nucleus transforms ──────────────────────── */
 .social-cluster--open .social-cluster__nucleus {
   background: rgba(14, 8, 22, 0.8);
-  border-color: rgba(190, 41, 236, 0.5);
+  border-color: rgba(var(--accent-rgb), 0.5);
   box-shadow:
-    0 0 0 1px rgba(190, 41, 236, 0.12),
-    0 8px 40px rgba(190, 41, 236, 0.28),
-    0 0 80px rgba(190, 41, 236, 0.08);
+    0 0 0 1px rgba(var(--accent-rgb), 0.12),
+    0 8px 40px rgba(var(--accent-rgb), 0.28),
+    0 0 80px rgba(var(--accent-rgb), 0.08);
   transform: rotate(45deg) scale(0.92);
 }
 
@@ -138,7 +137,7 @@
 /* Cross/close glyph drawn via nucleus ::before & ::after when open */
 .social-cluster--open .social-cluster__nucleus::before {
   inset: -8px;
-  border-color: rgba(190, 41, 236, 0.28);
+  border-color: rgba(var(--accent-rgb), 0.28);
   animation: sc-ring-breathe 1.8s ease-in-out infinite;
 }
 
@@ -149,7 +148,7 @@
   border-radius: 50%;
   pointer-events: none;
   opacity: 0;
-  background: radial-gradient(circle, rgba(190, 41, 236, 0.2) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(var(--accent-rgb), 0.2) 0%, transparent 70%);
   z-index: 0;
 }
 
@@ -206,10 +205,10 @@
   background: rgba(14, 8, 22, 0.7);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--sc-node-border, rgba(190, 41, 236, 0.25));
+  border: 1px solid var(--sc-node-border, rgba(var(--accent-rgb), 0.25));
   box-shadow:
     0 0 0 1px rgba(0,0,0,0.2),
-    0 4px 20px var(--sc-node-glow, rgba(190, 41, 236, 0.18));
+    0 4px 20px var(--sc-node-glow, rgba(var(--accent-rgb), 0.18));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -239,8 +238,8 @@
   border-color: var(--sc-node-accent, var(--accent));
   box-shadow:
     0 0 0 1px rgba(0,0,0,0.2),
-    0 6px 28px var(--sc-node-glow, rgba(190, 41, 236, 0.3)),
-    0 0 16px var(--sc-node-glow, rgba(190, 41, 236, 0.2)),
+    0 6px 28px var(--sc-node-glow, rgba(var(--accent-rgb), 0.3)),
+    0 0 16px var(--sc-node-glow, rgba(var(--accent-rgb), 0.2)),
     inset 0 1px 0 rgba(255,255,255,0.06);
   transform: scale(1.12);
   outline: none;
@@ -252,7 +251,7 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: radial-gradient(circle at 50% 0%, var(--sc-node-subtle, rgba(190, 41, 236, 0.06)) 0%, transparent 70%);
+  background: radial-gradient(circle at 50% 0%, var(--sc-node-subtle, rgba(var(--accent-rgb), 0.06)) 0%, transparent 70%);
   opacity: 0;
   transition: opacity var(--transition-med);
   pointer-events: none;
@@ -280,7 +279,7 @@
     opacity 0.16s ease-out,
     transform 0.2s cubic-bezier(0.25, 0, 0, 1);
   pointer-events: none;
-  text-shadow: 0 0 10px var(--sc-node-glow, rgba(190, 41, 236, 0.3));
+  text-shadow: 0 0 10px var(--sc-node-glow, rgba(var(--accent-rgb), 0.3));
   /* Glass pill backing */
   background: rgba(6, 4, 10, 0.82);
   backdrop-filter: blur(8px);
@@ -318,8 +317,8 @@
   inset: -60px;
   border-radius: 50%;
   background: radial-gradient(circle at 40% 60%,
-    rgba(190, 41, 236, 0.06) 0%,
-    rgba(190, 41, 236, 0.02) 40%,
+    rgba(var(--accent-rgb), 0.06) 0%,
+    rgba(var(--accent-rgb), 0.02) 40%,
     transparent 70%
   );
   pointer-events: none;
@@ -339,7 +338,7 @@
   width: 7px; height: 7px;
   border-radius: 50%;
   background: var(--sc-node-accent, var(--accent));
-  box-shadow: 0 0 6px var(--sc-node-glow, rgba(190, 41, 236, 0.5));
+  box-shadow: 0 0 6px var(--sc-node-glow, rgba(var(--accent-rgb), 0.5));
   border: 1.5px solid rgba(6, 4, 10, 0.8);
   animation: sc-pip-pulse 2.8s ease-in-out infinite;
   animation-delay: var(--sc-delay, 0ms);

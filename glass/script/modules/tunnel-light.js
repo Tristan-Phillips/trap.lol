@@ -1,13 +1,11 @@
-/* ─────────────────────────────────────────────────────────────
-   trap.lol — Tunnel Light
-   Scroll ignition. bdunk bdunk bdunk.
-   GPL-3.0 — trap.lol
-   ───────────────────────────────────────────────────────────── */
+/* trap.lol — Tunnel Light
+   Staggered scroll ignition.
+   GPL-3.0 — trap.lol */
 
 export function initTunnelLight() {
   if (typeof IntersectionObserver === "undefined") return;
 
-  const SELECTORS = [
+  const selectors = [
     "#echoes-section .echoes-portal",
     ".section-title",
     ".card-primary-wrap",
@@ -18,24 +16,18 @@ export function initTunnelLight() {
     ".site-footer",
   ].join(", ");
 
-  const lamps = Array.from(document.querySelectorAll(SELECTORS));
+  const lamps = document.querySelectorAll(selectors);
   if (!lamps.length) return;
 
-  lamps.forEach((el) => el.classList.add("tl-lamp"));
+  lamps.forEach(el => el.classList.add("tl-lamp"));
 
-  /* Track per-parent ignition order so siblings stagger —
-     each sibling fires 60ms after the previous one */
   const parentCounters = new Map();
-
   const ignite = (el) => {
     const parent = el.parentElement;
     const idx = parentCounters.get(parent) ?? 0;
     parentCounters.set(parent, idx + 1);
 
-    const delay = idx * 60;
-    setTimeout(() => {
-      el.classList.add("tl-lamp--lit");
-    }, delay);
+    setTimeout(() => el.classList.add("tl-lamp--lit"), idx * 60);
   };
 
   const observer = new IntersectionObserver(
@@ -46,16 +38,12 @@ export function initTunnelLight() {
         observer.unobserve(entry.target);
       });
     },
-    {
-      rootMargin: "0px 0px -8% 0px",
-      threshold: 0,
-    }
+    { rootMargin: "0px 0px -8% 0px" }
   );
 
-  /* Double rAF — let browser paint the dormant state first */
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
-      lamps.forEach((el) => observer.observe(el));
+      lamps.forEach(el => observer.observe(el));
     });
   });
 }

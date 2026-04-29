@@ -1,207 +1,207 @@
 import { config, hostingData, toolsData, botsData, extData, guideData, appsData, llmData, fetchJSON, esc, renderError, globalRouter, IS_TOUCH } from './core.js';
 import { initTunnelLight } from './tunnel-light.js';
 
+/**
+ * Main UI Entry Point
+ */
 export function renderUI() {
+  renderMeta();
+  renderHeader();
+  renderFooter();
+  renderHosting();
+  renderTools();
+  renderBots();
+  renderSignalMesh();
+  renderCodex();
+  renderApps();
+  renderUplinkLaunchpad();
+  renderSocialCluster();
 
-  // ── 2. Header ────────────────────────────────────────────────────────────
-  const $eyebrow = document.getElementById("header-eyebrow");
-  const $title = document.getElementById("header-title");
-  const $subtitle = document.getElementById("header-subtitle");
-  if ($eyebrow) $eyebrow.textContent = config.site.eyebrow;
-  if ($title) {
-    $title.textContent = config.site.title;
-    $title.setAttribute("data-text", config.site.title);
-  }
-  if ($subtitle) $subtitle.textContent = config.site.tagline;
+  // Global initializations
+  if (typeof lucide !== "undefined") lucide.createIcons();
+  requestAnimationFrame(() => {
+    initTunnelLight();
+    updateCarouselArrows();
+    initGlobalListeners();
+  });
+}
 
-  // ── 2b. Meta / OG tags ───────────────────────────────────────────────────
-  const $ogTitle = document.getElementById("og-title");
-  const $ogDescription = document.getElementById("og-description");
-  const $ogUrl = document.getElementById("og-url");
-  const $metaDesc = document.querySelector('meta[name="description"]');
-  const ogTagline = config.site.tagline || "";
-  const ogDomain = config.site.domain || "";
-  if ($ogTitle) $ogTitle.setAttribute("content", config.site.title);
-  if ($ogDescription) $ogDescription.setAttribute("content", ogTagline);
-  if ($ogUrl) $ogUrl.setAttribute("content", `https://${ogDomain}`);
-  if ($metaDesc) $metaDesc.setAttribute("content", ogTagline);
+function renderMeta() {
   document.title = `${config.site.title} // uplink`;
+  const meta = {
+    "description": config.site.tagline,
+    "og:title": config.site.title,
+    "og:description": config.site.tagline,
+    "og:url": `https://${config.site.domain}`
+  };
 
-  // ── 3. Footer ────────────────────────────────────────────────────────────
-  const $footerDomain = document.getElementById("footer-domain");
-  const $footerTagline = document.getElementById("footer-tagline");
-  const $footerCopy = document.getElementById("footer-copy");
-  if ($footerDomain) $footerDomain.textContent = config.site.domain;
-  if ($footerTagline) $footerTagline.textContent = config.site.tagline;
-  if ($footerCopy)
-    $footerCopy.textContent = `© ${new Date().getFullYear()} ${config.site.author}`;
+  Object.entries(meta).forEach(([name, content]) => {
+    const el = name.startsWith("og:") 
+      ? document.getElementById(name.replace(":", "-")) 
+      : document.querySelector(`meta[name="${name}"]`);
+    if (el) el.setAttribute("content", content || "");
+  });
+}
 
-  // ── 4. Sovereign Nodes ───────────────────────────────────────────────────
-  const $hostGrid = document.getElementById("hosting-grid");
-  if ($hostGrid && hostingData.manifest) {
-    try {
-      let html = "";
-      Object.values(hostingData.manifest).forEach((node) => {
-        const statusClass = esc(node.status || "online");
-        
-        // Register to Global Router
-        if (node.shortcut) {
-          globalRouter.set(node.shortcut.toLowerCase(), { type: 'link', payload: node.url });
-        }
+function renderHeader() {
+  const map = {
+    "header-eyebrow": config.site.eyebrow,
+    "header-title": config.site.title,
+    "header-subtitle": config.site.tagline
+  };
+  Object.entries(map).forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = val;
+    if (id === "header-title") el.setAttribute("data-text", val);
+  });
+}
 
-        const sourceLink = node.source
-          ? `<a href="${esc(node.source)}" target="_blank" rel="noopener" class="card-primary__source" aria-label="View ${esc(node.hosting)} source"><i data-lucide="git-branch"></i> Source</a>`
-          : "";
+function renderFooter() {
+  const map = {
+    "footer-domain": config.site.domain,
+    "footer-tagline": config.site.tagline,
+    "footer-copy": `© ${new Date().getFullYear()} ${config.site.author}`
+  };
+  Object.entries(map).forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val;
+  });
+}
 
-        html += `
-          <div class="card-primary-wrap">
-            <a href="${esc(node.url)}" target="_blank" rel="noopener" class="card-primary" aria-label="${esc(node.name)} — ${esc(node.hosting)}">
-              <i data-lucide="${esc(node.icon)}"></i>
-              <div class="card-primary__body">
-                <span class="card-primary__sub">${esc(node.hosting)}</span>
-              </div>
-              <div class="card-primary__status ${statusClass}"></div>
-            </a>
-            ${sourceLink}
-          </div>
-        `;
-      });
-      $hostGrid.innerHTML = html;
-    } catch (e) {
-      renderError($hostGrid, "Failed to render hosting nodes.");
-      console.error("[render] hosting:", e);
-    }
-  }
+function renderHosting() {
+  const $grid = document.getElementById("hosting-grid");
+  if (!$grid || !hostingData?.manifest) return;
 
-  // ── 5. Ordnance Depot ────────────────────────────────────────────────────
-  const $toolsContainer = document.getElementById("tools-container");
-  if ($toolsContainer && toolsData.manifest) {
-    try {
-      const tools = Object.values(toolsData.manifest);
-      let cards = "";
-      tools.forEach((tool) => {
-
-        // Register atomic command to Global Router
-        if (tool.shortcut) {
-          globalRouter.set(tool.shortcut.toLowerCase(), { type: 'copy', payload: tool.install_cmd });
-        }
-
-        cards += `
-          <div class="tool-entry">
-            <div class="tool-entry__header">
-              <span class="tool-entry__icon"><i data-lucide="${esc(tool.icon)}"></i></span>
-              <span class="tool-entry__name">${esc(tool.name)}${tool.shortcut ? `<span class="tool-entry__shortcut">[${esc(tool.shortcut)}]</span>` : ""}</span>
-              <span class="tool-entry__target">${esc(tool.target)}</span>
-            </div>
-            <p class="tool-entry__desc">${esc(tool.description)}</p>
-            <div class="tool-entry__cmd">
-              <div class="tool-entry__cmd-scroll"><code>${esc(tool.install_cmd)}</code></div>
-              <button class="tool-entry__copy" aria-label="Copy install command" data-cmd="${esc(tool.install_cmd)}">
-                <i data-lucide="copy"></i>
-              </button>
-            </div>
-            <div class="tool-entry__footer">
-              <a href="${esc(tool.repo_url)}" target="_blank" rel="noopener" class="tool-entry__link" aria-label="View ${esc(tool.name)} source">
-                <i data-lucide="git-branch"></i> source
-              </a>
-            </div>
-          </div>
-        `;
-      });
-
-      // Wrap grid in a <details> — collapsed by default
-      const $details = document.createElement('details');
-      $details.className = 'tools-details';
-      $details.innerHTML = `
-        <summary class="tools-summary">
-          <span class="tools-summary__domain">EXEC</span>
-          <span class="tools-summary__label">Ordnance Depot</span>
-          <span class="tools-summary__meta">${tools.length} payloads</span>
-          <span class="tools-summary__status tools-summary__status--sealed">SEALED</span>
-          <svg class="tools-summary__chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-        </summary>
-        <div class="tools-details__body">
-          <div class="tools-details__body-inner">
-            <div class="tools-grid">${cards}</div>
-          </div>
-        </div>
-      `;
-      $details.addEventListener('toggle', () => {
-        const $status = $details.querySelector('.tools-summary__status');
-        if ($status) {
-          $status.textContent = $details.open ? 'OPEN' : 'SEALED';
-          $status.classList.toggle('tools-summary__status--sealed', !$details.open);
-          $status.classList.toggle('tools-summary__status--open', $details.open);
-        }
-      });
-      $toolsContainer.appendChild($details);
-    } catch (e) {
-      renderError($toolsContainer, "Failed to render ordnance depot.");
-      console.error("[render] tools:", e);
-    }
-  }
-
-  // ── 6. Drone Fleet ───────────────────────────────────────────────────────
-  const $botsContainer = document.getElementById("bots-container");
-  if ($botsContainer && botsData.manifest) {
-    try {
-      let html = "";
-      Object.values(botsData.manifest).forEach((bot) => {
-        
-        // Register to Global Router only if an active URL exists
-        if (bot.shortcut && bot.chat_url) {
-          globalRouter.set(bot.shortcut.toLowerCase(), { type: 'link', payload: bot.chat_url });
-        }
-
-        const botTooltipId = `bot-tip-${esc(bot.name.toLowerCase().replace(/\s+/g, '-'))}`;
-        html += `
-          <div class="bot-profile" data-tip-id="${botTooltipId}">
-            <div class="bot-avatar" role="img" aria-label="${esc(bot.name)}" aria-describedby="${botTooltipId}">
-              <i data-lucide="${esc(bot.icon)}"></i>
-              <div class="bot-status ${esc(bot.status)}"></div>
-            </div>
-            <span class="bot-name">${esc(bot.name)}</span>
-            <div class="bot-actions">
-              ${bot.chat_url ? `<a href="${esc(bot.chat_url)}" target="_blank" rel="noopener" class="bot-btn bot-btn--chat" aria-label="Message ${esc(bot.name)} on Telegram"><i data-lucide="message-circle"></i></a>` : ""}
-              <a href="${esc(bot.repo_url)}" target="_blank" rel="noopener" class="bot-btn bot-btn--code" aria-label="View ${esc(bot.name)} source code">
-                <i data-lucide="git-branch"></i>
-              </a>
-            </div>
-          </div>
-        `;
-        // Tooltip lives on body — immune to any stacking context inside bots-grid
-        const $tip = document.createElement('div');
-        $tip.className = 'agent-tooltip';
-        $tip.id = botTooltipId;
-        $tip.setAttribute('role', 'tooltip');
-        $tip.innerHTML = `<span class="agent-id">ID: ${esc(bot.name.toUpperCase())} ${bot.shortcut ? `[${esc(bot.shortcut)}]` : ""}</span><p>${esc(bot.description)}</p>`;
-        document.body.appendChild($tip);
-      });
-      $botsContainer.innerHTML = html;
-    } catch (e) {
-      renderError($botsContainer, "Failed to render drone fleet.");
-      console.error("[render] bots:", e);
-    }
-  }
-
-  // ── 7. Signal Mesh ───────────────────────────────────────────────────────
-  const $extContainer = document.getElementById("extlinks-container");
-
-  if ($extContainer && extData) {
-    try {
-      let html = "";
-      let idx = 0;
+  try {
+    $grid.innerHTML = Object.values(hostingData.manifest).map(node => {
+      if (node.shortcut) globalRouter.set(node.shortcut.toLowerCase(), { type: 'link', payload: node.url });
       
-      // Parse the Object Hash Map dynamically
-      for (const [catKey, category] of Object.entries(extData)) {
-        let linksHTML = "";
-        const visualClass = esc(category.visual_class || "");
+      const sourceLink = node.source
+        ? `<a href="${esc(node.source)}" target="_blank" rel="noopener" class="card-primary__source" aria-label="View ${esc(node.hosting)} source"><i data-lucide="git-branch"></i> Source</a>`
+        : "";
 
-        Object.values(category.manifest).forEach((link) => {
-          // Add to Global Keystroke Router
-          globalRouter.set(link.shortcut.toLowerCase(), { type: 'link', payload: link.url });
+      return `
+        <div class="card-primary-wrap">
+          <a href="${esc(node.url)}" target="_blank" rel="noopener" class="card-primary" aria-label="${esc(node.name)} — ${esc(node.hosting)}">
+            <i data-lucide="${esc(node.icon)}"></i>
+            <div class="card-primary__body">
+              <span class="card-primary__sub">${esc(node.hosting)}</span>
+            </div>
+            <div class="card-primary__status ${esc(node.status || "online")}"></div>
+          </a>
+          ${sourceLink}
+        </div>`;
+    }).join("");
+  } catch (e) {
+    renderError($grid, "Hosting nodes offline.");
+  }
+}
 
-          linksHTML += `
+function renderTools() {
+  const $container = document.getElementById("tools-container");
+  if (!$container || !toolsData?.manifest) return;
+
+  try {
+    const tools = Object.values(toolsData.manifest);
+    const cards = tools.map(tool => {
+      if (tool.shortcut) globalRouter.set(tool.shortcut.toLowerCase(), { type: 'copy', payload: tool.install_cmd });
+
+      return `
+        <div class="tool-entry">
+          <div class="tool-entry__header">
+            <span class="tool-entry__icon"><i data-lucide="${esc(tool.icon)}"></i></span>
+            <span class="tool-entry__name">${esc(tool.name)}${tool.shortcut ? `<span class="tool-entry__shortcut">[${esc(tool.shortcut)}]</span>` : ""}</span>
+            <span class="tool-entry__target">${esc(tool.target)}</span>
+          </div>
+          <p class="tool-entry__desc">${esc(tool.description)}</p>
+          <div class="tool-entry__cmd">
+            <div class="tool-entry__cmd-scroll"><code>${esc(tool.install_cmd)}</code></div>
+            <button class="tool-entry__copy" aria-label="Copy install command" data-cmd="${esc(tool.install_cmd)}">
+              <i data-lucide="copy"></i>
+            </button>
+          </div>
+          <div class="tool-entry__footer">
+            <a href="${esc(tool.repo_url)}" target="_blank" rel="noopener" class="tool-entry__link" aria-label="View ${esc(tool.name)} source">
+              <i data-lucide="git-branch"></i> source
+            </a>
+          </div>
+        </div>`;
+    }).join("");
+
+    const $details = document.createElement('details');
+    $details.className = 'tools-details';
+    $details.innerHTML = `
+      <summary class="tools-summary">
+        <span class="tools-summary__domain">EXEC</span>
+        <span class="tools-summary__label">Ordnance Depot</span>
+        <span class="tools-summary__meta">${tools.length} payloads</span>
+        <span class="tools-summary__status tools-summary__status--sealed">SEALED</span>
+        <svg class="tools-summary__chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+      </summary>
+      <div class="tools-details__body">
+        <div class="tools-details__body-inner"><div class="tools-grid">${cards}</div></div>
+      </div>`;
+    
+    $details.addEventListener('toggle', () => {
+      const $status = $details.querySelector('.tools-summary__status');
+      if (!$status) return;
+      $status.textContent = $details.open ? 'OPEN' : 'SEALED';
+      $status.classList.toggle('tools-summary__status--sealed', !$details.open);
+      $status.classList.toggle('tools-summary__status--open', $details.open);
+    });
+    $container.appendChild($details);
+  } catch (e) {
+    renderError($container, "Tools offline.");
+  }
+}
+
+function renderBots() {
+  const $container = document.getElementById("bots-container");
+  if (!$container || !botsData?.manifest) return;
+
+  try {
+    $container.innerHTML = Object.values(botsData.manifest).map(bot => {
+      if (bot.shortcut && bot.chat_url) globalRouter.set(bot.shortcut.toLowerCase(), { type: 'link', payload: bot.chat_url });
+      
+      const botId = esc(bot.name.toLowerCase().replace(/\s+/g, '-'));
+      const tipId = `bot-tip-${botId}`;
+
+      const $tip = document.createElement('div');
+      $tip.className = 'agent-tooltip';
+      $tip.id = tipId;
+      $tip.setAttribute('role', 'tooltip');
+      $tip.innerHTML = `<span class="agent-id">ID: ${esc(bot.name.toUpperCase())} ${bot.shortcut ? `[${esc(bot.shortcut)}]` : ""}</span><p>${esc(bot.description)}</p>`;
+      document.body.appendChild($tip);
+
+      return `
+        <div class="bot-profile" data-tip-id="${tipId}">
+          <div class="bot-avatar" role="img" aria-label="${esc(bot.name)}" aria-describedby="${tipId}">
+            <i data-lucide="${esc(bot.icon)}"></i>
+            <div class="bot-status ${esc(bot.status)}"></div>
+          </div>
+          <span class="bot-name">${esc(bot.name)}</span>
+          <div class="bot-actions">
+            ${bot.chat_url ? `<a href="${esc(bot.chat_url)}" target="_blank" rel="noopener" class="bot-btn bot-btn--chat" aria-label="Message ${esc(bot.name)} on Telegram"><i data-lucide="message-circle"></i></a>` : ""}
+            <a href="${esc(bot.repo_url)}" target="_blank" rel="noopener" class="bot-btn bot-btn--code" aria-label="View ${esc(bot.name)} source code"><i data-lucide="git-branch"></i></a>
+          </div>
+        </div>`;
+    }).join("");
+  } catch (e) {
+    renderError($container, "Drone fleet offline.");
+  }
+}
+
+function renderSignalMesh() {
+  const $container = document.getElementById("extlinks-container");
+  if (!$container || !extData) return;
+
+  try {
+    $container.innerHTML = Object.entries(extData).map(([catKey, category], idx) => {
+      const catId = `ext-cat-${idx}`;
+      const links = Object.values(category.manifest).map(link => {
+        globalRouter.set(link.shortcut.toLowerCase(), { type: 'link', payload: link.url });
+        return `
           <a href="${esc(link.url)}" target="_blank" rel="noopener" class="item-ext" aria-label="${esc(link.shortcut)}: ${esc(link.name)}">
             <span class="ext-shortcut">${esc(link.shortcut)}</span>
             <span class="ext-name">${esc(link.name)}</span>
@@ -210,690 +210,398 @@ export function renderUI() {
               <span>${esc(link.info)}</span>
             </div>
           </a>`;
-        });
+      }).join("");
 
-        const catTitle = esc(category.category);
-        const catId    = `ext-cat-${idx}`;
-        idx++;
-
-        html += `
-        <div class="ext-category ${visualClass}" id="${catId}">
+      return `
+        <div class="ext-category ${esc(category.visual_class || "")}" id="${catId}">
           <button class="ext-category__toggle" aria-expanded="false" aria-controls="${catId}-body">
             <span class="ext-category__key">${esc(catKey)}</span>
-            <span class="ext-category__label">${catTitle}</span>
+            <span class="ext-category__label">${esc(category.category)}</span>
             <span class="ext-category__count">${Object.keys(category.manifest).length}</span>
             <i data-lucide="chevron-down" class="ext-category__chevron"></i>
           </button>
           <div class="ext-category__body" id="${catId}-body" role="region">
-            <div class="ext-category__body-inner">
-              <div class="ext-list">
-                ${linksHTML}
-              </div>
-            </div>
+            <div class="ext-category__body-inner"><div class="ext-list">${links}</div></div>
           </div>
         </div>`;
-      }
-      $extContainer.innerHTML = html;
-    } catch (e) {
-      renderError($extContainer, "Failed to render Signal Mesh.");
-      console.error("[render] extlinks:", e);
-    }
+    }).join("");
+
+    initSignalMeshEvents($container);
+  } catch (e) {
+    renderError($container, "Signal mesh offline.");
   }
+}
 
-  // ── 7b. Accordion overlay toggle ─────────────────────────────────────────
-  if ($extContainer) {
-    function positionOverlay($cat) {
-      const $body         = $cat.querySelector(".ext-category__body");
-      const containerRect = $extContainer.getBoundingClientRect();
-      const catRect       = $cat.getBoundingClientRect();
-      // Offset left relative to the card, clamped so the overlay never leaves the container
-      const leftOffset = containerRect.left - catRect.left;
-      $body.style.left  = `${leftOffset}px`;
-      $body.style.width = `${containerRect.width}px`;
-      // Ensure overlay doesn't overflow viewport bottom
-      const spaceBelow = window.innerHeight - catRect.bottom;
-      const overlayH   = Math.min(400, spaceBelow - 8);
-      $body.style.maxHeight = overlayH > 80 ? `${overlayH}px` : "80vh";
-      $body.style.overflowY = "auto";
+function initSignalMeshEvents($container) {
+  const closeAll = () => {
+    $container.querySelectorAll(".ext-category--open").forEach($open => {
+      $open.classList.remove("ext-category--open");
+      $open.querySelector(".ext-category__toggle").setAttribute("aria-expanded", "false");
+    });
+  };
+
+  const positionOverlay = ($cat) => {
+    const $body = $cat.querySelector(".ext-category__body");
+    const containerRect = $container.getBoundingClientRect();
+    const catRect = $cat.getBoundingClientRect();
+    $body.style.left = `${containerRect.left - catRect.left}px`;
+    $body.style.width = `${containerRect.width}px`;
+    const spaceBelow = window.innerHeight - catRect.bottom;
+    const overlayH = Math.min(400, spaceBelow - 8);
+    $body.style.maxHeight = overlayH > 80 ? `${overlayH}px` : "80vh";
+  };
+
+  $container.addEventListener("click", (e) => {
+    const $btn = e.target.closest(".ext-category__toggle");
+    if (!$btn) return;
+    const $cat = $btn.closest(".ext-category");
+    const isOpen = $cat.classList.contains("ext-category--open");
+    closeAll();
+    if (!isOpen) {
+      if (window.innerWidth > 900) positionOverlay($cat);
+      $cat.classList.add("ext-category--open");
+      $btn.setAttribute("aria-expanded", "true");
     }
+  });
 
-    function closeAll() {
-      $extContainer.querySelectorAll(".ext-category--open").forEach(($open) => {
-        $open.classList.remove("ext-category--open");
-        $open.querySelector(".ext-category__toggle").setAttribute("aria-expanded", "false");
+  document.addEventListener("click", (e) => { if (!$container.contains(e.target)) closeAll(); });
+  window.addEventListener("resize", () => {
+    if (window.innerWidth <= 900) {
+      $container.querySelectorAll(".ext-category__body").forEach($b => {
+        $b.style.left = $b.style.width = $b.style.maxHeight = "";
       });
     }
+  }, { passive: true });
+}
 
-    $extContainer.addEventListener("click", (e) => {
-      const $btn = e.target.closest(".ext-category__toggle");
-      if (!$btn) return;
-      const $cat   = $btn.closest(".ext-category");
-      const isOpen = $cat.classList.contains("ext-category--open");
+function renderCodex() {
+  const $track = document.getElementById("guides-track");
+  if (!$track || !guideData) return;
 
-      closeAll();
-      if (!isOpen) {
-        if (window.innerWidth > 900) positionOverlay($cat);
-        $cat.classList.add("ext-category--open");
-        $btn.setAttribute("aria-expanded", "true");
-      }
-    });
-
-    document.addEventListener("click", (e) => {
-      if (!$extContainer.contains(e.target)) closeAll();
-    });
-
-    window.addEventListener("resize", () => {
-      if (window.innerWidth <= 900) {
-        $extContainer.querySelectorAll(".ext-category__body").forEach(($b) => {
-          $b.style.left = "";
-          $b.style.width = "";
-          $b.style.maxHeight = "";
-          $b.style.overflowY = "";
-        });
-      }
-    }, { passive: true });
-
-    $extContainer.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") { closeAll(); return; }
-      if (e.key !== "Enter" && e.key !== " ") return;
-      const $btn = e.target.closest(".ext-category__toggle");
-      if (!$btn) return;
-      e.preventDefault();
-      $btn.click();
-    });
-  }
-
-  // ── 8. Sacred Codex ──────────────────────────────────────────────────────
-  const $guidesTrack = document.getElementById("guides-track");
-  // Assuming guides.json remains a flat array for now, otherwise update to manifest extraction
-  if ($guidesTrack && guideData) {
-    try {
-      let html = "";
-      const flipHint = IS_TOUCH ? "tap to flip" : "hover to flip";
-      
-      const guidesArray = Array.isArray(guideData) ? guideData : (guideData.manifest ? Object.values(guideData.manifest) : []);
-
-      guidesArray.forEach((guide) => {
-        html += `
-          <div class="flip-card" tabindex="0" aria-label="${esc(guide.title)} guide">
-            <div class="flip-card__inner">
-              <div class="flip-card__front">
-                <i data-lucide="${esc(guide.icon)}" class="flip-card__icon"></i>
-                <h3 class="flip-card__title">${esc(guide.title)}</h3>
-                <div class="flip-card__meta">ETA: ${esc(guide.read_time)}</div>
-                <div class="flip-card__hint">${flipHint}</div>
-              </div>
-              <div class="flip-card__back">
-                <h4 class="flip-card__back-title">
-                  <i data-lucide="${esc(guide.icon)}"></i>${esc(guide.title)}
-                </h4>
-                <p class="flip-card__back-desc">${esc(guide.description)}</p>
-                <div class="flip-card__back-meta">
-                  <span>ETA: ${esc(guide.read_time)}</span>
-                  <a href="guide/?md=${esc(guide.file)}" class="flip-card__read-btn">
-                    <i data-lucide="external-link"></i> Read Guide
-                  </a>
-                </div>
-              </div>
+  try {
+    const flipHint = IS_TOUCH ? "tap to flip" : "hover to flip";
+    const guides = Array.isArray(guideData) ? guideData : (guideData.manifest ? Object.values(guideData.manifest) : []);
+    
+    $track.innerHTML = guides.map(guide => `
+      <div class="flip-card" tabindex="0" aria-label="${esc(guide.title)} guide">
+        <div class="flip-card__inner">
+          <div class="flip-card__front">
+            <i data-lucide="${esc(guide.icon)}" class="flip-card__icon"></i>
+            <h3 class="flip-card__title">${esc(guide.title)}</h3>
+            <div class="flip-card__meta">ETA: ${esc(guide.read_time)}</div>
+            <div class="flip-card__hint">${flipHint}</div>
+          </div>
+          <div class="flip-card__back">
+            <h4 class="flip-card__back-title"><i data-lucide="${esc(guide.icon)}"></i>${esc(guide.title)}</h4>
+            <p class="flip-card__back-desc">${esc(guide.description)}</p>
+            <div class="flip-card__back-meta">
+              <span>ETA: ${esc(guide.read_time)}</span>
+              <a href="guide/?md=${esc(guide.file)}" class="flip-card__read-btn"><i data-lucide="external-link"></i> Read</a>
             </div>
           </div>
-        `;
-      });
-      $guidesTrack.innerHTML = html;
-    } catch (e) {
-      renderError($guidesTrack, "Failed to render codex.");
-      console.error("[render] guides:", e);
-    }
+        </div>
+      </div>`).join("");
+  } catch (e) {
+    renderError($track, "Codex offline.");
   }
+}
 
-  // ── 8b. App Uplinks ──────────────────────────────────────────────────────
-  const $appsGrid = document.getElementById("apps-grid");
-  if ($appsGrid && appsData?.manifest) {
-    try {
-      let html = "";
-      Object.values(appsData.manifest).forEach((app) => {
-        const statusClass = esc(app.status || "planned");
-        const statusLabel = { live: "LIVE", wip: "WIP", planned: "PLANNED" }[app.status] ?? "—";
-        const tagsHtml = (app.tags ?? [])
-          .map(t => `<span class="app-card__tag">${esc(t)}</span>`)
-          .join("");
-        const keyBadge = app.keyed
-          ? `<span class="app-card__keyed" title="Requires your own API key"><i data-lucide="key-round"></i> API key</span>`
-          : `<span class="app-card__keyed app-card__keyed--free" title="No key required"><i data-lucide="unlock"></i> No key</span>`;
-        const isLive = app.status === "live";
-        const href   = isLive ? esc(app.path) : "#";
+function renderApps() {
+  const $grid = document.getElementById("apps-grid");
+  if (!$grid || !appsData?.manifest) return;
 
-        html += `
-          <a
-            href="${href}"
-            class="app-card app-card--${statusClass}"
-            aria-label="${esc(app.name)}"
-            ${!isLive ? 'aria-disabled="true" tabindex="0"' : ""}
-          >
-            <div class="app-card__header">
-              <i data-lucide="${esc(app.icon)}" class="app-card__icon"></i>
-              <span class="app-card__name">${esc(app.name)}</span>
-              <span class="app-card__status app-card__status--${statusClass}">${statusLabel}</span>
-            </div>
-            <p class="app-card__desc">${esc(app.description)}</p>
-            <div class="app-card__footer">
-              <div class="app-card__tags">${tagsHtml}</div>
-              ${keyBadge}
-            </div>
-          </a>`;
-      });
-      $appsGrid.innerHTML = html;
+  try {
+    $grid.innerHTML = Object.values(appsData.manifest).map(app => {
+      const status = app.status || "planned";
+      const isLive = status === "live";
+      const tags = (app.tags ?? []).map(t => `<span class="app-card__tag">${esc(t)}</span>`).join("");
+      const keyBadge = app.keyed
+        ? `<span class="app-card__keyed" title="Requires API key"><i data-lucide="key-round"></i> Key</span>`
+        : `<span class="app-card__keyed app-card__keyed--free" title="Free"><i data-lucide="unlock"></i> Free</span>`;
 
-      // Prevent navigation on non-live apps while still being keyboard-accessible
-      $appsGrid.addEventListener("click", (e) => {
-        const $a = e.target.closest(".app-card");
-        if ($a && $a.getAttribute("aria-disabled") === "true") e.preventDefault();
-      });
-      $appsGrid.addEventListener("keydown", (e) => {
-        if (e.key !== "Enter" && e.key !== " ") return;
-        const $a = e.target.closest(".app-card");
-        if ($a && $a.getAttribute("aria-disabled") === "true") e.preventDefault();
-      });
-    } catch (e) {
-      renderError($appsGrid, "Failed to render app uplinks.");
-      console.error("[render] apps:", e);
-    }
+      return `
+        <a href="${isLive ? esc(app.path) : "#"}" class="app-card app-card--${status}" ${!isLive ? 'aria-disabled="true" tabindex="0"' : ""}>
+          <div class="app-card__header">
+            <i data-lucide="${esc(app.icon)}" class="app-card__icon"></i>
+            <span class="app-card__name">${esc(app.name)}</span>
+            <span class="app-card__status app-card__status--${status}">${status.toUpperCase()}</span>
+          </div>
+          <p class="app-card__desc">${esc(app.description)}</p>
+          <div class="app-card__footer"><div class="app-card__tags">${tags}</div>${keyBadge}</div>
+        </a>`;
+    }).join("");
+
+    $grid.addEventListener("click", (e) => {
+      if (e.target.closest(".app-card[aria-disabled='true']")) e.preventDefault();
+    });
+  } catch (e) {
+    renderError($grid, "Apps offline.");
   }
+}
 
-  // ── 8c. Uplink Launchpad ─────────────────────────────────────────────────
-  renderUplinkLaunchpad();
-
-  // ── 8d. Social Signal Cluster ────────────────────────────────────────────
-  renderSocialCluster();
-
-  // ── 9. Init Lucide icons ─────────────────────────────────────────────────
-  if (typeof lucide !== "undefined") {
-    lucide.createIcons();
-  } else {
-    console.warn("[lucide] library not available — icons will not render.");
+function initGlobalListeners() {
+  // Tooltips, Clipboard, Scroll-to-top, Carousel, Terminal
+  initClipboard();
+  initBotTooltips();
+  initScrollTop();
+  if (!IS_TOUCH) {
+    initExtTooltips();
+    initTerminal();
   }
+  initFlipCards();
+}
 
-  // ── 9b. Tunnel light — after all HTML + icons are in the DOM ─────────────
-  requestAnimationFrame(() => initTunnelLight());
-
-  // ── 9c. Carousel arrow initial state (after layout) ──────────────────────
-  requestAnimationFrame(updateArrows);
-
-  // ── 10. Copy-to-clipboard (Ordnance Depot) ───────────────────────────────
+function initClipboard() {
   document.addEventListener("click", (e) => {
     const $btn = e.target.closest(".tool-entry__copy");
-    if (!$btn) return;
-    if ($btn.classList.contains("tool-entry__copy--copied")) return;
-    const cmd = $btn.dataset.cmd;
-    const $icon = $btn.querySelector("svg");
-    navigator.clipboard
-      .writeText(cmd)
-      .then(() => {
-        $btn.classList.add("tool-entry__copy--copied");
-        if ($icon) {
-          $icon.outerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
-        }
-        setTimeout(() => {
-          $btn.classList.remove("tool-entry__copy--copied");
-          const $check = $btn.querySelector("svg");
-          if ($check) {
-            $check.outerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>';
-          }
-        }, 1800);
-      })
-      .catch(() => {
-        console.warn("[clipboard] write failed");
-      });
+    if (!$btn || $btn.classList.contains("tool-entry__copy--copied")) return;
+    
+    navigator.clipboard.writeText($btn.dataset.cmd).then(() => {
+      $btn.classList.add("tool-entry__copy--copied");
+      const $icon = $btn.querySelector("i");
+      if ($icon) $icon.setAttribute("data-lucide", "check");
+      if (typeof lucide !== "undefined") lucide.createIcons();
+      setTimeout(() => {
+        $btn.classList.remove("tool-entry__copy--copied");
+        if ($icon) $icon.setAttribute("data-lucide", "copy");
+        if (typeof lucide !== "undefined") lucide.createIcons();
+      }, 1800);
+    });
   });
+}
 
-  // ── 11. Carousel arrows (Sacred Codex) ───────────────────────────────────
+function initBotTooltips() {
+  const show = ($p) => {
+    const $tip = document.getElementById($p.dataset.tipId);
+    if (!$tip) return;
+    document.querySelectorAll('.agent-tooltip--visible').forEach(t => t.classList.remove('agent-tooltip--visible'));
+    $tip.classList.add('agent-tooltip--visible');
+    const r = $p.getBoundingClientRect();
+    $tip.style.left = `${Math.max(8, Math.min(r.left + r.width/2 - $tip.offsetWidth/2, window.innerWidth - $tip.offsetWidth - 8))}px`;
+    $tip.style.top = `${r.top - $tip.offsetHeight - 12}px`;
+  };
+  const hide = () => document.querySelectorAll('.agent-tooltip--visible').forEach(t => t.classList.remove('agent-tooltip--visible'));
+
+  document.addEventListener('mouseover', e => { const $p = e.target.closest('.bot-profile'); if ($p) show($p); });
+  document.addEventListener('mouseout', e => { if (e.target.closest('.bot-profile') && !e.relatedTarget?.closest('.bot-profile')) hide(); });
+  document.addEventListener('click', e => {
+    if (e.target.closest('.bot-btn')) return;
+    const $p = e.target.closest('.bot-profile');
+    if (!$p) hide(); else show($p);
+  });
+}
+
+function initScrollTop() {
+  const $btn = document.getElementById("scroll-top");
+  if (!$btn) return;
+  window.addEventListener("scroll", () => $btn.classList.toggle("hidden", window.scrollY < 400), { passive: true });
+  $btn.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
+}
+
+function updateCarouselArrows() {
   const $track = document.getElementById("guides-track");
-  const $btnPrev = document.querySelector(".carousel__arrow--prev");
-  const $btnNext = document.querySelector(".carousel__arrow--next");
+  const $prev = document.querySelector(".carousel__arrow--prev");
+  const $next = document.querySelector(".carousel__arrow--next");
+  if (!$track || !$prev || !$next) return;
 
-  function scrollCarousel(dir) {
-    if (!$track) return;
-    const cardWidth = $track.querySelector(".flip-card")?.offsetWidth + 16 || 276;
-    $track.scrollBy({ left: dir * cardWidth, behavior: "smooth" });
-  }
+  const update = () => {
+    $prev.classList.toggle("carousel__arrow--hidden", $track.scrollLeft <= 0);
+    $next.classList.toggle("carousel__arrow--hidden", $track.scrollLeft + $track.clientWidth >= $track.scrollWidth - 2);
+  };
 
-  if ($btnPrev) $btnPrev.addEventListener("click", () => scrollCarousel(-1));
-  if ($btnNext) $btnNext.addEventListener("click", () => scrollCarousel(1));
+  $prev.onclick = () => $track.scrollBy({ left: -300, behavior: "smooth" });
+  $next.onclick = () => $track.scrollBy({ left: 300, behavior: "smooth" });
+  $track.onscroll = update;
+  update();
+}
 
-  function updateArrows() {
-    if (!$track || !$btnPrev || !$btnNext) return;
-    $btnPrev.classList.toggle("carousel__arrow--hidden", $track.scrollLeft <= 0);
-    $btnNext.classList.toggle(
-      "carousel__arrow--hidden",
-      $track.scrollLeft + $track.clientWidth >= $track.scrollWidth - 2,
-    );
-  }
-  if ($track) {
-    $track.addEventListener("scroll", updateArrows, { passive: true });
-  }
+function initFlipCards() {
+  const toggle = (el) => el?.classList.toggle("flip-card--flipped");
+  document.addEventListener("click", e => { if (IS_TOUCH) toggle(e.target.closest(".flip-card")); });
+  document.addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && document.activeElement.closest(".flip-card")) toggle(document.activeElement.closest(".flip-card")); });
+}
 
-  // ── 12. Flip cards — touch + keyboard ───────────────────────────────────
-  document.addEventListener("click", (e) => {
-    const $card = e.target.closest(".flip-card");
-    if (!$card) return;
-    if (IS_TOUCH) $card.classList.toggle("flip-card--flipped");
+function initExtTooltips() {
+  document.addEventListener("mouseover", (e) => {
+    const $link = e.target.closest(".item-ext");
+    const $tip = $link?.querySelector(".tooltip-data");
+    if (!$tip) return;
+    const r = $link.getBoundingClientRect();
+    const spaceAbove = r.top > 100;
+    $tip.style.left = `${Math.max(8, Math.min(r.left + 44, window.innerWidth - 268))}px`;
+    $tip.style.top = `${spaceAbove ? r.top : r.bottom + 8}px`;
+    $tip.style.transform = spaceAbove ? "translateY(-110%)" : "translateY(0)";
   });
+}
+
+function initTerminal() {
+  let buffer = "";
+  let timeout;
+  const $overlay = document.getElementById("cmd-overlay");
+  const $text = document.getElementById("cmd-text");
 
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" || e.key === " ") {
-      const $card = document.activeElement?.closest(".flip-card");
-      if ($card) {
-        e.preventDefault();
-        $card.classList.toggle("flip-card--flipped");
+    if (["INPUT", "TEXTAREA", "BUTTON"].includes(e.target.tagName) || e.ctrlKey || e.metaKey || e.altKey || !/^[a-zA-Z0-9]$/.test(e.key)) return;
+
+    buffer += e.key.toLowerCase();
+    $text.textContent = buffer.toUpperCase();
+    $overlay.classList.remove("hidden");
+
+    if (globalRouter.has(buffer)) {
+      const action = globalRouter.get(buffer);
+      $text.style.color = "#fff";
+      if (action.type === "link") {
+        $text.textContent = "ROUTING...";
+        setTimeout(() => { window.open(action.payload, "_blank"); reset(); }, 300);
+      } else {
+        $text.textContent = "PAYLOAD COPIED";
+        navigator.clipboard.writeText(action.payload);
+        setTimeout(reset, 800);
       }
-    }
+    } else if (buffer.length >= 2) setTimeout(reset, 500);
+
+    clearTimeout(timeout);
+    timeout = setTimeout(reset, 2000);
   });
 
-  // ── 13. Bot tooltips — body-level, positioned via getBoundingClientRect ──────
-  // Tooltips live on <body> to escape stacking contexts inside bots-grid.
-  function showBotTip($profile) {
-    const id = $profile.dataset.tipId;
-    if (!id) return;
-    const $tip = document.getElementById(id);
-    if (!$tip) return;
-    hideBotTips();
-    // Make visible first so the browser lays it out, then measure + position
-    $tip.classList.add('agent-tooltip--visible');
-    requestAnimationFrame(() => {
-      const r   = $profile.getBoundingClientRect();
-      const tipW = $tip.offsetWidth;
-      const tipH = $tip.offsetHeight;
-      let left = r.left + r.width / 2 - tipW / 2;
-      left = Math.max(8, Math.min(left, window.innerWidth - tipW - 8));
-      $tip.style.left = `${left}px`;
-      $tip.style.top  = `${r.top - tipH - 12}px`;
-    });
-  }
-
-  function hideBotTips() {
-    document.querySelectorAll('.agent-tooltip--visible').forEach((t) =>
-      t.classList.remove('agent-tooltip--visible')
-    );
-  }
-
-  // hover — show/hide on mouse enter/leave
-  document.addEventListener('mouseover', (e) => {
-    const $profile = e.target.closest('.bot-profile');
-    if ($profile) showBotTip($profile);
-  });
-  document.addEventListener('mouseout', (e) => {
-    if (!e.target.closest('.bot-profile')) return;
-    if (!e.relatedTarget?.closest('.bot-profile')) hideBotTips();
-  });
-
-  // tap — only toggle if no real mouse is driving (touch synthesises click without a preceding mouseover)
-  document.addEventListener('click', (e) => {
-    if (e.target.closest('.bot-btn')) return;
-    const $profile = e.target.closest('.bot-profile');
-    if (!$profile) { hideBotTips(); return; }
-    // If the tooltip is already visible, a mouse click opened it via hover — leave it alone
-    const id = $profile.dataset.tipId;
-    const $tip = document.getElementById(id);
-    if ($tip?.classList.contains('agent-tooltip--visible')) return;
-    showBotTip($profile);
-  });
-
-  // ── 14. Scroll-to-top ────────────────────────────────────────────────────
-  const $scrollTop = document.getElementById("scroll-top");
-  if ($scrollTop) {
-    let scrollRaf;
-    window.addEventListener(
-      "scroll",
-      () => {
-        if (scrollRaf) return;
-        scrollRaf = requestAnimationFrame(() => {
-          $scrollTop.classList.toggle("hidden", window.scrollY < 400);
-          scrollRaf = null;
-        });
-      },
-      { passive: true },
-    );
-    $scrollTop.addEventListener("click", () =>
-      window.scrollTo({ top: 0, behavior: "smooth" }),
-    );
-  }
-
-  // ── 14b. Tooltip positioning ─────────────────────────────────────────────
-  if (!IS_TOUCH) {
-    document.addEventListener("mouseover", (e) => {
-      const $link = e.target.closest(".item-ext");
-      if (!$link) return;
-      const $tip = $link.querySelector(".tooltip-data");
-      if (!$tip) return;
-
-      const rect  = $link.getBoundingClientRect();
-      const tipW  = 260;
-      const tipH  = 80;
-      const gap   = 8;
-
-      const idealLeft = rect.left + 44;
-      const left = Math.min(idealLeft, window.innerWidth - tipW - gap);
-      const spaceAbove = rect.top;
-      const top = spaceAbove > tipH + gap ? rect.top : rect.bottom + gap;
-
-      $tip.style.left      = `${Math.max(gap, left)}px`;
-      $tip.style.top       = `${top}px`;
-      $tip.style.transform = spaceAbove > tipH + gap ? "translateY(-110%)" : "translateY(0)";
-    });
-  }
-
-  
-
-  // ── 14. Global Terminal Keystroke Routing (Desktop) ──────────────────────
-  if (!IS_TOUCH) {
-    let keyBuffer = "";
-    let cmdTimeout;
-    const $cmdOverlay = document.getElementById("cmd-overlay");
-    const $cmdText = document.getElementById("cmd-text");
-
-    document.addEventListener("keydown", (e) => {
-      if (
-        e.target.tagName === "INPUT" ||
-        e.target.tagName === "TEXTAREA" ||
-        e.target.tagName === "BUTTON" ||
-        e.ctrlKey || e.metaKey || e.altKey
-      )
-        return;
-      
-      if (!/^[a-zA-Z0-9]$/.test(e.key)) return;
-
-      keyBuffer += e.key.toLowerCase();
-      $cmdText.textContent = keyBuffer.toUpperCase();
-      $cmdOverlay.classList.remove("hidden");
-
-      if (globalRouter.has(keyBuffer)) {
-        const action = globalRouter.get(keyBuffer);
-        $cmdText.style.color = "#fff";
-        
-        if (action.type === "link") {
-          $cmdText.textContent = "ROUTING...";
-          setTimeout(() => {
-            window.open(action.payload, "_blank");
-            resetBuffer();
-          }, 300);
-        } else if (action.type === "copy") {
-          $cmdText.textContent = "PAYLOAD COPIED";
-          navigator.clipboard.writeText(action.payload).catch(err => console.error("Clipboard write failed:", err));
-          setTimeout(resetBuffer, 800);
-        }
-      } else if (keyBuffer.length >= 2) {
-        // If buffer is 2 characters and invalid, reset to prevent locking
-        setTimeout(resetBuffer, 500);
-      }
-
-      clearTimeout(cmdTimeout);
-      cmdTimeout = setTimeout(resetBuffer, 2000);
-    });
-
-    function resetBuffer() {
-      keyBuffer = "";
-      $cmdOverlay.classList.add("hidden");
-      $cmdText.style.color = "var(--accent)";
-    }
-  }
-
+  const reset = () => { buffer = ""; $overlay.classList.add("hidden"); $text.style.color = "var(--accent)"; };
 }
 
-/* ═══════════════════════════════════════════════
-   ── Uplink Launchpad ─────────────────────────
-   Live telemetry + prompt probe. Hands off to
-   /playground/?q=…&agent=… for prefill-only flow.
-   ═══════════════════════════════════════════════ */
-function renderUplinkLaunchpad() {
+export function renderUplinkLaunchpad() {
   const $root = document.getElementById("uplink-launch");
-  if (!$root || !llmData || !llmData.routing_table) return;
+  if (!$root || !llmData) return;
 
-  const $telemetry    = document.getElementById("uplink-telemetry");
-  const $agentSelect  = document.getElementById("uplink-agent");
-  const $modelPreview = document.getElementById("uplink-model-preview");
-  const $prompt       = document.getElementById("uplink-prompt");
-  const $form         = document.getElementById("uplink-probe");
-  const $signalDot    = document.getElementById("uplink-signal-dot");
-  const $signalLabel  = document.getElementById("uplink-signal-label");
-  const $eyebrow      = $signalDot?.parentElement;
+  renderTelemetry();
+  initLaunchpadSignal();
+  initAgentRoster();
+  initLaunchpadForm();
+}
 
-  // ── Telemetry ───────────────────────────────────────────────────────────
+function renderTelemetry() {
+  const $tele = document.getElementById("uplink-telemetry");
+  if (!$tele) return;
+  const models = Object.values(llmData.routing_table || {});
+  const subCount = models.filter(m => !m.pay_per_token).length;
+  const defaultId = llmData.default_routing;
+  const def = llmData.routing_table?.[defaultId] || { label: defaultId || "—", provider: "" };
+
+  const $prev = document.getElementById("uplink-model-preview");
+  if ($prev) { $prev.textContent = def.label; $prev.title = def.provider; }
+
+  $tele.innerHTML = `
+    <div class="uplink-tele">
+      <span class="uplink-tele__label"><i data-lucide="layers"></i> models</span>
+      <span class="uplink-tele__value uplink-tele__value--accent">${models.length}</span>
+    </div>
+    <div class="uplink-tele">
+      <span class="uplink-tele__label"><i data-lucide="zap"></i> default</span>
+      <span class="uplink-tele__value uplink-tele__value--cyan">${esc(def.label)}</span>
+    </div>
+    <div class="uplink-tele">
+      <span class="uplink-tele__label"><i data-lucide="infinity"></i> sub</span>
+      <span class="uplink-tele__value uplink-tele__value--green">${subCount}</span>
+    </div>
+    <div class="uplink-tele">
+      <span class="uplink-tele__label"><i data-lucide="user-cog"></i> agents</span>
+      <span class="uplink-tele__value" id="uplink-tele-agent-count">…</span>
+    </div>`;
+}
+
+function initLaunchpadSignal() {
+  const isProxy = config.llm?.api_base && !config.llm.api_base.includes("nano-gpt.com");
+  const $dot = document.getElementById("uplink-signal-dot");
+  const $lbl = document.getElementById("uplink-signal-label");
+  const state = isProxy ? "proxy" : "armed";
+  if ($dot) { $dot.dataset.state = state; $dot.parentElement.dataset.state = state; }
+  if ($lbl) $lbl.textContent = isProxy ? "SOVEREIGN PROXY" : "UPLINK READY";
+}
+
+async function initAgentRoster() {
+  const $select = document.getElementById("uplink-agent");
+  const $count = document.getElementById("uplink-tele-agent-count");
+  if (!$select) return;
+
   try {
-    const familyCount = Array.isArray(llmData._index) ? llmData._index.length : 0;
-    const models      = Object.values(llmData.routing_table);
-    const modelCount  = models.length;
-    const subCount    = models.filter(m => !m.pay_per_token).length;
-    const paidCount   = modelCount - subCount;
-    const defaultId   = llmData.default_routing;
-    const defaultLbl  = llmData.routing_table[defaultId]?.label ?? defaultId ?? "—";
-    const defaultProv = llmData.routing_table[defaultId]?.provider ?? "";
-
-    $modelPreview.textContent = defaultLbl;
-    $modelPreview.title       = defaultProv ? `${defaultLbl} · ${defaultProv}` : defaultLbl;
-
-    $telemetry.innerHTML = `
-      <div class="uplink-tele">
-        <span class="uplink-tele__label"><i data-lucide="layers"></i> models</span>
-        <span class="uplink-tele__value uplink-tele__value--accent">${modelCount}</span>
-        <span class="uplink-tele__sub">${familyCount} families</span>
-      </div>
-      <div class="uplink-tele">
-        <span class="uplink-tele__label"><i data-lucide="zap"></i> default</span>
-        <span class="uplink-tele__value uplink-tele__value--cyan" title="${esc(defaultLbl)}">${esc(defaultLbl)}</span>
-        <span class="uplink-tele__sub">${esc(defaultProv)}</span>
-      </div>
-      <div class="uplink-tele">
-        <span class="uplink-tele__label"><i data-lucide="infinity"></i> subscription</span>
-        <span class="uplink-tele__value uplink-tele__value--green">${subCount}</span>
-        <span class="uplink-tele__sub">included</span>
-      </div>
-      <div class="uplink-tele">
-        <span class="uplink-tele__label"><i data-lucide="coins"></i> pay-per-token</span>
-        <span class="uplink-tele__value uplink-tele__value--warm">${paidCount}</span>
-        <span class="uplink-tele__sub">metered</span>
-      </div>
-      <div class="uplink-tele">
-        <span class="uplink-tele__label"><i data-lucide="user-cog"></i> agents</span>
-        <span class="uplink-tele__value" id="uplink-tele-agent-count">…</span>
-        <span class="uplink-tele__sub">personas</span>
-      </div>
-    `;
-  } catch (e) {
-    renderError($telemetry, "Telemetry offline.");
-    console.error("[uplink] telemetry:", e);
+    const files = await fetchJSON("glass/data/llm-agents/index.json");
+    const agents = await Promise.allSettled(files.filter(f => !f.startsWith("default")).map(f => fetchJSON(`glass/data/llm-agents/${f}`).then(d => ({f, d}))));
+    let count = 0;
+    agents.forEach(r => {
+      if (r.status !== "fulfilled") return;
+      const id = r.value.f.replace(".json", "");
+      const data = r.value.d.spec ? r.value.d.data : r.value.d;
+      const opt = new Option(data.name || id, id);
+      if (data.tags) opt.title = data.tags.join(", ");
+      $select.add(opt);
+      count++;
+    });
+    if ($count) $count.textContent = count;
+  } catch {
+    if ($count) $count.textContent = "0";
   }
+}
 
-  // ── Uplink mode probe ───────────────────────────────────────────────────
-  // NOTE: API keys are session-scoped inside the playground (never written
-  // to localStorage by design — see llm-auth.js). So the hub cannot observe
-  // key state. We only distinguish PROXY MODE vs DIRECT MODE here.
-  const llmCfg     = config.llm ?? {};
-  const PROXY_MODE = !!(llmCfg.api_base && !llmCfg.api_base.includes("nano-gpt.com"));
+function initLaunchpadForm() {
+  const $form = document.getElementById("uplink-probe");
+  const $prompt = document.getElementById("uplink-prompt");
+  if (!$form || !$prompt) return;
 
-  if (PROXY_MODE) {
-    if ($signalDot)   $signalDot.dataset.state = "proxy";
-    if ($eyebrow)     $eyebrow.dataset.state   = "proxy";
-    if ($signalLabel) $signalLabel.textContent = "SOVEREIGN PROXY";
-  } else {
-    if ($signalDot)   $signalDot.dataset.state = "armed";
-    if ($eyebrow)     $eyebrow.dataset.state   = "armed";
-    if ($signalLabel) $signalLabel.textContent = "UPLINK READY";
-  }
-
-  // ── Agent roster ────────────────────────────────────────────────────────
-  (async () => {
-    const $agentCountCell = document.getElementById("uplink-tele-agent-count");
-    try {
-      const filenames = await fetchJSON("glass/data/llm-agents/index.json");
-      if (!Array.isArray(filenames) || !filenames.length) {
-        if ($agentCountCell) $agentCountCell.textContent = "0";
-        return;
-      }
-      const results = await Promise.allSettled(
-        filenames
-          .filter(f => f.replace(/\.json$/i, "") !== "default")
-          .map(f => fetchJSON(`glass/data/llm-agents/${f}`).then(card => ({ f, card })))
-      );
-      let added = 0;
-      results.forEach((r) => {
-        if (r.status !== "fulfilled") return;
-        const { f, card } = r.value;
-        const data = card.spec ? card.data : card;
-        const id   = f.replace(/\.json$/i, "");
-        const name = data.name ?? id;
-        const opt  = document.createElement("option");
-        opt.value = id;
-        opt.textContent = name;
-        if (data.tags?.length) opt.title = data.tags.join(", ");
-        $agentSelect.appendChild(opt);
-        added++;
-      });
-      if ($agentCountCell) $agentCountCell.textContent = String(added);
-    } catch (e) {
-      if ($agentCountCell) $agentCountCell.textContent = "0";
-      console.warn("[uplink] agent roster unavailable:", e.message);
-    }
-  })();
-
-  // ── Auto-resize prompt textarea ─────────────────────────────────────────
-  $prompt.addEventListener("input", () => {
-    $prompt.style.height = "auto";
-    $prompt.style.height = Math.min($prompt.scrollHeight, 160) + "px";
-  });
-
-  // ── Enter-to-transmit (Shift+Enter = newline) ───────────────────────────
-  $prompt.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      $form.requestSubmit();
-    }
-  });
-
-  // ── Submit — hand off to /playground/ with URL params ───────────────────
-  $form.addEventListener("submit", (e) => {
+  $prompt.oninput = () => { $prompt.style.height = "auto"; $prompt.style.height = Math.min($prompt.scrollHeight, 160) + "px"; };
+  $prompt.onkeydown = e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); $form.requestSubmit(); } };
+  $form.onsubmit = e => {
     e.preventDefault();
     const params = new URLSearchParams();
-    const text   = $prompt.value.trim();
-    const agent  = $agentSelect.value;
-    if (text)  params.set("q", text);
-    if (agent) params.set("agent", agent);
-    const qs   = params.toString();
-    const href = qs ? `/playground/?${qs}` : "/playground/";
-    window.location.href = href;
-  });
+    if ($prompt.value.trim()) params.set("q", $prompt.value.trim());
+    if (document.getElementById("uplink-agent")?.value) params.set("agent", document.getElementById("uplink-agent").value);
+    window.location.href = `/playground/${params.toString() ? '?' + params.toString() : ''}`;
+  };
 }
 
-/* ═══════════════════════════════════════════════
-   ── Social Signal Cluster ─────────────────────
-   Fixed floating orbital node group. Reads
-   config.socials and bursts open on click.
-   ═══════════════════════════════════════════════ */
-function renderSocialCluster() {
+export function renderSocialCluster() {
   const $root = document.getElementById("social-cluster");
   if (!$root || !config?.socials) return;
 
-  // Per-platform identity map
-  const PLATFORM = {
-    github:  { label: "GITHUB",  accent: "var(--social-github-accent)",  glow: "var(--social-github-glow)",  subtle: "var(--social-github-subtle)",  icon: "github" },
-    youtube: { label: "YOUTUBE", accent: "var(--social-youtube-accent)", glow: "var(--social-youtube-glow)", subtle: "var(--social-youtube-subtle)", icon: "youtube" },
-    kick:    { label: "KICK",    accent: "var(--social-kick-accent)",    glow: "var(--social-kick-glow)",    subtle: "var(--social-kick-subtle)",    icon: "radio" },
-    "ko-fi":    { label: "KO-FI",    accent: "var(--social-kofi-accent)",      glow: "var(--social-kofi-glow)",      subtle: "var(--social-kofi-subtle)",      icon: "coffee" },
-    telegram:   { label: "TELEGRAM", accent: "var(--social-telegram-accent)",  glow: "var(--social-telegram-glow)",  subtle: "var(--social-telegram-subtle)",  icon: "send" },
+  const PLATFORMS = {
+    github: { icon: "github", label: "GITHUB" },
+    youtube: { icon: "youtube", label: "YOUTUBE" },
+    kick: { icon: "radio", label: "KICK" },
+    "ko-fi": { icon: "coffee", label: "KO-FI" },
+    telegram: { icon: "send", label: "TELEGRAM" }
   };
 
-  // Node arc layout — strict quarter-circle, r=144px, 90°→0° in 22.5° steps (5 nodes).
-  // chord at 22.5° step on r=144: 2*144*sin(11.25°)≈56px. Edge-to-edge gap on 40px buttons: ~16px.
   const R = 144;
-  const ARC = [90, 67, 45, 22, 0].map(deg => {
-    const rad = deg * Math.PI / 180;
-    return {
-      x: `${Math.round(R * Math.cos(rad))}px`,
-      y: `${-Math.round(R * Math.sin(rad))}px`,
-    };
-  });
-
-  const socials = Object.entries(config.socials);
-
-  // Build nodes HTML
-  let nodesHTML = "";
-  socials.forEach(([key, url], i) => {
-    const p     = PLATFORM[key] || { label: key.toUpperCase(), accent: "var(--accent)", glow: "var(--accent-glow)", subtle: "var(--accent-subtle)", icon: "external-link" };
-    const arc   = ARC[i] || ARC[ARC.length - 1];
-    const delay = `${i * 35}ms`;
-
-    nodesHTML += `
-      <div
-        class="social-node"
-        style="--sc-x:${arc.x};--sc-y:${arc.y};--sc-delay:${delay};--sc-node-accent:${p.accent};--sc-node-glow:${p.glow};--sc-node-subtle:${p.subtle};"
-        data-platform="${esc(key)}"
-      >
-        <a
-          href="${esc(url)}"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="social-node__btn"
-          aria-label="${esc(p.label)} — ${esc(url)}"
-          tabindex="-1"
-        >
-          <i data-lucide="${esc(p.icon)}"></i>
-          <span class="social-node__pip" aria-hidden="true"></span>
+  const nodes = Object.entries(config.socials).map(([key, url], i) => {
+    const p = PLATFORMS[key] || { icon: "external-link", label: key.toUpperCase() };
+    const rad = (90 - i * 22.5) * Math.PI / 180;
+    const x = Math.round(R * Math.cos(rad));
+    const y = -Math.round(R * Math.sin(rad));
+    
+    return `
+      <div class="social-node" style="--sc-x:${x}px;--sc-y:${y}px;--sc-delay:${i * 35}ms;--sc-node-accent:var(--social-${key}-accent, var(--accent));" data-platform="${esc(key)}">
+        <a href="${esc(url)}" target="_blank" rel="noopener" class="social-node__btn" aria-label="${p.label}" tabindex="-1">
+          <i data-lucide="${p.icon}"></i><span class="social-node__pip"></span>
         </a>
-        <span class="social-node__label" aria-hidden="true">${esc(p.label)}</span>
+        <span class="social-node__label">${p.label}</span>
       </div>`;
-  });
+  }).join("");
 
   $root.innerHTML = `
-    <button
-      class="social-cluster__nucleus"
-      aria-expanded="false"
-      aria-controls="social-cluster-nodes"
-      aria-label="Toggle social links"
-    >
-      <span class="social-cluster__grain" aria-hidden="true"></span>
-      <span class="social-cluster__scan"  aria-hidden="true"></span>
-      <span class="social-cluster__burst" aria-hidden="true"></span>
-      <span class="social-cluster__nucleus-glyph" aria-hidden="true">//</span>
+    <button class="social-cluster__nucleus" aria-expanded="false" aria-controls="social-cluster-nodes">
+      <span class="social-cluster__grain"></span><span class="social-cluster__scan"></span>
+      <span class="social-cluster__burst"></span><span class="social-cluster__nucleus-glyph">//</span>
     </button>
-    <div class="social-cluster__nodes" id="social-cluster-nodes" aria-hidden="true">
-      ${nodesHTML}
-    </div>
-  `;
+    <div class="social-cluster__nodes" id="social-cluster-nodes" aria-hidden="true">${nodes}</div>`;
 
-  const $nucleus = $root.querySelector(".social-cluster__nucleus");
-  const $nodes   = $root.querySelector(".social-cluster__nodes");
+  const $btn = $root.querySelector(".social-cluster__nucleus");
+  const $nodes = $root.querySelector(".social-cluster__nodes");
+  const toggle = (force) => {
+    const open = force ?? !$root.classList.contains("social-cluster--open");
+    $root.classList.toggle("social-cluster--open", open);
+    $btn.setAttribute("aria-expanded", open);
+    $nodes.setAttribute("aria-hidden", !open);
+    $nodes.querySelectorAll("a").forEach(a => a.tabIndex = open ? 0 : -1);
+  };
 
-  function open() {
-    $root.classList.add("social-cluster--open");
-    $nucleus.setAttribute("aria-expanded", "true");
-    $nodes.setAttribute("aria-hidden", "false");
-    // Make node links keyboard-reachable
-    $nodes.querySelectorAll(".social-node__btn").forEach(a => a.removeAttribute("tabindex"));
-  }
-
-  function close() {
-    $root.classList.remove("social-cluster--open");
-    $nucleus.setAttribute("aria-expanded", "false");
-    $nodes.setAttribute("aria-hidden", "true");
-    $nodes.querySelectorAll(".social-node__btn").forEach(a => a.setAttribute("tabindex", "-1"));
-  }
-
-  function toggle() {
-    $root.classList.contains("social-cluster--open") ? close() : open();
-  }
-
-  $nucleus.addEventListener("click", (e) => { e.stopPropagation(); toggle(); });
-
-  $nucleus.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); }
-  });
-
-  // Close on outside click
-  document.addEventListener("click", (e) => {
-    if (!$root.contains(e.target)) close();
-  });
-
-  // Close on Escape
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && $root.classList.contains("social-cluster--open")) close();
-  });
+  $btn.onclick = e => { e.stopPropagation(); toggle(); };
+  document.addEventListener("click", e => { if (!$root.contains(e.target)) toggle(false); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") toggle(false); });
 }

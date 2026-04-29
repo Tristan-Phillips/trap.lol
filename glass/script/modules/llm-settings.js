@@ -1,117 +1,106 @@
-// Neural Uplink — settings persistence & controls
-import { esc } from './core.js';
-
+// Neural Uplink — Settings & Persistence
 const SETTINGS_KEY = "llm_settings";
-
-// XOR obfuscation — not cryptographic; prevents casual inspection of localStorage
 const STORAGE_SALT = "TRAP_SOVEREIGN_2026";
 
-export function _pack(obj) {
-  const str = JSON.stringify(obj);
+/**
+ * Basic obfuscation to prevent casual inspection of localStorage.
+ */
+function _transform(str) {
   let out = "";
   for (let i = 0; i < str.length; i++) {
     out += String.fromCharCode(str.charCodeAt(i) ^ STORAGE_SALT.charCodeAt(i % STORAGE_SALT.length));
   }
-  return btoa(unescape(encodeURIComponent(out)));
+  return out;
+}
+
+export function _pack(obj) {
+  const str = _transform(JSON.stringify(obj));
+  return btoa(unescape(encodeURIComponent(str)));
 }
 
 export function _unpack(raw) {
   if (!raw) return null;
   try {
-    const str = decodeURIComponent(escape(atob(raw)));
-    let out = "";
-    for (let i = 0; i < str.length; i++) {
-      out += String.fromCharCode(str.charCodeAt(i) ^ STORAGE_SALT.charCodeAt(i % STORAGE_SALT.length));
-    }
-    return JSON.parse(out);
+    const str = _transform(decodeURIComponent(escape(atob(raw))));
+    return JSON.parse(str);
   } catch (e) {
-    try { return JSON.parse(raw); } catch (_) { return null; }
+    try { return JSON.parse(raw); } catch { return null; }
   }
 }
 
 export function syncToggle($btn, active) {
-  $btn.dataset.active = active ? "true" : "false";
-  $btn.setAttribute("aria-checked", active ? "true" : "false");
+  $btn.dataset.active = active;
+  $btn.setAttribute("aria-checked", active);
   $btn.querySelector(".llm-panel__toggle-label").textContent = active ? "On" : "Off";
 }
 
 export function persistSettings(cfg) {
   localStorage.setItem(SETTINGS_KEY, _pack({
-    tempOverride:  cfg.tempOverride,
-    maxCtxTurns:   cfg.maxCtxTurns,
-    streaming:     cfg.streaming,
-    enterToSend:   cfg.enterToSend,
-    systemPrompt:  cfg.systemPrompt,
+    tempOverride: cfg.tempOverride,
+    maxCtxTurns: cfg.maxCtxTurns,
+    streaming: cfg.streaming,
+    enterToSend: cfg.enterToSend,
+    systemPrompt: cfg.systemPrompt,
     selectedAgent: cfg.selectedAgent,
   }));
 }
 
-export function restoreSettings() {
-  return _unpack(localStorage.getItem(SETTINGS_KEY)) || {};
-}
+export const restoreSettings = () => _unpack(localStorage.getItem(SETTINGS_KEY)) || {};
 
-export function initSettingsControls({
-  cfg, hasValidKey,
-  $settingsBtn, $settingsPanel, $sessionsBtn, $sessionsPanel,
-  $syspromptInput, $tempInput, $tempVal, $ctxInput, $ctxVal,
-  $toggleStream, $toggleEnter,
-  closeAllPanels, getSelectedModel, appendSysLog,
-}) {
-  function gated() { return !hasValidKey(); }
+export function initSettingsControls(ctx) {
+  const { ui, cfg, auth, model, callbacks } = ctx;
 
-  $settingsBtn.addEventListener("click", () => {
-    if (gated()) return;
-    const wasHidden = $settingsPanel.hidden;
-    closeAllPanels();
-    if (wasHidden) {
-      $settingsPanel.hidden = false;
-      $settingsBtn.classList.add("llm-shell__action-btn--active");
-      if (typeof lucide !== "undefined") lucide.createIcons();
+  ui.settingsBtn.addEventListener("click", () => {
+    if (auth.gated()) return;
+    const isVisible = !ui.settingsPanel.hidden;
+    callbacks.closeAllPanels();
+    if (!isVisible) {
+      ui.settingsPanel.hidden = false;
+      ui.settingsBtn.classList.add("llm-shell__action-btn--active");
+      if (window.lucide) window.lucide.createIcons();
     }
   });
 
-  $syspromptInput.addEventListener("input", () => {
-    cfg.systemPrompt = $syspromptInput.value;
+  ui.syspromptInput.addEventListener("input", () => {
+    cfg.systemPrompt = ui.syspromptInput.value;
     persistSettings(cfg);
   });
 
-  $tempInput.addEventListener("input", () => {
-    const v = parseFloat($tempInput.value);
-    cfg.tempOverride = v;
-    $tempVal.textContent = v.toFixed(2);
+  ui.tempInput.addEventListener("input", () => {
+    cfg.tempOverride = parseFloat(ui.tempInput.value);
+    ui.tempVal.textContent = cfg.tempOverride.toFixed(2);
     persistSettings(cfg);
   });
 
-  $tempVal.addEventListener("dblclick", () => {
+  ui.tempVal.addEventListener("dblclick", () => {
     cfg.tempOverride = null;
-    $tempInput.value = getSelectedModel()?.recommended_inference?.temperature ?? 0.7;
-    $tempVal.textContent = "auto";
+    ui.tempInput.value = model.getSelected()?.recommended_inference?.temperature ?? 0.7;
+    ui.tempVal.textContent = "auto";
     persistSettings(cfg);
   });
 
-  $ctxInput.addEventListener("input", () => {
-    const v = parseInt($ctxInput.value, 10);
-    cfg.maxCtxTurns = v;
-    $ctxVal.textContent = `${v} turns`;
+  ui.ctxInput.addEventListener("input", () => {
+    cfg.maxCtxTurns = parseInt(ui.ctxInput.value, 10);
+    ui.ctxVal.textContent = `${cfg.maxCtxTurns} turns`;
     persistSettings(cfg);
   });
 
-  $ctxVal.addEventListener("dblclick", () => {
+  ui.ctxVal.addEventListener("dblclick", () => {
     cfg.maxCtxTurns = null;
-    $ctxInput.value = $ctxInput.min;
-    $ctxVal.textContent = "unlimited";
+    ui.ctxInput.value = ui.ctxInput.min;
+    ui.ctxVal.textContent = "unlimited";
     persistSettings(cfg);
   });
 
-  $toggleStream.addEventListener("click", () => {
+  ui.toggleStream.addEventListener("click", () => {
     cfg.streaming = !cfg.streaming;
-    syncToggle($toggleStream, cfg.streaming);
+    syncToggle(ui.toggleStream, cfg.streaming);
     persistSettings(cfg);
   });
 
-  $toggleEnter.addEventListener("click", () => {
+  ui.toggleEnter.addEventListener("click", () => {
     cfg.enterToSend = !cfg.enterToSend;
-    syncToggle($toggleEnter, cfg.enterToSend);
+    syncToggle(ui.toggleEnter, cfg.enterToSend);
     persistSettings(cfg);
   });
 }
