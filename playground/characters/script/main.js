@@ -1,21 +1,13 @@
 /**
- * main.js
- * Underdark Roleplay Interface — Bootstrapper
+ * main.js — Underdark Bootstrapper
  */
-
 import { initUI } from './modules/ui.js';
 
-async function boot() {
-    // Initial UI setup
+function boot() {
+    if (window.lucide) window.lucide.createIcons();
     initUI();
-    
-    // Initialize Lucide icons
-    if (window.lucide) {
-        window.lucide.createIcons();
-    }
 }
 
-// Start
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', boot);
 } else {
