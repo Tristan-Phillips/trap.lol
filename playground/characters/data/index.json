@@ -1,0 +1,13 @@
+{
+  "characters": [
+    {
+      "id": "kaelen-thorne",
+      "name": "Kaelen Thorne",
+      "tagline": "The Gutter Netrunner",
+      "card_path": "data/cards/example.json",
+      "avatar_path": null,
+      "tags": ["Cyberpunk", "Netrunner"]
+    }
+  ],
+  "lorebooks": []
+}

@@ -19,6 +19,16 @@
       "tags": ["ai", "llm", "playground"],
       "keyed": true,
       "status": "live"
+    },
+    "2": {
+      "name": "The Underdark",
+      "slug": "underdark",
+      "path": "/playground/characters/",
+      "icon": "swords",
+      "description": "Advanced LLM roleplay interface. Cinematic multi-bot layout and Lorebooks.",
+      "tags": ["ai", "llm", "roleplay", "characters"],
+      "keyed": true,
+      "status": "live"
     }
   }
 }
