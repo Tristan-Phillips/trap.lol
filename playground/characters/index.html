@@ -63,6 +63,11 @@
         </footer>
     </aside>
 
+    <!-- Roster reveal tab (shown when roster is collapsed on desktop) -->
+    <button id="roster-reveal-tab" class="sidebar-reveal-tab sidebar-reveal-tab--left" title="Open Roster  [ R ]" aria-label="Open Roster">
+        <i data-lucide="users"></i>
+    </button>
+
     <!-- ══════════════════════════════════════════════
          MAIN ARENA — The Thread
     ══════════════════════════════════════════════ -->
@@ -349,6 +354,32 @@
                                 <input type="checkbox" id="stream-toggle" checked hidden>
                                 <label for="stream-toggle" class="toggle-switch__slider"></label>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Theme -->
+                    <div class="config-section">
+                        <h4 class="config-section__title">
+                            <i data-lucide="palette"></i> Interface Theme
+                        </h4>
+                        <div class="theme-swatches" id="theme-swatches">
+                            <button class="theme-swatch theme-swatch--magenta active" data-theme="neon-magenta" title="Magenta"></button>
+                            <button class="theme-swatch theme-swatch--cyan"    data-theme="neon-cyan"    title="Cyan"></button>
+                            <button class="theme-swatch theme-swatch--green"   data-theme="neon-green"   title="Green"></button>
+                            <button class="theme-swatch theme-swatch--violet"  data-theme="neon-violet"  title="Violet"></button>
+                            <button class="theme-swatch theme-swatch--red"     data-theme="neon-red"     title="Red"></button>
+                        </div>
+                    </div>
+
+                    <!-- Danger Zone -->
+                    <div class="config-section config-section--danger">
+                        <h4 class="config-section__title">
+                            <i data-lucide="flame"></i> Danger Zone
+                        </h4>
+                        <div class="config-group">
+                            <button id="btn-clear-all-data" class="btn btn--danger btn--full">
+                                <i data-lucide="trash-2"></i> Wipe All Local Data
+                            </button>
                         </div>
                     </div>
 

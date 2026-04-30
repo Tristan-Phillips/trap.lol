@@ -967,6 +967,34 @@ input[type="range"]::-moz-range-thumb  { height: 13px; width: 13px; border-radiu
 input:checked + .toggle-switch__slider                { background-color: var(--theme-accent); }
 input:checked + .toggle-switch__slider::before        { transform: translateX(16px); }
 
+/* ── Theme Swatches ── */
+.theme-swatches {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.theme-swatch {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: var(--transition);
+    position: relative;
+}
+.theme-swatch.active {
+    border-color: #fff;
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.2);
+}
+.theme-swatch:hover { transform: scale(1.15); }
+.theme-swatch--magenta { background: #BE29EC; }
+.theme-swatch--cyan    { background: #00f0ff; }
+.theme-swatch--green   { background: #4ade80; }
+.theme-swatch--violet  { background: #8b5cf6; }
+.theme-swatch--red     { background: #ef4444; }
+
+/* ── Danger Section ── */
+.config-section--danger { border-color: rgba(239,68,68,0.3); }
+
 /* ── Badges ── */
 .badge {
     background: rgba(255,255,255,0.1);
@@ -1079,8 +1107,75 @@ input:checked + .toggle-switch__slider::before        { transform: translateX(16
 .btn-icon--xs        { padding: 3px; }
 .btn-icon--danger:hover { color: #ef4444; }
 
+/* ── Sidebar Reveal Tab (collapsed state edge handle) ── */
+.sidebar-reveal-tab {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--bg-surface);
+    border: 1px solid var(--glass-border-mute);
+    color: var(--text-muted);
+    cursor: pointer;
+    z-index: 25;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+    opacity: 0;
+    pointer-events: none;
+    padding: 8px 5px;
+    border-radius: 0 6px 6px 0;
+}
+.sidebar-reveal-tab--left {
+    left: 0;
+    border-left: none;
+}
+.sidebar-reveal-tab svg { width: 14px; height: 14px; }
+.sidebar-reveal-tab:hover { color: var(--theme-accent); background: var(--accent-subtle); }
+
+/* Show when roster is collapsed — toggled via .roster-collapsed on body */
+body.roster-collapsed #roster-reveal-tab {
+    opacity: 1;
+    pointer-events: auto;
+}
+
 /* Mobile sidebar toggle */
 .sidebar-mobile-toggle { display: none; }
+
+/* ── Input Image Previews ── */
+.input-container__previews {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 6px var(--space-sm) 0;
+}
+.input-container__previews:empty { display: none; }
+.input-preview-thumb {
+    position: relative;
+    width: 52px; height: 52px;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid var(--glass-border-mute);
+    flex-shrink: 0;
+}
+.input-preview-thumb img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+}
+.input-preview-thumb__remove {
+    position: absolute;
+    top: 2px; right: 2px;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.75);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+}
+.input-preview-thumb__remove svg { width: 9px; height: 9px; color: #fff; }
 
 /* Loading spinner */
 .spin { animation: spin 1.2s linear infinite; }
@@ -1234,29 +1329,40 @@ input:checked + .toggle-switch__slider::before        { transform: translateX(16
    RESPONSIVE — Tablet & Mobile
    ═══════════════════════════════════════════════════════════════════════════ */
 @media (max-width: 1100px) {
+    /* On tablet/mobile, sidebars are overlays — don't affect arena width */
     .sidebar--left {
         position: absolute;
         left: 0; top: 0; bottom: 0;
         z-index: 50;
         box-shadow: 4px 0 24px rgba(0,0,0,0.5);
+        width: 300px !important;  /* always full-width when visible */
     }
     .sidebar--right {
         position: absolute;
         right: 0; top: 0; bottom: 0;
         z-index: 50;
         box-shadow: -4px 0 24px rgba(0,0,0,0.5);
+        width: 340px !important;
     }
     .sidebar--left[data-collapsed="true"] {
         transform: translateX(-100%);
-        width: 300px;
         opacity: 0;
         pointer-events: none;
     }
     .sidebar--right[data-collapsed="true"] {
         transform: translateX(100%);
-        width: 360px;
         opacity: 0;
         pointer-events: none;
+    }
+    /* Mobile overlay backdrop */
+    .sidebar--left:not([data-collapsed="true"])::before,
+    .sidebar--right:not([data-collapsed="true"])::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.55);
+        z-index: -1;
+        pointer-events: auto;
     }
     .sidebar-mobile-toggle { display: flex; }
     .config-grid { grid-template-columns: 1fr; }

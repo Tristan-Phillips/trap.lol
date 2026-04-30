@@ -35,7 +35,7 @@ function confirm(title, body) {
         qs('#confirm-title', modal).innerHTML = `<i data-lucide="alert-triangle"></i> ${esc(title)}`;
         qs('#confirm-body',  modal).textContent = body;
         modal.hidden = false;
-        if (window.lucide) window.lucide.createIcons({ nodes: [modal] });
+        if (window.lucide) window.lucide.createIcons();
 
         const ok     = qs('#confirm-ok',     modal);
         const cancel = qs('#confirm-cancel', modal);
@@ -59,8 +59,8 @@ function confirm(title, body) {
 function showModal(id) { const m = qs(`#${id}`); if (m) { m.hidden = false; lucideRefresh(m); } }
 function hideModal(id) { const m = qs(`#${id}`); if (m) m.hidden = true; }
 
-function lucideRefresh(node) {
-    if (window.lucide) window.lucide.createIcons({ nodes: [node] });
+function lucideRefresh(_node) {
+    if (window.lucide) window.lucide.createIcons();
 }
 
 // ── Markdown Renderer ─────────────────────────────────────────────────────────
@@ -92,17 +92,37 @@ export function initUI() {
     const $rosterSidebar  = qs('#roster-sidebar');
     const $terminalSidebar = qs('#terminal-sidebar');
 
-    qs('#toggle-roster').addEventListener('click', () => {
-        const collapsed = $rosterSidebar.dataset.collapsed === 'true';
-        $rosterSidebar.dataset.collapsed = !collapsed;
-        qs('#toggle-roster i').dataset.lucide = collapsed ? 'chevron-left' : 'chevron-right';
+    const setRosterCollapsed = (collapsed) => {
+        $rosterSidebar.dataset.collapsed = collapsed;
+        document.body.classList.toggle('roster-collapsed', collapsed);
+        const icon = qs('#toggle-roster i');
+        if (icon) icon.dataset.lucide = collapsed ? 'chevron-right' : 'chevron-left';
         lucideRefresh(qs('#toggle-roster'));
+    };
+
+    qs('#toggle-roster').addEventListener('click', () => {
+        setRosterCollapsed($rosterSidebar.dataset.collapsed !== 'true');
     });
+
+    qs('#roster-reveal-tab')?.addEventListener('click', () => {
+        setRosterCollapsed(false);
+    });
+
+    // Init state
+    setRosterCollapsed($rosterSidebar.dataset.collapsed === 'true');
 
     // Mobile toggle
     qs('#toggle-roster-mobile')?.addEventListener('click', () => {
         const c = $rosterSidebar.dataset.collapsed === 'true';
         $rosterSidebar.dataset.collapsed = !c;
+    });
+
+    // Close sidebars when clicking the ::before overlay on mobile
+    $rosterSidebar.addEventListener('click', e => {
+        if (e.target === $rosterSidebar) $rosterSidebar.dataset.collapsed = 'true';
+    });
+    $terminalSidebar.addEventListener('click', e => {
+        if (e.target === $terminalSidebar) $terminalSidebar.dataset.collapsed = 'true';
     });
 
     // ── Sidebar: Terminal ─────────────────────────────────────────────────────
@@ -527,7 +547,8 @@ export function initUI() {
     }
 
     qs('#create-character').addEventListener('click', () => openCreator());
-    qs('#welcome-create').addEventListener('click', () => openCreator());
+    // Static welcome button (may or may not exist if history loaded)
+    qs('#welcome-create')?.addEventListener('click', () => openCreator());
     qs('#creator-close').addEventListener('click',  () => hideModal('modal-creator'));
     qs('#creator-cancel').addEventListener('click', () => hideModal('modal-creator'));
     qs('.modal__backdrop', qs('#modal-creator'))?.addEventListener('click', () => hideModal('modal-creator'));
@@ -1072,6 +1093,38 @@ export function initUI() {
         $textarea.focus();
     });
 
+    // ── Image Attach (previews only — injected as markdown image reference) ────
+    qs('#btn-add-image')?.addEventListener('click', () => {
+        const input = document.createElement('input');
+        input.type   = 'file';
+        input.accept = 'image/*';
+        input.onchange = e => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = ev => {
+                const dataUrl = ev.target.result;
+                const $prev   = qs('#input-previews');
+                const thumb   = document.createElement('div');
+                thumb.className = 'input-preview-thumb';
+                thumb.innerHTML = `
+                    <img src="${dataUrl}" alt="attachment">
+                    <button class="input-preview-thumb__remove" title="Remove">
+                        <i data-lucide="x"></i>
+                    </button>`;
+                thumb.querySelector('button').addEventListener('click', () => thumb.remove());
+                $prev.appendChild(thumb);
+                lucideRefresh(thumb);
+                // Append markdown image ref to textarea
+                const $ta = qs('#rp-input');
+                $ta.value += ($ta.value ? '\n' : '') + `![image](${dataUrl})`;
+                $ta.dispatchEvent(new Event('input'));
+            };
+            reader.readAsDataURL(file);
+        };
+        input.click();
+    });
+
     // ── Header Actions ────────────────────────────────────────────────────────
     qs('#clear-thread').addEventListener('click', async () => {
         const ok = await confirm('Clear Thread', 'Clear all messages in this thread?');
@@ -1301,17 +1354,47 @@ export function initUI() {
         qs('#confirm-cancel').click();
     });
 
+    // ── Theme Switcher ────────────────────────────────────────────────────────
+    const THEME_KEY = 'underdark_theme';
+    const savedTheme = localStorage.getItem(THEME_KEY) || 'neon-magenta';
+    document.body.classList.add(savedTheme);
+
+    qsa('[data-theme]', qs('#theme-swatches') || document).forEach($btn => {
+        if ($btn.dataset.theme === savedTheme) $btn.classList.add('active');
+        else $btn.classList.remove('active');
+        $btn.addEventListener('click', () => {
+            const theme = $btn.dataset.theme;
+            document.body.className = document.body.className.replace(/neon-\w+/g, '').trim();
+            document.body.classList.add(theme);
+            document.body.classList.add('underdark-page');
+            localStorage.setItem(THEME_KEY, theme);
+            qsa('[data-theme]').forEach(b => b.classList.toggle('active', b.dataset.theme === theme));
+        });
+    });
+
+    // ── Danger Zone ───────────────────────────────────────────────────────────
+    qs('#btn-clear-all-data')?.addEventListener('click', async () => {
+        const ok = await confirm('Wipe All Data', 'This will permanently delete all characters, sessions, history, and settings. Are you absolutely sure?');
+        if (!ok) return;
+        localStorage.clear();
+        location.reload();
+    });
+
     // ── Keyboard shortcuts ────────────────────────────────────────────────────
     document.addEventListener('keydown', e => {
         if (e.key === 'Escape') {
             qsa('.modal:not([hidden])').forEach(m => { m.hidden = true; });
             return;
         }
-        if ((e.key === 't' || e.key === 'T') && !e.ctrlKey && !e.metaKey
-            && document.activeElement?.tagName !== 'INPUT'
-            && document.activeElement?.tagName !== 'TEXTAREA') {
-            toggleTerminal();
-        }
+        const inInput = document.activeElement?.tagName === 'INPUT'
+                     || document.activeElement?.tagName === 'TEXTAREA'
+                     || document.activeElement?.tagName === 'SELECT';
+        if (inInput || e.ctrlKey || e.metaKey || e.altKey) return;
+
+        if (e.key === 't' || e.key === 'T') toggleTerminal();
+        if (e.key === 'r' || e.key === 'R') setRosterCollapsed($rosterSidebar.dataset.collapsed !== 'true');
+        if (e.key === 'n' || e.key === 'N') openCreator();
+        if (e.key === '/' ) { e.preventDefault(); qs('#character-search')?.focus(); }
     });
 
     // ── Initial Render ────────────────────────────────────────────────────────

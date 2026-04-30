@@ -4,8 +4,9 @@
 import { initUI } from './modules/ui.js';
 
 function boot() {
-    if (window.lucide) window.lucide.createIcons();
     initUI();
+    // Lucide pass after UI init injects initial icons
+    if (window.lucide) window.lucide.createIcons();
 }
 
 if (document.readyState === 'loading') {

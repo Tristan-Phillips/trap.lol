@@ -3,10 +3,10 @@
     {
       "id": "kaelen-thorne",
       "name": "Kaelen Thorne",
-      "tagline": "The Gutter Netrunner",
+      "tagline": "Netrunner. Noir. Never on time.",
       "card_path": "data/cards/example.json",
       "avatar_path": null,
-      "tags": ["Cyberpunk", "Netrunner"]
+      "tags": ["Cyberpunk", "Netrunner", "Noir", "Male"]
     }
   ],
   "lorebooks": []
