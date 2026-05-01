@@ -13,7 +13,7 @@ import {
     setConfig, saveCharacter, deleteCharacter,
     defaultCharOverride
 } from './state.js';
-import { buildPayload, streamCompletion } from './llm-engine.js';
+import { buildPayload, streamCompletion, extractThoughts } from './llm-engine.js';
 import { addBook, removeBook, addEntry, updateEntry, removeEntry, createBook } from './lorebook.js';
 import { parseCharacterCard, buildCard, normalizeData } from './parser-v2.js';
 import { getApiKey, setApiKey, clearApiKey, isValidKeyFormat, restoreKeyFromCookie } from '../../../../glass/script/modules/llm-auth.js';
@@ -795,7 +795,7 @@ export function initUI() {
     // ── Message Thread & Rendering ────────────────────────────────────────────
     const $thread = qs('#message-thread');
 
-    function appendMessage(msgObj, nameOverride, avatarUrl) {
+    function appendMessage(msgObj, nameOverride, avatarUrl, thoughts = null) {
         const { id, role, content, botId } = msgObj;
         const char = botId ? state.loadedCharacters[botId] : null;
         const meta = botId ? state.characters.find(c => c.id === botId) : null;
@@ -803,6 +803,14 @@ export function initUI() {
             || (botId ? (getCharOverride(botId).nickname || char?.name) : null)
             || (role === 'user' ? (state.config.userName || 'You') : 'System');
         const avatar = avatarUrl || meta?.avatar_path || char?.avatar || null;
+
+        const showThoughts = state.config.flags?.showThoughts ?? false;
+        const thoughtsHtml = showThoughts && thoughts?.length
+            ? `<details class="message__thoughts">
+                <summary class="message__thoughts-label"><i data-lucide="brain"></i> Inner thoughts</summary>
+                <div class="message__thoughts-body">${thoughts.map(t => `<p>${esc(t)}</p>`).join('')}</div>
+               </details>`
+            : '';
 
         const $msg = document.createElement('div');
         $msg.className = `message message--${role}`;
@@ -825,6 +833,7 @@ export function initUI() {
                         <button class="msg-action" data-action="delete" title="Delete"><i data-lucide="trash-2"></i></button>
                     </div>
                 </div>
+                ${thoughtsHtml}
                 <div class="message__bubble">
                     <div class="message__content">${renderMarkdown(content)}</div>
                 </div>
@@ -980,18 +989,47 @@ export function initUI() {
                 allChars:  state.activeBotIds.map(id => ({ ...state.loadedCharacters[id], id }))
             });
 
+            // Debug: show built system prompt in thread if flag is set
+            if (state.config.flags?.showSystemPrompt) {
+                const sysMsgs = payload.messages.filter(m => m.role === 'system');
+                const sysText = sysMsgs.map(m => m.content).join('\n\n---\n\n');
+                const debugMsg = {
+                    id: `msg-debug-${Date.now()}`,
+                    role: 'system',
+                    content: `\`\`\`\n${sysText}\n\`\`\``,
+                    botId: null,
+                    timestamp: Date.now(),
+                    tokens: 0,
+                    model: ''
+                };
+                appendMessage(debugMsg, 'System Prompt', null);
+            }
+
             await streamCompletion(payload,
                 (_delta, full) => {
                     $content.innerHTML = renderMarkdown(full);
                     $thread.scrollTop  = $thread.scrollHeight;
                 },
-                (finalText, tokens) => {
+                (finalText, tokens, thoughts) => {
                     const msg = addMessage('bot', finalText, botId, {
                         tokens,
                         model: payload.model
                     });
                     $botMsg.dataset.msgId = msg.id;
                     $content.innerHTML   = renderMarkdown(finalText);
+
+                    // Inject thought bubble if showThoughts and we have thoughts
+                    if (state.config.flags?.showThoughts && thoughts?.length) {
+                        const $thoughtsEl = document.createElement('details');
+                        $thoughtsEl.className = 'message__thoughts';
+                        $thoughtsEl.innerHTML = `
+                            <summary class="message__thoughts-label"><i data-lucide="brain"></i> Inner thoughts</summary>
+                            <div class="message__thoughts-body">${thoughts.map(t => `<p>${esc(t)}</p>`).join('')}</div>`;
+                        const $bubble = qs('.message__bubble', $botMsg);
+                        $bubble.parentElement.insertBefore($thoughtsEl, $bubble);
+                        lucideRefresh($thoughtsEl);
+                    }
+
                     // Wire retry on final message
                     qs('[data-action="retry"]', $botMsg)?.setAttribute('data-bot-id', botId);
                     state.isStreaming = false;
@@ -1200,6 +1238,19 @@ export function initUI() {
         set('context-strategy', c.contextStrategy);
         set('group-turn-mode',  c.groupTurnMode);
         if (qs('#stream-toggle')) qs('#stream-toggle').checked = c.stream;
+
+        // Sync narrative flags
+        const flags = c.flags || {};
+        const FLAG_KEYS = [
+            'showThoughts', 'showSystemPrompt', 'injectConsistency', 'injectSliders',
+            'injectAppearance', 'injectAdult', 'injectPersonality', 'injectVoice',
+            'injectStyle', 'injectAIDirectives', 'impersonationBlock', 'povFirst',
+            'jailbreakResistance'
+        ];
+        FLAG_KEYS.forEach(key => {
+            const $cb = qs(`#flag-${key}`);
+            if ($cb) $cb.checked = flags[key] ?? $cb.defaultChecked;
+        });
     }
 
     bindSlider('temp-input',       'temp-val',      'temperature');
@@ -1226,6 +1277,19 @@ export function initUI() {
     qs('#stream-toggle')?.addEventListener('change', e => setConfig({ stream: e.target.checked }));
     qs('#context-strategy')?.addEventListener('change', e => setConfig({ contextStrategy: e.target.value }));
     qs('#group-turn-mode')?.addEventListener('change', e => setConfig({ groupTurnMode: e.target.value }));
+
+    // Narrative flag toggles
+    const FLAG_KEYS = [
+        'showThoughts', 'showSystemPrompt', 'injectConsistency', 'injectSliders',
+        'injectAppearance', 'injectAdult', 'injectPersonality', 'injectVoice',
+        'injectStyle', 'injectAIDirectives', 'impersonationBlock', 'povFirst',
+        'jailbreakResistance'
+    ];
+    FLAG_KEYS.forEach(key => {
+        qs(`#flag-${key}`)?.addEventListener('change', e => {
+            setConfig({ flags: { ...state.config.flags, [key]: e.target.checked } });
+        });
+    });
 
     // Load models
     async function loadModels() {

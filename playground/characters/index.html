@@ -374,6 +374,162 @@
                         </div>
                     </div>
 
+                    <!-- Narrative & Behavior Flags -->
+                    <div class="config-section">
+                        <h4 class="config-section__title">
+                            <i data-lucide="brain-circuit"></i> Narrative &amp; Behavior
+                        </h4>
+
+                        <p class="config-section__desc">Control what gets injected into the system prompt and how the model behaves.</p>
+
+                        <div class="flag-grid">
+
+                            <div class="flag-row">
+                                <div class="flag-row__text">
+                                    <span class="flag-row__label">Character Thoughts</span>
+                                    <span class="flag-row__desc">Render &lt;think&gt; inner monologue as a collapsible aside</span>
+                                </div>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="flag-showThoughts" hidden>
+                                    <label for="flag-showThoughts" class="toggle-switch__slider"></label>
+                                </div>
+                            </div>
+
+                            <div class="flag-row">
+                                <div class="flag-row__text">
+                                    <span class="flag-row__label">Show System Prompt</span>
+                                    <span class="flag-row__desc">Display the full built prompt in-chat for debugging</span>
+                                </div>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="flag-showSystemPrompt" hidden>
+                                    <label for="flag-showSystemPrompt" class="toggle-switch__slider"></label>
+                                </div>
+                            </div>
+
+                            <div class="flag-row">
+                                <div class="flag-row__text">
+                                    <span class="flag-row__label">Consistency Mandate</span>
+                                    <span class="flag-row__desc">Inject "never break character" reinforcement block</span>
+                                </div>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="flag-injectConsistency" checked hidden>
+                                    <label for="flag-injectConsistency" class="toggle-switch__slider"></label>
+                                </div>
+                            </div>
+
+                            <div class="flag-row">
+                                <div class="flag-row__text">
+                                    <span class="flag-row__label">Behavioral Slider Directives</span>
+                                    <span class="flag-row__desc">Translate slider values into natural prose instructions</span>
+                                </div>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="flag-injectSliders" checked hidden>
+                                    <label for="flag-injectSliders" class="toggle-switch__slider"></label>
+                                </div>
+                            </div>
+
+                            <div class="flag-row">
+                                <div class="flag-row__text">
+                                    <span class="flag-row__label">Appearance Anchors</span>
+                                    <span class="flag-row__desc">Inject physical description for visual consistency</span>
+                                </div>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="flag-injectAppearance" checked hidden>
+                                    <label for="flag-injectAppearance" class="toggle-switch__slider"></label>
+                                </div>
+                            </div>
+
+                            <div class="flag-row">
+                                <div class="flag-row__text">
+                                    <span class="flag-row__label">Adult Appearance</span>
+                                    <span class="flag-row__desc">Include 18+ anatomy fields in appearance block</span>
+                                </div>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="flag-injectAdult" checked hidden>
+                                    <label for="flag-injectAdult" class="toggle-switch__slider"></label>
+                                </div>
+                            </div>
+
+                            <div class="flag-row">
+                                <div class="flag-row__text">
+                                    <span class="flag-row__label">Personality Block</span>
+                                    <span class="flag-row__desc">Inject archetype, attachment style, and psychology fields</span>
+                                </div>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="flag-injectPersonality" checked hidden>
+                                    <label for="flag-injectPersonality" class="toggle-switch__slider"></label>
+                                </div>
+                            </div>
+
+                            <div class="flag-row">
+                                <div class="flag-row__text">
+                                    <span class="flag-row__label">Voice &amp; Speech Block</span>
+                                    <span class="flag-row__desc">Inject tone, pace, accent, and speech pattern fields</span>
+                                </div>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="flag-injectVoice" checked hidden>
+                                    <label for="flag-injectVoice" class="toggle-switch__slider"></label>
+                                </div>
+                            </div>
+
+                            <div class="flag-row">
+                                <div class="flag-row__text">
+                                    <span class="flag-row__label">Style &amp; Fashion Block</span>
+                                    <span class="flag-row__desc">Inject clothing and aesthetic fields from Style panel</span>
+                                </div>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="flag-injectStyle" checked hidden>
+                                    <label for="flag-injectStyle" class="toggle-switch__slider"></label>
+                                </div>
+                            </div>
+
+                            <div class="flag-row">
+                                <div class="flag-row__text">
+                                    <span class="flag-row__label">AI Prose Directives</span>
+                                    <span class="flag-row__desc">Inject POV, prose style, response format, and length hints</span>
+                                </div>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="flag-injectAIDirectives" checked hidden>
+                                    <label for="flag-injectAIDirectives" class="toggle-switch__slider"></label>
+                                </div>
+                            </div>
+
+                            <div class="flag-row">
+                                <div class="flag-row__text">
+                                    <span class="flag-row__label">Impersonation Block</span>
+                                    <span class="flag-row__desc">Instruct model to never write dialogue for the user</span>
+                                </div>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="flag-impersonationBlock" checked hidden>
+                                    <label for="flag-impersonationBlock" class="toggle-switch__slider"></label>
+                                </div>
+                            </div>
+
+                            <div class="flag-row">
+                                <div class="flag-row__text">
+                                    <span class="flag-row__label">First-Person Narrative</span>
+                                    <span class="flag-row__desc">Prefer "I" / first-person perspective in responses</span>
+                                </div>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="flag-povFirst" checked hidden>
+                                    <label for="flag-povFirst" class="toggle-switch__slider"></label>
+                                </div>
+                            </div>
+
+                            <div class="flag-row flag-row--danger">
+                                <div class="flag-row__text">
+                                    <span class="flag-row__label">Anti-Jailbreak Guard</span>
+                                    <span class="flag-row__desc">Append resistance text against character override attempts</span>
+                                </div>
+                                <div class="toggle-switch">
+                                    <input type="checkbox" id="flag-jailbreakResistance" hidden>
+                                    <label for="flag-jailbreakResistance" class="toggle-switch__slider"></label>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
                     <!-- Danger Zone -->
                     <div class="config-section config-section--danger">
                         <h4 class="config-section__title">

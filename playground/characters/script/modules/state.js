@@ -27,12 +27,28 @@ export function defaultConfig() {
         maxContext: 8192,
         maxOutput: 512,
         stream: true,
+        lorebookScanDepth: 5,
         groupTurnMode: 'auto',    // 'auto' | 'manual' | 'round-robin'
         groupAutoDelay: 600,      // ms between auto responses in group chat
         userName: 'User',
         userPersona: '',
-        // Character physical/appearance anchoring (injected into system prompt)
-        charOverrides: {}         // keyed by charId → object of override fields
+        charOverrides: {},        // keyed by charId → object of override fields
+        // ── Narrative feature flags ───────────────────────────────────────────
+        flags: {
+            showThoughts:        false,  // render <think>…</think> as visible aside
+            showSystemPrompt:    false,  // show the built system prompt in chat for debugging
+            injectConsistency:   true,   // append "stay in character" reinforcement paragraph
+            injectSliders:       true,   // inject behavioral slider directives into system prompt
+            injectAppearance:    true,   // inject physical appearance anchors
+            injectAdult:         true,   // inject adult anatomy anchors
+            injectPersonality:   true,   // inject personality/psychology fields from ext
+            injectVoice:         true,   // inject voice/speech fields from ext
+            injectStyle:         true,   // inject fashion/style fields from ext
+            injectAIDirectives:  true,   // inject AI panel (prose style, POV, length) directives
+            impersonationBlock:  true,   // instruct model never to speak as the user
+            jailbreakResistance: false,  // add anti-jailbreak reminder to post-history
+            povFirst:            true,   // prefer first-person narrative
+        }
     };
 }
 
