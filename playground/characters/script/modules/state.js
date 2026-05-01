@@ -314,7 +314,7 @@ export function getCharOverride(charId) {
     const saved     = overrides[charId] || {};
     // Merge ext fields into the flat override so the LLM engine sees everything
     // the Sims Editor saved without needing to know about the ext sub-object.
-    const { ext, ...rest } = saved;
+    const { ext, _userEdits, ...rest } = saved;
     return { ...defaultCharOverride(), ...rest, ...(ext || {}) };
 }
 

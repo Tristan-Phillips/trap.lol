@@ -2823,7 +2823,7 @@ export function initUI() {
         if (e.key === 'a' || e.key === 'A') openCharPicker();
         if (e.key === 'g' || e.key === 'G') { if (state.activeBotId) openGalleryModal(state.activeBotId); }
         if (e.key === 'f' || e.key === 'F') toggleFocusMode();
-        if (e.key === '/' ) { e.preventDefault(); qs('#character-search')?.focus(); }
+        if (e.key === '/' ) { e.preventDefault(); qs('#search-toggle')?.click(); }
     });
 
     // ── Focus / Read Mode ─────────────────────────────────────────────────────
@@ -2852,11 +2852,24 @@ export function initUI() {
     // ── Sims Editor ───────────────────────────────────────────────────────────
     const simsEditor = initSimsEditor();
 
-    // Ensure card data is loaded before opening — the roster edit button fires
-    // before a character has ever been clicked, so loadedCharacters[id] may be empty.
+    // Always re-fetch the card from disk before opening the editor so that
+    // extensions.underdark fields are guaranteed to be present even if localStorage
+    // was full and the card data didn't survive the previous session's saveState().
     async function openSimsEditor(id) {
         if (!id) return;
-        await loadCharacterCard(id);   // no-op if already loaded
+        const meta = state.characters.find(c => c.id === id);
+        if (meta?.card_path) {
+            try {
+                const res = await fetch(meta.card_path);
+                const raw = await res.json();
+                state.loadedCharacters[id] = normalizeData(raw);
+            } catch (_) {
+                // fall through to whatever is already in memory
+                await loadCharacterCard(id);
+            }
+        } else {
+            await loadCharacterCard(id);
+        }
         simsEditor?.open(id);
     }
 

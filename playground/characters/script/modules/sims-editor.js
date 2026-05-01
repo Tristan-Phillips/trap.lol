@@ -39,7 +39,7 @@ const EXT_KEYS = new Set([
 
     // ── Body
     'weight', 'muscleTone', 'bodyFat', 'shoulderWidth', 'waistType',
-    'bodyMarkings', 'bodyPiercings', 'nails', 'scent',
+    'bodyMarkings', 'bodyPiercings', 'scent',
     'legType', 'handSize', 'posture', 'gait',
     'tattoos', 'scarsMarks',
     'nailLength', 'nailShape', 'nailColor', 'physicalQuirks',

@@ -2744,6 +2744,7 @@ kbd {
 /* ═══════════════════════════════════════════════════════════════════════════
    QUICK REPLY BAR
    ═══════════════════════════════════════════════════════════════════════════ */
+.quick-reply-bar[hidden] { display: none !important; }
 .quick-reply-bar {
     display: flex;
     gap: 6px;
