@@ -102,14 +102,16 @@ export function scanLorebooks(history, lorebooks, globalScanDepth = 5) {
             if (entry.disabled || seen.has(entry.id)) return;
             if (!entry.keywords.length) return;
 
+            const safeCorpus = corpus.length > 20000 ? corpus.slice(-20000) : corpus;
             const matched = entry.keywords.some(kw => {
                 if (!kw) return false;
                 try {
                     if (entry.useRegex) {
+                        if (kw.length >= 500) return false; // guard against ReDoS via huge patterns
                         const flags = entry.caseSensitive ? 'u' : 'iu';
-                        return new RegExp(kw, flags).test(corpus);
+                        return new RegExp(kw, flags).test(safeCorpus);
                     }
-                    const haystack = entry.caseSensitive ? corpus : corpus.toLowerCase();
+                    const haystack = entry.caseSensitive ? safeCorpus : safeCorpus.toLowerCase();
                     const needle   = entry.caseSensitive ? kw : kw.toLowerCase();
                     return haystack.includes(needle);
                 } catch (_) {

@@ -8,10 +8,12 @@ import {
     state, loadState, saveState,
     newSession, switchSession, deleteSession, renameSession,
     addMessage, editMessage, deleteMessage, clearHistory,
+    addComment, deleteComment,
     setActiveBot, removeBotFromSession,
     getCharOverride, setCharOverride,
     setConfig, saveCharacter, deleteCharacter,
-    defaultCharOverride
+    defaultCharOverride, resolveCharAvatar,
+    addReaction, getReactions, exportSessionJson, importSessionJson
 } from './state.js';
 import { buildPayload, streamCompletion } from './llm-engine.js';
 import { addBook, removeBook, addEntry, updateEntry, removeEntry, createBook } from './lorebook.js';
@@ -64,9 +66,28 @@ function lucideRefresh(_node) {
     if (window.lucide) window.lucide.createIcons();
 }
 
+// ── Avatar resolver cache ─────────────────────────────────────────────────────
+const _avatarCache = {};
+async function getAvatarUrl(charId, stored) {
+    if (!stored) return null;
+    if (!stored.startsWith('idb:')) return stored;
+    if (_avatarCache[charId]) return _avatarCache[charId];
+    const url = await resolveCharAvatar(charId, stored).catch(() => null);
+    if (url) _avatarCache[charId] = url;
+    return url;
+}
+// Sync variant: returns cached value or placeholder — for non-async render paths
+function getAvatarUrlSync(charId, stored) {
+    if (!stored) return null;
+    if (!stored.startsWith('idb:')) return stored;
+    return _avatarCache[charId] || null;
+}
+
 // ── Markdown Renderer ─────────────────────────────────────────────────────────
 function renderMarkdown(text) {
     try {
+        // RP convention: *action text* → <em> (before markdown parse)
+        text = text.replace(/(?<!\*)\*([^*\n]+)\*(?!\*)/g, '<em>$1</em>');
         let html = marked.parse(text, { breaks: true, gfm: true });
         if (typeof DOMPurify !== 'undefined') {
             html = DOMPurify.sanitize(html, { USE_PROFILES: { html: true } });
@@ -78,10 +99,9 @@ function renderMarkdown(text) {
 }
 
 // ── Group auto-response manager ───────────────────────────────────────────────
-let groupAutoTimers = [];
+let _groupAbort = false;
 function clearGroupTimers() {
-    groupAutoTimers.forEach(clearTimeout);
-    groupAutoTimers = [];
+    _groupAbort = true;
 }
 
 // ── Main Init ─────────────────────────────────────────────────────────────────
@@ -256,11 +276,9 @@ export function initUI() {
 
         $charList.innerHTML = chars.map(c => {
             const active = state.activeBotIds.includes(c.id);
-            const avatar = c.avatar_path
-                ? `url(${c.avatar_path})`
-                : state.loadedCharacters[c.id]?.avatar
-                    ? `url(${state.loadedCharacters[c.id].avatar})`
-                    : 'none';
+            const rawAvatar = c.avatar_path || state.loadedCharacters[c.id]?.avatar || null;
+            const resolvedAvatar = getAvatarUrlSync(c.id, rawAvatar);
+            const avatar = resolvedAvatar ? `url(${resolvedAvatar})` : 'none';
             return `
             <div class="character-card ${active ? 'character-card--active' : ''}" data-id="${esc(c.id)}" title="${esc(c.name)}">
                 <div class="character-card__avatar" style="background-image:${avatar}">
@@ -269,6 +287,7 @@ export function initUI() {
                 <div class="character-card__info">
                     <span class="character-card__name">${esc(c.name)}</span>
                     <span class="character-card__tagline">${esc(c.tagline || '')}</span>
+                    ${(c.tags || []).slice(0, 3).map(t => `<span class="char-tag-chip" data-tag-filter="${esc(t)}">${esc(t)}</span>`).join('')}
                 </div>
                 ${active ? '<span class="character-card__active-pip"></span>' : ''}
             </div>`;
@@ -282,7 +301,28 @@ export function initUI() {
             });
         });
 
+        qsa('[data-tag-filter]', $charList).forEach(chip => {
+            chip.addEventListener('click', e => {
+                e.stopPropagation();
+                searchQuery = chip.dataset.tagFilter.toLowerCase();
+                $charSearch.value = searchQuery;
+                renderRoster();
+            });
+        });
+
         lucideRefresh($charList);
+
+        // Async: resolve any IDB avatars and patch the DOM once loaded
+        chars.forEach(async c => {
+            const rawAvatar = c.avatar_path || state.loadedCharacters[c.id]?.avatar || null;
+            if (rawAvatar?.startsWith('idb:')) {
+                const url = await getAvatarUrl(c.id, rawAvatar);
+                if (url) {
+                    const $card = qs(`.character-card[data-id="${c.id}"] .character-card__avatar`, $charList);
+                    if ($card) $card.style.backgroundImage = `url(${url})`;
+                }
+            }
+        });
     }
 
     // ── Character Selection ───────────────────────────────────────────────────
@@ -313,7 +353,8 @@ export function initUI() {
         renderActiveBots();
         renderProfile(char, id);
         renderPersonaCharSelect();
-        updateCinematicBackground(meta.avatar_path || char.avatar);
+        const avatarUrl = await getAvatarUrl(id, meta.avatar_path || char.avatar);
+        updateCinematicBackground(avatarUrl);
 
         // Remove welcome screen
         qs('#arena-welcome')?.remove();
@@ -341,7 +382,8 @@ export function initUI() {
             const meta = state.characters.find(c => c.id === id);
             const name = char?.name || '?';
             const isActive = id === state.activeBotId;
-            const avatar   = meta?.avatar_path || char?.avatar;
+            const rawAv    = meta?.avatar_path || char?.avatar;
+            const avatar   = getAvatarUrlSync(id, rawAv);
             return `
             <div class="active-bot ${isActive ? 'active-bot--selected' : ''}" data-id="${esc(id)}" title="${esc(name)}">
                 <div class="active-bot__avatar" style="background-image:${avatar ? `url(${avatar})` : 'none'}">
@@ -353,8 +395,22 @@ export function initUI() {
             </div>`;
         }).join('');
 
+        // Async patch IDB avatars for active bots
+        state.activeBotIds.forEach(async id => {
+            const char  = state.loadedCharacters[id];
+            const meta  = state.characters.find(c => c.id === id);
+            const rawAv = meta?.avatar_path || char?.avatar;
+            if (rawAv?.startsWith('idb:')) {
+                const url = await getAvatarUrl(id, rawAv);
+                if (url) {
+                    const $av = qs(`.active-bot[data-id="${id}"] .active-bot__avatar`, $container);
+                    if ($av) $av.style.backgroundImage = `url(${url})`;
+                }
+            }
+        });
+
         qsa('.active-bot', $container).forEach($bot => {
-            $bot.addEventListener('click', e => {
+            $bot.addEventListener('click', async e => {
                 if (e.target.closest('[data-remove]')) return;
                 const id   = $bot.dataset.id;
                 const char = state.loadedCharacters[id];
@@ -362,7 +418,7 @@ export function initUI() {
                 setActiveBot(id);
                 renderActiveBots();
                 if (char) renderProfile(char, id);
-                if (meta) updateCinematicBackground(meta.avatar_path || char?.avatar);
+                if (meta) updateCinematicBackground(await getAvatarUrl(id, meta.avatar_path || char?.avatar));
                 renderPersonaCharSelect();
             });
         });
@@ -377,7 +433,10 @@ export function initUI() {
                 const newActive = state.loadedCharacters[state.activeBotId];
                 const newMeta   = state.characters.find(c => c.id === state.activeBotId);
                 if (newActive) renderProfile(newActive, state.activeBotId);
-                if (newMeta)   updateCinematicBackground(newMeta.avatar_path || newActive?.avatar);
+                if (newMeta) {
+                    const avUrl = await getAvatarUrl(state.activeBotId, newMeta.avatar_path || newActive?.avatar);
+                    updateCinematicBackground(avUrl);
+                }
             });
         });
 
@@ -391,10 +450,11 @@ export function initUI() {
     }
 
     // ── Profile Panel ─────────────────────────────────────────────────────────
-    function renderProfile(char, id) {
+    async function renderProfile(char, id) {
         const $profile = qs('#profile-card');
         const meta     = state.characters.find(c => c.id === id);
-        const avatar   = meta?.avatar_path || char.avatar;
+        const rawAv    = meta?.avatar_path || char.avatar;
+        const avatar   = await getAvatarUrl(id, rawAv).catch(() => rawAv);
 
         $profile.innerHTML = `
             <div class="profile-details">
@@ -450,7 +510,7 @@ export function initUI() {
         qs('#btn-delete-char').onclick = async () => {
             const ok = await confirm('Delete Character', `Permanently delete ${char.name}? This removes them from all threads.`);
             if (!ok) return;
-            deleteCharacter(id);
+            await deleteCharacter(id);
             renderRoster();
             renderActiveBots();
             $profile.innerHTML = '<div class="profile-view__empty">No character selected</div>';
@@ -482,10 +542,10 @@ export function initUI() {
                     id,
                     name:        card.name,
                     tagline:     card.creator_notes?.slice(0, 80) || 'Imported Fragment',
-                    avatar_path: null,
+                    avatar_path: card.avatar || null,
                     tags:        card.tags || []
                 };
-                saveCharacter(meta, card);
+                await saveCharacter(meta, card);
                 renderRoster();
                 selectCharacter(id);
             } catch (err) {
@@ -574,7 +634,7 @@ export function initUI() {
         e.target.value = '';
     });
 
-    qs('#creator-save').addEventListener('click', () => {
+    qs('#creator-save').addEventListener('click', async () => {
         const name = qs('#creator-name').value.trim();
         if (!name) {
             qs('#creator-name').classList.add('shake');
@@ -609,7 +669,7 @@ export function initUI() {
             tags: card.tags
         };
 
-        saveCharacter(meta, card);
+        await saveCharacter(meta, card);
         hideModal('modal-creator');
         renderRoster();
         selectCharacter(id);
@@ -802,7 +862,8 @@ export function initUI() {
         const name = nameOverride
             || (botId ? (getCharOverride(botId).nickname || char?.name) : null)
             || (role === 'user' ? (state.config.userName || 'You') : 'System');
-        const avatar = avatarUrl || meta?.avatar_path || char?.avatar || null;
+        const rawAvatar = avatarUrl || meta?.avatar_path || char?.avatar || null;
+        const avatar = rawAvatar ? getAvatarUrlSync(botId, rawAvatar) : null;
 
         const showThoughts = state.config.flags?.showThoughts ?? false;
         const thoughtsHtml = showThoughts && thoughts?.length
@@ -811,6 +872,11 @@ export function initUI() {
                 <div class="message__thoughts-body">${thoughts.map(t => `<p>${esc(t)}</p>`).join('')}</div>
                </details>`
             : '';
+
+        const commentCount  = msgObj.comments?.length || 0;
+        const hasComments   = commentCount > 0;
+        const isBot         = role === 'bot';
+        const modelLabel    = msgObj.model ? `<span class="message__model-badge">${esc(msgObj.model.split('/').pop() || msgObj.model)}</span>` : '';
 
         const $msg = document.createElement('div');
         $msg.className = `message message--${role}`;
@@ -823,63 +889,100 @@ export function initUI() {
             <div class="message__main">
                 <div class="message__header">
                     <span class="message__name">${esc(name)}</span>
+                    ${modelLabel}
                     <span class="message__time">${new Date(msgObj.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                     <div class="message__actions">
-                        <button class="msg-action" data-action="copy"  title="Copy">   <i data-lucide="copy"></i>   </button>
-                        <button class="msg-action" data-action="edit"  title="Edit">   <i data-lucide="pencil"></i> </button>
-                        <button class="msg-action" data-action="retry" title="Retry"  data-bot-id="${esc(botId || '')}">
-                            <i data-lucide="refresh-cw"></i>
+                        <button class="msg-action" data-action="copy"    title="Copy text"><i data-lucide="copy"></i></button>
+                        <button class="msg-action" data-action="edit"    title="Edit message"><i data-lucide="pencil"></i></button>
+                        ${isBot ? `<button class="msg-action" data-action="retry"  title="Regenerate" data-bot-id="${esc(botId || '')}"><i data-lucide="refresh-cw"></i></button>` : ''}
+                        ${isBot ? `<button class="msg-action" data-action="branch" title="Branch from here (keep this, regenerate)" data-bot-id="${esc(botId || '')}"><i data-lucide="git-branch"></i></button>` : ''}
+                        <button class="msg-action ${hasComments ? 'msg-action--has-annotation' : ''}" data-action="comment" title="Annotate${hasComments ? ` (${commentCount})` : ''}">
+                            <i data-lucide="message-square"></i>
+                            ${hasComments ? `<span class="msg-action__badge">${commentCount}</span>` : ''}
                         </button>
-                        <button class="msg-action" data-action="delete" title="Delete"><i data-lucide="trash-2"></i></button>
+                        <button class="msg-action" data-action="react" title="React"><i data-lucide="smile-plus"></i></button>
+                        <button class="msg-action msg-action--danger" data-action="delete" title="Delete message"><i data-lucide="trash-2"></i></button>
                     </div>
                 </div>
                 ${thoughtsHtml}
                 <div class="message__bubble">
                     <div class="message__content">${renderMarkdown(content)}</div>
                 </div>
-                ${msgObj.edited ? '<span class="message__edited">edited</span>' : ''}
+                ${msgObj.edited ? '<span class="message__meta-tag">edited</span>' : ''}
+                ${(() => {
+                    const r = msgObj.reactions || {};
+                    const entries = Object.entries(r).filter(([, who]) => who.length > 0);
+                    if (!entries.length) return '';
+                    return `<div class="message__reactions">${entries.map(([emoji, who]) =>
+                        `<button class="reaction-chip ${who.includes('user') ? 'reaction-chip--active' : ''}"
+                         data-react-emoji="${esc(emoji)}" title="${who.length} reaction">${emoji} <span>${who.length}</span></button>`
+                    ).join('')}</div>`;
+                })()}
+                ${hasComments ? `<div class="message__comment-strip">${msgObj.comments.map(c => `
+                    <div class="message__comment" data-comment-id="${esc(c.id)}">
+                        <i data-lucide="message-square" class="message__comment-icon"></i>
+                        <span class="message__comment-text">${esc(c.text)}</span>
+                        <button class="message__comment-del" data-del-comment="${esc(c.id)}" title="Remove note"><i data-lucide="x"></i></button>
+                    </div>`).join('')}
+                </div>` : ''}
             </div>`;
 
-        // Wire message actions
+        // ── Copy ─────────────────────────────────────────────────────────────
         qs('[data-action="copy"]', $msg).addEventListener('click', () => {
-            navigator.clipboard.writeText(content).catch(() => {});
+            navigator.clipboard.writeText(content).then(() => {
+                const btn = qs('[data-action="copy"]', $msg);
+                btn.querySelector('i').dataset.lucide = 'check';
+                lucideRefresh(btn);
+                setTimeout(() => { btn.querySelector('i').dataset.lucide = 'copy'; lucideRefresh(btn); }, 1500);
+            }).catch(() => {});
         });
 
+        // ── Edit ─────────────────────────────────────────────────────────────
         qs('[data-action="edit"]', $msg).addEventListener('click', () => {
-            qs('#msg-edit-id').value      = id;
-            qs('#msg-edit-content').value = content;
-            showModal('modal-msg-edit');
-
-            const save = () => {
-                const newContent = qs('#msg-edit-content').value.trim();
-                if (!newContent) return;
+            openMsgEditModal(id, content, isBot, name, (newContent, retrigger) => {
                 editMessage(id, newContent);
                 qs('.message__content', $msg).innerHTML = renderMarkdown(newContent);
-                const edited = qs('.message__edited', $msg);
-                if (!edited) {
-                    const span = document.createElement('span');
-                    span.className = 'message__edited';
-                    span.textContent = 'edited';
-                    $msg.querySelector('.message__main').appendChild(span);
+                let $tag = qs('.message__meta-tag', $msg);
+                if (!$tag) {
+                    $tag = document.createElement('span');
+                    $tag.className = 'message__meta-tag';
+                    qs('.message__main', $msg).appendChild($tag);
                 }
-                hideModal('modal-msg-edit');
-            };
+                $tag.textContent = 'edited';
 
-            qs('#msg-edit-save').onclick   = save;
-            qs('#msg-edit-cancel').onclick = () => hideModal('modal-msg-edit');
-            qs('#msg-edit-close').onclick  = () => hideModal('modal-msg-edit');
+                if (retrigger && !state.isStreaming) {
+                    const idx = state.history.findIndex(m => m.id === id);
+                    if (idx < 0) return;
+
+                    if (isBot && botId) {
+                        // Bot edit + regenerate: remove this message and everything after, re-run
+                        state.session.history = state.history.slice(0, idx);
+                        saveState();
+                        const allMsgs = qsa('.message', $thread);
+                        allMsgs.slice(allMsgs.indexOf($msg)).forEach(m => m.remove());
+                        triggerBotResponse(botId);
+                    } else {
+                        // User edit + re-run: keep this message, remove everything after it
+                        state.session.history = state.history.slice(0, idx + 1);
+                        saveState();
+                        const allMsgs = qsa('.message', $thread);
+                        allMsgs.slice(allMsgs.indexOf($msg) + 1).forEach(m => m.remove());
+                        const targetBotId = state.activeBotId;
+                        if (targetBotId) triggerBotResponse(targetBotId);
+                    }
+                }
+            });
         });
 
-        qs('[data-action="retry"]', $msg).addEventListener('click', async () => {
+        // ── Retry (regenerate — removes this message, re-runs) ───────────────
+        qs('[data-action="retry"]', $msg)?.addEventListener('click', async () => {
             if (state.isStreaming) return;
-            const targetBotId = $msg.querySelector('[data-bot-id]')?.dataset.botId || state.activeBotId;
+            const targetBotId = qs('[data-action="retry"]', $msg)?.dataset.botId || state.activeBotId;
             if (!targetBotId) return;
-            // Delete from this message onward, then re-trigger
             const idx = state.history.findIndex(m => m.id === id);
             if (idx >= 0) {
                 state.session.history = state.history.slice(0, idx);
                 saveState();
-                // Remove DOM messages from this one onward
                 const allMsgs = qsa('.message', $thread);
                 const msgIdx  = allMsgs.indexOf($msg);
                 allMsgs.slice(msgIdx).forEach(m => m.remove());
@@ -887,8 +990,65 @@ export function initUI() {
             await triggerBotResponse(targetBotId);
         });
 
+        // ── Branch (keep this response, generate an alternative after same context) ──
+        qs('[data-action="branch"]', $msg)?.addEventListener('click', async () => {
+            if (state.isStreaming) return;
+            const targetBotId = qs('[data-action="branch"]', $msg)?.dataset.botId || state.activeBotId;
+            if (!targetBotId) return;
+            const idx = state.history.findIndex(m => m.id === id);
+            if (idx < 0) return;
+            // Snapshot the original bot message and everything after it
+            const originalBotMsg = state.history[idx];
+            const msgsAfter      = state.history.slice(idx + 1);
+            // Trim history to just before this message so the LLM regenerates
+            // from the same prior context (same user turn)
+            state.session.history = state.history.slice(0, idx);
+            // triggerBotResponse will append its new message to the trimmed history
+            await triggerBotResponse(targetBotId);
+            // Re-append the original bot message and anything that was after it,
+            // so the thread now has: ...pre, NEW response, original response, ...after
+            state.session.history = [
+                ...state.session.history,
+                originalBotMsg,
+                ...msgsAfter
+            ];
+            saveState();
+        });
+
+        // ── React ────────────────────────────────────────────────────────────
+        qs('[data-action="react"]', $msg).addEventListener('click', (e) => {
+            e.stopPropagation();
+            showReactionPicker($msg, id);
+        });
+
+        // ── Existing reaction chips ───────────────────────────────────────────
+        qsa('[data-react-emoji]', $msg).forEach(btn => {
+            btn.addEventListener('click', e => {
+                e.stopPropagation();
+                addReaction(id, btn.dataset.reactEmoji);
+                refreshReactions($msg, id);
+            });
+        });
+
+        // ── Comment / Annotate ───────────────────────────────────────────────
+        qs('[data-action="comment"]', $msg).addEventListener('click', () => {
+            openCommentModal(id, $msg);
+        });
+
+        // ── Delete inline comment notes ──────────────────────────────────────
+        qsa('[data-del-comment]', $msg).forEach(btn => {
+            btn.addEventListener('click', e => {
+                e.stopPropagation();
+                const cid = btn.dataset.delComment;
+                deleteComment(id, cid);
+                btn.closest('.message__comment')?.remove();
+                refreshCommentActionBadge($msg, id);
+            });
+        });
+
+        // ── Delete message ───────────────────────────────────────────────────
         qs('[data-action="delete"]', $msg).addEventListener('click', async () => {
-            const ok = await confirm('Delete Message', 'Delete this message from the thread?');
+            const ok = await confirm('Delete Message', 'Remove this message from the thread?');
             if (!ok) return;
             deleteMessage(id);
             $msg.remove();
@@ -898,6 +1058,195 @@ export function initUI() {
         $thread.scrollTop = $thread.scrollHeight;
         lucideRefresh($msg);
         return $msg;
+    }
+
+    // ── Message edit modal ────────────────────────────────────────────────────
+    let _editAbort = null;
+
+    function openMsgEditModal(msgId, currentContent, isBot, speakerName, onSave) {
+        // Abort any previous open instance's listeners first
+        _editAbort?.abort();
+        _editAbort = new AbortController();
+        const sig = _editAbort.signal;
+
+        const $ta    = qs('#msg-edit-content');
+        const $count = qs('#msg-edit-charcount');
+        const $title = qs('#msg-edit-title');
+        const $retrigLabel = qs('.msg-edit-retrigger-label');
+
+        qs('#msg-edit-id').value  = msgId;
+        $ta.value                 = currentContent;
+        qs('#msg-edit-retrigger').checked = false;
+        if ($count) $count.textContent = `${currentContent.length} chars`;
+
+        // Context-aware title and retrigger label
+        if ($title) $title.innerHTML = `<i data-lucide="pencil"></i> Edit — ${esc(speakerName || 'Message')}`;
+        if ($retrigLabel) {
+            $retrigLabel.querySelector('input').labels?.[0]
+            $retrigLabel.lastChild.textContent = isBot
+                ? ' Regenerate this response'
+                : ' Re-run bot after saving';
+        }
+
+        // Single input listener, cleaned up on close
+        $ta.addEventListener('input', () => {
+            if ($count) $count.textContent = `${$ta.value.length} chars`;
+        }, { signal: sig });
+
+        const close = () => { hideModal('modal-msg-edit'); _editAbort?.abort(); };
+
+        const doSave = () => {
+            const newContent = $ta.value.trim();
+            if (!newContent) return;
+            onSave(newContent, qs('#msg-edit-retrigger')?.checked ?? false);
+            close();
+        };
+
+        qs('#msg-edit-save').onclick   = doSave;
+        qs('#msg-edit-cancel').onclick = close;
+        qs('#msg-edit-close').onclick  = close;
+        $ta.onkeydown = e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); doSave(); } };
+
+        showModal('modal-msg-edit');
+        lucideRefresh(qs('#msg-edit-title'));
+        setTimeout(() => { $ta.focus(); $ta.setSelectionRange($ta.value.length, $ta.value.length); }, 50);
+    }
+
+    // ── Comment modal ─────────────────────────────────────────────────────────
+    function openCommentModal(msgId, $msgEl) {
+        qs('#msg-comment-msg-id').value = msgId;
+        renderCommentList(msgId);
+        showModal('modal-msg-comment');
+        setTimeout(() => qs('#msg-comment-input')?.focus(), 50);
+
+        const doAdd = () => {
+            const text = qs('#msg-comment-input').value.trim();
+            if (!text) return;
+            const comment = addComment(msgId, text);
+            if (!comment) return;
+            qs('#msg-comment-input').value = '';
+            renderCommentList(msgId);
+            refreshCommentActionBadge($msgEl, msgId);
+        };
+
+        qs('#msg-comment-add').onclick = doAdd;
+        qs('#msg-comment-input').onkeydown = e => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); doAdd(); }
+        };
+        qs('#msg-comment-close').onclick     = () => hideModal('modal-msg-comment');
+        qs('#msg-comment-close-btn').onclick = () => hideModal('modal-msg-comment');
+        qs('.modal__backdrop', qs('#modal-msg-comment'))?.removeEventListener('click', _commentBackdrop);
+        _commentBackdrop = () => hideModal('modal-msg-comment');
+        qs('.modal__backdrop', qs('#modal-msg-comment'))?.addEventListener('click', _commentBackdrop);
+    }
+    let _commentBackdrop = null;
+
+    function renderCommentList(msgId) {
+        const msg = state.history.find(m => m.id === msgId);
+        const $list = qs('#msg-comment-list');
+        if (!$list) return;
+        const comments = msg?.comments || [];
+        if (!comments.length) {
+            $list.innerHTML = '<div class="comment-list__empty">No notes yet.</div>';
+            return;
+        }
+        $list.innerHTML = comments.map(c => `
+            <div class="comment-item" data-cid="${esc(c.id)}">
+                <div class="comment-item__text">${esc(c.text)}</div>
+                <div class="comment-item__meta">
+                    <span>${new Date(c.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    <button class="btn-icon btn-icon--xs btn-icon--danger" data-del-cmt="${esc(c.id)}" title="Delete note">
+                        <i data-lucide="trash-2"></i>
+                    </button>
+                </div>
+            </div>`).join('');
+
+        qsa('[data-del-cmt]', $list).forEach(btn => {
+            btn.addEventListener('click', () => {
+                deleteComment(msgId, btn.dataset.delCmt);
+                renderCommentList(msgId);
+                // also refresh the badge on the original message element
+                const $msgEl = qs(`.message[data-msg-id="${msgId}"]`, $thread);
+                if ($msgEl) refreshCommentActionBadge($msgEl, msgId);
+            });
+        });
+        lucideRefresh($list);
+    }
+
+    function refreshCommentActionBadge($msgEl, msgId) {
+        const msg = state.history.find(m => m.id === msgId);
+        const count = msg?.comments?.length || 0;
+        const $btn  = qs('[data-action="comment"]', $msgEl);
+        if (!$btn) return;
+        $btn.classList.toggle('msg-action--has-annotation', count > 0);
+        $btn.title = count > 0 ? `Annotate (${count})` : 'Annotate';
+        const $badge = qs('.msg-action__badge', $btn);
+        if (count > 0) {
+            if ($badge) { $badge.textContent = count; }
+            else {
+                const span = document.createElement('span');
+                span.className = 'msg-action__badge';
+                span.textContent = count;
+                $btn.appendChild(span);
+            }
+        } else {
+            $badge?.remove();
+        }
+    }
+
+    function showReactionPicker($msgEl, msgId) {
+        const $picker = qs('#reaction-picker');
+        if (!$picker) return;
+        // Position near message header
+        const rect = $msgEl.getBoundingClientRect();
+        $picker.style.top  = `${rect.top + window.scrollY - 50}px`;
+        $picker.style.left = `${Math.min(rect.left, window.innerWidth - 260)}px`;
+        $picker.hidden = false;
+        $picker.dataset.forMsg = msgId;
+
+        // Wire buttons
+        qsa('.reaction-picker__btn', $picker).forEach(btn => {
+            btn.onclick = () => {
+                addReaction(msgId, btn.dataset.emoji);
+                refreshReactions($msgEl, msgId);
+                $picker.hidden = true;
+            };
+        });
+
+        // Close on outside click
+        const close = (e) => {
+            if (!$picker.contains(e.target)) {
+                $picker.hidden = true;
+                document.removeEventListener('click', close, true);
+            }
+        };
+        setTimeout(() => document.addEventListener('click', close, true), 0);
+    }
+
+    function refreshReactions($msgEl, msgId) {
+        const msg = state.history.find(m => m.id === msgId);
+        const r = msg?.reactions || {};
+        const entries = Object.entries(r).filter(([, who]) => who.length > 0);
+        let $strip = qs('.message__reactions', $msgEl);
+        if (!entries.length) { $strip?.remove(); return; }
+        const html = `<div class="message__reactions">${entries.map(([emoji, who]) =>
+            `<button class="reaction-chip ${who.includes('user') ? 'reaction-chip--active' : ''}"
+             data-react-emoji="${esc(emoji)}" title="${who.length} reaction">${emoji} <span>${who.length}</span></button>`
+        ).join('')}</div>`;
+        if ($strip) {
+            $strip.outerHTML = html;
+        } else {
+            const $bubble = qs('.message__bubble', $msgEl);
+            $bubble?.insertAdjacentHTML('afterend', html);
+        }
+        // Re-wire new chips
+        qs('.message__reactions', $msgEl)?.querySelectorAll('[data-react-emoji]').forEach(btn => {
+            btn.addEventListener('click', e => {
+                e.stopPropagation();
+                addReaction(msgId, btn.dataset.reactEmoji);
+                refreshReactions($msgEl, msgId);
+            });
+        });
     }
 
     function renderFullHistory() {
@@ -933,6 +1282,142 @@ export function initUI() {
         });
     }
 
+    // ── Thread Search ─────────────────────────────────────────────────────────
+    const $searchBar    = qs('#thread-search-bar');
+    const $searchInput  = qs('#thread-search-input');
+    const $searchCount  = qs('#thread-search-count');
+    let _searchMatches  = [];
+    let _searchIdx      = 0;
+    let _searchOrigHTML = new Map(); // $contentEl → original innerHTML
+
+    qs('#search-toggle')?.addEventListener('click', () => {
+        const hidden = $searchBar.hidden;
+        $searchBar.hidden = !hidden;
+        if (!$searchBar.hidden) {
+            $searchInput.focus();
+            $searchInput.select();
+        } else {
+            clearSearch();
+        }
+    });
+
+    function clearSearch() {
+        _searchOrigHTML.forEach((orig, el) => { el.innerHTML = orig; });
+        _searchOrigHTML.clear();
+        _searchMatches = [];
+        _searchIdx = 0;
+        if ($searchCount) $searchCount.textContent = '';
+        if ($searchInput) $searchInput.value = '';
+    }
+
+    function runSearch(query) {
+        // Restore original HTML first
+        _searchOrigHTML.forEach((orig, el) => { el.innerHTML = orig; });
+        _searchOrigHTML.clear();
+        _searchMatches = [];
+        _searchIdx = 0;
+
+        if (!query.trim()) {
+            if ($searchCount) $searchCount.textContent = '';
+            return;
+        }
+
+        const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const re = new RegExp(`(${escaped})`, 'gi');
+
+        qsa('.message__content', $thread).forEach($el => {
+            const orig = $el.innerHTML;
+            if (!re.test($el.textContent)) return;
+            _searchOrigHTML.set($el, orig);
+            $el.innerHTML = $el.innerHTML.replace(re, '<mark class="search-highlight">$1</mark>');
+            qsa('.search-highlight', $el).forEach(m => _searchMatches.push(m));
+        });
+
+        if ($searchCount) $searchCount.textContent = _searchMatches.length ? `${_searchIdx + 1}/${_searchMatches.length}` : 'No results';
+        if (_searchMatches.length) scrollToMatch(0);
+    }
+
+    function scrollToMatch(idx) {
+        _searchMatches.forEach((m, i) => m.classList.toggle('search-highlight--current', i === idx));
+        _searchMatches[idx]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if ($searchCount) $searchCount.textContent = `${idx + 1}/${_searchMatches.length}`;
+    }
+
+    $searchInput?.addEventListener('input', debounce(() => runSearch($searchInput.value), 200));
+    qs('#thread-search-prev')?.addEventListener('click', () => {
+        if (!_searchMatches.length) return;
+        _searchIdx = (_searchIdx - 1 + _searchMatches.length) % _searchMatches.length;
+        scrollToMatch(_searchIdx);
+    });
+    qs('#thread-search-next')?.addEventListener('click', () => {
+        if (!_searchMatches.length) return;
+        _searchIdx = (_searchIdx + 1) % _searchMatches.length;
+        scrollToMatch(_searchIdx);
+    });
+    qs('#thread-search-close')?.addEventListener('click', () => {
+        $searchBar.hidden = true;
+        clearSearch();
+    });
+
+    // ── Quick Reply Bar ───────────────────────────────────────────────────────
+    const QR_PROMPTS = {
+        continue:    '(Continue the scene from where we left off.)',
+        describe:    '(Describe the current scene and setting in vivid detail.)',
+        narrate:     '(Narrate what happens next without dialogue.)',
+        introspect:  '(Share your inner thoughts and feelings right now.)',
+        ooc:         '[OOC: Let\'s pause the scene for a moment. ]',
+        shorter:     '(Please write a shorter response this time.)',
+        longer:      '(Please write a longer, more detailed response.)',
+    };
+
+    qs('#btn-quick-reply')?.addEventListener('click', () => {
+        const $bar = qs('#quick-reply-bar');
+        if ($bar) $bar.hidden = !$bar.hidden;
+    });
+
+    qsa('.qr-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const text = QR_PROMPTS[btn.dataset.qr] || '';
+            if (!text) return;
+            const $ta = qs('#rp-input');
+            const cur = $ta.value;
+            $ta.value = cur ? `${cur}\n${text}` : text;
+            $ta.dispatchEvent(new Event('input'));
+            $ta.focus();
+            qs('#quick-reply-bar').hidden = true;
+        });
+    });
+
+    // ── Session Export / Import ───────────────────────────────────────────────
+    qs('#btn-export-session')?.addEventListener('click', () => {
+        const json = exportSessionJson(state.activeSessionId);
+        const blob = new Blob([json], { type: 'application/json' });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href     = url;
+        a.download = `underdark-session-${state.session.name.replace(/\s+/g,'-')}-${Date.now()}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+    });
+
+    qs('#btn-import-session')?.addEventListener('click', () => {
+        qs('#session-import-input')?.click();
+    });
+
+    qs('#session-import-input')?.addEventListener('change', async e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        e.target.value = '';
+        try {
+            const text = await file.text();
+            await importSessionJson(text);
+            renderSessions();
+            renderAll();
+        } catch (err) {
+            alert(`Import failed: ${err.message}`);
+        }
+    });
+
     function renderAll() {
         renderSessions();
         renderRoster();
@@ -947,7 +1432,8 @@ export function initUI() {
         const activeMeta = state.characters.find(c => c.id === state.activeBotId);
         if (activeChar) {
             renderProfile(activeChar, state.activeBotId);
-            updateCinematicBackground(activeMeta?.avatar_path || activeChar.avatar);
+            getAvatarUrl(state.activeBotId, activeMeta?.avatar_path || activeChar.avatar)
+                .then(url => updateCinematicBackground(url));
         } else {
             qs('#profile-card').innerHTML = '<div class="profile-view__empty">No character selected</div>';
             qs('#profile-actions').hidden = true;
@@ -959,6 +1445,9 @@ export function initUI() {
         const char = state.loadedCharacters[botId];
         const meta = state.characters.find(c => c.id === botId);
         if (!char || state.isStreaming) return;
+        // Eagerly resolve IDB avatar so it's ready when placeholder renders
+        const rawAv = meta?.avatar_path || char.avatar;
+        if (rawAv?.startsWith('idb:')) await getAvatarUrl(botId, rawAv).catch(() => {});
 
         state.isStreaming = true;
         const controller = new AbortController();
@@ -1148,9 +1637,9 @@ export function initUI() {
         const msg = addMessage('user', text);
         appendMessage(msg);
 
-        clearGroupTimers();
+        _groupAbort = false;
 
-        // Group chat: all bots respond; solo: just activeBotId
+        // Group chat: all bots respond sequentially; solo: just activeBotId
         const respondingBots = state.config.groupTurnMode === 'auto' && state.activeBotIds.length > 1
             ? state.activeBotIds
             : [state.activeBotId];
@@ -1158,14 +1647,16 @@ export function initUI() {
         if (respondingBots.length === 1) {
             await triggerBotResponse(respondingBots[0]);
         } else {
+            // Sequential queue: each bot awaits the previous, with a brief gap
             const delay = state.config.groupAutoDelay || 600;
-            for (let i = 0; i < respondingBots.length; i++) {
-                const botId = respondingBots[i];
-                const t = setTimeout(async () => {
-                    if (!state.isStreaming) await triggerBotResponse(botId);
-                }, i * delay);
-                groupAutoTimers.push(t);
-            }
+            (async () => {
+                for (const botId of respondingBots) {
+                    if (_groupAbort) break;
+                    await new Promise(r => setTimeout(r, delay));
+                    if (_groupAbort) break;
+                    await triggerBotResponse(botId);
+                }
+            })();
         }
 
         $textarea.focus();
@@ -1217,11 +1708,22 @@ export function initUI() {
         const lines = state.history.map(m => {
             const name = m.role === 'user'
                 ? (state.config.userName || 'User')
-                : (state.loadedCharacters[m.botId]?.name || 'Bot');
-            return `[${name}]\n${m.content}`;
+                : (getCharOverride(m.botId)?.nickname || state.loadedCharacters[m.botId]?.name || 'Bot');
+            const modelTag  = m.model ? ` [${m.model.split('/').pop()}]` : '';
+            const time      = new Date(m.timestamp).toLocaleString();
+            const editedTag = m.edited ? ' (edited)' : '';
+            let block = `[${name}${modelTag} — ${time}${editedTag}]\n${m.content}`;
+            if (m.thoughts?.length) {
+                block += `\n\n<inner thoughts>\n${m.thoughts.join('\n')}\n</inner thoughts>`;
+            }
+            if (m.comments?.length) {
+                block += `\n\n<notes>\n${m.comments.map(c => `  • ${c.text}`).join('\n')}\n</notes>`;
+            }
+            return block;
         }).join('\n\n---\n\n');
 
-        const blob = new Blob([lines], { type: 'text/plain' });
+        const header = `# ${state.session.name}\nExported: ${new Date().toLocaleString()}\n\n`;
+        const blob = new Blob([header + lines], { type: 'text/plain' });
         const url  = URL.createObjectURL(blob);
         const a    = document.createElement('a');
         a.href     = url;
@@ -1266,7 +1768,8 @@ export function initUI() {
         set('sys-directive',   c.sysDirective);
         set('authors-note',    c.authorsNote);
         set('nsfw-bypass',     c.nsfwBypass);
-        set('user-name-input', c.userName);
+        set('user-name-input',    c.userName);
+        set('user-persona-input', c.userPersona);
         set('an-depth-input',  c.authorsNoteDepth);   setBadge('an-depth-val',  c.authorsNoteDepth);
         set('group-delay-input', c.groupAutoDelay);   setBadge('group-delay-val', `${c.groupAutoDelay}ms`);
         set('context-strategy', c.contextStrategy);
@@ -1315,10 +1818,11 @@ export function initUI() {
         const $el = qs(`#${id}`);
         if ($el) $el.addEventListener('input', debounce(() => setConfig({ [key]: $el.value }), 300));
     };
-    bindText('sys-directive',  'sysDirective');
-    bindText('authors-note',   'authorsNote');
-    bindText('nsfw-bypass',    'nsfwBypass');
-    bindText('user-name-input','userName');
+    bindText('sys-directive',      'sysDirective');
+    bindText('authors-note',       'authorsNote');
+    bindText('nsfw-bypass',        'nsfwBypass');
+    bindText('user-name-input',    'userName');
+    bindText('user-persona-input', 'userPersona');
 
     qs('#stream-toggle')?.addEventListener('change', e => setConfig({ stream: e.target.checked }));
     qs('#context-strategy')?.addEventListener('change', e => setConfig({ contextStrategy: e.target.value }));
@@ -1467,9 +1971,12 @@ export function initUI() {
         qs('#stat-model').textContent  = state.config.model || '—';
     }
 
-    // ── Modal: message edit ───────────────────────────────────────────────────
-    qs('#msg-edit-close')?.addEventListener('click', () => hideModal('modal-msg-edit'));
-    qs('.modal__backdrop', qs('#modal-msg-edit'))?.addEventListener('click', () => hideModal('modal-msg-edit'));
+    // ── Modal: message edit backdrop ─────────────────────────────────────────
+    qs('.modal__backdrop', qs('#modal-msg-edit'))?.addEventListener('click', () => {
+        hideModal('modal-msg-edit');
+        _editAbort?.abort();
+        _editAbort = null;
+    });
 
     // ── Modal: confirm backdrop ───────────────────────────────────────────────
     qs('.modal__backdrop', qs('#modal-confirm'))?.addEventListener('click', () => {
@@ -1499,6 +2006,8 @@ export function initUI() {
         const ok = await confirm('Wipe All Data', 'This will permanently delete all characters, sessions, history, and settings. Are you absolutely sure?');
         if (!ok) return;
         localStorage.clear();
+        // Also wipe IndexedDB avatar store
+        try { const { idbClear } = await import('./storage.js'); await idbClear(); } catch (_) {}
         location.reload();
     });
 

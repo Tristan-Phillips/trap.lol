@@ -7,6 +7,14 @@
       "card_path": "data/cards/example.json",
       "avatar_path": null,
       "tags": ["Cyberpunk", "Netrunner", "Noir", "Male"]
+    },
+    {
+      "id": "jinx-arcane",
+      "name": "Jinx",
+      "tagline": "She used to be Powder. Powder didn't survive.",
+      "card_path": "data/cards/jinx.json",
+      "avatar_path": null,
+      "tags": ["Arcane", "Female", "Chaotic", "Trauma", "Inventor", "Zaun"]
     }
   ],
   "lorebooks": []

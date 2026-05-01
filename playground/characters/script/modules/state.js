@@ -1,7 +1,12 @@
 /**
  * state.js — Central application state with full localStorage persistence.
  * All mutations go through exported helpers so persistence stays consistent.
+ *
+ * Large blobs (avatar data URLs) are stored in IndexedDB via storage.js.
+ * localStorage only holds metadata and session history (text only).
  */
+
+import { saveAvatar, loadAvatar, deleteAvatar, isDataUrl } from './storage.js';
 
 const STORAGE_KEY = 'underdark_v3';
 const SESSION_KEY = 'underdark_sessions_v3';
@@ -16,7 +21,6 @@ export function defaultConfig() {
         topP: 0.95,
         topK: 40,
         minP: 0.05,
-        typicalP: 1.0,
         repetitionPenalty: 1.10,
         presencePenalty: 0,
         frequencyPenalty: 0,
@@ -88,6 +92,8 @@ export function defaultCharOverride() {
         postHistoryOverride: '',
         // Persona injection mode
         appendToSystem: '',      // freeform appended to system prompt
+        // Cross-session persistent memory for this character
+        persistentMemory: '',
         enabled: true
     };
 }
@@ -232,6 +238,8 @@ export function addMessage(role, content, botId = null, meta = {}) {
         tokens: meta.tokens || 0,
         model: meta.model || '',
         thoughts: meta.thoughts || null,
+        comments: [],
+        reactions: {},
         edited: false
     };
     state.session.history.push(msg);
@@ -253,6 +261,27 @@ export function editMessage(msgId, newContent) {
 
 export function deleteMessage(msgId) {
     state.session.history = state.session.history.filter(m => m.id !== msgId);
+    saveState();
+}
+
+export function addComment(msgId, text) {
+    const msg = state.session.history.find(m => m.id === msgId);
+    if (!msg) return null;
+    if (!msg.comments) msg.comments = [];
+    const comment = {
+        id: `cmt-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`,
+        text,
+        timestamp: Date.now()
+    };
+    msg.comments.push(comment);
+    saveState();
+    return comment;
+}
+
+export function deleteComment(msgId, commentId) {
+    const msg = state.session.history.find(m => m.id === msgId);
+    if (!msg?.comments) return;
+    msg.comments = msg.comments.filter(c => c.id !== commentId);
     saveState();
 }
 
@@ -282,14 +311,22 @@ export function removeBotFromSession(id) {
 // ── Character override helpers ───────────────────────────────────────────────
 export function getCharOverride(charId) {
     const overrides = state.config.charOverrides || {};
-    return { ...defaultCharOverride(), ...(overrides[charId] || {}) };
+    const saved     = overrides[charId] || {};
+    // Merge ext fields into the flat override so the LLM engine sees everything
+    // the Sims Editor saved without needing to know about the ext sub-object.
+    const { ext, ...rest } = saved;
+    return { ...defaultCharOverride(), ...rest, ...(ext || {}) };
 }
 
 export function setCharOverride(charId, fields) {
     if (!state.config.charOverrides) state.config.charOverrides = {};
+    const existing = state.config.charOverrides[charId] || {};
+    // Preserve existing ext and deep-merge if caller also passes ext
+    const mergedExt = { ...(existing.ext || {}), ...(fields.ext || {}) };
     state.config.charOverrides[charId] = {
-        ...(state.config.charOverrides[charId] || defaultCharOverride()),
-        ...fields
+        ...existing,
+        ...fields,
+        ext: mergedExt
     };
     saveState();
 }
@@ -301,7 +338,16 @@ export function setConfig(fields) {
 }
 
 // ── Character storage helpers ────────────────────────────────────────────────
-export function saveCharacter(meta, card) {
+export async function saveCharacter(meta, card) {
+    // Offload avatar data URLs to IndexedDB to avoid localStorage quota issues
+    let avatarToStore = meta.avatar_path || card.avatar || null;
+    if (avatarToStore && isDataUrl(avatarToStore)) {
+        await saveAvatar(meta.id, avatarToStore).catch(() => {});
+        avatarToStore = `idb:${meta.id}`;
+        meta = { ...meta, avatar_path: avatarToStore };
+        card = { ...card, avatar: avatarToStore };
+    }
+
     const existing = state.characters.findIndex(c => c.id === meta.id);
     if (existing >= 0) {
         state.characters[existing] = meta;
@@ -312,7 +358,8 @@ export function saveCharacter(meta, card) {
     saveState();
 }
 
-export function deleteCharacter(id) {
+export async function deleteCharacter(id) {
+    await deleteAvatar(id).catch(() => {});
     state.characters = state.characters.filter(c => c.id !== id);
     delete state.loadedCharacters[id];
     // Remove from all sessions
@@ -321,4 +368,69 @@ export function deleteCharacter(id) {
         if (sess.activeBotId === id) sess.activeBotId = sess.activeBotIds[0] || null;
     });
     saveState();
+}
+
+// Resolve `idb:id` avatar references to actual data URLs for display.
+// Returns the raw value unchanged if it's already a plain URL / path.
+export async function resolveCharAvatar(charId, stored) {
+    if (!stored) return null;
+    if (stored === `idb:${charId}` || stored.startsWith('idb:')) {
+        return loadAvatar(charId).catch(() => null);
+    }
+    return stored;
+}
+
+// ── Reaction helpers ──────────────────────────────────────────────────────────
+export function addReaction(msgId, emoji) {
+    const msg = state.session.history.find(m => m.id === msgId);
+    if (!msg) return;
+    if (!msg.reactions) msg.reactions = {};
+    if (!msg.reactions[emoji]) msg.reactions[emoji] = [];
+    if (!msg.reactions[emoji].includes('user')) {
+        msg.reactions[emoji].push('user');
+    } else {
+        // Toggle off
+        msg.reactions[emoji] = msg.reactions[emoji].filter(r => r !== 'user');
+        if (!msg.reactions[emoji].length) delete msg.reactions[emoji];
+    }
+    saveState();
+}
+
+export function getReactions(msgId) {
+    const msg = state.session.history.find(m => m.id === msgId);
+    return msg?.reactions || {};
+}
+
+// ── Session export / import helpers ──────────────────────────────────────────
+export function exportSessionJson(sessionId) {
+    const sess = state.sessions.find(s => s.id === sessionId) || state.session;
+    const chars = {};
+    (sess.activeBotIds || []).forEach(id => {
+        if (state.loadedCharacters[id]) chars[id] = state.loadedCharacters[id];
+    });
+    return JSON.stringify({ version: 'underdark_export_v1', session: sess, characters: chars }, null, 2);
+}
+
+export async function importSessionJson(jsonString) {
+    const data = JSON.parse(jsonString);
+    if (data.version !== 'underdark_export_v1') throw new Error('Unrecognised export format.');
+    const sess = data.session;
+    // Give it a new id to avoid collision
+    sess.id = `sess-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    sess.name = `${sess.name} (imported)`;
+    state.sessions.push(sess);
+    state.activeSessionId = sess.id;
+    // Merge characters
+    if (data.characters) {
+        Object.entries(data.characters).forEach(([id, card]) => {
+            if (!state.loadedCharacters[id]) {
+                state.loadedCharacters[id] = card;
+                if (!state.characters.find(c => c.id === id)) {
+                    state.characters.push({ id, name: card.name || id, tagline: 'Imported', avatar_path: card.avatar || null, tags: card.tags || [] });
+                }
+            }
+        });
+    }
+    saveState();
+    return sess;
 }

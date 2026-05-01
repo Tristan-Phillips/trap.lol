@@ -439,6 +439,26 @@ export function initSimsEditor() {
         const badge = qs('#sims-char-name-badge');
         if (badge) badge.textContent = char?.name || meta?.name || '—';
 
+        // Seed charOverride from card's extensions.underdark if no user override exists yet.
+        // "No override yet" = the stored entry is missing or only has default values (ext is empty).
+        const sessionOverrides = state.config?.charOverrides || {};
+        const hasExistingOverride = charId in sessionOverrides &&
+            Object.keys(sessionOverrides[charId].ext || {}).length > 0;
+
+        if (!hasExistingOverride && char?.extensions?.underdark) {
+            const ud = char.extensions.underdark;
+            const { ext: cardExt, ...cardCore } = ud;
+            // Core keys that live directly on defaultCharOverride
+            const coreKeys = new Set(Object.keys(defaultCharOverride()));
+            const coreFromCard = {};
+            const extFromCard  = { ...(cardExt || {}) };
+            for (const [k, v] of Object.entries(cardCore)) {
+                if (coreKeys.has(k)) coreFromCard[k] = v;
+                else extFromCard[k] = v;
+            }
+            setCharOverride(charId, { ...coreFromCard, ext: extFromCard });
+        }
+
         // Load override into fields
         const override = getCharOverride(charId);
         // Build merged ext object (extended keys stored under override.ext)

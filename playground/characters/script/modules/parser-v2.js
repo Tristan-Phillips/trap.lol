@@ -5,6 +5,9 @@
  */
 
 export async function parseCharacterCard(file) {
+    if (file.size > 15 * 1024 * 1024) {
+        throw new Error('File too large (max 15 MB). Use a smaller card or JSON format.');
+    }
     if (file.type === 'application/json' || file.name.endsWith('.json')) {
         return parseJson(file);
     }
@@ -21,6 +24,9 @@ async function parseJson(file) {
 
 async function parsePng(file) {
     const buffer = await file.arrayBuffer();
+    if (buffer.byteLength > 15 * 1024 * 1024) {
+        throw new Error('PNG too large.');
+    }
     const view   = new DataView(buffer);
 
     if (view.getUint32(0) !== 0x89504E47 || view.getUint32(4) !== 0x0D0A1A0A) {
@@ -103,7 +109,7 @@ export function normalizeData(raw) {
 
     return {
         // Core identity
-        name:        d.name        || d.char_name   || 'Unknown Fragment',
+        name:        d.name        || d.char_name   || 'Unnamed Character',
         description: d.description || d.char_persona || '',
         personality: d.personality || '',
         scenario:    d.scenario    || '',

@@ -458,7 +458,9 @@ function buildSystemPrompt(character, config, override) {
         const base = override.systemPromptOverride
             .replace(/\{\{char\}\}/gi, charName)
             .replace(/\{\{user\}\}/gi, userName);
+        const persistentMemoryOverride = override.persistentMemory || character.persistentMemory;
         return base
+            + (persistentMemoryOverride?.trim() ? `\n\n[Character Memory — things ${charName} remembers across all conversations]\n${persistentMemoryOverride.trim()}` : '')
             + buildConsistencyBlock(override, charName, flags).replace(/\{C\}/g, charName)
             + buildAppearanceBlock(override, charName, flags)
             + buildVoiceBlock(override, charName, flags)
@@ -489,6 +491,12 @@ function buildSystemPrompt(character, config, override) {
     if (character.scenario)     sections.push(`Scenario: ${character.scenario}`);
     if (config.userPersona)     sections.push(`About ${userName}: ${config.userPersona}`);
 
+    // Per-character persistent memory (cross-session facts remembered about this char)
+    const persistentMemory = override.persistentMemory || character.persistentMemory;
+    if (persistentMemory && persistentMemory.trim()) {
+        sections.push(`[Character Memory — things ${charName} remembers across all conversations]\n${persistentMemory.trim()}`);
+    }
+
     const fullPrompt = sections.filter(Boolean).join('\n\n')
         + buildConsistencyBlock(override, charName, flags).replace(/\{C\}/g, charName)
         + buildAppearanceBlock(override, charName, flags)
@@ -504,6 +512,40 @@ function buildSystemPrompt(character, config, override) {
         + (config.nsfwBypass ? `\n\n${config.nsfwBypass}` : '');
 
     return fullPrompt;
+}
+
+// ── Background summarization of dropped messages ──────────────────────────────
+async function summarizeDropped(messages, config) {
+    const apiKey = getApiKey();
+    if (!apiKey || !messages.length) return '';
+
+    const transcript = messages.map(m =>
+        `${m.role === 'user' ? 'User' : 'Character'}: ${m.content.slice(0, 500)}`
+    ).join('\n');
+
+    const payload = {
+        model: config.model || 'deepseek-r1',
+        messages: [
+            { role: 'system', content: 'You are a concise narrator. Summarize the following roleplay excerpt into 2-3 sentences capturing key events, emotional beats, and anything that affects the ongoing story. Be factual and neutral.' },
+            { role: 'user', content: `Summarize this roleplay excerpt:\n\n${transcript}` }
+        ],
+        temperature: 0.3,
+        max_tokens: 200,
+        stream: false
+    };
+
+    try {
+        const res = await fetch(`${API_BASE}/chat/completions`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+            body: JSON.stringify(payload)
+        });
+        if (!res.ok) return '';
+        const data = await res.json();
+        return data.choices?.[0]?.message?.content?.trim() || '';
+    } catch (_) {
+        return '';
+    }
 }
 
 // ── Context window management ─────────────────────────────────────────────────
@@ -525,19 +567,73 @@ function applyContextStrategy(history, config, systemTokens) {
     }
 
     if (strategy === 'sliding') {
-        // Always keeps the first message (first_mes / greeting) as anchor
-        let tokens = 0;
+        if (history.length === 0) return [];
+        const anchor = history[0];
+        const anchorTokens = estimateTokens(anchor.content) + 8;
+        const remaining = budget - anchorTokens;
+        if (remaining <= 0) return [anchor];
+
         const result = [];
-        for (let i = history.length - 1; i >= 0; i--) {
+        let tokens = 0;
+        for (let i = history.length - 1; i >= 1; i--) {
             const t = estimateTokens(history[i].content) + 8;
-            if (tokens + t > budget && result.length) break;
+            if (tokens + t > remaining) break;
             tokens += t;
             result.unshift(history[i]);
+        }
+        // Always include anchor (first message) unless it's also in result already
+        if (!result.length || result[0] !== anchor) {
+            result.unshift(anchor);
         }
         return result;
     }
 
-    // 'summarize' — placeholder: falls back to sliding
+    if (strategy === 'summarize') {
+        // Build a sliding window; messages that got dropped will be summarized
+        if (history.length === 0) return [];
+        const anchor = history[0];
+        const anchorTokens = estimateTokens(anchor.content) + 8;
+        const remaining = budget - anchorTokens - 200; // reserve 200t for summary injection
+        if (remaining <= 0) return [anchor];
+
+        const result = [];
+        let tokens = 0;
+        let cutoff = history.length; // index of first included message (excl. anchor)
+        for (let i = history.length - 1; i >= 1; i--) {
+            const t = estimateTokens(history[i].content) + 8;
+            if (tokens + t > remaining) { cutoff = i + 1; break; }
+            tokens += t;
+            result.unshift(history[i]);
+            cutoff = i;
+        }
+
+        // If everything fits, no summary needed
+        if (cutoff <= 1) {
+            result.unshift(anchor);
+            return result;
+        }
+
+        // Messages between index 1 and cutoff-1 were dropped — summarize them async
+        // and inject as a synthetic system message. We trigger the summary call here
+        // and embed a placeholder; on next call the cached summary is used.
+        const droppedMsgs = history.slice(1, cutoff);
+        const cacheKey = `sum_${history[cutoff - 1]?.id || cutoff}`;
+        if (!applyContextStrategy._summaryCache) applyContextStrategy._summaryCache = {};
+        const cache = applyContextStrategy._summaryCache;
+
+        if (cache[cacheKey]) {
+            result.unshift({ role: 'system', content: `[Story so far: ${cache[cacheKey]}]`, id: '_summary', timestamp: 0, tokens: 0 });
+        } else {
+            // Kick off background summarization (non-blocking)
+            summarizeDropped(droppedMsgs, config).then(summary => {
+                cache[cacheKey] = summary;
+            }).catch(() => {});
+            // For this turn, fall back to including the anchor + whatever fits
+        }
+        result.unshift(anchor);
+        return result;
+    }
+
     return applyContextStrategy(history, { ...config, contextStrategy: 'sliding' }, systemTokens);
 }
 
@@ -569,6 +665,12 @@ export function buildPayload(ctx) {
     const contextHistory = applyContextStrategy(history, config, systemTokens);
 
     contextHistory.forEach(msg => {
+        // Synthetic summary injection from summarize strategy
+        if (msg.id === '_summary') {
+            messages.push({ role: 'system', content: msg.content });
+            return;
+        }
+
         const isBot   = msg.role === 'bot';
         const speaker = isBot
             ? (allChars.find(c => c.id === msg.botId)

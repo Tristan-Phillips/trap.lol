@@ -79,6 +79,9 @@
                 <!-- Bot avatars populated by JS -->
             </div>
             <div class="arena__actions">
+                <button id="search-toggle" class="btn-icon" title="Search Thread  [ / ]">
+                    <i data-lucide="search"></i>
+                </button>
                 <button id="export-chat"     class="btn-icon" title="Export Chat">
                     <i data-lucide="download"></i>
                 </button>
@@ -94,6 +97,22 @@
             </div>
         </header>
 
+        <div id="thread-search-bar" class="thread-search-bar" hidden>
+            <i data-lucide="search" class="thread-search-bar__icon"></i>
+            <input type="text" id="thread-search-input" class="thread-search-bar__input"
+                placeholder="Search messages…" spellcheck="false" autocomplete="off">
+            <span id="thread-search-count" class="thread-search-bar__count"></span>
+            <button id="thread-search-prev" class="btn-icon btn-icon--small" title="Previous">
+                <i data-lucide="chevron-up"></i>
+            </button>
+            <button id="thread-search-next" class="btn-icon btn-icon--small" title="Next">
+                <i data-lucide="chevron-down"></i>
+            </button>
+            <button id="thread-search-close" class="btn-icon btn-icon--small" title="Close">
+                <i data-lucide="x"></i>
+            </button>
+        </div>
+
         <div id="message-thread" class="arena__thread" aria-live="polite" aria-atomic="false">
             <div class="arena__welcome" id="arena-welcome">
                 <div class="welcome-box">
@@ -107,12 +126,25 @@
             </div>
         </div>
 
+        <div id="quick-reply-bar" class="quick-reply-bar" hidden>
+            <button class="qr-btn" data-qr="continue">▶ Continue</button>
+            <button class="qr-btn" data-qr="describe">👁 Describe scene</button>
+            <button class="qr-btn" data-qr="narrate">📖 Narrate</button>
+            <button class="qr-btn" data-qr="introspect">💭 Introspect</button>
+            <button class="qr-btn" data-qr="ooc">[OOC] pause</button>
+            <button class="qr-btn" data-qr="shorter">Shorter ↓</button>
+            <button class="qr-btn" data-qr="longer">Longer ↑</button>
+        </div>
+
         <footer class="arena__input-zone">
             <div class="input-container">
                 <div id="input-previews" class="input-container__previews"></div>
                 <div class="input-container__toolbar">
                     <button id="btn-add-image" class="btn-icon btn-icon--small" title="Attach image">
                         <i data-lucide="image"></i>
+                    </button>
+                    <button id="btn-quick-reply" class="btn-icon btn-icon--small" title="Quick replies">
+                        <i data-lucide="zap"></i>
                     </button>
                     <span id="active-bot-label" class="input-container__bot-label"></span>
                     <span id="token-estimate"   class="input-container__token-est"></span>
@@ -253,6 +285,11 @@
                             <label>User Name</label>
                             <input type="text" id="user-name-input" class="control-input"
                                 placeholder="User" value="User" spellcheck="false">
+                        </div>
+                        <div class="config-group">
+                            <label>User Persona <span class="config-sub-label">injected as "About [name]:"</span></label>
+                            <textarea id="user-persona-input" class="control-textarea" rows="2"
+                                placeholder="Describe yourself — how characters should perceive you..."></textarea>
                         </div>
                     </div>
 
@@ -544,6 +581,17 @@
                             <i data-lucide="flame"></i> Danger Zone
                         </h4>
                         <div class="config-group">
+                            <div style="display:flex;gap:6px;">
+                                <button id="btn-export-session" class="btn btn--ghost btn--full">
+                                    <i data-lucide="download"></i> Export Thread
+                                </button>
+                                <button id="btn-import-session" class="btn btn--ghost btn--full">
+                                    <i data-lucide="upload"></i> Import Thread
+                                </button>
+                            </div>
+                            <input type="file" id="session-import-input" accept=".json" hidden>
+                        </div>
+                        <div class="config-group">
                             <button id="btn-clear-all-data" class="btn btn--danger btn--full">
                                 <i data-lucide="trash-2"></i> Wipe All Local Data
                             </button>
@@ -568,6 +616,15 @@
                     </div>
 
                     <div id="persona-fields" class="persona-fields">
+
+                        <div class="config-section">
+                            <h4 class="config-section__title"><i data-lucide="brain"></i> Persistent Memory</h4>
+                            <div class="config-group">
+                                <label>Memory Notes <span class="config-sub-label">injected every session</span></label>
+                                <textarea class="control-textarea" data-po="persistentMemory" rows="3"
+                                    placeholder="Facts this character remembers across all sessions — relationship history, past events, player preferences..."></textarea>
+                            </div>
+                        </div>
 
                         <div class="config-section">
                             <h4 class="config-section__title"><i data-lucide="mic-2"></i> Voice &amp; Speech</h4>
@@ -966,18 +1023,52 @@
 <!-- Message Edit Modal -->
 <div id="modal-msg-edit" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="msg-edit-title">
     <div class="modal__backdrop"></div>
-    <div class="modal__box">
+    <div class="modal__box modal__box--wide">
         <header class="modal__header">
             <h2 id="msg-edit-title" class="modal__title"><i data-lucide="pencil"></i> Edit Message</h2>
             <button class="modal__close" id="msg-edit-close" aria-label="Close"><i data-lucide="x"></i></button>
         </header>
         <div class="modal__body">
             <input type="hidden" id="msg-edit-id">
-            <textarea id="msg-edit-content" class="control-textarea" rows="8"></textarea>
+            <textarea id="msg-edit-content" class="control-textarea control-textarea--tall" rows="10"
+                spellcheck="true" autocomplete="off"></textarea>
+            <div class="msg-edit-footer-meta">
+                <span id="msg-edit-charcount" class="msg-edit-charcount">0 chars</span>
+                <label class="msg-edit-retrigger-label">
+                    <input type="checkbox" id="msg-edit-retrigger">
+                    <span>Re-run bot after saving</span>
+                </label>
+            </div>
         </div>
         <footer class="modal__footer">
+            <span class="modal__footer-hint"><kbd>Ctrl</kbd><kbd>↵</kbd> to save</span>
             <button id="msg-edit-cancel" class="btn btn--ghost">Cancel</button>
-            <button id="msg-edit-save"   class="btn btn--accent">Save</button>
+            <button id="msg-edit-save"   class="btn btn--accent"><i data-lucide="check"></i> Save</button>
+        </footer>
+    </div>
+</div>
+
+<!-- Message Comment Modal -->
+<div id="modal-msg-comment" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="msg-comment-title">
+    <div class="modal__backdrop"></div>
+    <div class="modal__box">
+        <header class="modal__header">
+            <h2 id="msg-comment-title" class="modal__title"><i data-lucide="message-square"></i> Annotate Message</h2>
+            <button class="modal__close" id="msg-comment-close" aria-label="Close"><i data-lucide="x"></i></button>
+        </header>
+        <div class="modal__body">
+            <input type="hidden" id="msg-comment-msg-id">
+            <div id="msg-comment-list" class="comment-list"></div>
+            <div class="comment-compose">
+                <textarea id="msg-comment-input" class="control-textarea" rows="2"
+                    placeholder="Add a note…" spellcheck="true"></textarea>
+                <button id="msg-comment-add" class="btn btn--accent btn--sm">
+                    <i data-lucide="plus"></i> Add Note
+                </button>
+            </div>
+        </div>
+        <footer class="modal__footer">
+            <button id="msg-comment-close-btn" class="btn btn--ghost">Done</button>
         </footer>
     </div>
 </div>
@@ -999,6 +1090,18 @@
     </div>
 </div>
 
+
+<!-- Reaction Picker (attached contextually to messages) -->
+<div id="reaction-picker" class="reaction-picker" hidden>
+    <button class="reaction-picker__btn" data-emoji="❤️">❤️</button>
+    <button class="reaction-picker__btn" data-emoji="🔥">🔥</button>
+    <button class="reaction-picker__btn" data-emoji="😂">😂</button>
+    <button class="reaction-picker__btn" data-emoji="😱">😱</button>
+    <button class="reaction-picker__btn" data-emoji="👀">👀</button>
+    <button class="reaction-picker__btn" data-emoji="💔">💔</button>
+    <button class="reaction-picker__btn" data-emoji="⚔️">⚔️</button>
+    <button class="reaction-picker__btn" data-emoji="✨">✨</button>
+</div>
 
 <!-- ═══════════════════════════════════════════════════════════════
      SIMS-STYLE CHARACTER EDITOR MODAL
