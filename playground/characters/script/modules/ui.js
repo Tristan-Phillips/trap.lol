@@ -390,7 +390,7 @@ export function initUI() {
         qsa('[data-edit]', $charList).forEach(btn => {
             btn.addEventListener('click', e => {
                 e.stopPropagation();
-                simsEditor?.open(btn.dataset.edit);
+                openSimsEditor(btn.dataset.edit);
             });
         });
 
@@ -659,7 +659,7 @@ export function initUI() {
 
         // Profile action buttons
         qs('#btn-add-to-thread').onclick = () => addCharacterToThread(id);
-        qs('#btn-sims-edit').onclick     = () => simsEditor?.open(id);
+        qs('#btn-sims-edit').onclick     = () => openSimsEditor(id);
         qs('#btn-gallery-add').onclick   = () => openGalleryModal(id);
         qs('#btn-edit-char').onclick     = () => openCreator(id);
         qs('#btn-remove-char').onclick = () => {
@@ -2819,7 +2819,7 @@ export function initUI() {
         if (e.key === 't' || e.key === 'T') toggleTerminal();
         if (e.key === 'r' || e.key === 'R') setRosterCollapsed($rosterSidebar.dataset.collapsed !== 'true');
         if (e.key === 'n' || e.key === 'N') openCreator();
-        if (e.key === 'e' || e.key === 'E') { if (state.activeBotId) simsEditor?.open(state.activeBotId); }
+        if (e.key === 'e' || e.key === 'E') { if (state.activeBotId) openSimsEditor(state.activeBotId); }
         if (e.key === 'a' || e.key === 'A') openCharPicker();
         if (e.key === 'g' || e.key === 'G') { if (state.activeBotId) openGalleryModal(state.activeBotId); }
         if (e.key === 'f' || e.key === 'F') toggleFocusMode();
@@ -2852,9 +2852,16 @@ export function initUI() {
     // ── Sims Editor ───────────────────────────────────────────────────────────
     const simsEditor = initSimsEditor();
 
-    // "Edit in Sims" button in profile actions (also in profile render below)
+    // Ensure card data is loaded before opening — the roster edit button fires
+    // before a character has ever been clicked, so loadedCharacters[id] may be empty.
+    async function openSimsEditor(id) {
+        if (!id) return;
+        await loadCharacterCard(id);   // no-op if already loaded
+        simsEditor?.open(id);
+    }
+
     qs('#btn-sims-edit')?.addEventListener('click', () => {
-        if (state.activeBotId) simsEditor?.open(state.activeBotId);
+        if (state.activeBotId) openSimsEditor(state.activeBotId);
     });
 
     // ── Welcome screen static button wiring ─────────────────────────────────
