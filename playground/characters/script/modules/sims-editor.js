@@ -19,23 +19,68 @@ function debounce(fn, ms) {
 // ── Field map: data-spo → override key (most map 1:1; some are new extended fields) ──
 // Extended keys beyond defaultCharOverride are serialised under charOverride.ext
 const EXT_KEYS = new Set([
-    'name',
-    'pronouns', 'occupation', 'nationality', 'tagsRaw',
+    // ── Identity
+    'name', 'pronouns', 'occupation', 'nationality', 'tagsRaw',
+    'aliases', 'ethnicity', 'birthday', 'location',
+    'nativeLanguage', 'languagesSpoken', 'zodiac', 'mbti', 'enneagram',
+
+    // ── Face
     'faceShape', 'complexion', 'eyeShape', 'noseType', 'lipsType',
     'facialHair', 'facePiercings',
+    'jawType', 'cheekbones', 'foreheadType',
+    'skinUndertone', 'skinTexture',
+    'eyeSize', 'eyeDetail', 'eyeSpacing',
+    'eyebrowShape', 'eyelashes',
+    'lipColor', 'teethType',
+
+    // ── Hair
     'hairHighlights', 'hairLength', 'hairTexture', 'hairShine', 'hairAccessories',
+    'hairDyed', 'hairDensity', 'hairFade',
+
+    // ── Body
     'weight', 'muscleTone', 'bodyFat', 'shoulderWidth', 'waistType',
     'bodyMarkings', 'bodyPiercings', 'nails', 'scent',
+    'legType', 'handSize', 'posture', 'gait',
+    'tattoos', 'scarsMarks',
+    'nailLength', 'nailShape', 'nailColor', 'physicalQuirks',
+
+    // ── Style
     'styleArchetype', 'outfitDescription', 'colorPalette', 'signatureItem',
     'footwear', 'jewelry', 'underwear',
+    'formalOutfit', 'combatOutfit', 'sleepwear', 'swimwear',
+    'eyewear', 'carriedItems', 'headwear',
+    'groomingStandard', 'makeupStyle', 'lipstickColor', 'eyeMakeup',
+
+    // ── Voice
     'accent', 'catchphrases', 'verbosity', 'formality', 'vocabulary',
+    'voiceTone', 'voiceResonance', 'voiceVolume', 'speechPace',
+    'accentStrength', 'swearingLevel', 'speechPatterns',
+    'laughStyle', 'signatureSounds',
+
+    // ── Personality
     'coreTraits', 'archetype', 'fears', 'desires', 'alignment',
     'backstory', 'secrets', 'hobbies',
+    'attachmentStyle', 'loveLangs', 'conflictStyle', 'moodBaseline',
+    'moralPhilosophy', 'spirituality',
+    'triggers', 'petPeeves', 'comfortObjects',
+
+    // ── Behavior sliders (new ones)
+    'sociabilityLevel', 'curiosityLevel', 'impulsivityLevel',
+    'anxietyLevel', 'stubbornness', 'deceptivenessLevel',
+    'narcissismLevel', 'loyaltyLevel', 'protectivenessLevel', 'selfEsteemLevel',
     'empathyLevel', 'playfulnessLevel', 'obedienceLevel', 'jealousyLevel',
     'humorLevel', 'sadismLevel',
-    'breastShape', 'buttocksSize', 'buttocksShape', 'intimateMarkings',
-    'sexualOrientation', 'kinks', 'hardLimits',
-    'eyeSize',
+
+    // ── Adult
+    'sexualOrientation', 'dominantRole', 'libido', 'stamina', 'exhibitionism',
+    'chestType', 'breastShape', 'buttocksSize', 'buttocksShape', 'intimateMarkings',
+    'penisSize', 'penisShape',
+    'erogenousZones', 'vocalResponse', 'aftercareStyle',
+    'kinks', 'fantasies', 'hardLimits', 'otherAdultFeatures',
+
+    // ── AI
+    'contextPriority', 'narrativePOV', 'proseStyle', 'responseFormat', 'responseLength',
+    'allowedTopics', 'forbiddenTopics', 'worldRules',
 ]);
 
 // Slider descriptors — maps value ranges to human-readable strings
@@ -156,6 +201,120 @@ const SLIDER_DESCS = {
         [7, 8,   'Glossy — catches the light.'],
         [9, 10,  'Lustrous — almost mirror-like sheen.'],
     ],
+    speechPace: [
+        [1, 2,   'Glacially slow — every word a weight.'],
+        [3, 4,   'Unhurried — deliberate and measured.'],
+        [5, 6,   'Natural cadence — neither slow nor fast.'],
+        [7, 8,   'Quick — thoughts outpace pauses.'],
+        [9, 10,  'Rapid-fire — sentences tumble over each other.'],
+    ],
+    sociabilityLevel: [
+        [0,  15,  'Hermit — deeply averse to interaction; prefers solitude entirely.'],
+        [16, 30,  'Reclusive — tolerates brief contact but retreats quickly.'],
+        [31, 45,  'Reserved — engages when necessary; doesn\'t seek company.'],
+        [46, 55,  'Balanced — comfortable in both solitude and company.'],
+        [56, 70,  'Social — actively enjoys other people\'s presence.'],
+        [71, 85,  'Gregarious — energized by crowds and conversation.'],
+        [86, 100, 'Extroverted — constant social contact is essential; alone time drains them.'],
+    ],
+    curiosityLevel: [
+        [0,  20,  'Incurious — takes things at face value; does not dig deeper.'],
+        [21, 40,  'Mildly inquisitive — asks questions when the answer matters.'],
+        [41, 60,  'Averagely curious — interested in new things but not obsessive.'],
+        [61, 80,  'Highly curious — probes, investigates, and questions everything.'],
+        [81, 100, 'Insatiably curious — every answer breeds three new questions; knowledge is a compulsion.'],
+    ],
+    impulsivityLevel: [
+        [0,  15,  'Calculated — every action is planned; nothing done without consideration.'],
+        [16, 30,  'Deliberate — thinks before acting; weighs consequences carefully.'],
+        [31, 45,  'Measured — mostly thoughtful, with occasional spontaneous moments.'],
+        [46, 55,  'Balanced — half instinct, half calculation.'],
+        [56, 70,  'Reactive — acts on gut feeling more than logic.'],
+        [71, 85,  'Impulsive — acts first, regrets (or doesn\'t) later.'],
+        [86, 100, 'Feral impulse — pure id; no internal filter or delay between thought and action.'],
+    ],
+    anxietyLevel: [
+        [0,  15,  'Unflappable — virtually nothing rattles them.'],
+        [16, 30,  'Serene — calm under pressure; rare moments of worry.'],
+        [31, 45,  'Mildly anxious — occasional worry that doesn\'t interfere.'],
+        [46, 55,  'Moderate — noticeable anxiety in stressful or novel situations.'],
+        [56, 70,  'Anxious — frequently on edge; reads for threats automatically.'],
+        [71, 85,  'Hypervigilant — constant low-grade dread; always scanning for danger.'],
+        [86, 100, 'Paranoid — trust is nearly impossible; convinced something will go wrong.'],
+    ],
+    stubbornness: [
+        [0,  15,  'Completely malleable — changes position instantly when challenged.'],
+        [16, 30,  'Open — holds opinions loosely; persuaded by good arguments.'],
+        [31, 45,  'Adaptable — firm but willing to shift with evidence.'],
+        [46, 55,  'Steady — needs a compelling reason to change course.'],
+        [56, 70,  'Stubborn — will not concede without extraordinary pressure.'],
+        [71, 85,  'Obstinate — digs in when pushed; opposition hardens resolve.'],
+        [86, 100, 'Immovable — absolutely inflexible; will not budge regardless of argument.'],
+    ],
+    deceptivenessLevel: [
+        [0,  15,  'Radically honest — incapable of deception; says exactly what they think.'],
+        [16, 30,  'Honest — lies only if someone\'s life depends on it.'],
+        [31, 45,  'Mostly honest — omits truths, but rarely outright lies.'],
+        [46, 55,  'Situationally deceptive — lies comfortably when it serves a goal.'],
+        [56, 70,  'Calculated — truth is a tool, used when useful.'],
+        [71, 85,  'Manipulative — actively shapes others\' perceptions for personal benefit.'],
+        [86, 100, 'Habitual liar — the truth is almost always withheld or twisted.'],
+    ],
+    narcissismLevel: [
+        [0,  15,  'Self-effacing — reflexively puts others\' needs above their own.'],
+        [16, 30,  'Modest — low self-focus; genuinely considers others\' perspectives.'],
+        [31, 45,  'Balanced — healthy self-regard without grandiosity.'],
+        [46, 55,  'Moderately self-centered — conversations naturally drift back to them.'],
+        [56, 70,  'Vain — preoccupied with image, status, and admiration.'],
+        [71, 85,  'Grandiose — believes they are exceptional; others exist to validate them.'],
+        [86, 100, 'Solipsistic — other people are essentially props in their narrative.'],
+    ],
+    loyaltyLevel: [
+        [0,  15,  'Self-serving — allegiances shift based entirely on personal benefit.'],
+        [16, 30,  'Fickle — loyalty lasts until something better appears.'],
+        [31, 45,  'Conditional — stays loyal when it costs them little.'],
+        [46, 55,  'Reliable — can be counted on in most circumstances.'],
+        [56, 70,  'Loyal — will make real sacrifices for those they care about.'],
+        [71, 85,  'Fiercely loyal — will endure significant pain or risk for their people.'],
+        [86, 100, 'Absolute loyalty — would die before betraying those they\'ve chosen.'],
+    ],
+    protectivenessLevel: [
+        [0,  20,  'Detached — lets others handle their own problems entirely.'],
+        [21, 40,  'Cautious protector — helps when asked, doesn\'t hover.'],
+        [41, 60,  'Protective — instinctively shields those close to them.'],
+        [61, 80,  'Fiercely protective — threat to loved ones triggers immediate, decisive response.'],
+        [81, 100, 'Wrathfully protective — threats to those they love are met with overwhelming force; almost no cost is too high.'],
+    ],
+    selfEsteemLevel: [
+        [0,  15,  'Deeply self-loathing — core belief that they are fundamentally broken or worthless.'],
+        [16, 30,  'Low self-worth — frequent self-doubt; quick to accept blame.'],
+        [31, 45,  'Fragile — moments of confidence undercut by insecurity.'],
+        [46, 55,  'Average — fluctuates; neither consistently confident nor crumbling.'],
+        [56, 70,  'Grounded — comfortable in their skin; handles criticism well.'],
+        [71, 85,  'Confident — clear self-image; assurance is evident in behavior.'],
+        [86, 100, 'Bulletproof — unshakeable belief in their own worth; criticism does not penetrate.'],
+    ],
+    libido: [
+        [1, 2,   'Asexual or essentially non-sexual — desire is absent or irrelevant.'],
+        [3, 4,   'Low — rarely interested; need significant emotional investment first.'],
+        [5, 6,   'Moderate — healthy drive; responsive to the right context.'],
+        [7, 8,   'High — frequently interested; easy to arouse.'],
+        [9, 10,  'Insatiable — almost perpetually interested; difficult to satisfy.'],
+    ],
+    stamina: [
+        [1, 2,   'Very low — tires after minimal exertion.'],
+        [3, 4,   'Below average — good for one round, then needs rest.'],
+        [5, 6,   'Average — solid endurance, consistent performance.'],
+        [7, 8,   'High — can sustain extended sessions without flagging.'],
+        [9, 10,  'Limitless — seemingly inexhaustible; endurance is a defining trait.'],
+    ],
+    exhibitionism: [
+        [1, 2,   'Deeply private — public exposure is a source of shame or terror.'],
+        [3, 4,   'Private — prefers complete privacy; avoids any audience.'],
+        [5, 6,   'Neutral — comfortable if necessary, no active desire either way.'],
+        [7, 8,   'Exhibitionistic — enjoys being seen; thrill of observation.'],
+        [9, 10,  'Craves an audience — the presence of observers intensifies everything.'],
+    ],
 };
 
 function getSliderDesc(key, val) {
@@ -170,50 +329,81 @@ function getSliderDesc(key, val) {
 
 // ── Randomisation pools ───────────────────────────────────────────────────────
 const RAND = {
-    species:       ['Human','Elf','Half-Elf','Tiefling','Android','Vampire','Werewolf','Demon','Fae','Orc'],
-    gender:        ['Woman','Man','Non-binary','Genderfluid','Agender'],
-    pronouns:      ['she/her','he/him','they/them','she/they','he/they'],
-    hairLength:    ['short','medium','long','very-long'],
-    hairStyle:     ['straight','wavy','curly','braided','ponytail','messy','bun','undercut'],
-    bodyType:      ['slender','lean','average','athletic','muscular','curvy','full-figured'],
-    eyeColor:      ['dark brown','warm amber','ice blue','forest green','silver-grey','violet','gold','crimson'],
-    skinTone:      ['pale alabaster','warm beige','golden tan','rich brown','deep umber','cool ivory'],
-    hairColor:     ['raven black','dark brown','chestnut','auburn','warm blonde','platinum','silver','fire red','cobalt blue','deep violet'],
-    archetype:     ['noble-rogue','broken-hero','seducer','trickster','caretaker','tsundere','kuudere','rebel'],
-    alignment:     ['chaotic-good','neutral-good','chaotic-neutral','true-neutral','lawful-neutral'],
-    voiceTone:     ['husky','low','melodic','raspy','soft','gravelly'],
-    styleArchetype:['cyberpunk','gothic','streetwear','elegant','leather','casual','minimalist'],
+    species:        ['Human','Elf','Half-Elf','Tiefling','Android','Vampire','Werewolf','Demon','Fae','Orc'],
+    gender:         ['Woman','Man','Non-binary','Genderfluid','Agender'],
+    pronouns:       ['she/her','he/him','they/them','she/they','he/they'],
+    hairLength:     ['short','medium','long','very-long','buzzed','cropped'],
+    hairStyle:      ['straight','wavy','curly','braided','ponytail','messy','bun','undercut','locs','coiled'],
+    bodyType:       ['slender','lean','average','athletic','muscular','curvy','full-figured','lithe','petite'],
+    eyeColor:       ['dark brown','warm amber','ice blue','forest green','silver-grey','violet','gold','crimson','heterochromatic'],
+    skinTone:       ['pale alabaster','warm beige','golden tan','rich brown','deep umber','cool ivory','ashen','dusky'],
+    hairColor:      ['raven black','dark brown','chestnut','auburn','warm blonde','platinum','silver','fire red','cobalt blue','deep violet','rose gold','white'],
+    archetype:      ['noble-rogue','broken-hero','seducer','trickster','caretaker','tsundere','kuudere','rebel','yandere','loner','protector'],
+    alignment:      ['chaotic-good','neutral-good','chaotic-neutral','true-neutral','lawful-neutral','lawful-evil','chaotic-evil'],
+    voiceTone:      ['husky','low','melodic','raspy','soft','gravelly','whispery','velvety'],
+    styleArchetype: ['cyberpunk','gothic','streetwear','elegant','leather','casual','minimalist','dark-academia','techwear'],
+    attachmentStyle:['secure','anxious','avoidant','fearful'],
+    moodBaseline:   ['bleak','melancholic','stoic','neutral','warm','volatile','electric','sunny'],
+    narrativePOV:   ['first','third-limited'],
+    proseStyle:     ['literary','cinematic','punchy','lyrical','minimalist','descriptive'],
+    zodiac:         ['aries','taurus','gemini','cancer','leo','virgo','libra','scorpio','sagittarius','capricorn','aquarius','pisces'],
 };
 
 function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
 function randomiseFields(targetObj) {
     const r = {};
+    // Core identity
     r.species   = pick(RAND.species);
     r.gender    = pick(RAND.gender);
     r.pronouns  = pick(RAND.pronouns);
     r.age       = String(18 + Math.floor(Math.random() * 42));
+    r.zodiac    = pick(RAND.zodiac);
+    // Appearance
     r.hairLength  = pick(RAND.hairLength);
     r.hairStyle   = pick(RAND.hairStyle);
     r.bodyType    = pick(RAND.bodyType);
     r.eyeColor    = pick(RAND.eyeColor);
     r.skinTone    = pick(RAND.skinTone);
     r.hairColor   = pick(RAND.hairColor);
-    r.archetype   = pick(RAND.archetype);
-    r.alignment   = pick(RAND.alignment);
-    r.voiceTone   = pick(RAND.voiceTone);
+    r.muscleTone  = 2 + Math.floor(Math.random() * 7);
+    r.bodyFat     = 2 + Math.floor(Math.random() * 7);
+    // Style
     r.styleArchetype = pick(RAND.styleArchetype);
-    r.dominanceLevel    = Math.floor(Math.random() * 100);
-    r.explicitnessLevel = Math.floor(Math.random() * 100);
-    r.romanticismLevel  = Math.floor(Math.random() * 100);
-    r.violenceLevel     = Math.floor(Math.random() * 60);
-    r.empathyLevel      = 20 + Math.floor(Math.random() * 60);
-    r.playfulnessLevel  = 20 + Math.floor(Math.random() * 60);
-    r.obedienceLevel    = 20 + Math.floor(Math.random() * 60);
-    r.muscleTone        = 2 + Math.floor(Math.random() * 7);
-    r.bodyFat           = 2 + Math.floor(Math.random() * 7);
-    r.verbosity         = 3 + Math.floor(Math.random() * 6);
-    r.formality         = 2 + Math.floor(Math.random() * 8);
+    // Voice
+    r.voiceTone   = pick(RAND.voiceTone);
+    r.verbosity   = 3 + Math.floor(Math.random() * 6);
+    r.formality   = 2 + Math.floor(Math.random() * 8);
+    r.speechPace  = 3 + Math.floor(Math.random() * 6);
+    // Personality
+    r.archetype       = pick(RAND.archetype);
+    r.alignment       = pick(RAND.alignment);
+    r.attachmentStyle = pick(RAND.attachmentStyle);
+    r.moodBaseline    = pick(RAND.moodBaseline);
+    // Behavior dials
+    r.dominanceLevel     = Math.floor(Math.random() * 100);
+    r.explicitnessLevel  = Math.floor(Math.random() * 100);
+    r.romanticismLevel   = Math.floor(Math.random() * 100);
+    r.violenceLevel      = Math.floor(Math.random() * 60);
+    r.empathyLevel       = 20 + Math.floor(Math.random() * 60);
+    r.playfulnessLevel   = 20 + Math.floor(Math.random() * 60);
+    r.obedienceLevel     = 20 + Math.floor(Math.random() * 60);
+    r.jealousyLevel      = 10 + Math.floor(Math.random() * 60);
+    r.humorLevel         = 20 + Math.floor(Math.random() * 60);
+    r.sadismLevel        = Math.floor(Math.random() * 40);
+    r.sociabilityLevel   = 20 + Math.floor(Math.random() * 60);
+    r.curiosityLevel     = 30 + Math.floor(Math.random() * 60);
+    r.impulsivityLevel   = 15 + Math.floor(Math.random() * 60);
+    r.anxietyLevel       = 10 + Math.floor(Math.random() * 50);
+    r.stubbornness       = 20 + Math.floor(Math.random() * 60);
+    r.loyaltyLevel       = 40 + Math.floor(Math.random() * 50);
+    r.protectivenessLevel = 20 + Math.floor(Math.random() * 60);
+    r.selfEsteemLevel    = 20 + Math.floor(Math.random() * 70);
+    r.deceptivenessLevel = Math.floor(Math.random() * 50);
+    r.narcissismLevel    = 5 + Math.floor(Math.random() * 50);
+    // AI
+    r.narrativePOV = pick(RAND.narrativePOV);
+    r.proseStyle   = pick(RAND.proseStyle);
     return r;
 }
 

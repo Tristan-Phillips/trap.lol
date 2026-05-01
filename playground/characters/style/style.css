@@ -351,6 +351,8 @@ html, body.underdark-page {
 .arena__thread {
     flex: 1;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
     padding: var(--space-lg) var(--space-md);
     display: flex;
     flex-direction: column;
@@ -583,7 +585,8 @@ html, body.underdark-page {
     background: transparent;
     border: none;
     color: var(--text-main);
-    font-size: var(--text-base);
+    /* 16px minimum prevents iOS auto-zoom on focus */
+    font-size: max(var(--text-base), 16px);
     padding: 6px 4px;
     resize: none;
     outline: none;
@@ -597,11 +600,12 @@ html, body.underdark-page {
     color: #fff;
     border: none;
     border-radius: 8px;
-    width: 36px; height: 36px;
+    width: 44px; height: 44px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
+    touch-action: manipulation;
     transition: var(--transition);
     flex-shrink: 0;
 }
@@ -1048,6 +1052,7 @@ input:checked + .toggle-switch__slider::before        { transform: translateX(16
     border-radius: 6px;
     font-weight: 700;
     cursor: pointer;
+    touch-action: manipulation;
     transition: var(--transition);
     display: inline-flex;
     align-items: center;
@@ -1092,7 +1097,11 @@ input:checked + .toggle-switch__slider::before        { transform: translateX(16
     border: none;
     color: var(--text-muted);
     cursor: pointer;
+    touch-action: manipulation;
     padding: 6px;
+    /* minimum 44×44 tap target */
+    min-width: 44px;
+    min-height: 44px;
     border-radius: 4px;
     transition: var(--transition);
     display: inline-flex;
@@ -1202,6 +1211,8 @@ body.roster-collapsed #roster-reveal-tab {
     background: #06030c;
     overflow: hidden;
     z-index: 1;
+    /* safe area for notched phones */
+    padding-bottom: env(safe-area-inset-bottom);
 }
 
 /* ── Top Bar ── */
@@ -1272,6 +1283,8 @@ body.roster-collapsed #roster-reveal-tab {
 .sims-preview-panel__inner {
     flex: 1;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
     scrollbar-width: thin;
     scrollbar-color: var(--glass-border-mute) transparent;
     padding: var(--space-md) var(--space-sm);
@@ -1462,6 +1475,8 @@ body.roster-collapsed #roster-reveal-tab {
     background: rgba(0,0,0,0.4);
     border-right: 1px solid var(--glass-border-mute);
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
     scrollbar-width: none;
 }
 .sims-category-nav::-webkit-scrollbar { display: none; }
@@ -1478,6 +1493,7 @@ body.roster-collapsed #roster-reveal-tab {
     border-radius: 8px;
     color: var(--text-muted);
     cursor: pointer;
+    touch-action: manipulation;
     transition: var(--transition);
     width: 100%;
     font-family: var(--font-mono);
@@ -1486,6 +1502,9 @@ body.roster-collapsed #roster-reveal-tab {
     letter-spacing: 0.05em;
     white-space: nowrap;
     overflow: hidden;
+    /* ensure tap target is always ≥ 44px tall */
+    min-height: 44px;
+    justify-content: center;
 }
 .sims-cat-btn svg {
     width: 16px; height: 16px;
@@ -1525,6 +1544,8 @@ body.roster-collapsed #roster-reveal-tab {
 .sims-detail-panel {
     flex: 1;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
     scrollbar-width: thin;
     scrollbar-color: var(--glass-border-mute) transparent;
     padding: var(--space-lg);
@@ -1562,6 +1583,18 @@ body.roster-collapsed #roster-reveal-tab {
     margin: -10px 0 var(--space-md);
     padding-left: var(--space-sm);
     border-left: 2px solid rgba(var(--accent-rgb), 0.35);
+}
+.sims-section-divider {
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--theme-accent);
+    opacity: 0.6;
+    margin: var(--space-sm) 0 0;
+    padding-bottom: 4px;
+    border-bottom: 1px solid rgba(var(--accent-rgb), 0.15);
+    grid-column: 1 / -1;
 }
 
 /* ── Fields layout ── */
@@ -1640,11 +1673,16 @@ body.roster-collapsed #roster-reveal-tab {
     color: var(--text-muted);
     font-size: 0.68rem;
     cursor: pointer;
+    touch-action: manipulation;
     transition: var(--transition);
     white-space: nowrap;
     font-family: var(--font-mono);
     letter-spacing: 0.04em;
     line-height: 1.4;
+    /* min touch target via padding extension — visually same, tap zone bigger */
+    min-height: 30px;
+    display: inline-flex;
+    align-items: center;
 }
 .sims-chip:hover {
     color: var(--text-main);
@@ -1680,6 +1718,9 @@ body.roster-collapsed #roster-reveal-tab {
     width: 100%;
     background: transparent;
     cursor: pointer;
+    touch-action: pan-x;
+    /* tall transparent hit area so thumb is easy to grab on mobile */
+    height: 32px;
 }
 .sims-range:focus { outline: none; }
 .sims-range::-webkit-slider-runnable-track {
@@ -1751,9 +1792,11 @@ body.roster-collapsed #roster-reveal-tab {
     letter-spacing: 0.06em;
     font-weight: 700;
     cursor: pointer;
+    touch-action: manipulation;
     transition: var(--transition);
     border: none;
     white-space: nowrap;
+    min-height: 38px;
 }
 .sims-btn svg { width: 13px; height: 13px; flex-shrink: 0; }
 .sims-btn--ghost {
@@ -1813,46 +1856,169 @@ body.roster-collapsed #roster-reveal-tab {
 /* ═══════════════════════════════════════════════════════════════════════════
    SIMS RESPONSIVE
    ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Tablet: hide preview, collapse nav to icon-only rail ── */
 @media (max-width: 900px) {
     .sims-editor__body {
-        grid-template-columns: 0 42px 1fr;
+        grid-template-columns: 0 50px 1fr;
     }
     .sims-preview-panel { display: none; }
-    .sims-category-nav  { width: 42px; }
+    .sims-category-nav  { width: 50px; padding: var(--space-sm) 6px; }
     .sims-cat-btn span  { display: none; }
-    .sims-cat-btn       { padding: 10px 4px; }
+    .sims-cat-btn       { padding: 12px 6px; min-height: 48px; }
+    .sims-cat-btn svg   { width: 18px; height: 18px; }
 }
 
+/* ── Mobile: horizontal tab bar, full-width detail panel ── */
 @media (max-width: 600px) {
+    /* Body becomes a column: tab bar on top, detail panel below */
     .sims-editor__body {
         grid-template-columns: 1fr;
         grid-template-rows: auto 1fr;
     }
+
+    /* Horizontal scrolling tab bar */
     .sims-category-nav {
         flex-direction: row;
         width: 100%;
         overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-x: contain;
         border-right: none;
-        border-bottom: 1px solid var(--glass-border-mute);
-        padding: 4px var(--space-sm);
+        border-bottom: 2px solid rgba(var(--accent-rgb), 0.15);
+        padding: 0 var(--space-sm);
+        gap: 0;
+        /* scroll snap for satisfying swipe */
+        scroll-snap-type: x mandatory;
+        /* scroll padding so active item isn't hidden under edges */
+        scroll-padding: 0 var(--space-sm);
     }
     .sims-cat-btn {
-        flex-direction: row;
-        white-space: nowrap;
-        padding: 6px 10px;
+        flex-direction: column;
         flex-shrink: 0;
+        padding: 8px 12px;
+        min-height: 54px;
+        min-width: 56px;
+        border-radius: 0;
+        font-size: 0.48rem;
+        scroll-snap-align: start;
+        gap: 4px;
     }
-    .sims-cat-btn span { display: inline; }
+    /* show labels in horizontal mode */
+    .sims-cat-btn span { display: inline; font-size: 0.48rem; }
+    .sims-cat-btn svg  { width: 17px; height: 17px; }
+    /* active indicator: bottom border line */
+    .sims-cat-btn.active {
+        background: rgba(var(--accent-rgb), 0.1);
+    }
     .sims-cat-btn.active::before {
-        top: auto; bottom: 0; left: 20%; right: 20%;
+        top: auto; bottom: -2px;
+        left: 15%; right: 15%;
         width: auto; height: 2px;
         border-radius: 2px 2px 0 0;
+        box-shadow: 0 0 8px var(--theme-glow);
     }
+
+    /* Detail panel gets full width and extra bottom padding for footer */
+    .sims-detail-panel {
+        padding: var(--space-md);
+    }
+
+    /* Fields always single column */
     .sims-field-row {
         grid-template-columns: 1fr;
     }
+
+    /* Topbar: hide title text, keep icon + badge + actions */
     .sims-editor__topbar-title { display: none; }
+    .sims-editor__topbar {
+        padding: 0 var(--space-sm);
+        height: 50px;
+    }
+    /* Topbar action buttons: show icons only, hide text labels */
+    .sims-topbar-btn-label { display: none; }
+
+    /* Chips: slightly larger tap target on mobile */
+    .sims-chip {
+        padding: 6px 12px;
+        font-size: 0.72rem;
+        min-height: 34px;
+    }
+
+    /* Sliders: bigger thumb on mobile */
+    .sims-range::-webkit-slider-thumb {
+        height: 22px; width: 22px;
+        margin-top: -9px;
+    }
+    .sims-range--lg::-webkit-slider-thumb {
+        height: 24px; width: 24px;
+        margin-top: -10px;
+    }
+    .sims-range::-moz-range-thumb {
+        height: 22px; width: 22px;
+    }
+
+    /* Inputs: 16px minimum to prevent iOS auto-zoom on focus */
+    .sims-input,
+    .sims-select,
+    .sims-textarea {
+        font-size: 16px;
+        padding: 10px 12px;
+    }
+    .sims-textarea--code { font-size: 13px; }
+
+    /* Footer: stack buttons full-width */
+    .sims-editor__footer {
+        flex-direction: column;
+        padding: var(--space-sm) var(--space-md);
+        padding-bottom: calc(var(--space-sm) + env(safe-area-inset-bottom));
+        gap: var(--space-sm);
+    }
+    .sims-editor__footer-right {
+        width: 100%;
+        gap: var(--space-sm);
+    }
+    .sims-editor__footer-right .sims-btn {
+        flex: 1;
+        justify-content: center;
+        padding: 11px var(--space-md);
+        font-size: 0.72rem;
+    }
+    .sims-save-status {
+        text-align: center;
+        font-size: 0.65rem;
+    }
+
+    /* Section dividers: more breathing room */
+    .sims-section-divider {
+        margin: var(--space-md) 0 var(--space-xs);
+        font-size: 0.6rem;
+    }
+
+    /* Panel header slightly smaller */
+    .sims-panel__header {
+        font-size: 0.85rem;
+        margin-bottom: var(--space-md);
+    }
 }
+
+/* ── Small phones (≤ 400px): tighten further ── */
+@media (max-width: 400px) {
+    .sims-cat-btn {
+        min-width: 48px;
+        padding: 8px 8px;
+    }
+    .sims-cat-btn span { display: none; }
+    .sims-cat-btn {
+        min-height: 48px;
+        font-size: 0;   /* icon only on very small screens */
+    }
+    .sims-cat-btn svg { width: 19px; height: 19px; }
+    .sims-detail-panel { padding: var(--space-sm); }
+    .sims-chip { font-size: 0.68rem; }
+}
+
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* required field marker */
@@ -2009,14 +2175,15 @@ body.roster-collapsed #roster-reveal-tab {
         left: 0; top: 0; bottom: 0;
         z-index: 50;
         box-shadow: 4px 0 24px rgba(0,0,0,0.5);
-        width: 300px !important;  /* always full-width when visible */
+        /* cap at 90vw so they don't overflow tiny phones */
+        width: min(300px, 90vw) !important;
     }
     .sidebar--right {
         position: absolute;
         right: 0; top: 0; bottom: 0;
         z-index: 50;
         box-shadow: -4px 0 24px rgba(0,0,0,0.5);
-        width: 340px !important;
+        width: min(340px, 92vw) !important;
     }
     .sidebar--left[data-collapsed="true"] {
         transform: translateX(-100%);
@@ -2040,6 +2207,12 @@ body.roster-collapsed #roster-reveal-tab {
     }
     .sidebar-mobile-toggle { display: flex; }
     .config-grid { grid-template-columns: 1fr; }
+
+    /* Momentum scrolling on sidebar content */
+    .sidebar__content {
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+    }
 }
 
 @media (max-width: 720px) {
