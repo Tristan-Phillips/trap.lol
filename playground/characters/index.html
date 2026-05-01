@@ -78,7 +78,13 @@
             <div id="active-bots" class="arena__active-bots">
                 <!-- Bot avatars populated by JS -->
             </div>
+            <button id="add-char-btn" class="btn-icon btn-icon--add-char" title="Add Character to Thread">
+                <i data-lucide="user-plus"></i>
+            </button>
             <div class="arena__actions">
+                <button id="focus-mode-btn" class="btn-icon" title="Immersive Mode  [ F ]" aria-label="Toggle Immersive Mode">
+                    <i data-lucide="book-open"></i>
+                </button>
                 <button id="search-toggle" class="btn-icon" title="Search Thread  [ / ]">
                     <i data-lucide="search"></i>
                 </button>
@@ -115,13 +121,23 @@
 
         <div id="message-thread" class="arena__thread" aria-live="polite" aria-atomic="false">
             <div class="arena__welcome" id="arena-welcome">
-                <div class="welcome-box">
-                    <i data-lucide="zap" class="welcome-box__icon"></i>
-                    <h2>Neural Interface Established</h2>
-                    <p>Select a fragment from the roster or create one to begin synchronization.</p>
-                    <button id="welcome-create" class="btn btn--accent" style="margin-top: 1rem;">
-                        <i data-lucide="wand-2"></i> Create Character
-                    </button>
+                <div class="welcome-screen">
+                    <div class="welcome-screen__header">
+                        <i data-lucide="zap" class="welcome-screen__icon"></i>
+                        <h2>Begin Synchronization</h2>
+                        <p>Choose a fragment to inhabit this thread.</p>
+                    </div>
+                    <div id="welcome-char-grid" class="welcome-char-grid">
+                        <!-- Populated by JS -->
+                    </div>
+                    <div class="welcome-screen__actions">
+                        <button id="welcome-create" class="btn btn--ghost">
+                            <i data-lucide="wand-2"></i> Create Character
+                        </button>
+                        <button id="welcome-import" class="btn btn--ghost">
+                            <i data-lucide="upload"></i> Import Card
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -190,9 +206,18 @@
                     <div id="profile-card" class="profile-view__card">
                         <div class="profile-view__empty">No character selected</div>
                     </div>
+                    <div id="gallery-strip" class="gallery-strip" hidden>
+                        <!-- Populated by JS when character has gallery images -->
+                    </div>
                     <div id="profile-actions" class="profile-actions" hidden>
+                        <button id="btn-add-to-thread" class="btn btn--accent btn--full" hidden>
+                            <i data-lucide="message-circle-plus"></i> Add to Thread
+                        </button>
                         <button id="btn-sims-edit"   class="btn btn--accent btn--full">
                             <i data-lucide="sliders-horizontal"></i> Edit in Sims Editor
+                        </button>
+                        <button id="btn-gallery-add" class="btn btn--ghost btn--full">
+                            <i data-lucide="images"></i> Manage Gallery
                         </button>
                         <button id="btn-edit-char"   class="btn btn--ghost btn--full">
                             <i data-lucide="pencil"></i> Edit Card (Basic)
@@ -419,6 +444,43 @@
                         </div>
                     </div>
 
+                    <!-- Chat Background -->
+                    <div class="config-section">
+                        <h4 class="config-section__title">
+                            <i data-lucide="image"></i> Chat Background
+                        </h4>
+                        <div class="bg-preset-grid" id="bg-preset-grid">
+                            <button class="bg-preset bg-preset--none active" data-bg="" title="None"></button>
+                            <button class="bg-preset" data-bg="ember"    title="Ember"></button>
+                            <button class="bg-preset" data-bg="abyss"    title="Abyss"></button>
+                            <button class="bg-preset" data-bg="void"     title="Void"></button>
+                            <button class="bg-preset" data-bg="neon"     title="Neon City"></button>
+                            <button class="bg-preset" data-bg="sakura"   title="Sakura"></button>
+                            <button class="bg-preset" data-bg="deep"     title="Deep Sea"></button>
+                            <button class="bg-preset" data-bg="ash"      title="Ash"></button>
+                        </div>
+                        <div class="config-group" style="margin-top:var(--space-sm)">
+                            <label>Custom Image URL</label>
+                            <div style="display:flex;gap:4px;">
+                                <input type="text" id="bg-url-input" class="control-input"
+                                    placeholder="https://... or leave blank">
+                                <button id="bg-url-apply" class="btn btn--accent btn--sm">Apply</button>
+                            </div>
+                        </div>
+                        <div class="config-group">
+                            <label>Blur <span id="bg-blur-val" class="badge">45</span>px</label>
+                            <input type="range" id="bg-blur-input" min="0" max="80" step="1" value="45">
+                        </div>
+                        <div class="config-group">
+                            <label>Brightness <span id="bg-bright-val" class="badge">30</span>%</label>
+                            <input type="range" id="bg-bright-input" min="5" max="80" step="1" value="30">
+                        </div>
+                        <div class="config-group">
+                            <label>Opacity <span id="bg-opacity-val" class="badge">50</span>%</label>
+                            <input type="range" id="bg-opacity-input" min="0" max="100" step="1" value="50">
+                        </div>
+                    </div>
+
                     <!-- Narrative & Behavior Flags -->
                     <div class="config-section">
                         <h4 class="config-section__title">
@@ -605,17 +667,19 @@
             <div id="tab-persona" class="tab-panel" role="tabpanel">
                 <div class="persona-view">
                     <p class="persona-view__hint">
-                        These override fields anchor your active character's appearance and behavior across the entire conversation for consistency.
+                        Override fields injected per-character — anchors appearance, voice, and behavior across all sessions.
                     </p>
 
                     <div id="persona-char-select-group" class="config-group">
-                        <label>Anchoring Character</label>
+                        <label>Character</label>
                         <select id="persona-char-select" class="control-select">
                             <option value="">— Select character —</option>
                         </select>
                     </div>
 
-                    <div id="persona-fields" class="persona-fields">
+                    <div id="persona-char-header" class="persona-char-header" hidden></div>
+
+                    <div id="persona-fields" class="persona-fields" hidden>
 
                         <div class="config-section">
                             <h4 class="config-section__title"><i data-lucide="brain"></i> Persistent Memory</h4>
@@ -1091,6 +1155,9 @@
 </div>
 
 
+<!-- Toast notifications -->
+<div id="toast-container" class="toast-container" aria-live="polite"></div>
+
 <!-- Reaction Picker (attached contextually to messages) -->
 <div id="reaction-picker" class="reaction-picker" hidden>
     <button class="reaction-picker__btn" data-emoji="❤️">❤️</button>
@@ -1101,6 +1168,86 @@
     <button class="reaction-picker__btn" data-emoji="💔">💔</button>
     <button class="reaction-picker__btn" data-emoji="⚔️">⚔️</button>
     <button class="reaction-picker__btn" data-emoji="✨">✨</button>
+</div>
+
+<!-- Character Picker Modal -->
+<div id="modal-char-picker" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="char-picker-title">
+    <div class="modal__backdrop"></div>
+    <div class="modal__box modal__box--picker">
+        <header class="modal__header">
+            <h2 id="char-picker-title" class="modal__title">
+                <i data-lucide="user-plus"></i> Add Character to Thread
+            </h2>
+            <button class="modal__close" id="char-picker-close" aria-label="Close">
+                <i data-lucide="x"></i>
+            </button>
+        </header>
+        <div class="modal__body picker-body">
+            <div class="picker-search">
+                <i data-lucide="search"></i>
+                <input type="text" id="picker-search-input" class="picker-search__input"
+                    placeholder="Filter characters..." autocomplete="off" spellcheck="false">
+            </div>
+            <div id="picker-char-grid" class="picker-char-grid">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Gallery Modal -->
+<div id="modal-gallery" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="gallery-title">
+    <div class="modal__backdrop"></div>
+    <div class="modal__box modal__box--gallery">
+        <header class="modal__header">
+            <h2 id="gallery-title" class="modal__title">
+                <i data-lucide="images"></i>
+                <span id="gallery-char-name">Gallery</span>
+                <span id="gallery-count" class="badge" style="margin-left:6px;font-size:.65rem;"></span>
+            </h2>
+            <button class="modal__close" id="gallery-close" aria-label="Close">
+                <i data-lucide="x"></i>
+            </button>
+        </header>
+        <div class="modal__body gallery-modal-body">
+            <!-- Image grid -->
+            <div id="gallery-grid" class="gallery-grid">
+                <!-- Populated by JS -->
+            </div>
+            <!-- Add controls -->
+            <div class="gallery-add-bar">
+                <button id="gallery-add-file" class="btn btn--accent btn--sm">
+                    <i data-lucide="upload"></i> Upload
+                </button>
+                <div class="gallery-url-row">
+                    <input type="text" id="gallery-url-input" class="control-input control-input--sm"
+                        placeholder="Paste image URL…" autocomplete="off" spellcheck="false">
+                    <button id="gallery-url-add" class="btn btn--ghost btn--sm">
+                        <i data-lucide="link"></i> Add URL
+                    </button>
+                </div>
+                <input type="file" id="gallery-file-input" accept="image/*" multiple hidden>
+            </div>
+            <p class="gallery-hint">Drag images to reorder · Click to open lightbox · Hover for actions</p>
+        </div>
+    </div>
+</div>
+
+<!-- Lightbox -->
+<div id="lightbox" class="lightbox" hidden role="dialog" aria-modal="true">
+    <div class="lightbox__backdrop"></div>
+    <button class="lightbox__nav lightbox__nav--prev" id="lb-prev" aria-label="Previous"><i data-lucide="chevron-left"></i></button>
+    <div class="lightbox__stage">
+        <img id="lb-img" src="" alt="Gallery image" class="lightbox__img">
+        <div id="lb-caption" class="lightbox__caption"></div>
+    </div>
+    <button class="lightbox__nav lightbox__nav--next" id="lb-next" aria-label="Next"><i data-lucide="chevron-right"></i></button>
+    <button class="lightbox__close" id="lb-close" aria-label="Close"><i data-lucide="x"></i></button>
+    <div class="lightbox__toolbar">
+        <button class="lightbox__tool" id="lb-set-avatar" title="Set as avatar"><i data-lucide="image"></i> Set Avatar</button>
+        <button class="lightbox__tool lightbox__tool--danger" id="lb-remove" title="Remove from gallery"><i data-lucide="trash-2"></i> Remove</button>
+    </div>
+    <div class="lightbox__counter"><span id="lb-idx">1</span> / <span id="lb-total">1</span></div>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════

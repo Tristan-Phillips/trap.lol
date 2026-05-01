@@ -14,8 +14,15 @@
       "tagline": "She used to be Powder. Powder didn't survive.",
       "card_path": "data/cards/jinx.json",
       "avatar_path": null,
-      "tags": ["Arcane", "Female", "Chaotic", "Trauma", "Inventor", "Zaun"]
+      "tags": ["Arcane", "Female", "Chaotic", "Trauma", "Inventor", "Zaun"],
+      "lorebook_path": "data/lorebooks/arcane-zaun.json"
     }
   ],
-  "lorebooks": []
+  "lorebooks": [
+    {
+      "id": "lorebook-arcane-zaun",
+      "name": "Arcane — Zaun & Piltover World Lore",
+      "lore_path": "data/lorebooks/arcane-zaun.json"
+    }
+  ]
 }

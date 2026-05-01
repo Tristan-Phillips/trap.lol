@@ -66,6 +66,24 @@ function lucideRefresh(_node) {
     if (window.lucide) window.lucide.createIcons();
 }
 
+// ── Toast notifications ───────────────────────────────────────────────────────
+function showToast(message, type = 'info', duration = 3000) {
+    const $c = qs('#toast-container');
+    if (!$c) return;
+    const $t = document.createElement('div');
+    $t.className = `toast toast--${type}`;
+    const icons = { info: 'check-circle', error: 'alert-circle', warn: 'alert-triangle' };
+    $t.innerHTML = `<i data-lucide="${icons[type] || 'check-circle'}"></i><span>${esc(message)}</span>`;
+    $c.appendChild($t);
+    if (window.lucide) window.lucide.createIcons({ nodes: [$t] });
+    // Animate in
+    requestAnimationFrame(() => $t.classList.add('toast--visible'));
+    setTimeout(() => {
+        $t.classList.remove('toast--visible');
+        $t.addEventListener('transitionend', () => $t.remove(), { once: true });
+    }, duration);
+}
+
 // ── Avatar resolver cache ─────────────────────────────────────────────────────
 const _avatarCache = {};
 async function getAvatarUrl(charId, stored) {
@@ -255,52 +273,128 @@ export function initUI() {
     }, 200));
 
     function renderRoster() {
-        const chars = state.characters.filter(c => {
-            if (!searchQuery) return true;
-            return c.name.toLowerCase().includes(searchQuery)
-                || (c.tagline || '').toLowerCase().includes(searchQuery)
-                || (c.tags || []).some(t => t.toLowerCase().includes(searchQuery));
+        if (!state.characters.length) {
+            $charList.innerHTML = `
+                <div class="roster-empty">
+                    <i data-lucide="ghost"></i>
+                    <span>No fragments found.<br>Import or create one below.</span>
+                </div>`;
+            lucideRefresh($charList);
+            return;
+        }
+
+        const q = searchQuery.toLowerCase().trim();
+        const filtered = state.characters.filter(c => {
+            if (!q) return true;
+            return c.name.toLowerCase().includes(q)
+                || (c.tagline || '').toLowerCase().includes(q)
+                || (c.tags || []).some(t => t.toLowerCase().includes(q));
         });
 
-        if (!state.characters.length) {
-            $charList.innerHTML = '<div class="roster-empty"><i data-lucide="ghost"></i><span>No fragments found.<br>Import or create one.</span></div>';
+        if (!filtered.length) {
+            $charList.innerHTML = `
+                <div class="roster-empty">
+                    <i data-lucide="search-x"></i>
+                    <span>No matches for "${esc(q)}"</span>
+                    <button class="btn btn--ghost btn--sm" id="roster-clear-search">Clear</button>
+                </div>`;
+            qs('#roster-clear-search')?.addEventListener('click', () => {
+                searchQuery = '';
+                $charSearch.value = '';
+                renderRoster();
+            });
             lucideRefresh($charList);
             return;
         }
 
-        if (!chars.length) {
-            $charList.innerHTML = '<div class="roster-empty"><i data-lucide="search-x"></i><span>No matches</span></div>';
-            lucideRefresh($charList);
-            return;
-        }
+        const inThread  = filtered.filter(c => state.activeBotIds.includes(c.id));
+        const available = filtered.filter(c => !state.activeBotIds.includes(c.id));
 
-        $charList.innerHTML = chars.map(c => {
-            const active = state.activeBotIds.includes(c.id);
-            const rawAvatar = c.avatar_path || state.loadedCharacters[c.id]?.avatar || null;
-            const resolvedAvatar = getAvatarUrlSync(c.id, rawAvatar);
-            const avatar = resolvedAvatar ? `url(${resolvedAvatar})` : 'none';
+        const makeCard = (c, active) => {
+            const rawAv = c.avatar_path || state.loadedCharacters[c.id]?.avatar || null;
+            const av    = getAvatarUrlSync(c.id, rawAv);
+            const isActivePrimary = c.id === state.activeBotId;
             return `
-            <div class="character-card ${active ? 'character-card--active' : ''}" data-id="${esc(c.id)}" title="${esc(c.name)}">
-                <div class="character-card__avatar" style="background-image:${avatar}">
-                    ${!c.avatar_path && !state.loadedCharacters[c.id]?.avatar ? `<i data-lucide="user"></i>` : ''}
+            <div class="character-card ${active ? 'character-card--active' : ''} ${isActivePrimary ? 'character-card--primary' : ''}"
+                 data-id="${esc(c.id)}" title="${esc(c.name)}${c.tagline ? ' — ' + esc(c.tagline) : ''}">
+                <div class="character-card__avatar" style="background-image:${av ? `url(${av})` : 'none'}">
+                    ${!av ? `<i data-lucide="user"></i>` : ''}
+                    ${active ? `<span class="character-card__in-thread-badge" title="In thread"><i data-lucide="message-circle"></i></span>` : ''}
                 </div>
                 <div class="character-card__info">
                     <span class="character-card__name">${esc(c.name)}</span>
                     <span class="character-card__tagline">${esc(c.tagline || '')}</span>
-                    ${(c.tags || []).slice(0, 3).map(t => `<span class="char-tag-chip" data-tag-filter="${esc(t)}">${esc(t)}</span>`).join('')}
+                    <div class="character-card__tags">
+                        ${(c.tags || []).slice(0, 3).map(t => `<span class="char-tag-chip" data-tag-filter="${esc(t)}">${esc(t)}</span>`).join('')}
+                    </div>
                 </div>
-                ${active ? '<span class="character-card__active-pip"></span>' : ''}
+                <div class="character-card__actions">
+                    ${active
+                        ? `<button class="character-card__btn character-card__btn--remove" data-remove="${esc(c.id)}" title="Remove from thread"><i data-lucide="log-out"></i></button>`
+                        : `<button class="character-card__btn character-card__btn--add" data-add="${esc(c.id)}" title="Add to thread"><i data-lucide="plus"></i></button>`
+                    }
+                    <button class="character-card__btn character-card__btn--edit" data-edit="${esc(c.id)}" title="Open Sims Editor  [E]"><i data-lucide="sliders-horizontal"></i></button>
+                </div>
             </div>`;
-        }).join('');
+        };
 
+        let html = '';
+        if (inThread.length) {
+            html += `<div class="roster-section-label"><i data-lucide="message-circle"></i> In Thread <span class="roster-section-count">${inThread.length}</span></div>`;
+            html += inThread.map(c => makeCard(c, true)).join('');
+        }
+        if (available.length) {
+            html += `<div class="roster-section-label ${inThread.length ? 'roster-section-label--sep' : ''}"><i data-lucide="users"></i> Available <span class="roster-section-count">${available.length}</span></div>`;
+            html += available.map(c => makeCard(c, false)).join('');
+        }
+        $charList.innerHTML = html;
+
+        // Click card body → select/profile
         qsa('.character-card', $charList).forEach($card => {
-            $card.addEventListener('click', () => selectCharacter($card.dataset.id));
-            $card.addEventListener('dblclick', () => {
-                const id = $card.dataset.id;
-                selectCharacter(id).then(() => simsEditor?.open(id));
+            $card.addEventListener('click', e => {
+                if (e.target.closest('.character-card__actions')) return;
+                selectCharacter($card.dataset.id);
             });
         });
 
+        // Add to thread
+        qsa('[data-add]', $charList).forEach(btn => {
+            btn.addEventListener('click', e => {
+                e.stopPropagation();
+                addCharacterToThread(btn.dataset.add);
+            });
+        });
+
+        // Remove from thread
+        qsa('[data-remove]', $charList).forEach(btn => {
+            btn.addEventListener('click', async e => {
+                e.stopPropagation();
+                const removedId = btn.dataset.remove;
+                const removedMeta = state.characters.find(c => c.id === removedId);
+                removeBotFromSession(removedId);
+                renderActiveBots();
+                renderRoster();
+                renderWelcomeGrid();
+                renderPersonaCharSelect();
+                showToast(`${removedMeta?.name || 'Character'} removed from thread`);
+                // If removed was the profile-displayed char, clear profile
+                if (removedId === state.activeBotId || !state.activeBotIds.length) {
+                    qs('#profile-card').innerHTML = '<div class="profile-view__empty">No character selected</div>';
+                    qs('#profile-actions').hidden = true;
+                    if (qs('#gallery-strip')) qs('#gallery-strip').hidden = true;
+                }
+            });
+        });
+
+        // Edit (Sims Editor)
+        qsa('[data-edit]', $charList).forEach(btn => {
+            btn.addEventListener('click', e => {
+                e.stopPropagation();
+                simsEditor?.open(btn.dataset.edit);
+            });
+        });
+
+        // Tag filter chips
         qsa('[data-tag-filter]', $charList).forEach(chip => {
             chip.addEventListener('click', e => {
                 e.stopPropagation();
@@ -312,58 +406,117 @@ export function initUI() {
 
         lucideRefresh($charList);
 
-        // Async: resolve any IDB avatars and patch the DOM once loaded
-        chars.forEach(async c => {
-            const rawAvatar = c.avatar_path || state.loadedCharacters[c.id]?.avatar || null;
-            if (rawAvatar?.startsWith('idb:')) {
-                const url = await getAvatarUrl(c.id, rawAvatar);
+        // Async: resolve IDB avatars
+        filtered.forEach(async c => {
+            const rawAv = c.avatar_path || state.loadedCharacters[c.id]?.avatar || null;
+            if (rawAv?.startsWith('idb:')) {
+                const url = await getAvatarUrl(c.id, rawAv);
                 if (url) {
-                    const $card = qs(`.character-card[data-id="${c.id}"] .character-card__avatar`, $charList);
-                    if ($card) $card.style.backgroundImage = `url(${url})`;
+                    const $av = qs(`.character-card[data-id="${c.id}"] .character-card__avatar`, $charList);
+                    if ($av) $av.style.backgroundImage = `url(${url})`;
                 }
             }
         });
     }
 
-    // ── Character Selection ───────────────────────────────────────────────────
-    async function selectCharacter(id) {
+    // ── Character Loading (load card data + profile, no thread side-effects) ───
+    async function loadCharacterCard(id) {
         const meta = state.characters.find(c => c.id === id);
-        if (!meta) return;
-
-        // Load card data if not cached
+        if (!meta) return null;
         if (!state.loadedCharacters[id]) {
             if (meta.card_path) {
                 try {
-                    const res  = await fetch(meta.card_path);
-                    const raw  = await res.json();
+                    const res = await fetch(meta.card_path);
+                    const raw = await res.json();
                     state.loadedCharacters[id] = normalizeData(raw);
                     saveState();
                 } catch (e) {
                     console.error('[underdark] Failed to load card:', e);
-                    return;
+                    return null;
                 }
             } else {
-                return; // No data
+                return null;
+            }
+        }
+        return state.loadedCharacters[id];
+    }
+
+    // ── Add Character to Current Thread (explicit user action) ───────────────
+    async function addCharacterToThread(id) {
+        const char = await loadCharacterCard(id);
+        if (!char) return;
+        const meta = state.characters.find(c => c.id === id);
+
+        // Auto-attach lorebook if specified and not already in session
+        if (meta.lorebook_path) {
+            const alreadyAttached = state.lorebooks.some(b => b._sourcePath === meta.lorebook_path);
+            if (!alreadyAttached) {
+                try {
+                    const lbRes  = await fetch(meta.lorebook_path);
+                    const lbData = await lbRes.json();
+                    lbData._sourcePath = meta.lorebook_path;
+                    state.session.lorebooks.push(lbData);
+                    saveState();
+                    renderLorebooks();
+                } catch (e) {
+                    console.warn('[underdark] Failed to load lorebook:', e);
+                }
             }
         }
 
-        const char = state.loadedCharacters[id];
         setActiveBot(id);
         renderRoster();
         renderActiveBots();
         renderProfile(char, id);
         renderPersonaCharSelect();
+        renderWelcomeGrid();
+        showToast(`${char.name} added to thread`);
         const avatarUrl = await getAvatarUrl(id, meta.avatar_path || char.avatar);
         updateCinematicBackground(avatarUrl);
 
-        // Remove welcome screen
+        // Remove welcome screen only if it's still there
         qs('#arena-welcome')?.remove();
 
-        // First message if thread is empty
+        // First message only if thread is currently empty
         if (!state.history.length && char.first_mes) {
             const msg = addMessage('bot', char.first_mes, id);
             appendMessage(msg, char.name, meta.avatar_path || char.avatar);
         }
+    }
+
+    // ── Select Character (roster click: show profile + set active bot UI, no thread) ──
+    async function selectCharacter(id) {
+        const char = await loadCharacterCard(id);
+        if (!char) return;
+        const meta = state.characters.find(c => c.id === id);
+
+        // If already in this thread, just switch active bot
+        if (state.activeBotIds.includes(id)) {
+            setActiveBot(id);
+            renderRoster();
+            renderActiveBots();
+            renderProfile(char, id);
+            renderPersonaCharSelect();
+            const avatarUrl = await getAvatarUrl(id, meta.avatar_path || char.avatar);
+            updateCinematicBackground(avatarUrl);
+            return;
+        }
+
+        // Not in thread yet — just show profile in terminal, open terminal
+        renderProfile(char, id);
+        const avatarUrl = await getAvatarUrl(id, meta.avatar_path || char.avatar);
+        updateCinematicBackground(avatarUrl);
+        // Open terminal to Profile tab so user can see the character
+        const $terminal = qs('#terminal-sidebar');
+        if ($terminal?.dataset.collapsed === 'true') {
+            toggleTerminal(false);
+        }
+        // Activate profile tab
+        qsa('.tab-btn').forEach(b => {
+            b.classList.toggle('active', b.dataset.tab === 'profile');
+            b.setAttribute('aria-selected', b.dataset.tab === 'profile');
+        });
+        qsa('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-profile'));
     }
 
     // ── Active Bots Header ────────────────────────────────────────────────────
@@ -483,7 +636,14 @@ export function initUI() {
                 ` : ''}
             </div>`;
 
+        const inThread = state.activeBotIds.includes(id);
         qs('#profile-actions').hidden = false;
+        // Show add-to-thread only if not already in thread
+        const $addBtn    = qs('#btn-add-to-thread');
+        const $removeBtn = qs('#btn-remove-char');
+        if ($addBtn)    $addBtn.hidden    = inThread;
+        if ($removeBtn) $removeBtn.hidden = !inThread;
+        renderGalleryStrip(id);
 
         // Alt greeting switcher
         qs('#alt-greeting-select')?.addEventListener('change', e => {
@@ -498,28 +658,40 @@ export function initUI() {
         lucideRefresh($profile);
 
         // Profile action buttons
-        qs('#btn-sims-edit').onclick  = () => simsEditor?.open(id);
-        qs('#btn-edit-char').onclick  = () => openCreator(id);
+        qs('#btn-add-to-thread').onclick = () => addCharacterToThread(id);
+        qs('#btn-sims-edit').onclick     = () => simsEditor?.open(id);
+        qs('#btn-gallery-add').onclick   = () => openGalleryModal(id);
+        qs('#btn-edit-char').onclick     = () => openCreator(id);
         qs('#btn-remove-char').onclick = () => {
             removeBotFromSession(id);
             renderActiveBots();
             renderRoster();
+            renderWelcomeGrid();
+            renderPersonaCharSelect();
+            showToast(`${char.name} removed from thread`);
             $profile.innerHTML = '<div class="profile-view__empty">No character selected</div>';
             qs('#profile-actions').hidden = true;
+            if (qs('#gallery-strip')) qs('#gallery-strip').hidden = true;
         };
         qs('#btn-delete-char').onclick = async () => {
-            const ok = await confirm('Delete Character', `Permanently delete ${char.name}? This removes them from all threads.`);
+            const ok = await confirm('Delete Character', `Permanently delete ${char.name}? This cannot be undone.`);
             if (!ok) return;
             await deleteCharacter(id);
             renderRoster();
             renderActiveBots();
+            renderPersonaCharSelect();
+            showToast(`${char.name} deleted`, 'warn');
             $profile.innerHTML = '<div class="profile-view__empty">No character selected</div>';
             qs('#profile-actions').hidden = true;
+            if (qs('#gallery-strip')) qs('#gallery-strip').hidden = true;
         };
     }
 
     function updateCinematicBackground(path) {
         const $bg = qs('#arena-background');
+        // If a custom background preset/image is set, don't override with cinematic
+        const bgCfg = state.config.chatBackground;
+        if (bgCfg?.preset || bgCfg?.url) return;
         if (path) {
             $bg.style.backgroundImage = `url(${path})`;
             $bg.classList.add('arena__bg--visible');
@@ -527,6 +699,555 @@ export function initUI() {
             $bg.style.backgroundImage = 'none';
             $bg.classList.remove('arena__bg--visible');
         }
+    }
+
+    function applyChatBackground() {
+        const $bg = qs('#arena-background');
+        const bgCfg = state.config.chatBackground || {};
+
+        // Clear all preset classes always
+        ['ember','abyss','void','neon','sakura','deep','ash'].forEach(p =>
+            $bg.classList.remove(`arena__bg--${p}`)
+        );
+
+        if (bgCfg.url) {
+            const blur   = bgCfg.blur   ?? 45;
+            const bright = bgCfg.bright ?? 30;
+            const opacity = bgCfg.opacity ?? 50;
+            $bg.style.backgroundImage = `url(${bgCfg.url})`;
+            $bg.style.filter  = `blur(${blur}px) brightness(${bright / 100}) saturate(1.3)`;
+            $bg.style.opacity = opacity / 100;
+            $bg.classList.add('arena__bg--visible');
+        } else if (bgCfg.preset) {
+            const blur   = bgCfg.blur   ?? 45;
+            const bright = bgCfg.bright ?? 30;
+            const opacity = bgCfg.opacity ?? 50;
+            $bg.style.backgroundImage = 'none';
+            $bg.style.filter  = `blur(${blur}px) brightness(${bright / 100}) saturate(1.3)`;
+            $bg.style.opacity = opacity / 100;
+            $bg.classList.add('arena__bg--visible', `arena__bg--${bgCfg.preset}`);
+        } else {
+            // No custom bg — clear inline overrides so cinematic bg can take over
+            $bg.style.filter  = '';
+            $bg.style.opacity = '';
+        }
+    }
+
+    // ── Welcome Screen Character Grid ─────────────────────────────────────────
+    function renderWelcomeGrid() {
+        const $grid = qs('#welcome-char-grid');
+        if (!$grid) return;
+
+        if (!state.characters.length) {
+            $grid.innerHTML = '<p style="color:var(--text-muted);font-size:.8rem;text-align:center;width:100%;padding:.5rem 0;">No characters yet — create or import one below.</p>';
+            return;
+        }
+
+        $grid.innerHTML = state.characters.map(c => {
+            const rawAv = c.avatar_path || state.loadedCharacters[c.id]?.avatar || null;
+            const av = getAvatarUrlSync(c.id, rawAv);
+            const inThread = state.activeBotIds.includes(c.id);
+            return `<div class="welcome-char-card ${inThread ? 'welcome-char-card--active' : ''}" data-id="${esc(c.id)}">
+                <div class="welcome-char-card__avatar" style="${av ? `background-image:url(${av})` : ''}">
+                    ${!av ? '<i data-lucide="user"></i>' : ''}
+                </div>
+                <span class="welcome-char-card__name">${esc(c.name)}</span>
+                <span class="welcome-char-card__tagline">${esc(c.tagline || '')}</span>
+                <span class="welcome-char-card__add-hint">${inThread ? '✓ In thread' : '+ Add'}</span>
+            </div>`;
+        }).join('');
+
+        qsa('.welcome-char-card', $grid).forEach($card => {
+            $card.addEventListener('click', () => addCharacterToThread($card.dataset.id));
+        });
+
+        // Patch IDB avatars
+        state.characters.forEach(async c => {
+            const rawAv = c.avatar_path || state.loadedCharacters[c.id]?.avatar || null;
+            if (rawAv?.startsWith('idb:')) {
+                const url = await getAvatarUrl(c.id, rawAv);
+                if (url) {
+                    const $av = qs(`.welcome-char-card[data-id="${c.id}"] .welcome-char-card__avatar`, $grid);
+                    if ($av) $av.style.backgroundImage = `url(${url})`;
+                }
+            }
+        });
+
+        lucideRefresh($grid);
+    }
+
+    // ── Character Picker Modal ────────────────────────────────────────────────
+    function openCharPicker() {
+        const $modal = qs('#modal-char-picker');
+        if (!$modal) return;
+        renderPickerGrid('');
+        $modal.hidden = false;
+        lucideRefresh($modal);
+        setTimeout(() => qs('#picker-search-input')?.focus(), 50);
+    }
+
+    function renderPickerGrid(query) {
+        const $grid = qs('#picker-char-grid');
+        if (!$grid) return;
+        const q = query.toLowerCase().trim();
+        const chars = state.characters.filter(c => {
+            if (!q) return true;
+            return c.name.toLowerCase().includes(q) || (c.tagline || '').toLowerCase().includes(q);
+        });
+        if (!chars.length) {
+            $grid.innerHTML = '<p style="color:var(--text-muted);font-size:.8rem;text-align:center;padding:1rem;grid-column:1/-1;">No characters found</p>';
+            return;
+        }
+        $grid.innerHTML = chars.map(c => {
+            const rawAv = c.avatar_path || state.loadedCharacters[c.id]?.avatar || null;
+            const av = getAvatarUrlSync(c.id, rawAv);
+            const inThread = state.activeBotIds.includes(c.id);
+            return `<div class="picker-char-card ${inThread ? 'picker-char-card--active' : ''}" data-id="${esc(c.id)}">
+                <div class="picker-char-card__avatar" style="${av ? `background-image:url(${av})` : ''}">
+                    ${!av ? '<i data-lucide="user"></i>' : ''}
+                </div>
+                <span class="picker-char-card__name">${esc(c.name)}</span>
+            </div>`;
+        }).join('');
+
+        qsa('.picker-char-card', $grid).forEach($card => {
+            $card.addEventListener('click', async () => {
+                const id = $card.dataset.id;
+                if (state.activeBotIds.includes(id)) {
+                    // Already in thread — switch active bot
+                    setActiveBot(id);
+                    renderActiveBots();
+                    const char = state.loadedCharacters[id];
+                    const meta = state.characters.find(c => c.id === id);
+                    if (char) renderProfile(char, id);
+                    if (meta) updateCinematicBackground(await getAvatarUrl(id, meta.avatar_path || char?.avatar));
+                } else {
+                    await addCharacterToThread(id);
+                }
+                qs('#modal-char-picker').hidden = true;
+                renderPickerGrid('');
+            });
+        });
+
+        chars.forEach(async c => {
+            const rawAv = c.avatar_path || state.loadedCharacters[c.id]?.avatar || null;
+            if (rawAv?.startsWith('idb:')) {
+                const url = await getAvatarUrl(c.id, rawAv);
+                if (url) {
+                    const $av = qs(`.picker-char-card[data-id="${c.id}"] .picker-char-card__avatar`, $grid);
+                    if ($av) $av.style.backgroundImage = `url(${url})`;
+                }
+            }
+        });
+
+        lucideRefresh($grid);
+    }
+
+    qs('#add-char-btn')?.addEventListener('click', openCharPicker);
+    qs('#char-picker-close')?.addEventListener('click', () => { qs('#modal-char-picker').hidden = true; });
+    qs('.modal__backdrop', qs('#modal-char-picker'))?.addEventListener('click', () => { qs('#modal-char-picker').hidden = true; });
+    qs('#picker-search-input')?.addEventListener('input', debounce(e => renderPickerGrid(e.target.value), 200));
+
+    // ── Gallery ────────────────────────────────────────────────────────────────
+    let galleryCharId = null;
+    let lbImages = [];
+    let lbIndex  = 0;
+
+    function getCharGallery(id) {
+        return state.loadedCharacters[id]?.extensions?.underdark?.gallery || [];
+    }
+
+    function getAllGalleryImages(id) {
+        const meta  = state.characters.find(c => c.id === id);
+        const extra = getCharGallery(id);
+        return [meta?.avatar_path, ...extra].filter(Boolean);
+    }
+
+    function ensureGalleryStore(id) {
+        const char = state.loadedCharacters[id];
+        if (!char) return null;
+        if (!char.extensions)                char.extensions = {};
+        if (!char.extensions.underdark)      char.extensions.underdark = {};
+        if (!char.extensions.underdark.gallery) char.extensions.underdark.gallery = [];
+        return char;
+    }
+
+    // ── Gallery strip (profile tab) ───────────────────────────────────────────
+    function renderGalleryStrip(id) {
+        const $strip = qs('#gallery-strip');
+        if (!$strip) return;
+        const allImages = getAllGalleryImages(id);
+
+        if (!allImages.length) {
+            $strip.hidden = true;
+            return;
+        }
+
+        $strip.innerHTML = allImages.map((src, i) =>
+            `<div class="gallery-strip__thumb ${i === 0 ? 'gallery-strip__thumb--active' : ''}"
+                  style="background-image:url(${src})" data-gsrc="${esc(src)}" data-gi="${i}" title="Image ${i + 1}">
+                 <span class="gallery-strip__num">${i + 1}</span>
+             </div>`
+        ).join('');
+        // "Add more" placeholder at end
+        $strip.innerHTML += `<div class="gallery-strip__add" id="gallery-strip-add" title="Manage gallery">
+            <i data-lucide="plus"></i>
+        </div>`;
+        $strip.hidden = false;
+
+        qsa('.gallery-strip__thumb', $strip).forEach($t => {
+            $t.addEventListener('click', () => {
+                qsa('.gallery-strip__thumb', $strip).forEach(x => x.classList.remove('gallery-strip__thumb--active'));
+                $t.classList.add('gallery-strip__thumb--active');
+                const $av = qs('.profile-details__avatar');
+                if ($av) $av.style.backgroundImage = `url(${$t.dataset.gsrc})`;
+                // Open lightbox on strip click
+                openLightbox(id, parseInt($t.dataset.gi));
+            });
+        });
+
+        qs('#gallery-strip-add', $strip)?.addEventListener('click', () => openGalleryModal(id));
+        lucideRefresh($strip);
+    }
+
+    // ── Gallery modal (manage / add / remove) ─────────────────────────────────
+    function openGalleryModal(id) {
+        galleryCharId = id;
+        const char = state.loadedCharacters[id];
+        const meta = state.characters.find(c => c.id === id);
+        qs('#gallery-char-name').textContent = char?.name || meta?.name || 'Gallery';
+        renderGalleryModal(id);
+        qs('#modal-gallery').hidden = false;
+        lucideRefresh(qs('#modal-gallery'));
+    }
+
+    function renderGalleryModal(id) {
+        const $grid = qs('#gallery-grid');
+        if (!$grid) return;
+        const allImages = getAllGalleryImages(id);
+        const $count = qs('#gallery-count');
+        if ($count) $count.textContent = allImages.length ? `${allImages.length} image${allImages.length !== 1 ? 's' : ''}` : '';
+
+        if (!allImages.length) {
+            $grid.innerHTML = `
+                <div class="gallery-empty">
+                    <i data-lucide="image-off"></i>
+                    <span>No images yet</span>
+                    <p>Upload files or paste an image URL below.</p>
+                </div>`;
+            lucideRefresh($grid);
+            return;
+        }
+
+        $grid.innerHTML = allImages.map((src, i) => {
+            const isCover = i === 0;
+            return `
+            <div class="gallery-item ${isCover ? 'gallery-item--cover' : ''}"
+                 data-gi="${i}" draggable="true">
+                <img src="${esc(src)}" alt="Gallery image ${i + 1}" loading="lazy">
+                <div class="gallery-item__overlay">
+                    <div class="gallery-item__overlay-top">
+                        ${isCover ? `<span class="gallery-item__cover-badge"><i data-lucide="star"></i> Cover</span>` : ''}
+                        <button class="gallery-item__btn gallery-item__btn--lb" data-lb="${i}" title="Open fullscreen">
+                            <i data-lucide="expand"></i>
+                        </button>
+                    </div>
+                    <div class="gallery-item__overlay-bot">
+                        ${!isCover ? `<button class="gallery-item__btn gallery-item__btn--cover" data-set-cover="${i - 1}" title="Set as cover / avatar">
+                            <i data-lucide="star"></i>
+                        </button>` : ''}
+                        ${!isCover ? `<button class="gallery-item__btn gallery-item__btn--del" data-del="${i - 1}" title="Remove">
+                            <i data-lucide="trash-2"></i>
+                        </button>` : ''}
+                    </div>
+                </div>
+                <div class="gallery-item__drag-handle" title="Drag to reorder">
+                    <i data-lucide="grip-vertical"></i>
+                </div>
+            </div>`;
+        }).join('');
+
+        // Lightbox open
+        qsa('[data-lb]', $grid).forEach(btn => {
+            btn.addEventListener('click', e => {
+                e.stopPropagation();
+                openLightbox(id, parseInt(btn.dataset.lb));
+            });
+        });
+
+        // Set cover
+        qsa('[data-set-cover]', $grid).forEach(btn => {
+            btn.addEventListener('click', e => {
+                e.stopPropagation();
+                const idx = parseInt(btn.dataset.setCover);
+                const char = ensureGalleryStore(id);
+                if (!char) return;
+                const gallery = char.extensions.underdark.gallery;
+                const src = gallery[idx];
+                const meta = state.characters.find(c => c.id === id);
+                if (meta && src) {
+                    // Swap: push old avatar into gallery, set new one
+                    if (meta.avatar_path) gallery.unshift(meta.avatar_path);
+                    gallery.splice(gallery.indexOf(src), 1);
+                    meta.avatar_path = src;
+                    saveState();
+                    renderRoster();
+                    renderGalleryStrip(id);
+                    renderGalleryModal(id);
+                    showToast(`Cover image updated for ${meta.name}`);
+                }
+            });
+        });
+
+        // Delete
+        qsa('[data-del]', $grid).forEach(btn => {
+            btn.addEventListener('click', async e => {
+                e.stopPropagation();
+                const idx = parseInt(btn.dataset.del);
+                const char = ensureGalleryStore(id);
+                if (!char) return;
+                char.extensions.underdark.gallery.splice(idx, 1);
+                saveState();
+                renderGalleryStrip(id);
+                renderGalleryModal(id);
+                showToast('Image removed');
+            });
+        });
+
+        // Drag-to-reorder (gallery images only — index 0 = avatar, can't reorder that)
+        setupGalleryDragSort($grid, id);
+
+        lucideRefresh($grid);
+    }
+
+    function setupGalleryDragSort($grid, id) {
+        let dragSrc = null;
+
+        qsa('.gallery-item:not(.gallery-item--cover)', $grid).forEach(item => {
+            item.addEventListener('dragstart', e => {
+                dragSrc = item;
+                item.classList.add('gallery-item--dragging');
+                e.dataTransfer.effectAllowed = 'move';
+            });
+            item.addEventListener('dragend', () => {
+                item.classList.remove('gallery-item--dragging');
+                qsa('.gallery-item--dragover', $grid).forEach(el => el.classList.remove('gallery-item--dragover'));
+                dragSrc = null;
+            });
+            item.addEventListener('dragover', e => {
+                e.preventDefault();
+                if (dragSrc && dragSrc !== item && !item.classList.contains('gallery-item--cover')) {
+                    item.classList.add('gallery-item--dragover');
+                }
+            });
+            item.addEventListener('dragleave', () => item.classList.remove('gallery-item--dragover'));
+            item.addEventListener('drop', e => {
+                e.preventDefault();
+                item.classList.remove('gallery-item--dragover');
+                if (!dragSrc || dragSrc === item || item.classList.contains('gallery-item--cover')) return;
+                const srcIdx = parseInt(dragSrc.dataset.gi) - 1; // -1 because index 0 is avatar (not in gallery array)
+                const dstIdx = parseInt(item.dataset.gi) - 1;
+                if (srcIdx < 0 || dstIdx < 0) return;
+                const char = ensureGalleryStore(id);
+                if (!char) return;
+                const arr = char.extensions.underdark.gallery;
+                const [removed] = arr.splice(srcIdx, 1);
+                arr.splice(dstIdx, 0, removed);
+                saveState();
+                renderGalleryModal(id);
+                renderGalleryStrip(id);
+            });
+        });
+    }
+
+    // ── Lightbox ──────────────────────────────────────────────────────────────
+    function openLightbox(charId, startIndex) {
+        lbImages   = getAllGalleryImages(charId);
+        lbIndex    = startIndex;
+        galleryCharId = charId;
+        renderLightbox();
+        qs('#lightbox').hidden = false;
+        lucideRefresh(qs('#lightbox'));
+    }
+
+    function renderLightbox() {
+        if (!lbImages.length) return;
+        lbIndex = Math.max(0, Math.min(lbImages.length - 1, lbIndex));
+        const src = lbImages[lbIndex];
+        qs('#lb-img').src = src;
+        qs('#lb-idx').textContent  = lbIndex + 1;
+        qs('#lb-total').textContent = lbImages.length;
+        qs('#lb-caption').textContent = lbIndex === 0 ? 'Cover Image' : `Image ${lbIndex + 1}`;
+        // Disable set-avatar for cover
+        const $setAv = qs('#lb-set-avatar');
+        if ($setAv) $setAv.disabled = (lbIndex === 0);
+        const $del = qs('#lb-remove');
+        if ($del) $del.disabled = (lbIndex === 0);
+        // Prev/next visibility
+        qs('#lb-prev').style.opacity = lbIndex > 0 ? '1' : '0.25';
+        qs('#lb-next').style.opacity = lbIndex < lbImages.length - 1 ? '1' : '0.25';
+    }
+
+    qs('#lb-prev')?.addEventListener('click', () => { lbIndex--; renderLightbox(); });
+    qs('#lb-next')?.addEventListener('click', () => { lbIndex++; renderLightbox(); });
+    qs('#lb-close')?.addEventListener('click', () => { qs('#lightbox').hidden = true; });
+    qs('.lightbox__backdrop')?.addEventListener('click', () => { qs('#lightbox').hidden = true; });
+
+    qs('#lb-set-avatar')?.addEventListener('click', () => {
+        if (!galleryCharId || lbIndex === 0) return;
+        const src  = lbImages[lbIndex];
+        const meta = state.characters.find(c => c.id === galleryCharId);
+        const char = ensureGalleryStore(galleryCharId);
+        if (!meta || !char) return;
+        const gallery = char.extensions.underdark.gallery;
+        if (meta.avatar_path) gallery.unshift(meta.avatar_path);
+        const idx = gallery.indexOf(src);
+        if (idx !== -1) gallery.splice(idx, 1);
+        meta.avatar_path = src;
+        saveState();
+        renderRoster();
+        renderGalleryStrip(galleryCharId);
+        renderGalleryModal(galleryCharId);
+        lbImages = getAllGalleryImages(galleryCharId);
+        lbIndex  = 0;
+        renderLightbox();
+        showToast('Cover image updated');
+    });
+
+    qs('#lb-remove')?.addEventListener('click', async () => {
+        if (!galleryCharId || lbIndex === 0) return;
+        const char = ensureGalleryStore(galleryCharId);
+        if (!char) return;
+        char.extensions.underdark.gallery.splice(lbIndex - 1, 1);
+        saveState();
+        lbImages = getAllGalleryImages(galleryCharId);
+        renderGalleryStrip(galleryCharId);
+        renderGalleryModal(galleryCharId);
+        if (!lbImages.length) { qs('#lightbox').hidden = true; return; }
+        lbIndex = Math.min(lbIndex, lbImages.length - 1);
+        renderLightbox();
+        showToast('Image removed');
+    });
+
+    // Keyboard nav in lightbox
+    document.addEventListener('keydown', e => {
+        if (qs('#lightbox')?.hidden === false) {
+            if (e.key === 'ArrowLeft')  { lbIndex--; renderLightbox(); }
+            if (e.key === 'ArrowRight') { lbIndex++; renderLightbox(); }
+            if (e.key === 'Escape')     { qs('#lightbox').hidden = true; }
+        }
+    });
+
+    // Close gallery modal
+    qs('#gallery-close')?.addEventListener('click', () => { qs('#modal-gallery').hidden = true; });
+    qs('.modal__backdrop', qs('#modal-gallery'))?.addEventListener('click', () => { qs('#modal-gallery').hidden = true; });
+
+    // Upload files
+    qs('#gallery-add-file')?.addEventListener('click', () => qs('#gallery-file-input').click());
+    qs('#gallery-file-input')?.addEventListener('change', async e => {
+        const files = [...e.target.files];
+        e.target.value = '';
+        if (!galleryCharId) return;
+        const char = ensureGalleryStore(galleryCharId);
+        if (!char) return;
+        let added = 0;
+        for (const file of files) {
+            if (file.size > 10 * 1024 * 1024) { showToast(`${file.name} exceeds 10 MB limit`, 'error'); continue; }
+            await new Promise(resolve => {
+                const reader = new FileReader();
+                reader.onload = ev => { char.extensions.underdark.gallery.push(ev.target.result); added++; resolve(); };
+                reader.onerror = () => { showToast(`Failed to read ${file.name}`, 'error'); resolve(); };
+                reader.readAsDataURL(file);
+            });
+        }
+        if (added) {
+            saveState();
+            renderGalleryStrip(galleryCharId);
+            renderGalleryModal(galleryCharId);
+            showToast(`${added} image${added !== 1 ? 's' : ''} added`);
+        }
+    });
+
+    // Add by URL
+    qs('#gallery-url-add')?.addEventListener('click', () => {
+        const $input = qs('#gallery-url-input');
+        const url = $input?.value.trim();
+        if (!url) return;
+        // Basic URL validation
+        try { new URL(url); } catch { showToast('Invalid URL', 'error'); return; }
+        if (!galleryCharId) return;
+        const char = ensureGalleryStore(galleryCharId);
+        if (!char) return;
+        char.extensions.underdark.gallery.push(url);
+        $input.value = '';
+        saveState();
+        renderGalleryStrip(galleryCharId);
+        renderGalleryModal(galleryCharId);
+        showToast('Image URL added');
+    });
+    qs('#gallery-url-input')?.addEventListener('keydown', e => {
+        if (e.key === 'Enter') qs('#gallery-url-add').click();
+    });
+
+    // ── Chat Background ────────────────────────────────────────────────────────
+    function initChatBackground() {
+        const bgCfg = state.config.chatBackground || {};
+        const $blurInput   = qs('#bg-blur-input');
+        const $blurVal     = qs('#bg-blur-val');
+        const $brightInput = qs('#bg-bright-input');
+        const $brightVal   = qs('#bg-bright-val');
+        const $opacInput   = qs('#bg-opacity-input');
+        const $opacVal     = qs('#bg-opacity-val');
+        const $urlInput    = qs('#bg-url-input');
+
+        if ($blurInput)   { $blurInput.value   = bgCfg.blur   ?? 45;  if ($blurVal)   $blurVal.textContent   = $blurInput.value; }
+        if ($brightInput) { $brightInput.value = bgCfg.bright ?? 30;  if ($brightVal) $brightVal.textContent = $brightInput.value; }
+        if ($opacInput)   { $opacInput.value   = bgCfg.opacity ?? 50; if ($opacVal)   $opacVal.textContent   = $opacInput.value; }
+        if ($urlInput && bgCfg.url)  $urlInput.value = bgCfg.url;
+
+        // Mark active preset
+        const activePreset = bgCfg.preset || '';
+        qsa('.bg-preset').forEach(btn => {
+            btn.classList.toggle('active', (btn.dataset.bg || '') === activePreset);
+        });
+
+        qsa('.bg-preset').forEach(btn => {
+            btn.addEventListener('click', () => {
+                qsa('.bg-preset').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                if (!state.config.chatBackground) state.config.chatBackground = {};
+                state.config.chatBackground.preset = btn.dataset.bg || '';
+                state.config.chatBackground.url    = '';
+                if ($urlInput) $urlInput.value = '';
+                saveState();
+                applyChatBackground();
+            });
+        });
+
+        const syncSlider = (input, valEl, key) => {
+            input?.addEventListener('input', () => {
+                if (valEl) valEl.textContent = input.value;
+                if (!state.config.chatBackground) state.config.chatBackground = {};
+                state.config.chatBackground[key] = parseInt(input.value);
+                saveState();
+                applyChatBackground();
+            });
+        };
+        syncSlider($blurInput, $blurVal, 'blur');
+        syncSlider($brightInput, $brightVal, 'bright');
+        syncSlider($opacInput, $opacVal, 'opacity');
+
+        qs('#bg-url-apply')?.addEventListener('click', () => {
+            const url = $urlInput?.value.trim() || '';
+            if (!state.config.chatBackground) state.config.chatBackground = {};
+            state.config.chatBackground.url    = url;
+            state.config.chatBackground.preset = '';
+            qsa('.bg-preset').forEach(b => b.classList.toggle('active', !url && (b.dataset.bg || '') === ''));
+            saveState();
+            applyChatBackground();
+        });
+
+        applyChatBackground();
     }
 
     // ── Character Import ──────────────────────────────────────────────────────
@@ -548,8 +1269,9 @@ export function initUI() {
                 await saveCharacter(meta, card);
                 renderRoster();
                 selectCharacter(id);
+                showToast(`${card.name} imported`);
             } catch (err) {
-                alert(`Import failed: ${err.message}`);
+                showToast(`Import failed: ${err.message}`, 'error');
             }
         }
     });
@@ -1197,10 +1919,13 @@ export function initUI() {
     function showReactionPicker($msgEl, msgId) {
         const $picker = qs('#reaction-picker');
         if (!$picker) return;
-        // Position near message header
+        // Position BEFORE unhiding to prevent top-left flash
         const rect = $msgEl.getBoundingClientRect();
-        $picker.style.top  = `${rect.top + window.scrollY - 50}px`;
-        $picker.style.left = `${Math.min(rect.left, window.innerWidth - 260)}px`;
+        const pickerW = 260;
+        const top  = Math.max(4, rect.top + window.scrollY - 50);
+        const left = Math.max(4, Math.min(rect.left, window.innerWidth - pickerW - 8));
+        $picker.style.top  = `${top}px`;
+        $picker.style.left = `${left}px`;
         $picker.hidden = false;
         $picker.dataset.forMsg = msgId;
 
@@ -1260,18 +1985,28 @@ export function initUI() {
                 welcome.className = 'arena__welcome';
                 welcome.id = 'arena-welcome';
                 welcome.innerHTML = `
-                    <div class="welcome-box">
-                        <i data-lucide="zap" class="welcome-box__icon"></i>
-                        <h2>Neural Interface Established</h2>
-                        <p>Select a fragment from the roster or create one to begin.</p>
-                        <button id="welcome-create" class="btn btn--accent" style="margin-top:1rem;">
-                            <i data-lucide="wand-2"></i> Create Character
-                        </button>
+                    <div class="welcome-screen">
+                        <div class="welcome-screen__header">
+                            <i data-lucide="zap" class="welcome-screen__icon"></i>
+                            <h2>Begin Synchronization</h2>
+                            <p>Choose a fragment to inhabit this thread.</p>
+                        </div>
+                        <div id="welcome-char-grid" class="welcome-char-grid"></div>
+                        <div class="welcome-screen__actions">
+                            <button id="welcome-create" class="btn btn--ghost">
+                                <i data-lucide="wand-2"></i> Create Character
+                            </button>
+                            <button id="welcome-import" class="btn btn--ghost">
+                                <i data-lucide="upload"></i> Import Card
+                            </button>
+                        </div>
                     </div>`;
                 $thread.appendChild(welcome);
                 qs('#welcome-create', welcome)?.addEventListener('click', () => openCreator());
+                qs('#welcome-import', welcome)?.addEventListener('click', () => qs('#card-input').click());
                 lucideRefresh(welcome);
             }
+            renderWelcomeGrid();
             return;
         }
 
@@ -1427,6 +2162,7 @@ export function initUI() {
         syncConfigUI();
         renderPersonaCharSelect();
         updateTelemetry();
+        applyChatBackground();
 
         const activeChar = state.loadedCharacters[state.activeBotId];
         const activeMeta = state.characters.find(c => c.id === state.activeBotId);
@@ -1437,6 +2173,7 @@ export function initUI() {
         } else {
             qs('#profile-card').innerHTML = '<div class="profile-view__empty">No character selected</div>';
             qs('#profile-actions').hidden = true;
+            qs('#gallery-strip').hidden = true;
         }
     }
 
@@ -1891,23 +2628,35 @@ export function initUI() {
     function renderPersonaCharSelect() {
         const $sel = qs('#persona-char-select');
         if (!$sel) return;
+        const current = $sel.value;
+        // Show ALL roster characters (not just active bots)
         $sel.innerHTML = '<option value="">— Select character —</option>'
-            + state.activeBotIds.map(id => {
-                const c = state.loadedCharacters[id];
-                return c ? `<option value="${esc(id)}">${esc(c.name)}</option>` : '';
+            + state.characters.map(c => {
+                const inThread = state.activeBotIds.includes(c.id);
+                const label = inThread ? `${esc(c.name)} ●` : esc(c.name);
+                return `<option value="${esc(c.id)}">${label}</option>`;
             }).join('');
+        // Restore previous selection if still valid
+        if (current && state.characters.some(c => c.id === current)) $sel.value = current;
+        // Auto-select active bot if only one and nothing selected
+        if (!$sel.value && state.activeBotIds.length === 1) {
+            $sel.value = state.activeBotIds[0];
+            loadPersonaFields($sel.value);
+        }
     }
 
     function loadPersonaFields(charId) {
         if (!charId) return;
         const override = getCharOverride(charId);
+        // Merge core + ext so persona tab can read EXT_KEYS (height, hairColor, etc.)
+        const flat = { ...override, ...(override.ext || {}) };
         qsa('[data-po]').forEach(el => {
             const key = el.dataset.po;
             if (key === undefined) return;
             if (el.type === 'range') {
-                el.value = override[key] ?? el.defaultValue;
+                el.value = flat[key] ?? el.defaultValue;
             } else {
-                el.value = override[key] ?? '';
+                el.value = flat[key] ?? '';
             }
         });
         // Sync badge labels for persona sliders
@@ -1921,23 +2670,66 @@ export function initUI() {
         syncBadge('romance-input',   'romance-val');
         syncBadge('violence-input',  'violence-val');
 
-        // Load character-specific model into override model select
-        qs('#persona-model-select').value = override.modelOverride || '';
+        // Show the persona fields panel once a character is selected
+        const $fields = qs('#persona-fields');
+        if ($fields) $fields.hidden = false;
+
+        // Load character-specific model
+        if (qs('#persona-model-select')) qs('#persona-model-select').value = override.modelOverride || '';
+
+        // Update persona header with character name + avatar
+        const char = state.loadedCharacters[charId];
+        const meta = state.characters.find(c => c.id === charId);
+        const $hdr = qs('#persona-char-header');
+        if ($hdr && (char || meta)) {
+            const name = char?.name || meta?.name || '—';
+            const rawAv = meta?.avatar_path || char?.avatar;
+            const av = getAvatarUrlSync(charId, rawAv);
+            $hdr.innerHTML = `
+                <div class="persona-char-avatar" style="${av ? `background-image:url(${av})` : ''}">
+                    ${!av ? '<i data-lucide="user"></i>' : ''}
+                </div>
+                <div class="persona-char-info">
+                    <span class="persona-char-name">${esc(name)}</span>
+                    <span class="persona-char-status">${state.activeBotIds.includes(charId) ? '● In thread' : '○ Not in thread'}</span>
+                </div>`;
+            $hdr.hidden = false;
+            lucideRefresh($hdr);
+            // Async avatar patch for IDB
+            if (rawAv?.startsWith('idb:')) {
+                getAvatarUrl(charId, rawAv).then(url => {
+                    const $av = qs('.persona-char-avatar', $hdr);
+                    if ($av && url) $av.style.backgroundImage = `url(${url})`;
+                });
+            }
+        }
     }
 
     qs('#persona-char-select')?.addEventListener('change', e => {
         loadPersonaFields(e.target.value);
     });
 
+    // Keys the persona tab writes that live in override.ext (mirrors EXT_KEYS in sims-editor)
+    const PERSONA_EXT_KEYS = new Set([
+        'height','bodyType','skinTone','hairColor','hairStyle','eyeColor',
+        'distinctiveFeatures','voiceTone','speechPatterns',
+        'breastSize','areolaeSize','nippleColor','bodyHair','genitalia','otherAdultFeatures'
+    ]);
+
     const savePersonaDebounced = debounce((charId) => {
         if (!charId) return;
-        const fields = {};
+        const coreFields = {};
+        const extFields  = {};
         qsa('[data-po]').forEach(el => {
             const key = el.dataset.po;
             if (!key) return;
-            fields[key] = el.type === 'range' ? parseFloat(el.value) : el.value;
+            const val = el.type === 'range' ? parseFloat(el.value) : el.value;
+            if (PERSONA_EXT_KEYS.has(key)) extFields[key] = val;
+            else coreFields[key] = val;
         });
-        setCharOverride(charId, fields);
+        const existing = getCharOverride(charId);
+        const newExt = { ...(existing.ext || {}), ...extFields };
+        setCharOverride(charId, { ...coreFields, ext: newExt });
     }, 400);
 
     qsa('[data-po]').forEach(el => {
@@ -2013,7 +2805,9 @@ export function initUI() {
 
     // ── Keyboard shortcuts ────────────────────────────────────────────────────
     document.addEventListener('keydown', e => {
+        // Escape closes any open modal or lightbox
         if (e.key === 'Escape') {
+            if (!qs('#lightbox')?.hidden) { qs('#lightbox').hidden = true; return; }
             qsa('.modal:not([hidden])').forEach(m => { m.hidden = true; });
             return;
         }
@@ -2026,8 +2820,34 @@ export function initUI() {
         if (e.key === 'r' || e.key === 'R') setRosterCollapsed($rosterSidebar.dataset.collapsed !== 'true');
         if (e.key === 'n' || e.key === 'N') openCreator();
         if (e.key === 'e' || e.key === 'E') { if (state.activeBotId) simsEditor?.open(state.activeBotId); }
+        if (e.key === 'a' || e.key === 'A') openCharPicker();
+        if (e.key === 'g' || e.key === 'G') { if (state.activeBotId) openGalleryModal(state.activeBotId); }
+        if (e.key === 'f' || e.key === 'F') toggleFocusMode();
         if (e.key === '/' ) { e.preventDefault(); qs('#character-search')?.focus(); }
     });
+
+    // ── Focus / Read Mode ─────────────────────────────────────────────────────
+    const FOCUS_KEY = 'underdark_focus';
+    function toggleFocusMode(force) {
+        const on = force !== undefined ? force : !document.body.classList.contains('focus-mode');
+        document.body.classList.toggle('focus-mode', on);
+        qs('#focus-mode-btn')?.classList.toggle('active', on);
+        localStorage.setItem(FOCUS_KEY, on ? '1' : '');
+
+        if (on) {
+            // Open the right terminal so the character dossier is immediately visible
+            toggleTerminal(false);
+            // Switch to profile tab so you see the character, not config
+            const $profileBtn = qs('.tab-btn[data-tab="profile"]');
+            if ($profileBtn) $profileBtn.click();
+            showToast('Focus mode — just you and the characters', 'info', 2200);
+        } else {
+            showToast('Editor mode restored', 'info', 1800);
+        }
+    }
+    qs('#focus-mode-btn')?.addEventListener('click', () => toggleFocusMode());
+    // Restore on load
+    if (localStorage.getItem(FOCUS_KEY)) toggleFocusMode(true);
 
     // ── Sims Editor ───────────────────────────────────────────────────────────
     const simsEditor = initSimsEditor();
@@ -2037,9 +2857,14 @@ export function initUI() {
         if (state.activeBotId) simsEditor?.open(state.activeBotId);
     });
 
+    // ── Welcome screen static button wiring ─────────────────────────────────
+    qs('#welcome-create')?.addEventListener('click', () => openCreator());
+    qs('#welcome-import')?.addEventListener('click', () => qs('#card-input').click());
+
     // ── Initial Render ────────────────────────────────────────────────────────
     loadManifest().then(() => {
         renderAll();
+        initChatBackground();
         loadModels();
         updateApiStatus();
     });

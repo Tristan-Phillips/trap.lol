@@ -439,16 +439,12 @@ export function initSimsEditor() {
         const badge = qs('#sims-char-name-badge');
         if (badge) badge.textContent = char?.name || meta?.name || '—';
 
-        // Seed charOverride from card's extensions.underdark if no user override exists yet.
-        // "No override yet" = the stored entry is missing or only has default values (ext is empty).
-        const sessionOverrides = state.config?.charOverrides || {};
-        const hasExistingOverride = charId in sessionOverrides &&
-            Object.keys(sessionOverrides[charId].ext || {}).length > 0;
-
-        if (!hasExistingOverride && char?.extensions?.underdark) {
+        // Seed charOverride from card's extensions.underdark.
+        // Card data is the source of truth — always load it as the base, then layer
+        // any user edits (stored under the _userEdits sentinel) on top.
+        if (char?.extensions?.underdark) {
             const ud = char.extensions.underdark;
             const { ext: cardExt, ...cardCore } = ud;
-            // Core keys that live directly on defaultCharOverride
             const coreKeys = new Set(Object.keys(defaultCharOverride()));
             const coreFromCard = {};
             const extFromCard  = { ...(cardExt || {}) };
@@ -456,7 +452,12 @@ export function initSimsEditor() {
                 if (coreKeys.has(k)) coreFromCard[k] = v;
                 else extFromCard[k] = v;
             }
-            setCharOverride(charId, { ...coreFromCard, ext: extFromCard });
+            // Preserve any manual user edits layered on top of card defaults
+            const stored = state.config?.charOverrides?.[charId] || {};
+            const userEdits = stored._userEdits || {};
+            const mergedExt = { ...extFromCard, ...(userEdits.ext || {}) };
+            const mergedCore = { ...coreFromCard, ...userEdits.core };
+            setCharOverride(charId, { ...mergedCore, ext: mergedExt });
         }
 
         // Load override into fields
@@ -750,25 +751,28 @@ export function initSimsEditor() {
     function flushChanges() {
         if (!activeCharId || !Object.keys(pendingChanges).length) return;
 
-        // Split pending into core fields and ext fields
+        const coreKeys = new Set(Object.keys(defaultCharOverride()));
         const coreFields = {};
         const extFields  = {};
 
-        const coreKeys = Object.keys(defaultCharOverride());
-
         for (const [k, v] of Object.entries(pendingChanges)) {
-            if (coreKeys.includes(k)) {
-                coreFields[k] = v;
-            } else {
-                extFields[k] = v;
-            }
+            if (coreKeys.has(k)) coreFields[k] = v;
+            else extFields[k] = v;
         }
 
-        // Load existing override to preserve ext
+        // Persist user edits separately so card re-seeding on next open can layer them on top
+        const stored = state.config?.charOverrides?.[activeCharId] || {};
+        const prevUserEdits = stored._userEdits || { core: {}, ext: {} };
+        const newUserEdits = {
+            core: { ...prevUserEdits.core, ...coreFields },
+            ext:  { ...prevUserEdits.ext,  ...extFields  },
+        };
+
+        // Also update the live merged override so current session sees the changes
         const existing = getCharOverride(activeCharId);
         const newExt = { ...(existing.ext || {}), ...extFields };
+        setCharOverride(activeCharId, { ...coreFields, ext: newExt, _userEdits: newUserEdits });
 
-        setCharOverride(activeCharId, { ...coreFields, ext: newExt });
         pendingChanges = {};
         setSaveStatus('Saved ✓');
         setTimeout(() => setSaveStatus(''), 2500);

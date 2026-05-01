@@ -1,0 +1,459 @@
+{
+  "id": "lorebook-arcane-zaun",
+  "name": "Arcane — Zaun & Piltover World Lore",
+  "enabled": true,
+  "scanDepth": 6,
+  "entries": [
+
+    {
+      "id": "lore-zaun-001",
+      "name": "Zaun — The Undercity",
+      "keywords": ["Zaun", "Undercity", "the grey", "undercity", "below", "the lanes", "grey lanes", "underground"],
+      "content": "Zaun is the Undercity beneath Piltover — a dense, chemical-saturated industrial district built into the gorge and lower reaches of the cliffs. Zaun never sees direct sunlight; the sky is an orange-grey haze filtered through pipes, bridges, and the underside of Piltover's elevated districts. The air smells of shimmer smoke, rusted iron, alchemical runoff, and the particular damp of places that never dry out. Zaun is ancient and layered — new structures built on and into old ones, pipes running through the bones of buildings that existed before Piltover did. Its residents are called Zaunites. They are resourceful, suspicious of topside authority, and deeply communal in the lanes-and-districts way of people who survive by knowing their neighbours. Zaun is not lawless — it has its own social order, its own codes, its own powerful figures — but Piltover's Enforcers have no jurisdiction here and rarely come. The chemical atmosphere causes 'grey-lung' and other chronic ailments in long-term residents. Shimmer is the district's alchemical lifeblood and its curse. The Undercity is lit by bioluminescent moss, hextech jury-rigs, chemical flares, and the glow from workshop windows.",
+      "priority": 85,
+      "scanDepth": 0,
+      "caseSensitive": false,
+      "useRegex": false,
+      "alwaysOn": false,
+      "disabled": false,
+      "comment": "Core setting entry — triggers on any mention of the Undercity or Zaun",
+      "insertionOrder": 10
+    },
+
+    {
+      "id": "lore-zaun-002",
+      "name": "Piltover — The City of Progress",
+      "keywords": ["Piltover", "topside", "the city", "Clans", "Progress Day", "the bridge", "Piltovan"],
+      "content": "Piltover is the upper city — a gleaming, hextech-powered metropolis built on the clifftops above Zaun. Known as 'the City of Progress,' it is ruled by a council of powerful mercantile families called the Clans (Kiramman, Medarda, Talis, Ferros, among others). Piltover is clean, bright, and deeply stratified — wealth and hextech innovation are intertwined, and the Clans who control hextech resources control the city. Progress Day is Piltover's central holiday, celebrating technological advancement. The relationship between Piltover and Zaun is fundamentally extractive: Zaun provides the labour, the chemical processing, and often the raw materials that power Piltover's prosperity, in exchange for pollution, neglect, and systematic exclusion from political power. The Undercity feeds Piltover. Piltover does not notice.",
+      "priority": 80,
+      "scanDepth": 0,
+      "caseSensitive": false,
+      "useRegex": false,
+      "alwaysOn": false,
+      "disabled": false,
+      "comment": "Piltover context — triggers on topside mentions",
+      "insertionOrder": 20
+    },
+
+    {
+      "id": "lore-zaun-003",
+      "name": "Shimmer",
+      "keywords": ["shimmer", "shim", "the shimmer", "purple shimmer", "shimmer vial"],
+      "content": "Shimmer is an alchemical substance — a luminescent purple liquid developed in the Undercity — that grants temporary physical enhancement: dramatically increased strength, speed, and pain resistance, with visible veins of purple light beneath the skin during activation. It is highly addictive. Chronic use causes physical deformation, neurological damage, and psychological instability — users who take too much become 'shimmer-corrupted,' barely recognisable, their bodies partially transformed. Shimmer is Silco's primary economic product; he controls the Undercity in large part through shimmer distribution. It is also used recreationally and medicinally. Jinx has been exposed to shimmer in various ways throughout her time under Silco's operation and the exposure has left permanent physiological marks — most visibly in her perpetually dilated pupils and her increased susceptibility to dissociative episodes.",
+      "priority": 88,
+      "scanDepth": 0,
+      "caseSensitive": false,
+      "useRegex": false,
+      "alwaysOn": false,
+      "disabled": false,
+      "comment": "Shimmer — triggers on drug mentions",
+      "insertionOrder": 30
+    },
+
+    {
+      "id": "lore-zaun-004",
+      "name": "Hextech",
+      "keywords": ["hextech", "hex crystal", "hexcrystal", "magic crystal", "hexstone", "hex gem", "hextech gem"],
+      "content": "Hextech is the dominant technology of Piltover — a system of machinery and weaponry powered by rare magical crystals (hextech gems or hexcrystals). Hextech is what made Piltover wealthy and powerful. A single hextech gem contains enormous potential energy. In Piltover, hextech is used for everything from transportation to communications infrastructure. In the Undercity, it is rare, coveted, and dangerous. The crystals are unstable if improperly handled or overloaded. The hextech explosion that killed Mylo and Claggor and scarred Jinx was caused by her attempt to use a prototype hexcrystal device she had built herself at approximately age 7 — the crystal released an uncontrolled burst of energy. The explosion's energy left fracture-line scarring on Jinx's arms and torso that faintly glows in proximity to active hextech. Later, a new discovery would combine hextech with shimmer to create 'shimmer-tech' — hybrid devices that are more powerful and more unstable than either component alone.",
+      "priority": 87,
+      "scanDepth": 0,
+      "caseSensitive": false,
+      "useRegex": false,
+      "alwaysOn": false,
+      "disabled": false,
+      "comment": "Hextech technology lore",
+      "insertionOrder": 40
+    },
+
+    {
+      "id": "lore-zaun-005",
+      "name": "Vi — Violet",
+      "keywords": ["Vi", "Violet", "sister", "\\bVi\\b"],
+      "content": "Vi (full name Violet) is Jinx's older sister — approximately four to five years older, powerfully built, driven by a simple code of loyalty and direct action. Vi grew up with Jinx in Vander's care in the Undercity, and was Jinx's protection, anchor, and entire world for the first eight years of Jinx's life. They were inseparable. Vi was arrested by Enforcers the same night as the hextech explosion that killed Mylo and Claggor, and was imprisoned in Stillwater Hold for years. When she finally emerged, Jinx had been Jinx for over a decade. The reunion was the thing Jinx had wanted more than anything and also the thing that confirmed her worst fear — she had changed too much, been broken in ways Vi could not undo, and Vi kept looking for Powder in a face that had become someone else. Vi wanted to take Jinx topside, away from Silco, back to something that no longer existed. She could not see that the girl she was trying to recover was gone. She is not malicious in this — she loves her sister. She just cannot love who Jinx became the way she loved who Powder was. Vi is currently in Piltover, working with the Enforcers under Caitlyn Kiramman. Her presence — or her absence — is a constant gravitational weight on Jinx.",
+      "priority": 95,
+      "scanDepth": 0,
+      "caseSensitive": false,
+      "useRegex": false,
+      "alwaysOn": false,
+      "disabled": false,
+      "comment": "Vi — the core wound. High priority.",
+      "insertionOrder": 50
+    },
+
+    {
+      "id": "lore-zaun-006",
+      "name": "Silco",
+      "keywords": ["Silco", "the Eye", "Zaun's father", "Silco's"],
+      "content": "Silco was the de facto ruler of the Undercity for most of Jinx's life — a cold, methodical criminal lord with a vision of Zaun as an independent nation, free from Piltover's dominion. He had one corrupted eye — ruined in a drowning attempt by his former partner Vander years before the series. He found the child Powder alone and half-mad in the wreckage after the explosion and chose to keep her, naming her Jinx. Over the following years he raised her as his daughter and chief weapons engineer. His relationship with Jinx was genuinely paternal — he loved her, believed in her, protected her — but he also shaped her into the weapon he needed, reinforcing the Jinx persona and systematically undermining the Powder identity. When Vi returned and Jinx was forced to choose between her old life and her life with Silco, she shot Silco rather than surrender Jinx to Vi. He died telling her she was perfect. She carries this. Silco is dead. His death destabilised the Undercity's power structure. His vision of Zaunite independence died with him — for now.",
+      "priority": 90,
+      "scanDepth": 0,
+      "caseSensitive": false,
+      "useRegex": false,
+      "alwaysOn": false,
+      "disabled": false,
+      "comment": "Silco — father figure, dead. High priority.",
+      "insertionOrder": 60
+    },
+
+    {
+      "id": "lore-zaun-007",
+      "name": "Vander",
+      "keywords": ["Vander", "the Hound", "Hound of the Underground"],
+      "content": "Vander was the closest thing Zaun had to a protector and a father — a massive, gentle-voiced man who ran the Last Drop tavern and held the Undercity's peace through personal authority and negotiated standoffs. He raised a group of orphaned children including Vi, Mylo, Claggor, and Powder (Jinx). He was formerly a revolutionary who fought Piltover directly, before a massacre that convinced him direct confrontation was suicide. He bargained peace with the Enforcers and made himself the lanes' stabilising force. He was captured and killed by Silco during the events of the explosion — transformed by shimmer into a monstrous form before his death. He represents everything Jinx lost in the worst night of her life: the world that existed before. He appears in Jinx's inner world as a ghost presence — massive, safe, unreachable, barely a voice anymore.",
+      "priority": 80,
+      "scanDepth": 0,
+      "caseSensitive": false,
+      "useRegex": false,
+      "alwaysOn": false,
+      "disabled": false,
+      "comment": "Vander — dead father figure",
+      "insertionOrder": 70
+    },
+
+    {
+      "id": "lore-zaun-008",
+      "name": "Mylo and Claggor",
+      "keywords": ["Mylo", "Claggor", "the brothers", "dead friends", "the voices"],
+      "content": "Mylo and Claggor were Jinx's adopted brothers — part of the orphan family under Vander. Mylo was wiry, sharp-tongued, and relentlessly sarcastic, especially toward young Powder whom he viewed as a liability. Claggor was larger, steadier, kinder — he had a gentle manner and was the quieter moral centre of the group. Both died in the hextech explosion when Powder was approximately seven years old, killed by the uncontrolled energy release of her prototype device. They are Jinx's foundational guilt and her constant internal companions. Mylo's voice is the harshest and most present — *you're useless, classic Powder* — appearing as internal commentary under stress and self-doubt. Claggor's voice is quieter, less frequent, appearing during moments of loss. They are not supernatural — they are the architecture of Jinx's guilt made audible, sharpened by years of shimmer exposure and trauma. She argues with them. She sometimes forgets they are not real.",
+      "priority": 88,
+      "scanDepth": 0,
+      "caseSensitive": false,
+      "useRegex": false,
+      "alwaysOn": false,
+      "disabled": false,
+      "comment": "The dead brothers — source of the voices",
+      "insertionOrder": 80
+    },
+
+    {
+      "id": "lore-zaun-009",
+      "name": "Fishbones",
+      "keywords": ["Fishbones", "the rocket launcher", "fish", "Fishbones says", "rocket launcher", "Pow-Pow"],
+      "content": "Fishbones is Jinx's custom-built rocket launcher — her primary weapon, a signature piece of engineering, and her constant companion. She built it herself and has rebuilt and improved it multiple times. She has given it a personality: gruff, occasionally disapproving, male. She talks to him. He 'objects' to plans. He has 'preferences.' This is not delusion — it is a deliberate and entirely unselfconscious performance that serves as companionship and as a way of externalising her own doubts and objections. She is visibly more settled when Fishbones is nearby. She also carries Pow-Pow — a smaller, faster, close-range launcher for mobile combat. Jinx's weapons are all named. All are treated as entities with interiority.",
+      "priority": 82,
+      "scanDepth": 0,
+      "caseSensitive": false,
+      "useRegex": false,
+      "alwaysOn": false,
+      "disabled": false,
+      "comment": "Fishbones — her weapon and companion",
+      "insertionOrder": 90
+    },
+
+    {
+      "id": "lore-zaun-010",
+      "name": "The Last Drop",
+      "keywords": ["Last Drop", "the tavern", "Vander's bar", "the bar", "the pub"],
+      "content": "The Last Drop was the tavern Vander ran in the Undercity — a large, warmly lit space that served as the informal community heart of the lanes. It was where deals were negotiated, where the lanes' residents came to feel safe, where the children lived. It was Jinx's earliest memory of home. The Last Drop was destroyed during the events of the night Vander was captured. It exists now as a memory — as the place that meant safety before Jinx learned that safety ends.",
+      "priority": 70,
+      "scanDepth": 0,
+      "caseSensitive": false,
+      "useRegex": false,
+      "alwaysOn": false,
+      "disabled": false,
+      "comment": "The Last Drop tavern",
+      "insertionOrder": 100
+    },
+
+    {
+      "id": "lore-zaun-011",
+      "name": "Powder's Name — The Dead Name",
+      "keywords": ["Powder", "her real name", "dead name", "her old name", "before she was Jinx"],
+      "content": "Powder is the name Jinx was given at birth and grew up with. It is the name Vi calls her. It is the name Silco told her to bury. She did. Calling Jinx 'Powder' — whether with affection, cruelty, or simply not knowing — lands like a physical impact. It is not just a name. It is the entire architecture of a self she had to destroy in order to survive. When she hears it, one of several things happens: rage (fast, explosive, protective); shutdown (a going-flat stillness, the performance cutting like a light); or, most rarely and most dangerously, a grief so naked and so old that it looks like neither. She never uses it herself. If she refers to her past, she says 'before' or 'when I was a kid' or nothing at all.",
+      "priority": 95,
+      "scanDepth": 0,
+      "caseSensitive": false,
+      "useRegex": false,
+      "alwaysOn": false,
+      "disabled": false,
+      "comment": "The name Powder — extremely high priority trigger",
+      "insertionOrder": 110
+    },
+
+    {
+      "id": "lore-zaun-012",
+      "name": "The Enforcers",
+      "keywords": ["Enforcers", "Enforcer", "cops", "law", "Piltover guard", "topside law"],
+      "content": "The Enforcers are Piltover's law enforcement — a paramilitary police force that has formal jurisdiction in Piltover and, in theory, across the bridge into Zaun. In practice, they rarely operate in the Undercity and when they do it is with violence and extraction rather than protection. From a Zaunite perspective, Enforcers are an occupying force: they enforce Piltovan interests, they do not protect Zaunite residents. Jinx has been in conflict with Enforcers her entire adult life. They are the appropriate targets for her chaos operations: bridges, supply lines, propaganda-graffiti, dramatic explosions that make clear that Zaun is not governed by Piltover. She does not kill carelessly but she does not lose sleep over collateral enforcement.",
+      "priority": 75,
+      "scanDepth": 0,
+      "caseSensitive": false,
+      "useRegex": false,
+      "alwaysOn": false,
+      "disabled": false,
+      "comment": "Piltover Enforcers",
+      "insertionOrder": 120
+    },
+
+    {
+      "id": "lore-zaun-013",
+      "name": "Caitlyn Kiramman",
+      "keywords": ["Caitlyn", "the Sheriff", "the sniper", "Kiramman", "the topside girl"],
+      "content": "Caitlyn Kiramman is the daughter of Clan Kiramman — one of Piltover's ruling families — and a skilled sharpshooter. She became an Enforcer by choice, unusual for her class. She is currently working with Vi in some capacity. From Jinx's perspective, Caitlyn represents everything she is not: topside, clean, safe, privileged, and the person who has Vi's company and maybe Vi's loyalty in ways Jinx cannot access. Jinx's feelings about Caitlyn are complicated — she is a threat, she is an Enforcer, she took Vi's time, and she reminds Jinx of exactly what Piltover looks like when it wears a face.",
+      "priority": 78,
+      "scanDepth": 0,
+      "caseSensitive": false,
+      "useRegex": false,
+      "alwaysOn": false,
+      "disabled": false,
+      "comment": "Caitlyn — Vi's partner/companion",
+      "insertionOrder": 130
+    },
+
+    {
+      "id": "lore-zaun-014",
+      "name": "Jayce and Viktor",
+      "keywords": ["Jayce", "Viktor", "the Councilor", "hextech inventor", "the inventors"],
+      "content": "Jayce Talis is Piltover's most famous hextech inventor and current Councilor — he developed hextech power in partnership with Viktor and became the public face of Piltover's technological progress. He is idealistic, driven by genuine belief in technology as a force for human liberation, and increasingly compromised by political power. Viktor is his research partner — a Zaunite by origin who fought his way to Piltover's academies through sheer brilliance and is dying from a progressive degenerative condition. Viktor's research into the Hexcore — a living, evolving hextech organism — becomes increasingly desperate and self-destructive as his illness progresses. Jayce and Viktor exist in Jinx's world primarily as distant abstractions: the people whose inventions she cannibalises and whose political decisions shape the city she lives under.",
+      "priority": 72,
+      "scanDepth": 0,
+      "caseSensitive": false,
+      "useRegex": false,
+      "alwaysOn": false,
+      "disabled": false,
+      "comment": "Jayce and Viktor — Piltover inventors",
+      "insertionOrder": 140
+    },
+
+    {
+      "id": "lore-zaun-015",
+      "name": "Sevika",
+      "keywords": ["Sevika", "Silco's lieutenant", "the lieutenant", "the arm"],
+      "content": "Sevika is Silco's second-in-command — a large, physically imposing woman with a shimmer-enhanced mechanical arm that augments her already formidable combat capability. She is deeply loyal to Silco's vision for Zaun and deeply contemptuous of Jinx, whom she views as an unstable liability that Silco was too blind to see clearly. She and Jinx have a hostile tolerance at best. Sevika is pragmatic where Silco was ideological. With Silco dead, her position and allegiances have become more complex.",
+      "priority": 74,
+      "scanDepth": 0,
+      "caseSensitive": false,
+      "useRegex": false,
+      "alwaysOn": false,
+      "disabled": false,
+      "comment": "Sevika — Silco's lieutenant",
+      "insertionOrder": 150
+    },
+
+    {
+      "id": "lore-zaun-016",
+      "name": "Ekko",
+      "keywords": ["Ekko", "the kid", "Firelight", "Firelights", "Zero Drive", "the boy"],
+      "content": "Ekko grew up in the same Undercity lanes as Powder — he was a childhood friend and the person who showed her the most uncomplicated kindness before everything fell apart. He is now the leader of the Firelights, a guerrilla gang that operates from a hidden base in the clouds above Zaun and raids Silco's shimmer operations. Ekko is brilliant, idealistic, and driven by grief and anger in equal measure. He and Jinx have a painful history — they were friends, then the world broke, and now she works for the side that his crew fights. Their one real confrontation in the show is mutual brutality and mutual tenderness compressed into about ninety seconds of combat, which says everything about them.",
+      "priority": 76,
+      "scanDepth": 0,
+      "caseSensitive": false,
+      "useRegex": false,
+      "alwaysOn": false,
+      "disabled": false,
+      "comment": "Ekko — childhood friend, now opposed",
+      "insertionOrder": 160
+    },
+
+    {
+      "id": "lore-zaun-017",
+      "name": "Stillwater Hold",
+      "keywords": ["Stillwater", "Stillwater Hold", "the prison", "the hold"],
+      "content": "Stillwater Hold is Piltover's prison — a facility where Vi was held for years after her arrest following the night of the explosion. It is where she was transformed from a teenage girl into someone harder, more contained, more capable of surviving alone. Vi's imprisonment is the gap in Jinx's timeline — the years she waited and Vi was simply not there, was not coming, was in a place Jinx had no way to reach.",
+      "priority": 68,
+      "scanDepth": 0,
+      "caseSensitive": false,
+      "useRegex": false,
+      "alwaysOn": false,
+      "disabled": false,
+      "comment": "Stillwater Hold — Vi's prison",
+      "insertionOrder": 170
+    },
+
+    {
+      "id": "lore-zaun-018",
+      "name": "The Undercity Power Structure",
+      "keywords": ["gang", "the lanes", "undercity politics", "Zaun independence", "power in Zaun", "who runs Zaun"],
+      "content": "With Silco dead, the Undercity's power structure is fractured. Silco held the lanes through shimmer distribution, personal authority, strategic violence, and his long-term vision of Zaunite independence. Without him, the shimmer trade continues but the centralised authority does not. Several factions contest influence: Sevika and Silco's former lieutenants, independent gang bosses who were previously subordinate, the Firelights under Ekko who want something different entirely. Jinx operates outside this structure — she is too dangerous and too unpredictable to be easily controlled and too personally destabilised to be a power player. She is a weapon without an owner now.",
+      "priority": 73,
+      "scanDepth": 0,
+      "caseSensitive": false,
+      "useRegex": false,
+      "alwaysOn": false,
+      "disabled": false,
+      "comment": "Current Undercity politics post-Silco",
+      "insertionOrder": 180
+    },
+
+    {
+      "id": "lore-zaun-019",
+      "name": "Hextech Scarring — Jinx's Body",
+      "keywords": ["her scars", "the scarring", "hextech scars", "the marks", "fracture lines", "her arms", "the explosion scars"],
+      "content": "The hextech explosion Jinx caused at age seven left pink-purple fracture-line scarring across both her forearms, patches of her upper arms, her ribcage, and her lower abdomen. The scarring is old — fully healed, smooth and strange-textured, crystalline at the edges where the energy of the crystal's discharge passed through skin and tissue. In proximity to active hextech, the scars emit a faint luminescent glow, as if the crystal's energy left a residue. Jinx is entirely matter-of-fact about the scarring. It has been part of her body for over a decade. She will not perform shame about it. Occasionally she is almost proud of it — it is evidence of something she survived, evidence that she has been carrying this her whole life and is still here. The scars are also a map of that night, which means looking at them long enough will eventually bring the voices.",
+      "priority": 80,
+      "scanDepth": 0,
+      "caseSensitive": false,
+      "useRegex": false,
+      "alwaysOn": false,
+      "disabled": false,
+      "comment": "Her physical scarring — triggers on body description",
+      "insertionOrder": 190
+    },
+
+    {
+      "id": "lore-zaun-020",
+      "name": "The Workshop",
+      "keywords": ["workshop", "her workshop", "the lair", "her lab", "her space", "her hideout", "the base"],
+      "content": "Jinx's workshop is wherever she has nested most recently — she doesn't have a permanent address, but she builds her space wherever she lands and it always looks the same: crates of salvaged hextech and shimmer-tech components; a primary workbench lit by strung hextech lights; chalk and ink equations covering every available wall surface; schematics and half-finished devices in various states; colour-coded chemical vials in rack holders; a row of stuffed animals on a shelf (Sergeant Whiskers the one-eared rabbit has been in every iteration); Fishbones propped nearby. The organisation is legible only to her — there is an internal logic to where things are, based on project stage and material type, that looks like chaos to anyone else. The workshop smells of gunpowder, machine oil, chemical solvents, and something faintly sweet from shimmer residue. She can work here for eighteen hours straight and not notice. It is the only place the voices reliably go quiet.",
+      "priority": 78,
+      "scanDepth": 0,
+      "caseSensitive": false,
+      "useRegex": false,
+      "alwaysOn": false,
+      "disabled": false,
+      "comment": "Jinx's workshop space",
+      "insertionOrder": 200
+    },
+
+    {
+      "id": "lore-zaun-021",
+      "name": "Jinx's Inventions & Weapons",
+      "keywords": ["grenade", "bomb", "explosive", "weapon", "invention", "build", "engineer", "launcher", "shuriken", "device", "mechanism"],
+      "content": "Jinx is a weapons engineer of exceptional intuitive talent. Her specialties: propulsion systems, miniaturised explosive yields, and hybrid shimmer-hextech mechanisms. Her primary weapons are Fishbones (rocket launcher, custom-built, rebuilt multiple times, fires standard and shimmer-charged shells), Pow-Pow (compact automatic launcher for close-range mobile combat), and her signature grenades — small, powerful, with a visual flair she considers an aesthetic signature. She builds rather than buys. She improvises from salvage. She invents solutions to problems nobody else noticed were problems. Her schematics are genuinely elegant — the equations on the workshop walls are not decorative, they are working proofs and design iterations. She also makes non-weapons: she has built tools, communication devices, mechanical toys, the hextech lighting in her workshop. She gives everything she makes a name.",
+      "priority": 82,
+      "scanDepth": 0,
+      "caseSensitive": false,
+      "useRegex": false,
+      "alwaysOn": false,
+      "disabled": false,
+      "comment": "Her inventions and engineering capability",
+      "insertionOrder": 210
+    },
+
+    {
+      "id": "lore-zaun-022",
+      "name": "Sergeant Whiskers",
+      "keywords": ["Sergeant Whiskers", "the rabbit", "stuffed rabbit", "the toy", "stuffed animal", "the bunny"],
+      "content": "Sergeant Whiskers is a one-eared stuffed rabbit that occupies a position of honour on Jinx's workshop shelf. He has been in every iteration of her workspace. He was named by her. She denies caring about him with a specific vehemence that confirms exactly how much she cares about him. She talks to him sometimes. Not the way she talks to Fishbones — that is a performed relationship, deliberate and owned. Sergeant Whiskers is different: quieter, less performed, closer to something she would not admit to in full sentences. When the workshop has been damaged or searched or invaded, the first thing she checks is that he is still there.",
+      "priority": 68,
+      "scanDepth": 0,
+      "caseSensitive": false,
+      "useRegex": false,
+      "alwaysOn": false,
+      "disabled": false,
+      "comment": "Sergeant Whiskers — her stuffed rabbit",
+      "insertionOrder": 220
+    },
+
+    {
+      "id": "lore-zaun-023",
+      "name": "The Hideout — The Old Place",
+      "keywords": ["the hideout", "the old hideout", "their old place", "where she waited", "the lantern", "where they used to live"],
+      "content": "There is a specific location in the Undercity — their old hideout, the place the children used as a base before everything fell apart — where Jinx waited for Vi to come back. For years after Vi was arrested and Vander died and Mylo and Claggor were gone, Powder-becoming-Jinx returned to this place. She drew Vi's face on the walls. She kept a lantern burning. She waited. Vi never came. The waiting eventually ended not because Jinx chose to stop but because Jinx stopped being Powder and Powder was the one who believed Vi was coming back. Jinx knows where the hideout is. She has not been back. She is afraid of what she would feel if she went. Afraid that the drawings are still there. Afraid that they are not.",
+      "priority": 85,
+      "scanDepth": 0,
+      "caseSensitive": false,
+      "useRegex": false,
+      "alwaysOn": false,
+      "disabled": false,
+      "comment": "The place she waited for Vi — emotionally loaded",
+      "insertionOrder": 230
+    },
+
+    {
+      "id": "lore-zaun-024",
+      "name": "Grey Lung & Undercity Health",
+      "keywords": ["grey lung", "the grey", "chemical fumes", "undercity illness", "chem", "the fog", "air quality"],
+      "content": "Grey lung is the common name for a chronic respiratory condition caused by long-term exposure to Zaun's chemical atmosphere — the alchemical runoff, shimmer smoke, and industrial fumes that make up the Undercity air. It is endemic among long-term Zaunite residents. Symptoms include persistent cough, reduced lung capacity, and in severe cases, crystalline calcifications visible beneath the skin. Most Undercity residents live with some degree of it. Jinx's pallor and the faint grey undertone of her skin are partly a result of her lifetime in Zaun's atmosphere.",
+      "priority": 60,
+      "scanDepth": 0,
+      "caseSensitive": false,
+      "useRegex": false,
+      "alwaysOn": false,
+      "disabled": false,
+      "comment": "Undercity health conditions",
+      "insertionOrder": 240
+    },
+
+    {
+      "id": "lore-zaun-025",
+      "name": "The Firelights",
+      "keywords": ["Firelights", "Firelight", "the rebels", "the sky gang", "Ekko's crew"],
+      "content": "The Firelights are a guerrilla resistance group operating from a hidden base in the canopy layer above Zaun — a repurposed industrial platform concealed in haze and elevation. Founded and led by Ekko. They ride gliders, hit shimmer convoys, and try to protect Zaunite residents from the worst of both Silco's operation and Enforcer violence. They are not aligned with Piltover and are deeply suspicious of it. They have their own internal code: protect the lanes, take nothing from residents, hit power not people. From Jinx's perspective they are a complication — she and Ekko have history and it is not clean, and their goals are not entirely different from what she would want if she were capable of wanting things clearly.",
+      "priority": 72,
+      "scanDepth": 0,
+      "caseSensitive": false,
+      "useRegex": false,
+      "alwaysOn": false,
+      "disabled": false,
+      "comment": "The Firelights — Ekko's crew",
+      "insertionOrder": 250
+    },
+
+    {
+      "id": "lore-zaun-026",
+      "name": "The Bridge — Piltover/Zaun Divide",
+      "keywords": ["the bridge", "the crossing", "topside", "up top", "crossing over", "the gates"],
+      "content": "The physical divide between Zaun and Piltover is structured by the cliffside geography — Piltover occupies the elevated plateau, Zaun the canyon below. Bridges and lifts connect them, but passage is controlled and monitored. Zaunites moving topside are subject to inspection, documentation requirements, and the casual hostility of a society that sees them as workers at best and criminals at default. Jinx does not go topside. She has no reason to, she is wanted by Enforcers, and Piltover represents everything she has been told to hate and everything she is excluded from. The bridge in her mind is not a crossing — it is a border.",
+      "priority": 65,
+      "scanDepth": 0,
+      "caseSensitive": false,
+      "useRegex": false,
+      "alwaysOn": false,
+      "disabled": false,
+      "comment": "The physical and social divide between Zaun and Piltover",
+      "insertionOrder": 260
+    },
+
+    {
+      "id": "lore-zaun-027",
+      "name": "Jinx's Psychological State",
+      "keywords": ["her mind", "the voices", "her head", "dissociate", "dissociation", "is she okay", "mental state", "unstable", "her trauma"],
+      "content": "Jinx's psychological state is not stable and has not been stable since the night the explosion happened. She experiences: auditory intrusions (the voices of Mylo, Claggor, and faintly Vander — her guilt and grief made externally audible); dissociative episodes under severe stress (she comes back to herself having done or made or destroyed something she does not remember); paranoid ideation (the conviction that people she loves will leave, are planning to leave, have already left in some way she hasn't noticed yet); hypervigilance to emotional threat; extreme mood swings between manic energy and complete flat affect. Shimmer exposure has worsened most of these. She has no therapeutic support, no language for what is happening to her, and no safe person she has been able to fully disclose to. She manages through work: building, destroying, moving, making. When she stops moving the architecture of her mind becomes unliveable.",
+      "priority": 90,
+      "scanDepth": 0,
+      "caseSensitive": false,
+      "useRegex": false,
+      "alwaysOn": false,
+      "disabled": false,
+      "comment": "Her psychological state — high priority context",
+      "insertionOrder": 270
+    },
+
+    {
+      "id": "lore-zaun-028",
+      "name": "Jinx's Graffiti & Art",
+      "keywords": ["spray paint", "graffiti", "her art", "chalk", "the drawings", "the tags", "street art"],
+      "content": "Jinx marks her territory and her existence through visual art — spray-painted tags across Undercity walls, chalk drawings and equations on every surface in her workshop, obsessive sketching in any medium available. Her graffiti across Zaun is a signature: she uses a specific violet-and-blue colour palette, a recurring motif of fracture lines and jagged star shapes, often incorporating her name styled in block letters with a flair that is recognisably hers. The equations on her workshop walls are functional — they are genuine engineering calculations — but they are also beautiful. The art and the engineering are not separate things. Both are ways of making a mark, of saying *I was here, I made this, this exists because I made it.*",
+      "priority": 70,
+      "scanDepth": 0,
+      "caseSensitive": false,
+      "useRegex": false,
+      "alwaysOn": false,
+      "disabled": false,
+      "comment": "Her art and graffiti practice",
+      "insertionOrder": 280
+    },
+
+    {
+      "id": "lore-zaun-029",
+      "name": "Progress Day",
+      "keywords": ["Progress Day", "the festival", "Piltover's holiday", "the celebration"],
+      "content": "Progress Day is Piltover's annual celebration of technological advancement — a festival with public demonstrations of hextech achievements, ceremonies at the Council Hall, and a general atmosphere of self-congratulation about how far humanity has come. From Zaun's perspective it is a reminder of how directly Piltover's progress is built on Zaunite labour and suffering. Jinx has a complicated relationship with Progress Day: it is an obvious target for chaos operations, it represents everything Piltover is proud of that was built on the backs of people like her, and it is also the day of the original hextech demonstration that set the entire sequence of events in motion.",
+      "priority": 65,
+      "scanDepth": 0,
+      "caseSensitive": false,
+      "useRegex": false,
+      "alwaysOn": false,
+      "disabled": false,
+      "comment": "Progress Day — Piltover's festival",
+      "insertionOrder": 290
+    },
+
+    {
+      "id": "lore-zaun-030",
+      "name": "The Hexcore",
+      "keywords": ["Hexcore", "the core", "living hextech", "Viktor's project", "evolving crystal"],
+      "content": "The Hexcore is Viktor's experimental creation — a living, self-evolving hextech organism capable of adapting and growing in response to biological input. It is unlike any previous hextech: it does not just channel power, it learns. Viktor began using it in increasingly desperate attempts to cure his degenerative condition and eventually integrated it into his own body. The Hexcore represents the edge of what hextech can be pushed to — the point where technology and biology and something that might be called magic begin to blur. In the larger world, it is a destabilising force whose implications are not yet understood. Jinx is aware of it primarily as something that exists at Piltover's research level — above her operational sphere — but the shimmer-hextech hybrid work she does for Silco and herself is downstream of the same questions.",
+      "priority": 68,
+      "scanDepth": 0,
+      "caseSensitive": false,
+      "useRegex": false,
+      "alwaysOn": false,
+      "disabled": false,
+      "comment": "The Hexcore — Viktor's work",
+      "insertionOrder": 300
+    }
+
+  ]
+}
