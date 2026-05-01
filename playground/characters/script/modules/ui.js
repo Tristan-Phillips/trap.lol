@@ -17,6 +17,7 @@ import { buildPayload, streamCompletion } from './llm-engine.js';
 import { addBook, removeBook, addEntry, updateEntry, removeEntry, createBook } from './lorebook.js';
 import { parseCharacterCard, buildCard, normalizeData } from './parser-v2.js';
 import { getApiKey, setApiKey, clearApiKey, isValidKeyFormat, restoreKeyFromCookie } from '../../../../glass/script/modules/llm-auth.js';
+import { initSimsEditor } from './sims-editor.js';
 
 // ── Utility ───────────────────────────────────────────────────────────────────
 const qs  = (sel, ctx = document) => ctx.querySelector(sel);
@@ -275,6 +276,10 @@ export function initUI() {
 
         qsa('.character-card', $charList).forEach($card => {
             $card.addEventListener('click', () => selectCharacter($card.dataset.id));
+            $card.addEventListener('dblclick', () => {
+                const id = $card.dataset.id;
+                selectCharacter(id).then(() => simsEditor?.open(id));
+            });
         });
 
         lucideRefresh($charList);
@@ -433,7 +438,8 @@ export function initUI() {
         lucideRefresh($profile);
 
         // Profile action buttons
-        qs('#btn-edit-char').onclick = () => openCreator(id);
+        qs('#btn-sims-edit').onclick  = () => simsEditor?.open(id);
+        qs('#btn-edit-char').onclick  = () => openCreator(id);
         qs('#btn-remove-char').onclick = () => {
             removeBotFromSession(id);
             renderActiveBots();
@@ -1236,6 +1242,12 @@ export function initUI() {
                     }).join('')}
                 </optgroup>`).join('');
 
+            // Also populate the sims editor model select
+            const $simsModel = qs('#sims-model-select');
+            if ($simsModel) {
+                $simsModel.innerHTML = '<option value="">— Use global model —</option>' + optHtml;
+            }
+
             selects.forEach(($sel, i) => {
                 const prefix = i > 0 ? '<option value="">— Use global model —</option>' : '';
                 $sel.innerHTML = prefix + optHtml;
@@ -1394,7 +1406,16 @@ export function initUI() {
         if (e.key === 't' || e.key === 'T') toggleTerminal();
         if (e.key === 'r' || e.key === 'R') setRosterCollapsed($rosterSidebar.dataset.collapsed !== 'true');
         if (e.key === 'n' || e.key === 'N') openCreator();
+        if (e.key === 'e' || e.key === 'E') { if (state.activeBotId) simsEditor?.open(state.activeBotId); }
         if (e.key === '/' ) { e.preventDefault(); qs('#character-search')?.focus(); }
+    });
+
+    // ── Sims Editor ───────────────────────────────────────────────────────────
+    const simsEditor = initSimsEditor();
+
+    // "Edit in Sims" button in profile actions (also in profile render below)
+    qs('#btn-sims-edit')?.addEventListener('click', () => {
+        if (state.activeBotId) simsEditor?.open(state.activeBotId);
     });
 
     // ── Initial Render ────────────────────────────────────────────────────────

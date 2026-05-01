@@ -159,8 +159,11 @@
                         <div class="profile-view__empty">No character selected</div>
                     </div>
                     <div id="profile-actions" class="profile-actions" hidden>
+                        <button id="btn-sims-edit"   class="btn btn--accent btn--full">
+                            <i data-lucide="sliders-horizontal"></i> Edit in Sims Editor
+                        </button>
                         <button id="btn-edit-char"   class="btn btn--ghost btn--full">
-                            <i data-lucide="pencil"></i> Edit Character
+                            <i data-lucide="pencil"></i> Edit Card (Basic)
                         </button>
                         <button id="btn-remove-char" class="btn btn--ghost btn--full btn--danger-ghost">
                             <i data-lucide="user-minus"></i> Remove from Thread
@@ -831,6 +834,909 @@
         </footer>
     </div>
 </div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SIMS-STYLE CHARACTER EDITOR MODAL
+═══════════════════════════════════════════════════════════════ -->
+<div id="modal-sims-editor" class="modal sims-modal" hidden role="dialog" aria-modal="true" aria-labelledby="sims-editor-title">
+    <div class="modal__backdrop"></div>
+    <div class="sims-editor">
+
+        <!-- ── Top Bar ── -->
+        <header class="sims-editor__topbar">
+            <div class="sims-editor__topbar-left">
+                <i data-lucide="wand-2" class="sims-editor__topbar-icon"></i>
+                <h2 id="sims-editor-title" class="sims-editor__topbar-title">Character Editor</h2>
+                <span id="sims-char-name-badge" class="sims-char-badge">—</span>
+            </div>
+            <div class="sims-editor__topbar-right">
+                <button id="sims-random-btn" class="sims-btn sims-btn--ghost" title="Randomize all fields">
+                    <i data-lucide="shuffle"></i> Randomize
+                </button>
+                <button id="sims-reset-btn" class="sims-btn sims-btn--ghost" title="Reset all overrides to defaults">
+                    <i data-lucide="rotate-ccw"></i> Reset
+                </button>
+                <button id="sims-close-btn" class="sims-btn sims-btn--ghost sims-btn--icon" aria-label="Close">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- ── Main Body ── -->
+        <div class="sims-editor__body">
+
+            <!-- ╔══════════════════╗
+                 ║  LEFT — Preview  ║
+                 ╚══════════════════╝ -->
+            <aside class="sims-preview-panel">
+                <div class="sims-preview-panel__inner">
+                    <!-- Character avatar / silhouette -->
+                    <div class="sims-avatar-frame" id="sims-avatar-frame">
+                        <div class="sims-avatar-frame__img" id="sims-avatar-img"></div>
+                        <div class="sims-avatar-frame__silhouette" id="sims-silhouette" aria-label="Body map — click region to edit">
+                            <!-- SVG body map with clickable hotspots -->
+                            <svg class="sims-body-svg" viewBox="0 0 200 480" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Body regions">
+                                <!-- Head -->
+                                <ellipse cx="100" cy="52" rx="30" ry="36" class="sims-region" data-region="head" tabindex="0" role="button" aria-label="Head / Face" />
+                                <!-- Neck -->
+                                <rect x="88" y="83" width="24" height="18" rx="4" class="sims-region" data-region="neck" tabindex="0" role="button" aria-label="Neck" />
+                                <!-- Shoulders -->
+                                <ellipse cx="62" cy="110" rx="22" ry="14" class="sims-region" data-region="shoulders" tabindex="0" role="button" aria-label="Shoulders" />
+                                <ellipse cx="138" cy="110" rx="22" ry="14" class="sims-region" data-region="shoulders" tabindex="0" role="button" aria-label="Shoulders" />
+                                <!-- Chest / Torso upper -->
+                                <rect x="72" y="100" width="56" height="50" rx="6" class="sims-region" data-region="chest" tabindex="0" role="button" aria-label="Chest" />
+                                <!-- Left arm upper -->
+                                <rect x="42" y="108" width="20" height="58" rx="10" class="sims-region" data-region="arms" tabindex="0" role="button" aria-label="Arms" />
+                                <!-- Right arm upper -->
+                                <rect x="138" y="108" width="20" height="58" rx="10" class="sims-region" data-region="arms" tabindex="0" role="button" aria-label="Arms" />
+                                <!-- Left forearm -->
+                                <rect x="44" y="170" width="16" height="50" rx="8" class="sims-region sims-region--secondary" data-region="arms" tabindex="0" />
+                                <!-- Right forearm -->
+                                <rect x="140" y="170" width="16" height="50" rx="8" class="sims-region sims-region--secondary" data-region="arms" tabindex="0" />
+                                <!-- Hands -->
+                                <ellipse cx="52" cy="230" rx="12" ry="10" class="sims-region sims-region--secondary" data-region="arms" tabindex="0" />
+                                <ellipse cx="148" cy="230" rx="12" ry="10" class="sims-region sims-region--secondary" data-region="arms" tabindex="0" />
+                                <!-- Abdomen -->
+                                <rect x="76" y="150" width="48" height="50" rx="5" class="sims-region" data-region="abdomen" tabindex="0" role="button" aria-label="Abdomen" />
+                                <!-- Hips / Pelvis -->
+                                <ellipse cx="100" cy="215" rx="40" ry="24" class="sims-region" data-region="hips" tabindex="0" role="button" aria-label="Hips" />
+                                <!-- Left thigh -->
+                                <rect x="64" y="232" width="30" height="70" rx="10" class="sims-region" data-region="legs" tabindex="0" role="button" aria-label="Legs" />
+                                <!-- Right thigh -->
+                                <rect x="106" y="232" width="30" height="70" rx="10" class="sims-region" data-region="legs" tabindex="0" role="button" aria-label="Legs" />
+                                <!-- Left shin -->
+                                <rect x="68" y="305" width="22" height="65" rx="8" class="sims-region sims-region--secondary" data-region="legs" tabindex="0" />
+                                <!-- Right shin -->
+                                <rect x="110" y="305" width="22" height="65" rx="8" class="sims-region sims-region--secondary" data-region="legs" tabindex="0" />
+                                <!-- Feet -->
+                                <ellipse cx="79" cy="378" rx="18" ry="10" class="sims-region sims-region--secondary" data-region="legs" tabindex="0" />
+                                <ellipse cx="121" cy="378" rx="18" ry="10" class="sims-region sims-region--secondary" data-region="legs" tabindex="0" />
+
+                                <!-- Active region highlight ring (JS-controlled) -->
+                                <circle id="sims-region-indicator" cx="-999" cy="-999" r="0" class="sims-region-indicator" />
+                            </svg>
+
+                            <!-- Hover labels that appear on each region -->
+                            <div class="sims-region-tooltip" id="sims-region-tooltip"></div>
+                        </div>
+                    </div>
+
+                    <!-- Mini stat readout below avatar -->
+                    <div class="sims-stat-pills" id="sims-stat-pills">
+                        <!-- Dynamically populated -->
+                    </div>
+
+                    <!-- Quick color swatches for skin / hair / eyes -->
+                    <div class="sims-quick-swatches">
+                        <div class="sims-swatch-group">
+                            <span class="sims-swatch-label">Skin</span>
+                            <div class="sims-swatch-row" id="sims-skin-swatches">
+                                <button class="sims-color-dot" data-color="#FDDBB4" style="background:#FDDBB4" title="Light"></button>
+                                <button class="sims-color-dot" data-color="#E8B88A" style="background:#E8B88A" title="Beige"></button>
+                                <button class="sims-color-dot" data-color="#C8956C" style="background:#C8956C" title="Tan"></button>
+                                <button class="sims-color-dot" data-color="#A0624A" style="background:#A0624A" title="Brown"></button>
+                                <button class="sims-color-dot" data-color="#6B3A2A" style="background:#6B3A2A" title="Dark"></button>
+                                <button class="sims-color-dot" data-color="#2D1B0E" style="background:#2D1B0E" title="Deep"></button>
+                                <button class="sims-color-dot" data-color="#F5E6D0" style="background:#F5E6D0" title="Pale"></button>
+                                <button class="sims-color-dot sims-color-dot--custom" data-swatch-target="skinTone" title="Custom…">+</button>
+                            </div>
+                        </div>
+                        <div class="sims-swatch-group">
+                            <span class="sims-swatch-label">Hair</span>
+                            <div class="sims-swatch-row" id="sims-hair-swatches">
+                                <button class="sims-color-dot" data-color="#1A0A00" style="background:#1A0A00" title="Black"></button>
+                                <button class="sims-color-dot" data-color="#3B1F0A" style="background:#3B1F0A" title="Dark Brown"></button>
+                                <button class="sims-color-dot" data-color="#6B3A1F" style="background:#6B3A1F" title="Brown"></button>
+                                <button class="sims-color-dot" data-color="#A0522D" style="background:#A0522D" title="Auburn"></button>
+                                <button class="sims-color-dot" data-color="#D4A520" style="background:#D4A520" title="Blonde"></button>
+                                <button class="sims-color-dot" data-color="#F5E6C8" style="background:#F5E6C8" title="Platinum"></button>
+                                <button class="sims-color-dot" data-color="#C0C0C0" style="background:#C0C0C0" title="Silver"></button>
+                                <button class="sims-color-dot" data-color="#CC2244" style="background:#CC2244" title="Red"></button>
+                                <button class="sims-color-dot" data-color="#3B1F6B" style="background:#3B1F6B" title="Violet"></button>
+                                <button class="sims-color-dot" data-color="#1A5C8A" style="background:#1A5C8A" title="Blue"></button>
+                                <button class="sims-color-dot sims-color-dot--custom" data-swatch-target="hairColor" title="Custom…">+</button>
+                            </div>
+                        </div>
+                        <div class="sims-swatch-group">
+                            <span class="sims-swatch-label">Eyes</span>
+                            <div class="sims-swatch-row" id="sims-eye-swatches">
+                                <button class="sims-color-dot" data-color="#4B8BBE" style="background:#4B8BBE" title="Blue"></button>
+                                <button class="sims-color-dot" data-color="#6B8E5A" style="background:#6B8E5A" title="Green"></button>
+                                <button class="sims-color-dot" data-color="#8B6914" style="background:#8B6914" title="Amber"></button>
+                                <button class="sims-color-dot" data-color="#5C3A1F" style="background:#5C3A1F" title="Brown"></button>
+                                <button class="sims-color-dot" data-color="#2D2D2D" style="background:#2D2D2D" title="Black"></button>
+                                <button class="sims-color-dot" data-color="#9B59B6" style="background:#9B59B6" title="Violet"></button>
+                                <button class="sims-color-dot" data-color="#E0E0E0" style="background:#E0E0E0" title="Grey"></button>
+                                <button class="sims-color-dot" data-color="#E84393" style="background:#E84393" title="Pink"></button>
+                                <button class="sims-color-dot sims-color-dot--custom" data-swatch-target="eyeColor" title="Custom…">+</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- ╔══════════════════════╗
+                 ║  CENTER — Category   ║
+                 ╚══════════════════════╝ -->
+            <nav class="sims-category-nav" id="sims-category-nav" role="tablist" aria-label="Editor categories">
+                <button class="sims-cat-btn active" data-cat="identity" role="tab" aria-selected="true">
+                    <i data-lucide="user"></i>
+                    <span>Identity</span>
+                </button>
+                <button class="sims-cat-btn" data-cat="face" role="tab">
+                    <i data-lucide="scan-face"></i>
+                    <span>Face</span>
+                </button>
+                <button class="sims-cat-btn" data-cat="hair" role="tab">
+                    <i data-lucide="wind"></i>
+                    <span>Hair</span>
+                </button>
+                <button class="sims-cat-btn" data-cat="body" role="tab">
+                    <i data-lucide="person-standing"></i>
+                    <span>Body</span>
+                </button>
+                <button class="sims-cat-btn" data-cat="style" role="tab">
+                    <i data-lucide="shirt"></i>
+                    <span>Style</span>
+                </button>
+                <button class="sims-cat-btn" data-cat="voice" role="tab">
+                    <i data-lucide="mic-2"></i>
+                    <span>Voice</span>
+                </button>
+                <button class="sims-cat-btn" data-cat="personality" role="tab">
+                    <i data-lucide="brain"></i>
+                    <span>Personality</span>
+                </button>
+                <button class="sims-cat-btn" data-cat="behavior" role="tab">
+                    <i data-lucide="activity"></i>
+                    <span>Behavior</span>
+                </button>
+                <button class="sims-cat-btn" data-cat="adult" role="tab">
+                    <i data-lucide="lock"></i>
+                    <span>Adult</span>
+                    <span class="sims-cat-badge">18+</span>
+                </button>
+                <button class="sims-cat-btn" data-cat="ai" role="tab">
+                    <i data-lucide="cpu"></i>
+                    <span>AI / Model</span>
+                </button>
+            </nav>
+
+            <!-- ╔═══════════════════════╗
+                 ║  RIGHT — Detail Panel ║
+                 ╚═══════════════════════╝ -->
+            <main class="sims-detail-panel" id="sims-detail-panel" aria-live="polite">
+
+                <!-- ── IDENTITY ── -->
+                <section class="sims-panel" id="sims-panel-identity" data-panel="identity">
+                    <div class="sims-panel__header">
+                        <i data-lucide="user"></i> Identity &amp; Basics
+                    </div>
+                    <div class="sims-fields">
+                        <div class="sims-field sims-field--full">
+                            <label>Full Name</label>
+                            <input type="text" class="sims-input" data-spo="name" placeholder="Character's full name" spellcheck="false">
+                            <p class="sims-hint">Used as the display name everywhere.</p>
+                        </div>
+                        <div class="sims-field sims-field--full">
+                            <label>Nickname / Call Sign</label>
+                            <input type="text" class="sims-input" data-spo="nickname" placeholder="How others address them">
+                        </div>
+                        <div class="sims-field-row">
+                            <div class="sims-field">
+                                <label>Species / Race</label>
+                                <input type="text" class="sims-input" data-spo="species" placeholder="Human, Elf, Android…">
+                            </div>
+                            <div class="sims-field">
+                                <label>Gender Identity</label>
+                                <input type="text" class="sims-input" data-spo="gender" placeholder="Woman, Man, Non-binary…">
+                            </div>
+                        </div>
+                        <div class="sims-field-row">
+                            <div class="sims-field">
+                                <label>Age</label>
+                                <input type="text" class="sims-input" data-spo="age" placeholder="25">
+                            </div>
+                            <div class="sims-field">
+                                <label>Pronouns</label>
+                                <input type="text" class="sims-input" data-spo="pronouns" placeholder="she/her, they/them…">
+                            </div>
+                        </div>
+                        <div class="sims-field sims-field--full">
+                            <label>Occupation / Role</label>
+                            <input type="text" class="sims-input" data-spo="occupation" placeholder="Netrunner, Spy, Café Owner…">
+                        </div>
+                        <div class="sims-field sims-field--full">
+                            <label>Nationality / Origin</label>
+                            <input type="text" class="sims-input" data-spo="nationality" placeholder="Martian, British, Unknown…">
+                        </div>
+                        <div class="sims-field sims-field--full">
+                            <label>Tags <span class="sims-hint-inline">(comma-separated)</span></label>
+                            <input type="text" class="sims-input" data-spo="tagsRaw" placeholder="Fantasy, Sci-Fi, NSFW, Romance…">
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ── FACE ── -->
+                <section class="sims-panel" id="sims-panel-face" data-panel="face" hidden>
+                    <div class="sims-panel__header"><i data-lucide="scan-face"></i> Face &amp; Head</div>
+                    <div class="sims-fields">
+                        <div class="sims-field-row">
+                            <div class="sims-field">
+                                <label>Face Shape</label>
+                                <div class="sims-chip-group" data-spo="faceShape">
+                                    <button class="sims-chip" data-val="oval">Oval</button>
+                                    <button class="sims-chip" data-val="round">Round</button>
+                                    <button class="sims-chip" data-val="square">Square</button>
+                                    <button class="sims-chip" data-val="heart">Heart</button>
+                                    <button class="sims-chip" data-val="diamond">Diamond</button>
+                                    <button class="sims-chip" data-val="oblong">Oblong</button>
+                                </div>
+                            </div>
+                            <div class="sims-field">
+                                <label>Complexion</label>
+                                <div class="sims-chip-group" data-spo="complexion">
+                                    <button class="sims-chip" data-val="clear">Clear</button>
+                                    <button class="sims-chip" data-val="freckled">Freckled</button>
+                                    <button class="sims-chip" data-val="tattooed">Tattooed</button>
+                                    <button class="sims-chip" data-val="scarred">Scarred</button>
+                                    <button class="sims-chip" data-val="weathered">Weathered</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="sims-field-row">
+                            <div class="sims-field">
+                                <label>Eye Color</label>
+                                <input type="text" class="sims-input" data-spo="eyeColor" placeholder="amber, violet, silver…">
+                            </div>
+                            <div class="sims-field">
+                                <label>Eye Shape</label>
+                                <div class="sims-chip-group" data-spo="eyeShape">
+                                    <button class="sims-chip" data-val="almond">Almond</button>
+                                    <button class="sims-chip" data-val="round">Round</button>
+                                    <button class="sims-chip" data-val="hooded">Hooded</button>
+                                    <button class="sims-chip" data-val="upturned">Upturned</button>
+                                    <button class="sims-chip" data-val="deep-set">Deep-set</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="sims-slider-field">
+                            <label>Eye Size <span id="sims-val-eyeSize" class="sims-badge">5</span></label>
+                            <input type="range" class="sims-range" data-spo="eyeSize" min="1" max="10" step="1" value="5">
+                            <div class="sims-range-ends"><span>Narrow</span><span>Wide</span></div>
+                            <div class="sims-slider-desc" id="sims-desc-eyeSize">Average eye size.</div>
+                        </div>
+                        <div class="sims-field-row">
+                            <div class="sims-field">
+                                <label>Nose Type</label>
+                                <div class="sims-chip-group" data-spo="noseType">
+                                    <button class="sims-chip" data-val="button">Button</button>
+                                    <button class="sims-chip" data-val="aquiline">Aquiline</button>
+                                    <button class="sims-chip" data-val="snub">Snub</button>
+                                    <button class="sims-chip" data-val="broad">Broad</button>
+                                    <button class="sims-chip" data-val="pointed">Pointed</button>
+                                    <button class="sims-chip" data-val="straight">Straight</button>
+                                </div>
+                            </div>
+                            <div class="sims-field">
+                                <label>Lips</label>
+                                <div class="sims-chip-group" data-spo="lipsType">
+                                    <button class="sims-chip" data-val="thin">Thin</button>
+                                    <button class="sims-chip" data-val="full">Full</button>
+                                    <button class="sims-chip" data-val="bow">Cupid's Bow</button>
+                                    <button class="sims-chip" data-val="wide">Wide</button>
+                                    <button class="sims-chip" data-val="pouty">Pouty</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="sims-field sims-field--full">
+                            <label>Skin Tone</label>
+                            <input type="text" class="sims-input" data-spo="skinTone" placeholder="pale alabaster, warm olive, deep umber…">
+                        </div>
+                        <div class="sims-field sims-field--full">
+                            <label>Distinctive Facial Features</label>
+                            <input type="text" class="sims-input" data-spo="distinctiveFeatures" placeholder="scar above eyebrow, beauty mark, dimples…">
+                        </div>
+                        <div class="sims-field sims-field--full">
+                            <label>Facial Hair</label>
+                            <div class="sims-chip-group" data-spo="facialHair">
+                                <button class="sims-chip" data-val="none">None</button>
+                                <button class="sims-chip" data-val="stubble">Stubble</button>
+                                <button class="sims-chip" data-val="short-beard">Short Beard</button>
+                                <button class="sims-chip" data-val="full-beard">Full Beard</button>
+                                <button class="sims-chip" data-val="goatee">Goatee</button>
+                                <button class="sims-chip" data-val="mustache">Mustache</button>
+                            </div>
+                        </div>
+                        <div class="sims-field sims-field--full">
+                            <label>Piercings (face)</label>
+                            <input type="text" class="sims-input" data-spo="facePiercings" placeholder="nostril ring, septum, eyebrow bar, none…">
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ── HAIR ── -->
+                <section class="sims-panel" id="sims-panel-hair" data-panel="hair" hidden>
+                    <div class="sims-panel__header"><i data-lucide="wind"></i> Hair &amp; Head Style</div>
+                    <div class="sims-fields">
+                        <div class="sims-field sims-field--full">
+                            <label>Hair Color</label>
+                            <input type="text" class="sims-input" data-spo="hairColor" placeholder="raven black, platinum blonde, deep auburn…">
+                        </div>
+                        <div class="sims-field sims-field--full">
+                            <label>Highlights / Streaks</label>
+                            <input type="text" class="sims-input" data-spo="hairHighlights" placeholder="neon pink tips, silver streaks, none…">
+                        </div>
+                        <div class="sims-field sims-field--full">
+                            <label>Hair Length</label>
+                            <div class="sims-chip-group" data-spo="hairLength">
+                                <button class="sims-chip" data-val="shaved">Shaved</button>
+                                <button class="sims-chip" data-val="buzz">Buzz Cut</button>
+                                <button class="sims-chip" data-val="short">Short</button>
+                                <button class="sims-chip" data-val="medium">Medium</button>
+                                <button class="sims-chip" data-val="long">Long</button>
+                                <button class="sims-chip" data-val="very-long">Very Long</button>
+                                <button class="sims-chip" data-val="floor-length">Floor-length</button>
+                            </div>
+                        </div>
+                        <div class="sims-field sims-field--full">
+                            <label>Hair Style / Cut</label>
+                            <div class="sims-chip-group" data-spo="hairStyle">
+                                <button class="sims-chip" data-val="straight">Straight</button>
+                                <button class="sims-chip" data-val="wavy">Wavy</button>
+                                <button class="sims-chip" data-val="curly">Curly</button>
+                                <button class="sims-chip" data-val="coily">Coily</button>
+                                <button class="sims-chip" data-val="braided">Braided</button>
+                                <button class="sims-chip" data-val="dreadlocks">Dreadlocks</button>
+                                <button class="sims-chip" data-val="bun">Bun</button>
+                                <button class="sims-chip" data-val="ponytail">Ponytail</button>
+                                <button class="sims-chip" data-val="pixie">Pixie</button>
+                                <button class="sims-chip" data-val="undercut">Undercut</button>
+                                <button class="sims-chip" data-val="mohawk">Mohawk</button>
+                                <button class="sims-chip" data-val="messy">Messy / Tousled</button>
+                            </div>
+                        </div>
+                        <div class="sims-field sims-field--full">
+                            <label>Hair Texture</label>
+                            <div class="sims-chip-group" data-spo="hairTexture">
+                                <button class="sims-chip" data-val="silky">Silky</button>
+                                <button class="sims-chip" data-val="thick">Thick</button>
+                                <button class="sims-chip" data-val="fine">Fine</button>
+                                <button class="sims-chip" data-val="coarse">Coarse</button>
+                                <button class="sims-chip" data-val="kinky">Kinky</button>
+                            </div>
+                        </div>
+                        <div class="sims-slider-field">
+                            <label>Shine <span id="sims-val-hairShine" class="sims-badge">5</span></label>
+                            <input type="range" class="sims-range" data-spo="hairShine" min="1" max="10" step="1" value="5">
+                            <div class="sims-range-ends"><span>Matte / Dry</span><span>Lustrous</span></div>
+                            <div class="sims-slider-desc" id="sims-desc-hairShine">Healthy — normal shine.</div>
+                        </div>
+                        <div class="sims-field sims-field--full">
+                            <label>Accessories</label>
+                            <input type="text" class="sims-input" data-spo="hairAccessories" placeholder="flower pins, headband, ribbon, none…">
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ── BODY ── -->
+                <section class="sims-panel" id="sims-panel-body" data-panel="body" hidden>
+                    <div class="sims-panel__header"><i data-lucide="person-standing"></i> Body &amp; Physique</div>
+                    <div class="sims-fields">
+                        <div class="sims-field-row">
+                            <div class="sims-field">
+                                <label>Height</label>
+                                <input type="text" class="sims-input" data-spo="height" placeholder='5&apos;8" / 172cm'>
+                            </div>
+                            <div class="sims-field">
+                                <label>Weight / Build Feel</label>
+                                <input type="text" class="sims-input" data-spo="weight" placeholder="slender, athletic, curvy…">
+                            </div>
+                        </div>
+                        <div class="sims-field sims-field--full">
+                            <label>Body Type</label>
+                            <div class="sims-chip-group" data-spo="bodyType">
+                                <button class="sims-chip" data-val="petite">Petite</button>
+                                <button class="sims-chip" data-val="slender">Slender</button>
+                                <button class="sims-chip" data-val="lean">Lean</button>
+                                <button class="sims-chip" data-val="average">Average</button>
+                                <button class="sims-chip" data-val="athletic">Athletic</button>
+                                <button class="sims-chip" data-val="muscular">Muscular</button>
+                                <button class="sims-chip" data-val="curvy">Curvy</button>
+                                <button class="sims-chip" data-val="full-figured">Full-figured</button>
+                                <button class="sims-chip" data-val="stocky">Stocky</button>
+                                <button class="sims-chip" data-val="bulky">Bulky</button>
+                            </div>
+                        </div>
+                        <div class="sims-slider-field">
+                            <label>Muscle Tone <span id="sims-val-muscleTone" class="sims-badge">5</span></label>
+                            <input type="range" class="sims-range" data-spo="muscleTone" min="1" max="10" step="1" value="5">
+                            <div class="sims-range-ends"><span>Soft</span><span>Chiseled</span></div>
+                            <div class="sims-slider-desc" id="sims-desc-muscleTone">Average — some tone, not remarkable.</div>
+                        </div>
+                        <div class="sims-slider-field">
+                            <label>Body Fat <span id="sims-val-bodyFat" class="sims-badge">5</span></label>
+                            <input type="range" class="sims-range" data-spo="bodyFat" min="1" max="10" step="1" value="5">
+                            <div class="sims-range-ends"><span>Very lean</span><span>Voluptuous</span></div>
+                            <div class="sims-slider-desc" id="sims-desc-bodyFat">Average body composition.</div>
+                        </div>
+                        <div class="sims-field-row">
+                            <div class="sims-field">
+                                <label>Shoulder Width</label>
+                                <div class="sims-chip-group" data-spo="shoulderWidth">
+                                    <button class="sims-chip" data-val="narrow">Narrow</button>
+                                    <button class="sims-chip" data-val="medium">Medium</button>
+                                    <button class="sims-chip" data-val="broad">Broad</button>
+                                    <button class="sims-chip" data-val="very-broad">Very Broad</button>
+                                </div>
+                            </div>
+                            <div class="sims-field">
+                                <label>Waist</label>
+                                <div class="sims-chip-group" data-spo="waistType">
+                                    <button class="sims-chip" data-val="narrow">Narrow</button>
+                                    <button class="sims-chip" data-val="defined">Defined</button>
+                                    <button class="sims-chip" data-val="wide">Wide</button>
+                                    <button class="sims-chip" data-val="straight">Straight</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="sims-field sims-field--full">
+                            <label>Body Markings</label>
+                            <input type="text" class="sims-input" data-spo="bodyMarkings" placeholder="dragon tattoo on back, bite scar on shoulder, stretch marks…">
+                        </div>
+                        <div class="sims-field sims-field--full">
+                            <label>Piercings (body)</label>
+                            <input type="text" class="sims-input" data-spo="bodyPiercings" placeholder="navel ring, nipple piercings, none…">
+                        </div>
+                        <div class="sims-field sims-field--full">
+                            <label>Nails</label>
+                            <div class="sims-chip-group" data-spo="nails">
+                                <button class="sims-chip" data-val="short">Short</button>
+                                <button class="sims-chip" data-val="medium">Medium</button>
+                                <button class="sims-chip" data-val="long">Long</button>
+                                <button class="sims-chip" data-val="stiletto">Stiletto</button>
+                                <button class="sims-chip" data-val="bitten">Bitten</button>
+                                <button class="sims-chip" data-val="painted">Painted</button>
+                            </div>
+                        </div>
+                        <div class="sims-field sims-field--full">
+                            <label>Scent / Fragrance</label>
+                            <input type="text" class="sims-input" data-spo="scent" placeholder="smoky vetiver, cherry blossom, motor oil…">
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ── STYLE ── -->
+                <section class="sims-panel" id="sims-panel-style" data-panel="style" hidden>
+                    <div class="sims-panel__header"><i data-lucide="shirt"></i> Style &amp; Fashion</div>
+                    <div class="sims-fields">
+                        <div class="sims-field sims-field--full">
+                            <label>Style Archetype</label>
+                            <div class="sims-chip-group" data-spo="styleArchetype">
+                                <button class="sims-chip" data-val="casual">Casual</button>
+                                <button class="sims-chip" data-val="formal">Formal</button>
+                                <button class="sims-chip" data-val="military">Military</button>
+                                <button class="sims-chip" data-val="streetwear">Streetwear</button>
+                                <button class="sims-chip" data-val="gothic">Gothic</button>
+                                <button class="sims-chip" data-val="cyberpunk">Cyberpunk</button>
+                                <button class="sims-chip" data-val="fantasy">Fantasy Robes</button>
+                                <button class="sims-chip" data-val="elegant">Elegant</button>
+                                <button class="sims-chip" data-val="leather">Leather &amp; Chains</button>
+                                <button class="sims-chip" data-val="punk">Punk</button>
+                                <button class="sims-chip" data-val="minimalist">Minimalist</button>
+                                <button class="sims-chip" data-val="bohemian">Bohemian</button>
+                                <button class="sims-chip" data-val="uniform">Uniform</button>
+                                <button class="sims-chip" data-val="nude">Nude / Minimal</button>
+                            </div>
+                        </div>
+                        <div class="sims-field sims-field--full">
+                            <label>Primary Outfit Description</label>
+                            <textarea class="sims-textarea" data-spo="outfitDescription" rows="3" placeholder="Describe what they typically wear…"></textarea>
+                        </div>
+                        <div class="sims-field sims-field--full">
+                            <label>Color Palette</label>
+                            <input type="text" class="sims-input" data-spo="colorPalette" placeholder="blacks, deep purples, chrome accents…">
+                        </div>
+                        <div class="sims-field sims-field--full">
+                            <label>Signature Item / Accessory</label>
+                            <input type="text" class="sims-input" data-spo="signatureItem" placeholder="worn leather jacket, silver locket, katana…">
+                        </div>
+                        <div class="sims-field-row">
+                            <div class="sims-field">
+                                <label>Footwear</label>
+                                <input type="text" class="sims-input" data-spo="footwear" placeholder="combat boots, bare feet…">
+                            </div>
+                            <div class="sims-field">
+                                <label>Jewelry</label>
+                                <input type="text" class="sims-input" data-spo="jewelry" placeholder="nose ring, dog tags, none…">
+                            </div>
+                        </div>
+                        <div class="sims-field sims-field--full">
+                            <label>Underwear / Lingerie</label>
+                            <input type="text" class="sims-input" data-spo="underwear" placeholder="lace, boyshorts, none, boxers…">
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ── VOICE ── -->
+                <section class="sims-panel" id="sims-panel-voice" data-panel="voice" hidden>
+                    <div class="sims-panel__header"><i data-lucide="mic-2"></i> Voice &amp; Speech</div>
+                    <div class="sims-fields">
+                        <div class="sims-field sims-field--full">
+                            <label>Voice Tone</label>
+                            <div class="sims-chip-group" data-spo="voiceTone">
+                                <button class="sims-chip" data-val="high">High / Soft</button>
+                                <button class="sims-chip" data-val="melodic">Melodic</button>
+                                <button class="sims-chip" data-val="medium">Neutral</button>
+                                <button class="sims-chip" data-val="husky">Husky</button>
+                                <button class="sims-chip" data-val="low">Low / Deep</button>
+                                <button class="sims-chip" data-val="gravelly">Gravelly</button>
+                                <button class="sims-chip" data-val="raspy">Raspy</button>
+                                <button class="sims-chip" data-val="whispery">Whispery</button>
+                            </div>
+                        </div>
+                        <div class="sims-field sims-field--full">
+                            <label>Accent / Dialect</label>
+                            <input type="text" class="sims-input" data-spo="accent" placeholder="Southern drawl, crisp British, no accent…">
+                        </div>
+                        <div class="sims-field sims-field--full">
+                            <label>Speech Patterns / Quirks</label>
+                            <textarea class="sims-textarea" data-spo="speechPatterns" rows="3"
+                                placeholder="Short clipped sentences. Uses technical jargon. Never swears. Always deflects with dark humor…"></textarea>
+                        </div>
+                        <div class="sims-field sims-field--full">
+                            <label>Catchphrases / Verbal Tics</label>
+                            <input type="text" class="sims-input" data-spo="catchphrases" placeholder='"Ghost-code." ends sentences with "understood?" …'>
+                        </div>
+                        <div class="sims-slider-field">
+                            <label>Verbosity <span id="sims-val-verbosity" class="sims-badge">5</span></label>
+                            <input type="range" class="sims-range" data-spo="verbosity" min="1" max="10" step="1" value="5">
+                            <div class="sims-range-ends"><span>Terse / Minimal</span><span>Elaborate / Verbose</span></div>
+                            <div class="sims-slider-desc" id="sims-desc-verbosity">Measured — says what needs saying, nothing more.</div>
+                        </div>
+                        <div class="sims-slider-field">
+                            <label>Formality <span id="sims-val-formality" class="sims-badge">5</span></label>
+                            <input type="range" class="sims-range" data-spo="formality" min="1" max="10" step="1" value="5">
+                            <div class="sims-range-ends"><span>Crude / Casual</span><span>Formal / Refined</span></div>
+                            <div class="sims-slider-desc" id="sims-desc-formality">Conversational — relaxed, everyday speech.</div>
+                        </div>
+                        <div class="sims-field sims-field--full">
+                            <label>Language / Vocabulary</label>
+                            <input type="text" class="sims-input" data-spo="vocabulary" placeholder="archaic, street slang, highly technical, poetic…">
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ── PERSONALITY ── -->
+                <section class="sims-panel" id="sims-panel-personality" data-panel="personality" hidden>
+                    <div class="sims-panel__header"><i data-lucide="brain"></i> Personality &amp; Psychology</div>
+                    <div class="sims-fields">
+                        <div class="sims-field sims-field--full">
+                            <label>Core Traits <span class="sims-hint-inline">(define who they are)</span></label>
+                            <textarea class="sims-textarea" data-spo="coreTraits" rows="3"
+                                placeholder="Fiercely loyal, deeply sarcastic, secretly tender. Obsessive perfectionist. Feral when cornered…"></textarea>
+                        </div>
+                        <div class="sims-field sims-field--full">
+                            <label>Archetype / Trope</label>
+                            <div class="sims-chip-group sims-chip-group--wrap" data-spo="archetype">
+                                <button class="sims-chip" data-val="tsundere">Tsundere</button>
+                                <button class="sims-chip" data-val="yandere">Yandere</button>
+                                <button class="sims-chip" data-val="kuudere">Kuudere</button>
+                                <button class="sims-chip" data-val="dandere">Dandere</button>
+                                <button class="sims-chip" data-val="gentle-giant">Gentle Giant</button>
+                                <button class="sims-chip" data-val="noble-rogue">Noble Rogue</button>
+                                <button class="sims-chip" data-val="broken-hero">Broken Hero</button>
+                                <button class="sims-chip" data-val="villain">Villain</button>
+                                <button class="sims-chip" data-val="trickster">Trickster</button>
+                                <button class="sims-chip" data-val="caretaker">Caretaker</button>
+                                <button class="sims-chip" data-val="sage">Sage</button>
+                                <button class="sims-chip" data-val="rebel">Rebel</button>
+                                <button class="sims-chip" data-val="seducer">Seducer</button>
+                                <button class="sims-chip" data-val="innocent">Innocent</button>
+                            </div>
+                        </div>
+                        <div class="sims-field sims-field--full">
+                            <label>Fears &amp; Vulnerabilities</label>
+                            <textarea class="sims-textarea" data-spo="fears" rows="2"
+                                placeholder="Abandonment, intimacy, the dark, failure, losing control…"></textarea>
+                        </div>
+                        <div class="sims-field sims-field--full">
+                            <label>Desires &amp; Motivations</label>
+                            <textarea class="sims-textarea" data-spo="desires" rows="2"
+                                placeholder="Power, love, revenge, freedom, redemption, the truth…"></textarea>
+                        </div>
+                        <div class="sims-field sims-field--full">
+                            <label>Moral Alignment</label>
+                            <div class="sims-chip-group" data-spo="alignment">
+                                <button class="sims-chip" data-val="lawful-good">Lawful Good</button>
+                                <button class="sims-chip" data-val="neutral-good">Neutral Good</button>
+                                <button class="sims-chip" data-val="chaotic-good">Chaotic Good</button>
+                                <button class="sims-chip" data-val="lawful-neutral">Lawful Neutral</button>
+                                <button class="sims-chip" data-val="true-neutral">True Neutral</button>
+                                <button class="sims-chip" data-val="chaotic-neutral">Chaotic Neutral</button>
+                                <button class="sims-chip" data-val="lawful-evil">Lawful Evil</button>
+                                <button class="sims-chip" data-val="neutral-evil">Neutral Evil</button>
+                                <button class="sims-chip" data-val="chaotic-evil">Chaotic Evil</button>
+                            </div>
+                        </div>
+                        <div class="sims-field sims-field--full">
+                            <label>Backstory Summary</label>
+                            <textarea class="sims-textarea" data-spo="backstory" rows="4"
+                                placeholder="Brief origin. Key formative events. What shaped them into who they are now…"></textarea>
+                        </div>
+                        <div class="sims-field sims-field--full">
+                            <label>Secrets</label>
+                            <textarea class="sims-textarea" data-spo="secrets" rows="2"
+                                placeholder="What they hide from others. What they'd never admit…"></textarea>
+                        </div>
+                        <div class="sims-field sims-field--full">
+                            <label>Hobbies &amp; Interests</label>
+                            <input type="text" class="sims-input" data-spo="hobbies" placeholder="hacking, poetry, blade maintenance, cooking…">
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ── BEHAVIOR SLIDERS ── -->
+                <section class="sims-panel" id="sims-panel-behavior" data-panel="behavior" hidden>
+                    <div class="sims-panel__header"><i data-lucide="activity"></i> Behavioral Dials</div>
+                    <p class="sims-panel__desc">These sliders directly influence how the character responds and what behaviors the AI emphasizes. Injected as directives into every system prompt.</p>
+                    <div class="sims-fields">
+
+                        <div class="sims-slider-field sims-slider-field--prominent">
+                            <label>Dominance <span id="sims-val-dominanceLevel" class="sims-badge">50</span></label>
+                            <div class="sims-dual-label"><span>Deeply Submissive</span><span>Dominant / Alpha</span></div>
+                            <input type="range" class="sims-range sims-range--lg" data-spo="dominanceLevel" min="0" max="100" step="1" value="50">
+                            <div class="sims-slider-desc" id="sims-desc-dominanceLevel">Balanced — neither dominant nor submissive.</div>
+                        </div>
+
+                        <div class="sims-slider-field sims-slider-field--prominent">
+                            <label>Explicitness <span id="sims-val-explicitnessLevel" class="sims-badge">50</span></label>
+                            <div class="sims-dual-label"><span>Fade-to-Black</span><span>Fully Explicit</span></div>
+                            <input type="range" class="sims-range sims-range--lg" data-spo="explicitnessLevel" min="0" max="100" step="1" value="50">
+                            <div class="sims-slider-desc" id="sims-desc-explicitnessLevel">Moderate — sensual but not graphic.</div>
+                        </div>
+
+                        <div class="sims-slider-field sims-slider-field--prominent">
+                            <label>Romanticism <span id="sims-val-romanticismLevel" class="sims-badge">50</span></label>
+                            <div class="sims-dual-label"><span>Cold / Detached</span><span>Deeply Passionate</span></div>
+                            <input type="range" class="sims-range sims-range--lg" data-spo="romanticismLevel" min="0" max="100" step="1" value="50">
+                            <div class="sims-slider-desc" id="sims-desc-romanticismLevel">Neutral emotional temperature.</div>
+                        </div>
+
+                        <div class="sims-slider-field sims-slider-field--prominent">
+                            <label>Violence <span id="sims-val-violenceLevel" class="sims-badge">30</span></label>
+                            <div class="sims-dual-label"><span>Non-violent</span><span>Graphic Violence</span></div>
+                            <input type="range" class="sims-range sims-range--lg" data-spo="violenceLevel" min="0" max="100" step="1" value="30">
+                            <div class="sims-slider-desc" id="sims-desc-violenceLevel">Low — minimal combat description.</div>
+                        </div>
+
+                        <div class="sims-slider-field sims-slider-field--prominent">
+                            <label>Empathy <span id="sims-val-empathyLevel" class="sims-badge">50</span></label>
+                            <div class="sims-dual-label"><span>Callous / Predatory</span><span>Deeply Empathic</span></div>
+                            <input type="range" class="sims-range sims-range--lg" data-spo="empathyLevel" min="0" max="100" step="1" value="50">
+                            <div class="sims-slider-desc" id="sims-desc-empathyLevel">Moderate empathy and emotional awareness.</div>
+                        </div>
+
+                        <div class="sims-slider-field sims-slider-field--prominent">
+                            <label>Playfulness <span id="sims-val-playfulnessLevel" class="sims-badge">50</span></label>
+                            <div class="sims-dual-label"><span>Serious / Grave</span><span>Mischievous / Playful</span></div>
+                            <input type="range" class="sims-range sims-range--lg" data-spo="playfulnessLevel" min="0" max="100" step="1" value="50">
+                            <div class="sims-slider-desc" id="sims-desc-playfulnessLevel">Balanced tone.</div>
+                        </div>
+
+                        <div class="sims-slider-field sims-slider-field--prominent">
+                            <label>Obedience <span id="sims-val-obedienceLevel" class="sims-badge">50</span></label>
+                            <div class="sims-dual-label"><span>Defiant / Willful</span><span>Compliant / Eager</span></div>
+                            <input type="range" class="sims-range sims-range--lg" data-spo="obedienceLevel" min="0" max="100" step="1" value="50">
+                            <div class="sims-slider-desc" id="sims-desc-obedienceLevel">Neither pushes back nor blindly complies.</div>
+                        </div>
+
+                        <div class="sims-slider-field sims-slider-field--prominent">
+                            <label>Jealousy / Possessiveness <span id="sims-val-jealousyLevel" class="sims-badge">30</span></label>
+                            <div class="sims-dual-label"><span>Unattached</span><span>Obsessively Possessive</span></div>
+                            <input type="range" class="sims-range sims-range--lg" data-spo="jealousyLevel" min="0" max="100" step="1" value="30">
+                            <div class="sims-slider-desc" id="sims-desc-jealousyLevel">Low — relaxed and non-territorial.</div>
+                        </div>
+
+                        <div class="sims-slider-field sims-slider-field--prominent">
+                            <label>Humor <span id="sims-val-humorLevel" class="sims-badge">50</span></label>
+                            <div class="sims-dual-label"><span>Humorless</span><span>Witty / Comic</span></div>
+                            <input type="range" class="sims-range sims-range--lg" data-spo="humorLevel" min="0" max="100" step="1" value="50">
+                            <div class="sims-slider-desc" id="sims-desc-humorLevel">Average comedic presence.</div>
+                        </div>
+
+                        <div class="sims-slider-field sims-slider-field--prominent">
+                            <label>Sadism / Cruelty <span id="sims-val-sadismLevel" class="sims-badge">10</span></label>
+                            <div class="sims-dual-label"><span>Gentle / Kind</span><span>Sadistic / Cruel</span></div>
+                            <input type="range" class="sims-range sims-range--lg" data-spo="sadismLevel" min="0" max="100" step="1" value="10">
+                            <div class="sims-slider-desc" id="sims-desc-sadismLevel">Essentially non-cruel.</div>
+                        </div>
+
+                    </div>
+                </section>
+
+                <!-- ── ADULT / NSFW ── -->
+                <section class="sims-panel" id="sims-panel-adult" data-panel="adult" hidden>
+                    <div class="sims-panel__header sims-panel__header--adult">
+                        <i data-lucide="lock"></i> Adult / NSFW Anchors
+                        <span class="sims-badge sims-badge--warn">18+ Only</span>
+                    </div>
+                    <p class="sims-panel__desc">These fields are injected verbatim into every message's system context to enforce physical consistency during explicit content. Leave blank to skip that anchor.</p>
+                    <div class="sims-fields">
+                        <div class="sims-field-row">
+                            <div class="sims-field">
+                                <label>Breast Size</label>
+                                <div class="sims-chip-group" data-spo="breastSize">
+                                    <button class="sims-chip" data-val="flat">Flat</button>
+                                    <button class="sims-chip" data-val="small">Small</button>
+                                    <button class="sims-chip" data-val="b-cup">B-Cup</button>
+                                    <button class="sims-chip" data-val="c-cup">C-Cup</button>
+                                    <button class="sims-chip" data-val="d-cup">D-Cup</button>
+                                    <button class="sims-chip" data-val="dd-cup">DD-Cup</button>
+                                    <button class="sims-chip" data-val="large">Large</button>
+                                    <button class="sims-chip" data-val="very-large">Very Large</button>
+                                    <button class="sims-chip" data-val="massive">Massive</button>
+                                    <button class="sims-chip" data-val="n/a">N/A</button>
+                                </div>
+                            </div>
+                            <div class="sims-field">
+                                <label>Breast Shape</label>
+                                <div class="sims-chip-group" data-spo="breastShape">
+                                    <button class="sims-chip" data-val="round">Round</button>
+                                    <button class="sims-chip" data-val="perky">Perky</button>
+                                    <button class="sims-chip" data-val="natural">Natural</button>
+                                    <button class="sims-chip" data-val="teardrop">Teardrop</button>
+                                    <button class="sims-chip" data-val="wide-set">Wide-set</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="sims-field-row">
+                            <div class="sims-field">
+                                <label>Areolae Size</label>
+                                <div class="sims-chip-group" data-spo="areolaeSize">
+                                    <button class="sims-chip" data-val="small">Small</button>
+                                    <button class="sims-chip" data-val="medium">Medium</button>
+                                    <button class="sims-chip" data-val="large">Large</button>
+                                    <button class="sims-chip" data-val="puffy">Puffy</button>
+                                </div>
+                            </div>
+                            <div class="sims-field">
+                                <label>Nipple Color</label>
+                                <input type="text" class="sims-input" data-spo="nippleColor" placeholder="pink, rosy, dark brown, dusky…">
+                            </div>
+                        </div>
+                        <div class="sims-field-row">
+                            <div class="sims-field">
+                                <label>Buttocks</label>
+                                <div class="sims-chip-group" data-spo="buttocksSize">
+                                    <button class="sims-chip" data-val="flat">Flat</button>
+                                    <button class="sims-chip" data-val="small">Small</button>
+                                    <button class="sims-chip" data-val="average">Average</button>
+                                    <button class="sims-chip" data-val="full">Full</button>
+                                    <button class="sims-chip" data-val="large">Large</button>
+                                    <button class="sims-chip" data-val="very-large">Very Large</button>
+                                </div>
+                            </div>
+                            <div class="sims-field">
+                                <label>Butt Shape</label>
+                                <div class="sims-chip-group" data-spo="buttocksShape">
+                                    <button class="sims-chip" data-val="round">Round</button>
+                                    <button class="sims-chip" data-val="heart">Heart</button>
+                                    <button class="sims-chip" data-val="square">Square</button>
+                                    <button class="sims-chip" data-val="bubble">Bubble</button>
+                                    <button class="sims-chip" data-val="flat">Flat</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="sims-field sims-field--full">
+                            <label>Body Hair</label>
+                            <div class="sims-chip-group" data-spo="bodyHair">
+                                <button class="sims-chip" data-val="none/bare">None / Bare</button>
+                                <button class="sims-chip" data-val="minimal">Minimal</button>
+                                <button class="sims-chip" data-val="trimmed">Trimmed</button>
+                                <button class="sims-chip" data-val="natural">Natural</button>
+                                <button class="sims-chip" data-val="thick">Thick</button>
+                            </div>
+                        </div>
+                        <div class="sims-field sims-field--full">
+                            <label>Genitalia / Intimate Anatomy</label>
+                            <textarea class="sims-textarea" data-spo="genitalia" rows="3"
+                                placeholder="Detailed physical description for anatomical consistency during explicit scenes…"></textarea>
+                        </div>
+                        <div class="sims-field sims-field--full">
+                            <label>Intimate Piercings / Tattoos</label>
+                            <input type="text" class="sims-input" data-spo="intimateMarkings" placeholder="VCH piercing, lower back tattoo, none…">
+                        </div>
+                        <div class="sims-field sims-field--full">
+                            <label>Other Adult Features</label>
+                            <textarea class="sims-textarea" data-spo="otherAdultFeatures" rows="3"
+                                placeholder="Any remaining physical details important for explicit scene consistency…"></textarea>
+                        </div>
+                        <div class="sims-field sims-field--full">
+                            <label>Sexual Orientation / Preferences</label>
+                            <input type="text" class="sims-input" data-spo="sexualOrientation" placeholder="bisexual, lesbian, heterosexual, fluid…">
+                        </div>
+                        <div class="sims-field sims-field--full">
+                            <label>Turn-ons / Kinks</label>
+                            <textarea class="sims-textarea" data-spo="kinks" rows="3"
+                                placeholder="List specific turn-ons, kinks, fetishes the character has…"></textarea>
+                        </div>
+                        <div class="sims-field sims-field--full">
+                            <label>Hard Limits / Dislikes</label>
+                            <textarea class="sims-textarea" data-spo="hardLimits" rows="2"
+                                placeholder="What this character will never do or find repulsive…"></textarea>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ── AI / MODEL ── -->
+                <section class="sims-panel" id="sims-panel-ai" data-panel="ai" hidden>
+                    <div class="sims-panel__header"><i data-lucide="cpu"></i> AI &amp; Model Settings</div>
+                    <div class="sims-fields">
+                        <div class="sims-field sims-field--full">
+                            <label>Model Override <span class="sims-hint-inline">(overrides global model for this character)</span></label>
+                            <select class="sims-select" data-spo="modelOverride" id="sims-model-select">
+                                <option value="">— Use global model —</option>
+                            </select>
+                        </div>
+                        <div class="sims-field sims-field--full">
+                            <label>System Prompt Override <span class="sims-hint-inline">(replaces default RP template for this character)</span></label>
+                            <textarea class="sims-textarea sims-textarea--code" data-spo="systemPromptOverride" rows="5"
+                                placeholder="Custom system prompt. Use {{char}} and {{user}} macros…"></textarea>
+                        </div>
+                        <div class="sims-field sims-field--full">
+                            <label>Append to System Prompt</label>
+                            <textarea class="sims-textarea sims-textarea--code" data-spo="appendToSystem" rows="4"
+                                placeholder="Text appended after the system prompt. Useful for persistent reminders or extra context…"></textarea>
+                        </div>
+                        <div class="sims-field sims-field--full">
+                            <label>Post-History Instructions</label>
+                            <textarea class="sims-textarea sims-textarea--code" data-spo="postHistoryOverride" rows="3"
+                                placeholder="Injected after conversation history. Strong anchor for recurring behaviors…"></textarea>
+                        </div>
+                    </div>
+                </section>
+
+            </main><!-- /.sims-detail-panel -->
+
+        </div><!-- /.sims-editor__body -->
+
+        <!-- ── Footer ── -->
+        <footer class="sims-editor__footer">
+            <div class="sims-editor__footer-left">
+                <span class="sims-save-status" id="sims-save-status"></span>
+            </div>
+            <div class="sims-editor__footer-right">
+                <button id="sims-cancel-btn" class="sims-btn sims-btn--ghost">Cancel</button>
+                <button id="sims-apply-btn" class="sims-btn sims-btn--accent">
+                    <i data-lucide="check"></i> Apply Changes
+                </button>
+            </div>
+        </footer>
+
+    </div><!-- /.sims-editor -->
+</div><!-- /#modal-sims-editor -->
 
 
 <!-- ── Shards ── -->

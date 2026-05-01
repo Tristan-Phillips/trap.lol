@@ -1,5 +1,5 @@
 // Neural Uplink — Authentication & Security
-import { esc } from './core.js';
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 export const KEY_REGEX = /^sk-nano-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const COOKIE_NAME = "llm_ak";
