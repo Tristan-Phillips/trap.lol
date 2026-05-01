@@ -720,6 +720,25 @@ html, body.underdark-page {
     text-transform: uppercase;
     letter-spacing: 0.1em;
 }
+.world-view__scan-depth {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: var(--space-sm);
+    padding: 8px 10px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 6px;
+}
+.world-view__scan-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
 .world-view__empty {
     color: var(--text-muted);
     font-size: var(--text-sm);
@@ -1049,6 +1068,78 @@ input:checked + .toggle-switch__slider::before        { transform: translateX(16
     color: var(--text-muted);
     line-height: 1.3;
     opacity: 0.75;
+}
+
+/* ── Message: live thinking indicator (during streaming) ── */
+.message__thinking-live {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 6px 0;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: rgba(var(--accent-rgb), 0.08);
+    border: 1px solid rgba(var(--accent-rgb), 0.2);
+    font-size: 0.65rem;
+    font-family: var(--font-mono);
+    color: var(--theme-accent);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    animation: thinking-pulse 1.4s ease-in-out infinite;
+}
+.message__thinking-live svg { width: 11px; height: 11px; }
+@keyframes thinking-pulse {
+    0%, 100% { opacity: 0.5; }
+    50%       { opacity: 1; }
+}
+
+/* ── Debug system prompt block ── */
+.message--debug {
+    margin: var(--space-xs) var(--space-md);
+}
+.debug-prompt {
+    border: 1px solid rgba(var(--accent-rgb), 0.2);
+    border-radius: 6px;
+    overflow: hidden;
+}
+.debug-prompt__label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    font-size: 0.65rem;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--theme-accent);
+    opacity: 0.6;
+    cursor: pointer;
+    user-select: none;
+    list-style: none;
+    background: rgba(var(--accent-rgb), 0.04);
+}
+.debug-prompt__label svg { width: 11px; height: 11px; }
+.debug-prompt[open] .debug-prompt__label { opacity: 1; border-bottom: 1px solid rgba(var(--accent-rgb), 0.15); }
+.debug-prompt__hint {
+    margin-left: auto;
+    font-size: 0.6rem;
+    opacity: 0.5;
+    text-transform: none;
+    letter-spacing: 0;
+}
+.debug-prompt[open] .debug-prompt__hint { display: none; }
+.debug-prompt__body {
+    padding: 10px 14px;
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.63rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 400px;
+    overflow-y: auto;
+    background: rgba(0,0,0,0.2);
 }
 
 /* ── Message thought bubble ── */

@@ -189,6 +189,14 @@
                             </button>
                         </div>
                     </div>
+                    <div class="world-view__scan-depth">
+                        <label class="world-view__scan-label">
+                            Scan depth
+                            <span id="lore-scan-val" class="badge">5</span>
+                        </label>
+                        <input type="range" id="lore-scan-input" min="1" max="30" step="1" value="5"
+                            title="How many recent messages to scan for lorebook keyword matches">
+                    </div>
                     <div id="book-select-wrap" class="book-select-wrap" hidden>
                         <select id="book-select" class="control-select control-select--sm"></select>
                     </div>

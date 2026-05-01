@@ -13,7 +13,7 @@ import {
     setConfig, saveCharacter, deleteCharacter,
     defaultCharOverride
 } from './state.js';
-import { buildPayload, streamCompletion, extractThoughts } from './llm-engine.js';
+import { buildPayload, streamCompletion } from './llm-engine.js';
 import { addBook, removeBook, addEntry, updateEntry, removeEntry, createBook } from './lorebook.js';
 import { parseCharacterCard, buildCard, normalizeData } from './parser-v2.js';
 import { getApiKey, setApiKey, clearApiKey, isValidKeyFormat, restoreKeyFromCookie } from '../../../../glass/script/modules/llm-auth.js';
@@ -929,7 +929,7 @@ export function initUI() {
         state.history.forEach(msg => {
             const char = msg.botId ? state.loadedCharacters[msg.botId] : null;
             const meta = msg.botId ? state.characters.find(c => c.id === msg.botId) : null;
-            appendMessage(msg, char?.name || null, meta?.avatar_path || char?.avatar);
+            appendMessage(msg, char?.name || null, meta?.avatar_path || char?.avatar, msg.thoughts || null);
         });
     }
 
@@ -979,6 +979,10 @@ export function initUI() {
         const $content = qs('.message__content', $botMsg);
         $content.innerHTML = '<span class="thinking"><span></span><span></span><span></span></span>';
 
+        // Live "thinking" indicator shown while <think> tags are streaming
+        let $thinkingAside = null;
+        let isInsideThink   = false;
+
         try {
             const payload = buildPayload({
                 character: { ...char, id: botId },
@@ -989,36 +993,66 @@ export function initUI() {
                 allChars:  state.activeBotIds.map(id => ({ ...state.loadedCharacters[id], id }))
             });
 
-            // Debug: show built system prompt in thread if flag is set
-            if (state.config.flags?.showSystemPrompt) {
+            // Debug: show built system prompt as a one-time collapsible block,
+            // only when the thread has no prior debug message this session.
+            if (state.config.flags?.showSystemPrompt && !qs('.message--debug', $thread)) {
                 const sysMsgs = payload.messages.filter(m => m.role === 'system');
                 const sysText = sysMsgs.map(m => m.content).join('\n\n---\n\n');
-                const debugMsg = {
-                    id: `msg-debug-${Date.now()}`,
-                    role: 'system',
-                    content: `\`\`\`\n${sysText}\n\`\`\``,
-                    botId: null,
-                    timestamp: Date.now(),
-                    tokens: 0,
-                    model: ''
-                };
-                appendMessage(debugMsg, 'System Prompt', null);
+                const $debug  = document.createElement('div');
+                $debug.className = 'message message--debug';
+                $debug.innerHTML = `
+                    <details class="debug-prompt">
+                        <summary class="debug-prompt__label">
+                            <i data-lucide="terminal"></i> System Prompt
+                            <span class="debug-prompt__hint">click to expand</span>
+                        </summary>
+                        <pre class="debug-prompt__body">${esc(sysText)}</pre>
+                    </details>`;
+                $thread.insertBefore($debug, $botMsg);
+                lucideRefresh($debug);
             }
 
             await streamCompletion(payload,
                 (_delta, full) => {
+                    // Detect whether we are currently inside a <think> block
+                    const openCount  = (full.match(/<think>/gi)  || []).length;
+                    const closeCount = (full.match(/<\/think>/gi) || []).length;
+                    const nowThinking = openCount > closeCount;
+
+                    if (nowThinking && !isInsideThink) {
+                        // Just entered a <think> block — show aside indicator
+                        isInsideThink = true;
+                        if (!$thinkingAside) {
+                            $thinkingAside = document.createElement('div');
+                            $thinkingAside.className = 'message__thinking-live';
+                            $thinkingAside.innerHTML = '<i data-lucide="brain"></i> <span>Thinking…</span>';
+                            const $main = qs('.message__main', $botMsg);
+                            $main.insertBefore($thinkingAside, qs('.message__bubble', $botMsg));
+                            lucideRefresh($thinkingAside);
+                        }
+                    } else if (!nowThinking && isInsideThink) {
+                        // Exited the <think> block — remove the indicator
+                        isInsideThink = false;
+                        $thinkingAside?.remove();
+                        $thinkingAside = null;
+                    }
+
                     $content.innerHTML = renderMarkdown(full);
                     $thread.scrollTop  = $thread.scrollHeight;
                 },
                 (finalText, tokens, thoughts) => {
+                    // Clean up any lingering thinking indicator
+                    $thinkingAside?.remove();
+
                     const msg = addMessage('bot', finalText, botId, {
                         tokens,
-                        model: payload.model
+                        model: payload.model,
+                        thoughts: thoughts?.length ? thoughts : null
                     });
                     $botMsg.dataset.msgId = msg.id;
                     $content.innerHTML   = renderMarkdown(finalText);
 
-                    // Inject thought bubble if showThoughts and we have thoughts
+                    // Inject permanent thought bubble
                     if (state.config.flags?.showThoughts && thoughts?.length) {
                         const $thoughtsEl = document.createElement('details');
                         $thoughtsEl.className = 'message__thoughts';
@@ -1030,13 +1064,13 @@ export function initUI() {
                         lucideRefresh($thoughtsEl);
                     }
 
-                    // Wire retry on final message
                     qs('[data-action="retry"]', $botMsg)?.setAttribute('data-bot-id', botId);
                     state.isStreaming = false;
                     setSendState(false);
                     updateTelemetry();
                 },
                 (err) => {
+                    $thinkingAside?.remove();
                     $content.innerHTML = `<span class="msg-error">[Error: ${esc(err.message)}]</span>`;
                     state.isStreaming = false;
                     setSendState(false);
@@ -1239,6 +1273,11 @@ export function initUI() {
         set('group-turn-mode',  c.groupTurnMode);
         if (qs('#stream-toggle')) qs('#stream-toggle').checked = c.stream;
 
+        // World tab
+        const scanDepth = c.lorebookScanDepth ?? 5;
+        if (qs('#lore-scan-input'))  qs('#lore-scan-input').value   = scanDepth;
+        if (qs('#lore-scan-val'))    qs('#lore-scan-val').textContent = scanDepth;
+
         // Sync narrative flags
         const flags = c.flags || {};
         const FLAG_KEYS = [
@@ -1252,6 +1291,13 @@ export function initUI() {
             if ($cb) $cb.checked = flags[key] ?? $cb.defaultChecked;
         });
     }
+
+    // Lorebook scan depth (lives in World tab)
+    qs('#lore-scan-input')?.addEventListener('input', e => {
+        const v = parseInt(e.target.value);
+        qs('#lore-scan-val').textContent = v;
+        setConfig({ lorebookScanDepth: v });
+    });
 
     bindSlider('temp-input',       'temp-val',      'temperature');
     bindSlider('topp-input',       'topp-val',      'topP');

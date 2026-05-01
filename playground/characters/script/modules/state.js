@@ -178,9 +178,13 @@ export function loadState() {
         state.activeSessionId = state.sessions[0].id;
     }
 
-    // Migrate: ensure each session has full config with new keys
+    // Migrate: ensure each session has full config with new keys.
+    // Shallow spread handles top-level keys; flags needs a deep merge so that
+    // sessions with a partial flags object still pick up any newly added flags.
     state.sessions.forEach(sess => {
-        sess.config = { ...defaultConfig(), ...sess.config };
+        const saved = sess.config || {};
+        sess.config = { ...defaultConfig(), ...saved };
+        sess.config.flags = { ...defaultConfig().flags, ...(saved.flags || {}) };
     });
 }
 
@@ -227,6 +231,7 @@ export function addMessage(role, content, botId = null, meta = {}) {
         timestamp: Date.now(),
         tokens: meta.tokens || 0,
         model: meta.model || '',
+        thoughts: meta.thoughts || null,
         edited: false
     };
     state.session.history.push(msg);
