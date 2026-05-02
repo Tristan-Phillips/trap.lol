@@ -245,6 +245,15 @@ export function addMessage(role, content, botId = null, meta = {}) {
     state.session.history.push(msg);
     state.session.updatedAt = Date.now();
 
+    // Auto-name the session from the first user message if it still has a default name
+    if (role === 'user' && state.session.history.filter(m => m.role === 'user').length === 1) {
+        const isDefault = /^Thread\s*#\d+$/.test(state.session.name);
+        if (isDefault) {
+            const excerpt = content.replace(/\s+/g, ' ').trim().slice(0, 42);
+            state.session.name = excerpt.length < content.trim().length ? excerpt + '…' : excerpt;
+        }
+    }
+
     // Telemetry
     if (role === 'user') state.telemetry.turns++;
     state.telemetry.totalTokens += msg.tokens;

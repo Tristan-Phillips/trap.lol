@@ -592,6 +592,7 @@ export function initSimsEditor() {
 
     // ── Range Sliders ─────────────────────────────────────────────────────────
     function initSliders() {
+        const defaults = defaultCharOverride();
         qsa('.sims-range').forEach($range => {
             const key = $range.dataset.spo;
             if (!key) return;
@@ -606,6 +607,14 @@ export function initSimsEditor() {
                 if ($desc) $desc.textContent = getSliderDesc(key, v) || '';
                 // Record
                 recordChange(key, v);
+            });
+
+            // Double-click resets to default value
+            $range.addEventListener('dblclick', () => {
+                const def = defaults[key];
+                if (def === undefined) return;
+                setSliderValue(key, def);
+                recordChange(key, parseFloat(def));
             });
         });
     }
@@ -760,17 +769,15 @@ export function initSimsEditor() {
             else extFields[k] = v;
         }
 
-        // Persist user edits separately so card re-seeding on next open can layer them on top
+        // Read raw stored override once — used both to preserve existing ext fields
+        // and to layer user edits on top of card defaults.
         const stored = state.config?.charOverrides?.[activeCharId] || {};
         const prevUserEdits = stored._userEdits || { core: {}, ext: {} };
         const newUserEdits = {
             core: { ...prevUserEdits.core, ...coreFields },
             ext:  { ...prevUserEdits.ext,  ...extFields  },
         };
-
-        // Also update the live merged override so current session sees the changes
-        const existing = getCharOverride(activeCharId);
-        const newExt = { ...(existing.ext || {}), ...extFields };
+        const newExt = { ...(stored.ext || {}), ...extFields };
         setCharOverride(activeCharId, { ...coreFields, ext: newExt, _userEdits: newUserEdits });
 
         pendingChanges = {};
@@ -827,7 +834,7 @@ export function initSimsEditor() {
     qs('#sims-reset-btn')?.addEventListener('click', () => {
         if (!activeCharId) return;
         const def = defaultCharOverride();
-        setCharOverride(activeCharId, { ...def, ext: {} });
+        setCharOverride(activeCharId, { ...def, ext: {}, _userEdits: { core: {}, ext: {} } });
         loadAllFields(def);
         pendingChanges = {};
         setSaveStatus('Reset to defaults ✓');

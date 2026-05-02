@@ -118,9 +118,18 @@ function renderMarkdown(text) {
 
 // ── Group auto-response manager ───────────────────────────────────────────────
 let _groupAbort = false;
+const _rrIndex = {};   // sessionId → next round-robin bot index
 function clearGroupTimers() {
     _groupAbort = true;
 }
+
+// ── Narrative flag keys (shared between syncConfigUI and init bindings) ────────
+const FLAG_KEYS = [
+    'showThoughts', 'showSystemPrompt', 'injectConsistency', 'injectSliders',
+    'injectAppearance', 'injectAdult', 'injectPersonality', 'injectVoice',
+    'injectStyle', 'injectAIDirectives', 'impersonationBlock', 'povFirst',
+    'jailbreakResistance'
+];
 
 // ── Main Init ─────────────────────────────────────────────────────────────────
 export function initUI() {
@@ -372,6 +381,7 @@ export function initUI() {
                 const removedId = btn.dataset.remove;
                 const removedMeta = state.characters.find(c => c.id === removedId);
                 removeBotFromSession(removedId);
+                delete _rrIndex[state.activeSessionId];
                 renderActiveBots();
                 renderRoster();
                 renderWelcomeGrid();
@@ -432,6 +442,7 @@ export function initUI() {
                     saveState();
                 } catch (e) {
                     console.error('[underdark] Failed to load card:', e);
+                    showToast(`Failed to load character card: ${e.message}`, 'error');
                     return null;
                 }
             } else {
@@ -465,6 +476,7 @@ export function initUI() {
         }
 
         setActiveBot(id);
+        delete _rrIndex[state.activeSessionId];
         renderRoster();
         renderActiveBots();
         renderProfile(char, id);
@@ -581,6 +593,7 @@ export function initUI() {
                 e.stopPropagation();
                 const id = $btn.dataset.remove;
                 removeBotFromSession(id);
+                delete _rrIndex[state.activeSessionId];
                 renderActiveBots();
                 renderRoster();
                 const newActive = state.loadedCharacters[state.activeBotId];
@@ -649,10 +662,14 @@ export function initUI() {
         qs('#alt-greeting-select')?.addEventListener('change', e => {
             if (!e.target.value) return;
             const greeting = char.alternate_greetings[parseInt(e.target.value)];
-            if (greeting && state.history.length === 0) {
-                const msg = addMessage('bot', greeting, id);
-                appendMessage(msg, char.name, meta?.avatar_path || char.avatar);
+            if (!greeting) return;
+            if (state.history.length > 0) {
+                showToast('Clear the thread first to use an alternate greeting', 'warn');
+                e.target.value = '';
+                return;
             }
+            const msg = addMessage('bot', greeting, id);
+            appendMessage(msg, char.name, meta?.avatar_path || char.avatar);
         });
 
         lucideRefresh($profile);
@@ -664,6 +681,7 @@ export function initUI() {
         qs('#btn-edit-char').onclick     = () => openCreator(id);
         qs('#btn-remove-char').onclick = () => {
             removeBotFromSession(id);
+            delete _rrIndex[state.activeSessionId];
             renderActiveBots();
             renderRoster();
             renderWelcomeGrid();
@@ -677,6 +695,7 @@ export function initUI() {
             const ok = await confirm('Delete Character', `Permanently delete ${char.name}? This cannot be undone.`);
             if (!ok) return;
             await deleteCharacter(id);
+            delete _avatarCache[id];
             renderRoster();
             renderActiveBots();
             renderPersonaCharSelect();
@@ -1441,6 +1460,8 @@ export function initUI() {
         }
 
         $bookWrap.hidden = false;
+        // Guard: ensure all books have an entries array (handles malformed saves)
+        lorebooks.forEach(b => { if (!Array.isArray(b.entries)) b.entries = []; });
         $bookSelect.innerHTML = lorebooks.map(b =>
             `<option value="${esc(b.id)}">${esc(b.name)} (${b.entries.length})</option>`
         ).join('');
@@ -1494,6 +1515,19 @@ export function initUI() {
 
     $bookSelect.addEventListener('change', renderLorebooks);
 
+    qs('#remove-book')?.addEventListener('click', async () => {
+        const bookId = getActiveBookId();
+        if (!bookId) return;
+        const book = state.lorebooks.find(b => b.id === bookId);
+        if (!book) return;
+        const ok = await confirm('Delete Lorebook', `Delete "${book.name}" and all its entries? This cannot be undone.`);
+        if (!ok) return;
+        removeBook(state.lorebooks, bookId);
+        saveState();
+        renderLorebooks();
+        showToast(`Lorebook "${book.name}" deleted`, 'warn');
+    });
+
     qs('#add-book').addEventListener('click', () => {
         const name = prompt('Lorebook name:', 'New Lorebook');
         if (!name?.trim()) return;
@@ -1546,6 +1580,7 @@ export function initUI() {
 
     qs('#lore-editor-close').addEventListener('click',  () => hideModal('modal-lore-editor'));
     qs('#lore-editor-cancel').addEventListener('click', () => hideModal('modal-lore-editor'));
+    qs('.modal__backdrop', qs('#modal-lore-editor'))?.addEventListener('click', () => hideModal('modal-lore-editor'));
 
     qs('#lore-editor-save').addEventListener('click', () => {
         const entryId = qs('#lore-entry-id').value;
@@ -1599,6 +1634,7 @@ export function initUI() {
         const hasComments   = commentCount > 0;
         const isBot         = role === 'bot';
         const modelLabel    = msgObj.model ? `<span class="message__model-badge">${esc(msgObj.model.split('/').pop() || msgObj.model)}</span>` : '';
+        const tokenLabel    = (isBot && msgObj.tokens > 0) ? `<span class="message__token-badge" title="${msgObj.tokens} tokens">${msgObj.tokens}t</span>` : '';
 
         const $msg = document.createElement('div');
         $msg.className = `message message--${role}`;
@@ -1612,6 +1648,7 @@ export function initUI() {
                 <div class="message__header">
                     <span class="message__name">${esc(name)}</span>
                     ${modelLabel}
+                    ${tokenLabel}
                     <span class="message__time">${new Date(msgObj.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                     <div class="message__actions">
                         <button class="msg-action" data-action="copy"    title="Copy text"><i data-lucide="copy"></i></button>
@@ -1735,6 +1772,12 @@ export function initUI() {
                 ...msgsAfter
             ];
             saveState();
+            // Render the re-appended messages into the DOM
+            [originalBotMsg, ...msgsAfter].forEach(m => {
+                const c = m.botId ? state.loadedCharacters[m.botId] : null;
+                const meta = m.botId ? state.characters.find(ch => ch.id === m.botId) : null;
+                appendMessage(m, c?.name || null, meta?.avatar_path || c?.avatar, m.thoughts || null);
+            });
         });
 
         // ── React ────────────────────────────────────────────────────────────
@@ -1804,7 +1847,6 @@ export function initUI() {
         // Context-aware title and retrigger label
         if ($title) $title.innerHTML = `<i data-lucide="pencil"></i> Edit — ${esc(speakerName || 'Message')}`;
         if ($retrigLabel) {
-            $retrigLabel.querySelector('input').labels?.[0]
             $retrigLabel.lastChild.textContent = isBot
                 ? ' Regenerate this response'
                 : ' Re-run bot after saving';
@@ -1938,14 +1980,18 @@ export function initUI() {
             };
         });
 
-        // Close on outside click
-        const close = (e) => {
-            if (!$picker.contains(e.target)) {
-                $picker.hidden = true;
-                document.removeEventListener('click', close, true);
-            }
+        // Close on outside click or Escape
+        const closePicker = (e) => {
+            if (e.type === 'keydown' && e.key !== 'Escape') return;
+            if (e.type === 'click' && $picker.contains(e.target)) return;
+            $picker.hidden = true;
+            document.removeEventListener('click', closePicker, true);
+            document.removeEventListener('keydown', closePicker, true);
         };
-        setTimeout(() => document.addEventListener('click', close, true), 0);
+        setTimeout(() => {
+            document.addEventListener('click', closePicker, true);
+            document.addEventListener('keydown', closePicker, true);
+        }, 0);
     }
 
     function refreshReactions($msgEl, msgId) {
@@ -2021,6 +2067,7 @@ export function initUI() {
     const $searchBar    = qs('#thread-search-bar');
     const $searchInput  = qs('#thread-search-input');
     const $searchCount  = qs('#thread-search-count');
+    const $searchClear  = qs('#thread-search-clear');
     let _searchMatches  = [];
     let _searchIdx      = 0;
     let _searchOrigHTML = new Map(); // $contentEl → original innerHTML
@@ -2031,7 +2078,9 @@ export function initUI() {
         if (!$searchBar.hidden) {
             $searchInput.focus();
             $searchInput.select();
+            if ($searchClear) $searchClear.hidden = !$searchInput.value;
         } else {
+            if ($searchClear) $searchClear.hidden = true;
             clearSearch();
         }
     });
@@ -2078,7 +2127,16 @@ export function initUI() {
         if ($searchCount) $searchCount.textContent = `${idx + 1}/${_searchMatches.length}`;
     }
 
-    $searchInput?.addEventListener('input', debounce(() => runSearch($searchInput.value), 200));
+    $searchInput?.addEventListener('input', debounce(() => {
+        runSearch($searchInput.value);
+        if ($searchClear) $searchClear.hidden = !$searchInput.value;
+    }, 200));
+    $searchClear?.addEventListener('click', () => {
+        $searchInput.value = '';
+        $searchClear.hidden = true;
+        clearSearch();
+        $searchInput.focus();
+    });
     qs('#thread-search-prev')?.addEventListener('click', () => {
         if (!_searchMatches.length) return;
         _searchIdx = (_searchIdx - 1 + _searchMatches.length) % _searchMatches.length;
@@ -2091,6 +2149,7 @@ export function initUI() {
     });
     qs('#thread-search-close')?.addEventListener('click', () => {
         $searchBar.hidden = true;
+        if ($searchClear) $searchClear.hidden = true;
         clearSearch();
     });
 
@@ -2149,7 +2208,7 @@ export function initUI() {
             renderSessions();
             renderAll();
         } catch (err) {
-            alert(`Import failed: ${err.message}`);
+            showToast(`Import failed: ${err.message}`, 'error');
         }
     });
 
@@ -2173,7 +2232,8 @@ export function initUI() {
         } else {
             qs('#profile-card').innerHTML = '<div class="profile-view__empty">No character selected</div>';
             qs('#profile-actions').hidden = true;
-            qs('#gallery-strip').hidden = true;
+            const $gs = qs('#gallery-strip');
+            if ($gs) $gs.hidden = true;
         }
     }
 
@@ -2189,7 +2249,8 @@ export function initUI() {
         state.isStreaming = true;
         const controller = new AbortController();
         state.pendingAbort = controller;
-        setSendState(true);
+        const override = getCharOverride(botId);
+        setSendState(true, override.nickname || char.name);
 
         // Create placeholder message
         const placeholder = {
@@ -2211,12 +2272,13 @@ export function initUI() {
 
         try {
             const payload = buildPayload({
-                character: { ...char, id: botId },
-                history:   state.history,
-                lore:      state.lorebooks,
-                config:    state.config,
-                isGroup:   state.activeBotIds.length > 1,
-                allChars:  state.activeBotIds.map(id => ({ ...state.loadedCharacters[id], id }))
+                character:  { ...char, id: botId },
+                history:    state.history,
+                lore:       state.lorebooks,
+                config:     state.config,
+                isGroup:    state.activeBotIds.length > 1,
+                allChars:   state.activeBotIds.map(id => ({ ...state.loadedCharacters[id], id })),
+                sessionId:  state.activeSessionId
             });
 
             // Debug: show built system prompt as a one-time collapsible block,
@@ -2278,6 +2340,20 @@ export function initUI() {
                     $botMsg.dataset.msgId = msg.id;
                     $content.innerHTML   = renderMarkdown(finalText);
 
+                    // Patch token badge into the live message element
+                    if (tokens > 0) {
+                        const $hdr = qs('.message__header', $botMsg);
+                        if ($hdr && !qs('.message__token-badge', $hdr)) {
+                            const $tb = document.createElement('span');
+                            $tb.className = 'message__token-badge';
+                            $tb.title = `${tokens} tokens`;
+                            $tb.textContent = `${tokens}t`;
+                            const $time = qs('.message__time', $hdr);
+                            if ($time) $hdr.insertBefore($tb, $time);
+                            else $hdr.appendChild($tb);
+                        }
+                    }
+
                     // Inject permanent thought bubble
                     if (state.config.flags?.showThoughts && thoughts?.length) {
                         const $thoughtsEl = document.createElement('details');
@@ -2310,16 +2386,19 @@ export function initUI() {
         }
     }
 
-    function setSendState(streaming) {
+    function setSendState(streaming, botName = null) {
         const $btn = qs('#send-btn');
+        const $est = qs('#token-estimate');
         if (streaming) {
             $btn.innerHTML = '<i data-lucide="square"></i>';
-            $btn.title = 'Stop generation';
+            $btn.title = 'Stop generation (also cancels queued group bots)';
             $btn.classList.add('input-container__send--stop');
+            if ($est && botName) $est.textContent = `${botName} is writing…`;
         } else {
             $btn.innerHTML = '<i data-lucide="send"></i>';
             $btn.title = 'Send';
             $btn.classList.remove('input-container__send--stop');
+            if ($est) $est.textContent = '';
         }
         lucideRefresh($btn);
     }
@@ -2348,8 +2427,9 @@ export function initUI() {
     $form.addEventListener('submit', async e => {
         e.preventDefault();
 
-        // Stop if streaming
+        // Stop if streaming — also cancel any queued group bots
         if (state.isStreaming) {
+            _groupAbort = true;
             state.pendingAbort?.abort();
             return;
         }
@@ -2370,16 +2450,31 @@ export function initUI() {
         // Remove welcome screen
         qs('#arena-welcome')?.remove();
 
-        // Add user message
+        // Add user message (may auto-name session on first message)
         const msg = addMessage('user', text);
         appendMessage(msg);
+        renderSessions();
 
         _groupAbort = false;
 
-        // Group chat: all bots respond sequentially; solo: just activeBotId
-        const respondingBots = state.config.groupTurnMode === 'auto' && state.activeBotIds.length > 1
-            ? state.activeBotIds
-            : [state.activeBotId];
+        // Determine which bots respond this turn based on turn mode
+        const mode = state.config.groupTurnMode || 'auto';
+        const bots = state.activeBotIds;
+        let respondingBots;
+        if (bots.length <= 1 || mode === 'manual') {
+            // manual: only the active (user-selected) bot speaks
+            respondingBots = [state.activeBotId];
+        } else if (mode === 'round-robin') {
+            // One bot per turn, cycling through the roster in order
+            const sid = state.activeSessionId;
+            if (_rrIndex[sid] === undefined) _rrIndex[sid] = 0;
+            const idx = _rrIndex[sid] % bots.length;
+            respondingBots = [bots[idx]];
+            _rrIndex[sid] = (idx + 1) % bots.length;
+        } else {
+            // auto: all bots respond sequentially
+            respondingBots = bots;
+        }
 
         if (respondingBots.length === 1) {
             await triggerBotResponse(respondingBots[0]);
@@ -2511,6 +2606,7 @@ export function initUI() {
         set('group-delay-input', c.groupAutoDelay);   setBadge('group-delay-val', `${c.groupAutoDelay}ms`);
         set('context-strategy', c.contextStrategy);
         set('group-turn-mode',  c.groupTurnMode);
+        if (qs('#model-select') && c.model) qs('#model-select').value = c.model;
         if (qs('#stream-toggle')) qs('#stream-toggle').checked = c.stream;
 
         // World tab
@@ -2520,12 +2616,6 @@ export function initUI() {
 
         // Sync narrative flags
         const flags = c.flags || {};
-        const FLAG_KEYS = [
-            'showThoughts', 'showSystemPrompt', 'injectConsistency', 'injectSliders',
-            'injectAppearance', 'injectAdult', 'injectPersonality', 'injectVoice',
-            'injectStyle', 'injectAIDirectives', 'impersonationBlock', 'povFirst',
-            'jailbreakResistance'
-        ];
         FLAG_KEYS.forEach(key => {
             const $cb = qs(`#flag-${key}`);
             if ($cb) $cb.checked = flags[key] ?? $cb.defaultChecked;
@@ -2566,12 +2656,6 @@ export function initUI() {
     qs('#group-turn-mode')?.addEventListener('change', e => setConfig({ groupTurnMode: e.target.value }));
 
     // Narrative flag toggles
-    const FLAG_KEYS = [
-        'showThoughts', 'showSystemPrompt', 'injectConsistency', 'injectSliders',
-        'injectAppearance', 'injectAdult', 'injectPersonality', 'injectVoice',
-        'injectStyle', 'injectAIDirectives', 'impersonationBlock', 'povFirst',
-        'jailbreakResistance'
-    ];
     FLAG_KEYS.forEach(key => {
         qs(`#flag-${key}`)?.addEventListener('change', e => {
             setConfig({ flags: { ...state.config.flags, [key]: e.target.checked } });
@@ -2608,11 +2692,14 @@ export function initUI() {
                 }
             });
 
-        } catch (_) {
+        } catch (err) {
+            console.warn('[underdark] loadModels failed, using fallback:', err.message);
+            const fallbackOpt = '<option value="deepseek-r1">DeepSeek R1</option>';
             selects.forEach(($sel, i) => {
-                $sel.innerHTML = (i > 0 ? '<option value="">— Use global model —</option>' : '')
-                    + '<option value="deepseek-r1">DeepSeek R1</option>';
+                $sel.innerHTML = (i > 0 ? '<option value="">— Use global model —</option>' : '') + fallbackOpt;
             });
+            const $simsModel = qs('#sims-model-select');
+            if ($simsModel) $simsModel.innerHTML = '<option value="">— Use global model —</option>' + fallbackOpt;
             setConfig({ model: 'deepseek-r1' });
         }
 
@@ -2709,10 +2796,11 @@ export function initUI() {
         loadPersonaFields(e.target.value);
     });
 
-    // Keys the persona tab writes that live in override.ext (mirrors EXT_KEYS in sims-editor)
+    // Keys the persona tab writes that live in override.ext (mirrors EXT_KEYS in sims-editor).
+    // Core fields from defaultCharOverride() are intentionally excluded — they save to coreFields.
     const PERSONA_EXT_KEYS = new Set([
         'height','bodyType','skinTone','hairColor','hairStyle','eyeColor',
-        'distinctiveFeatures','voiceTone','speechPatterns',
+        'distinctiveFeatures',
         'breastSize','areolaeSize','nippleColor','bodyHair','genitalia','otherAdultFeatures'
     ]);
 
@@ -2727,8 +2815,10 @@ export function initUI() {
             if (PERSONA_EXT_KEYS.has(key)) extFields[key] = val;
             else coreFields[key] = val;
         });
-        const existing = getCharOverride(charId);
-        const newExt = { ...(existing.ext || {}), ...extFields };
+        // Read the raw stored override (not the flattened getCharOverride result)
+        // so we can preserve ext fields not shown on this tab.
+        const stored = state.config.charOverrides?.[charId] || {};
+        const newExt = { ...(stored.ext || {}), ...extFields };
         setCharOverride(charId, { ...coreFields, ext: newExt });
     }, 400);
 
@@ -2805,8 +2895,10 @@ export function initUI() {
 
     // ── Keyboard shortcuts ────────────────────────────────────────────────────
     document.addEventListener('keydown', e => {
-        // Escape closes any open modal or lightbox
+        // Escape closes any open modal, lightbox, or reaction picker
         if (e.key === 'Escape') {
+            const $picker = qs('#reaction-picker');
+            if ($picker && !$picker.hidden) { $picker.hidden = true; return; }
             if (!qs('#lightbox')?.hidden) { qs('#lightbox').hidden = true; return; }
             qsa('.modal:not([hidden])').forEach(m => { m.hidden = true; });
             return;
@@ -2902,9 +2994,18 @@ async function loadManifest() {
                 state.characters.push(c);
             }
         });
-        // Load manifest lorebooks if none saved
+        // Load manifest lorebooks if none saved in this session
         if (!state.lorebooks.length && data.lorebooks?.length) {
-            state.session.lorebooks = data.lorebooks;
+            for (const lb of data.lorebooks) {
+                if (lb.lore_path) {
+                    try {
+                        const lbRes  = await fetch(lb.lore_path);
+                        const lbData = await lbRes.json();
+                        lbData._sourcePath = lb.lore_path;
+                        state.session.lorebooks.push(lbData);
+                    } catch (_) {}
+                }
+            }
         }
         saveState();
     } catch (_) {

@@ -540,10 +540,14 @@ async function summarizeDropped(messages, config) {
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
             body: JSON.stringify(payload)
         });
-        if (!res.ok) return '';
+        if (!res.ok) {
+            console.warn(`[llm] summarizeDropped failed: HTTP ${res.status}`);
+            return '';
+        }
         const data = await res.json();
         return data.choices?.[0]?.message?.content?.trim() || '';
-    } catch (_) {
+    } catch (err) {
+        console.warn('[llm] summarizeDropped error:', err.message);
         return '';
     }
 }
@@ -617,16 +621,27 @@ function applyContextStrategy(history, config, systemTokens) {
         // and inject as a synthetic system message. We trigger the summary call here
         // and embed a placeholder; on next call the cached summary is used.
         const droppedMsgs = history.slice(1, cutoff);
-        const cacheKey = `sum_${history[cutoff - 1]?.id || cutoff}`;
+        const sessionId = config._sessionId || 'default';
+        const cacheKey = `${sessionId}__sum_${history[cutoff - 1]?.id || cutoff}`;
         if (!applyContextStrategy._summaryCache) applyContextStrategy._summaryCache = {};
         const cache = applyContextStrategy._summaryCache;
+
+        // Evict entries from other sessions and cap total size at 50 entries
+        const keys = Object.keys(cache);
+        if (keys.length > 50) {
+            const stale = keys.filter(k => !k.startsWith(sessionId + '__'));
+            (stale.length ? stale : keys.slice(0, 10)).forEach(k => delete cache[k]);
+        }
 
         if (cache[cacheKey]) {
             result.unshift({ role: 'system', content: `[Story so far: ${cache[cacheKey]}]`, id: '_summary', timestamp: 0, tokens: 0 });
         } else {
             // Kick off background summarization (non-blocking)
             summarizeDropped(droppedMsgs, config).then(summary => {
-                cache[cacheKey] = summary;
+                if (summary) {
+                    cache[cacheKey] = summary;
+                    console.debug('[llm] summary cached for', cacheKey);
+                }
             }).catch(() => {});
             // For this turn, fall back to including the anchor + whatever fits
         }
@@ -639,7 +654,9 @@ function applyContextStrategy(history, config, systemTokens) {
 
 // ── Main payload builder ──────────────────────────────────────────────────────
 export function buildPayload(ctx) {
-    const { character, history, lore, config, isGroup = false, allChars = [] } = ctx;
+    const { character, history, lore, config, isGroup = false, allChars = [], sessionId } = ctx;
+    // Stamp sessionId so applyContextStrategy can scope its summary cache correctly
+    const configWithSession = sessionId ? { ...config, _sessionId: sessionId } : config;
     const override  = getCharOverride(character.id || character.name);
     const charName  = override.nickname || character.name;
     const userName  = config.userName || 'User';
@@ -662,7 +679,7 @@ export function buildPayload(ctx) {
     // 3. Context-windowed history
     const systemTokens = estimateTokens(systemContent)
         + (activeLore.length ? estimateTokens(activeLore.map(e => e.content).join('')) : 0);
-    const contextHistory = applyContextStrategy(history, config, systemTokens);
+    const contextHistory = applyContextStrategy(history, configWithSession, systemTokens);
 
     contextHistory.forEach(msg => {
         // Synthetic summary injection from summarize strategy

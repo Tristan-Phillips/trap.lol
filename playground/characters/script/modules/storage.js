@@ -9,10 +9,12 @@ const DB_VERSION = 1;
 const STORE_BLOBS = 'blobs';   // key: string, value: any (avatar data URLs, etc.)
 
 let _db = null;
+let _dbPromise = null;
 
 function openDB() {
     if (_db) return Promise.resolve(_db);
-    return new Promise((resolve, reject) => {
+    if (_dbPromise) return _dbPromise;
+    _dbPromise = new Promise((resolve, reject) => {
         const req = indexedDB.open(DB_NAME, DB_VERSION);
         req.onupgradeneeded = e => {
             const db = e.target.result;
@@ -20,9 +22,10 @@ function openDB() {
                 db.createObjectStore(STORE_BLOBS);
             }
         };
-        req.onsuccess = e => { _db = e.target.result; resolve(_db); };
-        req.onerror   = e => reject(e.target.error);
+        req.onsuccess = e => { _db = e.target.result; _dbPromise = null; resolve(_db); };
+        req.onerror   = e => { _dbPromise = null; reject(e.target.error); };
     });
+    return _dbPromise;
 }
 
 export async function idbSet(key, value) {
@@ -83,17 +86,6 @@ export async function loadAvatar(charId) {
 
 export async function deleteAvatar(charId) {
     return idbDelete(`${AVATAR_PREFIX}${charId}`);
-}
-
-// ── Avatar resolution ──────────────────────────────────────────────────────────
-// Given a character id and its stored avatar field value, resolve the actual
-// data URL or path string to display. Call this when rendering avatars.
-export async function resolveAvatar(charId, storedValue) {
-    if (!storedValue) return null;
-    if (storedValue.startsWith('idb:')) {
-        return loadAvatar(charId);
-    }
-    return storedValue;
 }
 
 // Check if a string is a raw base64 data URL (should be migrated to IDB)

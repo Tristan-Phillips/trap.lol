@@ -80,6 +80,7 @@ export function scanLorebooks(history, lorebooks, globalScanDepth = 5) {
     // Always-on entries first
     lorebooks.forEach(book => {
         if (!book.enabled) return;
+        if (!Array.isArray(book.entries)) return;
         book.entries.forEach(entry => {
             if (entry.disabled) return;
             if (entry.alwaysOn && !seen.has(entry.id)) {
@@ -92,6 +93,7 @@ export function scanLorebooks(history, lorebooks, globalScanDepth = 5) {
     // Build search corpus from recent history
     lorebooks.forEach(book => {
         if (!book.enabled) return;
+        if (!Array.isArray(book.entries)) return;
         const depth = book.scanDepth || globalScanDepth;
         const corpus = history
             .slice(-depth)

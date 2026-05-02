@@ -591,6 +591,18 @@ html, body.underdark-page {
     white-space: nowrap;
 }
 
+/* Token count badge in message header */
+.message__token-badge {
+    font-size: 0.58rem;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    opacity: 0;
+    transition: opacity 0.15s;
+    white-space: nowrap;
+    cursor: default;
+}
+.message:hover .message__token-badge { opacity: 0.45; }
+
 /* Meta tag (edited, etc.) */
 .message__meta-tag {
     font-size: 0.62rem;
@@ -677,7 +689,6 @@ html, body.underdark-page {
     color: var(--text-muted);
     font-style: italic;
 }
-.message__edited { display: none; } /* superseded by .message__meta-tag */
 .msg-error { color: #ef4444; font-style: italic; }
 
 /* ── Message edit modal extras ── */
@@ -989,7 +1000,8 @@ html, body.underdark-page {
     flex-direction: column;
     gap: var(--space-xs);
 }
-.book-select-wrap { margin-bottom: var(--space-sm); }
+.book-select-wrap { margin-bottom: var(--space-sm); display: flex; gap: 4px; align-items: center; }
+.book-select-wrap .control-select { flex: 1; }
 
 .lore-entry {
     background: rgba(0,0,0,0.2);
@@ -2541,6 +2553,7 @@ kbd {
     font-size: 0.65rem;
     color: var(--text-main);
     line-height: 1.4;
+    min-width: 18px;
 }
 
 .modal__footer {
@@ -2721,6 +2734,13 @@ kbd {
     padding: 2px 4px;
 }
 .thread-search-bar__input::placeholder { color: var(--text-muted); opacity: 0.6; }
+.thread-search-bar__clear {
+    flex-shrink: 0;
+    opacity: 0.5;
+    transition: opacity 0.12s;
+}
+.thread-search-bar__clear:hover { opacity: 1; }
+.thread-search-bar__clear[hidden] { display: none !important; }
 .thread-search-bar__count {
     font-family: var(--font-mono);
     font-size: 0.65rem;
@@ -2895,20 +2915,6 @@ kbd {
     opacity: 0.6;
     margin-right: auto;
 }
-kbd {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 1px 5px;
-    border-radius: 3px;
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.15);
-    font-family: var(--font-mono);
-    font-size: 0.6rem;
-    color: var(--text-main);
-    min-width: 18px;
-}
-
 /* ═══════════════════════════════════════════════════════════════════════════
    WELCOME SCREEN — full character grid on empty thread
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -3311,6 +3317,7 @@ kbd {
     display: block;
     pointer-events: none;
 }
+.gallery-item { transition: border-color 0.16s, box-shadow 0.16s, transform 0.16s; }
 .gallery-item:hover { border-color: rgba(var(--accent-rgb),0.5); transform: translateY(-2px); }
 .gallery-item--cover { border-color: var(--theme-accent); box-shadow: 0 0 16px var(--theme-glow); }
 .gallery-item--dragging { opacity: 0.4; transform: scale(0.96); }

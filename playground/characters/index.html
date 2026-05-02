@@ -107,6 +107,9 @@
             <i data-lucide="search" class="thread-search-bar__icon"></i>
             <input type="text" id="thread-search-input" class="thread-search-bar__input"
                 placeholder="Search messages…" spellcheck="false" autocomplete="off">
+            <button id="thread-search-clear" class="btn-icon btn-icon--small thread-search-bar__clear" title="Clear search" hidden>
+                <i data-lucide="x-circle"></i>
+            </button>
             <span id="thread-search-count" class="thread-search-bar__count"></span>
             <button id="thread-search-prev" class="btn-icon btn-icon--small" title="Previous">
                 <i data-lucide="chevron-up"></i>
@@ -256,6 +259,9 @@
                     </div>
                     <div id="book-select-wrap" class="book-select-wrap" hidden>
                         <select id="book-select" class="control-select control-select--sm"></select>
+                        <button id="remove-book" class="btn-icon btn-icon--small btn-icon--danger" title="Delete this lorebook">
+                            <i data-lucide="trash-2"></i>
+                        </button>
                     </div>
                     <div id="lore-list" class="world-view__list">
                         <div class="world-view__empty">No lorebooks active</div>
@@ -2967,6 +2973,13 @@
                             <label>Custom World Rules <span class="sims-hint-inline">(universe-specific lore injected before every response)</span></label>
                             <textarea class="sims-textarea sims-textarea--code" data-spo="worldRules" rows="3"
                                 placeholder="Magic costs blood. The year is 2189. No one in this world uses the word 'sorry'…"></textarea>
+                        </div>
+
+                        <div class="sims-section-divider">— Persistent Memory —</div>
+                        <div class="sims-field sims-field--full">
+                            <label>Persistent Memory <span class="sims-hint-inline">(injected every session — facts this character always remembers)</span></label>
+                            <textarea class="sims-textarea" data-spo="persistentMemory" rows="3"
+                                placeholder="Relationship history, past events, things they remember about the user across all sessions…"></textarea>
                         </div>
 
                         <div class="sims-section-divider">— Prompt Engineering —</div>
