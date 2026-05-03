@@ -32,7 +32,7 @@ export function defaultConfig() {
         maxOutput: 512,
         stream: true,
         lorebookScanDepth: 5,
-        groupTurnMode: 'auto',    // 'auto' | 'manual' | 'round-robin'
+        groupTurnMode: 'manual',  // 'auto' | 'manual' | 'round-robin'
         groupAutoDelay: 600,      // ms between auto responses in group chat
         userName: 'User',
         userPersona: '',

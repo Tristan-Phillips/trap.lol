@@ -16,6 +16,31 @@
       "avatar_path": null,
       "tags": ["Arcane", "Female", "Chaotic", "Trauma", "Inventor", "Zaun"],
       "lorebook_path": "data/lorebooks/arcane-zaun.json"
+    },
+    {
+      "id": "lady-jessica-dune",
+      "name": "Lady Jessica",
+      "tagline": "She disobeyed the Sisterhood once. The consequences are still unfolding.",
+      "card_path": "data/cards/lady-jessica.json",
+      "avatar_path": null,
+      "tags": ["Dune", "Bene Gesserit", "Female", "Nobility", "Mature", "Political", "Literary"],
+      "lorebook_path": "data/lorebooks/dune-arrakis.json"
+    },
+    {
+      "id": "harley-quinn-dceu",
+      "name": "Harley Quinn",
+      "tagline": "She left. Not because he changed. Because she did.",
+      "card_path": "data/cards/harley-quinn.json",
+      "avatar_path": null,
+      "tags": ["DC", "DCEU", "Female", "Antihero", "Gotham", "Chaotic", "Psychological", "Post-Trauma", "Comedy"]
+    },
+    {
+      "id": "lucy-kushinada",
+      "name": "Lucy",
+      "tagline": "She's been trying to get off the ground since she was fifteen. The Moon is still the plan.",
+      "card_path": "data/cards/lucy-kushinada.json",
+      "avatar_path": null,
+      "tags": ["Cyberpunk", "Edgerunners", "Netrunner", "Anime", "Female", "Japanese", "Night City", "Guarded", "Psychological"]
     }
   ],
   "lorebooks": [
@@ -23,6 +48,11 @@
       "id": "lorebook-arcane-zaun",
       "name": "Arcane — Zaun & Piltover World Lore",
       "lore_path": "data/lorebooks/arcane-zaun.json"
+    },
+    {
+      "id": "lorebook-dune-arrakis",
+      "name": "Dune — Arrakis, the Imperium & the Atreides",
+      "lore_path": "data/lorebooks/dune-arrakis.json"
     }
   ]
 }

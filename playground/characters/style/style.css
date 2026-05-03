@@ -650,7 +650,7 @@ html, body.underdark-page {
 .message__bubble {
     padding: var(--space-sm) var(--space-md);
     border-radius: 12px;
-    line-height: 1.65;
+    line-height: 1.72;
     font-size: 0.9rem;
     position: relative;
 }
@@ -663,6 +663,8 @@ html, body.underdark-page {
     background: var(--glass-bg);
     border: 1px solid var(--glass-border-mute);
     border-top-left-radius: 2px;
+    line-height: 1.78;
+    letter-spacing: 0.008em;
 }
 .message__content p { margin: 0 0 0.75em; }
 .message__content p:last-child { margin-bottom: 0; }
@@ -2898,11 +2900,38 @@ kbd {
     border-color: rgba(var(--accent-rgb), 0.5);
 }
 
-/* ── RP italic (action text) ── */
+/* ── RP text layers ────────────────────────────────────────────────────────── */
+
+/* Action / narration text: *like this* */
 .message__content em {
     color: var(--text-muted);
     font-style: italic;
-    opacity: 0.85;
+    opacity: 0.9;
+    letter-spacing: 0.01em;
+}
+
+/* Spoken dialogue: "like this" */
+.message__content .rp-speech {
+    color: var(--text-warm);
+    font-style: normal;
+    font-weight: 450;
+    text-shadow: 0 0 18px rgba(var(--accent-warm-rgb), 0.35);
+    letter-spacing: 0.005em;
+}
+
+/* Inner thought: _like this_ */
+.message__content .rp-thought {
+    color: rgba(var(--violet-rgb), 0.85);
+    font-style: italic;
+    opacity: 0.9;
+    letter-spacing: 0.02em;
+}
+
+/* Bold emphasis: **like this** */
+.message__content strong {
+    color: var(--text-main);
+    font-weight: 650;
+    text-shadow: 0 0 12px rgba(var(--accent-rgb), 0.2);
 }
 
 /* ── modal footer hint (kbd) ── */

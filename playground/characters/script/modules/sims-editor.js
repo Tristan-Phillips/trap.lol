@@ -460,11 +460,8 @@ export function initSimsEditor() {
             setCharOverride(charId, { ...mergedCore, ext: mergedExt });
         }
 
-        // Load override into fields
-        const override = getCharOverride(charId);
-        // Build merged ext object (extended keys stored under override.ext)
-        const ext = override.ext || {};
-        loadAllFields({ ...override, ...ext });
+        // Load override into fields (getCharOverride already flat-merges ext fields)
+        loadAllFields(getCharOverride(charId));
 
         // Avatar
         const avatar = meta?.avatar_path || char?.avatar || null;
@@ -793,9 +790,7 @@ export function initSimsEditor() {
     // ── Stat pills (live preview) ─────────────────────────────────────────────
     function updateStatPills() {
         if (!activeCharId) return;
-        const override = getCharOverride(activeCharId);
-        const ext = override.ext || {};
-        const all = { ...override, ...ext };
+        const all = getCharOverride(activeCharId);
 
         const pills = [
             all.species    && { icon: '⚗', label: all.species },

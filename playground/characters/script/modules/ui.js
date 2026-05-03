@@ -102,16 +102,53 @@ function getAvatarUrlSync(charId, stored) {
 }
 
 // ── Markdown Renderer ─────────────────────────────────────────────────────────
+// RP text layer detection — logic-based, no codes required from the LLM.
+// Patterns detected automatically:
+//   “quoted text”   → .rp-speech  (warm gold — character's spoken voice)
+//   *action text*   → <em>        (muted italic — narration/action, handled by marked)
+//   _inner thought_ → .rp-thought (violet italic — internal monologue)
+//
+// Implementation: operate entirely on the final HTML string AFTER marked.parse()
+// and DOMPurify.sanitize(), so neither library can interfere with the spans we inject.
+// “straight quotes” are handled pre-parse via placeholder tokens to survive marked's
+// quote-entity conversion; curly/smart quotes are handled post-sanitize directly.
+
+const _rpTokens = [];
+function _rpToken(type, inner) {
+    const idx = _rpTokens.length;
+    _rpTokens.push({ type, inner });
+    // Use a placeholder with no underscores/asterisks so marked.js never interprets it
+    return `«rp${idx}»`;
+}
+function _rpFlush(html) {
+    return html.replace(/«rp(\d+)»/g, (_, i) => {
+        const { type, inner } = _rpTokens[Number(i)];
+        return `<span class=”rp-${type}”>${inner}</span>`;
+    });
+}
+
 function renderMarkdown(text) {
+    _rpTokens.length = 0;
     try {
-        // RP convention: *action text* → <em> (before markdown parse)
-        text = text.replace(/(?<!\*)\*([^*\n]+)\*(?!\*)/g, '<em>$1</em>');
+        // _inner thought_ — consume before marked.js can interpret the underscores
+        text = text.replace(/(?<![_\w])_([^_\n]{2,}?)_(?![_\w])/g, (_, inner) =>
+            _rpToken('thought', inner));
+        // “straight quoted speech” — tokenise pre-parse so marked can't entity-encode the quotes
+        text = text.replace(/”([^”\n]{2,}?)”/g, (_, inner) =>
+            _rpToken('speech', `“${inner}”`));
+        // *action/narration* — left for marked.js, which converts it to <em> natively
         let html = marked.parse(text, { breaks: true, gfm: true });
         if (typeof DOMPurify !== 'undefined') {
             html = DOMPurify.sanitize(html, { USE_PROFILES: { html: true } });
         }
+        // Restore RP spans after sanitisation (DOMPurify never sees them)
+        html = _rpFlush(html);
+        // Curly/smart quotes output by the LLM — safe to handle post-sanitize
+        html = html.replace(/“([^“”<>\n]{2,}?)”/g,
+            (_, inner) => `<span class=”rp-speech”>“${inner}”</span>`);
         return html;
     } catch (_) {
+        _rpTokens.length = 0;
         return `<p>${esc(text).replace(/\n/g, '<br>')}</p>`;
     }
 }
@@ -2735,15 +2772,13 @@ export function initUI() {
     function loadPersonaFields(charId) {
         if (!charId) return;
         const override = getCharOverride(charId);
-        // Merge core + ext so persona tab can read EXT_KEYS (height, hairColor, etc.)
-        const flat = { ...override, ...(override.ext || {}) };
         qsa('[data-po]').forEach(el => {
             const key = el.dataset.po;
             if (key === undefined) return;
             if (el.type === 'range') {
-                el.value = flat[key] ?? el.defaultValue;
+                el.value = override[key] ?? el.defaultValue;
             } else {
-                el.value = flat[key] ?? '';
+                el.value = override[key] ?? '';
             }
         });
         // Sync badge labels for persona sliders
