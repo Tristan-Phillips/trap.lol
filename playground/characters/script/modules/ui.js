@@ -123,7 +123,7 @@ function _rpToken(type, inner) {
 function _rpFlush(html) {
     return html.replace(/«rp(\d+)»/g, (_, i) => {
         const { type, inner } = _rpTokens[Number(i)];
-        return `<span class=”rp-${type}”>${inner}</span>`;
+        return `<span class="rp-${type}">${inner}</span>`;
     });
 }
 
@@ -133,9 +133,9 @@ function renderMarkdown(text) {
         // _inner thought_ — consume before marked.js can interpret the underscores
         text = text.replace(/(?<![_\w])_([^_\n]{2,}?)_(?![_\w])/g, (_, inner) =>
             _rpToken('thought', inner));
-        // “straight quoted speech” — tokenise pre-parse so marked can't entity-encode the quotes
-        text = text.replace(/”([^”\n]{2,}?)”/g, (_, inner) =>
-            _rpToken('speech', `“${inner}”`));
+        // "straight quoted speech" — tokenise pre-parse so marked can't entity-encode the quotes
+        text = text.replace(/"([^"\n]{2,}?)"/g, (_, inner) =>
+            _rpToken('speech', `"${inner}"`));
         // *action/narration* — left for marked.js, which converts it to <em> natively
         let html = marked.parse(text, { breaks: true, gfm: true });
         if (typeof DOMPurify !== 'undefined') {
@@ -145,7 +145,7 @@ function renderMarkdown(text) {
         html = _rpFlush(html);
         // Curly/smart quotes output by the LLM — safe to handle post-sanitize
         html = html.replace(/“([^“”<>\n]{2,}?)”/g,
-            (_, inner) => `<span class=”rp-speech”>“${inner}”</span>`);
+            (_, inner) => `<span class="rp-speech">“${inner}”</span>`);
         return html;
     } catch (_) {
         _rpTokens.length = 0;
