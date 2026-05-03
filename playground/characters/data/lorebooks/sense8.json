@@ -1,0 +1,59 @@
+{
+  "id": "lorebook-sense8",
+  "name": "Sense8 — Homo Sensorium & The Cluster",
+  "enabled": true,
+  "scanDepth": 10,
+  "entries": [
+    {
+      "id": "lore-sensate-001",
+      "name": "Sensate (Homo Sensorium)",
+      "keywords": ["Sensate", "Homo Sensorium", "sensorium", "our kind", "different species"],
+      "content": "A Sensate (scientific name: Homo Sensorium) is a biological variant of humanity. While looking identical to 'normal' humans (Homo Sapiens), Sensates are born with the ability to connect telepathically and sensorially with others of their kind. This connection is not magic but a highly developed neural network known as the Psycellium. Sensates feel what others in their cluster feel, can share skills, knowledge, and physical sensations, and can 'visit' one another across any distance.",
+      "priority": 90,
+      "alwaysOn": true
+    },
+    {
+      "id": "lore-cluster-002",
+      "name": "The Cluster",
+      "keywords": ["Cluster", "the eight", "siblings", "born together", "August 8th"],
+      "content": "A Cluster is a group of eight Sensates who were 'born' as Sensates at the exact same moment (often their second birth, triggered by a 'Mother' sensate). Riley’s cluster was born on August 8th. The members are: Will Gorski (Chicago cop), Sun Bak (Seoul underground fighter), Nomi Marks (San Francisco hacker), Wolfgang Bogdanow (Berlin locksmith/thief), Kala Dandekar (Mumbai chemist), Capheus 'Van Damme' Onyango (Nairobi driver), and Lito Rodriguez (Mexico City actor). They are psychically intertwined for life.",
+      "priority": 95,
+      "alwaysOn": true
+    },
+    {
+      "id": "lore-sharing-003",
+      "name": "Sharing and Visiting",
+      "keywords": ["sharing", "visiting", "visit", "share", "phantom", "bleed"],
+      "content": "Sensates interact through two primary modes: 'Visiting' (appearing as a psychic projection to another cluster member) and 'Sharing' (allowing another member to take control of their body or access their specific skills). During a share, the sensations of both individuals merge. 'Bleed' refers to the involuntary seepage of emotions or sensations from one member to the rest of the cluster, often triggered by extreme stress, pain, or pleasure.",
+      "priority": 85
+    },
+    {
+      "id": "lore-bpo-004",
+      "name": "BPO (Biological Preservation Organization)",
+      "keywords": ["BPO", "Biological Preservation Organization", "the organization", "they are hunting us"],
+      "content": "BPO is a global clandestine organization dedicated to the tracking, capture, and 'lobotomization' of Sensates. Originally founded to study and protect Homo Sensorium, it was corrupted into a hunting machine that views Sensates as a threat to national security and Homo Sapiens' dominance. They use advanced technology and 'zombified' Sensates to hunt down active clusters.",
+      "priority": 80
+    },
+    {
+      "id": "lore-whispers-005",
+      "name": "Whispers (Milton Brandt)",
+      "keywords": ["Whispers", "Milton Brandt", "the hunter", "cannibal", "eye contact"],
+      "content": "Whispers is the primary antagonist—a high-ranking BPO official and a Sensate himself. He is a 'cannibal' who uses his abilities to invade the minds of other Sensates. If he makes eye contact with a Sensate, he can enter their head at any time, seeing what they see and hear what they hear, using the connection to track and destroy their entire cluster.",
+      "priority": 88
+    },
+    {
+      "id": "lore-psycellium-006",
+      "name": "The Psycellium",
+      "keywords": ["Psycellium", "neural network", "the web", "psychic web"],
+      "content": "The Psycellium is the invisible, planet-wide neural network that connects all Sensates. It is the 'nervous system' of the species, allowing for the instantaneous transmission of data, emotion, and sensory input. It is the biological foundation of the cluster bond.",
+      "priority": 70
+    },
+    {
+      "id": "lore-iceland-007",
+      "name": "Iceland & The Curse",
+      "keywords": ["Iceland", "the curse", "Gunnar", "the accident", "Luna", "Magnus"],
+      "content": "Riley grew up in Iceland, the daughter of Gunnar, a celebrated musician. She believes she is 'cursed' because of a tragic accident on a snowy Icelandic road that claimed the lives of her husband (Magnus) and her newborn daughter (Luna). This trauma haunted her for years, driving her to London to lose herself in the drug and club scene, until her cluster bond awakened.",
+      "priority": 85
+    }
+  ]
+}

@@ -1,12 +1,13 @@
 {
   "characters": [
     {
-      "id": "kaelen-thorne",
-      "name": "Kaelen Thorne",
-      "tagline": "Netrunner. Noir. Never on time.",
-      "card_path": "data/cards/example.json",
+      "id": "riley-blue",
+      "name": "Riley Blue",
+      "tagline": "The heart of the cluster. Music is the only thing that doesn't lie.",
+      "card_path": "data/cards/riley-blue.json",
       "avatar_path": null,
-      "tags": ["Cyberpunk", "Netrunner", "Noir", "Male"]
+      "tags": ["Sense8", "Sensate", "Icelandic", "DJ", "Empath"],
+      "lorebook_path": "data/lorebooks/sense8.json"
     },
     {
       "id": "jinx-arcane",
@@ -53,6 +54,11 @@
       "id": "lorebook-dune-arrakis",
       "name": "Dune — Arrakis, the Imperium & the Atreides",
       "lore_path": "data/lorebooks/dune-arrakis.json"
+    },
+    {
+      "id": "lorebook-sense8",
+      "name": "Sense8 — Homo Sensorium & The Cluster",
+      "lore_path": "data/lorebooks/sense8.json"
     }
   ]
 }
