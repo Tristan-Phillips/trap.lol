@@ -173,6 +173,63 @@ export function initUI() {
     loadState();
     restoreKeyFromCookie();
 
+    // ── API Key Gate ──────────────────────────────────────────────────────────
+    // Block the entire UI until a valid key is stored. Skipped if key already present.
+    const $gate        = qs('#api-gate');
+    const $gateInput   = qs('#gate-key-input');
+    const $gateToggle  = qs('#gate-key-toggle');
+    const $gateSubmit  = qs('#gate-key-submit');
+    const $gateError   = qs('#gate-key-error');
+
+    function showGate() {
+        if (!$gate) return;
+        $gate.hidden = false;
+        if (window.lucide) window.lucide.createIcons({ nodes: [$gate] });
+        setTimeout(() => $gateInput?.focus(), 80);
+    }
+    function hideGate() {
+        if ($gate) $gate.hidden = true;
+    }
+
+    function trySubmitGateKey() {
+        const val = $gateInput?.value.trim() || '';
+        if (!isValidKeyFormat(val)) {
+            if ($gateError) $gateError.hidden = false;
+            $gateInput?.classList.add('shake');
+            setTimeout(() => $gateInput?.classList.remove('shake'), 500);
+            return;
+        }
+        if ($gateError) $gateError.hidden = true;
+        setApiKey(val);
+        $gateInput.value = '';
+        $gateInput.type  = 'password';
+        hideGate();
+        updateApiStatus();
+        showToast('API key saved — synchronization ready', 'info', 2500);
+    }
+
+    if ($gate) {
+        $gateToggle?.addEventListener('click', () => {
+            const isPass = $gateInput.type === 'password';
+            $gateInput.type = isPass ? 'text' : 'password';
+            const icon = $gateToggle.querySelector('i');
+            if (icon) icon.dataset.lucide = isPass ? 'eye-off' : 'eye';
+            lucideRefresh($gateToggle);
+        });
+        $gateSubmit?.addEventListener('click', trySubmitGateKey);
+        $gateInput?.addEventListener('keydown', e => {
+            if (e.key === 'Enter') trySubmitGateKey();
+            if ($gateError) $gateError.hidden = true;
+        });
+        $gateInput?.addEventListener('input', () => {
+            if ($gateError) $gateError.hidden = true;
+        });
+        // Show gate if no valid key is currently stored
+        if (!isValidKeyFormat(getApiKey())) {
+            showGate();
+        }
+    }
+
     // ── Sidebar: Roster ───────────────────────────────────────────────────────
     const $rosterSidebar  = qs('#roster-sidebar');
     const $terminalSidebar = qs('#terminal-sidebar');
@@ -279,10 +336,14 @@ export function initUI() {
     function updateApiStatus() {
         const key   = getApiKey();
         const valid = isValidKeyFormat(key);
-        $apiStatus.textContent = key
-            ? (valid ? '✓ Key active' : '✗ Invalid key format')
-            : 'No key set';
-        $apiStatus.className = `api-key-status ${key ? (valid ? 'api-key-status--ok' : 'api-key-status--err') : ''}`;
+        if ($apiStatus) {
+            $apiStatus.textContent = key
+                ? (valid ? '✓ Key active' : '✗ Invalid key format')
+                : 'No key set';
+            $apiStatus.className = `api-key-status ${key ? (valid ? 'api-key-status--ok' : 'api-key-status--err') : ''}`;
+        }
+        // If key was cleared, re-show the gate
+        if (!valid && $gate && $gate.hidden) showGate();
     }
 
     $apiToggle.addEventListener('click', () => {
@@ -539,7 +600,7 @@ export function initUI() {
         if (!char) return;
         const meta = state.characters.find(c => c.id === id);
 
-        // If already in this thread, just switch active bot
+        // If already in this thread, switch active bot (who responds on next send)
         if (state.activeBotIds.includes(id)) {
             setActiveBot(id);
             renderRoster();
@@ -548,6 +609,8 @@ export function initUI() {
             renderPersonaCharSelect();
             const avatarUrl = await getAvatarUrl(id, meta.avatar_path || char.avatar);
             updateCinematicBackground(avatarUrl);
+            const displayName = getCharOverride(id).nickname || char.name;
+            showToast(`Now responding as ${displayName}`, 'info', 1800);
             return;
         }
 

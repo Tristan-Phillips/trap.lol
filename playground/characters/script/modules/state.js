@@ -187,10 +187,12 @@ export function loadState() {
     // Migrate: ensure each session has full config with new keys.
     // Shallow spread handles top-level keys; flags needs a deep merge so that
     // sessions with a partial flags object still pick up any newly added flags.
+    // Also migrate 'auto' → 'manual' so single-char sessions feel correct by default.
     state.sessions.forEach(sess => {
         const saved = sess.config || {};
         sess.config = { ...defaultConfig(), ...saved };
         sess.config.flags = { ...defaultConfig().flags, ...(saved.flags || {}) };
+        if (sess.config.groupTurnMode === 'auto') sess.config.groupTurnMode = 'manual';
     });
 }
 

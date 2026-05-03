@@ -10,6 +10,36 @@
 </head>
 <body class="underdark-page">
 
+<!-- ── API Key Gate ── -->
+<div id="api-gate" class="api-gate" hidden>
+    <div class="api-gate__backdrop"></div>
+    <div class="api-gate__panel">
+        <div class="api-gate__logo">
+            <i data-lucide="key-round"></i>
+        </div>
+        <h1 class="api-gate__title">The Underdark</h1>
+        <p class="api-gate__sub">Enter your API key to begin synchronization.</p>
+        <div class="api-gate__form">
+            <div class="api-gate__input-row">
+                <input type="password" id="gate-key-input" class="api-gate__input"
+                       placeholder="sk-nano-xxxxxxxx-xxxx-4xxx-xxxx-xxxxxxxxxxxx"
+                       autocomplete="off" spellcheck="false" />
+                <button id="gate-key-toggle" class="api-gate__toggle" title="Show / hide key">
+                    <i data-lucide="eye"></i>
+                </button>
+            </div>
+            <p id="gate-key-error" class="api-gate__error" hidden>Invalid key format — check and try again.</p>
+            <button id="gate-key-submit" class="api-gate__submit">
+                <i data-lucide="zap"></i> Connect
+            </button>
+        </div>
+        <p class="api-gate__hint">
+            Your key is stored in a browser cookie and never transmitted to anyone but the API endpoint.
+            <br>Need a key? Check your provider dashboard.
+        </p>
+    </div>
+</div>
+
 <div id="app-root" class="underdark-layout">
 
     <!-- ══════════════════════════════════════════════
@@ -3029,7 +3059,7 @@
 <script src="../../shards/purify.min.js"></script>
 
 <!-- ── App ── -->
-<script type="module" src="./script/main.js?v=2"></script>
+<script type="module" src="./script/main.js?v=3"></script>
 
 </body>
 </html>
