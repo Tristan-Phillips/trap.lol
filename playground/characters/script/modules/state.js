@@ -1,22 +1,25 @@
 /**
- * state.js — Central application state with full localStorage persistence.
- * All mutations go through exported helpers so persistence stays consistent.
+ * state.js — The Reality Matrix
  *
- * Large blobs (avatar data URLs) are stored in IndexedDB via storage.js.
- * localStorage only holds metadata and session history (text only).
+ * This module manages the top-level 'Realities' (Workspaces) and the 'Chats'
+ * (DMs and Groups) within them. It enables cross-channel memory sharing
+ * and isolated continuities.
  */
 
 import { saveAvatar, loadAvatar, deleteAvatar, isDataUrl } from './storage.js';
 
-const STORAGE_KEY = 'underdark_v3';
-const SESSION_KEY = 'underdark_sessions_v3';
-const CHARS_KEY   = 'underdark_chars_v3';
+const STORAGE_KEY = 'underdark_v4';
+const CHARS_KEY   = 'underdark_chars_v4';
+
+// Legacy keys for migration
+const LEGACY_STORAGE_KEY = 'underdark_v3';
 
 // ── Default config shape ────────────────────────────────────────────────────
 export function defaultConfig() {
     return {
         model: '',
         contextStrategy: 'sliding',
+        groupScenario: '', // Shared context for all chats in a reality
         temperature: 0.80,
         topP: 0.95,
         topK: 40,
@@ -32,38 +35,34 @@ export function defaultConfig() {
         maxOutput: 512,
         stream: true,
         lorebookScanDepth: 5,
-        groupTurnMode: 'manual',  // 'auto' | 'manual' | 'round-robin'
-        groupAutoDelay: 600,      // ms between auto responses in group chat
+        groupTurnMode: 'manual',
+        groupAutoDelay: 600,
         userName: 'User',
         userPersona: '',
-        charOverrides: {},        // keyed by charId → object of override fields
-        // ── Narrative feature flags ───────────────────────────────────────────
+        charOverrides: {},
         flags: {
-            showThoughts:        false,  // render <think>…</think> as visible aside
-            showSystemPrompt:    false,  // show the built system prompt in chat for debugging
-            injectConsistency:   true,   // append "stay in character" reinforcement paragraph
-            injectSliders:       true,   // inject behavioral slider directives into system prompt
-            injectAppearance:    true,   // inject physical appearance anchors
-            injectAdult:         true,   // inject adult anatomy anchors
-            injectPersonality:   true,   // inject personality/psychology fields from ext
-            injectVoice:         true,   // inject voice/speech fields from ext
-            injectStyle:         true,   // inject fashion/style fields from ext
-            injectAIDirectives:  true,   // inject AI panel (prose style, POV, length) directives
-            impersonationBlock:  true,   // instruct model never to speak as the user
-            jailbreakResistance: false,  // add anti-jailbreak reminder to post-history
-            povFirst:            true,   // prefer first-person narrative
+            showThoughts:        false,
+            showSystemPrompt:    false,
+            injectConsistency:   true,
+            injectSliders:       true,
+            injectAppearance:    true,
+            injectAdult:         true,
+            injectPersonality:   true,
+            injectVoice:         true,
+            injectStyle:         true,
+            injectAIDirectives:  true,
+            impersonationBlock:  true,
+            jailbreakResistance: false,
+            povFirst:            true,
         }
     };
 }
 
-// ── Character override shape (the "everything" config) ──────────────────────
 export function defaultCharOverride() {
     return {
-        // Identity
         nickname: '',
-        voiceTone: '',           // e.g. "husky, low, measured"
-        speechPatterns: '',      // e.g. "speaks in short sentences, uses slang"
-        // Appearance (physical anchors for consistency)
+        voiceTone: '',
+        speechPatterns: '',
         species: '',
         gender: '',
         age: '',
@@ -73,86 +72,108 @@ export function defaultCharOverride() {
         hairColor: '',
         hairStyle: '',
         eyeColor: '',
-        distinctiveFeatures: '', // scars, tattoos, etc.
-        // NSFW / Adult appearance fields
+        distinctiveFeatures: '',
         breastSize: '',
         nippleColor: '',
         areolaeSize: '',
         bodyHair: '',
         genitalia: '',
         otherAdultFeatures: '',
-        // Behavioral
-        dominanceLevel: 50,      // 0=submissive, 100=dominant
-        explicitnessLevel: 50,   // 0=fade-to-black, 100=explicit
+        dominanceLevel: 50,
+        explicitnessLevel: 50,
         romanticismLevel: 50,
         violenceLevel: 30,
-        // Model override for this specific character
         modelOverride: '',
         systemPromptOverride: '',
         postHistoryOverride: '',
-        // Persona injection mode
-        appendToSystem: '',      // freeform appended to system prompt
-        // Cross-session persistent memory for this character
+        appendToSystem: '',
         persistentMemory: '',
         enabled: true
     };
 }
 
-// ── Session shape ────────────────────────────────────────────────────────────
-export function createSession(name = 'New Thread') {
+// ── Chat & Reality shapes ────────────────────────────────────────────────────
+
+export function createChat(type = 'dm', botIds = [], name = '') {
+    const id = `chat-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
     return {
-        id: `sess-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        id,
+        type, // 'dm' | 'group'
+        name: name || (type === 'dm' ? 'Direct Message' : 'New Group'),
+        botIds,
+        history: [],
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        shareMemory: true, // If true, other chats in the reality are context-accessible
+        activeBotId: botIds[0] || null,
+        config: {} // Optional chat-specific overrides if needed later
+    };
+}
+
+export function createReality(name = 'New Reality') {
+    const id = `real-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    return {
+        id,
         name,
         createdAt: Date.now(),
         updatedAt: Date.now(),
-        activeBotIds: [],
-        activeBotId: null,
-        history: [],
-        lorebooks: [],
+        worldConfig: {
+            scenario: '', // The overarching Isekai/World rules
+            activeLorebooks: [] // IDs of lorebooks enabled in this reality
+        },
+        chats: [],
+        activeChatId: null,
         config: defaultConfig()
     };
 }
 
 // ── Master state ─────────────────────────────────────────────────────────────
 export const state = {
-    // Persisted across sessions
-    characters: [],          // roster metadata [{id,name,tagline,avatar_path,card_path,tags}]
-    loadedCharacters: {},    // full card data keyed by id
-    sessions: [],            // array of session objects
-    activeSessionId: null,
+    characters: [],
+    loadedCharacters: {},
+    realities: [],
+    activeRealityId: null,
+    socialData: {}, // { charId: { postIdx: [ { role, content, timestamp } ] } }
 
-    // Current session shortcut (always mirrors sessions[activeIdx])
-    get session() {
-        return this.sessions.find(s => s.id === this.activeSessionId) || this.sessions[0];
+    get reality() {
+        return this.realities.find(r => r.id === this.activeRealityId) || this.realities[0];
     },
-    get history()    { return this.session?.history    ?? []; },
-    get lorebooks()  { return this.session?.lorebooks  ?? []; },
-    get config()     { return this.session?.config     ?? defaultConfig(); },
-    get activeBotId(){ return this.session?.activeBotId ?? null; },
-    get activeBotIds(){ return this.session?.activeBotIds ?? []; },
+    get chat() {
+        const r = this.reality;
+        if (!r) return null;
+        return r.chats.find(c => c.id === r.activeChatId) || r.chats[0];
+    },
+    get session() { return this.chat; },
 
-    // Volatile UI state
+    // Proxies for legacy/direct access
+    get history()     { return this.chat?.history ?? []; },
+    get lorebooks()   { return this.reality?.worldConfig.activeLorebooks ?? []; },
+    get config()      { return this.reality?.config ?? defaultConfig(); },
+    get activeBotId() { return this.chat?.activeBotId ?? null; },
+    get activeBotIds(){ return this.chat?.botIds ?? []; },
+
     isStreaming: false,
-    pendingAbort: null,      // AbortController for current stream
+    pendingAbort: null,
     telemetry: { turns: 0, totalTokens: 0, sessionTokens: 0 }
 };
 
-// ── Persistence ──────────────────────────────────────────────────────────────
+// ── Persistence & Migration ──────────────────────────────────────────────────
+
 export function saveState() {
     try {
         const payload = {
-            sessions: state.sessions,
-            activeSessionId: state.activeSessionId,
-            telemetry: state.telemetry
+            realities: state.realities,
+            activeRealityId: state.activeRealityId,
+            telemetry: state.telemetry,
+            socialData: state.socialData
         };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-        // Characters stored separately (can be large)
         localStorage.setItem(CHARS_KEY, JSON.stringify({
             characters: state.characters,
             loadedCharacters: state.loadedCharacters
         }));
     } catch (e) {
-        console.warn('[state] Save failed (quota?):', e);
+        console.warn('[state] Save failed:', e);
     }
 }
 
@@ -161,11 +182,34 @@ export function loadState() {
         const raw = localStorage.getItem(STORAGE_KEY);
         if (raw) {
             const data = JSON.parse(raw);
-            state.sessions = data.sessions || [];
-            state.activeSessionId = data.activeSessionId || null;
+            state.realities = data.realities || [];
+            state.activeRealityId = data.activeRealityId || null;
             state.telemetry = data.telemetry || { turns: 0, totalTokens: 0, sessionTokens: 0 };
+            state.socialData = data.socialData || {};
+        } else {
+            // Check for v3 legacy data
+            const legacyRaw = localStorage.getItem(LEGACY_STORAGE_KEY);
+            if (legacyRaw) {
+                console.log('[state] Migrating from v3 Reality structure...');
+                const legacy = JSON.parse(legacyRaw);
+                const legacyReality = createReality('Legacy Reality');
+                (legacy.sessions || []).forEach(sess => {
+                    const type = (sess.activeBotIds?.length > 1) ? 'group' : 'dm';
+                    const chat = createChat(type, sess.activeBotIds || [], sess.name);
+                    chat.history = sess.history || [];
+                    chat.activeBotId = sess.activeBotId;
+                    legacyReality.chats.push(chat);
+                });
+                legacyReality.config = { ...legacyReality.config, ...(legacy.config || {}) };
+                state.realities.push(legacyReality);
+                state.activeRealityId = legacyReality.id;
+                legacyReality.activeChatId = legacyReality.chats[0]?.id || null;
+                // Move telemetry
+                state.telemetry = legacy.telemetry || state.telemetry;
+            }
         }
-        const chars = localStorage.getItem(CHARS_KEY);
+
+        const chars = localStorage.getItem(CHARS_KEY) || localStorage.getItem('underdark_chars_v3');
         if (chars) {
             const data = JSON.parse(chars);
             state.characters = data.characters || [];
@@ -175,61 +219,98 @@ export function loadState() {
         console.warn('[state] Load failed:', e);
     }
 
-    // Ensure at least one session exists
-    if (!state.sessions.length) {
-        const sess = createSession('Thread #1');
-        state.sessions.push(sess);
-        state.activeSessionId = sess.id;
-    } else if (!state.activeSessionId || !state.sessions.find(s => s.id === state.activeSessionId)) {
-        state.activeSessionId = state.sessions[0].id;
+    // Ensure at least one reality exists
+    if (!state.realities.length) {
+        const real = createReality('Continuity Alpha');
+        state.realities.push(real);
+        state.activeRealityId = real.id;
     }
 
-    // Migrate: ensure each session has full config with new keys.
-    // Shallow spread handles top-level keys; flags needs a deep merge so that
-    // sessions with a partial flags object still pick up any newly added flags.
-    // Also migrate 'auto' → 'manual' so single-char sessions feel correct by default.
-    state.sessions.forEach(sess => {
-        const saved = sess.config || {};
-        sess.config = { ...defaultConfig(), ...saved };
-        sess.config.flags = { ...defaultConfig().flags, ...(saved.flags || {}) };
-        if (sess.config.groupTurnMode === 'auto') sess.config.groupTurnMode = 'manual';
+    // Sanitize and ensure active IDs
+    state.realities.forEach(real => {
+        if (!real.chats.length) {
+            const chat = createChat('dm', [], 'New Message');
+            real.chats.push(chat);
+        }
+        if (!real.activeChatId || !real.chats.find(c => c.id === real.activeChatId)) {
+            real.activeChatId = real.chats[0].id;
+        }
+        // Sync configs
+        const saved = real.config || {};
+        real.config = { ...defaultConfig(), ...saved };
+        real.config.flags = { ...defaultConfig().flags, ...(saved.flags || {}) };
     });
+
+    if (!state.activeRealityId || !state.realities.find(r => r.id === state.activeRealityId)) {
+        state.activeRealityId = state.realities[0].id;
+    }
 }
 
-// ── Session helpers ──────────────────────────────────────────────────────────
-export function newSession(name) {
-    const sess = createSession(name);
-    state.sessions.push(sess);
-    state.activeSessionId = sess.id;
+// ── Reality Helpers ──────────────────────────────────────────────────────────
+
+export function newReality(name) {
+    const real = createReality(name);
+    state.realities.push(real);
+    state.activeRealityId = real.id;
     saveState();
-    return sess;
+    return real;
 }
 
-export function switchSession(id) {
-    if (state.sessions.find(s => s.id === id)) {
-        state.activeSessionId = id;
+export function switchReality(id) {
+    if (state.realities.find(r => r.id === id)) {
+        state.activeRealityId = id;
         saveState();
     }
 }
 
-export function deleteSession(id) {
-    state.sessions = state.sessions.filter(s => s.id !== id);
-    if (!state.sessions.length) {
-        const sess = createSession('Thread #1');
-        state.sessions.push(sess);
+export function deleteReality(id) {
+    state.realities = state.realities.filter(r => r.id !== id);
+    if (!state.realities.length) {
+        const real = createReality('Continuity Alpha');
+        state.realities.push(real);
     }
-    if (state.activeSessionId === id || !state.sessions.find(s => s.id === state.activeSessionId)) {
-        state.activeSessionId = state.sessions[0].id;
+    if (state.activeRealityId === id || !state.realities.find(r => r.id === state.activeRealityId)) {
+        state.activeRealityId = state.realities[0].id;
     }
     saveState();
 }
 
-export function renameSession(id, name) {
-    const s = state.sessions.find(s => s.id === id);
-    if (s) { s.name = name; saveState(); }
+// ── Chat Helpers ─────────────────────────────────────────────────────────────
+
+export function newChat(type, botIds, name) {
+    const chat = createChat(type, botIds, name);
+    state.reality.chats.unshift(chat); // Newest at top
+    state.reality.activeChatId = chat.id;
+    saveState();
+    return chat;
 }
 
-// ── Message helpers ──────────────────────────────────────────────────────────
+export function switchChat(id) {
+    if (state.reality.chats.find(c => c.id === id)) {
+        state.reality.activeChatId = id;
+        saveState();
+    }
+}
+
+export function deleteChat(id) {
+    state.reality.chats = state.reality.chats.filter(c => c.id !== id);
+    if (!state.reality.chats.length) {
+        const chat = createChat('dm', [], 'New Message');
+        state.reality.chats.push(chat);
+    }
+    if (state.reality.activeChatId === id || !state.reality.chats.find(c => c.id === state.reality.activeChatId)) {
+        state.reality.activeChatId = state.reality.chats[0].id;
+    }
+    saveState();
+}
+
+export function renameChat(id, name) {
+    const c = state.reality.chats.find(c => c.id === id);
+    if (c) { c.name = name; saveState(); }
+}
+
+// ── Message Helpers ──────────────────────────────────────────────────────────
+
 export function addMessage(role, content, botId = null, meta = {}) {
     const msg = {
         id: `msg-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
@@ -244,19 +325,19 @@ export function addMessage(role, content, botId = null, meta = {}) {
         reactions: {},
         edited: false
     };
-    state.session.history.push(msg);
-    state.session.updatedAt = Date.now();
+    state.chat.history.push(msg);
+    state.chat.updatedAt = Date.now();
+    state.reality.updatedAt = Date.now();
 
-    // Auto-name the session from the first user message if it still has a default name
-    if (role === 'user' && state.session.history.filter(m => m.role === 'user').length === 1) {
-        const isDefault = /^Thread\s*#\d+$/.test(state.session.name);
+    // Auto-name
+    if (role === 'user' && state.chat.history.filter(m => m.role === 'user').length === 1) {
+        const isDefault = /^New\s*(Message|Group)$/.test(state.chat.name);
         if (isDefault) {
             const excerpt = content.replace(/\s+/g, ' ').trim().slice(0, 42);
-            state.session.name = excerpt.length < content.trim().length ? excerpt + '…' : excerpt;
+            state.chat.name = excerpt.length < content.trim().length ? excerpt + '…' : excerpt;
         }
     }
 
-    // Telemetry
     if (role === 'user') state.telemetry.turns++;
     state.telemetry.totalTokens += msg.tokens;
     state.telemetry.sessionTokens += msg.tokens;
@@ -266,17 +347,17 @@ export function addMessage(role, content, botId = null, meta = {}) {
 }
 
 export function editMessage(msgId, newContent) {
-    const msg = state.session.history.find(m => m.id === msgId);
+    const msg = state.chat.history.find(m => m.id === msgId);
     if (msg) { msg.content = newContent; msg.edited = true; saveState(); }
 }
 
 export function deleteMessage(msgId) {
-    state.session.history = state.session.history.filter(m => m.id !== msgId);
+    state.chat.history = state.chat.history.filter(m => m.id !== msgId);
     saveState();
 }
 
 export function addComment(msgId, text) {
-    const msg = state.session.history.find(m => m.id === msgId);
+    const msg = state.chat.history.find(m => m.id === msgId);
     if (!msg) return null;
     if (!msg.comments) msg.comments = [];
     const comment = {
@@ -290,41 +371,67 @@ export function addComment(msgId, text) {
 }
 
 export function deleteComment(msgId, commentId) {
-    const msg = state.session.history.find(m => m.id === msgId);
+    const msg = state.chat.history.find(m => m.id === msgId);
     if (!msg?.comments) return;
     msg.comments = msg.comments.filter(c => c.id !== commentId);
     saveState();
 }
 
 export function clearHistory() {
-    state.session.history = [];
+    state.chat.history = [];
     state.telemetry.sessionTokens = 0;
     saveState();
 }
 
-// ── Bot helpers ──────────────────────────────────────────────────────────────
+// ── Bot Helpers ──────────────────────────────────────────────────────────────
+
 export function setActiveBot(id) {
-    state.session.activeBotId = id;
-    if (!state.session.activeBotIds.includes(id)) {
-        state.session.activeBotIds.push(id);
+    state.chat.activeBotId = id;
+    if (!state.chat.botIds.includes(id)) {
+        state.chat.botIds.push(id);
     }
     saveState();
 }
 
-export function removeBotFromSession(id) {
-    state.session.activeBotIds = state.session.activeBotIds.filter(b => b !== id);
-    if (state.session.activeBotId === id) {
-        state.session.activeBotId = state.session.activeBotIds[0] || null;
+export function removeBotFromChat(id) {
+    state.chat.botIds = state.chat.botIds.filter(b => b !== id);
+    if (state.chat.activeBotId === id) {
+        state.chat.activeBotId = state.chat.botIds[0] || null;
     }
     saveState();
 }
 
-// ── Character override helpers ───────────────────────────────────────────────
+// ── Shared Memory Synapse Logic ──────────────────────────────────────────────
+
+/**
+ * Returns a collection of history entries from other chats in this reality
+ * for a specific bot. This is the "past memory" injected into the prompt.
+ */
+export function getBotMemoriesFromReality(botId, currentChatId, limit = 10) {
+    const memories = [];
+    state.reality.chats.forEach(c => {
+        if (c.id === currentChatId) return; // Skip current
+        if (!c.botIds.includes(botId)) return; // Bot must be present
+
+        // Grab relevant history
+        const relevant = c.history.filter(m => m.content && (m.botId === botId || m.role === 'user'));
+        relevant.slice(-limit).forEach(m => {
+            memories.push({
+                ...m,
+                chatName: c.name,
+                isGroup: c.type === 'group'
+            });
+        });
+    });
+    // Sort by timestamp
+    return memories.sort((a, b) => a.timestamp - b.timestamp);
+}
+
+// ── Standard Character & Config Helpers (Proxied) ─────────────────────────────
+
 export function getCharOverride(charId) {
     const overrides = state.config.charOverrides || {};
     const saved     = overrides[charId] || {};
-    // Merge ext fields into the flat override so the LLM engine sees everything
-    // the Sims Editor saved without needing to know about the ext sub-object.
     const { ext, _userEdits, ...rest } = saved;
     return { ...defaultCharOverride(), ...rest, ...(ext || {}) };
 }
@@ -332,25 +439,17 @@ export function getCharOverride(charId) {
 export function setCharOverride(charId, fields) {
     if (!state.config.charOverrides) state.config.charOverrides = {};
     const existing = state.config.charOverrides[charId] || {};
-    // Preserve existing ext and deep-merge if caller also passes ext
     const mergedExt = { ...(existing.ext || {}), ...(fields.ext || {}) };
-    state.config.charOverrides[charId] = {
-        ...existing,
-        ...fields,
-        ext: mergedExt
-    };
+    state.config.charOverrides[charId] = { ...existing, ...fields, ext: mergedExt };
     saveState();
 }
 
-// ── Config helpers ────────────────────────────────────────────────────────────
 export function setConfig(fields) {
-    Object.assign(state.session.config, fields);
+    Object.assign(state.reality.config, fields);
     saveState();
 }
 
-// ── Character storage helpers ────────────────────────────────────────────────
 export async function saveCharacter(meta, card) {
-    // Offload avatar data URLs to IndexedDB to avoid localStorage quota issues
     let avatarToStore = meta.avatar_path || card.avatar || null;
     if (avatarToStore && isDataUrl(avatarToStore)) {
         await saveAvatar(meta.id, avatarToStore).catch(() => {});
@@ -358,13 +457,9 @@ export async function saveCharacter(meta, card) {
         meta = { ...meta, avatar_path: avatarToStore };
         card = { ...card, avatar: avatarToStore };
     }
-
     const existing = state.characters.findIndex(c => c.id === meta.id);
-    if (existing >= 0) {
-        state.characters[existing] = meta;
-    } else {
-        state.characters.push(meta);
-    }
+    if (existing >= 0) state.characters[existing] = meta;
+    else state.characters.push(meta);
     state.loadedCharacters[meta.id] = card;
     saveState();
 }
@@ -373,16 +468,11 @@ export async function deleteCharacter(id) {
     await deleteAvatar(id).catch(() => {});
     state.characters = state.characters.filter(c => c.id !== id);
     delete state.loadedCharacters[id];
-    // Remove from all sessions
-    state.sessions.forEach(sess => {
-        sess.activeBotIds = sess.activeBotIds.filter(b => b !== id);
-        if (sess.activeBotId === id) sess.activeBotId = sess.activeBotIds[0] || null;
-    });
     saveState();
 }
 
-// Resolve `idb:id` avatar references to actual data URLs for display.
-// Returns the raw value unchanged if it's already a plain URL / path.
+// ── Standard Helpers ──────────────────────────────────────────────────────────
+
 export async function resolveCharAvatar(charId, stored) {
     if (!stored) return null;
     if (stored === `idb:${charId}` || stored.startsWith('idb:')) {
@@ -391,9 +481,8 @@ export async function resolveCharAvatar(charId, stored) {
     return stored;
 }
 
-// ── Reaction helpers ──────────────────────────────────────────────────────────
 export function addReaction(msgId, emoji) {
-    const msg = state.session.history.find(m => m.id === msgId);
+    const msg = state.chat.history.find(m => m.id === msgId);
     if (!msg) return;
     if (!msg.reactions) msg.reactions = {};
     if (!msg.reactions[emoji]) msg.reactions[emoji] = [];
@@ -408,30 +497,29 @@ export function addReaction(msgId, emoji) {
 }
 
 export function getReactions(msgId) {
-    const msg = state.session.history.find(m => m.id === msgId);
+    const msg = state.chat.history.find(m => m.id === msgId);
     return msg?.reactions || {};
 }
 
-// ── Session export / import helpers ──────────────────────────────────────────
-export function exportSessionJson(sessionId) {
-    const sess = state.sessions.find(s => s.id === sessionId) || state.session;
+export function exportSessionJson(chatId) {
+    const chat = state.reality.chats.find(c => c.id === chatId) || state.chat;
     const chars = {};
-    (sess.activeBotIds || []).forEach(id => {
+    (chat.botIds || []).forEach(id => {
         if (state.loadedCharacters[id]) chars[id] = state.loadedCharacters[id];
     });
-    return JSON.stringify({ version: 'underdark_export_v1', session: sess, characters: chars }, null, 2);
+    return JSON.stringify({ version: 'underdark_reality_chat_v1', chat, characters: chars }, null, 2);
 }
 
 export async function importSessionJson(jsonString) {
     const data = JSON.parse(jsonString);
-    if (data.version !== 'underdark_export_v1') throw new Error('Unrecognised export format.');
-    const sess = data.session;
-    // Give it a new id to avoid collision
-    sess.id = `sess-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-    sess.name = `${sess.name} (imported)`;
-    state.sessions.push(sess);
-    state.activeSessionId = sess.id;
-    // Merge characters
+    const chat = data.chat || data.session;
+    if (!chat) throw new Error('Invalid import format');
+    
+    chat.id = `chat-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    chat.name = `${chat.name} (imported)`;
+    state.reality.chats.unshift(chat);
+    state.reality.activeChatId = chat.id;
+
     if (data.characters) {
         Object.entries(data.characters).forEach(([id, card]) => {
             if (!state.loadedCharacters[id]) {
@@ -443,5 +531,5 @@ export async function importSessionJson(jsonString) {
         });
     }
     saveState();
-    return sess;
+    return chat;
 }

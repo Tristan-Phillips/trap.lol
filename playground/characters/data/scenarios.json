@@ -1,0 +1,74 @@
+{
+  "scenarios": [
+    {
+      "id": "blank",
+      "name": "— None / Custom —",
+      "scenario": ""
+    },
+    {
+      "id": "modern-earth",
+      "name": "Modern Earth (Realistic)",
+      "scenario": "The setting is contemporary Earth. Technology, culture, and social norms reflect the real world in the current decade. Characters exist within realistic constraints — no magic, no supernatural elements, and consequences follow believable cause-and-effect. The tone can range from mundane to dramatic, but remains grounded."
+    },
+    {
+      "id": "near-future-cyberpunk",
+      "name": "Near-Future Cyberpunk",
+      "scenario": "Set approximately 50–80 years in the future. Megacorporations have supplanted most governments. Neural implants and cybernetic augmentation are commonplace but stratified by wealth. Night cities sprawl across polluted coasts. The divide between augmented and unaugmented humanity is a constant source of tension. Violence is normalized; law enforcement is corporate. The black market drives innovation. Survival requires adaptability — and a willingness to compromise your humanity."
+    },
+    {
+      "id": "high-fantasy",
+      "name": "High Fantasy (Classic)",
+      "scenario": "A world of swords, sorcery, and ancient prophecy. Magic is real and stratified into schools of power accessible to those with aptitude or training. Kingdoms rise and fall; old gods linger at the edges of civilization. Dragons, monsters, and forgotten ruins populate the wilderness beyond city walls. Political intrigue and military conflict drive the age. Heroes and villains are rarely as simple as they appear."
+    },
+    {
+      "id": "dark-fantasy",
+      "name": "Dark Fantasy",
+      "scenario": "Magic exists but it corrupts. Gods are real but indifferent or malicious. The world is in slow decline — civilization holds on against rot, monsters, and the failures of its own rulers. Death is constant; hope is rare; survival demands moral compromise. Characters carry trauma as a natural condition of existence. Violence has weight. Power comes with cost. There are no clean victories."
+    },
+    {
+      "id": "post-apocalyptic",
+      "name": "Post-Apocalyptic Wasteland",
+      "scenario": "Civilization collapsed decades ago — whether through nuclear war, pandemic, ecological collapse, or something else is debated by survivors. What remains are scattered settlements, hostile factions, and a landscape that punishes the unprepared. Resources — food, water, fuel, medicine — are worth dying for. Technology ranges from scavenged pre-collapse gear to primitive improvisation. Trust is a currency more precious than bullets."
+    },
+    {
+      "id": "space-opera",
+      "name": "Space Opera",
+      "scenario": "Humanity — and dozens of alien species — have colonized thousands of star systems across the galaxy. FTL travel exists but is controlled by powerful factions. The galaxy is politically fractured: old empires in slow decay, rising republics, mercenary guilds, and ancient civilizations watching from the margins. Technology is indistinguishable from magic at its highest levels. Personal honour, political betrayal, and the scale of civilizations form the backdrop for intimate human stories."
+    },
+    {
+      "id": "historical-ancient",
+      "name": "Ancient World (Historical)",
+      "scenario": "The ancient world — broadly encompassing the Mediterranean, Middle East, and surrounding regions from roughly 3000 BCE to 500 CE. Empires of Rome, Greece, Egypt, Persia, and others intersect. Slavery, conquest, philosophy, religion, and trade define the political landscape. The gods are believed to be real and active. Social hierarchies are rigid. War is constant, but so is art, scholarship, and the long project of civilization."
+    },
+    {
+      "id": "feudal-japan",
+      "name": "Feudal Japan (Sengoku Era)",
+      "scenario": "Japan during the Sengoku period — a century of near-constant civil war between rival daimyo (warlords) fighting for supremacy. Samurai bushido code, political betrayal, ninja clans, and the influence of Buddhist and Shinto traditions shape every interaction. Honour and loyalty are tested against survival and ambition. The common people endure; the powerful schemes. Change is coming — it always is — but at tremendous cost."
+    },
+    {
+      "id": "gothic-horror",
+      "name": "Gothic Horror",
+      "scenario": "A world of decaying aristocracy, fog-choked moors, and ancient evil that refuses to die. The supernatural is real — vampires, werewolves, restless ghosts, and things without names lurk at the periphery of the known world. The Church and its inquisitors hunt monsters but create new ones in the process. Sanity is fragile. Obsession is common. Beauty and terror are often the same thing. Every old estate hides a secret; every family name carries a curse."
+    },
+    {
+      "id": "isekai-portal",
+      "name": "Isekai / Portal Fantasy",
+      "scenario": "One or more characters have been transported from the modern world into a fantasy realm with its own rules, magic systems, and history. The transported individual(s) carry knowledge and cultural context from their origin world, which creates friction, advantage, and unexpected consequences in the new setting. The rules of this world must be discovered, not assumed. The question of whether they can return — and whether they want to — shapes everything."
+    },
+    {
+      "id": "academy-magic",
+      "name": "Magical Academy",
+      "scenario": "A prestigious institution where students train to master magic, combat, politics, or esoteric disciplines depending on their faction. The academy has its own internal hierarchy, rivalries, forbidden wings, and secrets buried under centuries of institutional memory. Relationships form under pressure — competition, shared danger, late-night studying, and the very specific intimacy of people who are learning who they are. Power is discovered, not given. The real education is rarely in the curriculum."
+    },
+    {
+      "id": "slice-of-life",
+      "name": "Slice of Life (Contemporary)",
+      "scenario": "Ordinary life in a contemporary setting, with all its texture and significance. Work, friendship, love, loss, small moments, and the slow accumulation of experience. No monsters, no prophecies — just people navigating the complexity of existing. The drama comes from real things: misunderstandings, unspoken feelings, ambition, grief, desire, and the gap between who we are and who we want to be."
+    },
+    {
+      "id": "custom",
+      "name": "✏ Custom (write below)",
+      "scenario": ""
+    }
+  ]
+}

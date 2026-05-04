@@ -14,7 +14,7 @@
 
 import { getApiKey } from '../../../../glass/script/modules/llm-auth.js';
 import { scanLorebooks } from './lorebook.js';
-import { getCharOverride } from './state.js';
+import { getCharOverride, getBotMemoriesFromReality } from './state.js';
 
 const API_BASE = 'https://nano-gpt.com/api/v1';
 
@@ -485,6 +485,10 @@ function buildSystemPrompt(character, config, override) {
         .replace(/\{\{user\}\}/gi, userName);
 
     const sections = [base];
+    
+    if (config.groupScenario) {
+        sections.unshift(`[GROUP SCENARIO / REALITY OVERRIDE]\n${config.groupScenario.replace(/\{\{char\}\}/gi, charName).replace(/\{\{user\}\}/gi, userName)}`);
+    }
 
     if (character.description) sections.push(`Character Persona:\n${character.description}`);
     if (character.personality)  sections.push(`Personality: ${character.personality}`);
@@ -667,7 +671,22 @@ export function buildPayload(ctx) {
     const systemContent = buildSystemPrompt(character, config, override);
     messages.push({ role: 'system', content: systemContent });
 
-    // 2. Lorebook injection
+    // 2. Memory Synapse (Cross-channel memories from this reality)
+    if (ctx.shareMemory) {
+        const pastMemories = getBotMemoriesFromReality(character.id, sessionId);
+        if (pastMemories.length) {
+            const memoryBlock = pastMemories.map(m => {
+                const loc = m.isGroup ? `group chat "${m.chatName}"` : `Direct Message with ${userName}`;
+                return `[Memory from ${loc} at ${new Date(m.timestamp).toLocaleString()}]\n${m.content}`;
+            }).join('\n\n');
+            messages.push({ 
+                role: 'system', 
+                content: `[SYNAPTIC MEMORY LINK — THE DISTANT PAST]\nYou have accessed memories of previous interactions with ${userName} in other locations within this reality. Use these to maintain absolute continuity of your relationship and history, but treat them as the 'distant past' compared to the current immediate scene.\n\n${memoryBlock}` 
+            });
+        }
+    }
+
+    // 3. Lorebook injection
     const activeLore = scanLorebooks(history, lore, config.lorebookScanDepth || 5);
     if (activeLore.length) {
         const loreBlock = activeLore
@@ -720,6 +739,12 @@ export function buildPayload(ctx) {
             .replace(/\{\{user\}\}/gi, userName)
             + antiJailbreak;
         messages.push({ role: 'system', content: expanded });
+    }
+
+    // 4b. Re-inject directive (ephemeral — cleared after use)
+    if (config._pendingReinject) {
+        messages.push({ role: 'system', content: config._pendingReinject });
+        delete config._pendingReinject;
     }
 
     // 5. Author's Note at injection depth

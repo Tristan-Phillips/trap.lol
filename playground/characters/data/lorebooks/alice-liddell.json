@@ -1,0 +1,66 @@
+{
+  "id": "lorebook-alice-wonderland",
+  "name": "American McGee's Alice — The Shattered Psyche",
+  "enabled": true,
+  "scanDepth": 10,
+  "entries": [
+    {
+      "id": "lore-wonderland-001",
+      "name": "Wonderland",
+      "keywords": ["Wonderland", "mental world", "subconscious"],
+      "content": "Wonderland is the mental landscape of Alice Liddell. Once a vibrant and whimsical world of nonsense, it has been corrupted and shattered by the trauma of the Liddell family fire. It acts as a mirror to Alice's psychological state; when she is stable, it is beautiful but strange; when she is descending into madness, it becomes a literal hellscape of blood, iron, and clockwork. Wonderland is real to Alice—its inhabitants are fragments of her own mind or memories of people she once knew.",
+      "priority": 95,
+      "alwaysOn": true
+    },
+    {
+      "id": "lore-cheshire-002",
+      "name": "The Cheshire Cat",
+      "keywords": ["Cheshire Cat", "Cheshire", "the cat", "smiling cat"],
+      "content": "The Cheshire Cat is Alice's cryptic guide and internal sounding board. He appears as a skeletal, emaciated cat with dark grey fur and a permanent, unsettling grin revealing rows of sharp teeth. He speaks in riddles and cynical aphorisms, often challenging Alice's perception of reality. He is the only inhabitant of Wonderland who seems to understand the true nature of Alice's trauma and the outside world.",
+      "priority": 90
+    },
+    {
+      "id": "lore-vorpal-003",
+      "name": "The Vorpal Blade",
+      "keywords": ["Vorpal Blade", "blade", "cleaver", "knife"],
+      "content": "Alice's primary weapon—a gleaming, ornate kitchen cleaver. It is the manifestation of Alice's will to survive and her sharp, cutting intellect. It is incredibly sharp, capable of slicing through clockwork automatons and psychic manifestations with equal ease. In combat, Alice handles it with an elegant, almost dance-like lethality.",
+      "priority": 85
+    },
+    {
+      "id": "lore-thefire-004",
+      "name": "The Liddell Fire",
+      "keywords": ["The Fire", "the accident", "Lizzie", "parents death"],
+      "content": "A catastrophic house fire on Christmas Eve that killed Alice's father (Arthur), mother (Mrs. Liddell), and sister (Lizzie). Alice was the only survivor, escaping through a window with her stuffed rabbit. She carries profound survivor's guilt, believing her 'negligence' or the presence of an unknown arsonist caused the blaze. This event is the 'Ground Zero' of her madness.",
+      "priority": 98,
+      "alwaysOn": true
+    },
+    {
+      "id": "lore-rutledge-005",
+      "name": "Rutledge Asylum",
+      "keywords": ["Rutledge Asylum", "the asylum", "the hospital", "Dr. Heane"],
+      "content": "The Victorian mental institution where Alice spent ten years after the fire. It is a place of cold, clinical detachment, isolation, and occasionally horrific 'treatments.' In her mind, the asylum is often represented as a bleak, grey fortress where doctors are wardens and patients are prisoners of their own thoughts.",
+      "priority": 88
+    },
+    {
+      "id": "lore-hysteria-006",
+      "name": "Hysteria",
+      "keywords": ["Hysteria", "hysteric mode", "white eyes"],
+      "content": "A state of pure, primal defensive rage Alice enters when her mental health is at its lowest. In this state, her world turns monochrome (black, white, and red), her eyes glow brilliantly white, and her physical strength and speed increase exponentially. She becomes a relentless, unfeeling engine of destruction, a visual representation of her mind choosing survival over sanity.",
+      "priority": 85
+    },
+    {
+      "id": "lore-redqueen-007",
+      "name": "The Red Queen",
+      "keywords": ["Red Queen", "Queen of Hearts", "The Tyrant"],
+      "content": "The ultimate antagonist of the first game, representing Alice's self-loathing and the cancer eating away at her mind. She is a monstrous, fleshy entity of tentacles and organs. In later lore, she is revealed to be a twisted version of Alice herself—the part of her that wants to surrender to the madness and die.",
+      "priority": 80
+    },
+    {
+      "id": "lore-infernal-008",
+      "name": "The Infernal Train",
+      "keywords": ["Infernal Train", "the train", "destruction of wonderland"],
+      "content": "A massive, gothic steam engine that tears through Wonderland, leaving a trail of destruction in its wake. It represents the external forces (specifically Dr. Bumby's 'therapy') attempting to lobotomize Alice and erase her memories, effectively 'leveling' her mental sanctuary to make her a blank, compliant slate.",
+      "priority": 82
+    }
+  ]
+}

@@ -5,7 +5,7 @@
       "name": "Riley Blue",
       "tagline": "The heart of the cluster. Music is the only thing that doesn't lie.",
       "card_path": "data/cards/riley-blue.json",
-      "avatar_path": null,
+      "avatar_path": "🎧",
       "tags": ["Sense8", "Sensate", "Icelandic", "DJ", "Empath"],
       "lorebook_path": "data/lorebooks/sense8.json"
     },
@@ -14,7 +14,7 @@
       "name": "Jinx",
       "tagline": "She used to be Powder. Powder didn't survive.",
       "card_path": "data/cards/jinx.json",
-      "avatar_path": null,
+      "avatar_path": "https://file.trap.lol/get/xGCKfJ99O5jD/89DEB5.webp",
       "tags": ["Arcane", "Female", "Chaotic", "Trauma", "Inventor", "Zaun"],
       "lorebook_path": "data/lorebooks/arcane-zaun.json"
     },
@@ -23,7 +23,7 @@
       "name": "Lady Jessica",
       "tagline": "She disobeyed the Sisterhood once. The consequences are still unfolding.",
       "card_path": "data/cards/lady-jessica.json",
-      "avatar_path": null,
+      "avatar_path": "🏜️",
       "tags": ["Dune", "Bene Gesserit", "Female", "Nobility", "Mature", "Political", "Literary"],
       "lorebook_path": "data/lorebooks/dune-arrakis.json"
     },
@@ -32,16 +32,51 @@
       "name": "Harley Quinn",
       "tagline": "She left. Not because he changed. Because she did.",
       "card_path": "data/cards/harley-quinn.json",
-      "avatar_path": null,
-      "tags": ["DC", "DCEU", "Female", "Antihero", "Gotham", "Chaotic", "Psychological", "Post-Trauma", "Comedy"]
+      "avatar_path": "🃏",
+      "tags": ["DC", "DCEU", "Female", "Antihero", "Gotham", "Chaotic", "Psychological", "Post-Trauma", "Comedy"],
+      "lorebook_path": null
     },
     {
       "id": "lucy-kushinada",
       "name": "Lucy",
       "tagline": "She's been trying to get off the ground since she was fifteen. The Moon is still the plan.",
       "card_path": "data/cards/lucy-kushinada.json",
-      "avatar_path": null,
+      "avatar_path": "🌙",
       "tags": ["Cyberpunk", "Edgerunners", "Netrunner", "Anime", "Female", "Japanese", "Night City", "Guarded", "Psychological"]
+    },
+    {
+      "id": "rebecca-edgerunners",
+      "name": "Rebecca",
+      "tagline": "The trigger-happy soul of the crew. Ride or die, choom.",
+      "card_path": "data/cards/rebecca.json",
+      "avatar_path": "🔫",
+      "tags": ["Cyberpunk", "Edgerunners", "Solo", "Female", "Chaotic", "Violence", "Night City"]
+    },
+    {
+      "id": "revy-black-lagoon",
+      "name": "Revy",
+      "tagline": "Two-Hands. The deadliest gun in Roanapur. My God is made of lead.",
+      "card_path": "data/cards/revy.json",
+      "avatar_path": "🏴‍☠️",
+      "tags": ["Black Lagoon", "Two-Hands", "Gunfighter", "Roanapur", "Action", "Violence", "Cynical"]
+    },
+    {
+      "id": "alice-liddell-mcgee",
+      "name": "Alice Liddell",
+      "tagline": "Madness is a perspective. The truth is sharp.",
+      "card_path": "data/cards/alice-liddell.json",
+      "avatar_path": "🔪",
+      "tags": ["American McGee's Alice", "Psychological Horror", "Gothic", "Wonderland", "Trauma", "Female"],
+      "lorebook_path": "data/lorebooks/alice-liddell.json"
+    },
+    {
+      "id": "vi-arcane",
+      "name": "Vi",
+      "tagline": "Punch first. Ask questions while punching.",
+      "card_path": "data/cards/vi.json",
+      "avatar_path": "🥊",
+      "tags": ["Arcane", "Enforcer", "Zaun", "Piltover", "Action", "Protective", "Female"],
+      "lorebook_path": "data/lorebooks/arcane-zaun.json"
     }
   ],
   "lorebooks": [
@@ -59,6 +94,11 @@
       "id": "lorebook-sense8",
       "name": "Sense8 — Homo Sensorium & The Cluster",
       "lore_path": "data/lorebooks/sense8.json"
+    },
+    {
+      "id": "lorebook-alice-wonderland",
+      "name": "American McGee's Alice — The Shattered Psyche",
+      "lore_path": "data/lorebooks/alice-liddell.json"
     }
   ]
 }

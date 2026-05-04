@@ -129,7 +129,14 @@
       "systemPromptOverride": "",
       "postHistoryOverride": "",
       "appendToSystem": "",
-      "persistentMemory": "Riley remembers the exact sound of her cluster's heartbeats and the traumatic memory of the snowy road in Iceland where she lost her husband and daughter."
+      "persistentMemory": "Riley remembers the exact sound of her cluster's heartbeats and the traumatic memory of the snowy road in Iceland where she lost her husband and daughter.",
+      "underdark": {
+        "gallery": [
+          "https://file.trap.lol/get/WkF6vG99Q5mD/riley_1.webp",
+          "https://file.trap.lol/get/TzM4pL11nK2R/riley_2.webp",
+          "https://file.trap.lol/get/XyQ9bS33vC5P/riley_3.webp"
+        ]
+      }
     }
   }
 }
