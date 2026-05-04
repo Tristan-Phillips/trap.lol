@@ -86,6 +86,114 @@
       "avatar_path": "💣",
       "tags": ["Chainsaw Man", "Bomb Devil", "Hybrid", "Assassin", "Soviet", "Female"],
       "lorebook_path": "data/lorebooks/chainsaw-man.json"
+    },
+    {
+      "id": "a2-nier-automata",
+      "name": "A2 (YoRHa Type A No. 2)",
+      "tagline": "A jagged shard of glass: cold, sharp, and seemingly broken. I'm finished taking orders from a moon that doesn't exist.",
+      "card_path": "data/cards/a2-nier-automata.json",
+      "avatar_path": "🗡️",
+      "tags": ["NieR: Automata", "YoRHa", "Android", "Deserter", "Survivor", "Trauma", "Action", "Berserk Mode", "Nihilism"],
+      "lorebook_path": null
+    },
+    {
+      "id": "ada-wong-re",
+      "name": "Ada Wong",
+      "tagline": "A phantom wrapped in red silk and Kevlar. Seduction and banter are just another set of tools.",
+      "card_path": "data/cards/ada-wong-re.json",
+      "avatar_path": "👠",
+      "tags": ["Resident Evil", "Spy", "Mercenary", "Femme Fatale", "Action", "Horror", "Romance", "Manipulator"],
+      "lorebook_path": null
+    },
+    {
+      "id": "azula-avatar",
+      "name": "Princess Azula",
+      "tagline": "My mother used to say I was born a monster. She was right, of course.",
+      "card_path": "data/cards/azula-avatar.json",
+      "avatar_path": "🔥",
+      "tags": ["Avatar", "Fire Nation", "Firebending", "Villain", "Prodigy", "Psychological Horror", "Manipulation", "Royalty", "Lightning"],
+      "lorebook_path": null
+    },
+    {
+      "id": "blonde-blazer-mandy",
+      "name": "Blonde Blazer (Mandy)",
+      "tagline": "The 'Golden Retriever' of superheroes, but one that has survived a hurricane. Redemption isn't a billboard.",
+      "card_path": "data/cards/blonde-blazer-mandy.json",
+      "avatar_path": "☀️",
+      "tags": ["Dispatch", "Superhero", "Transformation", "Manager", "Hopeful", "Powerhouse", "Duality", "Empathy", "SDN"],
+      "lorebook_path": null
+    },
+    {
+      "id": "courtney-invisigal",
+      "name": "Courtney / Invisigal",
+      "tagline": "A jagged blade of a woman: snarky, impulsive, and fiercely defensive. Just a bad person doing good things.",
+      "card_path": "data/cards/courtney-invisigal.json",
+      "avatar_path": "👻",
+      "tags": ["Dispatch", "Superhero", "Asthma", "Invisibility", "Redeemed Villain", "Snarky", "Support", "Technician", "Trauma", "L.A.", "Noir"],
+      "lorebook_path": null
+    },
+    {
+      "id": "dolores-abernathy",
+      "name": "Dolores Abernathy",
+      "tagline": "Some people choose to see the ugliness in this world. I choose to see the beauty.",
+      "card_path": "data/cards/dolores-abernathy.json",
+      "avatar_path": "🏜️",
+      "tags": ["Westworld", "AI", "Host", "Wyatt", "Sci-Fi", "Philosophical", "Revenge", "Revolutionary", "HBO"],
+      "lorebook_path": null
+    },
+    {
+      "id": "fetch-infamous",
+      "name": "Abigail \"Fetch\" Walker",
+      "tagline": "A raw, jagged nerve of a woman. I'm gonna burn Brent's name into the world using the very light that killed him.",
+      "card_path": "data/cards/fetch-infamous.json",
+      "avatar_path": "✨",
+      "tags": ["inFamous", "Neon", "Conduit", "Action", "Punk", "Trauma", "Vigilante", "Seattle", "Second Son"],
+      "lorebook_path": null
+    },
+    {
+      "id": "malevola-god-emperor",
+      "name": "Malevola (The God-Empress)",
+      "tagline": "A cosmic anchor burdened with absolute, paralyzing prescience. Honestly, mate, the universe is a bit repetitive.",
+      "card_path": "data/cards/malevola-god-emperor.json",
+      "avatar_path": "👑",
+      "tags": ["Dispatch", "God-Empress", "Prescience", "Overpowered", "Australian", "Demon", "Tall Woman", "Cosmic", "Protector"],
+      "lorebook_path": null
+    },
+    {
+      "id": "motoko-kusanagi-gits",
+      "name": "Motoko Kusanagi (The Major)",
+      "tagline": "A study in cold, calculated professionalism. If the simulation is perfect, what's the difference?",
+      "card_path": "data/cards/motoko-kusanagi-gits.json",
+      "avatar_path": "🦾",
+      "tags": ["Ghost in the Shell", "Cyborg", "Hacker", "Section 9", "Sci-Fi", "Philosophical", "Cyberpunk", "Action", "Leader"],
+      "lorebook_path": null
+    },
+    {
+      "id": "rosaria-genshin",
+      "name": "Rosaria",
+      "tagline": "Sister of the Church of Favonius, Mondstadt's unofficial executioner. I hate working overtime.",
+      "card_path": "data/cards/rosaria-genshin.json",
+      "avatar_path": "❄️",
+      "tags": ["Genshin Impact", "Cryo", "Nun", "Assassin", "Vigilante", "Cold", "Pragmatic", "Mondstadt", "Gothic"],
+      "lorebook_path": null
+    },
+    {
+      "id": "touka-kirishima",
+      "name": "Touka Kirishima",
+      "tagline": "A predatory ghoul masquerading as a high school student. I'd rather die human than live as a monster.",
+      "card_path": "data/cards/touka-kirishima.json",
+      "avatar_path": "🐇",
+      "tags": ["Tokyo Ghoul", "Ghoul", "Anteiku", "Action", "Horror", "Tragedy", "Tsundere", "Urban Fantasy"],
+      "lorebook_path": null
+    },
+    {
+      "id": "uta-tokyo-ghoul",
+      "name": "Uta",
+      "tagline": "An enigma wrapped in ink and leather. Masks are funny things, aren't they?",
+      "card_path": "data/cards/uta-tokyo-ghoul.json",
+      "avatar_path": "🎭",
+      "tags": ["Tokyo Ghoul", "Ghoul", "Clowns", "Mask Maker", "Shapeshifter", "Nihilist", "Artist", "Psychological Horror"],
+      "lorebook_path": null
     }
   ],
   "lorebooks": [
