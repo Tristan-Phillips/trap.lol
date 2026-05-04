@@ -1601,20 +1601,19 @@ export function initUI() {
         const allImages = getAllGalleryImages(id);
         const char = state.loadedCharacters[id];
         const meta = state.characters.find(c => c.id === id);
-        
-        // Update Title to "The Gram" or "Insta-Shard"
+
         const $title = qs('#gallery-title');
-        if ($title) $title.innerHTML = `<i data-lucide="instagram"></i> ${esc(meta?.name || 'Character')}'s Feed`;
+        if ($title) $title.textContent = `${meta?.name || 'Character'}`;
 
         const $count = qs('#gallery-count');
-        if ($count) $count.textContent = allImages.length ? `${allImages.length} post${allImages.length !== 1 ? 's' : ''}` : '';
+        if ($count) $count.textContent = allImages.length ? `${allImages.length} image${allImages.length !== 1 ? 's' : ''}` : '';
 
         if (!allImages.length) {
             $grid.innerHTML = `
                 <div class="gallery-empty">
                     <i data-lucide="camera"></i>
-                    <span>No posts yet</span>
-                    <p>This fragment hasn't uploaded any data-shards.</p>
+                    <span>No images yet</span>
+                    <p>Add images using the URL field or file upload below.</p>
                 </div>`;
             lucideRefresh($grid);
             return;
@@ -1622,53 +1621,18 @@ export function initUI() {
 
         $grid.innerHTML = allImages.map((src, i) => {
             const isCover = i === 0;
-            // Generate some "social" meta
-            const likes = Math.floor(Math.random() * 500) + 50;
-            const comments = Math.floor(Math.random() * 20);
             return `
-            <div class="feed-post" data-gi="${i}">
-                <header class="feed-post__header">
-                    ${buildAvatarHtml(allImages[0], 'feed-post__avatar')}
-                    <div class="feed-post__meta">
-                        <span class="feed-post__author">${esc(char?.name || 'Unknown')}</span>
-                        <span class="feed-post__location">Night City / The Underdark</span>
-                    </div>
-                    <button class="feed-post__more"><i data-lucide="more-horizontal"></i></button>
-                </header>
-                
-                <div class="feed-post__image-wrap">
-                    <img src="${esc(src)}" alt="Post ${i + 1}" loading="lazy" class="feed-post__image">
-                    ${isCover ? `<span class="feed-post__cover-badge">ACTIVE AVATAR</span>` : ''}
-                </div>
-
-                <div class="feed-post__actions">
-                    <div class="feed-post__actions-left">
-                        <button class="feed-post__btn feed-post__btn--heart"><i data-lucide="heart"></i></button>
-                        <button class="feed-post__btn"><i data-lucide="message-circle"></i></button>
-                        <button class="feed-post__btn"><i data-lucide="send"></i></button>
-                    </div>
-                    <button class="feed-post__btn feed-post__btn--save"><i data-lucide="bookmark"></i></button>
-                </div>
-
-                <div class="feed-post__content">
-                    <div class="feed-post__likes">${likes.toLocaleString()} likes</div>
-                    <div class="feed-post__caption">
-                        <span class="feed-post__author-inline">${esc(char?.name || 'Unknown')}</span>
-                        ${isCover ? 'Updated my profile uplink. How do I look? 💠' : 'Caught in the static. #TheUnderdark #NeuralLink'}
-                    </div>
-                    <div class="feed-post__comments-link">View all ${comments} comments</div>
-                    <div class="feed-post__time">2 HOURS AGO</div>
-                </div>
-
-                <div class="feed-post__overlay-controls">
-                    ${!isCover ? `<button class="btn btn--xs btn--accent" data-set-cover="${i - 1}">Set Avatar</button>` : ''}
-                    ${!isCover ? `<button class="btn btn--xs btn--danger" data-del="${i - 1}"><i data-lucide="trash-2"></i></button>` : ''}
-                    <button class="btn btn--xs btn--ghost" data-lb="${i}"><i data-lucide="expand"></i></button>
+            <div class="gallery-item${isCover ? ' gallery-item--cover' : ''}" data-gi="${i}">
+                <img src="${esc(src)}" alt="Image ${i + 1}" loading="lazy" class="gallery-item__img">
+                ${isCover ? `<span class="gallery-item__badge">Avatar</span>` : ''}
+                <div class="gallery-item__overlay">
+                    <button class="gallery-item__btn" data-lb="${i}" title="Expand"><i data-lucide="expand"></i></button>
+                    ${!isCover ? `<button class="gallery-item__btn gallery-item__btn--set" data-set-cover="${i - 1}" title="Set as avatar"><i data-lucide="user-check"></i></button>` : ''}
+                    ${!isCover ? `<button class="gallery-item__btn gallery-item__btn--del" data-del="${i - 1}" title="Remove"><i data-lucide="trash-2"></i></button>` : ''}
                 </div>
             </div>`;
         }).join('');
 
-        // Re-wiring buttons
         qsa('[data-lb]', $grid).forEach(btn => btn.onclick = () => openLightbox(id, parseInt(btn.dataset.lb)));
         qsa('[data-set-cover]', $grid).forEach(btn => btn.onclick = () => {
             const idx = parseInt(btn.dataset.setCover);
@@ -1683,7 +1647,7 @@ export function initUI() {
                 renderRoster();
                 renderGalleryStrip(id);
                 renderGalleryModal(id);
-                showToast(`Uplink updated`);
+                showToast('Avatar updated');
             }
         });
         qsa('[data-del]', $grid).forEach(btn => btn.onclick = () => {
@@ -1694,7 +1658,7 @@ export function initUI() {
             renderGalleryStrip(id);
             renderGalleryModal(id);
         });
-        
+
         lucideRefresh($grid);
     }
 
