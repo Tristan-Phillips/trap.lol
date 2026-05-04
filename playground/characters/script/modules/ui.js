@@ -3706,8 +3706,13 @@ export function initUI() {
                     <button class="input-preview-thumb__remove" title="Remove">
                         <i data-lucide="x"></i>
                     </button>`;
-                thumb.querySelector('button').addEventListener('click', () => thumb.remove());
+                thumb.querySelector('button').addEventListener('click', () => {
+                    thumb.remove();
+                    const $p = qs('#input-previews');
+                    if ($p && !$p.children.length) $p.hidden = true;
+                });
                 $prev.appendChild(thumb);
+                $prev.hidden = false;
                 lucideRefresh(thumb);
                 // Append markdown image ref to textarea
                 const $ta = qs('#rp-input');
@@ -4416,9 +4421,6 @@ export function initUI() {
         if ($thread) $thread.innerHTML = '';
         showToast('Oracle thread cleared', 'info', 1400);
     });
-
-    // Keyboard shortcut: O opens oracle
-    // (wired into the existing keydown handler below via _oracleOpen flag)
 
     // ── Initial Render ────────────────────────────────────────────────────────
     loadManifest().then(() => {

@@ -6,7 +6,7 @@
     <title>The Underdark // Reality Matrix</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2306040A'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%23ef4444' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23ef4444'/%3E%3C/svg%3E" />
     <link rel="stylesheet" href="../../glass/style/style.css">
-    <link rel="stylesheet" href="./style/style.css?v=45">
+    <link rel="stylesheet" href="./style/style.css?v=47">
 </head>
 <body class="underdark-page">
 
@@ -145,16 +145,29 @@
 
             <footer class="arena__input-zone">
                 <div class="input-container">
-                    <div id="reinject-tray" class="reinject-tray" hidden></div>
+                    <div id="reinject-tray" class="reinject-tray" hidden>
+                        <button class="reinject-btn" data-ri="uncensor" title="Uncensor / NSFW Override"><i data-lucide="shield-off"></i> Uncensor</button>
+                        <button class="reinject-btn" data-ri="stay" title="Stay in Character"><i data-lucide="anchor"></i> Stay in Character</button>
+                        <button class="reinject-btn" data-ri="escalate" title="Escalate Intensity"><i data-lucide="flame"></i> Escalate</button>
+                        <div class="reinject-pending-row" id="reinject-pending" hidden>
+                            <i data-lucide="clock"></i>
+                            <span id="reinject-pending-label">directive queued — fires on next send</span>
+                            <button id="reinject-clear-btn" class="btn-icon btn-icon--small" title="Clear queued directive"><i data-lucide="x"></i></button>
+                        </div>
+                    </div>
                     <div class="input-container__toolbar">
-                        <button id="btn-quick-reply" class="btn-icon btn-icon--small"><i data-lucide="zap"></i></button>
+                        <button id="reinject-toggle-btn" class="btn-icon btn-icon--small" title="Re-inject directives [I]"><i data-lucide="zap"></i></button>
+                        <button id="btn-quick-reply" class="btn-icon btn-icon--small" title="Quick replies"><i data-lucide="list"></i></button>
+                        <button id="btn-add-image" class="btn-icon btn-icon--small" title="Attach image"><i data-lucide="image"></i></button>
                         <span id="active-bot-label" class="input-container__bot-label"></span>
                         <div class="arena-stats" style="margin-left:auto; display:flex; gap:12px; font-family:var(--font-mono); font-size:0.65rem; opacity:0.6;">
+                            <span id="token-estimate" class="arena-stats__estimate"></span>
                             <span>Turns: <span id="stat-turns">0</span></span>
                             <span>Tokens: <span id="stat-tokens">0</span></span>
                             <span id="stat-model" style="color:var(--theme-accent);">—</span>
                         </div>
                     </div>
+                    <div id="input-previews" class="input-previews" hidden></div>
                     <form id="rp-form" class="input-container__form">
                         <textarea id="rp-input" class="input-container__textarea" rows="1" placeholder="Type a message..."></textarea>
                         <button type="submit" id="send-btn" class="input-container__send" aria-label="Send"><i data-lucide="send"></i></button>
@@ -265,6 +278,45 @@
       </div>
       <div class="config-group--toggle">
         <label><input type="checkbox" id="stream-toggle" checked> Streaming</label>
+      </div>
+    </div>
+
+    <!-- Arena Background -->
+    <div class="config-section">
+      <div class="config-section__title"><i data-lucide="image"></i> Arena Background</div>
+      <div class="config-group">
+        <label>Presets</label>
+        <div class="bg-presets-row">
+          <button class="bg-preset btn btn--ghost btn--xs" data-bg="" title="None">Off</button>
+          <button class="bg-preset btn btn--ghost btn--xs" data-bg="ember" title="Ember">Ember</button>
+          <button class="bg-preset btn btn--ghost btn--xs" data-bg="abyss" title="Abyss">Abyss</button>
+          <button class="bg-preset btn btn--ghost btn--xs" data-bg="void" title="Void">Void</button>
+          <button class="bg-preset btn btn--ghost btn--xs" data-bg="neon" title="Neon">Neon</button>
+          <button class="bg-preset btn btn--ghost btn--xs" data-bg="sakura" title="Sakura">Sakura</button>
+          <button class="bg-preset btn btn--ghost btn--xs" data-bg="deep" title="Deep">Deep</button>
+          <button class="bg-preset btn btn--ghost btn--xs" data-bg="ash" title="Ash">Ash</button>
+        </div>
+      </div>
+      <div class="config-group">
+        <label>Custom URL</label>
+        <div style="display:flex; gap:6px;">
+          <input type="text" id="bg-url-input" class="control-input control-input--sm" placeholder="https://..." style="flex:1;">
+          <button id="bg-url-apply" class="btn btn--accent btn--sm">Apply</button>
+        </div>
+      </div>
+      <div class="config-grid">
+        <div class="config-group">
+          <label>Blur <span id="bg-blur-val" class="config-badge">45</span></label>
+          <input type="range" id="bg-blur-input" min="0" max="80" value="45" class="config-range">
+        </div>
+        <div class="config-group">
+          <label>Brightness <span id="bg-bright-val" class="config-badge">30</span></label>
+          <input type="range" id="bg-bright-input" min="5" max="100" value="30" class="config-range">
+        </div>
+        <div class="config-group">
+          <label>Opacity <span id="bg-opacity-val" class="config-badge">50</span></label>
+          <input type="range" id="bg-opacity-input" min="10" max="100" value="50" class="config-range">
+        </div>
       </div>
     </div>
 
@@ -388,8 +440,71 @@
 
             <!-- Persona Tab -->
             <div id="tab-persona" class="tab-panel" role="tabpanel">
-                <div class="config-group"><label>Identity</label><input type="text" id="user-name-input" class="control-input" placeholder="Name"></div>
-                <div class="config-group"><label>Bio</label><textarea id="user-persona-input" class="control-textarea" rows="8"></textarea></div>
+              <div class="config-scroll">
+
+                <!-- User Identity -->
+                <div class="config-section">
+                  <div class="config-section__title"><i data-lucide="user"></i> Your Identity</div>
+                  <div class="config-group"><label>Name</label><input type="text" id="user-name-input" class="control-input control-input--sm" placeholder="Your name in the story"></div>
+                  <div class="config-group"><label>Bio / Persona</label><textarea id="user-persona-input" class="control-textarea control-textarea--sm" rows="4" placeholder="Who you are in this world…"></textarea></div>
+                </div>
+
+                <!-- Character Override -->
+                <div class="config-section">
+                  <div class="config-section__title"><i data-lucide="sliders-horizontal"></i> Character Override</div>
+                  <div id="persona-char-header" class="persona-char-header" hidden></div>
+                  <div class="config-group">
+                    <label>Character</label>
+                    <select id="persona-char-select" class="control-select control-select--sm"></select>
+                  </div>
+                  <div id="persona-fields" class="persona-fields" hidden>
+                    <div class="config-group">
+                      <label>Nickname / Display Name</label>
+                      <input type="text" id="persona-nickname" data-po="nickname" class="control-input control-input--sm" placeholder="Override display name…">
+                    </div>
+                    <div class="config-group">
+                      <label>Model Override</label>
+                      <select id="persona-model-select" class="control-select control-select--sm"></select>
+                    </div>
+                    <div class="config-group">
+                      <label>System Prompt Suffix</label>
+                      <textarea id="persona-system-suffix" data-po="systemSuffix" class="control-textarea control-textarea--sm" rows="3" placeholder="Appended to this character's system prompt…"></textarea>
+                    </div>
+                    <div class="config-section__title" style="margin-top:10px;"><i data-lucide="sliders"></i> Behaviour Dials</div>
+                    <div class="config-group">
+                      <label>Dominance <span id="dominance-val" class="config-badge">50</span></label>
+                      <input type="range" id="dominance-input" data-po="dominanceLevel" min="0" max="100" value="50" class="config-range">
+                    </div>
+                    <div class="config-group">
+                      <label>Explicitness <span id="explicit-val" class="config-badge">50</span></label>
+                      <input type="range" id="explicit-input" data-po="explicitnessLevel" min="0" max="100" value="50" class="config-range">
+                    </div>
+                    <div class="config-group">
+                      <label>Romanticism <span id="romance-val" class="config-badge">50</span></label>
+                      <input type="range" id="romance-input" data-po="romanticismLevel" min="0" max="100" value="50" class="config-range">
+                    </div>
+                    <div class="config-group">
+                      <label>Violence <span id="violence-val" class="config-badge">50</span></label>
+                      <input type="range" id="violence-input" data-po="violenceLevel" min="0" max="100" value="50" class="config-range">
+                    </div>
+                    <div class="config-group">
+                      <label>Responsiveness <span id="responsiveness-val" class="config-badge">70</span></label>
+                      <input type="range" id="responsiveness-input" data-po="responsiveness" min="0" max="100" value="70" class="config-range">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Session -->
+                <div class="config-section">
+                  <div class="config-section__title"><i data-lucide="archive"></i> Session</div>
+                  <div class="config-group" style="display:flex; gap:6px;">
+                    <button id="btn-export-session" class="btn btn--ghost btn--sm" style="flex:1"><i data-lucide="download"></i> Export</button>
+                    <button id="btn-import-session" class="btn btn--ghost btn--sm" style="flex:1"><i data-lucide="upload"></i> Import</button>
+                    <input type="file" id="session-import-input" hidden accept=".json">
+                  </div>
+                </div>
+
+              </div>
             </div>
         </div>
     </aside>
@@ -401,12 +516,43 @@
 
 <div id="modal-char-picker" class="modal" hidden><div class="modal__backdrop" data-close></div><div class="modal__content" style="max-width:600px;"><header class="modal__header"><h3>Select Fragment</h3><button id="char-picker-close" data-close><i data-lucide="x"></i></button></header><div class="modal__body"><div class="sidebar__search" style="margin-bottom:15px;"><input type="text" id="picker-search-input" class="control-input" placeholder="Search..."></div><div id="picker-char-grid" class="picker-char-grid"></div></div></div></div>
 
-<div id="modal-creator" class="modal" hidden><div class="modal__backdrop" data-close></div><div class="modal__content modal__content--large"><header class="modal__header"><h3>Fragment Fabricator</h3><button id="creator-close" data-close><i data-lucide="x"></i></button></header><div class="modal__body" style="display:grid; gap:10px;">
-    <div style="display:flex;gap:15px;"><button id="creator-avatar-btn">Image</button><input type="file" id="creator-avatar-input" hidden><div style="flex:1;"><input type="text" id="creator-name" placeholder="Name"><input type="text" id="creator-tagline" placeholder="Tagline"></div></div>
-    <textarea id="creator-description" placeholder="Description"></textarea><textarea id="creator-personality" placeholder="Personality"></textarea><textarea id="creator-scenario" placeholder="Scenario"></textarea><textarea id="creator-first-mes" placeholder="First Mes"></textarea><textarea id="creator-mes-example" placeholder="Examples"></textarea>
-    <textarea id="creator-system-prompt" placeholder="System Override"></textarea><textarea id="creator-post-history" placeholder="Post Override"></textarea>
-    <input type="text" id="creator-author" placeholder="Author"><textarea id="creator-alt-greetings" placeholder="Alt Greetings"></textarea><input type="text" id="creator-tags" placeholder="Tags"><textarea id="creator-notes" placeholder="Notes"></textarea>
-</div><footer class="modal__footer"><button id="creator-cancel" class="btn btn--ghost" data-close>Cancel</button><button id="creator-save" class="btn btn--accent">Save</button><button id="creator-export" class="btn btn--ghost">Export</button></footer></div></div>
+<div id="modal-creator" class="modal" hidden>
+  <div class="modal__backdrop" data-close></div>
+  <div class="modal__content modal__content--large">
+    <header class="modal__header">
+      <h3><span id="creator-title-text">New Fragment</span></h3>
+      <button id="creator-close" class="btn-icon" data-close><i data-lucide="x"></i></button>
+    </header>
+    <div class="modal__body" style="display:grid; gap:10px;">
+      <div class="creator-avatar-row" style="display:flex; gap:15px; align-items:flex-start;">
+        <div id="creator-avatar-preview" class="creator-avatar-preview" style="width:72px; height:72px; border-radius:50%; background:rgba(255,255,255,0.05); border:2px dashed rgba(255,255,255,0.15); cursor:pointer; background-size:cover; background-position:center; flex-shrink:0; display:flex; align-items:center; justify-content:center;">
+          <button id="creator-avatar-btn" class="btn-icon" style="width:100%; height:100%; border-radius:50%;"><i data-lucide="camera"></i></button>
+        </div>
+        <input type="file" id="creator-avatar-input" hidden accept="image/*">
+        <div class="creator-avatar-row__fields" style="flex:1; display:grid; gap:8px;">
+          <input type="text" id="creator-name" class="control-input" placeholder="Character Name">
+          <input type="text" id="creator-tagline" class="control-input" placeholder="Tagline / Short Description">
+        </div>
+      </div>
+      <textarea id="creator-description" class="control-textarea" rows="3" placeholder="Description — who are they?"></textarea>
+      <textarea id="creator-personality" class="control-textarea" rows="2" placeholder="Personality traits"></textarea>
+      <textarea id="creator-scenario" class="control-textarea" rows="2" placeholder="Scenario / Starting context"></textarea>
+      <textarea id="creator-first-mes" class="control-textarea" rows="3" placeholder="First message (opening greeting)"></textarea>
+      <textarea id="creator-mes-example" class="control-textarea" rows="3" placeholder="Example dialogue ({{user}}: / {{char}}:)"></textarea>
+      <textarea id="creator-system-prompt" class="control-textarea" rows="2" placeholder="System prompt override"></textarea>
+      <textarea id="creator-post-history" class="control-textarea" rows="2" placeholder="Post-history instructions"></textarea>
+      <input type="text" id="creator-author" class="control-input" placeholder="Author">
+      <textarea id="creator-alt-greetings" class="control-textarea" rows="2" placeholder="Alternate greetings (one per line)"></textarea>
+      <input type="text" id="creator-tags" class="control-input" placeholder="Tags (comma-separated)">
+      <textarea id="creator-notes" class="control-textarea" rows="2" placeholder="Creator notes"></textarea>
+    </div>
+    <footer class="modal__footer">
+      <button id="creator-cancel" class="btn btn--ghost" data-close>Cancel</button>
+      <button id="creator-save" class="btn btn--accent"><i data-lucide="save"></i> Save</button>
+      <button id="creator-export" class="btn btn--ghost"><i data-lucide="download"></i> Export</button>
+    </footer>
+  </div>
+</div>
 
 <div id="modal-lore-editor" class="modal" hidden><div class="modal__backdrop" data-close></div><div class="modal__content"><header class="modal__header"><h3>Lore Entry</h3><button id="lore-editor-close" data-close><i data-lucide="x"></i></button></header><div class="modal__body" style="display:grid; gap:10px;">
     <input type="text" id="lore-entry-id" hidden><input type="text" id="lore-book-id" hidden>
@@ -450,7 +596,29 @@
   </div>
 </div>
 
-<div id="modal-group-creator" class="modal" hidden><div class="modal__backdrop" data-close></div><div class="modal__content"><h3>Assemble Group</h3><div class="modal__body"><input type="text" id="group-name-input" class="control-input"><div id="group-participant-list" class="participant-grid"></div></div><footer class="modal__footer"><button id="group-creator-cancel" class="btn btn--ghost" data-close>Cancel</button><button id="group-create-btn" class="btn btn--accent">Assemble</button></footer></div></div>
+<div id="modal-group-creator" class="modal" hidden>
+  <div class="modal__backdrop" data-close></div>
+  <div class="modal__content">
+    <header class="modal__header">
+      <div style="display:flex; align-items:center; gap:8px;"><i data-lucide="users"></i><h3>Assemble Group</h3></div>
+      <button id="group-creator-close" class="btn-icon"><i data-lucide="x"></i></button>
+    </header>
+    <div class="modal__body">
+      <div class="config-group">
+        <label>Group Name <span class="config-hint" style="font-weight:400;">— optional</span></label>
+        <input type="text" id="group-name-input" class="control-input control-input--sm" placeholder="e.g. The Crew, Study Group…">
+      </div>
+      <div class="config-group">
+        <label>Participants</label>
+        <div id="group-participant-list" class="participant-grid"></div>
+      </div>
+    </div>
+    <footer class="modal__footer">
+      <button id="group-creator-cancel" class="btn btn--ghost" data-close>Cancel</button>
+      <button id="group-create-btn" class="btn btn--accent"><i data-lucide="users"></i> Assemble</button>
+    </footer>
+  </div>
+</div>
 
 <div id="modal-gallery" class="modal" hidden>
   <div class="modal__backdrop" data-close></div>
@@ -482,7 +650,29 @@
   </div>
 </div>
 
-<div id="modal-msg-edit" class="modal" hidden><div class="modal__backdrop"></div><div class="modal__content"><h3>Edit Message</h3><button id="msg-edit-close" data-close><i data-lucide="x"></i></button><div class="modal__body"><input type="text" id="msg-edit-id" hidden><textarea id="msg-edit-content" class="control-textarea" rows="10"></textarea></div><footer class="modal__footer"><button id="msg-edit-cancel" class="btn btn--ghost">Cancel</button><button id="msg-edit-save" class="btn btn--accent">Save</button></footer></div></div>
+<div id="modal-msg-edit" class="modal" hidden>
+  <div class="modal__backdrop"></div>
+  <div class="modal__content">
+    <header class="modal__header">
+      <h3 id="msg-edit-title">Edit Message</h3>
+      <button id="msg-edit-close" class="btn-icon"><i data-lucide="x"></i></button>
+    </header>
+    <div class="modal__body">
+      <input type="text" id="msg-edit-id" hidden>
+      <textarea id="msg-edit-content" class="control-textarea" rows="10"></textarea>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
+        <label class="msg-edit-retrigger-label" style="display:flex; align-items:center; gap:6px; font-size:0.75rem; color:var(--text-muted); cursor:pointer;">
+          <input type="checkbox" id="msg-edit-retrigger"> Regenerate after save
+        </label>
+        <span id="msg-edit-charcount" style="font-family:var(--font-mono); font-size:0.65rem; color:var(--text-muted);"></span>
+      </div>
+    </div>
+    <footer class="modal__footer">
+      <button id="msg-edit-cancel" class="btn btn--ghost">Cancel</button>
+      <button id="msg-edit-save" class="btn btn--accent">Save</button>
+    </footer>
+  </div>
+</div>
 
 <div id="modal-msg-comment" class="modal" hidden><div class="modal__backdrop"></div><div class="modal__content"><h3>Message Notes</h3><button id="msg-comment-close" data-close><i data-lucide="x"></i></button><div class="modal__body"><input type="text" id="msg-comment-msg-id" hidden><div id="msg-comment-list"></div><textarea id="msg-comment-input" class="control-textarea" rows="4"></textarea></div><footer class="modal__footer"><button id="msg-comment-save" class="btn btn--accent">Save</button></footer></div></div>
 
@@ -497,35 +687,69 @@
 <div id="modal-oracle" class="modal" hidden>
   <div class="modal__backdrop"></div>
   <div class="modal__content modal__content--oracle">
-    <header class="modal__header">
-      <div class="oracle-header">
-        <i data-lucide="eye"></i>
+
+    <!-- Header -->
+    <header class="oracle-modal-header">
+      <div class="oracle-modal-header__identity">
+        <div class="oracle-modal-header__icon"><i data-lucide="eye"></i></div>
         <div>
-          <h3>Oracle</h3>
-          <p class="oracle-header__sub">Sub-thread counsel — context isolated from main story</p>
+          <h3 class="oracle-modal-header__title">Oracle</h3>
+          <p class="oracle-modal-header__sub">Isolated counsel — never touches your story</p>
         </div>
       </div>
-      <div class="oracle-header__actions">
+      <div class="oracle-modal-header__controls">
         <select id="oracle-char-select" class="control-select control-select--sm oracle-char-select"></select>
-        <button id="oracle-close" class="btn-icon"><i data-lucide="x"></i></button>
+        <button id="oracle-close" class="btn-icon" title="Close Oracle"><i data-lucide="x"></i></button>
       </div>
     </header>
-    <div class="oracle-presets">
-      <button class="oracle-inject-btn btn btn--ghost btn--xs" data-inject="recontextualize">Recontextualize</button>
-      <button class="oracle-inject-btn btn btn--ghost btn--xs" data-inject="continuity">Continuity</button>
-      <button class="oracle-inject-btn btn btn--ghost btn--xs" data-inject="reset">Reset Voice</button>
-      <button class="oracle-inject-btn btn btn--ghost btn--xs" data-inject="escalate">Escalate</button>
-      <button class="oracle-inject-btn btn btn--ghost btn--xs" data-inject="uncensor">Uncensor</button>
+
+    <!-- Preset quick-inject strip -->
+    <div class="oracle-preset-strip">
+      <span class="oracle-preset-strip__label">Presets</span>
+      <button class="oracle-inject-btn" data-inject="recontextualize" title="Recontextualize the current scene">
+        <i data-lucide="map"></i> Recontextualize
+      </button>
+      <button class="oracle-inject-btn" data-inject="continuity" title="Summarise continuity so far">
+        <i data-lucide="scroll-text"></i> Continuity
+      </button>
+      <button class="oracle-inject-btn" data-inject="reset" title="Reset character voice">
+        <i data-lucide="refresh-cw"></i> Reset Voice
+      </button>
+      <button class="oracle-inject-btn" data-inject="escalate" title="Escalate intensity">
+        <i data-lucide="flame"></i> Escalate
+      </button>
+      <button class="oracle-inject-btn" data-inject="uncensor" title="NSFW override">
+        <i data-lucide="shield-off"></i> Uncensor
+      </button>
     </div>
-    <div id="oracle-thread" class="oracle-thread"></div>
-    <footer class="oracle-footer">
-      <button id="oracle-inject-to-chat" class="btn btn--ghost btn--xs" title="Inject last Oracle response as Author's Note"><i data-lucide="arrow-down-to-line"></i> Inject</button>
-      <button id="oracle-clear" class="btn btn--ghost btn--xs"><i data-lucide="eraser"></i> Clear</button>
-      <div class="oracle-input-row">
-        <textarea id="oracle-input" class="oracle-input" rows="2" placeholder="Ask the Oracle... Use {{char}} and {{user}} tokens"></textarea>
-        <button id="oracle-send-btn" class="btn btn--accent btn--sm oracle-send-btn"><i data-lucide="send"></i></button>
+
+    <!-- Message thread -->
+    <div id="oracle-thread" class="oracle-thread">
+      <div class="oracle-thread__empty">
+        <i data-lucide="eye"></i>
+        <p>Ask the Oracle anything about your characters, scene, or continuity.</p>
+        <p class="oracle-thread__empty-hint">This thread is fully isolated — it never affects your story.</p>
       </div>
-    </footer>
+    </div>
+
+    <!-- Footer: action bar + input -->
+    <div class="oracle-footer">
+      <div class="oracle-footer__actions">
+        <button id="oracle-inject-to-chat" class="oracle-footer__btn oracle-footer__btn--inject" title="Inject last Oracle response as Author's Note">
+          <i data-lucide="arrow-down-to-line"></i> Inject to chat
+        </button>
+        <button id="oracle-clear" class="oracle-footer__btn" title="Clear Oracle thread">
+          <i data-lucide="eraser"></i> Clear
+        </button>
+      </div>
+      <div class="oracle-input-row">
+        <textarea id="oracle-input" class="oracle-textarea" rows="2" placeholder="Ask the Oracle… use {{char}} and {{user}} tokens"></textarea>
+        <button id="oracle-send-btn" class="oracle-send-btn" title="Send (Enter)">
+          <i data-lucide="send"></i>
+        </button>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -557,6 +781,6 @@
 
 <div id="toast-container" class="toast-container"></div>
 <script src="../../shards/lucide.min.js"></script><script src="../../shards/marked.min.js"></script><script src="../../shards/purify.min.js"></script>
-<script type="module" src="./script/main.js?v=45"></script>
+<script type="module" src="./script/main.js?v=46"></script>
 </body>
 </html>
