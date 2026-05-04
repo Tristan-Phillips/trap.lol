@@ -826,7 +826,7 @@ export function initUI() {
                     </div>
                 </div>
                 <div class="character-card__actions">
-                    <button class="character-card__btn" data-view-feed="${esc(c.id)}" title="View Social Feed"><i data-lucide="instagram"></i></button>
+                    <button class="character-card__btn" data-view-feed="${esc(c.id)}" title="View Gallery"><i data-lucide="images"></i></button>
                     ${active
                         ? `<button class="character-card__btn character-card__btn--remove" data-remove="${esc(c.id)}" title="Remove from thread"><i data-lucide="log-out"></i></button>`
                         : `<button class="character-card__btn character-card__btn--add" data-add="${esc(c.id)}" title="Add to thread"><i data-lucide="plus"></i></button>`

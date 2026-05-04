@@ -2340,19 +2340,40 @@ body.roster-collapsed #roster-reveal-tab {
     flex-shrink: 0;
 }
 
-.feed-char-avatar {
-    width: 34px; height: 34px;
-    border-radius: 50%;
-    border: 2px solid rgba(var(--accent-rgb), 0.5);
-    background-size: cover;
-    background-position: center;
-    background-color: rgba(var(--accent-rgb),0.1);
-    flex-shrink: 0;
+.feed-header__title {
     display: flex;
     align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
     justify-content: center;
-    font-size: 1.2rem;
-    box-shadow: 0 0 12px rgba(var(--accent-rgb),0.2);
+}
+.feed-char-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(var(--accent-rgb), 0.4);
+    background-size: cover;
+    background-position: center top;
+    background-color: rgba(var(--accent-rgb), 0.08);
+    flex-shrink: 0;
+    box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.15);
+}
+.feed-header__title-text {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+}
+.feed-header__name {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
 }
 .feed-char-info {
     flex: 1;
@@ -2369,13 +2390,14 @@ body.roster-collapsed #roster-reveal-tab {
     text-overflow: ellipsis;
 }
 .feed-char-tagline {
-    font-size: 0.65rem;
+    font-size: 0.62rem;
+    font-family: var(--font-mono);
     color: var(--text-muted);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    opacity: 0.65;
-    margin-top: 1px;
+    opacity: 0.55;
+    letter-spacing: 0.02em;
 }
 
 /* ── Feed arena body: two-column desktop layout ── */
