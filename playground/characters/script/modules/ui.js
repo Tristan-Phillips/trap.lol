@@ -1008,11 +1008,27 @@ export function initUI() {
         if (!char) return;
         const meta = state.characters.find(c => c.id === id);
 
-        // If already in this thread, switch active bot (who responds on next send)
+        // If this character belongs to a different chat than the one currently active,
+        // switch to that chat first so the thread reflects the correct conversation.
+        const existingChat = state.reality?.chats.find(c => c.botIds.includes(id));
+        if (existingChat && existingChat.id !== state.reality.activeChatId) {
+            switchChat(existingChat.id);
+            setActiveBot(id);
+            renderAll();
+            const avatarUrl = await getAvatarUrl(id, meta.avatar_path || char.avatar);
+            updateCinematicBackground(avatarUrl);
+            const displayName = getCharOverride(id).nickname || char.name;
+            showToast(`Switched to ${displayName}'s chat`, 'info', 1800);
+            return;
+        }
+
+        // Already in this thread — switch active bot (who responds on next send)
+        // and re-render the thread so any per-bot UI (profile, background) updates.
         if (state.activeBotIds.includes(id)) {
             setActiveBot(id);
             renderRoster();
             renderActiveBots();
+            renderFullHistory();
             renderProfile(char, id);
             renderPersonaCharSelect();
             const avatarUrl = await getAvatarUrl(id, meta.avatar_path || char.avatar);
@@ -1022,21 +1038,19 @@ export function initUI() {
             return;
         }
 
-        // Not in thread yet — just show profile in terminal, open terminal
+        // Not in any chat yet — show profile in terminal
         renderProfile(char, id);
         const avatarUrl = await getAvatarUrl(id, meta.avatar_path || char.avatar);
         updateCinematicBackground(avatarUrl);
-        // Open terminal to Profile tab so user can see the character
         const $terminal = qs('#terminal-sidebar');
         if ($terminal?.dataset.collapsed === 'true') {
             toggleTerminal(false);
         }
-        // Activate profile tab
         qsa('.tab-btn').forEach(b => {
-            b.classList.toggle('active', b.dataset.tab === 'profile');
-            b.setAttribute('aria-selected', b.dataset.tab === 'profile');
+            b.classList.toggle('active', b.dataset.tab === 'character');
+            b.setAttribute('aria-selected', b.dataset.tab === 'character');
         });
-        qsa('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-profile'));
+        qsa('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-character'));
     }
 
     // ── Active Bots Header ────────────────────────────────────────────────────
@@ -3284,20 +3298,31 @@ export function initUI() {
 
     qs('#btn-quick-reply')?.addEventListener('click', () => {
         const $bar = qs('#quick-reply-bar');
-        if ($bar) $bar.hidden = !$bar.hidden;
+        if (!$bar) return;
+        const open = $bar.hidden;
+        if (open && !$bar.dataset.built) {
+            $bar.innerHTML = Object.entries(QR_PROMPTS).map(([key, text]) => {
+                const label = key.charAt(0).toUpperCase() + key.slice(1);
+                return `<button class="qr-btn" data-qr="${esc(key)}" title="${esc(text)}">${esc(label)}</button>`;
+            }).join('');
+            $bar.dataset.built = '1';
+        }
+        $bar.hidden = !open;
     });
 
-    qsa('.qr-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const text = QR_PROMPTS[btn.dataset.qr] || '';
-            if (!text) return;
-            const $ta = qs('#rp-input');
-            const cur = $ta.value;
-            $ta.value = cur ? `${cur}\n${text}` : text;
-            $ta.dispatchEvent(new Event('input'));
-            $ta.focus();
-            qs('#quick-reply-bar').hidden = true;
-        });
+    document.addEventListener('click', e => {
+        const btn = e.target.closest('.qr-btn');
+        if (!btn) return;
+        const text = QR_PROMPTS[btn.dataset.qr] || '';
+        if (!text) return;
+        const $ta = qs('#rp-input');
+        if (!$ta) return;
+        const cur = $ta.value;
+        $ta.value = cur ? `${cur}\n${text}` : text;
+        $ta.dispatchEvent(new Event('input'));
+        $ta.focus();
+        const $bar = qs('#quick-reply-bar');
+        if ($bar) $bar.hidden = true;
     });
 
     // ── Session Export / Import ───────────────────────────────────────────────
@@ -3826,6 +3851,75 @@ export function initUI() {
         });
     });
 
+    // ── Scenario Presets ──────────────────────────────────────────────────────
+    async function loadScenarioPresets() {
+        const $sel = qs('#scenario-preset-select');
+        const $ta  = qs('#group-scenario-input');
+        if (!$sel) return;
+        try {
+            const res  = await fetch('./data/scenarios.json');
+            const data = await res.json();
+            $sel.innerHTML = (data.scenarios || []).map(s =>
+                `<option value="${esc(s.id)}">${esc(s.name)}</option>`
+            ).join('');
+        } catch {
+            $sel.innerHTML = '<option value="">— None —</option>';
+        }
+        // Sync select to current stored scenario text
+        const current = state.config.groupScenario || '';
+        const matchOpt = [...$sel.options].find(o => {
+            const val = o.value;
+            if (!val || val === 'blank' || val === 'custom') return false;
+            return false; // text-matching is unreliable — leave at blank by default
+        });
+        if (!matchOpt) $sel.value = current ? 'custom' : 'blank';
+
+        $sel.addEventListener('change', async () => {
+            const id = $sel.value;
+            if (!id || id === 'blank') {
+                if ($ta) { $ta.value = ''; setConfig({ groupScenario: '' }); }
+                return;
+            }
+            if (id === 'custom') return; // let user type freely
+            try {
+                const res  = await fetch('./data/scenarios.json');
+                const data = await res.json();
+                const entry = (data.scenarios || []).find(s => s.id === id);
+                if (entry && $ta) {
+                    $ta.value = entry.scenario;
+                    setConfig({ groupScenario: entry.scenario });
+                }
+            } catch { /* ignore */ }
+        });
+    }
+
+    // ── Persona Presets ───────────────────────────────────────────────────────
+    async function loadPersonaPresets() {
+        const $sel = qs('#persona-preset-select');
+        if (!$sel) return;
+        try {
+            const res  = await fetch('./data/personas.json');
+            const data = await res.json();
+            $sel.innerHTML = (data.personas || []).map(p =>
+                `<option value="${esc(p.id)}">${esc(p.name)}</option>`
+            ).join('');
+            $sel.addEventListener('change', async () => {
+                const id = $sel.value;
+                if (!id || id === 'blank') return;
+                const res2  = await fetch('./data/personas.json');
+                const data2 = await res2.json();
+                const entry = (data2.personas || []).find(p => p.id === id);
+                if (!entry) return;
+                const $name = qs('#user-name-input');
+                const $bio  = qs('#user-persona-input');
+                if ($name) { $name.value = entry.userName; setConfig({ userName: entry.userName }); }
+                if ($bio)  { $bio.value  = entry.userPersona; setConfig({ userPersona: entry.userPersona }); }
+            });
+        } catch {
+            $sel.innerHTML = '<option value="">— None —</option>';
+        }
+    }
+
     // Load models
     async function loadModels() {
         const selects = qsa('#model-select, #persona-model-select');
@@ -3918,7 +4012,6 @@ export function initUI() {
         syncBadge('explicit-input',      'explicit-val');
         syncBadge('romance-input',       'romance-val');
         syncBadge('violence-input',      'violence-val');
-        syncBadge('responsiveness-input','responsiveness-val');
 
         // Show the persona fields panel once a character is selected
         const $fields = qs('#persona-fields');
@@ -3965,7 +4058,6 @@ export function initUI() {
         'height','bodyType','skinTone','hairColor','hairStyle','eyeColor',
         'distinctiveFeatures',
         'breastSize','areolaeSize','nippleColor','bodyHair','genitalia','otherAdultFeatures',
-        'responsiveness'
     ]);
 
     const savePersonaDebounced = debounce((charId) => {
@@ -3997,7 +4089,6 @@ export function initUI() {
                     explicitnessLevel: 'explicit-val',
                     romanticismLevel: 'romance-val',
                     violenceLevel: 'violence-val',
-                    responsiveness: 'responsiveness-val'
                 };
                 const badgeId = map[el.dataset.po];
                 if (badgeId) { const $b = qs(`#${badgeId}`); if ($b) $b.textContent = el.value; }
@@ -4111,7 +4202,7 @@ export function initUI() {
             // Open the right terminal so the character dossier is immediately visible
             toggleTerminal(false);
             // Switch to profile tab so you see the character, not config
-            const $profileBtn = qs('.tab-btn[data-tab="profile"]');
+            const $profileBtn = qs('.tab-btn[data-tab="character"]');
             if ($profileBtn) $profileBtn.click();
             showToast('Focus mode — just you and the characters', 'info', 2200);
         } else {
@@ -4391,6 +4482,8 @@ export function initUI() {
         renderAll();
         initChatBackground();
         loadModels();
+        loadScenarioPresets();
+        loadPersonaPresets();
         updateApiStatus();
     });
 }

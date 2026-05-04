@@ -1,0 +1,52 @@
+{
+  "personas": [
+    {
+      "id": "blank",
+      "name": "— Custom / None —",
+      "userName": "",
+      "userPersona": ""
+    },
+    {
+      "id": "nameless-wanderer",
+      "name": "The Nameless Wanderer",
+      "userName": "Wanderer",
+      "userPersona": "A traveller without a fixed identity — past unknown, loyalties fluid. Pragmatic and observant, rarely the first to speak but always watching. Carries something heavy that doesn't get discussed."
+    },
+    {
+      "id": "the-director",
+      "name": "The Director",
+      "userName": "Director",
+      "userPersona": "A writer and architect of stories — curious, analytical, occasionally intrusive. Interested in what characters feel and why they do what they do. Treats the world as a collaborative creative space."
+    },
+    {
+      "id": "ghost",
+      "name": "Ghost",
+      "userName": "Ghost",
+      "userPersona": "Operative of ambiguous allegiance. Calm under pressure, rarely surprised. Expertise is violence and extraction but prefers not to use it. Has seen too much to be idealistic."
+    },
+    {
+      "id": "nightrunner",
+      "name": "Nightrunner",
+      "userName": "Runner",
+      "userPersona": "Street-level fixer and information broker in a city that eats people. Quick with words, quicker to leave when things go wrong. Debts are tracked carefully — both owed and owing."
+    },
+    {
+      "id": "the-scholar",
+      "name": "The Scholar",
+      "userName": "Scholar",
+      "userPersona": "Academic from another world, displaced by circumstance into strange territory. Intellectually voracious, socially awkward, morally earnest. Writes everything down. Dangerous when pushed."
+    },
+    {
+      "id": "sovereign",
+      "name": "Sovereign",
+      "userName": "Sovereign",
+      "userPersona": "Ruler or former ruler accustomed to deference and consequence. Strategic, composed, occasionally ruthless. Power is a tool, not a reward. Loneliness comes with the position."
+    },
+    {
+      "id": "the-beast",
+      "name": "The Beast",
+      "userName": "Beast",
+      "userPersona": "Something feral beneath a human surface. Operates on instinct and appetite more than reason. Not cruel — just direct. Respects strength; despises performance. Surprisingly protective of what it claims."
+    }
+  ]
+}

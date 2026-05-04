@@ -5759,7 +5759,8 @@ body.focus-mode .message:hover .message__actions { opacity: 1; }
 }
 
 /* Pending confirmation strip */
-.reinject-tray__pending {
+.reinject-tray__pending,
+.reinject-pending-row {
     display: flex;
     align-items: center;
     gap: 7px;
@@ -5772,9 +5773,12 @@ body.focus-mode .message:hover .message__actions { opacity: 1; }
     color: #fed7aa;
     animation: tray-slide-in 0.15s ease-out;
 }
-.reinject-tray__pending[hidden] { display: none !important; }
-.reinject-tray__pending svg { width: 13px; height: 13px; color: #fb923c; flex-shrink: 0; }
-.reinject-tray__pending span { flex: 1; }
+.reinject-tray__pending[hidden],
+.reinject-pending-row[hidden] { display: none !important; }
+.reinject-tray__pending svg,
+.reinject-pending-row svg { width: 13px; height: 13px; color: #fb923c; flex-shrink: 0; }
+.reinject-tray__pending span,
+.reinject-pending-row span { flex: 1; }
 .reinject-tray__clear {
     display: inline-flex;
     align-items: center;
@@ -6674,6 +6678,21 @@ body.focus-mode .message:hover .message__actions { opacity: 1; }
     .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); padding: 8px; }
 }
 
+/* ── Settings tab section dividers ── */
+.settings-section-label {
+    font: 600 0.65rem/1 var(--font-ui, sans-serif);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--theme-accent);
+    padding: 10px 10px 4px;
+    opacity: 0.75;
+}
+.settings-section-label--persona {
+    margin-top: 6px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    padding-top: 14px;
+}
+
 /* ── Config panel ── */
 .config-scroll {
     overflow-y: auto;
@@ -6717,44 +6736,8 @@ body.focus-mode .message:hover .message__actions { opacity: 1; }
 .modal__content--reality { max-width: 540px; }
 .reality-editor-body { display: flex; flex-direction: column; gap: 14px; }
 
-/* ── Reinject Tray ── */
-.reinject-tray {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    padding: 8px 14px;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-    background: rgba(0,0,0,0.2);
-}
-.reinject-btn {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    padding: 4px 10px;
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 6px;
-    background: rgba(255,255,255,0.04);
-    color: var(--text-muted);
-    font-size: 0.72rem;
-    cursor: pointer;
-    transition: all 0.12s;
-}
-.reinject-btn svg { width: 12px; height: 12px; }
-.reinject-btn:hover { border-color: rgba(var(--accent-rgb), 0.5); color: var(--text-main); background: rgba(var(--accent-rgb), 0.08); }
-.reinject-btn--active { border-color: rgba(var(--accent-rgb), 0.6) !important; color: var(--theme-accent) !important; }
-.reinject-pending-row {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.65rem;
-    color: var(--theme-accent);
-    font-family: var(--font-mono);
-    padding: 2px 4px;
-    width: 100%;
-}
-.reinject-pending-row svg { width: 11px; height: 11px; flex-shrink: 0; }
-#reinject-toggle-btn.has-pending { color: var(--theme-accent); }
-#reinject-toggle-btn.tray-open { color: var(--theme-accent); }
+#reinject-toggle-btn.has-pending { color: #fb923c; }
+#reinject-toggle-btn.tray-open   { color: #fb923c; }
 
 /* ── Input previews ── */
 .input-previews {
