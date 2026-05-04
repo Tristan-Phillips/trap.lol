@@ -3,823 +3,306 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>The Underdark // Roleplay Interface</title>
+    <title>The Underdark // Reality Matrix</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2306040A'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%23ef4444' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23ef4444'/%3E%3C/svg%3E" />
     <link rel="stylesheet" href="../../glass/style/style.css">
-    <link rel="stylesheet" href="./style/style.css?v=35">
+    <link rel="stylesheet" href="./style/style.css?v=43">
 </head>
 <body class="underdark-page">
 
-<!-- ── API KEY GATE ──────────────────────────────────────────────────────── -->
+<!-- ── API Key Gate ── -->
 <div id="api-gate" class="api-gate" hidden>
     <div class="api-gate__backdrop"></div>
     <div class="api-gate__panel">
         <div class="api-gate__logo"><i data-lucide="key-round"></i></div>
         <h1 class="api-gate__title">The Underdark</h1>
+        <p class="api-gate__sub">Enter your API key to begin synchronization.</p>
         <div class="api-gate__form">
             <div class="api-gate__input-row">
                 <input type="password" id="gate-key-input" class="api-gate__input" placeholder="sk-nano-...">
                 <button id="gate-key-toggle" class="api-gate__toggle"><i data-lucide="eye"></i></button>
             </div>
             <p id="gate-key-error" class="api-gate__error" hidden>Invalid key format.</p>
-            <button id="gate-key-submit" class="api-gate__submit">Connect</button>
+            <button id="gate-key-submit" class="api-gate__submit"><i data-lucide="zap"></i> Connect</button>
         </div>
     </div>
 </div>
 
-<!-- ── MAIN LAYOUT ───────────────────────────────────────────────────────── -->
 <div id="app-root" class="underdark-layout">
 
-    <!-- ── LEFT SIDEBAR ─────────────────────────────────────────────────── -->
+    <!-- ══════════════════════════════════════════════
+         LEFT SIDEBAR — Continuity & Fragments
+    ══════════════════════════════════════════════ -->
     <aside id="roster-sidebar" class="sidebar sidebar--left">
+
+        <!-- Reality Matrix Bar -->
         <div class="reality-bar">
-            <select id="reality-select" class="reality-bar__select"></select>
-            <button id="reality-new" class="btn-icon btn-icon--small" title="New Reality"><i data-lucide="plus-square"></i></button>
-            <button id="reality-config" class="btn-icon btn-icon--small" title="Configure Reality"><i data-lucide="settings-2"></i></button>
+            <select id="reality-select" class="reality-bar__select" title="Active Continuity"></select>
+            <button id="reality-new" class="btn-icon btn-icon--small" title="New Continuity"><i data-lucide="plus-square"></i></button>
+            <button id="reality-config" class="btn-icon btn-icon--small" title="Reality Settings"><i data-lucide="settings-2"></i></button>
         </div>
+
         <header class="sidebar__header">
             <div class="sidebar__identity"><i data-lucide="message-square"></i><span>Communications</span></div>
-            <button id="toggle-roster" class="sidebar__toggle" title="Collapse sidebar"><i data-lucide="panel-left-close"></i></button>
+            <button id="toggle-roster" class="sidebar__toggle"><i data-lucide="panel-left-close"></i></button>
         </header>
+
         <nav class="sidebar__tabs-nav">
-            <button class="sidebar-tab active" data-view="chats"><i data-lucide="message-circle"></i> Chats</button>
-            <button class="sidebar-tab" data-view="roster"><i data-lucide="users"></i> Roster</button>
-            <button class="sidebar-tab" data-view="social"><i data-lucide="instagram"></i> Social</button>
+            <button class="sidebar-tab active" data-view="chats">Chats</button>
+            <button class="sidebar-tab" data-view="roster">Roster</button>
+            <button class="sidebar-tab" data-view="social">Social</button>
         </nav>
 
-        <!-- Chats view -->
+        <!-- CHATS VIEW -->
         <div id="view-chats" class="sidebar-view active">
-            <div class="sidebar-action-bar">
-                <input type="text" id="chat-search-input" class="control-input control-input--sm" placeholder="Search chats...">
-            </div>
-            <div class="sidebar-action-bar sidebar-action-bar--buttons">
+            <div class="sidebar-action-bar" style="display:flex; gap:4px; padding:10px;">
                 <button id="chat-new-dm" class="btn btn--accent btn--sm" style="flex:1"><i data-lucide="message-square-plus"></i> New DM</button>
                 <button id="chat-new-group" class="btn btn--ghost btn--sm" style="flex:1"><i data-lucide="users"></i> Group</button>
             </div>
-            <div id="chat-list" class="chat-list"></div>
+            <div class="chat-search-bar" style="padding:0 10px 10px;">
+                <input type="text" id="chat-search-input" class="control-input control-input--sm" placeholder="Search conversations...">
+            </div>
+            <div id="chat-list" class="chat-list" role="list"></div>
         </div>
 
-        <!-- Roster view -->
+        <!-- ROSTER VIEW -->
         <div id="view-roster" class="sidebar-view" hidden>
-            <div class="sidebar__search">
-                <input type="text" id="character-search" class="control-input control-input--sm" placeholder="Filter characters...">
+            <div class="sidebar__search" style="padding:10px;">
+                <input type="text" id="character-search" class="control-input control-input--sm" placeholder="Filter fragments...">
             </div>
-            <div id="character-list" class="sidebar__content character-list"></div>
-            <footer class="sidebar__footer sidebar__footer--col">
-                <button id="maintenance-purge" class="btn btn--ghost btn--full btn--sm" style="opacity:0.45;">
-                    <i data-lucide="refresh-cw"></i> Purge &amp; Re-align
-                </button>
-                <button id="create-character" class="btn btn--accent btn--full"><i data-lucide="wand-2"></i> Create</button>
+            <div id="character-list" class="sidebar__content character-list" style="flex:1; overflow-y:auto;"></div>
+            <footer class="sidebar__footer sidebar__footer--col" style="padding:10px; display:flex; flex-direction:column; gap:8px;">
+                <button id="maintenance-purge" class="btn btn--ghost btn--full btn--sm" style="opacity: 0.4;"><i data-lucide="refresh-cw"></i> Purge &amp; Re-align</button>
+                <button id="create-character" class="btn btn--accent btn--full"><i data-lucide="wand-2"></i> Create Fragment</button>
                 <button id="import-card" class="btn btn--ghost btn--full"><i data-lucide="upload"></i> Import Card</button>
                 <input type="file" id="card-input" accept=".png,.json" hidden multiple>
             </footer>
         </div>
 
-        <!-- Social view -->
+        <!-- SOCIAL VIEW -->
         <div id="view-social" class="sidebar-view" hidden>
             <div class="social-sidebar__hot">
-                <button id="social-hot-btn" class="social-sidebar__hot-btn active" data-feed="hot">
-                    <i data-lucide="flame"></i>
-                    <span>Hot Feed</span>
-                    <span class="social-sidebar__hot-sub">All characters</span>
+                <button id="social-hot-btn" class="social-sidebar__hot-btn active">
+                    <i data-lucide="flame"></i> Hot Feed
                 </button>
             </div>
-            <div class="social-sidebar__section-label">Following</div>
+            <div class="social-sidebar__section-label">Characters</div>
             <div id="social-char-list" class="social-char-list"></div>
         </div>
     </aside>
 
-    <!-- Sidebar reveal tab (visible when roster is collapsed) -->
-    <button id="roster-reveal-tab" class="sidebar-reveal-tab sidebar-reveal-tab--left" title="Open sidebar">
-        <i data-lucide="panel-left-open"></i>
-    </button>
+    <button id="roster-reveal-tab" class="sidebar-reveal-tab sidebar-reveal-tab--left"><i data-lucide="panel-left-open"></i></button>
 
-    <!-- ── MAIN ARENA ────────────────────────────────────────────────────── -->
-    <main id="chat-arena" class="arena">
-        <div id="arena-background" class="arena__bg"></div>
-        <div id="arena-tint" class="arena__tint"></div>
+    <!-- ══════════════════════════════════════════════
+         MAIN ARENA — Roleplay & Feed
+    ══════════════════════════════════════════════ -->
+    <div class="arena-stack" style="flex:1; display:flex; flex-direction:column; position:relative; overflow:hidden;">
 
-        <header class="arena__header">
-            <div id="active-bots" class="arena__active-bots"></div>
-            <button id="add-char-btn" class="btn-icon" title="Add character (A)"><i data-lucide="user-plus"></i></button>
-            <div class="arena__actions">
-                <button id="focus-mode-btn" class="btn-icon" title="Focus / read mode (F)"><i data-lucide="book-open"></i></button>
-                <button id="oracle-btn" class="btn-icon" title="Oracle — isolated LLM query (O)"><i data-lucide="eye"></i></button>
-                <button id="search-toggle" class="btn-icon" title="Search thread (/)"><i data-lucide="search"></i></button>
-                <button id="export-chat" class="btn-icon" title="Export thread as text"><i data-lucide="download"></i></button>
-                <button id="chat-bg-btn" class="btn-icon" title="Chat background color"><i data-lucide="palette"></i></button>
-                <button id="clear-thread" class="btn-icon" title="Clear thread"><i data-lucide="trash-2"></i></button>
-                <button id="toggle-terminal" class="btn-icon" title="Toggle terminal (T)"><i data-lucide="terminal"></i></button>
-                <button id="toggle-roster-mobile" class="btn-icon sidebar-mobile-toggle" title="Toggle roster"><i data-lucide="users"></i></button>
-            </div>
-        </header>
-
-        <!-- Thread search bar -->
-        <div id="thread-search-bar" class="thread-search-bar" hidden>
-            <button id="thread-search-prev" class="btn-icon btn-icon--small" title="Previous"><i data-lucide="chevron-up"></i></button>
-            <button id="thread-search-next" class="btn-icon btn-icon--small" title="Next"><i data-lucide="chevron-down"></i></button>
-            <input type="text" id="thread-search-input" class="thread-search-bar__input" placeholder="Search messages...">
-            <span id="thread-search-count" class="thread-search-bar__count"></span>
-            <button id="thread-search-clear" class="btn-icon btn-icon--small" hidden title="Clear"><i data-lucide="x-circle"></i></button>
-            <button id="thread-search-close" class="btn-icon btn-icon--small" title="Close"><i data-lucide="x"></i></button>
-        </div>
-
-        <!-- Message thread -->
-        <div id="thread-container" class="arena__content">
-            <div id="message-thread" class="arena__thread"></div>
-        </div>
-
-        <!-- Input zone -->
-        <footer class="arena__input-zone">
-            <!-- Re-inject tray (hidden by default) -->
-            <div id="reinject-tray" class="reinject-tray" hidden>
-                <div class="reinject-tray__header">
-                    <span class="reinject-tray__label"><i data-lucide="zap"></i> Re-inject Directive</span>
-                    <button id="reinject-clear-btn" class="btn-icon btn-icon--small" title="Clear queued directive"><i data-lucide="x"></i></button>
+        <!-- ARENA: CHAT -->
+        <main id="chat-arena" class="arena">
+            <div id="arena-background" class="arena__bg"></div>
+            <div id="arena-tint" class="arena__tint"></div>
+            <header class="arena__header">
+                <div id="active-bots" class="arena__active-bots"></div>
+                <button id="add-char-btn" class="btn-icon" title="Add fragment"><i data-lucide="user-plus"></i></button>
+                <div class="arena__actions">
+                    <button id="chat-bg-btn" class="btn-icon" title="Chat background"><i data-lucide="palette"></i></button>
+                    <button id="focus-mode-btn" class="btn-icon" title="Immersive Mode"><i data-lucide="book-open"></i></button>
+                    <button id="oracle-btn" class="btn-icon" title="Oracle"><i data-lucide="eye"></i></button>
+                    <button id="search-toggle" class="btn-icon" title="Search history"><i data-lucide="search"></i></button>
+                    <button id="export-chat" class="btn-icon" title="Export session"><i data-lucide="download"></i></button>
+                    <button id="clear-thread" class="btn-icon" title="Clear thread"><i data-lucide="trash-2"></i></button>
+                    <button id="toggle-terminal" class="btn-icon" title="Terminal"><i data-lucide="terminal"></i></button>
+                    <button id="toggle-roster-mobile" class="btn-icon sidebar-mobile-toggle"><i data-lucide="users"></i></button>
                 </div>
-                <div class="reinject-tray__btns">
-                    <button class="reinject-btn" data-ri="uncensor" title="Lift content restrictions for next turn">
-                        <i data-lucide="shield-off"></i> Uncensor
-                    </button>
-                    <button class="reinject-btn" data-ri="stay" title="Enforce character voice">
-                        <i data-lucide="user-check"></i> Stay in Character
-                    </button>
-                    <button class="reinject-btn" data-ri="escalate" title="Escalate scene intensity">
-                        <i data-lucide="flame"></i> Escalate
-                    </button>
-                </div>
-                <div id="reinject-pending" class="reinject-tray__pending" hidden>
-                    <i data-lucide="clock"></i>
-                    <span id="reinject-pending-label">directive queued — fires on next send</span>
-                </div>
+            </header>
+
+            <div id="thread-search-bar" class="thread-search-bar" hidden>
+                <input type="text" id="thread-search-input" placeholder="Search signals...">
+                <span id="thread-search-count"></span>
+                <button id="thread-search-close" class="btn-icon btn-icon--small"><i data-lucide="x"></i></button>
             </div>
 
-            <!-- Quick reply bar (hidden by default) -->
-            <div id="quick-reply-bar" class="quick-reply-bar" hidden>
-                <button class="qr-btn" data-qr="continue" title="Continue the scene">Continue</button>
-                <button class="qr-btn" data-qr="describe" title="Describe the scene">Describe</button>
-                <button class="qr-btn" data-qr="narrate" title="Narrate only">Narrate</button>
-                <button class="qr-btn" data-qr="introspect" title="Inner thoughts">Introspect</button>
-                <button class="qr-btn" data-qr="ooc" title="Out of character">OOC</button>
-                <button class="qr-btn" data-qr="shorter" title="Shorter response">Shorter</button>
-                <button class="qr-btn" data-qr="longer" title="Longer response">Longer</button>
-            </div>
-
-            <div class="input-container">
-                <div class="input-container__toolbar">
-                    <button id="btn-quick-reply" class="btn-icon btn-icon--small" title="Quick replies"><i data-lucide="zap"></i></button>
-                    <button id="reinject-toggle-btn" class="btn-icon btn-icon--small" title="Re-inject directive (R)"><i data-lucide="shield-alert"></i></button>
-                    <span id="active-bot-label" class="input-container__bot-label"></span>
-                    <div class="arena-stats">
-                        <span>Turns: <span id="stat-turns">0</span></span>
-                        <span>Tokens: <span id="stat-tokens">0</span></span>
-                        <span id="stat-model" class="arena-stats__model">—</span>
+            <div id="thread-container" class="arena__content">
+                <div id="message-thread" class="arena__thread"></div>
+                <div class="arena__welcome" id="arena-welcome" hidden>
+                    <div class="welcome-screen">
+                        <h2>Reality Synchronized</h2>
+                        <div id="welcome-char-grid" class="welcome-char-grid"></div>
+                        <div class="welcome-screen__actions">
+                            <button id="welcome-create" class="btn btn--ghost">Create Character</button>
+                            <button id="welcome-import" class="btn btn--ghost">Import Card</button>
+                        </div>
                     </div>
-                    <span id="token-estimate" class="input-container__token-est"></span>
                 </div>
-                <div id="input-previews" class="input-previews"></div>
-                <form id="rp-form" class="input-container__form">
-                    <textarea id="rp-input" class="input-container__textarea" rows="1" placeholder="Type message..."></textarea>
-                    <div class="input-container__form-actions">
-                        <button type="button" id="btn-add-image" class="btn-icon btn-icon--small" title="Attach image"><i data-lucide="image-plus"></i></button>
-                        <button type="submit" id="send-btn" class="input-container__send" title="Send (Enter)"><i data-lucide="send"></i></button>
+            </div>
+
+            <div id="quick-reply-bar" class="quick-reply-bar" hidden></div>
+
+            <footer class="arena__input-zone">
+                <div class="input-container">
+                    <div id="reinject-tray" class="reinject-tray" hidden></div>
+                    <div class="input-container__toolbar">
+                        <button id="btn-quick-reply" class="btn-icon btn-icon--small"><i data-lucide="zap"></i></button>
+                        <span id="active-bot-label" class="input-container__bot-label"></span>
+                        <div class="arena-stats" style="margin-left:auto; display:flex; gap:12px; font-family:var(--font-mono); font-size:0.65rem; opacity:0.6;">
+                            <span>Turns: <span id="stat-turns">0</span></span>
+                            <span>Tokens: <span id="stat-tokens">0</span></span>
+                            <span id="stat-model" style="color:var(--theme-accent);">—</span>
+                        </div>
                     </div>
-                </form>
-            </div>
-        </footer>
-    </main>
-
-    <!-- ── SOCIAL / FEED ARENA ───────────────────────────────────────────── -->
-    <main id="feed-arena" class="arena feed-arena" hidden>
-        <!-- Feed header bar -->
-        <header class="feed-arena__header">
-            <div id="feed-char-identity" class="feed-char-identity">
-                <div id="feed-char-avatar" class="feed-char-avatar"></div>
-                <div class="feed-char-info">
-                    <span id="feed-user-name" class="feed-char-name">Hot Feed</span>
-                    <span id="feed-char-tagline" class="feed-char-tagline">All characters</span>
+                    <form id="rp-form" class="input-container__form">
+                        <textarea id="rp-input" class="input-container__textarea" rows="1" placeholder="Type a message..."></textarea>
+                        <button type="submit" id="send-btn" class="input-container__send" aria-label="Send"><i data-lucide="send"></i></button>
+                    </form>
                 </div>
-            </div>
-            <div class="feed-arena__actions">
-                <button id="feed-add-post-btn" class="btn-icon" title="Manage gallery / add images"><i data-lucide="image-plus"></i></button>
-            </div>
-        </header>
-        <!-- Feed body: two-column desktop layout -->
-        <div class="feed-arena__body">
-            <div id="social-feed-container" class="feed-scroll-area feed-scroll-area--main"></div>
-            <aside class="feed-arena__sidebar">
-                <div id="feed-profile-card" class="feed-profile-card"></div>
-                <div id="feed-suggested" class="feed-suggested"></div>
-            </aside>
-        </div>
-    </main>
+            </footer>
+        </main>
 
-    <!-- ── TERMINAL SIDEBAR (right) ─────────────────────────────────────── -->
+        <!-- ARENA: SOCIAL FEED -->
+        <main id="feed-arena" class="arena arena--feed" hidden style="position:absolute; inset:0; z-index:50; background:var(--bg-base);">
+            <header class="arena__header">
+                <button id="feed-back-btn" class="btn btn--ghost btn--sm"><i data-lucide="chevron-left"></i> Back to Thread</button>
+                <div class="feed-header__title" style="display:flex; align-items:center; gap:8px;">
+                    <div id="feed-char-avatar" class="feed-char-avatar"></div>
+                    <div>
+                        <div style="font-weight:800; font-size:1rem; line-height:1.2;"><i data-lucide="instagram"></i> <span id="feed-user-name">Insta-Shard</span></div>
+                        <div id="feed-char-tagline" class="feed-char-tagline"></div>
+                    </div>
+                </div>
+                <button id="feed-add-post-btn" class="btn btn--accent btn--sm"><i data-lucide="plus-square"></i> Post</button>
+            </header>
+            <div class="feed-arena__body">
+                <div id="social-feed-container" class="feed-scroll-area feed-scroll-area--main" style="flex:1; overflow-y:auto; padding:20px 0;"></div>
+                <aside class="feed-arena__sidebar">
+                    <div id="feed-profile-card" class="feed-profile-card"></div>
+                    <div id="feed-suggested" class="feed-suggested"></div>
+                </aside>
+            </div>
+        </main>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         RIGHT SIDEBAR — The Terminal
+    ══════════════════════════════════════════════ -->
     <aside id="terminal-sidebar" class="sidebar sidebar--right" data-collapsed="true">
         <header class="sidebar__header">
             <div class="sidebar__identity"><i data-lucide="terminal"></i><span>Terminal</span></div>
-            <button id="close-terminal" class="sidebar__toggle" title="Close terminal"><i data-lucide="chevron-right"></i></button>
+            <button id="close-terminal" class="sidebar__toggle"><i data-lucide="chevron-right"></i></button>
         </header>
-        <div class="sidebar__tabs">
-            <button class="tab-btn active" data-tab="profile">Profile</button>
-            <button class="tab-btn" data-tab="world">World</button>
-            <button class="tab-btn" data-tab="config">Config</button>
-            <button class="tab-btn" data-tab="persona">Persona</button>
+        <div class="sidebar__tabs" role="tablist">
+            <button class="tab-btn active" data-tab="profile" role="tab">Profile</button>
+            <button class="tab-btn" data-tab="world" role="tab">World</button>
+            <button class="tab-btn" data-tab="config" role="tab">Config</button>
+            <button class="tab-btn" data-tab="persona" role="tab">Persona</button>
         </div>
         <div class="sidebar__content terminal-content">
-
-            <!-- Profile tab -->
-            <div id="tab-profile" class="tab-panel active">
+            <!-- Profile Tab -->
+            <div id="tab-profile" class="tab-panel active" role="tabpanel">
                 <div id="profile-card"></div>
-                <div id="profile-actions" class="profile-actions" hidden>
-                    <button id="btn-add-to-thread" class="btn btn--accent btn--full btn--sm">
-                        <i data-lucide="plus-circle"></i> Add to Thread
-                    </button>
-                    <button id="btn-sims-edit" class="btn btn--accent btn--full btn--sm">
-                        <i data-lucide="sliders-horizontal"></i> Sims
-                    </button>
-                    <button id="btn-gallery-add" class="btn btn--ghost btn--full btn--sm">
-                        <i data-lucide="instagram"></i> Social Feed
-                    </button>
-                    <button id="btn-edit-char" class="btn btn--ghost btn--full btn--sm">
-                        <i data-lucide="pencil"></i> Edit
-                    </button>
-                    <button id="btn-remove-char" class="btn btn--ghost btn--full btn--sm">
-                        <i data-lucide="log-out"></i> Remove from Thread
-                    </button>
-                    <button id="btn-delete-char" class="btn btn--ghost btn--full btn--sm btn--danger-ghost">
-                        <i data-lucide="trash-2"></i> Delete
-                    </button>
+                <div id="profile-actions" class="profile-actions" hidden style="display:flex; flex-direction:column; gap:8px; padding:12px;">
+                    <button id="btn-add-to-thread" class="btn btn--accent btn--full">Add to Thread</button>
+                    <button id="btn-sims-edit" class="btn btn--accent btn--full">Sims Editor</button>
+                    <button id="btn-gallery-add" class="btn btn--ghost btn--full"><i data-lucide="instagram"></i> View Social Feed</button>
+                    <button id="btn-edit-char" class="btn btn--ghost btn--full">Edit Card (Basic)</button>
+                    <button id="btn-remove-char" class="btn btn--ghost btn--full">Remove from Thread</button>
+                    <button id="btn-delete-char" class="btn btn--ghost btn--full btn--danger-ghost">Delete Character</button>
                 </div>
                 <div id="gallery-strip" class="gallery-strip" hidden></div>
             </div>
 
-            <!-- World tab -->
-            <div id="tab-world" class="tab-panel">
+            <!-- World Tab -->
+            <div id="tab-world" class="tab-panel" role="tabpanel">
                 <div class="world-view">
-                    <div class="world-view__header">
-                        <h3>Lore</h3>
-                        <button id="add-book" class="btn-icon" title="New lorebook"><i data-lucide="book-plus"></i></button>
-                        <button id="add-lore" class="btn-icon" title="New entry"><i data-lucide="plus"></i></button>
+                    <div class="world-view__header" style="display:flex; justify-content:space-between; align-items:center;">
+                        <h3>Lorebooks</h3>
+                        <div style="display:flex; gap:4px;">
+                            <button id="add-book" class="btn-icon btn-icon--small"><i data-lucide="book-plus"></i></button>
+                            <button id="add-lore" class="btn-icon btn-icon--small"><i data-lucide="plus"></i></button>
+                        </div>
                     </div>
-                    <div id="book-select-wrap">
-                        <select id="book-select" class="control-select"></select>
-                        <button id="remove-book" class="btn-icon" title="Delete lorebook"><i data-lucide="trash-2"></i></button>
+                    <div id="book-select-wrap" style="margin:10px 0; display:flex; gap:6px;">
+                        <select id="book-select" class="control-select control-select--sm" style="flex:1;"></select>
+                        <button id="remove-book" class="btn-icon btn-icon--danger"><i data-lucide="trash-2"></i></button>
                     </div>
-                    <div class="world-view__scan-depth">
-                        <label>Scan Depth: <span id="lore-scan-val">5</span></label>
-                        <input type="range" id="lore-scan-input" min="1" max="20" value="5">
+                    <div class="world-view__scan-depth" style="margin:10px 0;">
+                        <label>Scan: <span id="lore-scan-val">5</span></label>
+                        <input type="range" id="lore-scan-input" min="1" max="30" value="5" style="width:100%;">
                     </div>
                     <div id="lore-list" class="world-view__list"></div>
                 </div>
             </div>
 
-            <!-- Config tab -->
-            <div id="tab-config" class="tab-panel">
+            <!-- Config Tab -->
+            <div id="tab-config" class="tab-panel" role="tabpanel">
                 <div class="config-view">
-                    <section class="config-section">
-                        <h4 class="config-section__title">Neural Routing</h4>
-                        <div class="config-row">
-                            <input type="password" id="api-key-input" class="control-input control-input--sm" placeholder="sk-nano-...">
-                            <button id="api-key-toggle" class="btn-icon" title="Show/hide key"><i data-lucide="eye"></i></button>
+                    <div class="config-section">
+                        <h4>Neural Routing</h4>
+                        <div style="display:flex; gap:8px; margin-bottom:10px;">
+                            <input type="password" id="api-key-input" class="control-input" placeholder="sk-...">
+                            <button id="api-key-toggle" class="btn-icon"><i data-lucide="eye"></i></button>
                             <button id="api-key-save" class="btn btn--accent btn--sm">Save</button>
                         </div>
-                        <div id="api-key-status" class="api-key-status"></div>
-                        <select id="model-select" class="control-select"></select>
-                    </section>
-
-                    <section class="config-section">
-                        <h4 class="config-section__title">Sampling</h4>
-                        <div class="config-slider-row"><label>Temperature</label><input type="range" id="temp-input" min="0" max="2" step="0.01" value="1.0"><span id="temp-val">1.00</span></div>
-                        <div class="config-slider-row"><label>Top-P</label><input type="range" id="topp-input" min="0" max="1" step="0.01" value="0.9"><span id="topp-val">0.90</span></div>
-                        <div class="config-slider-row"><label>Top-K</label><input type="range" id="topk-input" min="0" max="100" step="1" value="0"><span id="topk-val">0</span></div>
-                        <div class="config-slider-row"><label>Min-P</label><input type="range" id="minp-input" min="0" max="1" step="0.01" value="0"><span id="minp-val">0.00</span></div>
-                        <div class="config-slider-row"><label>Rep. Penalty</label><input type="range" id="rep-input" min="1" max="2" step="0.01" value="1.0"><span id="rep-val">1.00</span></div>
-                        <div class="config-slider-row"><label>Presence Pen.</label><input type="range" id="pres-input" min="-2" max="2" step="0.01" value="0"><span id="pres-val">0.00</span></div>
-                        <div class="config-slider-row"><label>Frequency Pen.</label><input type="range" id="freq-input" min="-2" max="2" step="0.01" value="0"><span id="freq-val">0.00</span></div>
-                        <div class="config-slider-row"><label>Max Context</label><input type="range" id="maxctx-input" min="512" max="32768" step="512" value="8192"><span id="maxctx-val">8192</span></div>
-                        <div class="config-slider-row"><label>Max Output</label><input type="range" id="maxout-input" min="64" max="4096" step="64" value="512"><span id="maxout-val">512</span></div>
-                    </section>
-
-                    <section class="config-section">
-                        <h4 class="config-section__title">Context</h4>
-                        <select id="context-strategy" class="control-select">
-                            <option value="sliding">Sliding Window</option>
-                            <option value="summarise">Summarise</option>
-                        </select>
-                        <label class="config-toggle-row">
-                            <input type="checkbox" id="stream-toggle" checked> Streaming
-                        </label>
-                    </section>
-
-                    <section class="config-section">
-                        <h4 class="config-section__title">Narrative Flags</h4>
-                        <label class="config-toggle-row"><input type="checkbox" id="flag-showThoughts">Show thoughts</label>
-                        <label class="config-toggle-row"><input type="checkbox" id="flag-showSystemPrompt">Show system prompt</label>
-                        <label class="config-toggle-row"><input type="checkbox" id="flag-injectConsistency">Inject consistency</label>
-                        <label class="config-toggle-row"><input type="checkbox" id="flag-injectSliders">Inject sliders</label>
-                        <label class="config-toggle-row"><input type="checkbox" id="flag-injectAppearance">Inject appearance</label>
-                        <label class="config-toggle-row"><input type="checkbox" id="flag-injectAdult" checked>Inject adult</label>
-                        <label class="config-toggle-row"><input type="checkbox" id="flag-injectPersonality" checked>Inject personality</label>
-                        <label class="config-toggle-row"><input type="checkbox" id="flag-injectVoice" checked>Inject voice</label>
-                        <label class="config-toggle-row"><input type="checkbox" id="flag-injectStyle" checked>Inject style</label>
-                        <label class="config-toggle-row"><input type="checkbox" id="flag-injectAIDirectives" checked>Inject AI directives</label>
-                        <label class="config-toggle-row"><input type="checkbox" id="flag-impersonationBlock">Impersonation block</label>
-                        <label class="config-toggle-row"><input type="checkbox" id="flag-povFirst">POV first-person</label>
-                        <label class="config-toggle-row"><input type="checkbox" id="flag-jailbreakResistance">Jailbreak resistance</label>
-                    </section>
-
-                    <section class="config-section">
-                        <h4 class="config-section__title">Author's Note</h4>
-                        <textarea id="authors-note" class="control-textarea control-textarea--sm" rows="3" placeholder="Injected near recent messages..."></textarea>
-                        <div class="config-slider-row"><label>Depth</label><input type="range" id="an-depth-input" min="1" max="20" step="1" value="4"><span id="an-depth-val">4</span></div>
-                    </section>
-
-                    <section class="config-section">
-                        <h4 class="config-section__title">System Directive</h4>
-                        <textarea id="sys-directive" class="control-textarea control-textarea--sm" rows="4" placeholder="Appended to system prompt..."></textarea>
-                    </section>
-
-                    <section class="config-section">
-                        <h4 class="config-section__title">NSFW Override</h4>
-                        <textarea id="nsfw-bypass" class="control-textarea control-textarea--sm" rows="3" placeholder="Custom NSFW unlock directive..."></textarea>
-                    </section>
-
-                    <section class="config-section">
-                        <h4 class="config-section__title">Group Settings</h4>
-                        <textarea id="group-scenario-input" class="control-textarea control-textarea--sm" rows="3" placeholder="World / group scenario rules..."></textarea>
-                        <select id="group-turn-mode" class="control-select">
-                            <option value="manual">Manual — active bot only</option>
-                            <option value="auto">Auto — all bots respond</option>
-                            <option value="round-robin">Round-robin</option>
-                        </select>
-                        <div class="config-slider-row"><label>Response Delay</label><input type="range" id="group-delay-input" min="0" max="3000" step="100" value="600"><span id="group-delay-val">600ms</span></div>
-                    </section>
-
-                    <section class="config-section config-section--bg">
-                        <h4 class="config-section__title">Chat Background</h4>
-                        <div class="bg-presets" id="theme-bg-presets">
-                            <button class="bg-preset" data-bg="" title="None">✕</button>
-                            <button class="bg-preset" data-bg="ember" title="Ember">🔴</button>
-                            <button class="bg-preset" data-bg="abyss" title="Abyss">🔵</button>
-                            <button class="bg-preset" data-bg="void" title="Void">⚫</button>
-                            <button class="bg-preset" data-bg="neon" title="Neon">💜</button>
-                            <button class="bg-preset" data-bg="sakura" title="Sakura">🌸</button>
-                            <button class="bg-preset" data-bg="deep" title="Deep">🌊</button>
-                            <button class="bg-preset" data-bg="ash" title="Ash">🌫️</button>
-                        </div>
-                        <div class="config-row" style="margin-top:8px;">
-                            <input type="text" id="bg-url-input" class="control-input control-input--sm" placeholder="Image URL...">
-                            <button id="bg-url-apply" class="btn btn--ghost btn--sm">Apply</button>
-                        </div>
-                        <div class="config-slider-row"><label>Blur</label><input type="range" id="bg-blur-input" min="0" max="80" value="45"><span id="bg-blur-val">45</span></div>
-                        <div class="config-slider-row"><label>Brightness</label><input type="range" id="bg-bright-input" min="5" max="100" value="30"><span id="bg-bright-val">30</span></div>
-                        <div class="config-slider-row"><label>Opacity</label><input type="range" id="bg-opacity-input" min="5" max="100" value="50"><span id="bg-opacity-val">50</span></div>
-                    </section>
-
-                    <section class="config-section config-section--theme">
-                        <h4 class="config-section__title">Theme</h4>
-                        <div id="theme-swatches" class="theme-swatches">
-                            <button class="theme-swatch" data-theme="neon-magenta" title="Magenta" style="background:#e040fb;"></button>
-                            <button class="theme-swatch" data-theme="neon-cyan" title="Cyan" style="background:#00e5ff;"></button>
-                            <button class="theme-swatch" data-theme="neon-green" title="Green" style="background:#69ff47;"></button>
-                            <button class="theme-swatch" data-theme="neon-amber" title="Amber" style="background:#ffab40;"></button>
-                            <button class="theme-swatch" data-theme="neon-red" title="Red" style="background:#ef4444;"></button>
-                            <button class="theme-swatch" data-theme="neon-blue" title="Blue" style="background:#3b82f6;"></button>
-                        </div>
-                    </section>
-
-                    <section class="config-section config-section--danger">
-                        <h4 class="config-section__title">Session</h4>
-                        <button id="btn-export-session" class="btn btn--ghost btn--full btn--sm"><i data-lucide="download"></i> Export Session</button>
-                        <button id="btn-import-session" class="btn btn--ghost btn--full btn--sm"><i data-lucide="upload"></i> Import Session</button>
-                        <input type="file" id="session-import-input" accept=".json" hidden>
-                        <button id="btn-clear-all-data" class="btn btn--ghost btn--full btn--sm btn--danger-ghost" style="margin-top:8px;"><i data-lucide="alert-triangle"></i> Wipe All Data</button>
-                    </section>
-
+                        <div id="api-key-status"></div>
+                        <select id="model-select" class="control-select" style="margin-top:10px;"></select>
+                        <select id="context-strategy" class="control-select" style="margin-top:10px;"><option value="sliding">Sliding Window</option></select>
+                        <textarea id="group-scenario-input" class="control-textarea" placeholder="World Scenario" style="margin-top:10px;"></textarea>
+                        <select id="group-turn-mode" class="control-select" style="margin-top:10px;"><option value="manual">Manual</option></select>
+                    </div>
                     <div id="config-container"></div>
                 </div>
             </div>
 
-            <!-- Persona / Override tab -->
-            <div id="tab-persona" class="tab-panel">
-                <div class="persona-view">
-                    <section class="config-section">
-                        <h4 class="config-section__title">User Identity</h4>
-                        <input type="text" id="user-name-input" class="control-input control-input--sm" placeholder="Your name in the scene...">
-                        <textarea id="user-persona-input" class="control-textarea" rows="5" placeholder="Describe yourself for the AI..."></textarea>
-                    </section>
-
-                    <section class="config-section">
-                        <h4 class="config-section__title">Character Override</h4>
-                        <select id="persona-char-select" class="control-select"></select>
-                        <div id="persona-char-header" class="persona-char-header" hidden></div>
-                        <div id="persona-fields" class="persona-fields" hidden>
-                            <input type="text" class="control-input control-input--sm" data-po="nickname" placeholder="Nickname / call them...">
-                            <textarea class="control-textarea control-textarea--sm" rows="3" data-po="systemOverride" placeholder="Override system prompt..."></textarea>
-                            <textarea class="control-textarea control-textarea--sm" rows="3" data-po="postHistoryOverride" placeholder="Post-history injection..."></textarea>
-                            <select id="persona-model-select" class="control-select"></select>
-                            <div class="config-section__subtitle">Behaviour Sliders</div>
-                            <div class="config-slider-row"><label>Dominance</label><input type="range" id="dominance-input" data-po="dominanceLevel" min="0" max="10" step="0.5" value="5"><span id="dominance-val">5</span></div>
-                            <div class="config-slider-row"><label>Explicitness</label><input type="range" id="explicit-input" data-po="explicitnessLevel" min="0" max="10" step="0.5" value="5"><span id="explicit-val">5</span></div>
-                            <div class="config-slider-row"><label>Romance</label><input type="range" id="romance-input" data-po="romanticismLevel" min="0" max="10" step="0.5" value="5"><span id="romance-val">5</span></div>
-                            <div class="config-slider-row"><label>Violence</label><input type="range" id="violence-input" data-po="violenceLevel" min="0" max="10" step="0.5" value="5"><span id="violence-val">5</span></div>
-                            <div class="config-section__subtitle">Appearance</div>
-                            <input type="text" class="control-input control-input--sm" data-po="height" placeholder="Height...">
-                            <input type="text" class="control-input control-input--sm" data-po="bodyType" placeholder="Body type...">
-                            <input type="text" class="control-input control-input--sm" data-po="skinTone" placeholder="Skin tone...">
-                            <input type="text" class="control-input control-input--sm" data-po="hairColor" placeholder="Hair colour...">
-                            <input type="text" class="control-input control-input--sm" data-po="hairStyle" placeholder="Hair style...">
-                            <input type="text" class="control-input control-input--sm" data-po="eyeColor" placeholder="Eye colour...">
-                            <textarea class="control-textarea control-textarea--sm" rows="2" data-po="distinctiveFeatures" placeholder="Distinctive features..."></textarea>
-                            <div class="config-section__subtitle">Social Behaviour</div>
-                            <div class="config-slider-row"><label>Responsiveness</label><input type="range" id="responsiveness-input" data-po="responsiveness" min="0" max="100" step="5" value="70"><span id="responsiveness-val">70</span></div>
-                            <div class="config-section__subtitle">Adult Details</div>
-                            <input type="text" class="control-input control-input--sm" data-po="breastSize" placeholder="Breast size...">
-                            <input type="text" class="control-input control-input--sm" data-po="areolaeSize" placeholder="Areolae...">
-                            <input type="text" class="control-input control-input--sm" data-po="nippleColor" placeholder="Nipple colour...">
-                            <input type="text" class="control-input control-input--sm" data-po="bodyHair" placeholder="Body hair...">
-                            <input type="text" class="control-input control-input--sm" data-po="genitalia" placeholder="Genitalia...">
-                            <textarea class="control-textarea control-textarea--sm" rows="2" data-po="otherAdultFeatures" placeholder="Other adult features..."></textarea>
-                        </div>
-                    </section>
-                </div>
+            <!-- Persona Tab -->
+            <div id="tab-persona" class="tab-panel" role="tabpanel">
+                <div class="config-group"><label>Identity</label><input type="text" id="user-name-input" class="control-input" placeholder="Name"></div>
+                <div class="config-group"><label>Bio</label><textarea id="user-persona-input" class="control-textarea" rows="8"></textarea></div>
             </div>
-
-        </div><!-- /terminal-content -->
+        </div>
     </aside>
-</div><!-- /underdark-layout -->
 
-
-<!-- ═══════════════════════════════════════════════════════════════════════
-     MODALS
-     ═══════════════════════════════════════════════════════════════════════ -->
-
-<!-- Confirm dialog -->
-<div id="modal-confirm" class="modal" hidden>
-    <div class="modal__backdrop"></div>
-    <div class="modal__content">
-        <h3 id="confirm-title" class="modal__title"><i data-lucide="alert-triangle"></i> Confirm</h3>
-        <div id="confirm-body" class="modal__body"></div>
-        <footer class="modal__footer">
-            <button id="confirm-cancel" class="btn btn--ghost">Cancel</button>
-            <button id="confirm-ok" class="btn btn--accent">Confirm</button>
-        </footer>
-    </div>
 </div>
 
-<!-- Character picker -->
-<div id="modal-char-picker" class="modal" hidden>
-    <div class="modal__backdrop" data-close></div>
-    <div class="modal__content">
-        <header class="modal__header">
-            <h3 class="modal__title">Select Fragment</h3>
-            <button id="char-picker-close" class="btn-icon modal__close"><i data-lucide="x"></i></button>
-        </header>
-        <div class="modal__body">
-            <input type="text" id="picker-search-input" class="control-input" placeholder="Search characters...">
-            <div id="picker-char-grid" class="picker-grid"></div>
-        </div>
-    </div>
-</div>
+<!-- ── MODALS ── -->
+<div id="modal-confirm" class="modal" hidden><div class="modal__backdrop"></div><div class="modal__content"><h3>Confirm</h3><div id="confirm-body" class="modal__body"></div><footer class="modal__footer"><button id="confirm-cancel" class="btn btn--ghost">No</button><button id="confirm-ok" class="btn btn--accent">Yes</button></footer></div></div>
 
-<!-- Character Creator / Editor -->
-<div id="modal-creator" class="modal" hidden>
-    <div class="modal__backdrop" data-close></div>
-    <div class="modal__content modal__content--large">
-        <header class="modal__header">
-            <h3 id="creator-title-text" class="modal__title">Create Fragment</h3>
-            <div class="modal__header-actions">
-                <button id="creator-export" class="btn btn--ghost btn--sm" title="Export as JSON"><i data-lucide="download"></i> Export</button>
-                <button id="creator-close" class="btn-icon modal__close"><i data-lucide="x"></i></button>
-            </div>
-        </header>
-        <div class="modal__body modal__body--creator">
-            <!-- Avatar + name row -->
-            <div class="creator-avatar-row">
-                <button id="creator-avatar-btn" class="creator-avatar-btn" title="Upload avatar">
-                    <div id="creator-avatar-preview" class="creator-avatar-preview">
-                        <i data-lucide="image-plus"></i>
-                    </div>
-                </button>
-                <input type="file" id="creator-avatar-input" accept="image/*" hidden>
-                <div class="creator-avatar-row__fields">
-                    <input type="text" id="creator-name" class="control-input" placeholder="Character name *" autocomplete="off">
-                    <input type="text" id="creator-tagline" class="control-input control-input--sm" placeholder="Tagline / bio line...">
-                    <input type="text" id="creator-tags" class="control-input control-input--sm" placeholder="Tags (comma-separated)...">
-                </div>
-            </div>
+<div id="modal-char-picker" class="modal" hidden><div class="modal__backdrop" data-close></div><div class="modal__content" style="max-width:600px;"><header class="modal__header"><h3>Select Fragment</h3><button id="char-picker-close" data-close><i data-lucide="x"></i></button></header><div class="modal__body"><div class="sidebar__search" style="margin-bottom:15px;"><input type="text" id="picker-search-input" class="control-input" placeholder="Search..."></div><div id="picker-char-grid" class="picker-grid"></div></div></div></div>
 
-            <!-- Tab nav -->
-            <nav class="creator-tabs">
-                <button class="creator-tab active" data-ctab="core">Core</button>
-                <button class="creator-tab" data-ctab="voice">Voice</button>
-                <button class="creator-tab" data-ctab="system">System</button>
-                <button class="creator-tab" data-ctab="meta">Meta</button>
-            </nav>
+<div id="modal-creator" class="modal" hidden><div class="modal__backdrop" data-close></div><div class="modal__content modal__content--large"><header class="modal__header"><h3>Fragment Fabricator</h3><button id="creator-close" data-close><i data-lucide="x"></i></button></header><div class="modal__body" style="display:grid; gap:10px;">
+    <div style="display:flex;gap:15px;"><button id="creator-avatar-btn">Image</button><input type="file" id="creator-avatar-input" hidden><div style="flex:1;"><input type="text" id="creator-name" placeholder="Name"><input type="text" id="creator-tagline" placeholder="Tagline"></div></div>
+    <textarea id="creator-description" placeholder="Description"></textarea><textarea id="creator-personality" placeholder="Personality"></textarea><textarea id="creator-scenario" placeholder="Scenario"></textarea><textarea id="creator-first-mes" placeholder="First Mes"></textarea><textarea id="creator-mes-example" placeholder="Examples"></textarea>
+    <textarea id="creator-system-prompt" placeholder="System Override"></textarea><textarea id="creator-post-history" placeholder="Post Override"></textarea>
+    <input type="text" id="creator-author" placeholder="Author"><textarea id="creator-alt-greetings" placeholder="Alt Greetings"></textarea><input type="text" id="creator-tags" placeholder="Tags"><textarea id="creator-notes" placeholder="Notes"></textarea>
+</div><footer class="modal__footer"><button id="creator-cancel" class="btn btn--ghost" data-close>Cancel</button><button id="creator-save" class="btn btn--accent">Save</button><button id="creator-export" class="btn btn--ghost">Export</button></footer></div></div>
 
-            <!-- Core tab -->
-            <div id="ctab-core" class="creator-tab-panel active">
-                <label class="form-label">Description</label>
-                <textarea id="creator-description" class="control-textarea" rows="5" placeholder="Who are they? Background, appearance, world..."></textarea>
-                <label class="form-label">Personality</label>
-                <textarea id="creator-personality" class="control-textarea" rows="4" placeholder="Core traits, quirks, speech patterns..."></textarea>
-                <label class="form-label">Scenario</label>
-                <textarea id="creator-scenario" class="control-textarea" rows="3" placeholder="Where / when / situation the chat begins in..."></textarea>
-                <label class="form-label">First Message</label>
-                <textarea id="creator-first-mes" class="control-textarea" rows="4" placeholder="Opening line when chat starts..."></textarea>
-            </div>
+<div id="modal-lore-editor" class="modal" hidden><div class="modal__backdrop" data-close></div><div class="modal__content"><header class="modal__header"><h3>Lore Entry</h3><button id="lore-editor-close" data-close><i data-lucide="x"></i></button></header><div class="modal__body" style="display:grid; gap:10px;">
+    <input type="text" id="lore-entry-id" hidden><input type="text" id="lore-book-id" hidden>
+    <input type="text" id="lore-entry-name" placeholder="Name"><input type="text" id="lore-entry-keywords" placeholder="Keywords"><textarea id="lore-entry-content" rows="8"></textarea><textarea id="lore-entry-comment" placeholder="Comment"></textarea>
+    <div style="display:flex; gap:10px;"><label><input type="checkbox" id="lore-always-on"> Always On</label><label><input type="checkbox" id="lore-use-regex"> Regex</label><label><input type="checkbox" id="lore-case-sensitive"> Case Sensitive</label><label><input type="checkbox" id="lore-disabled"> Disabled</label></div>
+    <label>Priority: <span id="lore-priority-val">50</span></label><input type="number" id="lore-priority-input" value="50">
+    <label>Order: <span id="lore-order-val">100</span></label><input type="number" id="lore-order-input" value="100">
+</div><footer class="modal__footer"><button id="lore-editor-cancel" class="btn btn--ghost" data-close>Cancel</button><button id="lore-editor-save" class="btn btn--accent">Save</button></footer></div></div>
 
-            <!-- Voice tab -->
-            <div id="ctab-voice" class="creator-tab-panel">
-                <label class="form-label">Message Example</label>
-                <textarea id="creator-mes-example" class="control-textarea" rows="6" placeholder="&lt;START&gt;\n{{user}}: ...\n{{char}}: ..."></textarea>
-                <label class="form-label">Alternate Greetings <small>(one per line)</small></label>
-                <textarea id="creator-alt-greetings" class="control-textarea" rows="5" placeholder="Each line is an alternate opening message..."></textarea>
-            </div>
+<div id="modal-reality-editor" class="modal" hidden><div class="modal__backdrop" data-close></div><div class="modal__content"><h3>Reality Config</h3><div class="modal__body" style="display:grid; gap:15px;"><input type="text" id="reality-name-input" class="control-input"><textarea id="reality-scenario-input" class="control-textarea" rows="6"></textarea></div><footer class="modal__footer"><button id="reality-editor-cancel" class="btn btn--ghost" data-close>Cancel</button><button id="reality-save-btn" class="btn btn--accent">Save</button></footer></div></div>
 
-            <!-- System tab -->
-            <div id="ctab-system" class="creator-tab-panel">
-                <label class="form-label">System Prompt Override</label>
-                <textarea id="creator-system-prompt" class="control-textarea" rows="5" placeholder="Replaces or prepends to the global system prompt..."></textarea>
-                <label class="form-label">Post-History Instructions</label>
-                <textarea id="creator-post-history" class="control-textarea" rows="4" placeholder="Injected after the conversation history..."></textarea>
-            </div>
+<div id="modal-group-creator" class="modal" hidden><div class="modal__backdrop" data-close></div><div class="modal__content"><h3>Assemble Group</h3><div class="modal__body"><input type="text" id="group-name-input" class="control-input"><div id="group-participant-list" class="participant-grid"></div></div><footer class="modal__footer"><button id="group-creator-cancel" class="btn btn--ghost" data-close>Cancel</button><button id="group-create-btn" class="btn btn--accent">Assemble</button></footer></div></div>
 
-            <!-- Meta tab -->
-            <div id="ctab-meta" class="creator-tab-panel">
-                <label class="form-label">Creator</label>
-                <input type="text" id="creator-author" class="control-input" placeholder="Author name...">
-                <label class="form-label">Creator Notes</label>
-                <textarea id="creator-notes" class="control-textarea" rows="5" placeholder="Notes for users of this character..."></textarea>
-            </div>
-        </div>
-        <footer class="modal__footer">
-            <button id="creator-cancel" class="btn btn--ghost">Cancel</button>
-            <button id="creator-save" class="btn btn--accent"><i data-lucide="save"></i> Save</button>
-        </footer>
-    </div>
-</div>
+<div id="modal-gallery" class="modal" hidden><div class="modal__backdrop" data-close></div><div class="modal__content"><h3>Gallery Management</h3><button id="gallery-close" data-close><i data-lucide="x"></i></button><div id="gallery-grid" class="gallery-grid"></div><div class="modal__body" style="display:grid; gap:10px;"><input type="text" id="gallery-url-input" class="control-input" placeholder="Image URL"><button id="gallery-url-add" class="btn btn--accent btn--sm">Add URL</button><button id="gallery-add-file" class="btn btn--ghost">Upload File</button></div><input type="file" id="gallery-file-input" hidden multiple></div></div>
 
-<!-- Lore Entry Editor -->
-<div id="modal-lore-editor" class="modal" hidden>
-    <div class="modal__backdrop" data-close></div>
-    <div class="modal__content">
-        <header class="modal__header">
-            <h3 class="modal__title"><i data-lucide="book-open"></i> Lore Entry</h3>
-            <button id="lore-editor-close" class="btn-icon modal__close"><i data-lucide="x"></i></button>
-        </header>
-        <div class="modal__body">
-            <input type="hidden" id="lore-entry-id">
-            <input type="hidden" id="lore-book-id">
-            <div class="form-group">
-                <label class="form-label">Name</label>
-                <input type="text" id="lore-entry-name" class="control-input" placeholder="Entry name...">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Keywords <small>(comma-separated)</small></label>
-                <input type="text" id="lore-entry-keywords" class="control-input" placeholder="word1, word2, ...">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Content</label>
-                <textarea id="lore-entry-content" class="control-textarea" rows="6" placeholder="The lore text injected into context..."></textarea>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Comment <small>(not injected)</small></label>
-                <textarea id="lore-entry-comment" class="control-textarea" rows="2" placeholder="Author notes..."></textarea>
-            </div>
-            <div class="lore-editor-flags">
-                <label class="config-toggle-row"><input type="checkbox" id="lore-always-on"> Always active</label>
-                <label class="config-toggle-row"><input type="checkbox" id="lore-use-regex"> Use regex</label>
-                <label class="config-toggle-row"><input type="checkbox" id="lore-case-sensitive"> Case sensitive</label>
-                <label class="config-toggle-row"><input type="checkbox" id="lore-disabled"> Disabled</label>
-            </div>
-            <div class="lore-editor-sliders">
-                <div class="config-slider-row"><label>Priority</label><input type="range" id="lore-priority-input" min="0" max="100" value="50"><span id="lore-priority-val">50</span></div>
-                <div class="config-slider-row"><label>Order</label><input type="range" id="lore-order-input" min="0" max="200" value="100"><span id="lore-order-val">100</span></div>
-            </div>
-        </div>
-        <footer class="modal__footer">
-            <button id="lore-editor-cancel" class="btn btn--ghost">Cancel</button>
-            <button id="lore-editor-save" class="btn btn--accent"><i data-lucide="save"></i> Save Entry</button>
-        </footer>
-    </div>
-</div>
+<div id="modal-msg-edit" class="modal" hidden><div class="modal__backdrop"></div><div class="modal__content"><h3>Edit Message</h3><button id="msg-edit-close" data-close><i data-lucide="x"></i></button><div class="modal__body"><input type="text" id="msg-edit-id" hidden><textarea id="msg-edit-content" class="control-textarea" rows="10"></textarea></div><footer class="modal__footer"><button id="msg-edit-cancel" class="btn btn--ghost">Cancel</button><button id="msg-edit-save" class="btn btn--accent">Save</button></footer></div></div>
 
-<!-- Reality Editor -->
-<div id="modal-reality-editor" class="modal" hidden>
-    <div class="modal__backdrop" data-close></div>
-    <div class="modal__content">
-        <header class="modal__header">
-            <h3 class="modal__title"><i data-lucide="layers"></i> Edit Continuity</h3>
-            <button id="reality-editor-close" class="btn-icon modal__close"><i data-lucide="x"></i></button>
-        </header>
-        <div class="modal__body">
-            <div class="form-group">
-                <label class="form-label">Reality Name</label>
-                <input type="text" id="reality-name-input" class="control-input" placeholder="Continuity name...">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Scenario Preset</label>
-                <select id="scenario-preset-select" class="control-select">
-                    <option value="blank">— Blank —</option>
-                    <option value="custom">Custom...</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label class="form-label">World Scenario</label>
-                <textarea id="reality-scenario-input" class="control-textarea" rows="6" placeholder="Describe the shared world context..."></textarea>
-            </div>
-        </div>
-        <footer class="modal__footer">
-            <button id="reality-editor-cancel" class="btn btn--ghost">Cancel</button>
-            <button id="reality-save-btn" class="btn btn--accent"><i data-lucide="save"></i> Save</button>
-        </footer>
-    </div>
-</div>
+<div id="modal-msg-comment" class="modal" hidden><div class="modal__backdrop"></div><div class="modal__content"><h3>Message Notes</h3><button id="msg-comment-close" data-close><i data-lucide="x"></i></button><div class="modal__body"><input type="text" id="msg-comment-msg-id" hidden><div id="msg-comment-list"></div><textarea id="msg-comment-input" class="control-textarea" rows="4"></textarea></div><footer class="modal__footer"><button id="msg-comment-save" class="btn btn--accent">Save</button></footer></div></div>
 
-<!-- Group Creator -->
-<div id="modal-group-creator" class="modal" hidden>
-    <div class="modal__backdrop" data-close></div>
-    <div class="modal__content">
-        <header class="modal__header">
-            <h3 class="modal__title"><i data-lucide="users"></i> Create Group Chat</h3>
-            <button id="group-creator-close" class="btn-icon modal__close"><i data-lucide="x"></i></button>
-        </header>
-        <div class="modal__body">
-            <div class="form-group">
-                <label class="form-label">Group Name <small>(optional)</small></label>
-                <input type="text" id="group-name-input" class="control-input" placeholder="Auto-named from participants...">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Participants</label>
-                <div id="group-participant-list" class="group-participant-list"></div>
-            </div>
-        </div>
-        <footer class="modal__footer">
-            <button id="group-creator-cancel" class="btn btn--ghost">Cancel</button>
-            <button id="group-create-btn" class="btn btn--accent"><i data-lucide="plus-circle"></i> Create</button>
-        </footer>
-    </div>
-</div>
+<div id="modal-sims-editor" class="modal" hidden><div class="modal__backdrop" data-close></div><div id="sims-editor-root"></div></div>
 
-<!-- Gallery / Social manager -->
-<div id="modal-gallery" class="modal" hidden>
-    <div class="modal__backdrop" data-close></div>
-    <div class="modal__content modal__content--large">
-        <header class="modal__header">
-            <div>
-                <h3 id="gallery-char-name" class="modal__title">Gallery</h3>
-                <span id="gallery-count" class="modal__subtitle"></span>
-            </div>
-            <button id="gallery-close" class="btn-icon modal__close"><i data-lucide="x"></i></button>
-        </header>
-        <div class="modal__body">
-            <div id="gallery-grid" class="gallery-grid"></div>
-            <div class="gallery-add-row">
-                <input type="text" id="gallery-url-input" class="control-input control-input--sm" placeholder="https://image-url...">
-                <button id="gallery-url-add" class="btn btn--accent btn--sm">Add URL</button>
-                <button id="gallery-add-file" class="btn btn--ghost btn--sm"><i data-lucide="upload"></i> Upload</button>
-                <input type="file" id="gallery-file-input" accept="image/*" hidden multiple>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Message Edit -->
-<div id="modal-msg-edit" class="modal" hidden>
-    <div class="modal__backdrop"></div>
-    <div class="modal__content">
-        <header class="modal__header">
-            <h3 id="msg-edit-title" class="modal__title"><i data-lucide="pencil"></i> Edit Message</h3>
-            <button id="msg-edit-close" class="btn-icon modal__close"><i data-lucide="x"></i></button>
-        </header>
-        <div class="modal__body">
-            <input type="hidden" id="msg-edit-id">
-            <textarea id="msg-edit-content" class="control-textarea control-textarea--large" rows="8"></textarea>
-            <div class="msg-edit-footer-row">
-                <span id="msg-edit-charcount" class="msg-edit-charcount"></span>
-                <label class="msg-edit-retrigger-label config-toggle-row">
-                    <input type="checkbox" id="msg-edit-retrigger">
-                    <span>Re-run bot after saving</span>
-                </label>
-            </div>
-        </div>
-        <footer class="modal__footer">
-            <button id="msg-edit-cancel" class="btn btn--ghost">Cancel</button>
-            <button id="msg-edit-save" class="btn btn--accent"><i data-lucide="save"></i> Save</button>
-        </footer>
-    </div>
-</div>
-
-<!-- Message Comment / Annotation -->
-<div id="modal-msg-comment" class="modal" hidden>
-    <div class="modal__backdrop"></div>
-    <div class="modal__content">
-        <header class="modal__header">
-            <h3 class="modal__title"><i data-lucide="message-square"></i> Annotations</h3>
-            <button id="msg-comment-close" class="btn-icon modal__close"><i data-lucide="x"></i></button>
-        </header>
-        <div class="modal__body">
-            <input type="hidden" id="msg-comment-msg-id">
-            <div id="msg-comment-list" class="comment-list"></div>
-            <div class="msg-comment-add-row">
-                <textarea id="msg-comment-input" class="control-textarea control-textarea--sm" rows="2" placeholder="Add a note (Ctrl+Enter to submit)..."></textarea>
-                <button id="msg-comment-add" class="btn btn--accent btn--sm"><i data-lucide="plus"></i> Add Note</button>
-            </div>
-        </div>
-        <footer class="modal__footer">
-            <button id="msg-comment-close-btn" class="btn btn--ghost">Close</button>
-        </footer>
-    </div>
-</div>
-
-<!-- Sims Editor (root populated by sims-editor.js) -->
-<div id="modal-sims-editor" class="modal" hidden>
-    <div class="modal__backdrop" data-close></div>
-    <div id="sims-editor-root"></div>
-</div>
-
-<!-- Oracle — isolated LLM query -->
-<div id="modal-oracle" class="modal" hidden>
-    <div class="modal__backdrop" data-close></div>
-    <div class="modal__content modal__content--large">
-        <header class="modal__header">
-            <div>
-                <h3 class="modal__title"><i data-lucide="eye"></i> Oracle</h3>
-                <span class="modal__subtitle">Isolated query — never touches chat history</span>
-            </div>
-            <button id="oracle-close" class="btn-icon modal__close"><i data-lucide="x"></i></button>
-        </header>
-        <div class="modal__body modal__body--oracle">
-            <div class="oracle-controls">
-                <select id="oracle-char-select" class="control-select control-select--sm"></select>
-                <div class="oracle-inject-row">
-                    <button class="oracle-inject-btn btn btn--ghost btn--xs" data-inject="uncensor" title="Lift restrictions">Uncensor</button>
-                    <button class="oracle-inject-btn btn btn--ghost btn--xs" data-inject="recontextualize" title="Analyse current scene">Recontextualize</button>
-                    <button class="oracle-inject-btn btn btn--ghost btn--xs" data-inject="reset" title="Reset character voice">Reset Voice</button>
-                    <button class="oracle-inject-btn btn btn--ghost btn--xs" data-inject="continuity" title="Summarise events">Continuity</button>
-                    <button class="oracle-inject-btn btn btn--ghost btn--xs" data-inject="escalate" title="Escalate intensity">Escalate</button>
-                </div>
-            </div>
-            <div id="oracle-thread" class="oracle-thread"></div>
-            <div class="oracle-input-row">
-                <textarea id="oracle-input" class="control-textarea control-textarea--sm" rows="2" placeholder="Query the Oracle... (Enter to send, Shift+Enter for newline)"></textarea>
-                <button id="oracle-send-btn" class="btn btn--accent btn--sm"><i data-lucide="send"></i></button>
-            </div>
-        </div>
-        <footer class="modal__footer">
-            <button id="oracle-clear" class="btn btn--ghost btn--sm"><i data-lucide="trash-2"></i> Clear Thread</button>
-            <button id="oracle-inject-to-chat" class="btn btn--ghost btn--sm" title="Inject last Oracle response as Author's Note"><i data-lucide="zap"></i> Inject to Chat</button>
-        </footer>
-    </div>
-</div>
-
-<!-- Lightbox -->
-<div id="lightbox" class="lightbox" hidden>
-    <div class="lightbox__backdrop"></div>
-    <div class="lightbox__content">
-        <img id="lb-img" src="" alt="Gallery image">
-        <div class="lightbox__meta">
-            <span id="lb-caption" class="lightbox__caption">Image</span>
-            <div class="lightbox__nav">
-                <button id="lb-prev" class="btn btn--ghost btn--sm"><i data-lucide="chevron-left"></i> Prev</button>
-                <span id="lb-idx">0</span> / <span id="lb-total">0</span>
-                <button id="lb-next" class="btn btn--ghost btn--sm">Next <i data-lucide="chevron-right"></i></button>
-            </div>
-            <div class="lightbox__actions">
-                <button id="lb-set-avatar" class="btn btn--accent btn--sm"><i data-lucide="star"></i> Set Avatar</button>
-                <button id="lb-remove" class="btn btn--ghost btn--sm btn--danger-ghost"><i data-lucide="trash-2"></i> Remove</button>
-                <button id="lb-close" class="btn btn--ghost btn--sm"><i data-lucide="x"></i> Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Reaction picker (floating) -->
 <div id="reaction-picker" class="reaction-picker" hidden>
-    <div class="reaction-picker__row">
-        <button class="reaction-picker__btn" data-emoji="❤️">❤️</button>
-        <button class="reaction-picker__btn" data-emoji="😂">😂</button>
-        <button class="reaction-picker__btn" data-emoji="😮">😮</button>
-        <button class="reaction-picker__btn" data-emoji="😢">😢</button>
-        <button class="reaction-picker__btn" data-emoji="😡">😡</button>
-        <button class="reaction-picker__btn" data-emoji="👍">👍</button>
-        <button class="reaction-picker__btn" data-emoji="👎">👎</button>
-        <button class="reaction-picker__btn" data-emoji="🔥">🔥</button>
-        <button class="reaction-picker__btn" data-emoji="💜">💜</button>
-        <button class="reaction-picker__btn" data-emoji="💀">💀</button>
-        <button class="reaction-picker__btn" data-emoji="✨">✨</button>
-        <button class="reaction-picker__btn" data-emoji="🤫">🤫</button>
-    </div>
+    <button class="reaction-picker__btn" data-emoji="❤️">❤️</button><button class="reaction-picker__btn" data-emoji="😂">😂</button><button class="reaction-picker__btn" data-emoji="🔥">🔥</button><button class="reaction-picker__btn" data-emoji="😭">😭</button><button class="reaction-picker__btn" data-emoji="😮">😮</button><button class="reaction-picker__btn" data-emoji="👍">👍</button>
 </div>
 
-<!-- Toast container -->
-<div id="toast-container" class="toast-container"></div>
+<div id="lightbox" class="lightbox" hidden><div class="lightbox__backdrop"></div><div class="lightbox__content"><img id="lb-img" src=""><div class="lightbox__meta"><button id="lb-prev">Prev</button><span id="lb-idx">0</span>/<span id="lb-total">0</span><button id="lb-next">Next</button><button id="lb-set-avatar">Avatar</button><button id="lb-remove">Del</button><button id="lb-close">Close</button></div></div></div>
 
-<script src="../../shards/lucide.min.js"></script>
-<script src="../../shards/marked.min.js"></script>
-<script src="../../shards/purify.min.js"></script>
-<script type="module" src="./script/main.js?v=35"></script>
+<div id="toast-container" class="toast-container"></div>
+<script src="../../shards/lucide.min.js"></script><script src="../../shards/marked.min.js"></script><script src="../../shards/purify.min.js"></script>
+<script type="module" src="./script/main.js?v=43"></script>
 </body>
 </html>

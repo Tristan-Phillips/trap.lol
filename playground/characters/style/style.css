@@ -1344,10 +1344,9 @@ html, body.underdark-page {
 
 .profile-details__section p {
     margin: 0;
-    color: var(--text-main);
+    color: var(--text-muted);
+    line-height: 1.55;
 }
-
-.profile-details__section p { margin: 0; color: var(--text-muted); line-height: 1.55; }
 
 .profile-actions {
     display: flex;

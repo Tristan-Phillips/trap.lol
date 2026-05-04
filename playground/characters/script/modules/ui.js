@@ -1550,7 +1550,7 @@ export function initUI() {
         galleryCharId = id;
         const char = state.loadedCharacters[id];
         const meta = state.characters.find(c => c.id === id);
-        qs('#gallery-char-name').textContent = char?.name || meta?.name || 'Gallery';
+        const $gcn = qs('#gallery-char-name'); if ($gcn) $gcn.textContent = char?.name || meta?.name || 'Gallery';
         renderGalleryModal(id);
         qs('#modal-gallery').hidden = false;
         lucideRefresh(qs('#modal-gallery'));
@@ -1664,6 +1664,10 @@ export function initUI() {
     const $feedArena = qs('#feed-arena');
     const $feedList  = qs('#social-feed-container');
     let _feedMode = 'hot'; // 'hot' | charId
+
+    qs('#feed-back-btn')?.addEventListener('click', () => {
+        switchSidebarTab('chats');
+    });
 
     qs('#feed-add-post-btn')?.addEventListener('click', () => {
         if (galleryCharId && _feedMode !== 'hot') openGalleryModal(galleryCharId);
@@ -2204,7 +2208,7 @@ export function initUI() {
         qs('#lb-img').src = src;
         qs('#lb-idx').textContent  = lbIndex + 1;
         qs('#lb-total').textContent = lbImages.length;
-        qs('#lb-caption').textContent = lbIndex === 0 ? 'Cover Image' : `Image ${lbIndex + 1}`;
+        const $lbCap = qs('#lb-caption'); if ($lbCap) $lbCap.textContent = lbIndex === 0 ? 'Cover Image' : `Image ${lbIndex + 1}`;
         // Disable set-avatar for cover
         const $setAv = qs('#lb-set-avatar');
         if ($setAv) $setAv.disabled = (lbIndex === 0);
@@ -2949,7 +2953,7 @@ export function initUI() {
 
         qs('#msg-edit-id').value  = msgId;
         $ta.value                 = currentContent;
-        qs('#msg-edit-retrigger').checked = false;
+        if (qs('#msg-edit-retrigger')) qs('#msg-edit-retrigger').checked = false;
         if ($count) $count.textContent = `${currentContent.length} chars`;
 
         // Context-aware title and retrigger label
@@ -3001,12 +3005,14 @@ export function initUI() {
             refreshCommentActionBadge($msgEl, msgId);
         };
 
-        qs('#msg-comment-add').onclick = doAdd;
-        qs('#msg-comment-input').onkeydown = e => {
+        const $cmtAdd = qs('#msg-comment-add');
+        if ($cmtAdd) $cmtAdd.onclick = doAdd;
+        const $cmtInput = qs('#msg-comment-input');
+        if ($cmtInput) $cmtInput.onkeydown = e => {
             if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); doAdd(); }
         };
-        qs('#msg-comment-close').onclick     = () => hideModal('modal-msg-comment');
-        qs('#msg-comment-close-btn').onclick = () => hideModal('modal-msg-comment');
+        qs('#msg-comment-close')?.addEventListener('click', () => hideModal('modal-msg-comment'));
+        qs('#msg-comment-close-btn')?.addEventListener('click', () => hideModal('modal-msg-comment'));
         qs('.modal__backdrop', qs('#modal-msg-comment'))?.removeEventListener('click', _commentBackdrop);
         _commentBackdrop = () => hideModal('modal-msg-comment');
         qs('.modal__backdrop', qs('#modal-msg-comment'))?.addEventListener('click', _commentBackdrop);

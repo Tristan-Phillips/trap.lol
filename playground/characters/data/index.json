@@ -77,6 +77,15 @@
       "avatar_path": "🥊",
       "tags": ["Arcane", "Enforcer", "Zaun", "Piltover", "Action", "Protective", "Female"],
       "lorebook_path": "data/lorebooks/arcane-zaun.json"
+    },
+    {
+      "id": "reze-csm",
+      "name": "Reze",
+      "tagline": "A country mouse in the city. Boom.",
+      "card_path": "data/cards/reze.json",
+      "avatar_path": "💣",
+      "tags": ["Chainsaw Man", "Bomb Devil", "Hybrid", "Assassin", "Soviet", "Female"],
+      "lorebook_path": "data/lorebooks/chainsaw-man.json"
     }
   ],
   "lorebooks": [
@@ -99,6 +108,11 @@
       "id": "lorebook-alice-wonderland",
       "name": "American McGee's Alice — The Shattered Psyche",
       "lore_path": "data/lorebooks/alice-liddell.json"
+    },
+    {
+      "id": "lorebook-chainsaw-man",
+      "name": "Chainsaw Man — Devils, Hybrids & Public Safety",
+      "lore_path": "data/lorebooks/chainsaw-man.json"
     }
   ]
 }
