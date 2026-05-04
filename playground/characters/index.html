@@ -6,7 +6,7 @@
     <title>The Underdark // Roleplay Interface</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2306040A'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%23ef4444' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23ef4444'/%3E%3C/svg%3E" />
     <link rel="stylesheet" href="../../glass/style/style.css">
-    <link rel="stylesheet" href="./style/style.css?v=34">
+    <link rel="stylesheet" href="./style/style.css?v=35">
 </head>
 <body class="underdark-page">
 
@@ -42,8 +42,9 @@
             <button id="toggle-roster" class="sidebar__toggle" title="Collapse sidebar"><i data-lucide="panel-left-close"></i></button>
         </header>
         <nav class="sidebar__tabs-nav">
-            <button class="sidebar-tab active" data-view="chats">Chats</button>
-            <button class="sidebar-tab" data-view="roster">Roster</button>
+            <button class="sidebar-tab active" data-view="chats"><i data-lucide="message-circle"></i> Chats</button>
+            <button class="sidebar-tab" data-view="roster"><i data-lucide="users"></i> Roster</button>
+            <button class="sidebar-tab" data-view="social"><i data-lucide="instagram"></i> Social</button>
         </nav>
 
         <!-- Chats view -->
@@ -72,6 +73,19 @@
                 <button id="import-card" class="btn btn--ghost btn--full"><i data-lucide="upload"></i> Import Card</button>
                 <input type="file" id="card-input" accept=".png,.json" hidden multiple>
             </footer>
+        </div>
+
+        <!-- Social view -->
+        <div id="view-social" class="sidebar-view" hidden>
+            <div class="social-sidebar__hot">
+                <button id="social-hot-btn" class="social-sidebar__hot-btn active" data-feed="hot">
+                    <i data-lucide="flame"></i>
+                    <span>Hot Feed</span>
+                    <span class="social-sidebar__hot-sub">All characters</span>
+                </button>
+            </div>
+            <div class="social-sidebar__section-label">Following</div>
+            <div id="social-char-list" class="social-char-list"></div>
         </div>
     </aside>
 
@@ -176,18 +190,28 @@
     </main>
 
     <!-- ── SOCIAL / FEED ARENA ───────────────────────────────────────────── -->
-    <main id="feed-arena" class="arena" hidden>
-        <!-- Feed profile header -->
-        <div id="feed-profile-header" class="feed-profile-header">
-            <button id="feed-back-btn" class="feed-back-btn" title="Back to chat"><i data-lucide="arrow-left"></i></button>
-            <div id="feed-char-avatar" class="feed-char-avatar"></div>
-            <div class="feed-char-info">
-                <span id="feed-user-name" class="feed-char-name">—</span>
-                <span id="feed-char-tagline" class="feed-char-tagline"></span>
+    <main id="feed-arena" class="arena feed-arena" hidden>
+        <!-- Feed header bar -->
+        <header class="feed-arena__header">
+            <div id="feed-char-identity" class="feed-char-identity">
+                <div id="feed-char-avatar" class="feed-char-avatar"></div>
+                <div class="feed-char-info">
+                    <span id="feed-user-name" class="feed-char-name">Hot Feed</span>
+                    <span id="feed-char-tagline" class="feed-char-tagline">All characters</span>
+                </div>
             </div>
-            <button id="feed-add-post-btn" class="btn-icon" title="Manage gallery"><i data-lucide="image-plus"></i></button>
+            <div class="feed-arena__actions">
+                <button id="feed-add-post-btn" class="btn-icon" title="Manage gallery / add images"><i data-lucide="image-plus"></i></button>
+            </div>
+        </header>
+        <!-- Feed body: two-column desktop layout -->
+        <div class="feed-arena__body">
+            <div id="social-feed-container" class="feed-scroll-area feed-scroll-area--main"></div>
+            <aside class="feed-arena__sidebar">
+                <div id="feed-profile-card" class="feed-profile-card"></div>
+                <div id="feed-suggested" class="feed-suggested"></div>
+            </aside>
         </div>
-        <div id="social-feed-container" class="feed-scroll-area"></div>
     </main>
 
     <!-- ── TERMINAL SIDEBAR (right) ─────────────────────────────────────── -->
@@ -796,6 +820,6 @@
 <script src="../../shards/lucide.min.js"></script>
 <script src="../../shards/marked.min.js"></script>
 <script src="../../shards/purify.min.js"></script>
-<script type="module" src="./script/main.js?v=34"></script>
+<script type="module" src="./script/main.js?v=35"></script>
 </body>
 </html>

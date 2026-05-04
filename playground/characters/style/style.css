@@ -2223,38 +2223,144 @@ body.roster-collapsed #roster-reveal-tab {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   SOCIAL FEED — Redesigned
+   SOCIAL FEED — Desktop Layout
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* Feed profile header bar */
-.feed-profile-header {
+/* ── Social sidebar tab (left sidebar view) ── */
+.social-sidebar__hot {
+    padding: 8px 8px 4px;
+    flex-shrink: 0;
+}
+.social-sidebar__hot-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.14s, border-color 0.14s;
+    color: var(--text-main);
+    text-align: left;
+}
+.social-sidebar__hot-btn:hover {
+    background: rgba(var(--accent-rgb),0.07);
+    border-color: rgba(var(--accent-rgb),0.2);
+}
+.social-sidebar__hot-btn.active {
+    background: rgba(var(--accent-rgb),0.1);
+    border-color: rgba(var(--accent-rgb),0.35);
+    color: var(--theme-accent);
+}
+.social-sidebar__hot-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+.social-sidebar__hot-btn span:first-of-type {
+    font-size: 0.8rem;
+    font-weight: 700;
+    flex: 1;
+}
+.social-sidebar__hot-sub {
+    font-size: 0.62rem;
+    color: var(--text-muted);
+    opacity: 0.6;
+    white-space: nowrap;
+}
+.social-sidebar__section-label {
+    padding: 8px 12px 4px;
+    font-size: 0.6rem;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--text-muted);
+    opacity: 0.5;
+    flex-shrink: 0;
+}
+.social-char-list {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 4px 8px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    scrollbar-width: thin;
+}
+.social-char-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 10px;
+    border-radius: 9px;
+    cursor: pointer;
+    transition: background 0.14s;
+    border: 1px solid transparent;
+    position: relative;
+}
+.social-char-item:hover { background: rgba(255,255,255,0.04); }
+.social-char-item.active {
+    background: rgba(var(--accent-rgb),0.08);
+    border-color: rgba(var(--accent-rgb),0.22);
+}
+.social-char-item__avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+    background-color: rgba(var(--accent-rgb),0.1);
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem;
+    border: 2px solid rgba(var(--accent-rgb),0.15);
+}
+.social-char-item.active .social-char-item__avatar { border-color: rgba(var(--accent-rgb),0.5); }
+.social-char-item__info { flex: 1; min-width: 0; }
+.social-char-item__name {
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+}
+.social-char-item__posts {
+    font-size: 0.62rem;
+    color: var(--text-muted);
+    opacity: 0.5;
+}
+
+/* ── Feed arena (full main area) ── */
+.feed-arena {
+    background: var(--bg-base);
+}
+.feed-arena__header {
+    height: 50px;
+    padding: 0 var(--space-md);
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 10px 16px;
-    background: rgba(0,0,0,0.6);
-    backdrop-filter: blur(16px);
-    border-bottom: 1px solid rgba(255,255,255,0.06);
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--glass-border-mute);
     flex-shrink: 0;
     z-index: 10;
 }
-.feed-back-btn {
-    background: none;
-    border: none;
-    color: var(--text-muted);
-    cursor: pointer;
+.feed-char-identity {
     display: flex;
     align-items: center;
-    padding: 6px;
-    border-radius: 50%;
-    transition: color 0.15s, background 0.15s;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+}
+.feed-arena__actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
     flex-shrink: 0;
 }
-.feed-back-btn:hover { color: var(--text-main); background: rgba(255,255,255,0.06); }
-.feed-back-btn svg { width: 18px; height: 18px; }
 
 .feed-char-avatar {
-    width: 40px; height: 40px;
+    width: 34px; height: 34px;
     border-radius: 50%;
     border: 2px solid rgba(var(--accent-rgb), 0.5);
     background-size: cover;
@@ -2291,12 +2397,163 @@ body.roster-collapsed #roster-reveal-tab {
     margin-top: 1px;
 }
 
-/* Feed scroll area */
-.feed-scroll-area {
+/* ── Feed arena body: two-column desktop layout ── */
+.feed-arena__body {
     flex: 1;
-    overflow-y: auto;
     min-height: 0;
-    background: transparent;
+    display: flex;
+    gap: 0;
+    overflow: hidden;
+}
+
+/* Main feed column */
+.feed-scroll-area--main {
+    flex: 1;
+    min-width: 0;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(var(--accent-rgb),0.1) transparent;
+    padding: 0;
+}
+.feed-scroll-area--main::-webkit-scrollbar { width: 4px; }
+.feed-scroll-area--main::-webkit-scrollbar-thumb {
+    background: rgba(var(--accent-rgb),0.15);
+    border-radius: 2px;
+}
+
+/* Right sidebar: profile card + suggested */
+.feed-arena__sidebar {
+    width: 300px;
+    flex-shrink: 0;
+    border-left: 1px solid rgba(255,255,255,0.04);
+    overflow-y: auto;
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    scrollbar-width: none;
+}
+.feed-arena__sidebar::-webkit-scrollbar { display: none; }
+
+/* Profile card in right sidebar */
+.feed-profile-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.feed-profile-card__header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.feed-profile-card__avatar {
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+    background-color: rgba(var(--accent-rgb),0.1);
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.6rem;
+    border: 2px solid rgba(var(--accent-rgb),0.35);
+}
+.feed-profile-card__name {
+    font-weight: 700;
+    font-size: 0.88rem;
+    display: block;
+}
+.feed-profile-card__handle {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    opacity: 0.55;
+    font-family: var(--font-mono);
+}
+.feed-profile-card__stats {
+    display: flex;
+    gap: 0;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.feed-profile-stat {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 4px;
+    gap: 2px;
+    cursor: default;
+}
+.feed-profile-stat + .feed-profile-stat { border-left: 1px solid rgba(255,255,255,0.05); }
+.feed-profile-stat__val {
+    font-weight: 700;
+    font-size: 0.9rem;
+    font-family: var(--font-mono);
+    color: var(--theme-accent);
+}
+.feed-profile-stat__label {
+    font-size: 0.58rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    opacity: 0.5;
+}
+.feed-profile-card__bio {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    opacity: 0.7;
+}
+.feed-profile-card__chat-btn {
+    width: 100%;
+}
+
+/* Suggested characters */
+.feed-suggested__label {
+    font-size: 0.62rem;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+    opacity: 0.5;
+    margin-bottom: 8px;
+}
+.feed-suggested-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 6px 0;
+    cursor: pointer;
+}
+.feed-suggested-item:hover .feed-suggested-item__name { color: var(--theme-accent); }
+.feed-suggested-item__avatar {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+    background-color: rgba(var(--accent-rgb),0.1);
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.9rem;
+}
+.feed-suggested-item__info { flex: 1; min-width: 0; }
+.feed-suggested-item__name {
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: color 0.14s;
+}
+.feed-suggested-item__sub {
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    opacity: 0.45;
+}
+
+/* ── Feed scroll area (generic) ── */
+.feed-scroll-area {
+    overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: rgba(var(--accent-rgb),0.1) transparent;
 }
@@ -2305,9 +2562,12 @@ body.roster-collapsed #roster-reveal-tab {
     display: flex;
     flex-direction: column;
     gap: 0;
-    padding-bottom: 64px;
-    max-width: 560px;
+    padding-bottom: 40px;
+    max-width: 640px;
     margin: 0 auto;
+    padding-left: 0;
+    padding-right: 0;
+    width: 100%;
 }
 
 /* Empty state */
@@ -2336,7 +2596,41 @@ body.roster-collapsed #roster-reveal-tab {
     display: flex;
     flex-direction: column;
     position: relative;
-    border-bottom: 1px solid rgba(255,255,255,0.04);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+/* Post author header */
+.feed-post__header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px 10px;
+}
+.feed-post__header-avatar {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+    background-color: rgba(var(--accent-rgb),0.1);
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem;
+    border: 2px solid rgba(var(--accent-rgb),0.25);
+}
+.feed-post__header-info { flex: 1; min-width: 0; }
+.feed-post__header-name {
+    font-size: 0.82rem;
+    font-weight: 700;
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.feed-post__header-sub {
+    font-size: 0.62rem;
+    color: var(--text-muted);
+    opacity: 0.45;
+    font-family: var(--font-mono);
 }
 
 /* Post image — full width, aspect-ratio 1/1 or natural */
@@ -2348,7 +2642,7 @@ body.roster-collapsed #roster-reveal-tab {
 }
 .feed-post__media-img {
     width: 100%;
-    max-height: 480px;
+    max-height: 600px;
     object-fit: cover;
     display: block;
 }
@@ -6256,4 +6550,21 @@ body.focus-mode .message:hover .message__actions { opacity: 1; }
     .creator-avatar-row__fields { width: 100%; }
     .gallery-add-row { flex-direction: column; }
     .gallery-add-row .control-input { width: 100%; }
+}
+
+/* ── Feed arena responsive ── */
+@media (max-width: 1100px) {
+    .feed-arena__sidebar { width: 260px; }
+}
+@media (max-width: 860px) {
+    .feed-arena__sidebar { display: none; }
+}
+
+/* ── Sidebar social tab icon spacing ── */
+.sidebar-tab svg { width: 11px; height: 11px; }
+.sidebar__tabs-nav .sidebar-tab {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
 }

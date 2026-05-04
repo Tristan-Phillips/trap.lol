@@ -331,25 +331,44 @@ export function initUI() {
         });
     });
 
-    // ── Sidebar Tabs (Chats / Roster) ─────────────────────────────────────────
-    qsa('.sidebar-tab').forEach($btn => {
-        $btn.addEventListener('click', () => {
-            const target = $btn.dataset.view;
-            qsa('.sidebar-tab').forEach(b => {
-                b.classList.remove('active');
-                b.setAttribute('aria-selected', 'false');
-            });
-            qsa('.sidebar-view').forEach(v => { v.hidden = true; v.classList.remove('active'); });
-            $btn.classList.add('active');
-            $btn.setAttribute('aria-selected', 'true');
-            const $view = qs(`#view-${target}`);
-            if ($view) { $view.hidden = false; $view.classList.add('active'); }
-            if (target === 'chats') {
-                const $cs = qs('#chat-search-input');
-                if ($cs) $cs.value = '';
-                renderChats();
-            }
+    // ── Sidebar Tabs (Chats / Roster / Social) ───────────────────────────────
+    let _activeSidebarTab = 'chats';
+
+    function switchSidebarTab(target) {
+        _activeSidebarTab = target;
+        qsa('.sidebar-tab').forEach(b => {
+            b.classList.toggle('active', b.dataset.view === target);
+            b.setAttribute('aria-selected', b.dataset.view === target ? 'true' : 'false');
         });
+        qsa('.sidebar-view').forEach(v => { v.hidden = true; v.classList.remove('active'); });
+        const $view = qs(`#view-${target}`);
+        if ($view) { $view.hidden = false; $view.classList.add('active'); }
+
+        if (target === 'chats') {
+            const $cs = qs('#chat-search-input');
+            if ($cs) $cs.value = '';
+            renderChats();
+            // Switch to chat arena
+            if ($chatArena) $chatArena.hidden = false;
+            if ($feedArena) $feedArena.hidden = true;
+        } else if (target === 'roster') {
+            if ($chatArena) $chatArena.hidden = false;
+            if ($feedArena) $feedArena.hidden = true;
+        } else if (target === 'social') {
+            renderSocialSidebar();
+            // Open hot feed by default if nothing selected
+            if ($chatArena) $chatArena.hidden = true;
+            if ($feedArena) $feedArena.hidden = false;
+            if (!galleryCharId) {
+                openHotFeed();
+            } else {
+                renderSocialFeed(galleryCharId);
+            }
+        }
+    }
+
+    qsa('.sidebar-tab').forEach($btn => {
+        $btn.addEventListener('click', () => switchSidebarTab($btn.dataset.view));
     });
 
     // ── Reality Selector ──────────────────────────────────────────────────────
@@ -809,7 +828,9 @@ export function initUI() {
         qsa('[data-view-feed]', $charList).forEach(btn => {
             btn.addEventListener('click', e => {
                 e.stopPropagation();
+                switchSidebarTab('social');
                 openSocialFeed(btn.dataset.viewFeed);
+                renderSocialSidebar();
             });
         });
 
@@ -1159,7 +1180,7 @@ export function initUI() {
         // Profile action buttons
         qs('#btn-add-to-thread').onclick = () => addCharacterToThread(id);
         qs('#btn-sims-edit').onclick     = () => openSimsEditor(id);
-        qs('#btn-gallery-add').onclick   = () => openSocialFeed(id); // Changed from manage to view feed
+        qs('#btn-gallery-add').onclick   = () => { switchSidebarTab('social'); openSocialFeed(id); renderSocialSidebar(); };
         qs('#btn-edit-char').onclick     = () => openCreator(id);
         qs('#btn-remove-char').onclick = () => {
             removeBotFromChat(id);
@@ -1638,21 +1659,114 @@ export function initUI() {
         lucideRefresh($grid);
     }
 
-    // ── Social Feed (Insta-Shard) ─────────────────────────────────────────────
+    // ── Social Feed ────────────────────────────────────────────────────────────
     const $chatArena = qs('#chat-arena');
     const $feedArena = qs('#feed-arena');
-    const $feedBack  = qs('#feed-back-btn');
     const $feedList  = qs('#social-feed-container');
-
-    $feedBack?.addEventListener('click', () => {
-        $feedArena.hidden = true;
-        $chatArena.hidden = false;
-        renderAll();
-    });
+    let _feedMode = 'hot'; // 'hot' | charId
 
     qs('#feed-add-post-btn')?.addEventListener('click', () => {
-        if (galleryCharId) openGalleryModal(galleryCharId);
+        if (galleryCharId && _feedMode !== 'hot') openGalleryModal(galleryCharId);
+        else if (state.characters.length) openGalleryModal(state.characters[0].id);
     });
+
+    // Render the social character list in the left sidebar
+    function renderSocialSidebar() {
+        const $list = qs('#social-char-list');
+        if (!$list) return;
+
+        if (!state.characters.length) {
+            $list.innerHTML = `<div style="padding:16px;text-align:center;font-size:.75rem;color:var(--text-muted);opacity:.4">No characters yet.</div>`;
+            return;
+        }
+
+        $list.innerHTML = state.characters.map(c => {
+            const rawAv = c.avatar_path || state.loadedCharacters[c.id]?.avatar;
+            const av = getAvatarUrlSync(c.id, rawAv) || rawAv;
+            const postCount = getAllGalleryImages(c.id).length;
+            const isActive = _feedMode === c.id;
+            const avHtml = av && !isEmoji(av)
+                ? `<div class="social-char-item__avatar" style="background-image:url('${esc(av)}')"></div>`
+                : `<div class="social-char-item__avatar">${av || '👤'}</div>`;
+            return `
+            <div class="social-char-item ${isActive ? 'active' : ''}" data-id="${esc(c.id)}">
+                ${avHtml}
+                <div class="social-char-item__info">
+                    <span class="social-char-item__name">${esc(c.name)}</span>
+                    <span class="social-char-item__posts">${postCount} post${postCount !== 1 ? 's' : ''}</span>
+                </div>
+            </div>`;
+        }).join('');
+
+        // IDB async patch
+        state.characters.forEach(async c => {
+            const rawAv = c.avatar_path || state.loadedCharacters[c.id]?.avatar;
+            if (rawAv?.startsWith('idb:')) {
+                const url = await getAvatarUrl(c.id, rawAv).catch(() => null);
+                if (url) {
+                    const $av = qs(`.social-char-item[data-id="${c.id}"] .social-char-item__avatar`, $list);
+                    if ($av) { $av.style.backgroundImage = `url(${url})`; $av.textContent = ''; }
+                }
+            }
+        });
+
+        qsa('.social-char-item', $list).forEach(el => {
+            el.addEventListener('click', () => {
+                openSocialFeed(el.dataset.id);
+                qs('#social-hot-btn')?.classList.remove('active');
+            });
+        });
+    }
+
+    // Hot feed button
+    qs('#social-hot-btn')?.addEventListener('click', () => {
+        qs('#social-hot-btn')?.classList.add('active');
+        qsa('.social-char-item').forEach(el => el.classList.remove('active'));
+        openHotFeed();
+    });
+
+    function openHotFeed() {
+        _feedMode = 'hot';
+        galleryCharId = null;
+        // Update feed header
+        const $name    = qs('#feed-user-name');
+        const $tagline = qs('#feed-char-tagline');
+        const $avEl    = qs('#feed-char-avatar');
+        if ($name)    $name.textContent    = 'Hot Feed';
+        if ($tagline) $tagline.textContent = 'All characters';
+        if ($avEl) { $avEl.style.backgroundImage = ''; $avEl.textContent = '🔥'; }
+        renderHotFeed();
+        renderFeedSidebar(null);
+    }
+
+    async function renderHotFeed() {
+        if (!$feedList) return;
+        // Collect all posts from all characters, interleaved
+        const allPosts = [];
+        for (const c of state.characters) {
+            const images = getAllGalleryImages(c.id);
+            const meta   = c;
+            const char   = state.loadedCharacters[c.id];
+            images.forEach((src, i) => allPosts.push({ charId: c.id, meta, char, src, postIdx: i }));
+        }
+        if (!allPosts.length) {
+            $feedList.innerHTML = `
+                <div class="feed-empty">
+                    <i data-lucide="image-off"></i>
+                    <h3>No Posts Yet</h3>
+                    <p>Add images to your characters' galleries to see their feed here.</p>
+                </div>`;
+            lucideRefresh($feedList);
+            return;
+        }
+        // Shuffle for hot-feed feel (stable shuffle seeded by char+idx)
+        allPosts.sort((a, b) => {
+            const ha = (a.charId.charCodeAt(0) * 17 + a.postIdx * 31) % 97;
+            const hb = (b.charId.charCodeAt(0) * 17 + b.postIdx * 31) % 97;
+            return hb - ha;
+        });
+        await _renderPostList(allPosts);
+    }
 
     // Persistent like state per (charId, postIdx)
     function getFeedLikes(charId) {
@@ -1669,38 +1783,26 @@ export function initUI() {
     }
 
     function openSocialFeed(id) {
+        _feedMode = id;
         galleryCharId = id;
-        $chatArena.hidden = true;
-        $feedArena.hidden = false;
-        renderSocialFeed(id);
-    }
-
-    async function renderSocialFeed(id) {
-        if (!$feedList) return;
+        if ($chatArena) $chatArena.hidden = true;
+        if ($feedArena) $feedArena.hidden = false;
         const char = state.loadedCharacters[id];
         const meta = state.characters.find(c => c.id === id);
-        const images = getAllGalleryImages(id);
-
-        // Update profile header
         const charName = char?.name || meta?.name || 'Unknown';
         const charTagline = meta?.tagline || char?.description?.slice(0, 60) || '';
         const rawAv = meta?.avatar_path || char?.avatar;
         const av = getAvatarUrlSync(id, rawAv) || rawAv;
 
-        const $name = qs('#feed-user-name');
+        // Update header
+        const $name    = qs('#feed-user-name');
         const $tagline = qs('#feed-char-tagline');
-        const $avEl = qs('#feed-char-avatar');
+        const $avEl    = qs('#feed-char-avatar');
         if ($name)    $name.textContent    = charName;
         if ($tagline) $tagline.textContent = charTagline;
         if ($avEl) {
-            if (av && !isEmoji(av)) {
-                $avEl.style.backgroundImage = `url(${av})`;
-                $avEl.textContent = '';
-            } else {
-                $avEl.style.backgroundImage = '';
-                $avEl.textContent = av || '👤';
-            }
-            // Async IDB patch
+            if (av && !isEmoji(av)) { $avEl.style.backgroundImage = `url(${av})`; $avEl.textContent = ''; }
+            else { $avEl.style.backgroundImage = ''; $avEl.textContent = av || '👤'; }
             if (rawAv?.startsWith('idb:')) {
                 getAvatarUrl(id, rawAv).then(url => {
                     if (url && $avEl) { $avEl.style.backgroundImage = `url(${url})`; $avEl.textContent = ''; }
@@ -1708,92 +1810,131 @@ export function initUI() {
             }
         }
 
+        // Highlight in sidebar
+        qsa('.social-char-item').forEach(el => el.classList.toggle('active', el.dataset.id === id));
+        qs('#social-hot-btn')?.classList.remove('active');
+
+        renderSocialFeed(id);
+        renderFeedSidebar(id);
+    }
+
+    // Render per-character or hot feed posts
+    async function renderSocialFeed(id) {
+        if (!$feedList) return;
+        const char = state.loadedCharacters[id];
+        const meta = state.characters.find(c => c.id === id);
+        const images = getAllGalleryImages(id);
+        const charName = char?.name || meta?.name || 'Unknown';
+        const rawAv = meta?.avatar_path || char?.avatar;
+        const av = getAvatarUrlSync(id, rawAv) || rawAv;
+
         if (!images.length) {
             $feedList.innerHTML = `
                 <div class="feed-empty">
                     <i data-lucide="image-off"></i>
-                    <h3>No Shards Yet</h3>
+                    <h3>No Posts Yet</h3>
                     <p>Add images via the gallery to populate ${esc(charName)}'s feed.</p>
+                    <button class="btn btn--accent btn--sm" id="feed-empty-add">Add Images</button>
                 </div>`;
+            qs('#feed-empty-add', $feedList)?.addEventListener('click', () => openGalleryModal(id));
             lucideRefresh($feedList);
             return;
         }
 
-        const likes = getFeedLikes(id);
-        // Stable per-post like counts (seeded by post index so they don't change on re-render)
-        const seedLike = (i) => 47 + ((id.charCodeAt(0) * 13 + i * 37) % 400);
+        const posts = images.map((src, i) => ({ charId: id, meta, char, src, postIdx: i }));
+        await _renderPostList(posts);
+    }
 
-        $feedList.innerHTML = images.map((src, i) => {
-            const comments = (state.socialData[id]?.[i] || []).filter(c => c.role !== undefined);
+    // Shared post renderer — works for single-char and hot feeds
+    async function _renderPostList(posts) {
+        if (!$feedList) return;
+        const CAPTIONS = [
+            'Signal caught. Feeling something tonight. 💠',
+            'Static and signal. #TheUnderdark',
+            'The city never sleeps. Neither do I.',
+            'Another day in the dark.',
+            'Running on fumes and spite. ✦',
+            'Fragment recovered.',
+            'Stay sharp. Stay alive.',
+            'Connection lost. Searching…',
+            'Found something worth keeping.',
+            'Between the static — clarity. ✦',
+        ];
+
+        const seedLike = (charId, i) => 47 + ((charId.charCodeAt(0) * 13 + i * 37) % 400);
+
+        $feedList.innerHTML = posts.map(({ charId, meta, char, src, postIdx: i }) => {
+            const charName = char?.name || meta?.name || 'Unknown';
+            const rawAv    = meta?.avatar_path || char?.avatar;
+            const av       = getAvatarUrlSync(charId, rawAv) || rawAv;
+            const likes    = getFeedLikes(charId);
             const isLiked  = !!likes[i];
-            const likeCount = seedLike(i) + (isLiked ? 1 : 0);
-            const CAPTIONS = [
-                'Signal caught. Feeling something tonight. 💠',
-                'Static and signal. #TheUnderdark',
-                'The city never sleeps. Neither do I.',
-                'Another day in the dark.',
-                'Running on fumes and spite. ✦',
-                'Fragment recovered.',
-                'Stay sharp. Stay alive.',
-            ];
-            const caption = CAPTIONS[i % CAPTIONS.length];
+            const likeCount = seedLike(charId, i) + (isLiked ? 1 : 0);
+            const caption  = CAPTIONS[(charId.charCodeAt(0) + i) % CAPTIONS.length];
+            const comments = (state.socialData[charId]?.[i] || []).filter(c => c.role !== undefined);
 
-            // Build media
             let mediaHtml;
             if (!src) {
                 mediaHtml = `<div class="feed-post__media-empty"><i data-lucide="image-off"></i></div>`;
             } else if (isEmoji(src)) {
                 mediaHtml = `<div class="feed-post__media-emoji">${src}</div>`;
             } else {
-                mediaHtml = `<img src="${esc(src)}" class="feed-post__media-img" loading="lazy" alt="Post ${i+1}">`;
+                mediaHtml = `<img src="${esc(src)}" class="feed-post__media-img" loading="lazy" alt="Post by ${esc(charName)}">`;
             }
 
-            // Build comments HTML
-            const visibleComments = comments.slice(-6); // show last 6
+            const avHtml = av && !isEmoji(av)
+                ? `style="background-image:url('${esc(av)}')"` : '';
+            const avContent = av && !isEmoji(av) ? '' : (av || '👤');
+
+            const visibleComments = comments.slice(-4);
             const hiddenCount = comments.length - visibleComments.length;
             const commentsHtml = `
-                ${hiddenCount > 0 ? `<button class="feed-comments__view-more" data-char-id="${esc(id)}" data-post-idx="${i}">View ${hiddenCount} earlier comment${hiddenCount !== 1 ? 's' : ''}…</button>` : ''}
+                ${hiddenCount > 0 ? `<button class="feed-comments__view-more" data-char-id="${esc(charId)}" data-post-idx="${i}">View ${hiddenCount} earlier…</button>` : ''}
                 ${visibleComments.map(c => {
-                    if (c.role === 'system') {
-                        return `<div class="feed-comment feed-comment--system"><span class="feed-comment__text">${esc(c.content)}</span></div>`;
-                    }
+                    if (c.role === 'system') return `<div class="feed-comment feed-comment--system"><span class="feed-comment__text">${esc(c.content)}</span></div>`;
                     const isBot  = c.role === 'bot';
                     const isUser = c.role === 'user';
-                    const name   = isUser ? (state.config.userName || 'You') : esc(charName);
-                    const avatarContent = isUser ? '👤' : (av && !isEmoji(av) ? '' : (av || '👤'));
-                    const avatarStyle   = (!isUser && av && !isEmoji(av)) ? `style="background-image:url(${esc(av)})"` : '';
+                    const cName   = isUser ? (state.config.userName || 'You') : esc(charName);
+                    const cAvAttr = isBot && av && !isEmoji(av) ? `style="background-image:url('${esc(av)}')"` : '';
+                    const cAvText = isUser ? '👤' : (av && !isEmoji(av) ? '' : (av || '👤'));
                     return `
                     <div class="feed-comment ${isBot ? 'feed-comment--bot' : 'feed-comment--user'}">
-                        <div class="feed-comment__avatar" ${avatarStyle}>${avatarContent}</div>
+                        <div class="feed-comment__avatar" ${cAvAttr}>${cAvText}</div>
                         <div class="feed-comment__body">
-                            <span class="feed-comment__author">${esc(name)}</span>
+                            <span class="feed-comment__author">${esc(cName)}</span>
                             <span class="feed-comment__text">${esc(c.content)}</span>
                         </div>
                     </div>`;
                 }).join('')}`;
 
             return `
-            <article class="feed-post" data-post-idx="${i}">
-                <div class="feed-post__media">
-                    ${mediaHtml}
-                    <span class="feed-post__index">${i + 1} / ${images.length}</span>
-                </div>
+            <article class="feed-post" data-post-idx="${i}" data-char-id="${esc(charId)}">
+                <header class="feed-post__header">
+                    <div class="feed-post__header-avatar" ${avHtml}>${avContent}</div>
+                    <div class="feed-post__header-info">
+                        <span class="feed-post__header-name">${esc(charName)}</span>
+                        <span class="feed-post__header-sub">Night City / The Underdark</span>
+                    </div>
+                    <button class="feed-post__header-dm btn-icon btn-icon--small" data-dm-char="${esc(charId)}" title="Open DM with ${esc(charName)}"><i data-lucide="message-circle"></i></button>
+                </header>
+                <div class="feed-post__media">${mediaHtml}</div>
                 <div class="feed-post__toolbar">
-                    <button class="feed-post__act-btn feed-post__act-btn--like ${isLiked ? 'liked' : ''}" data-like-char="${esc(id)}" data-like-idx="${i}" title="${isLiked ? 'Unlike' : 'Like'}">
-                        <i data-lucide="${isLiked ? 'heart' : 'heart'}"></i>
+                    <button class="feed-post__act-btn feed-post__act-btn--like ${isLiked ? 'liked' : ''}" data-like-char="${esc(charId)}" data-like-idx="${i}">
+                        <i data-lucide="heart"></i>
                     </button>
                     <span class="feed-post__act-count">${likeCount.toLocaleString()}</span>
+                    <button class="feed-post__act-btn" style="margin-left:4px"><i data-lucide="message-circle"></i></button>
                     <span class="feed-post__spacer"></span>
+                    <span class="feed-post__time">${relativeTime(comments.at(-1)?.timestamp || (Date.now() - 1000 * 60 * (60 + i * 47)))}</span>
                 </div>
                 <div class="feed-post__body">
-                    <div class="feed-post__caption"><strong>${esc(charName)}</strong>${esc(caption)}</div>
-                    ${comments.length > 0 ? `<div class="feed-comments" data-comments-for="${esc(id)}-${i}">${commentsHtml}</div>` : ''}
-                    <div class="feed-post__time">${relativeTime(comments[comments.length - 1]?.timestamp || (Date.now() - 1000 * 60 * (60 + i * 47))) || 'recently'}</div>
+                    <div class="feed-post__caption"><strong>${esc(charName)}</strong> ${esc(caption)}</div>
+                    ${comments.length > 0 ? `<div class="feed-comments" data-comments-for="${esc(charId)}-${i}">${commentsHtml}</div>` : `<div class="feed-comments" data-comments-for="${esc(charId)}-${i}"></div>`}
                 </div>
                 <div class="feed-post__comment-row">
                     <div class="feed-comment-user-avatar">👤</div>
-                    <input type="text" class="feed-post__comment-input" placeholder="Add a comment…" data-char-id="${esc(id)}" data-post-idx="${i}">
-                    <button class="feed-post__comment-submit" data-char-id="${esc(id)}" data-post-idx="${i}" disabled>Post</button>
+                    <input type="text" class="feed-post__comment-input" placeholder="Add a comment…" data-char-id="${esc(charId)}" data-post-idx="${i}">
+                    <button class="feed-post__comment-submit" data-char-id="${esc(charId)}" data-post-idx="${i}" disabled>Post</button>
                 </div>
             </article>`;
         }).join('');
@@ -1806,18 +1947,33 @@ export function initUI() {
                 const nowLiked = toggleFeedLike(cId, idx);
                 $btn.classList.toggle('liked', nowLiked);
                 const $cnt = $btn.nextElementSibling;
-                if ($cnt) {
-                    const base = seedLike(idx);
-                    $cnt.textContent = (base + (nowLiked ? 1 : 0)).toLocaleString();
+                if ($cnt) $cnt.textContent = (seedLike(cId, idx) + (nowLiked ? 1 : 0)).toLocaleString();
+            });
+        });
+
+        // Wire DM buttons
+        qsa('.feed-post__header-dm', $feedList).forEach($btn => {
+            $btn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const cId = $btn.dataset.dmChar;
+                await loadCharacterCard(cId).catch(() => {});
+                // Find or create DM
+                const existing = state.reality?.chats.find(c => c.type === 'dm' && c.botIds.length === 1 && c.botIds[0] === cId);
+                if (existing) {
+                    switchChat(existing.id);
+                } else {
+                    newChat('dm', [cId]);
                 }
+                // Switch to chats tab
+                switchSidebarTab('chats');
+                renderChats();
+                renderAll();
             });
         });
 
         // Wire comment inputs
         qsa('.feed-post__comment-input', $feedList).forEach($input => {
-            const charId  = $input.dataset.charId;
-            const postIdx = $input.dataset.postIdx;
-            const $btn = qs(`.feed-post__comment-submit[data-char-id="${charId}"][data-post-idx="${postIdx}"]`, $feedList);
+            const $btn = qs(`.feed-post__comment-submit[data-char-id="${$input.dataset.charId}"][data-post-idx="${$input.dataset.postIdx}"]`, $feedList);
             $input.oninput   = () => { if ($btn) $btn.disabled = !$input.value.trim(); };
             $input.onkeydown = e  => { if (e.key === 'Enter' && $btn && !$btn.disabled) $btn.click(); };
         });
@@ -1831,16 +1987,18 @@ export function initUI() {
                 if (!text) return;
                 $btn.disabled = true;
                 if ($input) $input.value = '';
-                // Show typing indicator
+                const cMeta = state.characters.find(c => c.id === charId);
+                const cChar = state.loadedCharacters[charId];
+                const cName = cChar?.name || cMeta?.name || 'Unknown';
+                const cRawAv = cMeta?.avatar_path || cChar?.avatar;
+                const cAv = getAvatarUrlSync(charId, cRawAv) || cRawAv;
                 const $commentsEl = qs(`[data-comments-for="${charId}-${postIdx}"]`, $feedList);
                 if ($commentsEl) {
                     $commentsEl.insertAdjacentHTML('beforeend', `
                         <div class="feed-comment feed-comment--typing" id="typing-${charId}-${postIdx}">
-                            <div class="feed-comment__avatar" style="${av && !isEmoji(av) ? `background-image:url(${esc(av || '')})` : ''}">
-                                ${av && !isEmoji(av) ? '' : (av || '👤')}
-                            </div>
+                            <div class="feed-comment__avatar" ${cAv && !isEmoji(cAv) ? `style="background-image:url('${esc(cAv)}')"` : ''}>${cAv && !isEmoji(cAv) ? '' : (cAv || '👤')}</div>
                             <div class="feed-comment__body">
-                                <span class="feed-comment__author">${esc(charName)}</span>
+                                <span class="feed-comment__author">${esc(cName)}</span>
                                 <span class="feed-comment__text">typing…</span>
                             </div>
                         </div>`);
@@ -1850,6 +2008,115 @@ export function initUI() {
         });
 
         lucideRefresh($feedList);
+    }
+
+    // Right sidebar: profile card + suggested
+    function renderFeedSidebar(charId) {
+        const $pc = qs('#feed-profile-card');
+        const $sg = qs('#feed-suggested');
+
+        if (!charId) {
+            // Hot feed — show all characters as suggested
+            if ($pc) $pc.innerHTML = `
+                <div class="feed-suggested__label">All Characters</div>
+                ${state.characters.map(c => {
+                    const rawAv = c.avatar_path || state.loadedCharacters[c.id]?.avatar;
+                    const av = getAvatarUrlSync(c.id, rawAv) || rawAv;
+                    const postCount = getAllGalleryImages(c.id).length;
+                    const avHtml = av && !isEmoji(av)
+                        ? `<div class="feed-suggested-item__avatar" style="background-image:url('${esc(av)}')"></div>`
+                        : `<div class="feed-suggested-item__avatar">${av || '👤'}</div>`;
+                    return `<div class="feed-suggested-item" data-id="${esc(c.id)}">
+                        ${avHtml}
+                        <div class="feed-suggested-item__info">
+                            <span class="feed-suggested-item__name">${esc(c.name)}</span>
+                            <span class="feed-suggested-item__sub">${postCount} post${postCount !== 1 ? 's' : ''}</span>
+                        </div>
+                    </div>`;
+                }).join('')}`;
+            if ($sg) $sg.innerHTML = '';
+            qsa('.feed-suggested-item', $pc).forEach(el => {
+                el.addEventListener('click', () => openSocialFeed(el.dataset.id));
+            });
+            return;
+        }
+
+        const meta = state.characters.find(c => c.id === charId);
+        const char = state.loadedCharacters[charId];
+        if (!meta && !char) { if ($pc) $pc.innerHTML = ''; return; }
+
+        const charName = char?.name || meta?.name || 'Unknown';
+        const rawAv = meta?.avatar_path || char?.avatar;
+        const av = getAvatarUrlSync(charId, rawAv) || rawAv;
+        const postCount = getAllGalleryImages(charId).length;
+        const likeCount = Object.values(getFeedLikes(charId)).filter(Boolean).length;
+        const bio = char?.description?.slice(0, 120) || meta?.tagline || '';
+
+        const avHtml = av && !isEmoji(av)
+            ? `<div class="feed-profile-card__avatar" style="background-image:url('${esc(av)}')"></div>`
+            : `<div class="feed-profile-card__avatar">${av || '👤'}</div>`;
+
+        if ($pc) $pc.innerHTML = `
+            <div class="feed-profile-card__header">
+                ${avHtml}
+                <div>
+                    <span class="feed-profile-card__name">${esc(charName)}</span>
+                    <span class="feed-profile-card__handle">@${esc(charName.toLowerCase().replace(/\s+/g, '_'))}</span>
+                </div>
+            </div>
+            <div class="feed-profile-card__stats">
+                <div class="feed-profile-stat">
+                    <span class="feed-profile-stat__val">${postCount}</span>
+                    <span class="feed-profile-stat__label">Posts</span>
+                </div>
+                <div class="feed-profile-stat">
+                    <span class="feed-profile-stat__val">${likeCount}</span>
+                    <span class="feed-profile-stat__label">Liked</span>
+                </div>
+                <div class="feed-profile-stat">
+                    <span class="feed-profile-stat__val">${state.reality?.chats.filter(c => c.botIds.includes(charId)).length || 0}</span>
+                    <span class="feed-profile-stat__label">Threads</span>
+                </div>
+            </div>
+            ${bio ? `<div class="feed-profile-card__bio">${esc(bio)}</div>` : ''}
+            <button class="btn btn--accent btn--sm feed-profile-card__chat-btn" data-dm="${esc(charId)}">
+                <i data-lucide="message-circle"></i> Open DM
+            </button>`;
+
+        qs('.feed-profile-card__chat-btn', $pc)?.addEventListener('click', async () => {
+            await loadCharacterCard(charId).catch(() => {});
+            const existing = state.reality?.chats.find(c => c.type === 'dm' && c.botIds.length === 1 && c.botIds[0] === charId);
+            if (existing) switchChat(existing.id); else newChat('dm', [charId]);
+            switchSidebarTab('chats');
+            renderChats();
+            renderAll();
+        });
+
+        // Suggested: other characters
+        const others = state.characters.filter(c => c.id !== charId).slice(0, 5);
+        if ($sg) $sg.innerHTML = others.length ? `
+            <div class="feed-suggested__label">More Characters</div>
+            ${others.map(c => {
+                const rAv = c.avatar_path || state.loadedCharacters[c.id]?.avatar;
+                const a = getAvatarUrlSync(c.id, rAv) || rAv;
+                const posts = getAllGalleryImages(c.id).length;
+                const aHtml = a && !isEmoji(a)
+                    ? `<div class="feed-suggested-item__avatar" style="background-image:url('${esc(a)}')"></div>`
+                    : `<div class="feed-suggested-item__avatar">${a || '👤'}</div>`;
+                return `<div class="feed-suggested-item" data-id="${esc(c.id)}">
+                    ${aHtml}
+                    <div class="feed-suggested-item__info">
+                        <span class="feed-suggested-item__name">${esc(c.name)}</span>
+                        <span class="feed-suggested-item__sub">${posts} post${posts !== 1 ? 's' : ''}</span>
+                    </div>
+                </div>`;
+            }).join('')}` : '';
+
+        qsa('.feed-suggested-item', $sg).forEach(el => {
+            el.addEventListener('click', () => openSocialFeed(el.dataset.id));
+        });
+
+        lucideRefresh($pc);
     }
 
     async function submitSocialComment(charId, postIdx, text) {
@@ -3056,9 +3323,10 @@ export function initUI() {
     });
 
     function renderAll() {
-        // Ensure arenas are in correct visibility state for main view
-        if ($chatArena) $chatArena.hidden = false;
-        if ($feedArena) $feedArena.hidden = true;
+        // Restore arena visibility based on active tab
+        const inSocial = _activeSidebarTab === 'social';
+        if ($chatArena) $chatArena.hidden = inSocial;
+        if ($feedArena) $feedArena.hidden = !inSocial;
 
         renderRealities();
         renderChats();
