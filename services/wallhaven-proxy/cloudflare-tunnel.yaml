@@ -1,0 +1,32 @@
+# ── Cloudflare Tunnel ingress rule ──────────────────────────────────────────
+#
+# Add this ingress block to your existing tunnel config
+# (usually at /etc/cloudflared/config.yml on your VPS),
+# OR paste it into the Cloudflare Zero Trust dashboard under
+#   Networks → Tunnels → <your tunnel> → Public Hostnames → Add a public hostname
+#
+# Dashboard fields:
+#   Subdomain : wallhaven
+#   Domain    : trap.lol
+#   Path      : (leave empty)
+#   Type      : HTTP
+#   URL       : localhost:8080
+#
+# ── config.yml snippet (if you manage tunnels via file) ─────────────────────
+
+ingress:
+  # Wallhaven CORS proxy
+  - hostname: wallhaven.trap.lol
+    service: http://localhost:8080
+    originRequest:
+      # The proxy is local so TLS is not needed on the origin leg
+      noTLSVerify: false
+      connectTimeout: 10s
+      tcpKeepAlive: 30s
+      keepAliveConnections: 20
+      keepAliveTimeout: 90s
+
+  # ... your other ingress rules ...
+
+  # Required catch-all
+  - service: http_status:404
