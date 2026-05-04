@@ -33,7 +33,7 @@ function debounce(fn, ms) {
     return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
 }
 
-function confirm(title, body) {
+function confirm(title, body, opts = {}) {
     return new Promise(res => {
         const modal = qs('#modal-confirm');
         if (!modal) {
@@ -52,8 +52,11 @@ function confirm(title, body) {
         const cancel = qs('#confirm-cancel', modal);
         const bd     = qs('.modal__backdrop', modal);
 
+        if (opts.danger) ok?.classList.add('btn--danger-confirm');
+
         const cleanup = (val) => {
             modal.hidden = true;
+            ok?.classList.remove('btn--danger-confirm');
             ok?.removeEventListener('click', onOk);
             cancel?.removeEventListener('click', onCancel);
             bd?.removeEventListener('click', onCancel);
@@ -387,11 +390,47 @@ export function initUI() {
     });
 
     qs('#reality-new')?.addEventListener('click', () => {
-        const name = prompt('New Reality name:', 'New Continuity');
-        if (!name?.trim()) return;
-        newReality(name.trim());
+        // Populate preset select (same source as reality editor)
+        const $sel = qs('#new-reality-preset');
+        if ($sel && _scenarioPresets.length) {
+            $sel.innerHTML = '<option value="blank">— Blank —</option>'
+                + _scenarioPresets.map(s => `<option value="${esc(s.id)}">${esc(s.name)}</option>`).join('');
+        }
+        qs('#new-reality-name').value = '';
+        showModal('modal-new-reality');
+        setTimeout(() => qs('#new-reality-name')?.focus(), 60);
+    });
+
+    qs('#new-reality-close')?.addEventListener('click', () => hideModal('modal-new-reality'));
+    qs('#new-reality-cancel')?.addEventListener('click', () => hideModal('modal-new-reality'));
+    qs('.modal__backdrop', qs('#modal-new-reality'))?.addEventListener('click', () => hideModal('modal-new-reality'));
+
+    qs('#new-reality-create')?.addEventListener('click', () => {
+        const name = qs('#new-reality-name')?.value.trim();
+        if (!name) {
+            qs('#new-reality-name')?.classList.add('shake');
+            setTimeout(() => qs('#new-reality-name')?.classList.remove('shake'), 500);
+            return;
+        }
+        const preset = qs('#new-reality-preset')?.value;
+        const scenario = preset && preset !== 'blank'
+            ? (_scenarioPresets.find(s => s.id === preset)?.scenario || '')
+            : '';
+        newReality(name);
+        if (scenario) {
+            const r = state.reality;
+            if (!r.worldConfig) r.worldConfig = { scenario: '', activeLorebooks: [] };
+            r.worldConfig.scenario = scenario;
+            saveState();
+        }
+        hideModal('modal-new-reality');
         renderRealities();
         renderAll();
+        showToast(`Continuity "${name}" created`, 'info', 2000);
+    });
+
+    qs('#new-reality-name')?.addEventListener('keydown', e => {
+        if (e.key === 'Enter') qs('#new-reality-create')?.click();
     });
 
     // ── Scenario preset loader ────────────────────────────────────────────────
@@ -589,7 +628,7 @@ export function initUI() {
                 e.preventDefault();
                 const chatId = el.dataset.id;
                 const chatName = allChats.find(c => c.id === chatId)?.name || 'this chat';
-                const ok = await confirm('Delete Chat', `Delete "${chatName}" and all its history? This cannot be undone.`);
+                const ok = await confirm('Delete Chat', `Delete "${chatName}" and all its history? This cannot be undone.`, { danger: true });
                 if (!ok) return;
                 deleteChat(chatId);
                 renderChats(qs('#chat-search-input')?.value || '');
@@ -1195,7 +1234,7 @@ export function initUI() {
             if (qs('#gallery-strip')) qs('#gallery-strip').hidden = true;
         };
         qs('#btn-delete-char').onclick = async () => {
-            const ok = await confirm('Delete Character', `Permanently delete ${char.name}? This cannot be undone.`);
+            const ok = await confirm('Delete Character', `Permanently delete ${char.name}? This cannot be undone.`, { danger: true });
             if (!ok) return;
             await deleteCharacter(id);
             delete _avatarCache[id];
@@ -3682,7 +3721,7 @@ export function initUI() {
 
     // ── Header Actions ────────────────────────────────────────────────────────
     qs('#clear-thread')?.addEventListener('click', async () => {
-        const ok = await confirm('Clear Thread', 'Clear all messages in this thread?');
+        const ok = await confirm('Clear Thread', 'Clear all messages in this thread?', { danger: true });
         if (!ok) return;
         clearHistory();
         clearGroupTimers();
@@ -4044,7 +4083,7 @@ export function initUI() {
 
     // ── Maintenance Purge ─────────────────────────────────────────────────────
     qs('#maintenance-purge')?.addEventListener('click', async () => {
-        const ok = await confirm('Purge & Re-align', 'This will clear all local characters, threads, and continuities, then reload the default manifest. API keys will be preserved. Proceed?');
+        const ok = await confirm('Purge & Re-align', 'This will clear all local characters, threads, and continuities, then reload the default manifest. API keys will be preserved. Proceed?', { danger: true });
         if (!ok) return;
         const apiKey = localStorage.getItem('nano_gpt_key'); // preserve key
         const theme  = localStorage.getItem('underdark_theme');
@@ -4056,7 +4095,7 @@ export function initUI() {
 
     // ── Danger Zone ───────────────────────────────────────────────────────────
     qs('#btn-clear-all-data')?.addEventListener('click', async () => {
-        const ok = await confirm('Wipe All Data', 'This will permanently delete all characters, sessions, history, and settings. Are you absolutely sure?');
+        const ok = await confirm('Wipe All Data', 'This will permanently delete all characters, sessions, history, and settings. Are you absolutely sure?', { danger: true });
         if (!ok) return;
         localStorage.clear();
         // Also wipe IndexedDB avatar store
@@ -4087,7 +4126,7 @@ export function initUI() {
         if (e.key === 'g' || e.key === 'G') { if (state.activeBotId) openGalleryModal(state.activeBotId); }
         if (e.key === 'f' || e.key === 'F') toggleFocusMode();
         if (e.key === 'o' || e.key === 'O') openOracle();
-        if (e.key === 'r' || e.key === 'R') qs('#reinject-toggle-btn')?.click();
+        if (e.key === 'i' || e.key === 'I') qs('#reinject-toggle-btn')?.click();
         if (e.key === '/' ) { e.preventDefault(); qs('#search-toggle')?.click(); }
     });
 
@@ -4237,6 +4276,10 @@ export function initUI() {
     };
 
     function openOracle() {
+        if (!state.activeBotIds.length) {
+            showToast('Add a character to the thread before using Oracle', 'warn', 2800);
+            return;
+        }
         // Populate character select
         const $sel = qs('#oracle-char-select');
         if ($sel) {

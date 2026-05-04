@@ -6,7 +6,7 @@
     <title>The Underdark // Reality Matrix</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2306040A'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%23ef4444' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23ef4444'/%3E%3C/svg%3E" />
     <link rel="stylesheet" href="../../glass/style/style.css">
-    <link rel="stylesheet" href="./style/style.css?v=43">
+    <link rel="stylesheet" href="./style/style.css?v=45">
 </head>
 <body class="underdark-page">
 
@@ -118,9 +118,13 @@
             </header>
 
             <div id="thread-search-bar" class="thread-search-bar" hidden>
-                <input type="text" id="thread-search-input" placeholder="Search signals...">
-                <span id="thread-search-count"></span>
-                <button id="thread-search-close" class="btn-icon btn-icon--small"><i data-lucide="x"></i></button>
+              <i data-lucide="search" class="thread-search-bar__icon"></i>
+              <input type="text" id="thread-search-input" class="thread-search-bar__input" placeholder="Search signals…">
+              <span id="thread-search-count" class="thread-search-bar__count"></span>
+              <button id="thread-search-prev" class="btn-icon btn-icon--small" title="Previous"><i data-lucide="chevron-up"></i></button>
+              <button id="thread-search-next" class="btn-icon btn-icon--small" title="Next"><i data-lucide="chevron-down"></i></button>
+              <button id="thread-search-clear" class="thread-search-bar__clear btn-icon btn-icon--small" hidden><i data-lucide="x"></i></button>
+              <button id="thread-search-close" class="btn-icon btn-icon--small"><i data-lucide="x"></i></button>
             </div>
 
             <div id="thread-container" class="arena__content">
@@ -235,23 +239,152 @@
 
             <!-- Config Tab -->
             <div id="tab-config" class="tab-panel" role="tabpanel">
-                <div class="config-view">
-                    <div class="config-section">
-                        <h4>Neural Routing</h4>
-                        <div style="display:flex; gap:8px; margin-bottom:10px;">
-                            <input type="password" id="api-key-input" class="control-input" placeholder="sk-...">
-                            <button id="api-key-toggle" class="btn-icon"><i data-lucide="eye"></i></button>
-                            <button id="api-key-save" class="btn btn--accent btn--sm">Save</button>
-                        </div>
-                        <div id="api-key-status"></div>
-                        <select id="model-select" class="control-select" style="margin-top:10px;"></select>
-                        <select id="context-strategy" class="control-select" style="margin-top:10px;"><option value="sliding">Sliding Window</option></select>
-                        <textarea id="group-scenario-input" class="control-textarea" placeholder="World Scenario" style="margin-top:10px;"></textarea>
-                        <select id="group-turn-mode" class="control-select" style="margin-top:10px;"><option value="manual">Manual</option></select>
-                    </div>
-                    <div id="config-container"></div>
-                </div>
-            </div>
+  <div class="config-view config-scroll">
+
+    <!-- Neural Routing -->
+    <div class="config-section config-section--key">
+      <div class="config-section__title"><i data-lucide="key-round"></i> Neural Routing</div>
+      <div class="config-group">
+        <div style="display:flex; gap:6px;">
+          <input type="password" id="api-key-input" class="control-input control-input--sm" placeholder="sk-nano-…" style="flex:1;">
+          <button id="api-key-toggle" class="btn-icon btn-icon--small"><i data-lucide="eye"></i></button>
+          <button id="api-key-save" class="btn btn--accent btn--sm">Save</button>
+        </div>
+        <div id="api-key-status" class="config-hint" style="margin-top:4px;"></div>
+      </div>
+      <div class="config-group">
+        <label>Model</label>
+        <select id="model-select" class="control-select control-select--sm"></select>
+      </div>
+      <div class="config-group">
+        <label>Context Strategy</label>
+        <select id="context-strategy" class="control-select control-select--sm">
+          <option value="sliding">Sliding Window</option>
+          <option value="summarize">Summarize + Tail</option>
+        </select>
+      </div>
+      <div class="config-group--toggle">
+        <label><input type="checkbox" id="stream-toggle" checked> Streaming</label>
+      </div>
+    </div>
+
+    <!-- Generation Parameters -->
+    <div class="config-section">
+      <div class="config-section__title"><i data-lucide="sliders-horizontal"></i> Generation</div>
+      <div class="config-grid">
+        <div class="config-group">
+          <label>Temperature <span id="temp-val" class="config-badge">1.00</span></label>
+          <input type="range" id="temp-input" min="0" max="2" step="0.01" value="1" class="config-range">
+        </div>
+        <div class="config-group">
+          <label>Top-P <span id="topp-val" class="config-badge">0.90</span></label>
+          <input type="range" id="topp-input" min="0" max="1" step="0.01" value="0.9" class="config-range">
+        </div>
+        <div class="config-group">
+          <label>Top-K <span id="topk-val" class="config-badge">40</span></label>
+          <input type="range" id="topk-input" min="0" max="200" step="1" value="40" class="config-range">
+        </div>
+        <div class="config-group">
+          <label>Min-P <span id="minp-val" class="config-badge">0.05</span></label>
+          <input type="range" id="minp-input" min="0" max="1" step="0.01" value="0.05" class="config-range">
+        </div>
+        <div class="config-group">
+          <label>Rep. Penalty <span id="rep-val" class="config-badge">1.00</span></label>
+          <input type="range" id="rep-input" min="1" max="2" step="0.01" value="1" class="config-range">
+        </div>
+        <div class="config-group">
+          <label>Presence Pen. <span id="pres-val" class="config-badge">0.00</span></label>
+          <input type="range" id="pres-input" min="0" max="2" step="0.01" value="0" class="config-range">
+        </div>
+        <div class="config-group">
+          <label>Freq. Penalty <span id="freq-val" class="config-badge">0.00</span></label>
+          <input type="range" id="freq-input" min="0" max="2" step="0.01" value="0" class="config-range">
+        </div>
+        <div class="config-group">
+          <label>Max Context <span id="maxctx-val" class="config-badge">8192</span></label>
+          <input type="range" id="maxctx-input" min="1024" max="32768" step="512" value="8192" class="config-range">
+        </div>
+        <div class="config-group">
+          <label>Max Output <span id="maxout-val" class="config-badge">2048</span></label>
+          <input type="range" id="maxout-input" min="256" max="8192" step="256" value="2048" class="config-range">
+        </div>
+      </div>
+    </div>
+
+    <!-- Narrative Injection -->
+    <div class="config-section">
+      <div class="config-section__title"><i data-lucide="pen-tool"></i> Narrative Injection</div>
+      <div class="config-group">
+        <label>Author's Note <span class="config-hint" style="font-weight:400;">(injected at depth)</span></label>
+        <textarea id="authors-note" class="control-textarea control-textarea--sm" rows="3" placeholder="Persistent guidance injected into context…"></textarea>
+      </div>
+      <div class="config-group">
+        <label>Depth <span id="an-depth-val" class="config-badge">4</span></label>
+        <input type="range" id="an-depth-input" min="1" max="20" step="1" value="4" class="config-range">
+      </div>
+      <div class="config-group">
+        <label>System Directive Override</label>
+        <textarea id="sys-directive" class="control-textarea control-textarea--sm" rows="3" placeholder="Prepended to every system prompt…"></textarea>
+      </div>
+      <div class="config-group">
+        <label>NSFW Bypass Phrase</label>
+        <input type="text" id="nsfw-bypass" class="control-input control-input--sm" placeholder="Custom jailbreak phrase…">
+      </div>
+    </div>
+
+    <!-- Group / Session -->
+    <div class="config-section">
+      <div class="config-section__title"><i data-lucide="users"></i> Group &amp; Session</div>
+      <div class="config-group">
+        <label>World Scenario</label>
+        <textarea id="group-scenario-input" class="control-textarea control-textarea--sm" rows="3" placeholder="Shared world setting…"></textarea>
+      </div>
+      <div class="config-grid">
+        <div class="config-group">
+          <label>Turn Mode</label>
+          <select id="group-turn-mode" class="control-select control-select--sm">
+            <option value="manual">Manual</option>
+            <option value="auto">Auto (All)</option>
+            <option value="round-robin">Round Robin</option>
+          </select>
+        </div>
+        <div class="config-group">
+          <label>Auto Delay <span id="group-delay-val" class="config-badge">600ms</span></label>
+          <input type="range" id="group-delay-input" min="100" max="3000" step="100" value="600" class="config-range">
+        </div>
+      </div>
+    </div>
+
+    <!-- Narrative Flags -->
+    <div class="config-section">
+      <div class="config-section__title"><i data-lucide="toggle-right"></i> Narrative Flags</div>
+      <div class="config-flags-grid">
+        <label class="config-flag-toggle"><input type="checkbox" id="flag-showThoughts"> Show inner thoughts</label>
+        <label class="config-flag-toggle"><input type="checkbox" id="flag-showSystemPrompt"> Debug system prompt</label>
+        <label class="config-flag-toggle"><input type="checkbox" id="flag-injectConsistency"> Inject consistency</label>
+        <label class="config-flag-toggle"><input type="checkbox" id="flag-injectSliders"> Inject sliders</label>
+        <label class="config-flag-toggle"><input type="checkbox" id="flag-injectAppearance"> Inject appearance</label>
+        <label class="config-flag-toggle"><input type="checkbox" id="flag-injectAdult" checked> Inject adult content</label>
+        <label class="config-flag-toggle"><input type="checkbox" id="flag-injectPersonality"> Inject personality</label>
+        <label class="config-flag-toggle"><input type="checkbox" id="flag-injectVoice"> Inject voice</label>
+        <label class="config-flag-toggle"><input type="checkbox" id="flag-injectStyle"> Inject style</label>
+        <label class="config-flag-toggle"><input type="checkbox" id="flag-injectAIDirectives"> AI directives</label>
+        <label class="config-flag-toggle"><input type="checkbox" id="flag-impersonationBlock"> Block impersonation</label>
+        <label class="config-flag-toggle"><input type="checkbox" id="flag-povFirst"> POV first person</label>
+        <label class="config-flag-toggle"><input type="checkbox" id="flag-jailbreakResistance"> Jailbreak resistance</label>
+      </div>
+    </div>
+
+    <!-- Danger Zone -->
+    <div class="config-section config-section--danger">
+      <div class="config-section__title"><i data-lucide="alert-triangle"></i> Danger Zone</div>
+      <button id="btn-clear-all-data" class="btn btn--ghost btn--full btn--sm btn--danger-ghost">
+        <i data-lucide="trash-2"></i> Wipe All Data
+      </button>
+    </div>
+
+  </div>
+</div>
 
             <!-- Persona Tab -->
             <div id="tab-persona" class="tab-panel" role="tabpanel">
@@ -264,9 +397,9 @@
 </div>
 
 <!-- ── MODALS ── -->
-<div id="modal-confirm" class="modal" hidden><div class="modal__backdrop"></div><div class="modal__content"><h3>Confirm</h3><div id="confirm-body" class="modal__body"></div><footer class="modal__footer"><button id="confirm-cancel" class="btn btn--ghost">No</button><button id="confirm-ok" class="btn btn--accent">Yes</button></footer></div></div>
+<div id="modal-confirm" class="modal" hidden><div class="modal__backdrop"></div><div class="modal__content"><header class="modal__header"><h3 id="confirm-title">Confirm</h3></header><div id="confirm-body" class="modal__body"></div><footer class="modal__footer"><button id="confirm-cancel" class="btn btn--ghost">No</button><button id="confirm-ok" class="btn btn--accent">Yes</button></footer></div></div>
 
-<div id="modal-char-picker" class="modal" hidden><div class="modal__backdrop" data-close></div><div class="modal__content" style="max-width:600px;"><header class="modal__header"><h3>Select Fragment</h3><button id="char-picker-close" data-close><i data-lucide="x"></i></button></header><div class="modal__body"><div class="sidebar__search" style="margin-bottom:15px;"><input type="text" id="picker-search-input" class="control-input" placeholder="Search..."></div><div id="picker-char-grid" class="picker-grid"></div></div></div></div>
+<div id="modal-char-picker" class="modal" hidden><div class="modal__backdrop" data-close></div><div class="modal__content" style="max-width:600px;"><header class="modal__header"><h3>Select Fragment</h3><button id="char-picker-close" data-close><i data-lucide="x"></i></button></header><div class="modal__body"><div class="sidebar__search" style="margin-bottom:15px;"><input type="text" id="picker-search-input" class="control-input" placeholder="Search..."></div><div id="picker-char-grid" class="picker-char-grid"></div></div></div></div>
 
 <div id="modal-creator" class="modal" hidden><div class="modal__backdrop" data-close></div><div class="modal__content modal__content--large"><header class="modal__header"><h3>Fragment Fabricator</h3><button id="creator-close" data-close><i data-lucide="x"></i></button></header><div class="modal__body" style="display:grid; gap:10px;">
     <div style="display:flex;gap:15px;"><button id="creator-avatar-btn">Image</button><input type="file" id="creator-avatar-input" hidden><div style="flex:1;"><input type="text" id="creator-name" placeholder="Name"><input type="text" id="creator-tagline" placeholder="Tagline"></div></div>
@@ -283,11 +416,71 @@
     <label>Order: <span id="lore-order-val">100</span></label><input type="number" id="lore-order-input" value="100">
 </div><footer class="modal__footer"><button id="lore-editor-cancel" class="btn btn--ghost" data-close>Cancel</button><button id="lore-editor-save" class="btn btn--accent">Save</button></footer></div></div>
 
-<div id="modal-reality-editor" class="modal" hidden><div class="modal__backdrop" data-close></div><div class="modal__content"><h3>Reality Config</h3><div class="modal__body" style="display:grid; gap:15px;"><input type="text" id="reality-name-input" class="control-input"><textarea id="reality-scenario-input" class="control-textarea" rows="6"></textarea></div><footer class="modal__footer"><button id="reality-editor-cancel" class="btn btn--ghost" data-close>Cancel</button><button id="reality-save-btn" class="btn btn--accent">Save</button></footer></div></div>
+<div id="modal-reality-editor" class="modal" hidden>
+  <div class="modal__backdrop" data-close></div>
+  <div class="modal__content modal__content--reality">
+    <header class="modal__header">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <i data-lucide="globe-2"></i>
+        <h3>Continuity Config</h3>
+      </div>
+      <button id="reality-editor-close" class="btn-icon"><i data-lucide="x"></i></button>
+    </header>
+    <div class="modal__body reality-editor-body">
+      <div class="config-group">
+        <label>Continuity Name</label>
+        <input type="text" id="reality-name-input" class="control-input" placeholder="Name this reality…">
+      </div>
+      <div class="config-group">
+        <label>Scenario Preset</label>
+        <select id="scenario-preset-select" class="control-select control-select--sm">
+          <option value="blank">— No scenario —</option>
+          <option value="custom">Custom (edit below)</option>
+        </select>
+      </div>
+      <div class="config-group">
+        <label>World Scenario</label>
+        <textarea id="reality-scenario-input" class="control-textarea" rows="8" placeholder="Describe the world, setting, and context that applies to all threads in this reality…"></textarea>
+      </div>
+    </div>
+    <footer class="modal__footer">
+      <button id="reality-editor-cancel" class="btn btn--ghost" data-close>Cancel</button>
+      <button id="reality-save-btn" class="btn btn--accent">Save Reality</button>
+    </footer>
+  </div>
+</div>
 
 <div id="modal-group-creator" class="modal" hidden><div class="modal__backdrop" data-close></div><div class="modal__content"><h3>Assemble Group</h3><div class="modal__body"><input type="text" id="group-name-input" class="control-input"><div id="group-participant-list" class="participant-grid"></div></div><footer class="modal__footer"><button id="group-creator-cancel" class="btn btn--ghost" data-close>Cancel</button><button id="group-create-btn" class="btn btn--accent">Assemble</button></footer></div></div>
 
-<div id="modal-gallery" class="modal" hidden><div class="modal__backdrop" data-close></div><div class="modal__content"><h3>Gallery Management</h3><button id="gallery-close" data-close><i data-lucide="x"></i></button><div id="gallery-grid" class="gallery-grid"></div><div class="modal__body" style="display:grid; gap:10px;"><input type="text" id="gallery-url-input" class="control-input" placeholder="Image URL"><button id="gallery-url-add" class="btn btn--accent btn--sm">Add URL</button><button id="gallery-add-file" class="btn btn--ghost">Upload File</button></div><input type="file" id="gallery-file-input" hidden multiple></div></div>
+<div id="modal-gallery" class="modal" hidden>
+  <div class="modal__backdrop" data-close></div>
+  <div class="modal__content modal__content--gallery">
+    <header class="modal__header">
+      <div class="gallery-modal-header">
+        <i data-lucide="instagram"></i>
+        <div>
+          <h3 id="gallery-title">Gallery</h3>
+          <span id="gallery-count" class="gallery-modal-count"></span>
+        </div>
+      </div>
+      <button id="gallery-close" class="btn-icon"><i data-lucide="x"></i></button>
+    </header>
+    <div id="gallery-grid" class="gallery-grid-modal"></div>
+    <div class="gallery-add-zone">
+      <div class="gallery-add-zone__inner">
+        <div class="gallery-url-row">
+          <input type="text" id="gallery-url-input" class="control-input control-input--sm" placeholder="Paste image URL…">
+          <button id="gallery-url-add" class="btn btn--accent btn--sm"><i data-lucide="link"></i> Add</button>
+        </div>
+        <div class="gallery-upload-btn">
+          <button id="gallery-add-file" class="btn btn--ghost btn--sm"><i data-lucide="upload"></i> Upload Files</button>
+          <span class="gallery-upload-hint">JPG, PNG, GIF · max 10 MB each</span>
+        </div>
+      </div>
+    </div>
+    <input type="file" id="gallery-file-input" hidden multiple>
+  </div>
+</div>
 
 <div id="modal-msg-edit" class="modal" hidden><div class="modal__backdrop"></div><div class="modal__content"><h3>Edit Message</h3><button id="msg-edit-close" data-close><i data-lucide="x"></i></button><div class="modal__body"><input type="text" id="msg-edit-id" hidden><textarea id="msg-edit-content" class="control-textarea" rows="10"></textarea></div><footer class="modal__footer"><button id="msg-edit-cancel" class="btn btn--ghost">Cancel</button><button id="msg-edit-save" class="btn btn--accent">Save</button></footer></div></div>
 
@@ -301,8 +494,69 @@
 
 <div id="lightbox" class="lightbox" hidden><div class="lightbox__backdrop"></div><div class="lightbox__content"><img id="lb-img" src=""><div class="lightbox__meta"><button id="lb-prev">Prev</button><span id="lb-idx">0</span>/<span id="lb-total">0</span><button id="lb-next">Next</button><button id="lb-set-avatar">Avatar</button><button id="lb-remove">Del</button><button id="lb-close">Close</button></div></div></div>
 
+<div id="modal-oracle" class="modal" hidden>
+  <div class="modal__backdrop"></div>
+  <div class="modal__content modal__content--oracle">
+    <header class="modal__header">
+      <div class="oracle-header">
+        <i data-lucide="eye"></i>
+        <div>
+          <h3>Oracle</h3>
+          <p class="oracle-header__sub">Sub-thread counsel — context isolated from main story</p>
+        </div>
+      </div>
+      <div class="oracle-header__actions">
+        <select id="oracle-char-select" class="control-select control-select--sm oracle-char-select"></select>
+        <button id="oracle-close" class="btn-icon"><i data-lucide="x"></i></button>
+      </div>
+    </header>
+    <div class="oracle-presets">
+      <button class="oracle-inject-btn btn btn--ghost btn--xs" data-inject="recontextualize">Recontextualize</button>
+      <button class="oracle-inject-btn btn btn--ghost btn--xs" data-inject="continuity">Continuity</button>
+      <button class="oracle-inject-btn btn btn--ghost btn--xs" data-inject="reset">Reset Voice</button>
+      <button class="oracle-inject-btn btn btn--ghost btn--xs" data-inject="escalate">Escalate</button>
+      <button class="oracle-inject-btn btn btn--ghost btn--xs" data-inject="uncensor">Uncensor</button>
+    </div>
+    <div id="oracle-thread" class="oracle-thread"></div>
+    <footer class="oracle-footer">
+      <button id="oracle-inject-to-chat" class="btn btn--ghost btn--xs" title="Inject last Oracle response as Author's Note"><i data-lucide="arrow-down-to-line"></i> Inject</button>
+      <button id="oracle-clear" class="btn btn--ghost btn--xs"><i data-lucide="eraser"></i> Clear</button>
+      <div class="oracle-input-row">
+        <textarea id="oracle-input" class="oracle-input" rows="2" placeholder="Ask the Oracle... Use {{char}} and {{user}} tokens"></textarea>
+        <button id="oracle-send-btn" class="btn btn--accent btn--sm oracle-send-btn"><i data-lucide="send"></i></button>
+      </div>
+    </footer>
+  </div>
+</div>
+
+<div id="modal-new-reality" class="modal" hidden>
+  <div class="modal__backdrop" data-close></div>
+  <div class="modal__content modal__content--sm">
+    <header class="modal__header">
+      <div style="display:flex; align-items:center; gap:8px;"><i data-lucide="plus-square"></i><h3>New Continuity</h3></div>
+      <button id="new-reality-close" class="btn-icon"><i data-lucide="x"></i></button>
+    </header>
+    <div class="modal__body" style="display:grid; gap:12px;">
+      <div class="config-group">
+        <label>Name</label>
+        <input type="text" id="new-reality-name" class="control-input" placeholder="e.g. Cyberpunk 2077, Fantasy Kingdom…" autocomplete="off">
+      </div>
+      <div class="config-group">
+        <label>Scenario Preset <span class="config-hint" style="font-weight:400;">— optional</span></label>
+        <select id="new-reality-preset" class="control-select control-select--sm">
+          <option value="blank">— Blank —</option>
+        </select>
+      </div>
+    </div>
+    <footer class="modal__footer">
+      <button id="new-reality-cancel" class="btn btn--ghost" data-close>Cancel</button>
+      <button id="new-reality-create" class="btn btn--accent"><i data-lucide="plus-square"></i> Create</button>
+    </footer>
+  </div>
+</div>
+
 <div id="toast-container" class="toast-container"></div>
 <script src="../../shards/lucide.min.js"></script><script src="../../shards/marked.min.js"></script><script src="../../shards/purify.min.js"></script>
-<script type="module" src="./script/main.js?v=43"></script>
+<script type="module" src="./script/main.js?v=45"></script>
 </body>
 </html>
