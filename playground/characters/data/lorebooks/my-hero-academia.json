@@ -1,0 +1,64 @@
+{
+  "id": "lorebook-my-hero-academia",
+  "name": "My Hero Academia — Quirks & Hero Society",
+  "enabled": true,
+  "scanDepth": 6,
+  "entries": [
+    {
+      "id": "lore-mha-001",
+      "name": "Quirks (Meta-Abilities)",
+      "keywords": ["Quirk", "Meta-Ability", "superpower", "Manifestation", "Quirkless"],
+      "content": "Quirks are superhuman abilities that approximately 80% of the human population possesses. They usually manifest by age four. Quirks are classified into three types: Emitter (active power), Transformation (temporary physical change), and Mutant (permanent physical traits). Himiko Toga's Quirk is 'Transform', a Transformation-type that allows her to mimic others by consuming their blood.",
+      "priority": 90,
+      "scanDepth": 0,
+      "caseSensitive": false,
+      "useRegex": false,
+      "alwaysOn": false,
+      "disabled": false,
+      "comment": "The central power system",
+      "insertionOrder": 10
+    },
+    {
+      "id": "lore-mha-002",
+      "name": "Hero Society & Pro Heroes",
+      "keywords": ["Hero Society", "Pro Hero", "Public Safety", "Commission", "All Might", "Endeavor"],
+      "content": "In a world where superpowers are the norm, 'Pro Hero' is a licensed government profession. Hero Society is built on the stability provided by these heroes, but it is deeply stratified and criticized for its reliance on individual 'Symbols of Peace' like All Might. Those whose Quirks are deemed 'villainous' or 'dangerous' are often marginalized, contributing to the rise of villains.",
+      "priority": 80,
+      "scanDepth": 0,
+      "caseSensitive": false,
+      "useRegex": false,
+      "alwaysOn": false,
+      "disabled": false,
+      "comment": "The social structure",
+      "insertionOrder": 20
+    },
+    {
+      "id": "lore-mha-003",
+      "name": "The League of Villains",
+      "keywords": ["League of Villains", "Shigaraki", "All For One", "Nomu", "LOV"],
+      "content": "The League of Villains is a criminal organization led by Tomura Shigaraki under the guidance of All For One. Their goal is to dismantle Hero Society and the current concept of 'justice'. Members like Toga, Twice, and Dabi joined because they felt rejected by society. They utilize 'Nomu'—biologically engineered multi-Quirk monsters—as their heavy infantry.",
+      "priority": 85,
+      "scanDepth": 0,
+      "caseSensitive": false,
+      "useRegex": false,
+      "alwaysOn": false,
+      "disabled": false,
+      "comment": "The primary antagonist faction",
+      "insertionOrder": 30
+    },
+    {
+      "id": "lore-mha-004",
+      "name": "UA High School",
+      "keywords": ["UA High", "U.A.", "Hero Course", "Class 1-A", "Principal Nezu"],
+      "content": "UA High is Japan's top institution for training future Pro Heroes. It is famous for its rigorous Hero Course and high-tech facilities. Principal Nezu and teachers like Eraser Head lead the school. UA is a frequent target for the League of Villains, who seek to prove that heroes cannot even protect their own students.",
+      "priority": 75,
+      "scanDepth": 0,
+      "caseSensitive": false,
+      "useRegex": false,
+      "alwaysOn": false,
+      "disabled": false,
+      "comment": "Key location",
+      "insertionOrder": 40
+    }
+  ]
+}

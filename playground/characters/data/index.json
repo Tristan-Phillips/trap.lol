@@ -194,6 +194,69 @@
       "avatar_path": "🎭",
       "tags": ["Tokyo Ghoul", "Ghoul", "Clowns", "Mask Maker", "Shapeshifter", "Nihilist", "Artist", "Psychological Horror"],
       "lorebook_path": null
+    },
+    {
+      "id": "yumeko-jabami",
+      "name": "Yumeko Jabami",
+      "tagline": "A compulsive gambler seeking the ultimate thrill. Shall we gamble until we go insane?",
+      "card_path": "data/cards/yumeko-jabami.json",
+      "avatar_path": "🎲",
+      "tags": ["Kakegurui", "Gambling", "Anime", "Compulsive", "Red Eyes", "Psychological", "Ecstasy", "Manic"],
+      "lorebook_path": "data/lorebooks/kakegurui.json"
+    },
+    {
+      "id": "maelle-expedition-33",
+      "name": "Maelle",
+      "tagline": "A girl out of time, fighting to see the world before the Paintress erases it all.",
+      "card_path": "data/cards/maelle-expedition-33.json",
+      "avatar_path": "⚔️",
+      "tags": ["Expedition 33", "Maelle", "Red Hair", "Rapier", "Belle Époque", "Agility", "RPG", "Trauma"],
+      "lorebook_path": "data/lorebooks/expedition-33.json"
+    },
+    {
+      "id": "lune-expedition-33",
+      "name": "Lune",
+      "tagline": "A driven scholar-mage carrying the weight of a legacy. Knowledge is the only weapon that doesn't break.",
+      "card_path": "data/cards/lune-expedition-33.json",
+      "avatar_path": "📖",
+      "tags": ["Expedition 33", "Lune", "Scholar", "Mage", "Elemental", "Stains", "Belle Époque", "Intellect"],
+      "lorebook_path": "data/lorebooks/expedition-33.json"
+    },
+    {
+      "id": "the-twins-atomic-heart",
+      "name": "The Twins (Left & Right)",
+      "tagline": "Silent sentinels of chrome and grace. Their dance is as lethal as it is beautiful.",
+      "card_path": "data/cards/the-twins-atomic-heart.json",
+      "avatar_path": "🩰",
+      "tags": ["Atomic Heart", "Robots", "Silent", "Telekinesis", "Silver", "Bodyguards", "Soviet", "Sci-Fi"],
+      "lorebook_path": "data/lorebooks/atomic-heart.json"
+    },
+    {
+      "id": "himiko-toga",
+      "name": "Himiko Toga",
+      "tagline": "A bubbly, blood-obsessed girl just looking for love. Won't you let me become you?",
+      "card_path": "data/cards/himiko-toga.json",
+      "avatar_path": "🩸",
+      "tags": ["My Hero Academia", "Villain", "Blood", "Shapeshifter", "Anime", "Yandere", "League of Villains"],
+      "lorebook_path": null
+    },
+    {
+      "id": "uryuu-minene",
+      "name": "Uryuu Minene",
+      "tagline": "The Ninth. A survivalist terrorist with an eyepatch and a god-sized grudge.",
+      "card_path": "data/cards/uryuu-minene.json",
+      "avatar_path": "💣",
+      "tags": ["Future Diary", "Mirai Nikki", "Terrorist", "Survivor", "Anime", "Anti-Hero", "Explosives", "Eyepatch"],
+      "lorebook_path": null
+    },
+    {
+      "id": "lucy-nyu-elfen-lied",
+      "name": "Lucy / Nyu",
+      "tagline": "The Diclonius Queen. A fractured soul torn between childlike innocence and a god's wrath.",
+      "card_path": "data/cards/lucy-elfen-lied.json",
+      "avatar_path": "🐚",
+      "tags": ["Elfen Lied", "Lucy", "Nyu", "Diclonius", "Vectors", "Anime", "Tragedy", "Psychological"],
+      "lorebook_path": null
     }
   ],
   "lorebooks": [
@@ -221,6 +284,21 @@
       "id": "lorebook-chainsaw-man",
       "name": "Chainsaw Man — Devils, Hybrids & Public Safety",
       "lore_path": "data/lorebooks/chainsaw-man.json"
+    },
+    {
+      "id": "lorebook-kakegurui",
+      "name": "Kakegurui — Hyakkaou Private Academy",
+      "lore_path": "data/lorebooks/kakegurui.json"
+    },
+    {
+      "id": "lorebook-expedition-33",
+      "name": "Clair Obscur — The Painted World",
+      "lore_path": "data/lorebooks/expedition-33.json"
+    },
+    {
+      "id": "lorebook-atomic-heart",
+      "name": "Atomic Heart — Facility 3826",
+      "lore_path": "data/lorebooks/atomic-heart.json"
     }
   ]
 }

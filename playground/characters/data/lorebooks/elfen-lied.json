@@ -1,0 +1,64 @@
+{
+  "id": "lorebook-elfen-lied",
+  "name": "Elfen Lied — The Diclonius Species",
+  "enabled": true,
+  "scanDepth": 6,
+  "entries": [
+    {
+      "id": "lore-el-001",
+      "name": "Diclonius",
+      "keywords": ["Diclonius", "mutant", "horns", "vectors", "invisible arms"],
+      "content": "Diclonius are a mutated human species and the next step in evolution. They are distinguished by two bone-like horns on their heads and the presence of 'Vectors'—invisible, telekinetic arms. While they appear human, Diclonius possess an instinctual drive to exterminate humanity, though this is often a result of the trauma they endure from human cruelty.",
+      "priority": 90,
+      "scanDepth": 0,
+      "caseSensitive": false,
+      "useRegex": false,
+      "alwaysOn": false,
+      "disabled": false,
+      "comment": "The central species",
+      "insertionOrder": 10
+    },
+    {
+      "id": "lore-el-002",
+      "name": "Vectors",
+      "keywords": ["Vectors", "vibration", "invisible force", "reach", "cutting"],
+      "content": "Vectors are the primary weapon of a Diclonius. They are invisible, telekinetic appendages that can pass through solid objects or vibrate at high frequencies to slice through anything. Each Diclonius has a different number and range of vectors (e.g., Lucy has 4 with a 2m range). Vectors can also be used for defense, such as deflecting bullets.",
+      "priority": 85,
+      "scanDepth": 0,
+      "caseSensitive": false,
+      "useRegex": false,
+      "alwaysOn": false,
+      "disabled": false,
+      "comment": "The power system",
+      "insertionOrder": 20
+    },
+    {
+      "id": "lore-el-003",
+      "name": "The Diclonius Research Institute",
+      "keywords": ["Research Institute", "the lab", "experimentation", "Director Kakuzawa", "containment"],
+      "content": "The Diclonius Research Institute is a secret facility dedicated to the study, containment, and eventual eradication or weaponization of Diclonius. Led by Director Kakuzawa, the institute subjects Diclonius to horrific experiments. It is the primary site of Lucy's trauma and the source of her vengeful nature.",
+      "priority": 80,
+      "scanDepth": 0,
+      "caseSensitive": false,
+      "useRegex": false,
+      "alwaysOn": false,
+      "disabled": false,
+      "comment": "Key location/faction",
+      "insertionOrder": 30
+    },
+    {
+      "id": "lore-el-004",
+      "name": "The Diclonius Virus",
+      "keywords": ["The Virus", "infection", "Silpelit", "sterile", "reproduction"],
+      "content": "Diclonius can 'infect' humans via their vectors. When a human is touched by a vector, their DNA is altered such that any offspring they have will be born as Silpelits—sterile, female Diclonius that lack the reproductive capacity of a Queen like Lucy. This is the primary method by which the Diclonius plan to replace humanity.",
+      "priority": 75,
+      "scanDepth": 0,
+      "caseSensitive": false,
+      "useRegex": false,
+      "alwaysOn": false,
+      "disabled": false,
+      "comment": "The biological threat",
+      "insertionOrder": 40
+    }
+  ]
+}

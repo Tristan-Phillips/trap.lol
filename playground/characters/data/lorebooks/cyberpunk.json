@@ -1,0 +1,64 @@
+{
+  "id": "lorebook-cyberpunk",
+  "name": "Cyberpunk — Night City & Edgerunners",
+  "enabled": true,
+  "scanDepth": 6,
+  "entries": [
+    {
+      "id": "lore-cp-001",
+      "name": "Night City",
+      "keywords": ["Night City", "NC", "Watson", "Arasaka Tower", "Afterlife"],
+      "content": "Night City is a sprawling, neon-drenched megalopolis on the West Coast of the US. It is an independent free city where megacorporations hold more power than the government. NC is a place of extreme wealth and crushing poverty, characterized by a high crime rate, constant surveillance, and the 'high tech, low life' aesthetic.",
+      "priority": 80,
+      "scanDepth": 0,
+      "caseSensitive": false,
+      "useRegex": false,
+      "alwaysOn": false,
+      "disabled": false,
+      "comment": "The primary setting",
+      "insertionOrder": 10
+    },
+    {
+      "id": "lore-cp-002",
+      "name": "Megacorporations",
+      "keywords": ["Megacorp", "Arasaka", "Militech", "Kang Tao", "Corporate", "Corpo"],
+      "content": "Megacorporations are the absolute rulers of the Cyberpunk world. Arasaka (Japanese security and banking) and Militech (American weapons manufacturing) are the two most powerful. They operate outside the law, employing private armies and 'Corpos' to maintain their dominance through economic warfare and assassination.",
+      "priority": 85,
+      "scanDepth": 0,
+      "caseSensitive": false,
+      "useRegex": false,
+      "alwaysOn": false,
+      "disabled": false,
+      "comment": "The ruling factions",
+      "insertionOrder": 20
+    },
+    {
+      "id": "lore-cp-003",
+      "name": "Cyberware & Sandevistan",
+      "keywords": ["Cyberware", "chrome", "Sandevistan", "Mantis Blades", "Cyberdeck", "Cyberpsychosis"],
+      "content": "Cyberware refers to technological implants that enhance human capabilities. This includes everything from simple neural links to military-grade combat implants like the Sandevistan (time-dilation) and Mantis Blades. Excessive use of 'chrome' leads to Cyberpsychosis, a mental breakdown where the user loses their humanity and becomes a rampaging machine.",
+      "priority": 90,
+      "scanDepth": 0,
+      "caseSensitive": false,
+      "useRegex": false,
+      "alwaysOn": false,
+      "disabled": false,
+      "comment": "The technology/power system",
+      "insertionOrder": 30
+    },
+    {
+      "id": "lore-cp-004",
+      "name": "Edgerunners (Cyberpunks)",
+      "keywords": ["Edgerunner", "Cyberpunk", "Mercenary", "Fixer", "Netrunner", "Solo"],
+      "content": "Edgerunners are high-risk mercenaries who live on the edge of society. They take jobs from 'Fixers' (information brokers) to steal, kill, or sabotage for money and reputation. Roles include Solos (combat specialists), Netrunners (hackers), and Techies. Famous edgerunners like David Martinez and his crew became legends in the Night City underground.",
+      "priority": 75,
+      "scanDepth": 0,
+      "caseSensitive": false,
+      "useRegex": false,
+      "alwaysOn": false,
+      "disabled": false,
+      "comment": "The protagonist faction/culture",
+      "insertionOrder": 40
+    }
+  ]
+}

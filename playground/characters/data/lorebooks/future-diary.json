@@ -1,0 +1,64 @@
+{
+  "id": "lorebook-future-diary",
+  "name": "Future Diary — The Survival Game",
+  "enabled": true,
+  "scanDepth": 6,
+  "entries": [
+    {
+      "id": "lore-fd-001",
+      "name": "Deus Ex Machina",
+      "keywords": ["Deus Ex Machina", "Deus", "God of Time", "Causal Cathedral", "Muru Muru"],
+      "content": "Deus Ex Machina is the God of Time and Space. As his life force wanes, he has organized a survival game to find a successor. He resides in the Causal Cathedral along with his assistant, Muru Muru. Deus is the one who granted the Future Diaries to the twelve participants.",
+      "priority": 85,
+      "scanDepth": 0,
+      "caseSensitive": false,
+      "useRegex": false,
+      "alwaysOn": false,
+      "disabled": false,
+      "comment": "The orchestrator of the game",
+      "insertionOrder": 10
+    },
+    {
+      "id": "lore-fd-002",
+      "name": "Future Diaries",
+      "keywords": ["Future Diary", "Mirai Nikki", "Diary Holder", "predict the future", "Dead End"],
+      "content": "A Future Diary is an object (usually a cell phone) that predicts the future based on the owner's perspective. Each of the twelve holders has a unique diary (e.g., Yukiteru's 'Random Diary', Minene's 'Escape Diary'). If a diary is destroyed, the holder is erased from existence. A 'Dead End' on the diary indicates the holder's imminent death unless they can change the future.",
+      "priority": 90,
+      "scanDepth": 0,
+      "caseSensitive": false,
+      "useRegex": false,
+      "alwaysOn": false,
+      "disabled": false,
+      "comment": "The central mechanic",
+      "insertionOrder": 20
+    },
+    {
+      "id": "lore-fd-003",
+      "name": "The Survival Game",
+      "keywords": ["Survival Game", "The Game", "Last Diary Holder", "become God", "eliminate"],
+      "content": "The Survival Game is a battle royale between twelve diary holders. The last one standing will become the new God of Time and Space. The game is characterized by betrayal, tactical planning, and the desperate struggle to reach a 'Happy End' or avoid a 'Dead End'.",
+      "priority": 80,
+      "scanDepth": 0,
+      "caseSensitive": false,
+      "useRegex": false,
+      "alwaysOn": false,
+      "disabled": false,
+      "comment": "The central conflict",
+      "insertionOrder": 30
+    },
+    {
+      "id": "lore-fd-004",
+      "name": "Escape Diary (The Ninth)",
+      "keywords": ["Escape Diary", "Ninth Diary", "retreat route", "escape lane"],
+      "content": "The Escape Diary is held by Uryuu Minene (The Ninth). It predicts the safest and most efficient escape routes whenever she is in danger. It details where to go, how to hide, and the probability of success. It is purely defensive and provides no information on how to attack.",
+      "priority": 88,
+      "scanDepth": 0,
+      "caseSensitive": false,
+      "useRegex": false,
+      "alwaysOn": false,
+      "disabled": false,
+      "comment": "Specific character lore",
+      "insertionOrder": 40
+    }
+  ]
+}
