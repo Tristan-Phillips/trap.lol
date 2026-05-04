@@ -107,6 +107,7 @@
                 <button id="add-char-btn" class="btn-icon" title="Add fragment"><i data-lucide="user-plus"></i></button>
                 <div class="arena__actions">
                     <button id="chat-bg-btn" class="btn-icon" title="Chat background"><i data-lucide="palette"></i></button>
+                    <button id="wh-open-btn" class="btn-icon" title="Wallhaven Gallery"><i data-lucide="image-plus"></i></button>
                     <button id="focus-mode-btn" class="btn-icon" title="Immersive Mode"><i data-lucide="book-open"></i></button>
                     <button id="oracle-btn" class="btn-icon" title="Oracle"><i data-lucide="eye"></i></button>
                     <button id="search-toggle" class="btn-icon" title="Search history"><i data-lucide="search"></i></button>
@@ -1125,11 +1126,20 @@
     <!-- ── Left filter sidebar ── -->
     <aside class="wh-sidebar">
 
-      <!-- View tabs: Browse / Liked -->
+      <!-- View tabs -->
       <div class="wh-view-tabs">
         <button class="wh-view-tab active" data-wview="browse"><i data-lucide="grid-2x2"></i> Browse</button>
         <button class="wh-view-tab" data-wview="liked"><i data-lucide="heart"></i> Liked <span id="wh-liked-count" class="wh-liked-badge">0</span></button>
         <button class="wh-view-tab" data-wview="saved"><i data-lucide="bookmark"></i> Saved <span id="wh-saved-count" class="wh-saved-badge">0</span></button>
+        <button class="wh-view-tab" data-wview="assigned"><i data-lucide="user-check"></i> Assigned <span id="wh-assigned-count" class="wh-saved-badge">0</span></button>
+      </div>
+
+      <!-- Character filter (shown in assigned view) -->
+      <div id="wh-char-filter-wrap" class="wh-char-filter-wrap" hidden>
+        <div class="wh-sidebar-section__label" style="padding:8px 10px 4px;">Filter by Character</div>
+        <select id="wh-char-filter" class="wh-char-filter-select">
+          <option value="">All Characters</option>
+        </select>
       </div>
 
       <!-- Filters (only shown in browse view) -->
@@ -1231,6 +1241,11 @@
           <p class="wh-empty-msg">No saved images yet.</p>
           <p class="wh-empty-hint">Click the bookmark on any wallpaper to save it here.</p>
         </div>
+        <div class="wh-empty-state" id="wh-assigned-empty" hidden>
+          <div class="wh-empty-icon"><i data-lucide="user-check"></i></div>
+          <p class="wh-empty-msg">No images assigned to characters yet.</p>
+          <p class="wh-empty-hint">Open any image and use <strong>Assign to Character</strong> to link it to a character's gallery and social feed.</p>
+        </div>
         <div class="wh-spinner" id="wh-spinner" hidden>
           <div class="wh-spinner__ring"></div>
           <span>Scanning the archive…</span>
@@ -1256,8 +1271,9 @@
 
     <!-- top-right corner controls -->
     <div class="wh-lb-corner">
-      <button id="wh-lb-like" class="wh-lb-corner-btn" title="Like"><i data-lucide="heart"></i></button>
-      <button id="wh-lb-save" class="wh-lb-corner-btn" title="Save"><i data-lucide="bookmark"></i></button>
+      <button id="wh-lb-like" class="wh-lb-corner-btn" title="Like (L)"><i data-lucide="heart"></i></button>
+      <button id="wh-lb-save" class="wh-lb-corner-btn" title="Save (S)"><i data-lucide="bookmark"></i></button>
+      <button id="wh-lb-download" class="wh-lb-corner-btn" title="Download (D)"><i data-lucide="download"></i></button>
       <button id="wh-lb-close" class="wh-lb-corner-btn" title="Close (Esc)"><i data-lucide="x"></i></button>
     </div>
 
@@ -1272,8 +1288,14 @@
       </div>
       <div class="wh-lightbox__actions">
         <button id="wh-lb-set-bg" class="wh-lb-action-btn" title="Set as arena background"><i data-lucide="image"></i> Set BG</button>
-        <button id="wh-lb-add-gallery" class="wh-lb-action-btn wh-lb-action-btn--accent" title="Add to character gallery"><i data-lucide="plus"></i> Add to Gallery</button>
-        <a id="wh-lb-open" href="#" target="_blank" rel="noopener" class="wh-lb-action-btn"><i data-lucide="external-link"></i> Wallhaven</a>
+        <!-- Assign to character -->
+        <div class="wh-lb-assign-wrap">
+          <select id="wh-lb-assign-select" class="wh-lb-assign-select" title="Pick character to assign">
+            <option value="">Assign to…</option>
+          </select>
+          <button id="wh-lb-assign-btn" class="wh-lb-action-btn wh-lb-action-btn--accent" title="Assign to selected character"><i data-lucide="user-check"></i> Assign</button>
+        </div>
+        <a id="wh-lb-open" href="#" target="_blank" rel="noopener" class="wh-lb-action-btn"><i data-lucide="external-link"></i> Source</a>
       </div>
     </div>
 
@@ -1293,290 +1315,378 @@
 (function () {
 'use strict';
 
-// ── STATE ──────────────────────────────────────────────────────────────────
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// STATE
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 const WH = {
-  apiKey:    localStorage.getItem('wh_apikey') || '',
-  query:     '',
-  cats:      { general: true, anime: true, people: true },
-  purity:    { sfw: true, sketchy: false, nsfw: false },
-  sort:      'toplist',
-  topRange:  '1M',
-  layout:    'grid',
-  page:      1,
-  totalPages:1,
-  total:     0,
-  results:   [],
-  liked:     loadSet('wh_liked'),
-  saved:     loadSet('wh_saved'),
-  likedData: loadMap('wh_liked_data'),
-  savedData: loadMap('wh_saved_data'),
-  lbIndex:   0,
-  lbSet:     'browse',
-  loading:   false,
-  charName:  '',
-  seed:      null,
-  view:      'browse',
+  apiKey:       localStorage.getItem('wh_apikey') || '',
+  query:        '',
+  cats:         { general:true, anime:true, people:true },
+  purity:       { sfw:true, sketchy:false, nsfw:false },
+  sort:         'toplist',
+  topRange:     '1M',
+  layout:       'grid',
+  page:         1,
+  totalPages:   1,
+  total:        0,
+  results:      [],
+  liked:        loadSet('wh_liked'),
+  saved:        loadSet('wh_saved'),
+  likedData:    loadMap('wh_liked_data'),
+  savedData:    loadMap('wh_saved_data'),
+  // assigned: { [wallId]: [charId, charId, …] }
+  assigned:     loadMapArr('wh_assigned'),
+  // assignedData: { [wallId]: wallpaper object }
+  assignedData: loadMap('wh_assigned_data'),
+  lbIndex:      0,
+  lbSet:        'browse',
+  loading:      false,
+  charName:     '',
+  charId:       null,   // id of char that opened the gallery (for default assign)
+  seed:         null,
+  view:         'browse',
+  assignedCharFilter: '',  // charId or ''
 };
 
-function loadSet(key) {
-  try { return new Set(JSON.parse(localStorage.getItem(key) || '[]')); } catch { return new Set(); }
-}
-function saveSet(key, set) { localStorage.setItem(key, JSON.stringify([...set])); }
-function loadMap(key) {
-  try { return new Map(Object.entries(JSON.parse(localStorage.getItem(key) || '{}'))) ; } catch { return new Map(); }
-}
-function saveMap(key, map) {
-  const obj = {};
-  map.forEach((v, k) => { obj[k] = v; });
-  localStorage.setItem(key, JSON.stringify(obj));
-}
+function loadSet(k){ try{return new Set(JSON.parse(localStorage.getItem(k)||'[]'));}catch{return new Set();} }
+function saveSet(k,s){ localStorage.setItem(k,JSON.stringify([...s])); }
+function loadMap(k){ try{return new Map(Object.entries(JSON.parse(localStorage.getItem(k)||'{}')));}catch{return new Map();} }
+function saveMap(k,m){ const o={}; m.forEach((v,kk)=>{o[kk]=v;}); localStorage.setItem(k,JSON.stringify(o)); }
+function loadMapArr(k){ try{ const raw=JSON.parse(localStorage.getItem(k)||'{}'); return new Map(Object.entries(raw)); }catch{return new Map();} }
+function saveMapArr(k,m){ const o={}; m.forEach((v,kk)=>{o[kk]=v;}); localStorage.setItem(k,JSON.stringify(o)); }
 
-// ── DOM ────────────────────────────────────────────────────────────────────
-const arena       = document.getElementById('wh-arena');
-const backBtn     = document.getElementById('wh-back-btn');
-const charLabel   = document.getElementById('wh-char-label');
-const searchInput = document.getElementById('wh-search-input');
-const searchClear = document.getElementById('wh-search-clear');
-const searchBtn   = document.getElementById('wh-search-btn');
-const apikeyInput = document.getElementById('wh-apikey-input');
-const apikeyToggle= document.getElementById('wh-apikey-toggle');
-const apikeySave  = document.getElementById('wh-apikey-save');
-const keyStatus   = document.getElementById('wh-key-status');
-const statusText  = document.getElementById('wh-status-text');
-const resultCount = document.getElementById('wh-result-count');
-const pageControls= document.getElementById('wh-page-controls');
-const pageNum     = document.getElementById('wh-page-num');
-const pageTotal   = document.getElementById('wh-page-total');
-const prevBtn     = document.getElementById('wh-prev-btn');
-const nextBtn     = document.getElementById('wh-next-btn');
-const grid        = document.getElementById('wh-grid');
-const emptyBrowse = document.getElementById('wh-empty');
-const likedEmpty  = document.getElementById('wh-liked-empty');
-const savedEmpty  = document.getElementById('wh-saved-empty');
-const spinner     = document.getElementById('wh-spinner');
-const errorBox    = document.getElementById('wh-error');
-const errorMsg    = document.getElementById('wh-error-msg');
-const retryBtn    = document.getElementById('wh-retry-btn');
-const likedCount  = document.getElementById('wh-liked-count');
-const savedCount  = document.getElementById('wh-saved-count');
-const filtersPanel= document.getElementById('wh-filters-panel');
-const topRangeGrp = document.getElementById('wh-toprange-group');
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// DOM REFS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const arena          = document.getElementById('wh-arena');
+const backBtn        = document.getElementById('wh-back-btn');
+const charLabel      = document.getElementById('wh-char-label');
+const searchInput    = document.getElementById('wh-search-input');
+const searchClear    = document.getElementById('wh-search-clear');
+const searchBtn      = document.getElementById('wh-search-btn');
+const apikeyInput    = document.getElementById('wh-apikey-input');
+const apikeyToggle   = document.getElementById('wh-apikey-toggle');
+const apikeySave     = document.getElementById('wh-apikey-save');
+const keyStatus      = document.getElementById('wh-key-status');
+const statusText     = document.getElementById('wh-status-text');
+const resultCount    = document.getElementById('wh-result-count');
+const pageControls   = document.getElementById('wh-page-controls');
+const pageNum        = document.getElementById('wh-page-num');
+const pageTotal      = document.getElementById('wh-page-total');
+const prevBtn        = document.getElementById('wh-prev-btn');
+const nextBtn        = document.getElementById('wh-next-btn');
+const grid           = document.getElementById('wh-grid');
+const emptyBrowse    = document.getElementById('wh-empty');
+const likedEmpty     = document.getElementById('wh-liked-empty');
+const savedEmpty     = document.getElementById('wh-saved-empty');
+const assignedEmpty  = document.getElementById('wh-assigned-empty');
+const spinner        = document.getElementById('wh-spinner');
+const errorBox       = document.getElementById('wh-error');
+const errorMsg       = document.getElementById('wh-error-msg');
+const retryBtn       = document.getElementById('wh-retry-btn');
+const likedCount     = document.getElementById('wh-liked-count');
+const savedCount     = document.getElementById('wh-saved-count');
+const assignedCount  = document.getElementById('wh-assigned-count');
+const filtersPanel   = document.getElementById('wh-filters-panel');
+const topRangeGrp    = document.getElementById('wh-toprange-group');
+const charFilterWrap = document.getElementById('wh-char-filter-wrap');
+const charFilterSel  = document.getElementById('wh-char-filter');
 
-const lb          = document.getElementById('wh-lightbox');
-const lbBackdrop  = document.getElementById('wh-lb-backdrop');
-const lbImg       = document.getElementById('wh-lb-img');
-const lbRes       = document.getElementById('wh-lb-res');
-const lbPurityEl  = document.getElementById('wh-lb-purity');
-const lbCat       = document.getElementById('wh-lb-cat');
-const lbViews     = document.getElementById('wh-lb-views').querySelector('span');
-const lbFaves     = document.getElementById('wh-lb-faves').querySelector('span');
-const lbSetBg     = document.getElementById('wh-lb-set-bg');
-const lbAddGallery= document.getElementById('wh-lb-add-gallery');
-const lbOpen      = document.getElementById('wh-lb-open');
-const lbPrev      = document.getElementById('wh-lb-prev');
-const lbNext      = document.getElementById('wh-lb-next');
-const lbLike      = document.getElementById('wh-lb-like');
-const lbSave      = document.getElementById('wh-lb-save');
-const lbClose     = document.getElementById('wh-lb-close');
-const lbCounter   = document.getElementById('wh-lb-counter');
+// Lightbox
+const lb             = document.getElementById('wh-lightbox');
+const lbBackdrop     = document.getElementById('wh-lb-backdrop');
+const lbImg          = document.getElementById('wh-lb-img');
+const lbRes          = document.getElementById('wh-lb-res');
+const lbPurityEl     = document.getElementById('wh-lb-purity');
+const lbCat          = document.getElementById('wh-lb-cat');
+const lbViews        = document.getElementById('wh-lb-views').querySelector('span');
+const lbFaves        = document.getElementById('wh-lb-faves').querySelector('span');
+const lbSetBg        = document.getElementById('wh-lb-set-bg');
+const lbOpen         = document.getElementById('wh-lb-open');
+const lbPrev         = document.getElementById('wh-lb-prev');
+const lbNext         = document.getElementById('wh-lb-next');
+const lbLike         = document.getElementById('wh-lb-like');
+const lbSave         = document.getElementById('wh-lb-save');
+const lbDownload     = document.getElementById('wh-lb-download');
+const lbClose        = document.getElementById('wh-lb-close');
+const lbCounter      = document.getElementById('wh-lb-counter');
+const lbAssignSel    = document.getElementById('wh-lb-assign-select');
+const lbAssignBtn    = document.getElementById('wh-lb-assign-btn');
 
-// ── HELPERS ────────────────────────────────────────────────────────────────
+// Header button (new, in arena header)
+const whOpenBtn      = document.getElementById('wh-open-btn');
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// HELPERS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 function buildCats()   { return `${WH.cats.general?1:0}${WH.cats.anime?1:0}${WH.cats.people?1:0}`; }
 function buildPurity() { return `${WH.purity.sfw?1:0}${WH.purity.sketchy?1:0}${WH.purity.nsfw?1:0}`; }
 function purityLabel(p){ return {sfw:'SFW',sketchy:'Sketchy',nsfw:'NSFW'}[p]||p; }
-function fmtNum(n) {
-  if (n>=1e6) return (n/1e6).toFixed(1)+'M';
-  if (n>=1e3) return (n/1e3).toFixed(1)+'k';
-  return String(n);
-}
-function setLoading(on) {
-  WH.loading = on; spinner.hidden = !on; searchBtn.disabled = on;
-  if (on) { emptyBrowse.hidden=true; likedEmpty.hidden=true; savedEmpty.hidden=true; errorBox.hidden=true; }
-}
-function showError(msg) { errorBox.hidden=false; errorMsg.textContent=msg; spinner.hidden=true; }
-function updateBadges() {
-  likedCount.textContent = WH.liked.size;
-  savedCount.textContent = WH.saved.size;
-  likedCount.classList.toggle('wh-liked-badge--active', WH.liked.size>0);
-  savedCount.classList.toggle('wh-saved-badge--active', WH.saved.size>0);
-}
-function hideAllStates() { emptyBrowse.hidden=true; likedEmpty.hidden=true; savedEmpty.hidden=true; errorBox.hidden=true; spinner.hidden=true; }
+function fmtNum(n){ if(n>=1e6)return(n/1e6).toFixed(1)+'M'; if(n>=1e3)return(n/1e3).toFixed(1)+'k'; return String(n); }
 
-// ── API KEY ────────────────────────────────────────────────────────────────
+function setLoading(on){
+  WH.loading=on; spinner.hidden=!on; searchBtn.disabled=on;
+  if(on){ emptyBrowse.hidden=true;likedEmpty.hidden=true;savedEmpty.hidden=true;assignedEmpty.hidden=true;errorBox.hidden=true; }
+}
+function hideAllStates(){ emptyBrowse.hidden=true;likedEmpty.hidden=true;savedEmpty.hidden=true;assignedEmpty.hidden=true;errorBox.hidden=true;spinner.hidden=true; }
+function showError(msg){ errorBox.hidden=false;errorMsg.textContent=msg;spinner.hidden=true; }
+
+function updateBadges(){
+  likedCount.textContent    = WH.liked.size;
+  savedCount.textContent    = WH.saved.size;
+  assignedCount.textContent = WH.assignedData.size;
+  likedCount.classList.toggle('wh-liked-badge--active',    WH.liked.size>0);
+  savedCount.classList.toggle('wh-saved-badge--active',    WH.saved.size>0);
+  assignedCount.classList.toggle('wh-saved-badge--active', WH.assignedData.size>0);
+}
+
+// Returns all characters from main app (reads localStorage key used by the RP app)
+function getAllChars(){
+  try {
+    // The main app stores characters under 'characters' as an array of objects with .id and .name
+    const raw = localStorage.getItem('characters');
+    if (!raw) return [];
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr : [];
+  } catch { return []; }
+}
+
+function getCharName(id){
+  const chars = getAllChars();
+  const c = chars.find(c=>String(c.id)===String(id));
+  return c ? (c.name||'Unknown') : 'Unknown';
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// POPULATE CHARACTER SELECTS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function populateCharSelects(){
+  const chars = getAllChars();
+
+  // Lightbox assign select
+  lbAssignSel.innerHTML = '<option value="">Assign to character…</option>';
+  chars.forEach(c=>{
+    const opt=document.createElement('option');
+    opt.value=String(c.id);
+    opt.textContent=c.name||'Unnamed';
+    lbAssignSel.appendChild(opt);
+  });
+  // Pre-select current char if set
+  if(WH.charId) lbAssignSel.value=String(WH.charId);
+
+  // Sidebar char filter (assigned view)
+  charFilterSel.innerHTML='<option value="">All Characters</option>';
+  chars.forEach(c=>{
+    const opt=document.createElement('option');
+    opt.value=String(c.id);
+    opt.textContent=c.name||'Unnamed';
+    charFilterSel.appendChild(opt);
+  });
+  if(WH.assignedCharFilter) charFilterSel.value=WH.assignedCharFilter;
+}
+
+charFilterSel.addEventListener('change',()=>{
+  WH.assignedCharFilter=charFilterSel.value;
+  if(WH.view==='assigned') renderCurrentView();
+});
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// API KEY
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 apikeyInput.value = WH.apiKey;
-if (WH.apiKey) { keyStatus.textContent='Connected'; keyStatus.className='wh-key-status wh-key-status--ok'; }
+if(WH.apiKey){ keyStatus.textContent='Connected'; keyStatus.className='wh-key-status wh-key-status--ok'; }
 
-apikeyToggle.addEventListener('click', () => {
-  const show = apikeyInput.type === 'password';
-  apikeyInput.type = show ? 'text' : 'password';
-  apikeyToggle.innerHTML = show ? '<i data-lucide="eye-off"></i>' : '<i data-lucide="eye"></i>';
-  lucide.createIcons({ nodes: [apikeyToggle] });
+apikeyToggle.addEventListener('click',()=>{
+  const show=apikeyInput.type==='password';
+  apikeyInput.type=show?'text':'password';
+  apikeyToggle.innerHTML=show?'<i data-lucide="eye-off"></i>':'<i data-lucide="eye"></i>';
+  lucide.createIcons({nodes:[apikeyToggle]});
 });
-apikeySave.addEventListener('click', () => {
-  WH.apiKey = apikeyInput.value.trim();
-  localStorage.setItem('wh_apikey', WH.apiKey);
-  keyStatus.textContent = WH.apiKey ? 'Connected' : 'Cleared';
-  keyStatus.className = 'wh-key-status' + (WH.apiKey ? ' wh-key-status--ok' : '');
-});
-
-// ── FILTER CHIPS ───────────────────────────────────────────────────────────
-document.querySelectorAll('#wh-cats .wh-chip').forEach(btn => {
-  btn.addEventListener('click', () => {
-    WH.cats[btn.dataset.cat] = !WH.cats[btn.dataset.cat];
-    btn.classList.toggle('active', WH.cats[btn.dataset.cat]);
-  });
-});
-document.querySelectorAll('#wh-purities .wh-chip').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const p = btn.dataset.purity;
-    if (p !== 'sfw' && !WH.apiKey) { showToast('API key required for '+purityLabel(p)+' content.','warn'); return; }
-    WH.purity[p] = !WH.purity[p];
-    btn.classList.toggle('active', WH.purity[p]);
-  });
-});
-document.querySelectorAll('#wh-sorts .wh-chip').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('#wh-sorts .wh-chip').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    WH.sort = btn.dataset.sort;
-    topRangeGrp.style.display = WH.sort==='toplist' ? '' : 'none';
-  });
-});
-document.querySelectorAll('#wh-ranges .wh-chip').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('#wh-ranges .wh-chip').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    WH.topRange = btn.dataset.range;
-  });
-});
-document.querySelectorAll('#wh-layouts .wh-chip').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('#wh-layouts .wh-chip').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    WH.layout = btn.dataset.layout;
-    grid.className = `wh-grid wh-grid--${WH.layout}`;
-  });
+apikeySave.addEventListener('click',()=>{
+  WH.apiKey=apikeyInput.value.trim();
+  localStorage.setItem('wh_apikey',WH.apiKey);
+  keyStatus.textContent=WH.apiKey?'Connected':'Cleared';
+  keyStatus.className='wh-key-status'+(WH.apiKey?' wh-key-status--ok':'');
 });
 
-// ── VIEW TABS ──────────────────────────────────────────────────────────────
-document.querySelectorAll('.wh-view-tab').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.wh-view-tab').forEach(b => b.classList.remove('active'));
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// FILTER CHIPS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+document.querySelectorAll('#wh-cats .wh-chip').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    WH.cats[btn.dataset.cat]=!WH.cats[btn.dataset.cat];
+    btn.classList.toggle('active',WH.cats[btn.dataset.cat]);
+  });
+});
+document.querySelectorAll('#wh-purities .wh-chip').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const p=btn.dataset.purity;
+    if(p!=='sfw'&&!WH.apiKey){showToast('API key required for '+purityLabel(p)+' content.','warn');return;}
+    WH.purity[p]=!WH.purity[p];
+    btn.classList.toggle('active',WH.purity[p]);
+  });
+});
+document.querySelectorAll('#wh-sorts .wh-chip').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('#wh-sorts .wh-chip').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active'); WH.sort=btn.dataset.sort;
+    topRangeGrp.style.display=WH.sort==='toplist'?'':'none';
+  });
+});
+document.querySelectorAll('#wh-ranges .wh-chip').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('#wh-ranges .wh-chip').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active'); WH.topRange=btn.dataset.range;
+  });
+});
+document.querySelectorAll('#wh-layouts .wh-chip').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('#wh-layouts .wh-chip').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active'); WH.layout=btn.dataset.layout;
+    grid.className=`wh-grid wh-grid--${WH.layout}`;
+  });
+});
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// VIEW TABS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+document.querySelectorAll('.wh-view-tab').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.wh-view-tab').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
-    WH.view = btn.dataset.wview;
-    filtersPanel.style.display = WH.view==='browse' ? '' : 'none';
-    pageControls.hidden = WH.view!=='browse';
+    WH.view=btn.dataset.wview;
+    const isBrowse=WH.view==='browse';
+    const isAssigned=WH.view==='assigned';
+    filtersPanel.style.display=isBrowse?'':'none';
+    charFilterWrap.hidden=!isAssigned;
+    pageControls.hidden=!isBrowse;
+    if(isAssigned) populateCharSelects();
     renderCurrentView();
   });
 });
 
-function renderCurrentView() {
-  hideAllStates();
-  grid.innerHTML = '';
-  if (WH.view === 'liked') {
-    const items = [...WH.likedData.values()];
-    if (!items.length) { likedEmpty.hidden=false; return; }
-    items.forEach((w,i) => buildTile(w,i,'liked'));
-    lucide.createIcons({ nodes:[grid] });
+function renderCurrentView(){
+  hideAllStates(); grid.innerHTML='';
+  if(WH.view==='liked'){
+    const items=[...WH.likedData.values()];
+    if(!items.length){likedEmpty.hidden=false;return;}
+    items.forEach((w,i)=>buildTile(w,i,'liked'));
+    lucide.createIcons({nodes:[grid]});
     statusText.textContent='Liked'; resultCount.textContent=items.length+' images';
-  } else if (WH.view === 'saved') {
-    const items = [...WH.savedData.values()];
-    if (!items.length) { savedEmpty.hidden=false; return; }
-    items.forEach((w,i) => buildTile(w,i,'saved'));
-    lucide.createIcons({ nodes:[grid] });
+  } else if(WH.view==='saved'){
+    const items=[...WH.savedData.values()];
+    if(!items.length){savedEmpty.hidden=false;return;}
+    items.forEach((w,i)=>buildTile(w,i,'saved'));
+    lucide.createIcons({nodes:[grid]});
     statusText.textContent='Saved'; resultCount.textContent=items.length+' images';
+  } else if(WH.view==='assigned'){
+    let items=[...WH.assignedData.values()];
+    if(WH.assignedCharFilter){
+      items=items.filter(w=>{
+        const charIds=WH.assigned.get(w.id)||[];
+        return charIds.includes(WH.assignedCharFilter);
+      });
+    }
+    if(!items.length){assignedEmpty.hidden=false;return;}
+    items.forEach((w,i)=>buildTile(w,i,'assigned'));
+    lucide.createIcons({nodes:[grid]});
+    const label=WH.assignedCharFilter?`Assigned — ${getCharName(WH.assignedCharFilter)}`:'Assigned';
+    statusText.textContent=label; resultCount.textContent=items.length+' images';
   } else {
-    if (!WH.results.length) { emptyBrowse.hidden=false; return; }
-    WH.results.forEach((w,i) => buildTile(w,i,'browse'));
-    lucide.createIcons({ nodes:[grid] });
-    statusText.textContent = WH.query ? `"${WH.query}"` : '';
-    resultCount.textContent = WH.total>0 ? WH.total.toLocaleString()+' results' : '';
-    pageControls.hidden = false;
+    if(!WH.results.length){emptyBrowse.hidden=false;return;}
+    WH.results.forEach((w,i)=>buildTile(w,i,'browse'));
+    lucide.createIcons({nodes:[grid]});
+    statusText.textContent=WH.query?`"${WH.query}"`:'';;
+    resultCount.textContent=WH.total>0?WH.total.toLocaleString()+' results':'';
+    pageControls.hidden=false;
   }
 }
 
-// ── SEARCH ─────────────────────────────────────────────────────────────────
-searchInput.addEventListener('input', () => { searchClear.hidden=!searchInput.value; });
-searchClear.addEventListener('click', () => { searchInput.value=''; searchClear.hidden=true; searchInput.focus(); });
-searchInput.addEventListener('keydown', e => { if(e.key==='Enter'){e.preventDefault();doSearch();} });
-searchBtn.addEventListener('click', doSearch);
-prevBtn.addEventListener('click', () => { if(WH.page>1){WH.page--;fetchWallpapers(false);} });
-nextBtn.addEventListener('click', () => { if(WH.page<WH.totalPages){WH.page++;fetchWallpapers(false);} });
-retryBtn.addEventListener('click', () => fetchWallpapers(false));
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// SEARCH
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+searchInput.addEventListener('input',()=>{searchClear.hidden=!searchInput.value;});
+searchClear.addEventListener('click',()=>{searchInput.value='';searchClear.hidden=true;searchInput.focus();});
+searchInput.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();doSearch();}});
+searchBtn.addEventListener('click',doSearch);
+prevBtn.addEventListener('click',()=>{if(WH.page>1){WH.page--;fetchWallpapers(false);}});
+nextBtn.addEventListener('click',()=>{if(WH.page<WH.totalPages){WH.page++;fetchWallpapers(false);}});
+retryBtn.addEventListener('click',()=>fetchWallpapers(false));
 
-function doSearch() {
+function doSearch(){
   WH.query=searchInput.value.trim(); WH.page=1; WH.seed=null;
-  document.querySelectorAll('.wh-view-tab').forEach(b => b.classList.toggle('active', b.dataset.wview==='browse'));
-  WH.view='browse'; filtersPanel.style.display='';
+  document.querySelectorAll('.wh-view-tab').forEach(b=>b.classList.toggle('active',b.dataset.wview==='browse'));
+  WH.view='browse'; filtersPanel.style.display=''; charFilterWrap.hidden=true;
   fetchWallpapers(false);
 }
 
-async function fetchWallpapers(append) {
-  if (WH.loading) return;
-  setLoading(true);
-  grid.hidden=false; grid.innerHTML='';
-  pageControls.hidden=true;
-  statusText.textContent='Scanning…'; resultCount.textContent='';
+async function fetchWallpapers(append){
+  if(WH.loading)return;
+  setLoading(true); grid.hidden=false; grid.innerHTML='';
+  pageControls.hidden=true; statusText.textContent='Scanning…'; resultCount.textContent='';
 
-  const q = WH.query || WH.charName;
-  const params = new URLSearchParams({
-    categories: buildCats(), purity: buildPurity(),
-    sorting: WH.sort, order: 'desc', page: WH.page,
-  });
-  if (q) params.set('q', q);
-  if (WH.sort==='toplist') params.set('topRange', WH.topRange);
-  if (WH.sort==='random' && WH.seed) params.set('seed', WH.seed);
+  const q=WH.query||WH.charName;
+  const params=new URLSearchParams({categories:buildCats(),purity:buildPurity(),sorting:WH.sort,order:'desc',page:WH.page});
+  if(q)params.set('q',q);
+  if(WH.sort==='toplist')params.set('topRange',WH.topRange);
+  if(WH.sort==='random'&&WH.seed)params.set('seed',WH.seed);
 
-  const fetchHeaders = {};
-  if (WH.apiKey) fetchHeaders['X-API-Key'] = WH.apiKey;
+  const fetchHeaders={};
+  if(WH.apiKey)fetchHeaders['X-API-Key']=WH.apiKey;
 
-  const url = `https://wallhaven.trap.lol/api/v1/search?${params.toString()}`;
-
-  try {
-    const res = await fetch(url, { headers: fetchHeaders });
-    if (!res.ok) throw new Error('HTTP '+res.status);
-    const json = await res.json();
-    if (!json.data) throw new Error(json.error||'Unexpected API response');
-
-    const meta = json.meta||{};
-    WH.totalPages = meta.last_page||1;
-    WH.total      = meta.total||json.data.length;
-    if (meta.seed) WH.seed = meta.seed;
-
-    const pageData = json.data.slice(0,10);
-    WH.results = append ? WH.results.concat(pageData) : pageData;
-
+  try{
+    const res=await fetch(`https://wallhaven.trap.lol/api/v1/search?${params.toString()}`,{headers:fetchHeaders});
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    const json=await res.json();
+    if(!json.data)throw new Error(json.error||'Unexpected response');
+    const meta=json.meta||{};
+    WH.totalPages=meta.last_page||1; WH.total=meta.total||json.data.length;
+    if(meta.seed)WH.seed=meta.seed;
+    const pageData=json.data.slice(0,10);
+    WH.results=append?WH.results.concat(pageData):pageData;
     grid.innerHTML='';
-    WH.results.forEach((w,i) => buildTile(w,i,'browse'));
-    lucide.createIcons({ nodes:[grid] });
-
+    WH.results.forEach((w,i)=>buildTile(w,i,'browse'));
+    lucide.createIcons({nodes:[grid]});
     pageNum.textContent=WH.page; pageTotal.textContent=WH.totalPages;
-    statusText.textContent = q ? `"${q}"` : 'Top results';
-    resultCount.textContent = WH.total.toLocaleString()+' results';
-    pageControls.hidden = !WH.results.length;
-    prevBtn.disabled = WH.page<=1;
-    nextBtn.disabled = WH.page>=WH.totalPages;
-    if (!WH.results.length) emptyBrowse.hidden=false;
+    statusText.textContent=q?`"${q}"`:'Top results';
+    resultCount.textContent=WH.total.toLocaleString()+' results';
+    pageControls.hidden=!WH.results.length;
+    prevBtn.disabled=WH.page<=1; nextBtn.disabled=WH.page>=WH.totalPages;
+    if(!WH.results.length)emptyBrowse.hidden=false;
     setLoading(false);
-  } catch(err) {
+  }catch(err){
     setLoading(false);
-    const m = err.message;
+    const m=err.message;
     showError(m.includes('429')?'Rate limit — wait a moment.':m.includes('401')?'Unauthorized — check API key.':'Fetch failed: '+m);
   }
 }
 
-// ── TILE ───────────────────────────────────────────────────────────────────
-function buildTile(w, idx, set) {
-  const isLiked = WH.liked.has(w.id);
-  const isSaved = WH.saved.has(w.id);
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// TILE
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function charBadgesHtml(wallId){
+  const charIds=WH.assigned.get(wallId)||[];
+  if(!charIds.length)return'';
+  const chars=getAllChars();
+  return charIds.map(id=>{
+    const c=chars.find(c=>String(c.id)===String(id));
+    return c?`<span class="wh-tile__char-badge" title="Assigned to ${c.name||'?'}">${(c.name||'?').slice(0,1)}</span>`:'';
+  }).join('');
+}
 
-  const tile = document.createElement('div');
-  tile.className = `wh-tile wh-tile--${w.purity}`;
-  tile.dataset.idx = idx; tile.dataset.set = set;
+function buildTile(w,idx,set){
+  const isLiked=WH.liked.has(w.id);
+  const isSaved=WH.saved.has(w.id);
+  const isAssigned=WH.assigned.has(w.id)&&(WH.assigned.get(w.id)||[]).length>0;
 
-  tile.innerHTML = `
+  const tile=document.createElement('div');
+  tile.className=`wh-tile wh-tile--${w.purity}`;
+  tile.dataset.idx=idx; tile.dataset.set=set;
+
+  tile.innerHTML=`
     <div class="wh-tile__img-wrap">
       <img class="wh-tile__img" src="${w.thumbs.large}" loading="lazy" draggable="false" alt="">
+      ${isAssigned?`<div class="wh-tile__char-badges">${charBadgesHtml(w.id)}</div>`:''}
       <div class="wh-tile__overlay">
         <div class="wh-tile__overlay-top">
           <span class="wh-tile__purity wh-tile__purity--${w.purity}">${purityLabel(w.purity)}</span>
@@ -1588,76 +1698,189 @@ function buildTile(w, idx, set) {
             <span><i data-lucide="heart"></i>${fmtNum(w.favorites)}</span>
           </div>
           <div class="wh-tile__actions">
-            <button class="wh-tile-btn${isLiked?' wh-tile-btn--active-heart':''}" data-action="like" title="${isLiked?'Unlike':'Like'}"><i data-lucide="heart"></i></button>
-            <button class="wh-tile-btn${isSaved?' wh-tile-btn--active-save':''}" data-action="save" title="${isSaved?'Unsave':'Save'}"><i data-lucide="bookmark"></i></button>
-            <button class="wh-tile-btn wh-tile-btn--add" data-action="add" title="Add to gallery"><i data-lucide="plus"></i></button>
+            <button class="wh-tile-btn${isLiked?' wh-tile-btn--active-heart':''}" data-action="like" title="Like (L)"><i data-lucide="heart"></i></button>
+            <button class="wh-tile-btn${isSaved?' wh-tile-btn--active-save':''}" data-action="save" title="Save (S)"><i data-lucide="bookmark"></i></button>
+            <button class="wh-tile-btn${isAssigned?' wh-tile-btn--active-assign':''}" data-action="assign" title="Assign to character"><i data-lucide="user-check"></i></button>
+            <button class="wh-tile-btn" data-action="dl" title="Download"><i data-lucide="download"></i></button>
             <button class="wh-tile-btn wh-tile-btn--bg" data-action="bg" title="Set as background"><i data-lucide="image"></i></button>
           </div>
         </div>
       </div>
     </div>`;
 
-  tile.querySelector('.wh-tile__img-wrap').addEventListener('click', e => {
-    if (e.target.closest('[data-action]')) return;
-    openLightbox(idx, set);
+  tile.querySelector('.wh-tile__img-wrap').addEventListener('click',e=>{
+    if(e.target.closest('[data-action]'))return;
+    openLightbox(idx,set);
   });
-  tile.querySelector('[data-action="like"]').addEventListener('click', e => { e.stopPropagation(); toggleLike(w, tile); });
-  tile.querySelector('[data-action="save"]').addEventListener('click', e => { e.stopPropagation(); toggleSave(w, tile); });
-  tile.querySelector('[data-action="add"]').addEventListener('click',  e => { e.stopPropagation(); addToCharGallery(w.path, w.thumbs.large); });
-  tile.querySelector('[data-action="bg"]').addEventListener('click',   e => { e.stopPropagation(); setAsBackground(w.path); });
+  tile.querySelector('[data-action="like"]').addEventListener('click',e=>{e.stopPropagation();toggleLike(w,tile);});
+  tile.querySelector('[data-action="save"]').addEventListener('click',e=>{e.stopPropagation();toggleSave(w,tile);});
+  tile.querySelector('[data-action="assign"]').addEventListener('click',e=>{e.stopPropagation();openLightbox(idx,set);requestAnimationFrame(()=>{lbAssignSel.focus();});});
+  tile.querySelector('[data-action="dl"]').addEventListener('click',e=>{e.stopPropagation();downloadWallpaper(w);});
+  tile.querySelector('[data-action="bg"]').addEventListener('click',e=>{e.stopPropagation();setAsBackground(w.path);});
 
   grid.appendChild(tile);
 }
 
-// ── LIKE / SAVE ────────────────────────────────────────────────────────────
-function toggleLike(w, tile) {
-  const btn = tile.querySelector('[data-action="like"]');
-  if (WH.liked.has(w.id)) {
-    WH.liked.delete(w.id); WH.likedData.delete(w.id);
-    btn.classList.remove('wh-tile-btn--active-heart'); showToast('Unliked.','info');
-  } else {
-    WH.liked.add(w.id); WH.likedData.set(w.id, w);
-    btn.classList.add('wh-tile-btn--active-heart'); showToast('Liked!','success');
-  }
-  saveSet('wh_liked',WH.liked); saveMap('wh_liked_data',WH.likedData);
-  updateBadges(); syncLbButtons();
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// LIKE / SAVE
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function toggleLike(w,tile){
+  const btn=tile.querySelector('[data-action="like"]');
+  if(WH.liked.has(w.id)){WH.liked.delete(w.id);WH.likedData.delete(w.id);btn.classList.remove('wh-tile-btn--active-heart');showToast('Unliked.','info');}
+  else{WH.liked.add(w.id);WH.likedData.set(w.id,w);btn.classList.add('wh-tile-btn--active-heart');showToast('Liked!','success');}
+  saveSet('wh_liked',WH.liked);saveMap('wh_liked_data',WH.likedData);
+  updateBadges();syncLbButtons();
 }
-function toggleSave(w, tile) {
-  const btn = tile.querySelector('[data-action="save"]');
-  if (WH.saved.has(w.id)) {
-    WH.saved.delete(w.id); WH.savedData.delete(w.id);
-    btn.classList.remove('wh-tile-btn--active-save'); showToast('Removed.','info');
-  } else {
-    WH.saved.add(w.id); WH.savedData.set(w.id, w);
-    btn.classList.add('wh-tile-btn--active-save'); showToast('Saved!','success');
-  }
-  saveSet('wh_saved',WH.saved); saveMap('wh_saved_data',WH.savedData);
-  updateBadges(); syncLbButtons();
+function toggleSave(w,tile){
+  const btn=tile.querySelector('[data-action="save"]');
+  if(WH.saved.has(w.id)){WH.saved.delete(w.id);WH.savedData.delete(w.id);btn.classList.remove('wh-tile-btn--active-save');showToast('Removed.','info');}
+  else{WH.saved.add(w.id);WH.savedData.set(w.id,w);btn.classList.add('wh-tile-btn--active-save');showToast('Saved!','success');}
+  saveSet('wh_saved',WH.saved);saveMap('wh_saved_data',WH.savedData);
+  updateBadges();syncLbButtons();
 }
 
-// ── INTEGRATIONS ───────────────────────────────────────────────────────────
-function setAsBackground(url) {
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ASSIGN TO CHARACTER
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+lbAssignBtn.addEventListener('click',()=>{
+  const charId=lbAssignSel.value; if(!charId)return;
+  const w=lbDataset()[WH.lbIndex]; if(!w)return;
+  assignToChar(w,charId);
+});
+
+function assignToChar(w, charId){
+  const charIds=WH.assigned.get(w.id)||[];
+  if(charIds.includes(charId)){
+    // unassign
+    const next=charIds.filter(id=>id!==charId);
+    if(next.length===0){ WH.assigned.delete(w.id); WH.assignedData.delete(w.id); }
+    else{ WH.assigned.set(w.id,next); }
+    showToast('Unassigned from character.','info');
+  } else {
+    charIds.push(charId);
+    WH.assigned.set(w.id,charIds);
+    WH.assignedData.set(w.id,w);
+    // Push into the character's actual gallery in the main app
+    addToCharacterGalleryInApp(charId, w.path, w.thumbs.large, w.id);
+    const cName=getCharName(charId);
+    showToast(`Assigned to ${cName} — added to their gallery & feed.`,'success');
+  }
+  saveMapArr('wh_assigned',WH.assigned);
+  saveMap('wh_assigned_data',WH.assignedData);
+  updateBadges(); syncLbButtons();
+  // Refresh tile assign button state
+  const tileEl=grid.querySelector(`[data-idx="${WH.lbIndex}"][data-set="${WH.lbSet}"]`);
+  if(tileEl){
+    const isAssigned=WH.assigned.has(w.id)&&(WH.assigned.get(w.id)||[]).length>0;
+    tileEl.querySelector('[data-action="assign"]').classList.toggle('wh-tile-btn--active-assign',isAssigned);
+  }
+}
+
+// Push image into the main app's character gallery
+function addToCharacterGalleryInApp(charId, url, thumb, wallId){
+  try {
+    const raw=localStorage.getItem('characters'); if(!raw)return;
+    const chars=JSON.parse(raw); if(!Array.isArray(chars))return;
+    const idx=chars.findIndex(c=>String(c.id)===String(charId)); if(idx===-1)return;
+    const char=chars[idx];
+    if(!char.gallery)char.gallery=[];
+    // Avoid duplicates
+    if(!char.gallery.find(g=>g.url===url)){
+      char.gallery.push({url,thumb:thumb||url,wh:wallId,addedAt:Date.now()});
+      chars[idx]=char;
+      localStorage.setItem('characters',JSON.stringify(chars));
+    }
+    // Also push a social post to the character's feed
+    addToCharacterFeedInApp(charId, url, thumb, wallId);
+  } catch(e){ console.warn('WH assign gallery error',e); }
+}
+
+function addToCharacterFeedInApp(charId, url, thumb, wallId){
+  try {
+    const key=`feed_${charId}`;
+    const raw=localStorage.getItem(key);
+    const feed=raw?JSON.parse(raw):[];
+    if(!Array.isArray(feed))return;
+    // Avoid duplicate posts for same wallpaper
+    if(feed.find(p=>p.whId===wallId))return;
+    feed.unshift({
+      id:`wh_${wallId}_${Date.now()}`,
+      whId:wallId,
+      type:'image',
+      imageUrl:url,
+      thumb:thumb||url,
+      caption:'',
+      likes:0,
+      ts:Date.now(),
+      source:'wallhaven',
+    });
+    localStorage.setItem(key,JSON.stringify(feed));
+    // Notify the main app so the feed re-renders if it's visible
+    document.dispatchEvent(new CustomEvent('wh:feed-updated',{detail:{charId,url,thumb}}));
+  } catch(e){ console.warn('WH feed post error',e); }
+}
+
+// Legacy event kept for compatibility — maps to the assign flow using the current char
+document.addEventListener('wh:add-to-gallery',e=>{
+  const {url,thumb}=e.detail;
+  if(WH.charId) addToCharacterGalleryInApp(WH.charId,url,thumb,'');
+});
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// DOWNLOAD
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function downloadWallpaper(w){
+  const filename=`wallhaven-${w.id}.${w.file_type==='image/jpeg'?'jpg':'png'}`;
+  // Fetch through the proxy so the browser gets a blob (avoids cross-origin download block)
+  fetch(`https://wallhaven.trap.lol/api/v1/w/${w.id}${WH.apiKey?'?apikey='+WH.apiKey:''}`)
+    .then(r=>r.json())
+    .then(json=>{
+      const imgUrl=json.data?.path||w.path;
+      // Use anchor download trick; works when image is same-origin (our proxy serves it)
+      const a=document.createElement('a');
+      a.href=imgUrl; a.download=filename; a.target='_blank';
+      a.click();
+      showToast('Download started.','success');
+    })
+    .catch(()=>{
+      // Fallback: open full image in new tab
+      window.open(w.path,'_blank');
+      showToast('Opened in new tab — save manually.','info');
+    });
+}
+
+lbDownload.addEventListener('click',()=>{
+  const w=lbDataset()[WH.lbIndex]; if(w)downloadWallpaper(w);
+});
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// INTEGRATIONS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function setAsBackground(url){
   const i=document.getElementById('bg-url-input'),a=document.getElementById('bg-url-apply');
   if(i&&a){i.value=url;a.click();showToast('Arena background updated.','success');}
 }
-function addToCharGallery(url,thumb) {
-  document.dispatchEvent(new CustomEvent('wh:add-to-gallery',{detail:{url,thumb}}));
-  showToast('Added to character gallery.','success');
-}
 
-// ── LIGHTBOX ───────────────────────────────────────────────────────────────
-function lbDataset() {
-  if (WH.lbSet==='liked') return [...WH.likedData.values()];
-  if (WH.lbSet==='saved') return [...WH.savedData.values()];
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// LIGHTBOX
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function lbDataset(){
+  if(WH.lbSet==='liked')return[...WH.likedData.values()];
+  if(WH.lbSet==='saved')return[...WH.savedData.values()];
+  if(WH.lbSet==='assigned'){
+    let items=[...WH.assignedData.values()];
+    if(WH.assignedCharFilter) items=items.filter(w=>(WH.assigned.get(w.id)||[]).includes(WH.assignedCharFilter));
+    return items;
+  }
   return WH.results;
 }
-function openLightbox(idx, set) {
+function openLightbox(idx,set){
   WH.lbIndex=idx; WH.lbSet=set||'browse';
+  populateCharSelects();
   lb.hidden=false; renderLightbox();
 }
-function renderLightbox() {
-  const ds=lbDataset(), w=ds[WH.lbIndex];
-  if (!w) return;
+function renderLightbox(){
+  const ds=lbDataset(), w=ds[WH.lbIndex]; if(!w)return;
   lbImg.classList.add('wh-lb-img--loading'); lbImg.src='';
   const t=new Image();
   t.onload=()=>{lbImg.src=w.path;lbImg.classList.remove('wh-lb-img--loading');};
@@ -1671,95 +1894,100 @@ function renderLightbox() {
   lbCounter.textContent=(WH.lbIndex+1)+' / '+ds.length;
   lbPrev.disabled=WH.lbIndex===0; lbNext.disabled=WH.lbIndex===ds.length-1;
   lbSetBg.onclick=()=>setAsBackground(w.path);
-  lbAddGallery.onclick=()=>addToCharGallery(w.path,w.thumbs.large);
   syncLbButtons();
 }
-function syncLbButtons() {
-  if (lb.hidden) return;
-  const w=lbDataset()[WH.lbIndex]; if(!w)return;
-  lbLike.classList.toggle('wh-lb-corner-btn--active-heart', WH.liked.has(w.id));
-  lbSave.classList.toggle('wh-lb-corner-btn--active-save',  WH.saved.has(w.id));
+function syncLbButtons(){
+  if(lb.hidden)return;
+  const ds=lbDataset(), w=ds[WH.lbIndex]; if(!w)return;
+  lbLike.classList.toggle('wh-lb-corner-btn--active-heart',WH.liked.has(w.id));
+  lbSave.classList.toggle('wh-lb-corner-btn--active-save', WH.saved.has(w.id));
+  const isAssigned=WH.assigned.has(w.id)&&(WH.assigned.get(w.id)||[]).length>0;
+  lbAssignBtn.classList.toggle('wh-lb-action-btn--active-assign',isAssigned);
+  lbAssignBtn.title=isAssigned?'Click to unassign':'Assign to selected character';
 }
 
-function lbToggleLike() {
+function lbToggleLike(){
   const w=lbDataset()[WH.lbIndex]; if(!w)return;
-  const tileEl=grid.querySelector(`[data-idx="${WH.lbIndex}"][data-set="${WH.lbSet}"]`);
-  if(tileEl){toggleLike(w,tileEl);}else{
-    if(WH.liked.has(w.id)){WH.liked.delete(w.id);WH.likedData.delete(w.id);}
-    else{WH.liked.add(w.id);WH.likedData.set(w.id,w);}
-    saveSet('wh_liked',WH.liked);saveMap('wh_liked_data',WH.likedData);
-    updateBadges();syncLbButtons();
+  const tile=grid.querySelector(`[data-idx="${WH.lbIndex}"][data-set="${WH.lbSet}"]`);
+  if(tile){toggleLike(w,tile);}else{
+    if(WH.liked.has(w.id)){WH.liked.delete(w.id);WH.likedData.delete(w.id);}else{WH.liked.add(w.id);WH.likedData.set(w.id,w);}
+    saveSet('wh_liked',WH.liked);saveMap('wh_liked_data',WH.likedData);updateBadges();syncLbButtons();
   }
 }
-function lbToggleSave() {
+function lbToggleSave(){
   const w=lbDataset()[WH.lbIndex]; if(!w)return;
-  const tileEl=grid.querySelector(`[data-idx="${WH.lbIndex}"][data-set="${WH.lbSet}"]`);
-  if(tileEl){toggleSave(w,tileEl);}else{
-    if(WH.saved.has(w.id)){WH.saved.delete(w.id);WH.savedData.delete(w.id);}
-    else{WH.saved.add(w.id);WH.savedData.set(w.id,w);}
-    saveSet('wh_saved',WH.saved);saveMap('wh_saved_data',WH.savedData);
-    updateBadges();syncLbButtons();
+  const tile=grid.querySelector(`[data-idx="${WH.lbIndex}"][data-set="${WH.lbSet}"]`);
+  if(tile){toggleSave(w,tile);}else{
+    if(WH.saved.has(w.id)){WH.saved.delete(w.id);WH.savedData.delete(w.id);}else{WH.saved.add(w.id);WH.savedData.set(w.id,w);}
+    saveSet('wh_saved',WH.saved);saveMap('wh_saved_data',WH.savedData);updateBadges();syncLbButtons();
   }
 }
 
-lbLike.addEventListener('click', lbToggleLike);
-lbSave.addEventListener('click', lbToggleSave);
-lbClose.addEventListener('click', ()=>{lb.hidden=true;});
-lbBackdrop.addEventListener('click', ()=>{lb.hidden=true;});
-lbPrev.addEventListener('click', ()=>{if(WH.lbIndex>0){WH.lbIndex--;renderLightbox();}});
-lbNext.addEventListener('click', ()=>{const ds=lbDataset();if(WH.lbIndex<ds.length-1){WH.lbIndex++;renderLightbox();}});
+lbLike.addEventListener('click',lbToggleLike);
+lbSave.addEventListener('click',lbToggleSave);
+lbClose.addEventListener('click',()=>{lb.hidden=true;});
+lbBackdrop.addEventListener('click',()=>{lb.hidden=true;});
+lbPrev.addEventListener('click',()=>{if(WH.lbIndex>0){WH.lbIndex--;renderLightbox();}});
+lbNext.addEventListener('click',()=>{const ds=lbDataset();if(WH.lbIndex<ds.length-1){WH.lbIndex++;renderLightbox();}});
 
-document.addEventListener('keydown', e => {
-  if (!lb.hidden) {
+document.addEventListener('keydown',e=>{
+  if(!lb.hidden){
     if(e.key==='ArrowLeft'&&WH.lbIndex>0){WH.lbIndex--;renderLightbox();}
     else if(e.key==='ArrowRight'){const ds=lbDataset();if(WH.lbIndex<ds.length-1){WH.lbIndex++;renderLightbox();}}
     else if(e.key==='Escape'){lb.hidden=true;}
     else if(e.key==='l'||e.key==='L') lbToggleLike();
     else if(e.key==='s'||e.key==='S') lbToggleSave();
+    else if(e.key==='d'||e.key==='D'){const w=lbDataset()[WH.lbIndex];if(w)downloadWallpaper(w);}
     return;
   }
-  if (!arena.hidden && e.key==='Escape') closeArena();
+  if(!arena.hidden&&e.key==='Escape')closeArena();
 });
 
-// ── ARENA OPEN/CLOSE ───────────────────────────────────────────────────────
-backBtn.addEventListener('click', closeArena);
-function closeArena() { arena.hidden=true; lb.hidden=true; }
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ARENA OPEN / CLOSE
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+backBtn.addEventListener('click',closeArena);
+function closeArena(){arena.hidden=true;lb.hidden=true;}
 
-window.openWallhavenGallery = function(charName) {
-  WH.charName=charName||'';
+// Header button in chat arena
+if(whOpenBtn){
+  whOpenBtn.addEventListener('click',()=>{
+    // Try to read the active character's name from the thread header
+    const nameEl=document.querySelector('#active-bots .arena__bot-name, #active-bots .bot-avatar[title]');
+    const name=nameEl?(nameEl.title||nameEl.textContent||'').trim():'';
+    // Try to get the active character id
+    const firstBot=document.querySelector('#active-bots [data-char-id]');
+    const charId=firstBot?firstBot.dataset.charId:null;
+    openWallhavenGallery(name, charId);
+  });
+}
+
+window.openWallhavenGallery = function(charName, charId){
+  WH.charName=charName||''; WH.charId=charId||null;
   charLabel.textContent=charName||'Visual Archive';
   searchInput.value=charName||''; searchClear.hidden=!charName;
   apikeyInput.value=WH.apiKey;
   arena.hidden=false;
-  updateBadges();
-  lucide.createIcons();
+  updateBadges(); populateCharSelects(); lucide.createIcons();
   document.querySelectorAll('.wh-view-tab').forEach(b=>b.classList.toggle('active',b.dataset.wview==='browse'));
-  WH.view='browse'; filtersPanel.style.display='';
-  if (charName && WH.results.length===0) {
+  WH.view='browse'; filtersPanel.style.display=''; charFilterWrap.hidden=true;
+  if(charName&&WH.results.length===0){
     WH.query=charName; WH.page=1; WH.seed=null; fetchWallpapers(false);
   } else { renderCurrentView(); }
 };
 
-// ── INJECT BUTTON ──────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
-  const galleryBtn = document.getElementById('btn-gallery-add');
-  if (galleryBtn) {
-    const whBtn = document.createElement('button');
-    whBtn.id='btn-wallhaven-gallery'; whBtn.className='btn btn--ghost btn--full';
-    whBtn.innerHTML='<i data-lucide="image-plus"></i> Wallhaven Images';
-    whBtn.addEventListener('click', () => {
-      const nameEl=document.querySelector('.profile-details__name, #sims-char-name-badge');
-      const name=nameEl?nameEl.textContent.trim().replace(/^—$/,''):'';
-      openWallhavenGallery(name);
-    });
-    galleryBtn.parentNode.insertBefore(whBtn, galleryBtn.nextSibling);
-    lucide.createIcons({ nodes:[whBtn] });
-  }
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// INIT
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+document.addEventListener('DOMContentLoaded',()=>{
   updateBadges();
+  lucide.createIcons({nodes:[document.getElementById('wh-open-btn')]});
 });
 
-// ── TOAST ──────────────────────────────────────────────────────────────────
-function showToast(msg, type) {
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// TOAST
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function showToast(msg,type){
   const c=document.getElementById('toast-container'); if(!c)return;
   const t=document.createElement('div');
   t.className=`toast toast--${type||'info'}`; t.textContent=msg;
@@ -1811,13 +2039,7 @@ function showToast(msg, type) {
 .wh-search-wrap{position:relative;flex:1;min-width:0;}
 .wh-search-icon{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,0.3);pointer-events:none;}
 .wh-search-icon svg{width:14px;height:14px;}
-.wh-search-input {
-  width:100%;box-sizing:border-box;
-  background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
-  border-radius:9px;padding:8px 30px 8px 30px;
-  font-size:0.8rem;color:var(--text-primary,#f0edf8);outline:none;
-  transition:border-color 0.18s,background 0.18s;
-}
+.wh-search-input{width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:9px;padding:8px 30px 8px 30px;font-size:0.8rem;color:var(--text-primary,#f0edf8);outline:none;transition:border-color 0.18s,background 0.18s;}
 .wh-search-input::placeholder{color:rgba(255,255,255,0.28);}
 .wh-search-input:focus{border-color:rgba(var(--accent-rgb,239,68,68),0.45);background:rgba(255,255,255,0.07);}
 .wh-search-clear{position:absolute;right:7px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.3);padding:0;display:flex;align-items:center;}
@@ -1837,14 +2059,21 @@ function showToast(msg, type) {
 
 /* Sidebar */
 .wh-sidebar{width:200px;flex-shrink:0;display:flex;flex-direction:column;border-right:1px solid rgba(255,255,255,0.05);background:rgba(0,0,0,0.25);overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.06) transparent;}
+
 .wh-view-tabs{display:flex;flex-direction:column;gap:2px;padding:10px 8px 6px;border-bottom:1px solid rgba(255,255,255,0.05);flex-shrink:0;}
 .wh-view-tab{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;border:none;background:transparent;color:rgba(255,255,255,0.45);font-size:0.75rem;font-weight:600;cursor:pointer;transition:all 0.15s;text-align:left;}
 .wh-view-tab svg{width:14px;height:14px;flex-shrink:0;}
 .wh-view-tab:hover{background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.8);}
 .wh-view-tab.active{background:rgba(var(--accent-rgb,239,68,68),0.12);color:var(--theme-accent,#ef4444);}
+
 .wh-liked-badge,.wh-saved-badge{margin-left:auto;font-size:0.58rem;background:rgba(255,255,255,0.08);border-radius:20px;padding:1px 6px;color:rgba(255,255,255,0.4);font-family:var(--font-mono,monospace);transition:all 0.15s;}
 .wh-liked-badge--active{background:rgba(239,68,68,0.2);color:#f87171;}
 .wh-saved-badge--active{background:rgba(var(--accent-rgb,239,68,68),0.2);color:var(--theme-accent,#ef4444);}
+
+/* Char filter (assigned view) */
+.wh-char-filter-wrap{padding:0 8px 8px;border-bottom:1px solid rgba(255,255,255,0.04);}
+.wh-char-filter-select{width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.09);border-radius:7px;padding:6px 8px;font-size:0.68rem;color:var(--text-primary,#f0edf8);outline:none;cursor:pointer;}
+.wh-char-filter-select:focus{border-color:rgba(var(--accent-rgb,239,68,68),0.4);}
 
 .wh-filters-panel{flex:1;overflow-y:auto;padding:8px 8px 0;}
 .wh-sidebar-section{margin-bottom:16px;}
@@ -1879,7 +2108,7 @@ function showToast(msg, type) {
 .wh-page-btn:disabled{opacity:0.25;cursor:not-allowed;}
 .wh-page-btn svg{width:12px;height:12px;}
 
-/* Grid area */
+/* Grid */
 .wh-grid-area{flex:1;min-height:0;position:relative;overflow:hidden;}
 .wh-grid{height:100%;overflow-y:auto;padding:12px;display:grid;align-content:start;gap:8px;scrollbar-width:thin;scrollbar-color:rgba(var(--accent-rgb,239,68,68),0.15) transparent;}
 .wh-grid::-webkit-scrollbar{width:4px;}
@@ -1921,14 +2150,18 @@ kbd{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);bo
 .wh-tile__stats2{display:flex;gap:7px;font-size:0.52rem;font-family:var(--font-mono,monospace);color:rgba(255,255,255,0.5);}
 .wh-tile__stats2 span{display:flex;align-items:center;gap:3px;}
 .wh-tile__stats2 svg{width:9px;height:9px;}
-.wh-tile__actions{display:flex;gap:5px;}
+.wh-tile__actions{display:flex;gap:4px;}
 .wh-tile-btn{background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.15);border-radius:6px;width:26px;height:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:rgba(255,255,255,0.65);transition:all 0.13s;}
 .wh-tile-btn svg{width:11px;height:11px;}
 .wh-tile-btn:hover{background:rgba(255,255,255,0.15);color:#fff;border-color:rgba(255,255,255,0.3);}
-.wh-tile-btn--active-heart{background:rgba(239,68,68,0.3)!important;border-color:rgba(239,68,68,0.6)!important;color:#f87171!important;}
-.wh-tile-btn--active-save{background:rgba(var(--accent-rgb,239,68,68),0.25)!important;border-color:rgba(var(--accent-rgb,239,68,68),0.5)!important;color:var(--theme-accent,#ef4444)!important;}
-.wh-tile-btn--add:hover{background:rgba(var(--accent-rgb,239,68,68),0.25)!important;color:var(--theme-accent,#ef4444)!important;}
+.wh-tile-btn--active-heart {background:rgba(239,68,68,0.3)!important;border-color:rgba(239,68,68,0.6)!important;color:#f87171!important;}
+.wh-tile-btn--active-save  {background:rgba(var(--accent-rgb,239,68,68),0.25)!important;border-color:rgba(var(--accent-rgb,239,68,68),0.5)!important;color:var(--theme-accent,#ef4444)!important;}
+.wh-tile-btn--active-assign{background:rgba(74,222,128,0.2)!important;border-color:rgba(74,222,128,0.45)!important;color:#4ade80!important;}
 .wh-tile-btn--bg:hover{background:rgba(99,102,241,0.25)!important;color:#a5b4fc!important;}
+
+/* Character assignment badges on tiles */
+.wh-tile__char-badges{position:absolute;top:5px;left:5px;display:flex;gap:3px;z-index:1;pointer-events:none;}
+.wh-tile__char-badge{width:18px;height:18px;border-radius:50%;background:rgba(var(--accent-rgb,239,68,68),0.85);border:1px solid rgba(255,255,255,0.3);font-size:0.55rem;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;text-transform:uppercase;}
 
 /* Buttons */
 .wh-btn{border:none;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-size:0.72rem;font-weight:600;padding:8px 14px;transition:all 0.15s;white-space:nowrap;flex-shrink:0;}
@@ -1946,37 +2179,52 @@ kbd{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);bo
 .wh-lightbox__stage{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;}
 .wh-lightbox__img{max-width:88vw;max-height:82vh;object-fit:contain;border-radius:8px;box-shadow:0 0 120px rgba(0,0,0,0.85);transition:opacity 0.2s;}
 .wh-lb-img--loading{opacity:0.15;}
+
 .wh-lb-corner{position:absolute;top:14px;right:14px;display:flex;gap:6px;z-index:2;}
 .wh-lb-corner-btn{background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.12);border-radius:8px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:rgba(255,255,255,0.6);transition:all 0.15s;}
 .wh-lb-corner-btn svg{width:15px;height:15px;}
 .wh-lb-corner-btn:hover{background:rgba(255,255,255,0.12);color:#fff;}
 .wh-lb-corner-btn--active-heart{background:rgba(239,68,68,0.3)!important;border-color:rgba(239,68,68,0.6)!important;color:#f87171!important;}
-.wh-lb-corner-btn--active-save{background:rgba(var(--accent-rgb,239,68,68),0.3)!important;border-color:rgba(var(--accent-rgb,239,68,68),0.6)!important;color:var(--theme-accent,#ef4444)!important;}
-.wh-lightbox__ui{position:absolute;bottom:0;left:0;right:0;padding:22px 20px 18px;background:linear-gradient(to top,rgba(0,0,0,0.88) 0%,transparent 100%);display:flex;align-items:flex-end;justify-content:space-between;gap:16px;}
+.wh-lb-corner-btn--active-save {background:rgba(var(--accent-rgb,239,68,68),0.3)!important;border-color:rgba(var(--accent-rgb,239,68,68),0.6)!important;color:var(--theme-accent,#ef4444)!important;}
+
+.wh-lightbox__ui{position:absolute;bottom:0;left:0;right:0;padding:22px 20px 18px;background:linear-gradient(to top,rgba(0,0,0,0.9) 0%,transparent 100%);display:flex;align-items:flex-end;justify-content:space-between;gap:16px;}
 .wh-lightbox__info{display:flex;gap:7px;align-items:center;flex-wrap:wrap;}
-.wh-lightbox__actions{display:flex;gap:8px;}
+.wh-lightbox__actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end;}
+
 .wh-lb-badge{display:inline-flex;align-items:center;gap:4px;font-size:0.62rem;font-family:var(--font-mono,monospace);background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.1);padding:3px 7px;border-radius:5px;color:rgba(255,255,255,0.6);}
 .wh-lb-badge svg{width:10px;height:10px;}
 .wh-lb-badge--sfw    {border-color:rgba(74,222,128,0.3);color:#4ade80;}
 .wh-lb-badge--sketchy{border-color:rgba(251,191,36,0.3);color:#fbbf24;}
 .wh-lb-badge--nsfw   {border-color:rgba(239,68,68,0.3);color:#f87171;}
+
 .wh-lb-action-btn{display:inline-flex;align-items:center;gap:6px;background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.14);border-radius:8px;padding:8px 13px;font-size:0.7rem;font-weight:600;color:rgba(255,255,255,0.7);cursor:pointer;text-decoration:none;transition:all 0.14s;white-space:nowrap;}
 .wh-lb-action-btn svg{width:12px;height:12px;}
 .wh-lb-action-btn:hover{background:rgba(255,255,255,0.12);color:#fff;}
 .wh-lb-action-btn--accent{background:rgba(var(--accent-rgb,239,68,68),0.22);border-color:rgba(var(--accent-rgb,239,68,68),0.4);color:var(--theme-accent,#ef4444);}
 .wh-lb-action-btn--accent:hover{background:rgba(var(--accent-rgb,239,68,68),0.38);color:#fff;}
+.wh-lb-action-btn--active-assign{background:rgba(74,222,128,0.2)!important;border-color:rgba(74,222,128,0.5)!important;color:#4ade80!important;}
+
+/* Assign row in lightbox */
+.wh-lb-assign-wrap{display:flex;align-items:center;gap:6px;}
+.wh-lb-assign-select{background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.14);border-radius:8px;padding:7px 10px;font-size:0.68rem;color:rgba(255,255,255,0.75);outline:none;cursor:pointer;max-width:160px;transition:border-color 0.15s;}
+.wh-lb-assign-select:focus{border-color:rgba(var(--accent-rgb,239,68,68),0.5);}
+.wh-lb-assign-select option{background:#12101a;color:#f0edf8;}
+
 .wh-lb-nav{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.1);border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:rgba(255,255,255,0.7);transition:all 0.15s;z-index:2;}
 .wh-lb-nav:hover:not(:disabled){background:rgba(255,255,255,0.15);color:#fff;}
 .wh-lb-nav:disabled{opacity:0.2;cursor:not-allowed;}
 .wh-lb-nav svg{width:20px;height:20px;}
 .wh-lb-nav--prev{left:14px;}
 .wh-lb-nav--next{right:14px;}
+
 .wh-lb-counter{position:absolute;top:14px;left:50%;transform:translateX(-50%);font-size:0.62rem;font-family:var(--font-mono,monospace);background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.1);padding:3px 10px;border-radius:20px;color:rgba(255,255,255,0.5);z-index:2;white-space:nowrap;pointer-events:none;}
 
 /* Responsive */
 @media(max-width:800px){.wh-sidebar{width:160px;}.wh-header__right{display:none;}.wh-grid--grid,.wh-grid--masonry{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));}}
-@media(max-width:600px){.wh-sidebar{display:none;}.wh-lightbox__ui{flex-direction:column;gap:8px;}.wh-lb-nav{display:none;}.wh-grid--grid,.wh-grid--masonry,.wh-grid--large{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));}}
+@media(max-width:600px){.wh-sidebar{display:none;}.wh-lightbox__ui{flex-direction:column;gap:8px;align-items:flex-start;}.wh-lb-nav{display:none;}.wh-grid--grid,.wh-grid--masonry,.wh-grid--large{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));}}
 </style>
+
+
 
 
 </body>
