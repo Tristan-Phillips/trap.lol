@@ -6810,3 +6810,284 @@ body.focus-mode .message:hover .message__actions { opacity: 1; }
 .creator-avatar-preview { position: relative; }
 .creator-avatar-preview.has-image #creator-avatar-btn { opacity: 0; }
 .creator-avatar-preview.has-image:hover #creator-avatar-btn { opacity: 1; background: rgba(0,0,0,0.5); }
+
+
+/* =============================================================================
+   MOBILE-FIRST REVISION
+   God-tier UX for iPhone 14, iPad Air 5, iPad Pro, T480 720p laptop.
+   ============================================================================= */
+
+/* -- Arena header overflow menu ------------------------------------------- */
+.arena-action--overflow { display: none; position: relative; }
+
+.header-overflow-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    z-index: 200;
+    background: rgba(10,6,18,0.97);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 6px;
+    min-width: 180px;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    animation: menuFadeIn 0.14s ease;
+}
+@keyframes menuFadeIn {
+    from { opacity:0; transform: translateY(-6px) scale(0.96); }
+    to   { opacity:1; transform: translateY(0) scale(1); }
+}
+.header-overflow-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 12px;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    color: rgba(255,255,255,0.75);
+    font-size: 0.78rem;
+    font-family: var(--font-sans);
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.12s, color 0.12s;
+    touch-action: manipulation;
+    min-height: 42px;
+}
+.header-overflow-item svg { width: 14px; height: 14px; flex-shrink: 0; }
+.header-overflow-item:hover,
+.header-overflow-item:active {
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+}
+.header-overflow-item--danger { color: rgba(239,68,68,0.8); }
+.header-overflow-item--danger:hover,
+.header-overflow-item--danger:active {
+    background: rgba(239,68,68,0.12);
+    color: #f87171;
+}
+
+/* -- Active bot long-press reveal ------------------------------------------ */
+.active-bot--touch-reveal .active-bot__remove { display: flex !important; }
+
+/* -- Input zone: hide stat clutter on narrow screens ----------------------- */
+@media (max-width: 600px) {
+    .arena-stats { display: none !important; }
+    .input-container__toolbar { gap: 2px; padding: 5px 8px 0; }
+    .input-container__bot-label { font-size: 0.62rem; }
+}
+
+/* -- Arena header: secondary actions collapse to overflow on <=520px ------- */
+@media (max-width: 520px) {
+    .arena-action--secondary { display: none !important; }
+    .arena-action--overflow  { display: flex !important; }
+    .arena__header { padding: 0 8px; gap: 3px; }
+    .arena__actions { gap: 1px; }
+    .arena-action--primary { width: 34px; height: 34px; min-width: 34px; min-height: 34px; }
+    .arena-action--primary svg { width: 15px; height: 15px; }
+}
+
+@media (max-width: 380px) {
+    #chat-bg-btn { display: none !important; }
+    .arena__active-bots { gap: 4px; }
+    .active-bot { width: 30px; height: 30px; }
+}
+
+/* -- Modals: bottom-sheet on mobile ---------------------------------------- */
+@media (max-width: 600px) {
+    .modal {
+        align-items: flex-end;
+        padding: 0;
+    }
+    .modal__content {
+        width: 100%;
+        max-width: 100%;
+        max-height: 92dvh;
+        border-radius: 20px 20px 0 0;
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    .modal__content::before {
+        content: '';
+        display: block;
+        width: 36px;
+        height: 4px;
+        background: rgba(255,255,255,0.15);
+        border-radius: 2px;
+        margin: 10px auto 0;
+        flex-shrink: 0;
+    }
+    .modal__body {
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+        max-height: calc(92dvh - 140px);
+    }
+    .modal__footer {
+        position: sticky;
+        bottom: 0;
+        background: rgba(10,6,18,0.97);
+        border-top: 1px solid rgba(255,255,255,0.06);
+        padding: 10px 16px;
+        padding-bottom: max(10px, env(safe-area-inset-bottom, 0px));
+    }
+    .modal__content--large { max-height: 100dvh; border-radius: 0; }
+    .modal__content--large .modal__body { max-height: calc(100dvh - 120px); }
+    .modal__content--oracle { max-height: 94dvh; border-radius: 20px 20px 0 0; }
+    .oracle-modal-header { padding: 12px 14px 10px; }
+    .oracle-modal-header__controls { gap: 5px; }
+    .oracle-char-select { min-width: 110px; font-size: 0.72rem; }
+}
+
+/* -- Sims editor: full-screen sheet on mobile ------------------------------ */
+@media (max-width: 600px) {
+    .sims-modal { align-items: flex-end; padding: 0; }
+    .sims-editor {
+        width: 100%;
+        max-width: 100%;
+        max-height: 100dvh;
+        height: 100dvh;
+        border-radius: 0;
+        overflow: hidden;
+    }
+    .sims-detail-panel {
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+    }
+}
+
+/* -- Prevent iOS zoom on inputs (16px minimum) ----------------------------- */
+@media (max-width: 1100px) {
+    .input-container__textarea { font-size: max(1rem, 16px); }
+    .control-input,
+    .control-select,
+    .control-textarea,
+    .wh-search-input,
+    .wh-apikey-input { font-size: max(0.8rem, 16px); }
+}
+
+/* -- Tablet refinements (iPad Air / iPad Pro 768-1100px) ------------------- */
+@media (min-width: 768px) and (max-width: 1100px) {
+    .sidebar--left  { width: min(320px, 80vw) !important; }
+    .sidebar--right { width: min(360px, 82vw) !important; }
+    #rp-input { font-size: max(0.9rem, 16px); min-height: 48px; }
+    .message__content { max-width: 78%; }
+    .input-container { max-width: 100%; }
+}
+
+/* -- 720p laptop (T480: 1280x720) ------------------------------------------ */
+@media (min-width: 1100px) and (max-width: 1366px) {
+    .sidebar--left  { width: 260px; }
+    .sidebar--right { width: 320px; }
+    .input-container { max-width: 760px; }
+    #export-chat { display: none; }
+}
+
+/* -- Touch device universal improvements ----------------------------------- */
+@media (pointer: coarse) {
+    .chat-list-item { min-height: 60px; }
+    .character-card { min-height: 56px; }
+    .wh-view-tab { min-height: 44px; }
+    .wh-chip { min-height: 38px; padding: 8px 12px; font-size: 0.72rem; }
+    .tab-btn { min-height: 40px; }
+    .sidebar-tab { min-height: 36px; }
+    .sidebar-reveal-tab { min-width: 28px; min-height: 64px; }
+    .reinject-btn { min-height: 40px; font-size: 0.72rem; }
+    .sidebar-reveal-tab { display: flex; }
+    /* Active-bot remove: always visible */
+    .active-bot__remove { display: flex !important; opacity: 0.7; }
+    .active-bot__remove:active { opacity: 1; transform: scale(1.15); }
+    /* Config range sliders */
+    .config-range { height: 20px; }
+    .config-range::-webkit-slider-thumb { width: 22px; height: 22px; }
+    .config-range::-moz-range-thumb { width: 22px; height: 22px; }
+    /* Thread search bar */
+    .thread-search-bar .btn-icon { min-width: 36px; min-height: 36px; }
+}
+
+/* -- WH tile actions: always visible on touch ------------------------------ */
+@media (pointer: coarse) {
+    .wh-tile__overlay { opacity: 1 !important; }
+    .wh-tile__img     { filter: none !important; }
+    .wh-tile:hover .wh-tile__img { filter: brightness(0.65); }
+    .wh-tile-btn { width: 34px; height: 34px; }
+    .wh-tile-btn svg { width: 14px; height: 14px; }
+    .wh-lb-nav { display: flex !important; opacity: 0.8; }
+    .wh-lb-corner-btn { width: 42px; height: 42px; }
+    .wh-lb-corner-btn svg { width: 18px; height: 18px; }
+}
+
+/* -- Lightbox safe area ---------------------------------------------------- */
+.wh-lightbox__ui {
+    padding-bottom: max(18px, calc(12px + env(safe-area-inset-bottom, 0px)));
+}
+.wh-lb-corner {
+    top: max(14px, calc(env(safe-area-inset-top, 0px) + 14px));
+    right: max(14px, calc(env(safe-area-inset-right, 0px) + 14px));
+}
+
+/* -- Toast above home bar -------------------------------------------------- */
+.toast-container {
+    bottom: max(24px, calc(env(safe-area-inset-bottom, 0px) + 16px));
+}
+
+/* -- Reality bar ----------------------------------------------------------- */
+@media (max-width: 600px) {
+    .reality-bar { padding: 6px 8px; }
+    .reality-bar__select { font-size: 0.72rem; padding: 6px 8px; }
+}
+
+/* -- Input zone: safe area ------------------------------------------------- */
+@media (max-width: 520px) {
+    .input-container { border-radius: 12px; }
+    .arena__input-zone {
+        padding: 6px 8px max(10px, calc(env(safe-area-inset-bottom,0px) + 6px));
+    }
+}
+
+/* -- Sidebar reveal tab: safe area repositioning --------------------------- */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+    #roster-reveal-tab {
+        bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+    }
+}
+
+/* -- Thread messages: phone-optimized -------------------------------------- */
+@media (max-width: 480px) {
+    .message { max-width: 100%; }
+    .message__content { max-width: 96%; }
+    .message__text { font-size: 0.88rem; line-height: 1.65; }
+    .arena__thread { padding: 10px 8px; }
+    .qr-btn { min-height: 36px; font-size: 0.68rem; padding: 6px 12px; }
+    .welcome-screen { padding: 24px 12px; gap: 16px; }
+    .welcome-char-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .welcome-char-card__avatar { width: 52px; height: 52px; }
+    .welcome-char-card__name { font-size: 0.68rem; }
+}
+
+/* -- Character list: 2-col on phone ---------------------------------------- */
+@media (max-width: 520px) {
+    .character-list { grid-template-columns: repeat(2, 1fr); gap: 5px; padding: 6px; }
+    .sidebar-action-bar { flex-direction: column; }
+    .sidebar-action-bar .btn { width: 100%; }
+}
+
+/* -- Focus mode: full collapse on phone ------------------------------------ */
+@media (max-width: 520px) {
+    body.focus-mode .sidebar--left {
+        transform: translateX(-100%) !important;
+        pointer-events: none !important;
+        opacity: 0 !important;
+    }
+}
+
+/* -- Send button minimum size ---------------------------------------------- */
+.input-container__send {
+    min-width: 44px;
+    min-height: 44px;
+    width: 44px;
+    height: 44px;
+}

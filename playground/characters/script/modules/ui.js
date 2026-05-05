@@ -322,6 +322,35 @@ export function initUI() {
     qs('#toggle-terminal')?.addEventListener('click', () => toggleTerminal());
     qs('#close-terminal')?.addEventListener('click',  () => toggleTerminal(true));
 
+    // ── Arena header overflow menu (secondary actions on narrow screens) ──────
+    const $overflowBtn  = qs('#header-overflow-btn');
+    const $overflowMenu = qs('#header-overflow-menu');
+    if ($overflowBtn && $overflowMenu) {
+        const closeOverflow = () => {
+            $overflowMenu.hidden = true;
+            $overflowBtn.setAttribute('aria-expanded', 'false');
+        };
+        $overflowBtn.addEventListener('click', e => {
+            e.stopPropagation();
+            const open = !$overflowMenu.hidden;
+            if (open) { closeOverflow(); return; }
+            $overflowMenu.hidden = false;
+            $overflowBtn.setAttribute('aria-expanded', 'true');
+        });
+        $overflowMenu.querySelectorAll('.header-overflow-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const target = item.dataset.overflowFor;
+                if (target) qs(`#${target}`)?.click();
+                closeOverflow();
+            });
+        });
+        document.addEventListener('click', e => {
+            if (!$overflowMenu.hidden && !$overflowMenu.contains(e.target) && e.target !== $overflowBtn) {
+                closeOverflow();
+            }
+        });
+    }
+
     // ── Tab system ────────────────────────────────────────────────────────────
     qsa('.tab-btn').forEach($btn => {
         $btn.addEventListener('click', () => {
@@ -1106,6 +1135,14 @@ export function initUI() {
                 if (meta) updateCinematicBackground(await getAvatarUrl(id, meta.avatar_path || char?.avatar));
                 renderPersonaCharSelect();
             });
+
+            // Long-press to reveal remove button on touch devices
+            let _lpt;
+            $bot.addEventListener('touchstart', () => {
+                _lpt = setTimeout(() => $bot.classList.add('active-bot--touch-reveal'), 600);
+            }, { passive: true });
+            $bot.addEventListener('touchend', () => clearTimeout(_lpt), { passive: true });
+            $bot.addEventListener('touchcancel', () => clearTimeout(_lpt), { passive: true });
         });
 
         qsa('[data-remove]', $container).forEach($btn => {

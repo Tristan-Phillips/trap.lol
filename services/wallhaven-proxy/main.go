@@ -154,7 +154,24 @@ var rl = &rateLimiter{
 	buckets: make(map[string]*bucket),
 }
 
-func init() { rl.mu <- struct{}{} }
+func init() {
+	rl.mu <- struct{}{}
+	// Evict buckets idle for more than 10 minutes every 5 minutes.
+	go func() {
+		ticker := time.NewTicker(5 * time.Minute)
+		defer ticker.Stop()
+		for range ticker.C {
+			cutoff := time.Now().Add(-10 * time.Minute)
+			<-rl.mu
+			for ip, b := range rl.buckets {
+				if b.lastRefil.Before(cutoff) {
+					delete(rl.buckets, ip)
+				}
+			}
+			rl.mu <- struct{}{}
+		}
+	}()
+}
 
 func rateLimitMiddleware(next http.Handler) http.Handler {
 	const (

@@ -6,7 +6,7 @@
     <title>The Underdark // Reality Matrix</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2306040A'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%23ef4444' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23ef4444'/%3E%3C/svg%3E" />
     <link rel="stylesheet" href="../../glass/style/style.css">
-    <link rel="stylesheet" href="./style/style.css?v=54">
+    <link rel="stylesheet" href="./style/style.css?v=55">
 </head>
 <body class="underdark-page">
 
@@ -106,15 +106,23 @@
                 <div id="active-bots" class="arena__active-bots"></div>
                 <button id="add-char-btn" class="btn-icon" title="Add fragment"><i data-lucide="user-plus"></i></button>
                 <div class="arena__actions">
-                    <button id="chat-bg-btn" class="btn-icon" title="Chat background"><i data-lucide="palette"></i></button>
-                    <button id="wh-open-btn" class="btn-icon" title="Wallhaven Gallery"><i data-lucide="image-plus"></i></button>
-                    <button id="focus-mode-btn" class="btn-icon" title="Immersive Mode"><i data-lucide="book-open"></i></button>
-                    <button id="oracle-btn" class="btn-icon" title="Oracle"><i data-lucide="eye"></i></button>
-                    <button id="search-toggle" class="btn-icon" title="Search history"><i data-lucide="search"></i></button>
-                    <button id="export-chat" class="btn-icon" title="Export session"><i data-lucide="download"></i></button>
-                    <button id="clear-thread" class="btn-icon" title="Clear thread"><i data-lucide="trash-2"></i></button>
-                    <button id="toggle-terminal" class="btn-icon" title="Terminal"><i data-lucide="terminal"></i></button>
-                    <button id="toggle-roster-mobile" class="btn-icon sidebar-mobile-toggle"><i data-lucide="users"></i></button>
+                    <button id="chat-bg-btn" class="btn-icon arena-action--primary" title="Chat background"><i data-lucide="palette"></i></button>
+                    <button id="wh-open-btn" class="btn-icon arena-action--primary" title="Wallhaven Gallery"><i data-lucide="image-plus"></i></button>
+                    <button id="focus-mode-btn" class="btn-icon arena-action--primary" title="Immersive Mode"><i data-lucide="book-open"></i></button>
+                    <button id="oracle-btn" class="btn-icon arena-action--primary" title="Oracle"><i data-lucide="eye"></i></button>
+                    <button id="search-toggle" class="btn-icon arena-action--secondary" title="Search history"><i data-lucide="search"></i></button>
+                    <button id="export-chat" class="btn-icon arena-action--secondary" title="Export session"><i data-lucide="download"></i></button>
+                    <button id="clear-thread" class="btn-icon arena-action--secondary" title="Clear thread"><i data-lucide="trash-2"></i></button>
+                    <button id="toggle-terminal" class="btn-icon arena-action--secondary" title="Terminal"><i data-lucide="terminal"></i></button>
+                    <!-- Overflow menu (secondary actions on mobile) -->
+                    <button id="header-overflow-btn" class="btn-icon arena-action--overflow" title="More actions" aria-haspopup="true" aria-expanded="false"><i data-lucide="more-vertical"></i></button>
+                    <div id="header-overflow-menu" class="header-overflow-menu" hidden role="menu">
+                        <button class="header-overflow-item" data-overflow-for="search-toggle"><i data-lucide="search"></i> Search</button>
+                        <button class="header-overflow-item" data-overflow-for="export-chat"><i data-lucide="download"></i> Export</button>
+                        <button class="header-overflow-item header-overflow-item--danger" data-overflow-for="clear-thread"><i data-lucide="trash-2"></i> Clear Thread</button>
+                        <button class="header-overflow-item" data-overflow-for="toggle-terminal"><i data-lucide="terminal"></i> Terminal</button>
+                    </div>
+                    <button id="toggle-roster-mobile" class="btn-icon sidebar-mobile-toggle" title="Roster"><i data-lucide="users"></i></button>
                 </div>
             </header>
 
@@ -1092,6 +1100,10 @@
         <i data-lucide="chevron-left"></i>
         <span>Back</span>
       </button>
+      <!-- Mobile sidebar toggle (only visible on small screens) -->
+      <button id="wh-sidebar-toggle" class="wh-sidebar-toggle" title="Filters &amp; Views" aria-label="Toggle filters">
+        <i data-lucide="sliders-horizontal"></i>
+      </button>
       <div class="wh-header__logo">
         <svg viewBox="0 0 24 24" fill="none"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><line x1="4" y1="22" x2="4" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
       </div>
@@ -1120,11 +1132,22 @@
     </div>
   </header>
 
+  <!-- ── Mobile view tab bar (shown below grid on small screens) ── -->
+  <nav class="wh-mobile-tabs" id="wh-mobile-tabs" aria-label="Gallery views">
+    <button class="wh-mobile-tab active" data-wview="browse"><i data-lucide="grid-2x2"></i><span>Browse</span></button>
+    <button class="wh-mobile-tab" data-wview="liked"><i data-lucide="heart"></i><span>Liked <span class="wh-liked-badge" id="wh-liked-count-m">0</span></span></button>
+    <button class="wh-mobile-tab" data-wview="saved"><i data-lucide="bookmark"></i><span>Saved <span class="wh-saved-badge" id="wh-saved-count-m">0</span></span></button>
+    <button class="wh-mobile-tab" data-wview="assigned"><i data-lucide="user-check"></i><span>Assigned</span></button>
+  </nav>
+
   <!-- ── Body: sidebar + grid ── -->
   <div class="wh-body">
 
+    <!-- Mobile sidebar backdrop -->
+    <div id="wh-sidebar-backdrop" class="wh-sidebar-backdrop" hidden></div>
+
     <!-- ── Left filter sidebar ── -->
-    <aside class="wh-sidebar">
+    <aside class="wh-sidebar" id="wh-sidebar">
 
       <!-- View tabs -->
       <div class="wh-view-tabs">
@@ -1140,6 +1163,7 @@
         <select id="wh-char-filter" class="wh-char-filter-select">
           <option value="">All Characters</option>
         </select>
+        <button id="wh-unassign-all-btn" class="wh-btn wh-btn--ghost wh-btn--sm wh-unassign-all-btn" title="Unassign filtered selection from all characters"><i data-lucide="user-x"></i> Unassign All</button>
       </div>
 
       <!-- Filters (only shown in browse view) -->
@@ -1318,14 +1342,23 @@
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // STATE
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Load persisted filter prefs, fall back to defaults
+(function(){
+  try {
+    const fp=JSON.parse(localStorage.getItem('wh_filters')||'{}');
+    window.__whFilters__=fp;
+  } catch { window.__whFilters__={}; }
+})();
+const _fp=window.__whFilters__||{};
+
 const WH = {
   apiKey:       localStorage.getItem('wh_apikey') || '',
   query:        '',
-  cats:         { general:true, anime:true, people:true },
-  purity:       { sfw:true, sketchy:false, nsfw:false },
-  sort:         'toplist',
-  topRange:     '1M',
-  layout:       'grid',
+  cats:         _fp.cats  || { general:true, anime:true, people:true },
+  purity:       _fp.purity|| { sfw:true, sketchy:false, nsfw:false },
+  sort:         _fp.sort    || 'toplist',
+  topRange:     _fp.topRange|| '1M',
+  layout:       _fp.layout  || 'grid',
   page:         1,
   totalPages:   1,
   total:        0,
@@ -1347,6 +1380,11 @@ const WH = {
   view:         'browse',
   assignedCharFilter: '',  // charId or ''
 };
+function saveFilters(){
+  localStorage.setItem('wh_filters',JSON.stringify({
+    cats:WH.cats, purity:WH.purity, sort:WH.sort, topRange:WH.topRange, layout:WH.layout
+  }));
+}
 
 function loadSet(k){ try{return new Set(JSON.parse(localStorage.getItem(k)||'[]'));}catch{return new Set();} }
 function saveSet(k,s){ localStorage.setItem(k,JSON.stringify([...s])); }
@@ -1361,6 +1399,10 @@ function saveMapArr(k,m){ const o={}; m.forEach((v,kk)=>{o[kk]=v;}); localStorag
 const arena          = document.getElementById('wh-arena');
 const backBtn        = document.getElementById('wh-back-btn');
 const charLabel      = document.getElementById('wh-char-label');
+const whSidebar      = document.getElementById('wh-sidebar');
+const whSidebarToggle= document.getElementById('wh-sidebar-toggle');
+const whSidebarBack  = document.getElementById('wh-sidebar-backdrop');
+const whMobileTabs   = document.getElementById('wh-mobile-tabs');
 const searchInput    = document.getElementById('wh-search-input');
 const searchClear    = document.getElementById('wh-search-clear');
 const searchBtn      = document.getElementById('wh-search-btn');
@@ -1389,8 +1431,9 @@ const savedCount     = document.getElementById('wh-saved-count');
 const assignedCount  = document.getElementById('wh-assigned-count');
 const filtersPanel   = document.getElementById('wh-filters-panel');
 const topRangeGrp    = document.getElementById('wh-toprange-group');
-const charFilterWrap = document.getElementById('wh-char-filter-wrap');
-const charFilterSel  = document.getElementById('wh-char-filter');
+const charFilterWrap    = document.getElementById('wh-char-filter-wrap');
+const charFilterSel     = document.getElementById('wh-char-filter');
+const unassignAllBtn    = document.getElementById('wh-unassign-all-btn');
 
 // Lightbox
 const lb             = document.getElementById('wh-lightbox');
@@ -1419,6 +1462,22 @@ const whOpenBtn      = document.getElementById('wh-open-btn');
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // HELPERS
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// Intersection Observer — swap data-src → src when tile enters the viewport
+const tileObserver = new IntersectionObserver((entries, obs) => {
+  entries.forEach(entry => {
+    if (!entry.isIntersecting) return;
+    const img = entry.target.querySelector('.wh-tile__img--pending');
+    if (img && img.dataset.src) {
+      img.src = img.dataset.src;
+      img.removeAttribute('data-src');
+      img.classList.remove('wh-tile__img--pending');
+      img.classList.add('wh-tile__img--reveal');
+    }
+    obs.unobserve(entry.target);
+  });
+}, { root: grid, rootMargin: '100px', threshold: 0 });
+
 function buildCats()   { return `${WH.cats.general?1:0}${WH.cats.anime?1:0}${WH.cats.people?1:0}`; }
 function buildPurity() { return `${WH.purity.sfw?1:0}${WH.purity.sketchy?1:0}${WH.purity.nsfw?1:0}`; }
 function purityLabel(p){ return {sfw:'SFW',sketchy:'Sketchy',nsfw:'NSFW'}[p]||p; }
@@ -1432,12 +1491,17 @@ function hideAllStates(){ emptyBrowse.hidden=true;likedEmpty.hidden=true;savedEm
 function showError(msg){ errorBox.hidden=false;errorMsg.textContent=msg;spinner.hidden=true; }
 
 function updateBadges(){
-  likedCount.textContent    = WH.liked.size;
-  savedCount.textContent    = WH.saved.size;
-  assignedCount.textContent = WH.assignedData.size;
-  likedCount.classList.toggle('wh-liked-badge--active',    WH.liked.size>0);
-  savedCount.classList.toggle('wh-saved-badge--active',    WH.saved.size>0);
-  assignedCount.classList.toggle('wh-saved-badge--active', WH.assignedData.size>0);
+  const ls=WH.liked.size, ss=WH.saved.size, as=WH.assignedData.size;
+  likedCount.textContent    = ls;
+  savedCount.textContent    = ss;
+  assignedCount.textContent = as;
+  likedCount.classList.toggle('wh-liked-badge--active',    ls>0);
+  savedCount.classList.toggle('wh-saved-badge--active',    ss>0);
+  assignedCount.classList.toggle('wh-saved-badge--active', as>0);
+  // Mirror badges in mobile tabs
+  const mlc=document.getElementById('wh-liked-count-m'), msc=document.getElementById('wh-saved-count-m');
+  if(mlc) mlc.textContent=ls;
+  if(msc) msc.textContent=ss;
 }
 
 // Returns all characters from main app (reads localStorage key used by the RP app)
@@ -1490,6 +1554,32 @@ charFilterSel.addEventListener('change',()=>{
   if(WH.view==='assigned') renderCurrentView();
 });
 
+unassignAllBtn.addEventListener('click',()=>{
+  // Collect wall IDs to unassign — filtered by current char filter if set
+  let wallIds;
+  if(WH.assignedCharFilter){
+    wallIds=[...WH.assignedData.keys()].filter(wid=>(WH.assigned.get(wid)||[]).includes(WH.assignedCharFilter));
+  } else {
+    wallIds=[...WH.assignedData.keys()];
+  }
+  if(!wallIds.length){showToast('Nothing to unassign.','info');return;}
+  const label=WH.assignedCharFilter?`from ${getCharName(WH.assignedCharFilter)}`:'from all characters';
+  if(!confirm(`Unassign ${wallIds.length} image${wallIds.length===1?'':'s'} ${label}?\n\nThis removes them from the Assigned view but does NOT delete them from character galleries.`))return;
+  wallIds.forEach(wid=>{
+    if(WH.assignedCharFilter){
+      const next=(WH.assigned.get(wid)||[]).filter(id=>id!==WH.assignedCharFilter);
+      if(next.length===0){WH.assigned.delete(wid);WH.assignedData.delete(wid);}
+      else{WH.assigned.set(wid,next);}
+    } else {
+      WH.assigned.delete(wid); WH.assignedData.delete(wid);
+    }
+  });
+  saveMapArr('wh_assigned',WH.assigned);
+  saveMap('wh_assigned_data',WH.assignedData);
+  updateBadges(); renderCurrentView();
+  showToast(`Unassigned ${wallIds.length} image${wallIds.length===1?'':'s'} ${label}.`,'success');
+});
+
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // API KEY
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -1510,12 +1600,25 @@ apikeySave.addEventListener('click',()=>{
 });
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// FILTER CHIPS
+// FILTER CHIPS — wire + restore persisted state
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// Restore chip active states from persisted WH values
+(function restoreFilterChips(){
+  document.querySelectorAll('#wh-cats .wh-chip').forEach(b=>b.classList.toggle('active',!!WH.cats[b.dataset.cat]));
+  document.querySelectorAll('#wh-purities .wh-chip').forEach(b=>b.classList.toggle('active',!!WH.purity[b.dataset.purity]));
+  document.querySelectorAll('#wh-sorts .wh-chip').forEach(b=>b.classList.toggle('active',b.dataset.sort===WH.sort));
+  document.querySelectorAll('#wh-ranges .wh-chip').forEach(b=>b.classList.toggle('active',b.dataset.range===WH.topRange));
+  document.querySelectorAll('#wh-layouts .wh-chip').forEach(b=>b.classList.toggle('active',b.dataset.layout===WH.layout));
+  topRangeGrp.style.display=WH.sort==='toplist'?'':'none';
+  grid.className=`wh-grid wh-grid--${WH.layout}`;
+})();
+
 document.querySelectorAll('#wh-cats .wh-chip').forEach(btn=>{
   btn.addEventListener('click',()=>{
     WH.cats[btn.dataset.cat]=!WH.cats[btn.dataset.cat];
     btn.classList.toggle('active',WH.cats[btn.dataset.cat]);
+    saveFilters();
   });
 });
 document.querySelectorAll('#wh-purities .wh-chip').forEach(btn=>{
@@ -1524,6 +1627,7 @@ document.querySelectorAll('#wh-purities .wh-chip').forEach(btn=>{
     if(p!=='sfw'&&!WH.apiKey){showToast('API key required for '+purityLabel(p)+' content.','warn');return;}
     WH.purity[p]=!WH.purity[p];
     btn.classList.toggle('active',WH.purity[p]);
+    saveFilters();
   });
 });
 document.querySelectorAll('#wh-sorts .wh-chip').forEach(btn=>{
@@ -1531,12 +1635,14 @@ document.querySelectorAll('#wh-sorts .wh-chip').forEach(btn=>{
     document.querySelectorAll('#wh-sorts .wh-chip').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active'); WH.sort=btn.dataset.sort;
     topRangeGrp.style.display=WH.sort==='toplist'?'':'none';
+    saveFilters();
   });
 });
 document.querySelectorAll('#wh-ranges .wh-chip').forEach(btn=>{
   btn.addEventListener('click',()=>{
     document.querySelectorAll('#wh-ranges .wh-chip').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active'); WH.topRange=btn.dataset.range;
+    saveFilters();
   });
 });
 document.querySelectorAll('#wh-layouts .wh-chip').forEach(btn=>{
@@ -1544,26 +1650,55 @@ document.querySelectorAll('#wh-layouts .wh-chip').forEach(btn=>{
     document.querySelectorAll('#wh-layouts .wh-chip').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active'); WH.layout=btn.dataset.layout;
     grid.className=`wh-grid wh-grid--${WH.layout}`;
+    saveFilters();
   });
 });
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // VIEW TABS
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function switchWhView(view){
+  WH.view=view;
+  // Sync both desktop sidebar tabs and mobile bottom nav
+  document.querySelectorAll('.wh-view-tab').forEach(b=>b.classList.toggle('active',b.dataset.wview===view));
+  document.querySelectorAll('.wh-mobile-tab').forEach(b=>b.classList.toggle('active',b.dataset.wview===view));
+  const isBrowse=view==='browse';
+  const isAssigned=view==='assigned';
+  filtersPanel.style.display=isBrowse?'':'none';
+  charFilterWrap.hidden=!isAssigned;
+  pageControls.hidden=!isBrowse;
+  if(isAssigned) populateCharSelects();
+  renderCurrentView();
+}
+
 document.querySelectorAll('.wh-view-tab').forEach(btn=>{
-  btn.addEventListener('click',()=>{
-    document.querySelectorAll('.wh-view-tab').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-    WH.view=btn.dataset.wview;
-    const isBrowse=WH.view==='browse';
-    const isAssigned=WH.view==='assigned';
-    filtersPanel.style.display=isBrowse?'':'none';
-    charFilterWrap.hidden=!isAssigned;
-    pageControls.hidden=!isBrowse;
-    if(isAssigned) populateCharSelects();
-    renderCurrentView();
-  });
+  btn.addEventListener('click',()=>switchWhView(btn.dataset.wview));
 });
+
+// Mobile bottom nav tabs
+document.querySelectorAll('.wh-mobile-tab').forEach(btn=>{
+  btn.addEventListener('click',()=>switchWhView(btn.dataset.wview));
+});
+
+// Mobile sidebar toggle
+function openWhSidebar(){
+  whSidebar.classList.add('wh-sidebar--open');
+  whSidebarBack.hidden=false;
+  whSidebarToggle.setAttribute('aria-expanded','true');
+  document.addEventListener('keydown',closeWhSidebarOnEsc);
+}
+function closeWhSidebar(){
+  whSidebar.classList.remove('wh-sidebar--open');
+  whSidebarBack.hidden=true;
+  whSidebarToggle.setAttribute('aria-expanded','false');
+  document.removeEventListener('keydown',closeWhSidebarOnEsc);
+}
+function closeWhSidebarOnEsc(e){ if(e.key==='Escape') closeWhSidebar(); }
+
+whSidebarToggle.addEventListener('click',()=>{
+  whSidebar.classList.contains('wh-sidebar--open')?closeWhSidebar():openWhSidebar();
+});
+whSidebarBack.addEventListener('click',closeWhSidebar);
 
 function renderCurrentView(){
   hideAllStates(); grid.innerHTML='';
@@ -1685,7 +1820,7 @@ function buildTile(w,idx,set){
 
   tile.innerHTML=`
     <div class="wh-tile__img-wrap">
-      <img class="wh-tile__img" src="${w.thumbs.large}" loading="lazy" draggable="false" alt="">
+      <img class="wh-tile__img wh-tile__img--pending" data-src="${w.thumbs.large}" draggable="false" alt="">
       ${isAssigned?`<div class="wh-tile__char-badges">${charBadgesHtml(w.id)}</div>`:''}
       <div class="wh-tile__overlay">
         <div class="wh-tile__overlay-top">
@@ -1719,6 +1854,7 @@ function buildTile(w,idx,set){
   tile.querySelector('[data-action="bg"]').addEventListener('click',e=>{e.stopPropagation();setAsBackground(w.path);});
 
   grid.appendChild(tile);
+  tileObserver.observe(tile);
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -1831,19 +1967,17 @@ document.addEventListener('wh:add-to-gallery',e=>{
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 function downloadWallpaper(w){
   const filename=`wallhaven-${w.id}.${w.file_type==='image/jpeg'?'jpg':'png'}`;
-  // Fetch through the proxy so the browser gets a blob (avoids cross-origin download block)
-  fetch(`https://wallhaven.trap.lol/api/v1/w/${w.id}${WH.apiKey?'?apikey='+WH.apiKey:''}`)
+  const dlHeaders={}; if(WH.apiKey)dlHeaders['X-API-Key']=WH.apiKey;
+  fetch(`https://wallhaven.trap.lol/api/v1/w/${w.id}`,{headers:dlHeaders})
     .then(r=>r.json())
     .then(json=>{
       const imgUrl=json.data?.path||w.path;
-      // Use anchor download trick; works when image is same-origin (our proxy serves it)
       const a=document.createElement('a');
       a.href=imgUrl; a.download=filename; a.target='_blank';
       a.click();
       showToast('Download started.','success');
     })
     .catch(()=>{
-      // Fallback: open full image in new tab
       window.open(w.path,'_blank');
       showToast('Opened in new tab — save manually.','info');
     });
@@ -1930,6 +2064,20 @@ lbBackdrop.addEventListener('click',()=>{lb.hidden=true;});
 lbPrev.addEventListener('click',()=>{if(WH.lbIndex>0){WH.lbIndex--;renderLightbox();}});
 lbNext.addEventListener('click',()=>{const ds=lbDataset();if(WH.lbIndex<ds.length-1){WH.lbIndex++;renderLightbox();}});
 
+// Touch swipe for lightbox
+(function(){
+  let _sx=0,_sy=0;
+  lb.addEventListener('touchstart',e=>{if(e.touches.length!==1)return;_sx=e.touches[0].clientX;_sy=e.touches[0].clientY;},{passive:true});
+  lb.addEventListener('touchend',e=>{
+    if(e.changedTouches.length!==1)return;
+    const dx=e.changedTouches[0].clientX-_sx;
+    const dy=e.changedTouches[0].clientY-_sy;
+    if(Math.abs(dy)>Math.abs(dx)||Math.abs(dx)<40)return;
+    if(dx<0){const ds=lbDataset();if(WH.lbIndex<ds.length-1){WH.lbIndex++;renderLightbox();}}
+    else if(dx>0&&WH.lbIndex>0){WH.lbIndex--;renderLightbox();}
+  },{passive:true});
+})();
+
 document.addEventListener('keydown',e=>{
   if(!lb.hidden){
     if(e.key==='ArrowLeft'&&WH.lbIndex>0){WH.lbIndex--;renderLightbox();}
@@ -1953,11 +2101,9 @@ function closeArena(){arena.hidden=true;lb.hidden=true;}
 if(whOpenBtn){
   whOpenBtn.addEventListener('click',()=>{
     // Try to read the active character's name from the thread header
-    const nameEl=document.querySelector('#active-bots .arena__bot-name, #active-bots .bot-avatar[title]');
-    const name=nameEl?(nameEl.title||nameEl.textContent||'').trim():'';
-    // Try to get the active character id
-    const firstBot=document.querySelector('#active-bots [data-char-id]');
-    const charId=firstBot?firstBot.dataset.charId:null;
+    const activeBot=document.querySelector('#active-bots .active-bot--selected, #active-bots .active-bot');
+    const name=activeBot?(activeBot.title||'').trim():'';
+    const charId=activeBot?activeBot.dataset.id:null;
     openWallhavenGallery(name, charId);
   });
 }
@@ -2071,9 +2217,11 @@ function showToast(msg,type){
 .wh-saved-badge--active{background:rgba(var(--accent-rgb,239,68,68),0.2);color:var(--theme-accent,#ef4444);}
 
 /* Char filter (assigned view) */
-.wh-char-filter-wrap{padding:0 8px 8px;border-bottom:1px solid rgba(255,255,255,0.04);}
+.wh-char-filter-wrap{padding:0 8px 8px;border-bottom:1px solid rgba(255,255,255,0.04);display:flex;flex-direction:column;gap:6px;}
 .wh-char-filter-select{width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.09);border-radius:7px;padding:6px 8px;font-size:0.68rem;color:var(--text-primary,#f0edf8);outline:none;cursor:pointer;}
 .wh-char-filter-select:focus{border-color:rgba(var(--accent-rgb,239,68,68),0.4);}
+.wh-unassign-all-btn{width:100%;justify-content:center;color:rgba(239,68,68,0.7)!important;border-color:rgba(239,68,68,0.18)!important;}
+.wh-unassign-all-btn:hover{background:rgba(239,68,68,0.12)!important;color:#f87171!important;border-color:rgba(239,68,68,0.35)!important;}
 
 .wh-filters-panel{flex:1;overflow-y:auto;padding:8px 8px 0;}
 .wh-sidebar-section{margin-bottom:16px;}
@@ -2136,7 +2284,9 @@ kbd{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);bo
 .wh-tile--nsfw   {border-color:rgba(239,68,68,0.2);}
 .wh-tile--sketchy{border-color:rgba(251,191,36,0.15);}
 .wh-tile__img-wrap{width:100%;height:100%;position:relative;}
-.wh-tile__img{width:100%;height:100%;object-fit:cover;display:block;transition:filter 0.18s;}
+.wh-tile__img{width:100%;height:100%;object-fit:cover;display:block;transition:filter 0.18s,opacity 0.35s;}
+.wh-tile__img--pending{opacity:0;}
+.wh-tile__img--reveal{opacity:1;}
 .wh-tile:hover .wh-tile__img{filter:brightness(0.65);}
 .wh-tile__overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.85) 0%,transparent 50%);opacity:0;transition:opacity 0.18s;display:flex;flex-direction:column;justify-content:space-between;padding:8px;}
 .wh-tile:hover .wh-tile__overlay{opacity:1;}
@@ -2219,9 +2369,114 @@ kbd{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);bo
 
 .wh-lb-counter{position:absolute;top:14px;left:50%;transform:translateX(-50%);font-size:0.62rem;font-family:var(--font-mono,monospace);background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.1);padding:3px 10px;border-radius:20px;color:rgba(255,255,255,0.5);z-index:2;white-space:nowrap;pointer-events:none;}
 
+/* ── WH sidebar toggle (mobile only) ── */
+.wh-sidebar-toggle {
+  display:none;
+  align-items:center;justify-content:center;
+  width:34px;height:34px;border-radius:8px;
+  background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);
+  color:rgba(255,255,255,0.7);cursor:pointer;transition:all 0.15s;flex-shrink:0;
+}
+.wh-sidebar-toggle svg{width:15px;height:15px;}
+.wh-sidebar-toggle:hover{background:rgba(255,255,255,0.12);color:#fff;}
+
+/* ── WH mobile bottom nav ── */
+.wh-mobile-tabs {
+  display:none;
+  background:rgba(6,4,10,0.97);
+  border-top:1px solid rgba(255,255,255,0.06);
+  flex-shrink:0;
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+.wh-mobile-tab {
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;flex:1;
+  padding:8px 4px;
+  background:transparent;border:none;
+  color:rgba(255,255,255,0.38);font-size:0.52rem;font-family:var(--font-mono,monospace);
+  font-weight:600;letter-spacing:0.04em;cursor:pointer;transition:color 0.14s,background 0.14s;
+  touch-action:manipulation;min-height:52px;
+}
+.wh-mobile-tab svg{width:18px;height:18px;flex-shrink:0;}
+.wh-mobile-tab:active{background:rgba(255,255,255,0.06);}
+.wh-mobile-tab.active{color:var(--theme-accent,#ef4444);}
+.wh-mobile-tab .wh-liked-badge,
+.wh-mobile-tab .wh-saved-badge {
+  display:inline;font-size:inherit;
+  background:transparent;padding:0;margin:0;
+}
+
+/* ── WH sidebar backdrop ── */
+.wh-sidebar-backdrop {
+  position:fixed;inset:0;z-index:98;
+  background:rgba(0,0,0,0.55);
+  backdrop-filter:blur(4px);
+  -webkit-backdrop-filter:blur(4px);
+}
+.wh-sidebar-backdrop[hidden]{display:none;}
+
+/* ── WH sidebar open state (mobile slide-in) ── */
+.wh-sidebar--open {
+  transform:translateX(0) !important;
+  z-index:99 !important;
+}
+
 /* Responsive */
-@media(max-width:800px){.wh-sidebar{width:160px;}.wh-header__right{display:none;}.wh-grid--grid,.wh-grid--masonry{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));}}
-@media(max-width:600px){.wh-sidebar{display:none;}.wh-lightbox__ui{flex-direction:column;gap:8px;align-items:flex-start;}.wh-lb-nav{display:none;}.wh-grid--grid,.wh-grid--masonry,.wh-grid--large{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));}}
+@media(max-width:800px){
+  .wh-sidebar{width:160px;}
+  .wh-header__right{display:none;}
+  .wh-grid--grid,.wh-grid--masonry{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));}
+}
+@media(max-width:600px){
+  /* Sidebar becomes slide-in drawer */
+  .wh-sidebar{
+    position:fixed;left:0;top:0;bottom:0;z-index:99;
+    transform:translateX(-100%);
+    transition:transform 0.28s cubic-bezier(0.4,0,0.2,1);
+    width:min(240px,80vw) !important;
+    max-height:100dvh;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+    overflow-y:auto;
+  }
+  .wh-sidebar-toggle{display:flex;}
+  .wh-mobile-tabs{display:flex;}
+  /* Header collapses to search + back only on small screens */
+  .wh-header{flex-wrap:wrap;gap:8px;padding:8px 12px;}
+  .wh-header__center{order:2;width:100%;flex:none;}
+  .wh-header__right{display:none;}
+  .wh-header__left{flex:1;}
+  .wh-header__logo{display:none;}
+  .wh-header__title{font-size:0.78rem;}
+  /* Grid — comfortable tiles on phone */
+  .wh-grid--grid,.wh-grid--masonry,.wh-grid--large{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));}
+  /* Lightbox bottom bar stacks */
+  .wh-lightbox__ui{flex-direction:column;gap:8px;align-items:flex-start;padding:16px 14px;}
+  .wh-lightbox__actions{flex-wrap:wrap;gap:6px;justify-content:flex-start;width:100%;}
+  .wh-lb-assign-wrap{width:100%;}
+  .wh-lb-assign-select{flex:1;max-width:none;}
+  /* Status bar compact */
+  .wh-statusbar{padding:5px 10px;flex-wrap:wrap;gap:4px;}
+  /* Grid area fills remaining */
+  .wh-grid-area{flex:1;}
+  /* Search button icon-only */
+  .wh-search-btn-label{display:none;}
+}
+@media(max-width:380px){
+  .wh-grid--grid,.wh-grid--masonry{grid-template-columns:repeat(2,1fr);}
+  .wh-mobile-tab{min-height:48px;font-size:0.47rem;}
+  .wh-mobile-tab svg{width:16px;height:16px;}
+}
+/* iPad: sidebar is normal visible */
+@media(min-width:768px){
+  .wh-mobile-tabs{display:none;}
+  .wh-sidebar-toggle{display:none;}
+  .wh-sidebar-backdrop{display:none!important;}
+  .wh-sidebar{transform:none!important;position:relative!important;}
+}
+@media(min-width:801px){
+  .wh-header__right{display:flex;}
+}
 </style>
 
 
