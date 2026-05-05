@@ -1,0 +1,302 @@
+/* ═══════════════════════════════════════════════════════════════
+   ORACLE MODAL
+═══════════════════════════════════════════════════════════════ */
+
+/* Container — wide panel, flex column, capped height */
+.modal__content--oracle {
+    max-width: 720px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    max-height: 82vh;
+    min-height: 0;
+    border-color: rgba(167,139,250,0.35);
+    box-shadow: 0 24px 80px rgba(0,0,0,0.8), 0 0 40px rgba(167,139,250,0.12);
+    overflow: hidden;
+}
+
+/* Header band */
+.oracle-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 18px 12px;
+    border-bottom: 1px solid rgba(167,139,250,0.12);
+    background: rgba(167,139,250,0.03);
+    flex-shrink: 0;
+}
+.oracle-modal-header__identity {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.oracle-modal-header__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: rgba(167,139,250,0.12);
+    border: 1px solid rgba(167,139,250,0.25);
+    color: #a78bfa;
+    flex-shrink: 0;
+}
+.oracle-modal-header__icon svg { width: 16px; height: 16px; }
+.oracle-modal-header__title {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: 0.01em;
+}
+.oracle-modal-header__sub {
+    margin: 2px 0 0;
+    font-size: 0.64rem;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    letter-spacing: 0.02em;
+}
+.oracle-modal-header__controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.oracle-char-select {
+    min-width: 150px;
+    max-width: 200px;
+    font-size: 0.78rem;
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: var(--bg-raised);
+    border: 1px solid var(--glass-border);
+    color: var(--text-primary);
+    cursor: pointer;
+}
+
+/* Preset strip — horizontal scrollable pill row */
+.oracle-preset-strip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--glass-border-mute);
+    background: rgba(0,0,0,0.15);
+    flex-shrink: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+.oracle-preset-strip::-webkit-scrollbar { display: none; }
+.oracle-preset-strip__label {
+    font-size: 0.62rem;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    white-space: nowrap;
+    flex-shrink: 0;
+    opacity: 0.6;
+}
+.oracle-inject-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 11px;
+    border-radius: 20px;
+    border: 1px solid rgba(167,139,250,0.22);
+    background: rgba(167,139,250,0.05);
+    color: var(--text-muted);
+    font-size: 0.68rem;
+    font-family: var(--font-mono);
+    white-space: nowrap;
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.oracle-inject-btn svg { width: 11px; height: 11px; }
+.oracle-inject-btn:hover {
+    background: rgba(167,139,250,0.18);
+    color: #a78bfa;
+    border-color: rgba(167,139,250,0.5);
+}
+
+/* Thread — scrollable conversation area */
+.oracle-thread {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(167,139,250,0.25) transparent;
+}
+.oracle-thread::-webkit-scrollbar { width: 4px; }
+.oracle-thread::-webkit-scrollbar-thumb { background: rgba(167,139,250,0.25); border-radius: 2px; }
+
+/* Empty state */
+.oracle-thread__empty {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 32px 24px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    opacity: 0.55;
+}
+.oracle-thread__empty svg { width: 30px; height: 30px; opacity: 0.35; }
+.oracle-thread__empty p { margin: 0; line-height: 1.5; }
+.oracle-thread__empty-hint {
+    font-size: 0.68rem;
+    font-family: var(--font-mono);
+    opacity: 0.7;
+}
+
+/* Messages — flat bubbles (JS sets .oracle-msg--user / --bot directly) */
+.oracle-msg {
+    max-width: 86%;
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 0.82rem;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.oracle-msg--user {
+    align-self: flex-end;
+    background: rgba(var(--accent-rgb), 0.14);
+    border: 1px solid rgba(var(--accent-rgb), 0.28);
+    color: var(--text-primary);
+    border-bottom-right-radius: 4px;
+}
+.oracle-msg--bot {
+    align-self: flex-start;
+    background: rgba(167,139,250,0.07);
+    border: 1px solid rgba(167,139,250,0.16);
+    color: var(--text-secondary);
+    border-bottom-left-radius: 4px;
+}
+.oracle-msg--bot.streaming {
+    border-color: rgba(167,139,250,0.45);
+    box-shadow: 0 0 8px rgba(167,139,250,0.12);
+}
+
+/* Footer — stacked: action row above input row */
+.oracle-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border-top: 1px solid rgba(167,139,250,0.1);
+    background: rgba(0,0,0,0.12);
+    flex-shrink: 0;
+}
+.oracle-footer__actions {
+    display: flex;
+    gap: 6px;
+    padding: 8px 16px 6px;
+    border-bottom: 1px solid var(--glass-border-mute);
+}
+.oracle-footer__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--glass-border);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    font-family: var(--font-mono);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.oracle-footer__btn svg { width: 11px; height: 11px; }
+.oracle-footer__btn:hover {
+    background: rgba(255,255,255,0.05);
+    color: var(--text-primary);
+    border-color: var(--glass-border);
+}
+.oracle-footer__btn--inject {
+    border-color: rgba(var(--accent-rgb), 0.3);
+    color: var(--accent);
+}
+.oracle-footer__btn--inject:hover {
+    background: rgba(var(--accent-rgb), 0.12);
+    border-color: rgba(var(--accent-rgb), 0.5);
+}
+
+/* Input row */
+.oracle-input-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    padding: 10px 16px 12px;
+}
+.oracle-textarea {
+    flex: 1;
+    min-height: 40px;
+    max-height: 130px;
+    resize: none;
+    background: rgba(0,0,0,0.25);
+    border: 1px solid rgba(167,139,250,0.18);
+    border-radius: 10px;
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    font-family: var(--font-sans);
+    padding: 9px 13px;
+    line-height: 1.45;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    overflow-y: auto;
+    scrollbar-width: thin;
+}
+.oracle-textarea:focus {
+    outline: none;
+    border-color: rgba(167,139,250,0.5);
+    box-shadow: 0 0 0 3px rgba(167,139,250,0.1);
+}
+.oracle-textarea::placeholder { color: var(--text-muted); opacity: 0.5; }
+.oracle-send-btn {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    border: 1px solid rgba(167,139,250,0.35);
+    background: rgba(167,139,250,0.1);
+    color: #a78bfa;
+    cursor: pointer;
+    transition: background 0.15s, box-shadow 0.15s, border-color 0.15s;
+}
+.oracle-send-btn svg { width: 16px; height: 16px; }
+.oracle-send-btn:hover {
+    background: rgba(167,139,250,0.22);
+    border-color: rgba(167,139,250,0.55);
+    box-shadow: 0 0 10px rgba(167,139,250,0.25);
+}
+.oracle-send-btn:disabled { opacity: 0.3; cursor: not-allowed; box-shadow: none; }
+
+/* Responsive */
+@media (max-width: 600px) {
+    .modal__content--oracle { max-width: 100%; max-height: 100dvh; border-radius: 0; }
+    .oracle-preset-strip { padding: 6px 12px; }
+    .oracle-thread { padding: 12px 14px; }
+}
+
+/* ── Confirm danger styling ── */
+.btn--danger-confirm {
+    background: rgba(239,68,68,0.15) !important;
+    border-color: rgba(239,68,68,0.5) !important;
+    color: #f87171 !important;
+}
+.btn--danger-confirm:hover {
+    background: rgba(239,68,68,0.25) !important;
+    border-color: rgba(239,68,68,0.7) !important;
+}

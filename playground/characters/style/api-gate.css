@@ -1,0 +1,158 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   API KEY GATE — full-screen overlay shown to new users
+   ═══════════════════════════════════════════════════════════════════════════ */
+.api-gate {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.api-gate[hidden] { display: none; }
+
+.api-gate__backdrop {
+    position: absolute;
+    inset: 0;
+    background: #06040A;
+    background: var(--bg-base, #06040A);
+}
+.api-gate__backdrop::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse 60% 50% at 30% 40%, rgba(190,41,236,0.13) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 40% at 70% 60%, rgba(244,168,48,0.08) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.api-gate__panel {
+    position: relative;
+    z-index: 1;
+    width: 420px;
+    max-width: calc(100vw - 32px);
+    background: #0E0816;
+    background: var(--bg-surface, #0E0816);
+    border: 1px solid rgba(190,41,236,0.30);
+    border-radius: 16px;
+    padding: 40px 36px 32px;
+    text-align: center;
+    box-shadow:
+        0 0 0 1px rgba(190,41,236,0.08),
+        0 24px 60px rgba(0,0,0,0.6),
+        0 0 80px rgba(190,41,236,0.08);
+}
+
+.api-gate__logo {
+    width: 52px;
+    height: 52px;
+    margin: 0 auto 20px;
+    border-radius: 14px;
+    background: rgba(190,41,236,0.12);
+    border: 1px solid rgba(190,41,236,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.api-gate__logo svg, .api-gate__logo i { width: 22px; height: 22px; color: #BE29EC; }
+
+.api-gate__title {
+    margin: 0 0 6px;
+    font-size: 1.45rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: #EDE8F5;
+    color: var(--text-main, #EDE8F5);
+}
+
+.api-gate__sub {
+    margin: 0 0 28px;
+    font-size: 0.85rem;
+    color: #7D6E92;
+    color: var(--text-muted, #7D6E92);
+    line-height: 1.5;
+}
+
+.api-gate__form { display: flex; flex-direction: column; gap: 10px; }
+
+.api-gate__input-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.api-gate__input {
+    flex: 1;
+    min-width: 0;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(190,41,236,0.2);
+    border-radius: 8px;
+    padding: 11px 14px;
+    font-size: 0.82rem;
+    font-family: ui-monospace, monospace;
+    color: #EDE8F5;
+    color: var(--text-main, #EDE8F5);
+    outline: none;
+    transition: border-color 0.18s;
+}
+.api-gate__input:focus {
+    border-color: rgba(190,41,236,0.55);
+    box-shadow: 0 0 0 2px rgba(190,41,236,0.10);
+}
+.api-gate__input::placeholder { color: rgba(125,110,146,0.5); }
+
+.api-gate__toggle {
+    flex-shrink: 0;
+    width: 38px; height: 38px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(190,41,236,0.2);
+    border-radius: 8px;
+    color: #7D6E92;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.18s, color 0.18s;
+}
+.api-gate__toggle:hover { border-color: rgba(190,41,236,0.45); color: #EDE8F5; }
+.api-gate__toggle svg, .api-gate__toggle i { width: 15px; height: 15px; }
+
+.api-gate__error {
+    margin: 0;
+    font-size: 0.78rem;
+    color: #ef4444;
+    text-align: left;
+}
+.api-gate__error[hidden] { display: none; }
+
+.api-gate__submit {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: none;
+    background: rgba(190,41,236,0.85);
+    color: #fff;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: background 0.18s, box-shadow 0.18s;
+    box-shadow: 0 0 20px rgba(190,41,236,0.3);
+}
+.api-gate__submit:hover {
+    background: rgb(190,41,236);
+    box-shadow: 0 0 32px rgba(190,41,236,0.5);
+}
+.api-gate__submit svg, .api-gate__submit i { width: 16px; height: 16px; }
+.api-gate__hint {
+    margin: 20px 0 0;
+    font-size: 0.73rem;
+    color: #7D6E92;
+    color: var(--text-muted, #7D6E92);
+    opacity: 0.7;
+}

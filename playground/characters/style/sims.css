@@ -1,0 +1,330 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   SIMS-STYLE CHARACTER EDITOR
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Modal wrapper ── */
+.sims-modal {
+    padding: 0;
+    align-items: stretch;
+    justify-content: stretch;
+    z-index: 1200;
+}
+
+/* ── Editor container ── */
+.sims-editor {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    background: #06030c;
+    overflow: hidden;
+    z-index: 1;
+    /* safe area for notched phones */
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* ── Top Bar ── */
+.sims-editor__topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 var(--space-lg);
+    height: 54px;
+    background: rgba(0,0,0,0.6);
+    border-bottom: 1px solid var(--glass-border);
+    backdrop-filter: blur(14px);
+    flex-shrink: 0;
+    z-index: 10;
+    gap: var(--space-md);
+}
+.sims-editor__topbar-left,
+.sims-editor__topbar-right {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+.sims-editor__topbar-icon {
+    width: 18px; height: 18px;
+    color: var(--theme-accent);
+}
+.sims-editor__topbar-title {
+    font-family: var(--font-mono);
+    font-size: var(--text-base);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin: 0;
+    font-weight: 700;
+}
+.sims-char-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 10px;
+    background: rgba(var(--accent-rgb), 0.18);
+    border: 1px solid rgba(var(--accent-rgb), 0.4);
+    border-radius: 20px;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--theme-accent);
+    letter-spacing: 0.08em;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ── Body: 3-column layout ── */
+.sims-editor__body {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 280px 60px 1fr;
+    overflow: hidden;
+}
+
+/* ── Left — Preview Panel ── */
+.sims-preview-panel {
+    border-right: 1px solid var(--glass-border-mute);
+    background: rgba(0,0,0,0.35);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.sims-preview-panel__inner {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--glass-border-mute) transparent;
+    padding: var(--space-md) var(--space-sm);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+/* Avatar frame */
+.sims-avatar-frame {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 0.55;
+    border-radius: 12px;
+    overflow: hidden;
+    background: linear-gradient(160deg, #0e0518 0%, #050210 100%);
+    border: 1px solid var(--glass-border-mute);
+    flex-shrink: 0;
+}
+.sims-avatar-frame__img {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center top;
+    opacity: 0.4;
+    transition: opacity 0.5s;
+}
+.sims-avatar-frame__img.has-image { opacity: 1; }
+
+.sims-avatar-frame__silhouette {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* SVG Body regions */
+.sims-body-svg {
+    width: 100%;
+    height: 100%;
+    padding: 8px;
+    box-sizing: border-box;
+}
+.sims-region {
+    fill: rgba(var(--accent-rgb), 0.10);
+    stroke: rgba(var(--accent-rgb), 0.30);
+    stroke-width: 1px;
+    cursor: pointer;
+    transition: fill 0.18s, stroke 0.18s;
+}
+.sims-region--secondary {
+    fill: rgba(var(--accent-rgb), 0.06);
+    stroke: rgba(var(--accent-rgb), 0.18);
+}
+.sims-region:hover,
+.sims-region:focus {
+    fill: rgba(var(--accent-rgb), 0.35);
+    stroke: var(--theme-accent);
+    stroke-width: 1.5px;
+    outline: none;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SIMS RESPONSIVE
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Tablet: hide preview, collapse nav to icon-only rail ── */
+@media (max-width: 900px) {
+    .sims-editor__body {
+        grid-template-columns: 0 50px 1fr;
+    }
+    .sims-preview-panel { display: none; }
+    .sims-category-nav  { width: 50px; padding: var(--space-sm) 6px; }
+    .sims-cat-btn span  { display: none; }
+    .sims-cat-btn       { padding: 12px 6px; min-height: 48px; }
+    .sims-cat-btn svg   { width: 18px; height: 18px; }
+}
+
+/* ── Mobile: horizontal tab bar, full-width detail panel ── */
+@media (max-width: 600px) {
+    /* Body becomes a column: tab bar on top, detail panel below */
+    .sims-editor__body {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+    }
+
+    /* Horizontal scrolling tab bar */
+    .sims-category-nav {
+        flex-direction: row;
+        width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-x: contain;
+        border-right: none;
+        border-bottom: 2px solid rgba(var(--accent-rgb), 0.15);
+        padding: 0 var(--space-sm);
+        gap: 0;
+        /* scroll snap for satisfying swipe */
+        scroll-snap-type: x mandatory;
+        /* scroll padding so active item isn't hidden under edges */
+        scroll-padding: 0 var(--space-sm);
+    }
+    .sims-cat-btn {
+        flex-direction: column;
+        flex-shrink: 0;
+        padding: 8px 12px;
+        min-height: 54px;
+        min-width: 56px;
+        border-radius: 0;
+        font-size: 0.48rem;
+        scroll-snap-align: start;
+        gap: 4px;
+    }
+    /* show labels in horizontal mode */
+    .sims-cat-btn span { display: inline; font-size: 0.48rem; }
+    .sims-cat-btn svg  { width: 17px; height: 17px; }
+    /* active indicator: bottom border line */
+    .sims-cat-btn.active {
+        background: rgba(var(--accent-rgb), 0.1);
+    }
+    .sims-cat-btn.active::before {
+        top: auto; bottom: -2px;
+        left: 15%; right: 15%;
+        width: auto; height: 2px;
+        border-radius: 2px 2px 0 0;
+        box-shadow: 0 0 8px var(--theme-glow);
+    }
+
+    /* Detail panel gets full width and extra bottom padding for footer */
+    .sims-detail-panel {
+        padding: var(--space-md);
+    }
+
+    /* Fields always single column */
+    .sims-field-row {
+        grid-template-columns: 1fr;
+    }
+
+    /* Topbar: hide title text, keep icon + badge + actions */
+    .sims-editor__topbar-title { display: none; }
+    .sims-editor__topbar {
+        padding: 0 var(--space-sm);
+        height: 50px;
+    }
+    /* Topbar action buttons: show icons only, hide text labels */
+    .sims-topbar-btn-label { display: none; }
+
+    /* Chips: slightly larger tap target on mobile */
+    .sims-chip {
+        padding: 6px 12px;
+        font-size: 0.72rem;
+        min-height: 34px;
+    }
+
+    /* Sliders: bigger thumb on mobile */
+    .sims-range::-webkit-slider-thumb {
+        height: 22px; width: 22px;
+        margin-top: -9px;
+    }
+    .sims-range--lg::-webkit-slider-thumb {
+        height: 24px; width: 24px;
+        margin-top: -10px;
+    }
+    .sims-range::-moz-range-thumb {
+        height: 22px; width: 22px;
+    }
+
+    /* Inputs: 16px minimum to prevent iOS auto-zoom on focus */
+    .sims-input,
+    .sims-select,
+    .sims-textarea {
+        font-size: 16px;
+        padding: 10px 12px;
+    }
+    .sims-textarea--code { font-size: 13px; }
+
+    /* Footer: stack buttons full-width */
+    .sims-editor__footer {
+        flex-direction: column;
+        padding: var(--space-sm) var(--space-md);
+        padding-bottom: calc(var(--space-sm) + env(safe-area-inset-bottom));
+        gap: var(--space-sm);
+    }
+    .sims-editor__footer-right {
+        width: 100%;
+        gap: var(--space-sm);
+    }
+    .sims-editor__footer-right .sims-btn {
+        flex: 1;
+        justify-content: center;
+        padding: 11px var(--space-md);
+        font-size: 0.72rem;
+    }
+    .sims-save-status {
+        text-align: center;
+        font-size: 0.65rem;
+    }
+
+    /* Section dividers: more breathing room */
+    .sims-section-divider {
+        margin: var(--space-md) 0 var(--space-xs);
+        font-size: 0.6rem;
+    }
+
+    /* Panel header slightly smaller */
+    .sims-panel__header {
+        font-size: 0.85rem;
+        margin-bottom: var(--space-md);
+    }
+}
+
+/* ── Small phones (≤ 400px): tighten further ── */
+@media (max-width: 400px) {
+    .sims-cat-btn {
+        min-width: 48px;
+        padding: 8px 8px;
+    }
+    .sims-cat-btn span { display: none; }
+    .sims-cat-btn {
+        min-height: 48px;
+        font-size: 0;   /* icon only on very small screens */
+    }
+    .sims-cat-btn svg { width: 19px; height: 19px; }
+    .sims-detail-panel { padding: var(--space-sm); }
+    .sims-chip { font-size: 0.68rem; }
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* required field marker */
+.required { color: #ef4444; }

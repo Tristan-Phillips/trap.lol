@@ -1,0 +1,1185 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   SOCIAL FEED — Desktop Layout
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Social sidebar tab (left sidebar view) ── */
+.social-sidebar__hot {
+    padding: 8px 8px 4px;
+    flex-shrink: 0;
+}
+.social-sidebar__hot-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.14s, border-color 0.14s;
+    color: var(--text-main);
+    text-align: left;
+}
+.social-sidebar__hot-btn:hover {
+    background: rgba(var(--accent-rgb),0.07);
+    border-color: rgba(var(--accent-rgb),0.2);
+}
+.social-sidebar__hot-btn.active {
+    background: rgba(var(--accent-rgb),0.1);
+    border-color: rgba(var(--accent-rgb),0.35);
+    color: var(--theme-accent);
+}
+.social-sidebar__hot-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+.social-sidebar__hot-btn span:first-of-type {
+    font-size: 0.8rem;
+    font-weight: 700;
+    flex: 1;
+}
+.social-sidebar__hot-sub {
+    font-size: 0.62rem;
+    color: var(--text-muted);
+    opacity: 0.6;
+    white-space: nowrap;
+}
+.social-sidebar__section-label {
+    padding: 8px 12px 4px;
+    font-size: 0.6rem;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--text-muted);
+    opacity: 0.5;
+    flex-shrink: 0;
+}
+.social-char-list {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 4px 8px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    scrollbar-width: thin;
+}
+.social-char-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 10px;
+    border-radius: 9px;
+    cursor: pointer;
+    transition: background 0.14s;
+    border: 1px solid transparent;
+    position: relative;
+}
+.social-char-item:hover { background: rgba(255,255,255,0.04); }
+.social-char-item.active {
+    background: rgba(var(--accent-rgb),0.08);
+    border-color: rgba(var(--accent-rgb),0.22);
+}
+.social-char-item__avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+    background-color: rgba(var(--accent-rgb),0.1);
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem;
+    border: 2px solid rgba(var(--accent-rgb),0.15);
+}
+.social-char-item.active .social-char-item__avatar { border-color: rgba(var(--accent-rgb),0.5); }
+.social-char-item__info { flex: 1; min-width: 0; }
+.social-char-item__name {
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+}
+.social-char-item__posts {
+    font-size: 0.62rem;
+    color: var(--text-muted);
+    opacity: 0.5;
+}
+
+/* ── Feed arena (full main area) ── */
+.feed-arena {
+    background: var(--bg-base);
+}
+.feed-arena__header {
+    height: 50px;
+    padding: 0 var(--space-md);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--glass-border-mute);
+    flex-shrink: 0;
+    z-index: 10;
+}
+.feed-char-identity {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+}
+.feed-arena__actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.feed-header__title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+    justify-content: center;
+}
+.feed-char-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(var(--accent-rgb), 0.4);
+    background-size: cover;
+    background-position: center top;
+    background-color: rgba(var(--accent-rgb), 0.08);
+    flex-shrink: 0;
+    box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.15);
+}
+.feed-header__title-text {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+}
+.feed-header__name {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+}
+.feed-char-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+.feed-char-name {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--text-main);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.feed-char-tagline {
+    font-size: 0.62rem;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    opacity: 0.55;
+    letter-spacing: 0.02em;
+}
+
+/* ── Feed arena body: two-column desktop layout ── */
+.feed-arena__body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    gap: 0;
+    overflow: hidden;
+}
+
+/* Main feed column */
+.feed-scroll-area--main {
+    flex: 1;
+    min-width: 0;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(var(--accent-rgb),0.1) transparent;
+    padding: 0;
+}
+.feed-scroll-area--main::-webkit-scrollbar { width: 4px; }
+.feed-scroll-area--main::-webkit-scrollbar-thumb {
+    background: rgba(var(--accent-rgb),0.15);
+    border-radius: 2px;
+}
+
+/* Right sidebar: profile card + suggested */
+.feed-arena__sidebar {
+    width: 300px;
+    flex-shrink: 0;
+    border-left: 1px solid rgba(255,255,255,0.04);
+    overflow-y: auto;
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    scrollbar-width: none;
+}
+.feed-arena__sidebar::-webkit-scrollbar { display: none; }
+
+/* Profile card in right sidebar */
+.feed-profile-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.feed-profile-card__header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.feed-profile-card__avatar {
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+    background-color: rgba(var(--accent-rgb),0.1);
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.6rem;
+    border: 2px solid rgba(var(--accent-rgb),0.35);
+}
+.feed-profile-card__name {
+    font-weight: 700;
+    font-size: 0.88rem;
+    display: block;
+}
+.feed-profile-card__handle {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    opacity: 0.55;
+    font-family: var(--font-mono);
+}
+.feed-profile-card__stats {
+    display: flex;
+    gap: 0;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.feed-profile-stat {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 4px;
+    gap: 2px;
+    cursor: default;
+}
+.feed-profile-stat + .feed-profile-stat { border-left: 1px solid rgba(255,255,255,0.05); }
+.feed-profile-stat__val {
+    font-weight: 700;
+    font-size: 0.9rem;
+    font-family: var(--font-mono);
+    color: var(--theme-accent);
+}
+.feed-profile-stat__label {
+    font-size: 0.58rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    opacity: 0.5;
+}
+.feed-profile-card__bio {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    opacity: 0.7;
+}
+.feed-profile-card__chat-btn {
+    width: 100%;
+}
+
+/* Suggested characters */
+.feed-suggested__label {
+    font-size: 0.62rem;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+    opacity: 0.5;
+    margin-bottom: 8px;
+}
+.feed-suggested-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 6px 0;
+    cursor: pointer;
+}
+.feed-suggested-item:hover .feed-suggested-item__name { color: var(--theme-accent); }
+.feed-suggested-item__avatar {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+    background-color: rgba(var(--accent-rgb),0.1);
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.9rem;
+}
+.feed-suggested-item__info { flex: 1; min-width: 0; }
+.feed-suggested-item__name {
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: color 0.14s;
+}
+.feed-suggested-item__sub {
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    opacity: 0.45;
+}
+
+/* ── Feed scroll area (generic) ── */
+.feed-scroll-area {
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(var(--accent-rgb),0.1) transparent;
+}
+
+#social-feed-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding-bottom: 40px;
+    max-width: 640px;
+    margin: 0 auto;
+    padding-left: 0;
+    padding-right: 0;
+    width: 100%;
+}
+
+/* Empty state */
+.feed-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 64px 24px;
+    color: var(--text-muted);
+    text-align: center;
+}
+.feed-empty svg { width: 48px; height: 48px; opacity: 0.2; }
+.feed-empty h3 {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    opacity: 0.5;
+    margin: 0;
+}
+.feed-empty p { font-size: 0.8rem; opacity: 0.35; margin: 0; }
+
+/* Post card */
+.feed-post {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+/* Post author header */
+.feed-post__header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px 10px;
+}
+.feed-post__header-avatar {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+    background-color: rgba(var(--accent-rgb),0.1);
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem;
+    border: 2px solid rgba(var(--accent-rgb),0.25);
+}
+.feed-post__header-info { flex: 1; min-width: 0; }
+.feed-post__header-name {
+    font-size: 0.82rem;
+    font-weight: 700;
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.feed-post__header-sub {
+    font-size: 0.62rem;
+    color: var(--text-muted);
+    opacity: 0.45;
+    font-family: var(--font-mono);
+}
+
+/* Post image — full width, aspect-ratio 1/1 or natural */
+.feed-post__media {
+    position: relative;
+    width: 100%;
+    background: rgba(0,0,0,0.4);
+    overflow: hidden;
+}
+.feed-post__media-img {
+    width: 100%;
+    max-height: 600px;
+    object-fit: cover;
+    display: block;
+}
+.feed-post__media-emoji {
+    width: 100%;
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 5rem;
+    background: linear-gradient(135deg, rgba(var(--accent-rgb),0.08) 0%, rgba(0,0,0,0.3) 100%);
+}
+.feed-post__media-empty {
+    width: 100%;
+    height: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,0.02);
+    color: var(--text-muted);
+    opacity: 0.3;
+}
+.feed-post__media-empty svg { width: 32px; height: 32px; }
+
+/* Post index badge */
+.feed-post__index {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    padding: 2px 7px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.08);
+}
+
+/* Post action row */
+.feed-post__toolbar {
+    display: flex;
+    align-items: center;
+    padding: 10px 14px 6px;
+    gap: 4px;
+}
+.feed-post__act-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.72rem;
+    font-family: var(--font-mono);
+    transition: color 0.14s, background 0.14s;
+}
+.feed-post__act-btn svg { width: 18px; height: 18px; }
+.feed-post__act-btn:hover { color: var(--text-main); background: rgba(255,255,255,0.05); }
+.feed-post__act-btn--like:hover { color: #ff4d6d; }
+.feed-post__act-btn--like.liked { color: #ff4d6d; }
+.feed-post__act-btn--like.liked svg { fill: #ff4d6d; }
+.feed-post__act-count {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--text-muted);
+}
+.feed-post__spacer { flex: 1; }
+
+/* Post caption area */
+.feed-post__body {
+    padding: 0 14px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.feed-post__caption {
+    font-size: 0.83rem;
+    line-height: 1.5;
+    color: var(--text-main);
+}
+.feed-post__caption strong {
+    font-weight: 700;
+    margin-right: 6px;
+    color: var(--text-main);
+}
+.feed-post__time {
+    font-size: 0.62rem;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    opacity: 0.4;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Comments section */
+.feed-comments {
+    padding: 0 14px 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+.feed-comments__view-more {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    opacity: 0.5;
+    cursor: pointer;
+    padding: 4px 0;
+    background: none;
+    border: none;
+    text-align: left;
+}
+.feed-comments__view-more:hover { opacity: 0.8; }
+
+.feed-comment {
+    display: flex;
+    gap: 9px;
+    padding: 7px 0;
+    border-top: 1px solid rgba(255,255,255,0.025);
+    align-items: flex-start;
+}
+.feed-comment:first-child { border-top: none; }
+
+.feed-comment__avatar {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+    background-color: rgba(var(--accent-rgb),0.1);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    border: 1px solid rgba(var(--accent-rgb),0.2);
+}
+.feed-comment--user .feed-comment__avatar {
+    background-color: rgba(var(--accent-warm-rgb),0.12);
+    border-color: rgba(var(--accent-warm-rgb),0.2);
+}
+
+.feed-comment__body {
+    flex: 1;
+    min-width: 0;
+}
+.feed-comment__author {
+    font-size: 0.72rem;
+    font-weight: 700;
+    margin-right: 5px;
+    color: var(--text-main);
+}
+.feed-comment--bot .feed-comment__author { color: var(--theme-accent); }
+.feed-comment--user .feed-comment__author { color: var(--accent-warm, #e8a87c); }
+.feed-comment__text {
+    font-size: 0.78rem;
+    line-height: 1.45;
+    color: var(--text-secondary);
+    display: inline;
+}
+.feed-comment--system {
+    justify-content: center;
+    border-top: none;
+    padding: 4px 0 8px;
+}
+.feed-comment--system .feed-comment__text {
+    font-size: 0.65rem;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    opacity: 0.35;
+    font-style: italic;
+    text-align: center;
+}
+.feed-comment--typing .feed-comment__text {
+    font-style: italic;
+    opacity: 0.55;
+}
+
+/* Comment input row */
+.feed-post__comment-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px 12px;
+    border-top: 1px solid rgba(255,255,255,0.04);
+    margin-top: 2px;
+}
+.feed-comment-user-avatar {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: rgba(var(--accent-warm-rgb),0.12);
+    border: 1px solid rgba(var(--accent-warm-rgb),0.2);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+.feed-post__comment-input {
+    flex: 1;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 20px;
+    color: var(--text-main);
+    font-size: 0.8rem;
+    padding: 6px 12px;
+    outline: none;
+    transition: border-color 0.18s, background 0.18s;
+    font-family: inherit;
+}
+.feed-post__comment-input::placeholder { color: var(--text-muted); opacity: 0.4; }
+.feed-post__comment-input:focus {
+    border-color: rgba(var(--accent-rgb),0.35);
+    background: rgba(255,255,255,0.06);
+}
+.feed-post__comment-submit {
+    background: none;
+    border: none;
+    color: var(--theme-accent);
+    font-weight: 700;
+    font-size: 0.78rem;
+    font-family: var(--font-mono);
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    opacity: 0.4;
+    transition: opacity 0.2s;
+    white-space: nowrap;
+    padding: 4px 6px;
+    border-radius: 4px;
+}
+.feed-post__comment-submit:not(:disabled) { opacity: 1; }
+.feed-post__comment-submit:not(:disabled):hover { background: rgba(var(--accent-rgb),0.1); }
+.feed-post__comment-submit:disabled { cursor: default; }
+
+.sims-region--active {
+    fill: rgba(var(--accent-rgb), 0.25);
+    stroke: var(--theme-accent);
+    stroke-width: 1.5px;
+    filter: drop-shadow(0 0 6px var(--theme-glow));
+}
+.sims-region-indicator {
+    fill: none;
+    stroke: var(--theme-accent);
+    stroke-width: 2;
+    opacity: 0.6;
+    animation: regionPulse 1.8s ease-in-out infinite;
+    pointer-events: none;
+}
+@keyframes regionPulse {
+    0%,100% { opacity: 0.3; r: 18px; }
+    50%      { opacity: 0.8; r: 22px; }
+}
+
+/* Region tooltip */
+.sims-region-tooltip {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.85);
+    border: 1px solid var(--glass-border);
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--theme-accent);
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+/* Stat pills */
+.sims-stat-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+.sims-stat-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--glass-border-mute);
+    border-radius: 12px;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+.sims-stat-pill__icon {
+    font-size: 0.7rem;
+    line-height: 1;
+}
+
+/* Quick swatches */
+.sims-quick-swatches {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+.sims-swatch-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.sims-swatch-label {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    width: 28px;
+    flex-shrink: 0;
+}
+.sims-swatch-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+.sims-color-dot {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    border: 1.5px solid transparent;
+    cursor: pointer;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.55rem;
+    font-weight: 700;
+    color: rgba(255,255,255,0.7);
+    transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+    flex-shrink: 0;
+}
+.sims-color-dot:hover {
+    border-color: rgba(255,255,255,0.6);
+    transform: scale(1.25);
+    z-index: 1;
+}
+.sims-color-dot.active {
+    border-color: #fff;
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.3);
+}
+.sims-color-dot--custom {
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.2);
+    font-size: 0.65rem;
+}
+
+/* ── Center — Category Nav ── */
+.sims-category-nav {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: var(--space-sm) 4px;
+    background: rgba(0,0,0,0.4);
+    border-right: 1px solid var(--glass-border-mute);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+}
+.sims-category-nav::-webkit-scrollbar { display: none; }
+
+.sims-cat-btn {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 9px 6px;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    color: var(--text-muted);
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: var(--transition);
+    width: 100%;
+    font-family: var(--font-mono);
+    font-size: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+    overflow: hidden;
+    /* ensure tap target is always ≥ 44px tall */
+    min-height: 44px;
+    justify-content: center;
+}
+.sims-cat-btn svg {
+    width: 16px; height: 16px;
+    flex-shrink: 0;
+}
+.sims-cat-btn span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.sims-cat-btn:hover {
+    color: var(--text-main);
+    background: rgba(255,255,255,0.06);
+}
+.sims-cat-btn.active {
+    color: var(--theme-accent);
+    background: rgba(var(--accent-rgb), 0.14);
+}
+.sims-cat-btn.active::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 20%; bottom: 20%;
+    width: 2px;
+    background: var(--theme-accent);
+    border-radius: 0 2px 2px 0;
+    box-shadow: 0 0 8px var(--theme-glow);
+}
+.sims-cat-badge {
+    position: absolute;
+    top: 4px; right: 4px;
+    background: rgba(var(--accent-warm-rgb), 0.25);
+    color: var(--accent-warm);
+    border: 1px solid rgba(var(--accent-warm-rgb), 0.4);
+    border-radius: 10px;
+    padding: 1px 3px;
+    font-size: 0.45rem;
+    letter-spacing: 0.05em;
+}
+
+/* ── Right — Detail Panel ── */
+.sims-detail-panel {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--glass-border-mute) transparent;
+    padding: var(--space-lg);
+    background: rgba(0,0,0,0.2);
+}
+
+/* ── Panel sections ── */
+.sims-panel { animation: simsSlideIn 0.2s ease; }
+@keyframes simsSlideIn {
+    from { opacity: 0; transform: translateX(12px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+.sims-panel__header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    font-family: var(--font-mono);
+    font-size: var(--text-base);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--theme-accent);
+    margin-bottom: var(--space-lg);
+    padding-bottom: var(--space-sm);
+    border-bottom: 1px solid rgba(var(--accent-rgb), 0.25);
+}
+.sims-panel__header svg { width: 17px; height: 17px; }
+.sims-panel__header--adult {
+    color: #ff6b6b;
+    border-bottom-color: rgba(239,68,68,0.3);
+}
+.sims-panel__desc {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    line-height: 1.55;
+    margin: -10px 0 var(--space-md);
+    padding-left: var(--space-sm);
+    border-left: 2px solid rgba(var(--accent-rgb), 0.35);
+}
+.sims-section-divider {
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--theme-accent);
+    opacity: 0.6;
+    margin: var(--space-sm) 0 0;
+    padding-bottom: 4px;
+    border-bottom: 1px solid rgba(var(--accent-rgb), 0.15);
+    grid-column: 1 / -1;
+}
+
+/* ── Fields layout ── */
+.sims-fields { display: flex; flex-direction: column; gap: var(--space-md); }
+
+.sims-field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-md);
+}
+.sims-field { display: flex; flex-direction: column; gap: 5px; }
+.sims-field--full { grid-column: 1 / -1; }
+
+.sims-field label {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.sims-hint {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    opacity: 0.75;
+    margin-top: 2px;
+    line-height: 1.4;
+}
+.sims-hint-inline {
+    font-size: 0.62rem;
+    opacity: 0.65;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+/* ── Sims form controls ── */
+.sims-input,
+.sims-select,
+.sims-textarea {
+    width: 100%;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid var(--glass-border-mute);
+    border-radius: 6px;
+    color: var(--text-main);
+    padding: 7px 10px;
+    font-size: var(--text-sm);
+    outline: none;
+    transition: var(--transition);
+    box-sizing: border-box;
+    font-family: var(--font-sans);
+}
+.sims-input:focus,
+.sims-select:focus,
+.sims-textarea:focus {
+    border-color: var(--theme-accent);
+    background: rgba(0,0,0,0.55);
+    box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.12);
+}
+.sims-textarea { resize: vertical; line-height: 1.55; }
+.sims-textarea--code { font-family: var(--font-mono); font-size: 0.72rem; }
+.sims-select { cursor: pointer; }
+
+/* ── Chip groups ── */
+.sims-chip-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+.sims-chip {
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--glass-border-mute);
+    color: var(--text-muted);
+    font-size: 0.68rem;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: var(--transition);
+    white-space: nowrap;
+    font-family: var(--font-mono);
+    letter-spacing: 0.04em;
+    line-height: 1.4;
+    /* min touch target via padding extension — visually same, tap zone bigger */
+    min-height: 30px;
+    display: inline-flex;
+    align-items: center;
+}
+.sims-chip:hover {
+    color: var(--text-main);
+    border-color: var(--glass-border);
+    background: rgba(255,255,255,0.08);
+}
+.sims-chip.active {
+    background: rgba(var(--accent-rgb), 0.22);
+    border-color: var(--theme-accent);
+    color: var(--theme-accent);
+    box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.2);
+}
+
+/* ── Slider fields ── */
+.sims-slider-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.sims-slider-field label {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.sims-slider-field--prominent { margin-bottom: var(--space-sm); }
+.sims-range {
+    -webkit-appearance: none;
+    width: 100%;
+    background: transparent;
+    cursor: pointer;
+    touch-action: pan-x;
+    /* tall transparent hit area so thumb is easy to grab on mobile */
+    height: 32px;
+}
+.sims-range:focus { outline: none; }
+.sims-range::-webkit-slider-runnable-track {
+    height: 4px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 2px;
+    cursor: pointer;
+}
+.sims-range--lg::-webkit-slider-runnable-track { height: 5px; }
+.sims-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    height: 16px; width: 16px;
+    border-radius: 50%;
+    background: var(--theme-accent);
+    cursor: pointer;
+    margin-top: -6px;
+    box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.2);
+    transition: box-shadow 0.15s;
+}
+.sims-range--lg::-webkit-slider-thumb { height: 18px; width: 18px; margin-top: -7px; }
+.sims-range:hover::-webkit-slider-thumb,
+.sims-range:focus::-webkit-slider-thumb {
+    box-shadow: 0 0 12px var(--theme-glow), 0 0 0 4px rgba(var(--accent-rgb), 0.25);
+}
+.sims-range::-moz-range-track { height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; }
+.sims-range::-moz-range-thumb { height: 16px; width: 16px; border-radius: 50%; background: var(--theme-accent); border: none; cursor: pointer; }
+
+.sims-range-ends,
+.sims-dual-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    opacity: 0.7;
+    margin-top: 1px;
+}
+.sims-dual-label {
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 2px;
+    opacity: 0.5;
+}
+
+.sims-slider-desc {
+    font-size: 0.68rem;
+    color: var(--theme-accent);
+    opacity: 0.85;
+    line-height: 1.4;
+    min-height: 1.4em;
+    padding: 3px 8px;
+    background: rgba(var(--accent-rgb), 0.06);
+    border-left: 2px solid rgba(var(--accent-rgb), 0.4);
+    border-radius: 0 4px 4px 0;
+    transition: color 0.2s;
+}
+
+/* ── Sims Buttons ── */
+.sims-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px var(--space-md);
+    border-radius: 6px;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 700;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: var(--transition);
+    border: none;
+    white-space: nowrap;
+    min-height: 38px;
+}
+.sims-btn svg { width: 13px; height: 13px; flex-shrink: 0; }
+.sims-btn--ghost {
+    background: transparent;
+    border: 1px solid var(--glass-border-mute);
+    color: var(--text-main);
+}
+.sims-btn--ghost:hover { background: rgba(255,255,255,0.07); border-color: var(--glass-border); }
+.sims-btn--accent {
+    background: var(--theme-accent);
+    color: #fff;
+}
+.sims-btn--accent:hover { filter: brightness(1.15); box-shadow: 0 0 16px var(--theme-glow); }
+.sims-btn--icon {
+    padding: 7px 8px;
+}
+
+/* ── Sims Badges ── */
+.sims-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    background: rgba(255,255,255,0.1);
+    color: var(--text-main);
+    min-width: 28px;
+    justify-content: center;
+}
+.sims-badge--warn {
+    background: rgba(var(--accent-warm-rgb), 0.2);
+    color: var(--accent-warm);
+    border: 1px solid rgba(var(--accent-warm-rgb), 0.35);
+}
+
+/* ── Footer ── */
+.sims-editor__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px var(--space-lg);
+    background: rgba(0,0,0,0.6);
+    border-top: 1px solid var(--glass-border-mute);
+    flex-shrink: 0;
+    gap: var(--space-md);
+}
+.sims-editor__footer-right { display: flex; gap: var(--space-sm); }
+.sims-save-status {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--theme-accent);
+    opacity: 0.8;
+    min-height: 1em;
+}

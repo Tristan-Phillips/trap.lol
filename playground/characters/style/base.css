@@ -1,0 +1,30 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   The Underdark v3 — Complete UI System
+   Sovereign Codex aesthetic: Dune × Arcane × cyberpunk terminal
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Global Hidden State ── */
+[hidden] { display: none !important; }
+
+/* ── Reset / Base ─────────────────────────────────────────────────────────── */
+html, body.underdark-page {
+    margin: 0; padding: 0;
+    width: 100vw; height: 100vh;
+    background: var(--bg-base);
+    color: var(--text-main);
+    font-family: var(--font-sans);
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+/* ── Layout ───────────────────────────────────────────────────────────────── */
+.underdark-layout {
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+}
