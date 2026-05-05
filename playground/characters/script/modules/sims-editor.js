@@ -582,8 +582,14 @@ export function initSimsEditor() {
     function setChipValue(key, val) {
         const $group = qs(`.sims-chip-group[data-spo="${key}"]`);
         if (!$group) return;
+        const v = (val ?? '').toString().toLowerCase();
+        let matched = false;
         qsa('.sims-chip', $group).forEach(chip => {
-            chip.classList.toggle('active', chip.dataset.val === val);
+            // Exact match first, then contains-in-either-direction (handles freeform card values)
+            const chipVal = (chip.dataset.val ?? '').toLowerCase();
+            const hit = !matched && v && (v === chipVal || v.includes(chipVal) || chipVal.includes(v));
+            chip.classList.toggle('active', hit);
+            if (hit) matched = true;
         });
     }
 
@@ -740,6 +746,30 @@ export function initSimsEditor() {
             }
             $simsModel.value = data.modelOverride || '';
         }
+
+        // Sync colour swatches to loaded text values
+        [
+            ['skinTone',  '#sims-skin-swatches'],
+            ['hairColor', '#sims-hair-swatches'],
+            ['eyeColor',  '#sims-eye-swatches'],
+        ].forEach(([field, groupSel]) => {
+            const $g = qs(groupSel);
+            if (!$g) return;
+            const loaded = (data[field] ?? '').toString().toLowerCase();
+            qsa('.sims-color-dot:not(.sims-color-dot--custom)', $g).forEach(btn => {
+                btn.classList.remove('active');
+            });
+            if (!loaded) return;
+            let matched = false;
+            qsa('.sims-color-dot:not(.sims-color-dot--custom)', $g).forEach(btn => {
+                if (matched) return;
+                const title = (btn.title ?? '').toLowerCase();
+                if (title && (loaded === title || loaded.includes(title) || title.includes(loaded))) {
+                    btn.classList.add('active');
+                    matched = true;
+                }
+            });
+        });
     }
 
     // ── Change recorder & auto-save ───────────────────────────────────────────

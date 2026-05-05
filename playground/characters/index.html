@@ -677,6 +677,537 @@
 
 <div id="modal-msg-comment" class="modal" hidden><div class="modal__backdrop"></div><div class="modal__content"><h3>Message Notes</h3><button id="msg-comment-close" data-close><i data-lucide="x"></i></button><div class="modal__body"><input type="text" id="msg-comment-msg-id" hidden><div id="msg-comment-list"></div><textarea id="msg-comment-input" class="control-textarea" rows="4"></textarea></div><footer class="modal__footer"><button id="msg-comment-save" class="btn btn--accent">Save</button></footer></div></div>
 
+<!-- ══════════════════════════════════════════════
+     CHARACTER CREATOR / EDITOR — Full Studio
+══════════════════════════════════════════════ -->
+<div id="modal-char-creator" class="modal cc-modal" hidden role="dialog" aria-modal="true" aria-labelledby="cc-modal-title">
+    <div class="cc-backdrop"></div>
+    <div class="cc-studio">
+
+        <!-- ── Topbar ── -->
+        <header class="cc-topbar">
+            <div class="cc-topbar__left">
+                <i data-lucide="sparkles" class="cc-topbar__icon"></i>
+                <h2 id="cc-modal-title" class="cc-topbar__title">Create Character</h2>
+                <span id="cc-char-badge" class="cc-char-badge">—</span>
+            </div>
+            <div class="cc-topbar__right">
+                <button id="cc-import-btn" class="cc-btn cc-btn--ghost" title="Import existing card to prefill"><i data-lucide="upload"></i> Import Card</button>
+                <input type="file" id="cc-import-file" accept=".json,.png" hidden>
+                <button id="cc-close" class="cc-btn cc-btn--ghost cc-btn--icon" aria-label="Close"><i data-lucide="x"></i></button>
+            </div>
+        </header>
+
+        <div class="cc-body">
+
+            <!-- ── Left: Avatar + Quick Identity ── -->
+            <aside class="cc-sidebar">
+                <div class="cc-avatar-zone">
+                    <div id="cc-avatar-preview" class="cc-avatar-preview" title="Character avatar"></div>
+                    <div class="cc-avatar-controls">
+                        <button id="cc-avatar-upload-btn" class="cc-btn cc-btn--ghost cc-btn--sm"><i data-lucide="image-up"></i> Upload</button>
+                        <button id="cc-avatar-clear" class="cc-btn cc-btn--ghost cc-btn--sm cc-btn--danger"><i data-lucide="trash-2"></i></button>
+                        <input type="file" id="cc-avatar-file" accept="image/*" hidden>
+                    </div>
+                    <div class="cc-avatar-url-row">
+                        <input type="text" id="cc-avatar-url-input" class="cc-input cc-input--sm" placeholder="…or paste image URL">
+                        <button id="cc-avatar-url-btn" class="cc-btn cc-btn--ghost cc-btn--sm"><i data-lucide="link"></i></button>
+                    </div>
+                </div>
+
+                <!-- Quick identity summary -->
+                <div class="cc-quick-fields">
+                    <div class="cc-field-row">
+                        <label class="cc-label">Name *</label>
+                        <input type="text" id="cc-name" class="cc-input" placeholder="Character name…">
+                    </div>
+                    <div class="cc-field-row">
+                        <label class="cc-label">Tagline</label>
+                        <input type="text" id="cc-tagline" class="cc-input" placeholder="Short descriptor…">
+                    </div>
+                    <div class="cc-field-row">
+                        <label class="cc-label">Tags</label>
+                        <input type="text" id="cc-tags" class="cc-input" placeholder="tag1, tag2, tag3">
+                    </div>
+                    <div class="cc-field-row">
+                        <label class="cc-label cc-label--muted">ID preview</label>
+                        <input type="text" id="cc-id-preview" class="cc-input cc-input--mono cc-input--sm" placeholder="auto-generated" readonly>
+                    </div>
+                    <div class="cc-field-row cc-field-row--inline">
+                        <label class="cc-label">Enabled</label>
+                        <input type="checkbox" id="cc-enabled" checked class="cc-checkbox">
+                    </div>
+                </div>
+
+                <!-- Gallery strip -->
+                <div class="cc-gallery-section">
+                    <div class="cc-section-label"><i data-lucide="images"></i> Image Gallery</div>
+                    <div id="cc-gallery-strip" class="cc-gallery-strip"></div>
+                    <div class="cc-gallery-add-row">
+                        <button id="cc-gallery-add-btn" class="cc-btn cc-btn--ghost cc-btn--sm"><i data-lucide="plus"></i> Add Image</button>
+                        <input type="file" id="cc-gallery-file" accept="image/*" hidden multiple>
+                    </div>
+                    <div class="cc-gallery-url-row">
+                        <input type="text" id="cc-gallery-url-input" class="cc-input cc-input--sm" placeholder="Image URL…">
+                        <button id="cc-gallery-url-btn" class="cc-btn cc-btn--ghost cc-btn--sm"><i data-lucide="link"></i></button>
+                    </div>
+                </div>
+
+                <!-- Meta -->
+                <div class="cc-meta-fields">
+                    <div class="cc-field-row">
+                        <label class="cc-label">Creator</label>
+                        <input type="text" id="cc-creator" class="cc-input cc-input--sm" value="trap.lol">
+                    </div>
+                    <div class="cc-field-row">
+                        <label class="cc-label">Version</label>
+                        <input type="text" id="cc-version" class="cc-input cc-input--sm" value="1.0">
+                    </div>
+                    <input type="hidden" id="cc-spec-version" value="2.0">
+                </div>
+            </aside>
+
+            <!-- ── Right: Tabbed editor ── -->
+            <div class="cc-main">
+
+                <nav class="cc-tabs">
+                    <button class="cc-tab-btn active" data-tab="card">Card</button>
+                    <button class="cc-tab-btn" data-tab="identity">Identity</button>
+                    <button class="cc-tab-btn" data-tab="appearance">Appearance</button>
+                    <button class="cc-tab-btn" data-tab="personality">Personality</button>
+                    <button class="cc-tab-btn" data-tab="voice">Voice & Style</button>
+                    <button class="cc-tab-btn" data-tab="behavior">Behavior</button>
+                    <button class="cc-tab-btn" data-tab="adult">Adult</button>
+                    <button class="cc-tab-btn" data-tab="ai">AI / Prompt</button>
+                    <button class="cc-tab-btn" data-tab="overrides">Overrides</button>
+                </nav>
+
+                <div class="cc-panels">
+
+                    <!-- ═══ CARD ═══ -->
+                    <div class="cc-tab-panel" data-panel="card">
+                        <div class="cc-section-label">Core Card Fields</div>
+                        <div class="cc-field-group">
+                            <label class="cc-label">Description <span class="cc-hint">Physical appearance, presence, mannerisms</span></label>
+                            <textarea id="cc-description" class="cc-textarea cc-textarea--tall" placeholder="Physical appearance, aura, first impressions…"></textarea>
+                        </div>
+                        <div class="cc-field-group">
+                            <label class="cc-label">Personality <span class="cc-hint">Psychological profile, core traits, motivations</span></label>
+                            <textarea id="cc-personality" class="cc-textarea cc-textarea--tall" placeholder="Who they are beneath the surface…"></textarea>
+                        </div>
+                        <div class="cc-field-group">
+                            <label class="cc-label">Scenario <span class="cc-hint">Opening scene / context for roleplay</span></label>
+                            <textarea id="cc-scenario" class="cc-textarea" placeholder="The setting and situation when the chat begins…"></textarea>
+                        </div>
+                        <div class="cc-field-group">
+                            <label class="cc-label">First Message <span class="cc-hint">Opening line (*actions* + dialogue)</span></label>
+                            <textarea id="cc-first-mes" class="cc-textarea cc-textarea--tall" placeholder="*Character action* &quot;Opening dialogue…&quot;"></textarea>
+                        </div>
+                        <div class="cc-field-group">
+                            <label class="cc-label">Message Examples <span class="cc-hint">Format: &lt;START&gt; blocks with {{user}}/{{char}}</span></label>
+                            <textarea id="cc-mes-example" class="cc-textarea cc-textarea--tall" placeholder="&lt;START&gt;&#10;{{user}}: …&#10;{{char}}: …"></textarea>
+                        </div>
+                        <div class="cc-field-group">
+                            <label class="cc-label">Alternate Greetings <span class="cc-hint">Separate each with --- on its own line</span></label>
+                            <textarea id="cc-alt-greetings" class="cc-textarea cc-textarea--tall" placeholder="First alternate greeting…&#10;---&#10;Second alternate greeting…"></textarea>
+                        </div>
+                        <div class="cc-field-group">
+                            <label class="cc-label">Creator Notes</label>
+                            <textarea id="cc-creator-notes" class="cc-textarea" placeholder="Meta notes, usage tips, trigger warnings…"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- ═══ IDENTITY ═══ -->
+                    <div class="cc-tab-panel" data-panel="identity" hidden>
+                        <div class="cc-section-label">Identity & Background</div>
+                        <div class="cc-grid-2">
+                            <div class="cc-field-group"><label class="cc-label">Full Name</label><input type="text" id="cc-ext-name" class="cc-input" placeholder="Full / canonical name"></div>
+                            <div class="cc-field-group"><label class="cc-label">Pronouns</label><input type="text" id="cc-ext-pronouns" class="cc-input" placeholder="she/her"></div>
+                            <div class="cc-field-group"><label class="cc-label">Occupation</label><input type="text" id="cc-ext-occupation" class="cc-input" placeholder="Role / job / title"></div>
+                            <div class="cc-field-group"><label class="cc-label">Aliases / Nicknames</label><input type="text" id="cc-ext-aliases" class="cc-input" placeholder="Other names"></div>
+                            <div class="cc-field-group"><label class="cc-label">Ethnicity</label><input type="text" id="cc-ext-ethnicity" class="cc-input" placeholder="e.g. Android, Japanese"></div>
+                            <div class="cc-field-group"><label class="cc-label">Nationality</label><input type="text" id="cc-ext-nationality" class="cc-input" placeholder="Country / faction"></div>
+                            <div class="cc-field-group"><label class="cc-label">Birthday</label><input type="text" id="cc-ext-birthday" class="cc-input" placeholder="Month Day or Unknown"></div>
+                            <div class="cc-field-group"><label class="cc-label">Location</label><input type="text" id="cc-ext-location" class="cc-input" placeholder="Primary setting"></div>
+                            <div class="cc-field-group"><label class="cc-label">Native Language</label><input type="text" id="cc-ext-native-lang" class="cc-input" placeholder="e.g. Japanese"></div>
+                            <div class="cc-field-group"><label class="cc-label">Languages Spoken</label><input type="text" id="cc-ext-languages" class="cc-input" placeholder="English, Japanese…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Zodiac</label><input type="text" id="cc-ext-zodiac" class="cc-input" placeholder="e.g. Scorpio"></div>
+                            <div class="cc-field-group"><label class="cc-label">MBTI</label><input type="text" id="cc-ext-mbti" class="cc-input" placeholder="e.g. ISTP"></div>
+                            <div class="cc-field-group"><label class="cc-label">Enneagram</label><input type="text" id="cc-ext-enneagram" class="cc-input" placeholder="e.g. 8w9"></div>
+                        </div>
+                    </div>
+
+                    <!-- ═══ APPEARANCE ═══ -->
+                    <div class="cc-tab-panel" data-panel="appearance" hidden>
+                        <div class="cc-section-label">Core Appearance</div>
+                        <div class="cc-grid-2">
+                            <div class="cc-field-group"><label class="cc-label">Species</label><input type="text" id="cc-species" class="cc-input" placeholder="Human, Elf, Android…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Gender</label><input type="text" id="cc-gender" class="cc-input" placeholder="Female, Male, Non-binary…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Age</label><input type="text" id="cc-age" class="cc-input" placeholder="25 or &quot;Appears 20s&quot;"></div>
+                            <div class="cc-field-group"><label class="cc-label">Height</label><input type="text" id="cc-height" class="cc-input" placeholder="5'6&quot; (168cm)"></div>
+                            <div class="cc-field-group"><label class="cc-label">Body Type</label><input type="text" id="cc-body-type" class="cc-input" placeholder="Slender, Athletic, Curvy…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Skin Tone</label><input type="text" id="cc-skin-tone" class="cc-input" placeholder="Pale, Golden tan…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Hair Color</label><input type="text" id="cc-hair-color" class="cc-input" placeholder="Raven black, Platinum…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Hair Style</label><input type="text" id="cc-hair-style" class="cc-input" placeholder="Long straight, Twin tails…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Eye Color</label><input type="text" id="cc-eye-color" class="cc-input" placeholder="Emerald, Ice blue…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Distinctive Features</label><input type="text" id="cc-distinctive-features" class="cc-input" placeholder="Scars, marks, auras…"></div>
+                        </div>
+
+                        <div class="cc-section-label cc-section-label--sm">Face Detail</div>
+                        <div class="cc-grid-2">
+                            <div class="cc-field-group"><label class="cc-label">Face Shape</label><input type="text" id="cc-ext-face-shape" class="cc-input" placeholder="Slim, angular…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Complexion</label><input type="text" id="cc-ext-complexion" class="cc-input" placeholder="Flawless, Scarred…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Jaw Type</label><input type="text" id="cc-ext-jaw" class="cc-input" placeholder="Defined, Soft…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Cheekbones</label><input type="text" id="cc-ext-cheekbones" class="cc-input" placeholder="High, Prominent…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Forehead</label><input type="text" id="cc-ext-forehead" class="cc-input" placeholder="Average, High…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Skin Undertone</label><input type="text" id="cc-ext-undertone" class="cc-input" placeholder="Cool, Warm, Neutral"></div>
+                            <div class="cc-field-group"><label class="cc-label">Skin Texture</label><input type="text" id="cc-ext-skin-texture" class="cc-input" placeholder="Smooth, Artificial…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Eye Shape</label><input type="text" id="cc-ext-eye-shape" class="cc-input" placeholder="Almond, Round…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Eye Spacing</label><input type="text" id="cc-ext-eye-spacing" class="cc-input" placeholder="Average, Close-set…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Eye Detail</label><input type="text" id="cc-ext-eye-detail" class="cc-input" placeholder="Unique iris detail…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Eye Size <span class="cc-badge-inline" id="cc-sl-badge-eyeSize">5</span></label>
+                                <input type="range" id="cc-sl-eyeSize" class="cc-slider" data-key="eyeSize" min="1" max="10" value="5" step="1">
+                            </div>
+                            <div class="cc-field-group"><label class="cc-label">Eyebrow Shape</label><input type="text" id="cc-ext-eyebrow" class="cc-input" placeholder="Arched, Straight…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Eyelashes</label><input type="text" id="cc-ext-eyelashes" class="cc-input" placeholder="Long, Thin, Dark…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Nose Type</label><input type="text" id="cc-ext-nose" class="cc-input" placeholder="Petite, Straight…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Lips Type</label><input type="text" id="cc-ext-lips" class="cc-input" placeholder="Full, Thin…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Lip Color</label><input type="text" id="cc-ext-lip-color" class="cc-input" placeholder="Natural rose, Crimson…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Teeth</label><input type="text" id="cc-ext-teeth" class="cc-input" placeholder="Perfect, Fanged…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Facial Hair</label><input type="text" id="cc-ext-facial-hair" class="cc-input" placeholder="None, Stubble…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Face Piercings</label><input type="text" id="cc-ext-face-piercings" class="cc-input" placeholder="None, Septum…"></div>
+                        </div>
+
+                        <div class="cc-section-label cc-section-label--sm">Hair Detail</div>
+                        <div class="cc-grid-2">
+                            <div class="cc-field-group"><label class="cc-label">Hair Length</label><input type="text" id="cc-ext-hair-length" class="cc-input" placeholder="Mid-back, Cropped…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Hair Texture</label><input type="text" id="cc-ext-hair-texture" class="cc-input" placeholder="Straight, Wavy, Coiled…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Hair Density</label><input type="text" id="cc-ext-hair-density" class="cc-input" placeholder="Medium, Thick, Thin"></div>
+                            <div class="cc-field-group"><label class="cc-label">Hair Highlights</label><input type="text" id="cc-ext-hair-highlights" class="cc-input" placeholder="None, Platinum tips…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Dyed?</label><input type="text" id="cc-ext-hair-dyed" class="cc-input" placeholder="Natural, Dyed red…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Fade</label><input type="text" id="cc-ext-hair-fade" class="cc-input" placeholder="None, Undercut…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Accessories</label><input type="text" id="cc-ext-hair-accessories" class="cc-input" placeholder="Crown, Bow, None…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Hair Shine <span class="cc-badge-inline" id="cc-sl-badge-hairShine">5</span></label>
+                                <input type="range" id="cc-sl-hairShine" class="cc-slider" data-key="hairShine" min="1" max="10" value="5" step="1">
+                            </div>
+                        </div>
+
+                        <div class="cc-section-label cc-section-label--sm">Body Detail</div>
+                        <div class="cc-grid-2">
+                            <div class="cc-field-group"><label class="cc-label">Weight</label><input type="text" id="cc-ext-weight" class="cc-input" placeholder="110 lbs / 50 kg"></div>
+                            <div class="cc-field-group"><label class="cc-label">Shoulder Width</label><input type="text" id="cc-ext-shoulder" class="cc-input" placeholder="Narrow, Broad…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Waist Type</label><input type="text" id="cc-ext-waist" class="cc-input" placeholder="Slim, Hourglass…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Leg Type</label><input type="text" id="cc-ext-leg-type" class="cc-input" placeholder="Long, Powerful…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Hand Size</label><input type="text" id="cc-ext-hand-size" class="cc-input" placeholder="Delicate, Large…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Posture</label><input type="text" id="cc-ext-posture" class="cc-input" placeholder="Upright, Slouched…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Gait</label><input type="text" id="cc-ext-gait" class="cc-input" placeholder="Prowling, Deliberate…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Muscle Tone <span class="cc-badge-inline" id="cc-sl-badge-muscleTone">5</span></label>
+                                <input type="range" id="cc-sl-muscleTone" class="cc-slider" data-key="muscleTone" min="1" max="10" value="5" step="1">
+                            </div>
+                            <div class="cc-field-group"><label class="cc-label">Body Fat <span class="cc-badge-inline" id="cc-sl-badge-bodyFat">5</span></label>
+                                <input type="range" id="cc-sl-bodyFat" class="cc-slider" data-key="bodyFat" min="1" max="10" value="5" step="1">
+                            </div>
+                            <div class="cc-field-group"><label class="cc-label">Body Markings</label><input type="text" id="cc-ext-body-markings" class="cc-input" placeholder="Birthmarks, vitiligo…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Tattoos</label><input type="text" id="cc-ext-tattoos" class="cc-input" placeholder="Sleeve, Back piece…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Scars / Marks</label><input type="text" id="cc-ext-scars" class="cc-input" placeholder="Blade scar, burn…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Body Piercings</label><input type="text" id="cc-ext-body-piercings" class="cc-input" placeholder="Navel, etc."></div>
+                            <div class="cc-field-group"><label class="cc-label">Scent</label><input type="text" id="cc-ext-scent" class="cc-input" placeholder="Gunpowder, Florals…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Nail Length</label><input type="text" id="cc-ext-nail-length" class="cc-input" placeholder="Short, Long, Claw…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Nail Shape</label><input type="text" id="cc-ext-nail-shape" class="cc-input" placeholder="Square, Almond…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Nail Color</label><input type="text" id="cc-ext-nail-color" class="cc-input" placeholder="Black, Nude…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Physical Quirks</label><input type="text" id="cc-ext-physical-quirks" class="cc-input" placeholder="Twitches, fidgets…"></div>
+                        </div>
+                    </div>
+
+                    <!-- ═══ PERSONALITY ═══ -->
+                    <div class="cc-tab-panel" data-panel="personality" hidden>
+                        <div class="cc-section-label">Core Personality</div>
+                        <div class="cc-grid-2">
+                            <div class="cc-field-group"><label class="cc-label">Core Traits</label><input type="text" id="cc-ext-core-traits" class="cc-input" placeholder="Cynical, fiercely loyal…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Archetype</label><input type="text" id="cc-ext-archetype" class="cc-input" placeholder="Broken hero, seducer…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Alignment</label><input type="text" id="cc-ext-alignment" class="cc-input" placeholder="Chaotic neutral…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Mood Baseline</label><input type="text" id="cc-ext-mood-baseline" class="cc-input" placeholder="Bleak, stoic, warm…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Attachment Style</label><input type="text" id="cc-ext-attachment" class="cc-input" placeholder="Avoidant, secure…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Love Languages</label><input type="text" id="cc-ext-love-langs" class="cc-input" placeholder="Acts of service…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Conflict Style</label><input type="text" id="cc-ext-conflict-style" class="cc-input" placeholder="Confrontational…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Moral Philosophy</label><input type="text" id="cc-ext-moral-philosophy" class="cc-input" placeholder="Survival of fittest…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Spirituality</label><input type="text" id="cc-ext-spirituality" class="cc-input" placeholder="Atheist, Buddhist…"></div>
+                        </div>
+                        <div class="cc-field-group"><label class="cc-label">Backstory</label><textarea id="cc-ext-backstory" class="cc-textarea" placeholder="History, formative events, origin…"></textarea></div>
+                        <div class="cc-field-group"><label class="cc-label">Fears</label><textarea id="cc-ext-fears" class="cc-textarea cc-textarea--sm" placeholder="Deep fears and anxieties…"></textarea></div>
+                        <div class="cc-field-group"><label class="cc-label">Desires</label><textarea id="cc-ext-desires" class="cc-textarea cc-textarea--sm" placeholder="Core wants and goals…"></textarea></div>
+                        <div class="cc-field-group"><label class="cc-label">Secrets</label><textarea id="cc-ext-secrets" class="cc-textarea cc-textarea--sm" placeholder="Hidden truths…"></textarea></div>
+                        <div class="cc-field-group"><label class="cc-label">Hobbies</label><input type="text" id="cc-ext-hobbies" class="cc-input" placeholder="Weapon maintenance, painting…"></div>
+                        <div class="cc-field-group"><label class="cc-label">Triggers</label><textarea id="cc-ext-triggers" class="cc-textarea cc-textarea--sm" placeholder="Specific words or events that destabilize…"></textarea></div>
+                        <div class="cc-field-group"><label class="cc-label">Pet Peeves</label><input type="text" id="cc-ext-pet-peeves" class="cc-input" placeholder="Minor irritants…"></div>
+                        <div class="cc-field-group"><label class="cc-label">Comfort Objects</label><input type="text" id="cc-ext-comfort-objects" class="cc-input" placeholder="Soothing items, people…"></div>
+                    </div>
+
+                    <!-- ═══ VOICE & STYLE ═══ -->
+                    <div class="cc-tab-panel" data-panel="voice" hidden>
+                        <div class="cc-section-label">Voice</div>
+                        <div class="cc-grid-2">
+                            <div class="cc-field-group"><label class="cc-label">Voice Tone</label><input type="text" id="cc-voice-tone" class="cc-input" placeholder="Husky, melodic, raspy…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Accent</label><input type="text" id="cc-ext-accent" class="cc-input" placeholder="British RP, Tokyo-ben…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Accent Strength</label><input type="text" id="cc-ext-accent-strength" class="cc-input" placeholder="Subtle, Heavy…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Voice Resonance</label><input type="text" id="cc-ext-voice-resonance" class="cc-input" placeholder="Deep, Thin, Warm…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Voice Volume</label><input type="text" id="cc-ext-voice-volume" class="cc-input" placeholder="Quiet, Loud…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Laugh Style</label><input type="text" id="cc-ext-laugh-style" class="cc-input" placeholder="Rare, Cackle, Soft…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Signature Sounds</label><input type="text" id="cc-ext-signature-sounds" class="cc-input" placeholder="Clicks, hums, sighs…"></div>
+                        </div>
+                        <div class="cc-grid-2">
+                            <div class="cc-field-group"><label class="cc-label">Verbosity <span class="cc-badge-inline" id="cc-sl-badge-verbosity">5</span></label>
+                                <input type="range" id="cc-sl-verbosity" class="cc-slider" data-key="verbosity" min="1" max="10" value="5" step="1">
+                            </div>
+                            <div class="cc-field-group"><label class="cc-label">Formality <span class="cc-badge-inline" id="cc-sl-badge-formality">5</span></label>
+                                <input type="range" id="cc-sl-formality" class="cc-slider" data-key="formality" min="1" max="10" value="5" step="1">
+                            </div>
+                            <div class="cc-field-group"><label class="cc-label">Speech Pace <span class="cc-badge-inline" id="cc-sl-badge-speechPace">5</span></label>
+                                <input type="range" id="cc-sl-speechPace" class="cc-slider" data-key="speechPace" min="1" max="10" value="5" step="1">
+                            </div>
+                        </div>
+                        <div class="cc-field-group"><label class="cc-label">Vocabulary Style</label><input type="text" id="cc-ext-vocabulary" class="cc-input" placeholder="Archaic, Street, Technical…"></div>
+                        <div class="cc-field-group"><label class="cc-label">Swearing Level</label><input type="text" id="cc-ext-swearing" class="cc-input" placeholder="None, Casual, Heavy…"></div>
+                        <div class="cc-field-group"><label class="cc-label">Catchphrases</label><textarea id="cc-ext-catchphrases" class="cc-textarea cc-textarea--sm" placeholder="&quot;I'll kill every last one of you.&quot;…"></textarea></div>
+                        <div class="cc-field-group"><label class="cc-label">Speech Patterns / Quirks</label><textarea id="cc-ext-speech-patterns" class="cc-textarea cc-textarea--sm" placeholder="Trailing off, over-explains, interrupts…"></textarea></div>
+
+                        <div class="cc-section-label cc-section-label--sm">Style & Clothing</div>
+                        <div class="cc-grid-2">
+                            <div class="cc-field-group"><label class="cc-label">Style Archetype</label><input type="text" id="cc-ext-style-archetype" class="cc-input" placeholder="Cyberpunk, Gothic…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Color Palette</label><input type="text" id="cc-ext-color-palette" class="cc-input" placeholder="Black & crimson…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Signature Item</label><input type="text" id="cc-ext-signature-item" class="cc-input" placeholder="Katana, locket…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Footwear</label><input type="text" id="cc-ext-footwear" class="cc-input" placeholder="Combat boots…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Jewelry</label><input type="text" id="cc-ext-jewelry" class="cc-input" placeholder="None, Gold chain…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Eyewear</label><input type="text" id="cc-ext-eyewear" class="cc-input" placeholder="None, Goggles…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Headwear</label><input type="text" id="cc-ext-headwear" class="cc-input" placeholder="None, Crown…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Carried Items</label><input type="text" id="cc-ext-carried-items" class="cc-input" placeholder="Switchblade, notebook…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Underwear</label><input type="text" id="cc-ext-underwear" class="cc-input" placeholder="Black lace, None…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Grooming Standard</label><input type="text" id="cc-ext-grooming" class="cc-input" placeholder="Meticulous, Wild…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Makeup Style</label><input type="text" id="cc-ext-makeup-style" class="cc-input" placeholder="None, Smoky eye…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Lipstick Color</label><input type="text" id="cc-ext-lipstick" class="cc-input" placeholder="Crimson, Nude…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Eye Makeup</label><input type="text" id="cc-ext-eye-makeup" class="cc-input" placeholder="Kohl, Shadow…"></div>
+                        </div>
+                        <div class="cc-field-group"><label class="cc-label">Default Outfit</label><textarea id="cc-ext-outfit" class="cc-textarea" placeholder="Detailed clothing description…"></textarea></div>
+                        <div class="cc-field-group"><label class="cc-label">Formal Outfit</label><input type="text" id="cc-ext-formal-outfit" class="cc-input" placeholder="Evening dress…"></div>
+                        <div class="cc-field-group"><label class="cc-label">Combat Outfit</label><input type="text" id="cc-ext-combat-outfit" class="cc-input" placeholder="Armour, tactical gear…"></div>
+                        <div class="cc-field-group"><label class="cc-label">Sleepwear</label><input type="text" id="cc-ext-sleepwear" class="cc-input" placeholder="Nothing, oversized tee…"></div>
+                        <div class="cc-field-group"><label class="cc-label">Swimwear</label><input type="text" id="cc-ext-swimwear" class="cc-input" placeholder="Bikini, swim shorts…"></div>
+                    </div>
+
+                    <!-- ═══ BEHAVIOR SLIDERS ═══ -->
+                    <div class="cc-tab-panel" data-panel="behavior" hidden>
+                        <div class="cc-section-label">Core Behavior Dials</div>
+                        <div class="cc-sliders-grid">
+                            <div class="cc-slider-row">
+                                <div class="cc-slider-label">Dominance <span class="cc-badge-inline" id="cc-sl-badge-dominanceLevel">50</span></div>
+                                <input type="range" id="cc-sl-dominanceLevel" class="cc-slider" data-key="dominanceLevel" min="0" max="100" value="50">
+                                <div class="cc-slider-desc" id="cc-sl-desc-dominanceLevel"></div>
+                            </div>
+                            <div class="cc-slider-row">
+                                <div class="cc-slider-label">Explicitness <span class="cc-badge-inline" id="cc-sl-badge-explicitnessLevel">50</span></div>
+                                <input type="range" id="cc-sl-explicitnessLevel" class="cc-slider" data-key="explicitnessLevel" min="0" max="100" value="50">
+                                <div class="cc-slider-desc" id="cc-sl-desc-explicitnessLevel"></div>
+                            </div>
+                            <div class="cc-slider-row">
+                                <div class="cc-slider-label">Romanticism <span class="cc-badge-inline" id="cc-sl-badge-romanticismLevel">50</span></div>
+                                <input type="range" id="cc-sl-romanticismLevel" class="cc-slider" data-key="romanticismLevel" min="0" max="100" value="50">
+                                <div class="cc-slider-desc" id="cc-sl-desc-romanticismLevel"></div>
+                            </div>
+                            <div class="cc-slider-row">
+                                <div class="cc-slider-label">Violence <span class="cc-badge-inline" id="cc-sl-badge-violenceLevel">30</span></div>
+                                <input type="range" id="cc-sl-violenceLevel" class="cc-slider" data-key="violenceLevel" min="0" max="100" value="30">
+                                <div class="cc-slider-desc" id="cc-sl-desc-violenceLevel"></div>
+                            </div>
+                            <div class="cc-slider-row">
+                                <div class="cc-slider-label">Anxiety <span class="cc-badge-inline" id="cc-sl-badge-anxietyLevel">40</span></div>
+                                <input type="range" id="cc-sl-anxietyLevel" class="cc-slider" data-key="anxietyLevel" min="0" max="100" value="40">
+                                <div class="cc-slider-desc" id="cc-sl-desc-anxietyLevel"></div>
+                            </div>
+                            <div class="cc-slider-row">
+                                <div class="cc-slider-label">Loyalty <span class="cc-badge-inline" id="cc-sl-badge-loyaltyLevel">60</span></div>
+                                <input type="range" id="cc-sl-loyaltyLevel" class="cc-slider" data-key="loyaltyLevel" min="0" max="100" value="60">
+                                <div class="cc-slider-desc" id="cc-sl-desc-loyaltyLevel"></div>
+                            </div>
+                            <div class="cc-slider-row">
+                                <div class="cc-slider-label">Stubbornness <span class="cc-badge-inline" id="cc-sl-badge-stubbornness">50</span></div>
+                                <input type="range" id="cc-sl-stubbornness" class="cc-slider" data-key="stubbornness" min="0" max="100" value="50">
+                                <div class="cc-slider-desc" id="cc-sl-desc-stubbornness"></div>
+                            </div>
+                            <div class="cc-slider-row">
+                                <div class="cc-slider-label">Self-Esteem <span class="cc-badge-inline" id="cc-sl-badge-selfEsteemLevel">55</span></div>
+                                <input type="range" id="cc-sl-selfEsteemLevel" class="cc-slider" data-key="selfEsteemLevel" min="0" max="100" value="55">
+                                <div class="cc-slider-desc" id="cc-sl-desc-selfEsteemLevel"></div>
+                            </div>
+                            <div class="cc-slider-row">
+                                <div class="cc-slider-label">Curiosity <span class="cc-badge-inline" id="cc-sl-badge-curiosityLevel">60</span></div>
+                                <input type="range" id="cc-sl-curiosityLevel" class="cc-slider" data-key="curiosityLevel" min="0" max="100" value="60">
+                                <div class="cc-slider-desc" id="cc-sl-desc-curiosityLevel"></div>
+                            </div>
+                            <div class="cc-slider-row">
+                                <div class="cc-slider-label">Empathy <span class="cc-badge-inline" id="cc-sl-badge-empathyLevel">50</span></div>
+                                <input type="range" id="cc-sl-empathyLevel" class="cc-slider" data-key="empathyLevel" min="0" max="100" value="50">
+                                <div class="cc-slider-desc" id="cc-sl-desc-empathyLevel"></div>
+                            </div>
+                        </div>
+
+                        <div class="cc-section-label cc-section-label--sm">Extended Behavior Sliders</div>
+                        <div class="cc-sliders-grid">
+                            <div class="cc-slider-row">
+                                <div class="cc-slider-label">Sociability <span class="cc-badge-inline" id="cc-sl-badge-sociabilityLevel">50</span></div>
+                                <input type="range" id="cc-sl-sociabilityLevel" class="cc-slider" data-key="sociabilityLevel" min="0" max="100" value="50">
+                            </div>
+                            <div class="cc-slider-row">
+                                <div class="cc-slider-label">Impulsivity <span class="cc-badge-inline" id="cc-sl-badge-impulsivityLevel">50</span></div>
+                                <input type="range" id="cc-sl-impulsivityLevel" class="cc-slider" data-key="impulsivityLevel" min="0" max="100" value="50">
+                            </div>
+                            <div class="cc-slider-row">
+                                <div class="cc-slider-label">Deceptiveness <span class="cc-badge-inline" id="cc-sl-badge-deceptivenessLevel">30</span></div>
+                                <input type="range" id="cc-sl-deceptivenessLevel" class="cc-slider" data-key="deceptivenessLevel" min="0" max="100" value="30">
+                            </div>
+                            <div class="cc-slider-row">
+                                <div class="cc-slider-label">Narcissism <span class="cc-badge-inline" id="cc-sl-badge-narcissismLevel">30</span></div>
+                                <input type="range" id="cc-sl-narcissismLevel" class="cc-slider" data-key="narcissismLevel" min="0" max="100" value="30">
+                            </div>
+                            <div class="cc-slider-row">
+                                <div class="cc-slider-label">Protectiveness <span class="cc-badge-inline" id="cc-sl-badge-protectivenessLevel">50</span></div>
+                                <input type="range" id="cc-sl-protectivenessLevel" class="cc-slider" data-key="protectivenessLevel" min="0" max="100" value="50">
+                            </div>
+                            <div class="cc-slider-row">
+                                <div class="cc-slider-label">Playfulness <span class="cc-badge-inline" id="cc-sl-badge-playfulnessLevel">50</span></div>
+                                <input type="range" id="cc-sl-playfulnessLevel" class="cc-slider" data-key="playfulnessLevel" min="0" max="100" value="50">
+                            </div>
+                            <div class="cc-slider-row">
+                                <div class="cc-slider-label">Obedience <span class="cc-badge-inline" id="cc-sl-badge-obedienceLevel">50</span></div>
+                                <input type="range" id="cc-sl-obedienceLevel" class="cc-slider" data-key="obedienceLevel" min="0" max="100" value="50">
+                            </div>
+                            <div class="cc-slider-row">
+                                <div class="cc-slider-label">Jealousy <span class="cc-badge-inline" id="cc-sl-badge-jealousyLevel">30</span></div>
+                                <input type="range" id="cc-sl-jealousyLevel" class="cc-slider" data-key="jealousyLevel" min="0" max="100" value="30">
+                            </div>
+                            <div class="cc-slider-row">
+                                <div class="cc-slider-label">Humor <span class="cc-badge-inline" id="cc-sl-badge-humorLevel">50</span></div>
+                                <input type="range" id="cc-sl-humorLevel" class="cc-slider" data-key="humorLevel" min="0" max="100" value="50">
+                            </div>
+                            <div class="cc-slider-row">
+                                <div class="cc-slider-label">Sadism <span class="cc-badge-inline" id="cc-sl-badge-sadismLevel">10</span></div>
+                                <input type="range" id="cc-sl-sadismLevel" class="cc-slider" data-key="sadismLevel" min="0" max="100" value="10">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ═══ ADULT ═══ -->
+                    <div class="cc-tab-panel" data-panel="adult" hidden>
+                        <div class="cc-section-label">Physical (Adult)</div>
+                        <div class="cc-grid-2">
+                            <div class="cc-field-group"><label class="cc-label">Breast Size</label><input type="text" id="cc-breast-size" class="cc-input" placeholder="B-cup (73cm), n/a…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Nipple Color</label><input type="text" id="cc-nipple-color" class="cc-input" placeholder="Pale pink, n/a…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Areolae Size</label><input type="text" id="cc-areolae-size" class="cc-input" placeholder="Small, n/a…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Body Hair</label><input type="text" id="cc-body-hair" class="cc-input" placeholder="None, Light…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Genitalia</label><input type="text" id="cc-genitalia" class="cc-input" placeholder="Female, n/a…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Chest Type</label><input type="text" id="cc-ext-chest-type" class="cc-input" placeholder="Soft, Taut…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Breast Shape</label><input type="text" id="cc-ext-breast-shape" class="cc-input" placeholder="Teardrop, Full…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Buttocks Size</label><input type="text" id="cc-ext-buttocks-size" class="cc-input" placeholder="Small, Full…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Buttocks Shape</label><input type="text" id="cc-ext-buttocks-shape" class="cc-input" placeholder="Round, Heart…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Intimate Markings</label><input type="text" id="cc-ext-intimate-markings" class="cc-input" placeholder="None, Tattoo…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Penis Size</label><input type="text" id="cc-ext-penis-size" class="cc-input" placeholder="n/a, Above avg…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Penis Shape</label><input type="text" id="cc-ext-penis-shape" class="cc-input" placeholder="n/a, Curved…"></div>
+                        </div>
+                        <div class="cc-field-group"><label class="cc-label">Other Adult Features</label><textarea id="cc-other-adult" class="cc-textarea cc-textarea--sm" placeholder="Sensitivity, smell, temperature, texture…"></textarea></div>
+
+                        <div class="cc-section-label cc-section-label--sm">Sexual Behavior</div>
+                        <div class="cc-grid-2">
+                            <div class="cc-field-group"><label class="cc-label">Sexual Orientation</label><input type="text" id="cc-ext-sexual-orientation" class="cc-input" placeholder="Bisexual, Straight…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Dominant Role</label><input type="text" id="cc-ext-dominant-role" class="cc-input" placeholder="Dominant, Switch…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Erogenous Zones</label><input type="text" id="cc-ext-erogenous" class="cc-input" placeholder="Neck, ears, inner thigh…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Vocal Response</label><input type="text" id="cc-ext-vocal-response" class="cc-input" placeholder="Quiet, Loud, Whimpers…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Aftercare Style</label><input type="text" id="cc-ext-aftercare" class="cc-input" placeholder="Cuddly, Distant…"></div>
+                        </div>
+                        <div class="cc-grid-2">
+                            <div class="cc-slider-row">
+                                <div class="cc-slider-label">Libido <span class="cc-badge-inline" id="cc-sl-badge-libido">5</span></div>
+                                <input type="range" id="cc-sl-libido" class="cc-slider" data-key="libido" min="1" max="10" value="5" step="1">
+                            </div>
+                            <div class="cc-slider-row">
+                                <div class="cc-slider-label">Stamina <span class="cc-badge-inline" id="cc-sl-badge-stamina">5</span></div>
+                                <input type="range" id="cc-sl-stamina" class="cc-slider" data-key="stamina" min="1" max="10" value="5" step="1">
+                            </div>
+                            <div class="cc-slider-row">
+                                <div class="cc-slider-label">Exhibitionism <span class="cc-badge-inline" id="cc-sl-badge-exhibitionism">5</span></div>
+                                <input type="range" id="cc-sl-exhibitionism" class="cc-slider" data-key="exhibitionism" min="1" max="10" value="5" step="1">
+                            </div>
+                        </div>
+                        <div class="cc-field-group"><label class="cc-label">Kinks</label><textarea id="cc-ext-kinks" class="cc-textarea cc-textarea--sm" placeholder="BDSM, roleplay, voyeurism…"></textarea></div>
+                        <div class="cc-field-group"><label class="cc-label">Fantasies</label><textarea id="cc-ext-fantasies" class="cc-textarea cc-textarea--sm" placeholder="Core sexual fantasies…"></textarea></div>
+                        <div class="cc-field-group"><label class="cc-label">Hard Limits</label><textarea id="cc-ext-hard-limits" class="cc-textarea cc-textarea--sm" placeholder="Absolute no-goes…"></textarea></div>
+                    </div>
+
+                    <!-- ═══ AI / PROMPT ═══ -->
+                    <div class="cc-tab-panel" data-panel="ai" hidden>
+                        <div class="cc-section-label">System Prompt & Instructions</div>
+                        <div class="cc-field-group">
+                            <label class="cc-label">System Prompt <span class="cc-hint">Core AI roleplay instructions</span></label>
+                            <textarea id="cc-system-prompt" class="cc-textarea cc-textarea--xl" placeholder="You are {{char}}. Write in third-person limited present tense…"></textarea>
+                        </div>
+                        <div class="cc-field-group">
+                            <label class="cc-label">Post-History Instructions <span class="cc-hint">Tone &amp; continuity reminder injected after messages</span></label>
+                            <textarea id="cc-post-history" class="cc-textarea" placeholder="Maintain {{char}}'s voice. Avoid breaking character…"></textarea>
+                        </div>
+                        <div class="cc-section-label cc-section-label--sm">AI Behavior</div>
+                        <div class="cc-grid-2">
+                            <div class="cc-field-group"><label class="cc-label">Narrative POV</label><input type="text" id="cc-ext-narrative-pov" class="cc-input" placeholder="third-limited, first"></div>
+                            <div class="cc-field-group"><label class="cc-label">Prose Style</label><input type="text" id="cc-ext-prose-style" class="cc-input" placeholder="Literary, cinematic, punchy…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Response Format</label><input type="text" id="cc-ext-response-format" class="cc-input" placeholder="*actions* + dialogue"></div>
+                            <div class="cc-field-group"><label class="cc-label">Response Length</label><input type="text" id="cc-ext-response-length" class="cc-input" placeholder="3-5 paragraphs…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Context Priority</label><input type="text" id="cc-ext-context-priority" class="cc-input" placeholder="Card, lorebook, user…"></div>
+                        </div>
+                        <div class="cc-field-group"><label class="cc-label">Allowed Topics</label><textarea id="cc-ext-allowed-topics" class="cc-textarea cc-textarea--sm" placeholder="Combat, romance, dark themes…"></textarea></div>
+                        <div class="cc-field-group"><label class="cc-label">Forbidden Topics</label><textarea id="cc-ext-forbidden-topics" class="cc-textarea cc-textarea--sm" placeholder="Topics to strictly avoid…"></textarea></div>
+                        <div class="cc-field-group"><label class="cc-label">World Rules</label><textarea id="cc-ext-world-rules" class="cc-textarea cc-textarea--sm" placeholder="Canon constraints, world physics…"></textarea></div>
+                    </div>
+
+                    <!-- ═══ OVERRIDES ═══ -->
+                    <div class="cc-tab-panel" data-panel="overrides" hidden>
+                        <div class="cc-section-label">Runtime Overrides</div>
+                        <div class="cc-field-group"><label class="cc-label">Nickname</label><input type="text" id="cc-nickname" class="cc-input" placeholder="Short in-chat name"></div>
+                        <div class="cc-field-group"><label class="cc-label">Model Override <span class="cc-hint">Leave blank to use global model</span></label><input type="text" id="cc-model-override" class="cc-input cc-input--mono" placeholder="e.g. gemini-2.0-flash-thinking"></div>
+                        <div class="cc-field-group">
+                            <label class="cc-label">System Prompt Override <span class="cc-hint">Replaces card system prompt for this reality</span></label>
+                            <textarea id="cc-system-override" class="cc-textarea" placeholder="Full override…"></textarea>
+                        </div>
+                        <div class="cc-field-group">
+                            <label class="cc-label">Post-History Override</label>
+                            <textarea id="cc-post-override" class="cc-textarea" placeholder="Full override…"></textarea>
+                        </div>
+                        <div class="cc-field-group">
+                            <label class="cc-label">Append to System <span class="cc-hint">Appended after the system prompt, not replacing it</span></label>
+                            <textarea id="cc-append-system" class="cc-textarea" placeholder="Extra context added to every prompt…"></textarea>
+                        </div>
+                        <div class="cc-field-group">
+                            <label class="cc-label">Persistent Memory <span class="cc-hint">Injected as fixed context across all chats</span></label>
+                            <textarea id="cc-persistent-memory" class="cc-textarea" placeholder="Core memories the character always carries…"></textarea>
+                        </div>
+                    </div>
+
+                </div><!-- .cc-panels -->
+
+                <!-- ── Footer actions ── -->
+                <footer class="cc-footer">
+                    <div class="cc-footer__left">
+                        <button id="cc-cancel" class="cc-btn cc-btn--ghost">Cancel</button>
+                    </div>
+                    <div class="cc-footer__right">
+                        <button id="cc-export-json" class="cc-btn cc-btn--ghost" title="Download card JSON (for data/cards/)"><i data-lucide="download"></i> Export JSON</button>
+                        <button id="cc-export-codebase" class="cc-btn cc-btn--ghost" title="Download card + index entry (for full codebase placement)"><i data-lucide="package-open"></i> Export to Codebase</button>
+                        <button id="cc-save" class="cc-btn cc-btn--secondary"><i data-lucide="save"></i> Save</button>
+                        <button id="cc-save-activate" class="cc-btn cc-btn--accent"><i data-lucide="zap"></i> Save &amp; Activate</button>
+                    </div>
+                </footer>
+
+            </div><!-- .cc-main -->
+        </div><!-- .cc-body -->
+    </div><!-- .cc-studio -->
+</div><!-- #modal-char-creator -->
+
 <div id="modal-sims-editor" class="modal sims-modal" hidden role="dialog" aria-modal="true" aria-labelledby="sims-editor-title">
     <div class="modal__backdrop"></div>
     <div class="sims-editor">

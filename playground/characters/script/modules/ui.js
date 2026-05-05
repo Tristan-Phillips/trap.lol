@@ -21,6 +21,7 @@ import { addBook, removeBook, addEntry, updateEntry, removeEntry, createBook } f
 import { parseCharacterCard, buildCard, normalizeData } from './parser-v2.js';
 import { getApiKey, setApiKey, clearApiKey, isValidKeyFormat, restoreKeyFromCookie } from '../../../../glass/script/modules/llm-auth.js';
 import { initSimsEditor } from './sims-editor.js';
+import { initCharCreator } from './char-creator.js';
 
 // ── Utility ───────────────────────────────────────────────────────────────────
 const qs  = (sel, ctx = document) => ctx ? ctx.querySelector(sel) : null;
