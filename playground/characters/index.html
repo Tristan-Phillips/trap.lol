@@ -515,44 +515,6 @@
 
 <div id="modal-char-picker" class="modal" hidden><div class="modal__backdrop" data-close></div><div class="modal__content" style="max-width:600px;"><header class="modal__header"><h3>Select Fragment</h3><button id="char-picker-close" data-close><i data-lucide="x"></i></button></header><div class="modal__body"><div class="sidebar__search" style="margin-bottom:15px;"><input type="text" id="picker-search-input" class="control-input" placeholder="Search..."></div><div id="picker-char-grid" class="picker-char-grid"></div></div></div></div>
 
-<div id="modal-creator" class="modal" hidden>
-  <div class="modal__backdrop" data-close></div>
-  <div class="modal__content modal__content--large">
-    <header class="modal__header">
-      <h3><span id="creator-title-text">New Fragment</span></h3>
-      <button id="creator-close" class="btn-icon" data-close><i data-lucide="x"></i></button>
-    </header>
-    <div class="modal__body" style="display:grid; gap:10px;">
-      <div class="creator-avatar-row" style="display:flex; gap:15px; align-items:flex-start;">
-        <div id="creator-avatar-preview" class="creator-avatar-preview" style="width:72px; height:72px; border-radius:50%; background:rgba(255,255,255,0.05); border:2px dashed rgba(255,255,255,0.15); cursor:pointer; background-size:cover; background-position:center; flex-shrink:0; display:flex; align-items:center; justify-content:center;">
-          <button id="creator-avatar-btn" class="btn-icon" style="width:100%; height:100%; border-radius:50%;"><i data-lucide="camera"></i></button>
-        </div>
-        <input type="file" id="creator-avatar-input" hidden accept="image/*">
-        <div class="creator-avatar-row__fields" style="flex:1; display:grid; gap:8px;">
-          <input type="text" id="creator-name" class="control-input" placeholder="Character Name">
-          <input type="text" id="creator-tagline" class="control-input" placeholder="Tagline / Short Description">
-        </div>
-      </div>
-      <textarea id="creator-description" class="control-textarea" rows="3" placeholder="Description — who are they?"></textarea>
-      <textarea id="creator-personality" class="control-textarea" rows="2" placeholder="Personality traits"></textarea>
-      <textarea id="creator-scenario" class="control-textarea" rows="2" placeholder="Scenario / Starting context"></textarea>
-      <textarea id="creator-first-mes" class="control-textarea" rows="3" placeholder="First message (opening greeting)"></textarea>
-      <textarea id="creator-mes-example" class="control-textarea" rows="3" placeholder="Example dialogue ({{user}}: / {{char}}:)"></textarea>
-      <textarea id="creator-system-prompt" class="control-textarea" rows="2" placeholder="System prompt override"></textarea>
-      <textarea id="creator-post-history" class="control-textarea" rows="2" placeholder="Post-history instructions"></textarea>
-      <input type="text" id="creator-author" class="control-input" placeholder="Author">
-      <textarea id="creator-alt-greetings" class="control-textarea" rows="2" placeholder="Alternate greetings (one per line)"></textarea>
-      <input type="text" id="creator-tags" class="control-input" placeholder="Tags (comma-separated)">
-      <textarea id="creator-notes" class="control-textarea" rows="2" placeholder="Creator notes"></textarea>
-    </div>
-    <footer class="modal__footer">
-      <button id="creator-cancel" class="btn btn--ghost" data-close>Cancel</button>
-      <button id="creator-save" class="btn btn--accent"><i data-lucide="save"></i> Save</button>
-      <button id="creator-export" class="btn btn--ghost"><i data-lucide="download"></i> Export</button>
-    </footer>
-  </div>
-</div>
-
 <div id="modal-lore-editor" class="modal" hidden><div class="modal__backdrop" data-close></div><div class="modal__content"><header class="modal__header"><h3>Lore Entry</h3><button id="lore-editor-close" data-close><i data-lucide="x"></i></button></header><div class="modal__body" style="display:grid; gap:10px;">
     <input type="text" id="lore-entry-id" hidden><input type="text" id="lore-book-id" hidden>
     <input type="text" id="lore-entry-name" placeholder="Name"><input type="text" id="lore-entry-keywords" placeholder="Keywords"><textarea id="lore-entry-content" rows="8"></textarea><textarea id="lore-entry-comment" placeholder="Comment"></textarea>
@@ -692,7 +654,9 @@
                 <span id="cc-char-badge" class="cc-char-badge">—</span>
             </div>
             <div class="cc-topbar__right">
-                <button id="cc-import-btn" class="cc-btn cc-btn--ghost" title="Import existing card to prefill"><i data-lucide="upload"></i> Import Card</button>
+                <button id="cc-open-sims" class="cc-btn cc-btn--ghost cc-btn--sm" title="Switch to visual trait editor"><i data-lucide="wand-2"></i> Visual Traits</button>
+                <button id="cc-topbar-export" class="cc-btn cc-btn--ghost cc-btn--sm" title="Download card JSON"><i data-lucide="download"></i> Export</button>
+                <button id="cc-import-btn" class="cc-btn cc-btn--ghost cc-btn--sm" title="Import existing card to prefill"><i data-lucide="upload"></i> Import Card</button>
                 <input type="file" id="cc-import-file" accept=".json,.png" hidden>
                 <button id="cc-close" class="cc-btn cc-btn--ghost cc-btn--icon" aria-label="Close"><i data-lucide="x"></i></button>
             </div>
@@ -821,6 +785,8 @@
                     <div class="cc-tab-panel" data-panel="identity" hidden>
                         <div class="cc-section-label">Identity & Background</div>
                         <div class="cc-grid-2">
+                            <div class="cc-field-group"><label class="cc-label">Name (Sync)</label><input type="text" id="cc-name-sync" class="cc-input" placeholder="Character name…"></div>
+                            <div class="cc-field-group"><label class="cc-label">Tagline (Sync)</label><input type="text" id="cc-tagline-sync" class="cc-input" placeholder="Short tagline…"></div>
                             <div class="cc-field-group"><label class="cc-label">Full Name</label><input type="text" id="cc-ext-name" class="cc-input" placeholder="Full / canonical name"></div>
                             <div class="cc-field-group"><label class="cc-label">Pronouns</label><input type="text" id="cc-ext-pronouns" class="cc-input" placeholder="she/her"></div>
                             <div class="cc-field-group"><label class="cc-label">Occupation</label><input type="text" id="cc-ext-occupation" class="cc-input" placeholder="Role / job / title"></div>

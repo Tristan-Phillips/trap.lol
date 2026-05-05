@@ -168,11 +168,31 @@ export function initCharCreator() {
         e.target.value = '';
     });
 
+    qs('#cc-open-sims')?.addEventListener('click', () => {
+        if (!_editId) {
+            showToast('Save the character first to use the visual editor.', 'warn');
+            return;
+        }
+        document.dispatchEvent(new CustomEvent('sims-editor:open', { detail: { charId: _editId } }));
+        closeCreator();
+    });
+
     // ── Slider live sync ──────────────────────────────────────────────────────
     qsa('.cc-slider').forEach($sl => {
         const key = $sl.dataset.key;
         $sl.addEventListener('input', () => syncSliderBadge(key, $sl.value));
     });
+
+    // ── Field Syncing (Sidebar <-> Identity Tab) ──────────────────────────────
+    const syncFields = (id1, id2) => {
+        const el1 = qs(`#cc-${id1}`);
+        const el2 = qs(`#cc-${id2}`);
+        if (!el1 || !el2) return;
+        el1.addEventListener('input', () => { el2.value = el1.value; if (id1 === 'name') updateHeader(); });
+        el2.addEventListener('input', () => { el1.value = el2.value; if (id1 === 'name') updateHeader(); });
+    };
+    syncFields('name', 'name-sync');
+    syncFields('tagline', 'tagline-sync');
 
     // ── Auto-generate ID from name ────────────────────────────────────────────
     qs('#cc-name')?.addEventListener('input', debounce(() => {
@@ -185,6 +205,7 @@ export function initCharCreator() {
     qs('#cc-save')?.addEventListener('click',         () => saveCard(false));
     qs('#cc-save-activate')?.addEventListener('click',() => saveCard(true));
     qs('#cc-export-json')?.addEventListener('click',  exportJson);
+    qs('#cc-topbar-export')?.addEventListener('click',exportJson);
     qs('#cc-export-codebase')?.addEventListener('click', exportToCodebase);
 
     return { open: openCreator, close: closeCreator };
@@ -260,6 +281,8 @@ function resetForm() {
 
     qs('#cc-gallery-strip').innerHTML = '';
     setField('id-preview', '');
+    setField('name-sync', '');
+    setField('tagline-sync', '');
     qs('#cc-version').value = '1.0';
     qs('#cc-creator').value = 'trap.lol';
     qs('#cc-spec-version').value = '2.0';
@@ -268,7 +291,9 @@ function resetForm() {
 async function populateFromCard(meta, card, charId) {
     // Core card fields
     setField('name',           card.name || '');
+    setField('name-sync',      card.name || '');
     setField('tagline',        meta?.tagline || '');
+    setField('tagline-sync',   meta?.tagline || '');
     setField('description',    card.description || '');
     setField('personality',    card.personality || '');
     setField('scenario',       card.scenario || '');

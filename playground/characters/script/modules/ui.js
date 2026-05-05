@@ -1272,7 +1272,7 @@ export function initUI() {
         qs('#btn-add-to-thread').onclick = () => addCharacterToThread(id);
         qs('#btn-sims-edit').onclick     = () => openSimsEditor(id);
         qs('#btn-gallery-add').onclick   = () => { switchSidebarTab('social'); openSocialFeed(id); renderSocialSidebar(); };
-        qs('#btn-edit-char').onclick     = () => openCreator(id);
+        qs('#btn-edit-char').onclick     = () => document.dispatchEvent(new CustomEvent('char-creator:open', { detail: { charId: id } }));
         qs('#btn-remove-char').onclick = () => {
             removeBotFromChat(id);
             delete _rrIndex[state.chat.id];
@@ -2462,153 +2462,11 @@ export function initUI() {
         }
     });
 
-    // ── Character Creator Modal ───────────────────────────────────────────────
-    let creatorEditId = null;
-    let creatorAvatarDataUrl = null;
+    // ── Edit Character Trigger ────────────────────────────────────────────────
+    const triggerEditCreator = (charId) => {
+        document.dispatchEvent(new CustomEvent('char-creator:open', { detail: { charId } }));
+    };
 
-    function openCreator(editId = null) {
-        creatorEditId     = editId;
-        creatorAvatarDataUrl = null;
-        const modal = qs('#modal-creator');
-
-        // Reset
-        qsa('#modal-creator input, #modal-creator textarea').forEach(el => { el.value = ''; });
-        const $titleText = qs('#creator-title-text');
-        if ($titleText) $titleText.textContent = editId ? 'Edit Fragment' : 'Create Fragment';
-        const $prevEl = qs('#creator-avatar-preview');
-        if ($prevEl) { $prevEl.style.backgroundImage = 'none'; $prevEl.classList.remove('has-image'); }
-
-        if (editId) {
-            const char = state.loadedCharacters[editId];
-            const meta = state.characters.find(c => c.id === editId);
-            if (char) {
-                qs('#creator-name').value        = char.name        || '';
-                qs('#creator-tagline').value     = meta?.tagline    || '';
-                qs('#creator-description').value = char.description || '';
-                qs('#creator-personality').value = char.personality || '';
-                qs('#creator-scenario').value    = char.scenario    || '';
-                qs('#creator-first-mes').value   = char.first_mes   || '';
-                qs('#creator-system-prompt').value = char.system_prompt || '';
-                qs('#creator-post-history').value  = char.post_history_instructions || '';
-                qs('#creator-notes').value         = char.creator_notes || '';
-                qs('#creator-author').value        = char.creator || '';
-                qs('#creator-mes-example').value   = char.mes_example || '';
-                qs('#creator-alt-greetings').value = (char.alternate_greetings || []).join('\n');
-                qs('#creator-tags').value          = (meta?.tags || char.tags || []).join(', ');
-                if (meta?.avatar_path || char.avatar) {
-                    const src = meta?.avatar_path || char.avatar;
-                    const $prev = qs('#creator-avatar-preview');
-                    if ($prev) { $prev.style.backgroundImage = `url(${src})`; $prev.classList.add('has-image'); }
-                    creatorAvatarDataUrl = src;
-                }
-            }
-        }
-
-        // Creator tabs
-        qsa('.creator-tab').forEach(btn => {
-            btn.addEventListener('click', () => {
-                qsa('.creator-tab').forEach(b => b.classList.remove('active'));
-                qsa('.creator-tab-panel').forEach(p => p.classList.remove('active'));
-                btn.classList.add('active');
-                qs(`#ctab-${btn.dataset.ctab}`)?.classList.add('active');
-            });
-        });
-
-        // Reset to first tab
-        qsa('.creator-tab').forEach((b, i) => b.classList.toggle('active', i === 0));
-        qsa('.creator-tab-panel').forEach((p, i) => p.classList.toggle('active', i === 0));
-
-        showModal('modal-creator');
-    }
-
-    qs('#create-character')?.addEventListener('click', () => openCreator());
-    // Static welcome button (may or may not exist if history loaded)
-    qs('#welcome-create')?.addEventListener('click', () => openCreator());
-    qs('#creator-close')?.addEventListener('click',  () => hideModal('modal-creator'));
-    qs('#creator-cancel')?.addEventListener('click', () => hideModal('modal-creator'));
-    qs('.modal__backdrop', qs('#modal-creator'))?.addEventListener('click', () => hideModal('modal-creator'));
-
-    // Avatar picker
-    qs('#creator-avatar-btn')?.addEventListener('click', () => qs('#creator-avatar-input')?.click());
-    qs('#creator-avatar-input')?.addEventListener('change', e => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = ev => {
-            creatorAvatarDataUrl = ev.target.result;
-            const $p = qs('#creator-avatar-preview');
-            if ($p) { $p.style.backgroundImage = `url(${creatorAvatarDataUrl})`; $p.classList.add('has-image'); }
-        };
-        reader.readAsDataURL(file);
-        e.target.value = '';
-    });
-
-    qs('#creator-save')?.addEventListener('click', async () => {
-        const name = qs('#creator-name').value.trim();
-        if (!name) {
-            qs('#creator-name').classList.add('shake');
-            setTimeout(() => qs('#creator-name').classList.remove('shake'), 500);
-            return;
-        }
-
-        const id = creatorEditId || `custom-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
-
-        const card = buildCard({
-            name,
-            description:              qs('#creator-description').value.trim(),
-            personality:              qs('#creator-personality').value.trim(),
-            scenario:                 qs('#creator-scenario').value.trim(),
-            first_mes:                qs('#creator-first-mes').value.trim(),
-            system_prompt:            qs('#creator-system-prompt').value.trim(),
-            post_history_instructions:qs('#creator-post-history').value.trim(),
-            creator_notes:            qs('#creator-notes').value.trim(),
-            creator:                  qs('#creator-author').value.trim(),
-            mes_example:              qs('#creator-mes-example').value.trim(),
-            alternate_greetings:      qs('#creator-alt-greetings').value.trim()
-                .split('\n').map(s => s.trim()).filter(Boolean),
-            tags: qs('#creator-tags').value.split(',').map(t => t.trim()).filter(Boolean),
-            avatar: creatorAvatarDataUrl || null
-        });
-
-        const meta = {
-            id,
-            name,
-            tagline: qs('#creator-tagline').value.trim() || '',
-            avatar_path: creatorAvatarDataUrl || null,
-            tags: card.tags
-        };
-
-        await saveCharacter(meta, card);
-        hideModal('modal-creator');
-        renderRoster();
-        selectCharacter(id);
-    });
-
-    qs('#creator-export')?.addEventListener('click', () => {
-        const name = qs('#creator-name').value.trim() || 'character';
-        const card = buildCard({
-            name,
-            description:               qs('#creator-description').value.trim(),
-            personality:               qs('#creator-personality').value.trim(),
-            scenario:                  qs('#creator-scenario').value.trim(),
-            first_mes:                 qs('#creator-first-mes').value.trim(),
-            system_prompt:             qs('#creator-system-prompt').value.trim(),
-            post_history_instructions: qs('#creator-post-history').value.trim(),
-            creator_notes:             qs('#creator-notes').value.trim(),
-            creator:                   qs('#creator-author').value.trim(),
-            mes_example:               qs('#creator-mes-example').value.trim(),
-            alternate_greetings:       qs('#creator-alt-greetings').value.trim().split('\n').filter(Boolean),
-            tags:                      qs('#creator-tags').value.split(',').map(t => t.trim()).filter(Boolean)
-        });
-        const json = JSON.stringify({ spec: 'chara_card_v2', data: card }, null, 2);
-        const blob = new Blob([json], { type: 'application/json' });
-        const url  = URL.createObjectURL(blob);
-        const a    = document.createElement('a');
-        a.href     = url;
-        a.download = `${name.toLowerCase().replace(/\s+/g, '-')}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
-    });
 
     // ── Lorebook UI ───────────────────────────────────────────────────────────
     const $loreList    = qs('#lore-list');
@@ -3217,7 +3075,9 @@ export function initUI() {
                         </div>
                     </div>`;
                 $thread.appendChild(welcome);
-                qs('#welcome-create', welcome)?.addEventListener('click', () => openCreator());
+                qs('#welcome-create', welcome)?.addEventListener('click', () => {
+                    document.dispatchEvent(new CustomEvent('char-creator:open'));
+                });
                 qs('#welcome-import', welcome)?.addEventListener('click', () => qs('#card-input').click());
                 lucideRefresh(welcome);
             }
@@ -4218,7 +4078,7 @@ export function initUI() {
 
         if (e.key === 't' || e.key === 'T') toggleTerminal();
         if (e.key === 'r' || e.key === 'R') setRosterCollapsed($rosterSidebar.dataset.collapsed !== 'true');
-        if (e.key === 'n' || e.key === 'N') openCreator();
+        if (e.key === 'n' || e.key === 'N') document.dispatchEvent(new CustomEvent('char-creator:open'));
         if (e.key === 'e' || e.key === 'E') { if (state.activeBotId) openSimsEditor(state.activeBotId); }
         if (e.key === 'a' || e.key === 'A') openCharPicker();
         if (e.key === 'g' || e.key === 'G') { if (state.activeBotId) openGalleryModal(state.activeBotId); }
@@ -4253,6 +4113,7 @@ export function initUI() {
 
     // ── Sims Editor ───────────────────────────────────────────────────────────
     const simsEditor = initSimsEditor();
+    initCharCreator();
 
     // Always re-fetch the card from disk before opening the editor so that
     // extensions.underdark fields are guaranteed to be present even if localStorage
@@ -4280,7 +4141,7 @@ export function initUI() {
     });
 
     // ── Welcome screen static button wiring ─────────────────────────────────
-    qs('#welcome-create')?.addEventListener('click', () => openCreator());
+    qs('#welcome-create')?.addEventListener('click', () => document.dispatchEvent(new CustomEvent('char-creator:open')));
     qs('#welcome-import')?.addEventListener('click', () => qs('#card-input').click());
 
     // ── Oracle button ─────────────────────────────────────────────────────────

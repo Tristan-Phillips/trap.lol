@@ -889,5 +889,9 @@ export function initSimsEditor() {
     initSwatches();
 
     // ── Public API ────────────────────────────────────────────────────────────
+    document.addEventListener('sims-editor:open', e => {
+        if (e.detail?.charId) open(e.detail.charId);
+    });
+
     return { open, close };
 }
