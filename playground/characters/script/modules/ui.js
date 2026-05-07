@@ -8,7 +8,7 @@ import {
     state, loadState, saveState,
     newReality, switchReality, deleteReality,
     newChat, switchChat, deleteChat, renameChat,
-    addMessage, editMessage, deleteMessage, clearHistory,
+    addMessage, editMessage, deleteMessage, deleteImageMessage, clearHistory,
     addComment, deleteComment,
     setActiveBot, removeBotFromChat,
     getCharOverride, setCharOverride,
@@ -16,10 +16,11 @@ import {
     defaultCharOverride, defaultThreadConfig, resolveCharAvatar,
     addReaction, getReactions, exportSessionJson, importSessionJson
 } from './state.js';
+import { resolveImageUrl, saveImageBlob, deleteImageBlob, isIdbImageRef, idbImageRefId, isDataUrl } from './storage.js';
 import { buildPayload, streamCompletion } from './llm-engine.js';
 import { parseCommand, executeCommand, filterCommands, COMMANDS } from './commands.js';
 import { IMAGE_MODELS, DEFAULT_MODEL, buildImagePrompt, generateImagePromptWithLLM, generateImage } from './image-engine.js';
-import { addBook, removeBook, addEntry, updateEntry, removeEntry, createBook } from './lorebook.js';
+import { addBook, removeBook, addEntry, updateEntry, removeEntry, createBook, scanLorebooks } from './lorebook.js';
 import { parseCharacterCard, buildCard, normalizeData } from './parser-v2.js';
 import { getApiKey, setApiKey, clearApiKey, isValidKeyFormat, restoreKeyFromCookie } from '../../../../glass/script/modules/llm-auth.js';
 import { initCharEditor } from './char-editor.js';
@@ -33,6 +34,24 @@ const esc = str => String(str ?? '').replace(/[&<>"']/g, c =>
 function debounce(fn, ms) {
     let t;
     return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+}
+
+// Light markdown renderer for profile details — bold, italic, headers, line breaks only.
+// Does NOT use marked.js to avoid dependency — covers the common character-card patterns.
+function renderMarkdownSafe(text) {
+    if (!text) return '';
+    return esc(text)
+        .replace(/\*\*\*([^*]+)\*\*\*/g, '<strong><em>$1</em></strong>')
+        .replace(/\*\*([^*]+)\*\*/g,     '<strong>$1</strong>')
+        .replace(/\*([^*\n]+)\*/g,       '<em>$1</em>')
+        .replace(/^#{3}\s+(.+)$/gm,      '<h4 class="pd-md-h4">$1</h4>')
+        .replace(/^#{2}\s+(.+)$/gm,      '<h3 class="pd-md-h3">$1</h3>')
+        .replace(/^#{1}\s+(.+)$/gm,      '<h2 class="pd-md-h2">$1</h2>')
+        .replace(/^---+$/gm,             '<hr class="pd-md-hr">')
+        .replace(/\n\n/g,                '</p><p class="pd-p">')
+        .replace(/\n/g,                  '<br>')
+        .replace(/^/,                    '<p class="pd-p">')
+        .replace(/$/,                    '</p>');
 }
 
 function confirm(title, body, opts = {}) {
@@ -1692,6 +1711,7 @@ export function initUI() {
                     <button class="profile-tab-btn active" data-profile-tab="feed"><i data-lucide="grid"></i> Feed</button>
                     <button class="profile-tab-btn" data-profile-tab="details"><i data-lucide="info"></i> Details</button>
                     <button class="profile-tab-btn" data-profile-tab="notes"><i data-lucide="file-text"></i> Notes</button>
+                    <button class="profile-tab-btn" data-profile-tab="introspect"><i data-lucide="activity"></i> State</button>
                 </div>
 
                 <div id="profile-content-feed" class="profile-tab-content active">
@@ -1699,29 +1719,64 @@ export function initUI() {
                 </div>
 
                 <div id="profile-content-details" class="profile-tab-content" hidden>
-                    <div class="profile-details">
-                        <div class="profile-details__section">
-                            <strong>Description</strong>
-                            <p>${esc(char.description || '—').replace(/\n/g, '<br>')}</p>
-                        </div>
-                        ${char.personality ? `<div class="profile-details__section"><strong>Personality</strong><p>${esc(char.personality)}</p></div>` : ''}
-                        ${char.scenario    ? `<div class="profile-details__section"><strong>Scenario</strong><p>${esc(char.scenario).replace(/\n/g,'<br>')}</p></div>` : ''}
+                    <div class="profile-details profile-details--terminal">
+                        ${char.description ? `
+                        <div class="pd-block">
+                            <div class="pd-block__label"><i data-lucide="scroll-text"></i> Profile</div>
+                            <div class="pd-block__body pd-body--prose">${renderMarkdownSafe(char.description)}</div>
+                        </div>` : ''}
+                        ${char.personality ? `
+                        <div class="pd-block">
+                            <div class="pd-block__label"><i data-lucide="brain"></i> Psyche</div>
+                            <div class="pd-block__body pd-body--prose">${renderMarkdownSafe(char.personality)}</div>
+                        </div>` : ''}
+                        ${char.scenario ? `
+                        <div class="pd-block">
+                            <div class="pd-block__label"><i data-lucide="map"></i> Scenario</div>
+                            <div class="pd-block__body pd-body--prose">${renderMarkdownSafe(char.scenario)}</div>
+                        </div>` : ''}
+                        ${char.mes_example ? `
+                        <div class="pd-block">
+                            <div class="pd-block__label"><i data-lucide="message-square-quote"></i> Example Dialogue</div>
+                            <div class="pd-block__body pd-body--code">${esc(char.mes_example).replace(/\n/g,'<br>')}</div>
+                        </div>` : ''}
                     </div>
                 </div>
 
                 <div id="profile-content-notes" class="profile-tab-content" hidden>
-                    <div class="profile-details">
-                        ${char.creator_notes ? `<div class="profile-details__section"><strong>Creator Notes</strong><p>${esc(char.creator_notes)}</p></div>` : ''}
+                    <div class="profile-details profile-details--terminal">
+                        ${char.creator_notes ? `
+                        <div class="pd-block">
+                            <div class="pd-block__label"><i data-lucide="feather"></i> Creator Notes</div>
+                            <div class="pd-block__body pd-body--prose">${renderMarkdownSafe(char.creator_notes)}</div>
+                        </div>` : ''}
+                        ${char.system_prompt ? `
+                        <div class="pd-block pd-block--system">
+                            <div class="pd-block__label"><i data-lucide="terminal"></i> System Directive</div>
+                            <div class="pd-block__body pd-body--code">${esc(char.system_prompt).replace(/\n/g,'<br>')}</div>
+                        </div>` : ''}
+                        ${char.post_history_instructions ? `
+                        <div class="pd-block pd-block--system">
+                            <div class="pd-block__label"><i data-lucide="arrow-down-to-line"></i> Post-History Injection</div>
+                            <div class="pd-block__body pd-body--code">${esc(char.post_history_instructions).replace(/\n/g,'<br>')}</div>
+                        </div>` : ''}
                         ${char.alternate_greetings?.length ? `
-                            <div class="profile-details__section">
-                                <strong>Alt. Greetings</strong>
+                        <div class="pd-block">
+                            <div class="pd-block__label"><i data-lucide="message-circle-more"></i> Alternate Greetings</div>
+                            <div class="pd-block__body">
                                 <select id="alt-greeting-select" class="control-select control-select--sm">
                                     <option value="">— Default greeting —</option>
-                                    ${char.alternate_greetings.map((g, i) => `<option value="${i}">Alt ${i + 1}: ${esc(g.slice(0, 50))}...</option>`).join('')}
+                                    ${char.alternate_greetings.map((g, i) => `<option value="${i}">Alt ${i + 1}: ${esc(g.replace(/\n/g,' ').slice(0, 60))}…</option>`).join('')}
                                 </select>
                             </div>
-                        ` : ''}
+                        </div>` : ''}
+                        ${!char.creator_notes && !char.system_prompt && !char.alternate_greetings?.length ? `
+                        <div class="pd-empty"><i data-lucide="file-x"></i><span>No metadata recorded for this fragment.</span></div>` : ''}
                     </div>
+                </div>
+
+                <div id="profile-content-introspect" class="profile-tab-content" hidden>
+                    <div class="profile-introspect" id="profile-introspect-body"></div>
                 </div>
             </div>`;
 
@@ -1733,6 +1788,7 @@ export function initUI() {
                 qsa('.profile-tab-content', $profile).forEach(c => c.hidden = true);
                 $btn.classList.add('active');
                 qs(`#profile-content-${target}`, $profile).hidden = false;
+                if (target === 'introspect') renderIntrospectionTab(char, id);
             };
         });
 
@@ -1790,6 +1846,149 @@ export function initUI() {
             qs('#profile-actions').hidden = true;
             if (qs('#gallery-strip')) qs('#gallery-strip').hidden = true;
         };
+    }
+
+    async function renderIntrospectionTab(char, charId) {
+        const $body = qs('#profile-introspect-body');
+        if (!$body) return;
+
+        const override  = getCharOverride(charId);
+        const tc        = state.chat?.threadConfig || {};
+        const rc        = state.config;
+        const history   = state.history.filter(m => m.role === 'user' || m.role === 'bot');
+        const userMsgs  = history.filter(m => m.role === 'user').length;
+        const botMsgs   = history.filter(m => m.role === 'bot').length;
+        const lastBot   = [...history].reverse().find(m => m.role === 'bot');
+        const lastUser  = [...history].reverse().find(m => m.role === 'user');
+        const totalTok  = state.telemetry?.totalTokens ?? 0;
+        const turns     = state.telemetry?.turns ?? 0;
+
+        // Effective model
+        const effectiveModel = tc.model ?? rc.model ?? '—';
+        const effectiveTemp  = (tc.temperature ?? rc.temperature ?? 0.8).toFixed(2);
+        const effectiveMax   = tc.maxOutput ?? rc.maxOutput ?? 512;
+
+        // Lore active
+        let loreChips = '';
+        if (state.lorebooks?.length) {
+            try {
+                const fired = scanLorebooks(state.history, state.lorebooks, 8);
+                loreChips = fired.slice(0, 6).map(e =>
+                    `<span class="introspect-lore-chip">${esc(e.key || e.title || 'entry')}</span>`
+                ).join('') || '<span style="opacity:.4;font-size:.65rem;font-family:var(--font-mono)">none active</span>';
+            } catch (_) {
+                loreChips = '<span style="opacity:.4;font-size:.65rem;font-family:var(--font-mono)">—</span>';
+            }
+        } else {
+            loreChips = '<span style="opacity:.4;font-size:.65rem;font-family:var(--font-mono)">no lorebooks attached</span>';
+        }
+
+        // Override field completeness (how fully the char is configured)
+        const ovFields = ['species','gender','age','height','bodyType','skinTone','hairColor','eyeColor',
+            'personality','styleArchetype','outfitDescription','voice','speechStyle','tone'];
+        const filled = ovFields.filter(k => override[k] && String(override[k]).trim() && String(override[k]).toLowerCase() !== 'n/a').length;
+        const completeness = Math.round((filled / ovFields.length) * 100);
+        const compColor = completeness >= 70 ? 'green' : completeness >= 40 ? 'yellow' : 'red';
+
+        // Last message snippet
+        const snippet = (msg) => {
+            if (!msg) return '—';
+            return msg.content.replace(/<[^>]+>/g,'').replace(/\*{1,3}([^*]+)\*{1,3}/g,'$1').trim().slice(0,180);
+        };
+
+        const scenarioActive = state.chat?.threadConfig?.threadScenario || state.reality?.worldConfig?.scenario;
+        const personaActive  = state.config.userPersona || '—';
+        const nsfw = state.config.flags?.injectAdult !== false;
+
+        $body.innerHTML = `
+            <!-- Session Stats -->
+            <div class="introspect-section">
+                <div class="introspect-section__label"><i data-lucide="bar-chart-2"></i> Session State</div>
+                <div class="introspect-stat-grid">
+                    <div class="introspect-stat">
+                        <span class="introspect-stat__key">Turns</span>
+                        <span class="introspect-stat__val introspect-stat__val--accent">${turns}</span>
+                    </div>
+                    <div class="introspect-stat">
+                        <span class="introspect-stat__key">Tokens Used</span>
+                        <span class="introspect-stat__val">${totalTok.toLocaleString()}</span>
+                    </div>
+                    <div class="introspect-stat">
+                        <span class="introspect-stat__key">Bot Messages</span>
+                        <span class="introspect-stat__val introspect-stat__val--accent">${botMsgs}</span>
+                    </div>
+                    <div class="introspect-stat">
+                        <span class="introspect-stat__key">User Messages</span>
+                        <span class="introspect-stat__val">${userMsgs}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Config -->
+            <div class="introspect-section">
+                <div class="introspect-section__label"><i data-lucide="settings-2"></i> Active Config</div>
+                <div class="introspect-stat-grid">
+                    <div class="introspect-stat">
+                        <span class="introspect-stat__key">Model</span>
+                        <span class="introspect-stat__val introspect-stat__val--accent" style="font-size:.62rem">${esc(effectiveModel.slice(0,22))}</span>
+                    </div>
+                    <div class="introspect-stat">
+                        <span class="introspect-stat__key">Temperature</span>
+                        <span class="introspect-stat__val">${effectiveTemp}</span>
+                    </div>
+                    <div class="introspect-stat">
+                        <span class="introspect-stat__key">Max Output</span>
+                        <span class="introspect-stat__val">${effectiveMax}</span>
+                    </div>
+                    <div class="introspect-stat">
+                        <span class="introspect-stat__key">NSFW</span>
+                        <span class="introspect-stat__val ${nsfw ? 'introspect-stat__val--accent' : 'introspect-stat__val--red'}">${nsfw ? 'ON' : 'OFF'}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Character Completeness -->
+            <div class="introspect-section">
+                <div class="introspect-section__label"><i data-lucide="user-cog"></i> Override Coverage</div>
+                <div class="introspect-bar-row">
+                    <span class="introspect-bar-label">Fields</span>
+                    <div class="introspect-bar-track"><div class="introspect-bar-fill introspect-bar-fill--${compColor}" style="width:${completeness}%"></div></div>
+                    <span class="introspect-bar-val">${completeness}%</span>
+                </div>
+                <div style="font-size:.62rem;font-family:var(--font-mono);color:var(--text-muted);opacity:.6;margin-top:2px">${filled} / ${ovFields.length} profile fields populated</div>
+            </div>
+
+            <!-- Scene Context -->
+            <div class="introspect-section">
+                <div class="introspect-section__label"><i data-lucide="map-pin"></i> Scene Context</div>
+                ${scenarioActive ? `<div style="font-size:.65rem;color:var(--text-muted);font-family:var(--font-mono);margin-bottom:5px;opacity:.6">${esc(String(scenarioActive).slice(0,100))}${String(scenarioActive).length > 100 ? '…' : ''}</div>` : '<div style="opacity:.3;font-size:.65rem;font-family:var(--font-mono)">No active scenario</div>'}
+                <div style="font-size:.6rem;font-family:var(--font-mono);color:var(--text-muted);margin-top:4px;opacity:.5">Persona: ${esc(personaActive.slice(0,60))}</div>
+            </div>
+
+            <!-- Last Exchange -->
+            ${lastBot ? `
+            <div class="introspect-section">
+                <div class="introspect-section__label"><i data-lucide="message-square"></i> Last Bot Message</div>
+                <div class="introspect-recent-msg">${esc(snippet(lastBot))}</div>
+            </div>` : ''}
+
+            <!-- Active Lore -->
+            <div class="introspect-section">
+                <div class="introspect-section__label"><i data-lucide="book-open"></i> Lore Active</div>
+                <div>${loreChips}</div>
+            </div>
+
+            <!-- Refresh -->
+            <button class="introspect-refresh-btn" id="introspect-refresh-btn">
+                <i data-lucide="refresh-cw"></i> Refresh State
+            </button>
+        `;
+
+        lucideRefresh($body);
+
+        qs('#introspect-refresh-btn', $body)?.addEventListener('click', () => {
+            renderIntrospectionTab(char, charId);
+        });
     }
 
     function updateCinematicBackground(path) {
@@ -2053,7 +2252,8 @@ export function initUI() {
 
     // ── Gallery ────────────────────────────────────────────────────────────────
     let galleryCharId = null;
-    let lbImages = [];
+    let lbImages = [];   // resolved display URLs (for <img src>)
+    let lbRefs   = [];   // raw storage refs (for save/delete operations)
     let lbIndex  = 0;
 
     function getCharGallery(id) {
@@ -2075,13 +2275,42 @@ export function initUI() {
         return char;
     }
 
+    // Push a data URL (or URL string) to a character's gallery, offloading
+    // data URLs to IndexedDB so they don't fill localStorage.
+    async function addToGallery(charId, dataUrl) {
+        const charObj = ensureGalleryStore(charId);
+        if (!charObj) return null;
+        const gallery = charObj.extensions.underdark.gallery;
+        if (gallery.includes(dataUrl)) return dataUrl;
+        if (isDataUrl(dataUrl)) {
+            const blobId = `gallery-${charId}-${Date.now()}-${Math.random().toString(36).slice(2,6)}`;
+            const ref = await saveImageBlob(blobId, dataUrl).catch(() => null);
+            const stored = ref || dataUrl;
+            gallery.push(stored);
+            saveState();
+            return stored;
+        }
+        gallery.push(dataUrl);
+        saveState();
+        return dataUrl;
+    }
+
+    // Resolve all gallery image refs to display URLs (for rendering)
+    async function resolveGalleryImages(id) {
+        const meta  = state.characters.find(c => c.id === id);
+        const extra = getCharGallery(id);
+        const avatarRef = meta?.avatar_path;
+        const all = [avatarRef, ...extra].filter(Boolean);
+        return Promise.all(all.map(ref => resolveImageUrl(ref)));
+    }
+
     // ── Gallery strip (profile tab) ───────────────────────────────────────────
-    function renderGalleryStrip(id) {
+    async function renderGalleryStrip(id) {
         const $strip = qs('#gallery-strip');
         if (!$strip) return;
-        const allImages = getAllGalleryImages(id);
+        const allRefs = getAllGalleryImages(id);
 
-        if (!allImages.length) {
+        if (!allRefs.length) {
             $strip.innerHTML = `
                 <div class="gallery-feed-empty">
                     <i data-lucide="camera"></i>
@@ -2091,20 +2320,22 @@ export function initUI() {
             return;
         }
 
-        $strip.innerHTML = allImages.map((src, i) =>
-            `<div class="gallery-feed-item" data-gi="${i}">
+        // Resolve all refs (may include idb: refs)
+        const resolvedUrls = await Promise.all(allRefs.map(ref => resolveImageUrl(ref)));
+
+        $strip.innerHTML = resolvedUrls.map((src, i) =>
+            src ? `<div class="gallery-feed-item" data-gi="${i}">
                  <img src="${src}" loading="lazy" class="gallery-feed-img">
                  ${i === 0 ? '<div class="gallery-feed-badge"><i data-lucide="star"></i></div>' : ''}
-             </div>`
+             </div>` : ''
         ).join('') + `
             <div class="gallery-feed-item gallery-feed-item--add" id="gallery-strip-add">
                 <i data-lucide="plus"></i>
             </div>`;
 
         qsa('.gallery-feed-item:not(.gallery-feed-item--add)', $strip).forEach($t => {
-            $t.addEventListener('click', () => {
-                openSocialFeed(id);
-            });
+            const idx = parseInt($t.dataset.gi);
+            $t.addEventListener('click', () => openLightbox(id, idx));
         });
 
         qs('#gallery-strip-add', $strip)?.addEventListener('click', () => openGalleryModal(id));
@@ -2122,20 +2353,19 @@ export function initUI() {
         lucideRefresh(qs('#modal-gallery'));
     }
 
-    function renderGalleryModal(id) {
+    async function renderGalleryModal(id) {
         const $grid = qs('#gallery-grid');
         if (!$grid) return;
-        const allImages = getAllGalleryImages(id);
-        const char = state.loadedCharacters[id];
+        const allRefs = getAllGalleryImages(id);
         const meta = state.characters.find(c => c.id === id);
 
         const $title = qs('#gallery-title');
         if ($title) $title.textContent = `${meta?.name || 'Character'}`;
 
         const $count = qs('#gallery-count');
-        if ($count) $count.textContent = allImages.length ? `${allImages.length} image${allImages.length !== 1 ? 's' : ''}` : '';
+        if ($count) $count.textContent = allRefs.length ? `${allRefs.length} image${allRefs.length !== 1 ? 's' : ''}` : '';
 
-        if (!allImages.length) {
+        if (!allRefs.length) {
             $grid.innerHTML = `
                 <div class="gallery-empty">
                     <i data-lucide="camera"></i>
@@ -2146,7 +2376,11 @@ export function initUI() {
             return;
         }
 
-        $grid.innerHTML = allImages.map((src, i) => {
+        // Resolve all IDB refs to display URLs
+        const resolvedUrls = await Promise.all(allRefs.map(ref => resolveImageUrl(ref)));
+
+        $grid.innerHTML = resolvedUrls.map((src, i) => {
+            if (!src) return '';
             const isCover = i === 0;
             return `
             <div class="gallery-item${isCover ? ' gallery-item--cover' : ''}" data-gi="${i}">
@@ -2154,7 +2388,7 @@ export function initUI() {
                 ${isCover ? `<span class="gallery-item__badge">Avatar</span>` : ''}
                 <div class="gallery-item__overlay">
                     <button class="gallery-item__btn" data-lb="${i}" title="Expand"><i data-lucide="expand"></i></button>
-                    ${src.startsWith('data:') ? `<button class="gallery-item__btn gallery-item__btn--dl" data-dl="${i}" title="Download"><i data-lucide="download"></i></button>` : ''}
+                    <button class="gallery-item__btn gallery-item__btn--dl" data-dl="${i}" title="Download"><i data-lucide="download"></i></button>
                     ${isCover ? `<button class="gallery-item__btn gallery-item__btn--set" data-set-cover="-1" title="Already profile picture" disabled><i data-lucide="star"></i></button>` : `<button class="gallery-item__btn gallery-item__btn--set" data-set-cover="${i - 1}" title="Set as profile picture"><i data-lucide="user-check"></i></button>`}
                     ${!isCover ? `<button class="gallery-item__btn gallery-item__btn--del" data-del="${i - 1}" title="Remove"><i data-lucide="trash-2"></i></button>` : ''}
                 </div>
@@ -2166,11 +2400,11 @@ export function initUI() {
             const idx = parseInt(btn.dataset.setCover);
             const charObj = ensureGalleryStore(id);
             const gallery = charObj.extensions.underdark.gallery;
-            const src = gallery[idx];
-            if (meta && src) {
+            const ref = gallery[idx]; // may be idb:img: ref
+            if (meta && ref) {
                 if (meta.avatar_path) gallery.unshift(meta.avatar_path);
-                gallery.splice(gallery.indexOf(src), 1);
-                meta.avatar_path = src;
+                gallery.splice(gallery.indexOf(ref), 1);
+                meta.avatar_path = ref;
                 saveState();
                 renderRoster();
                 renderGalleryStrip(id);
@@ -2178,17 +2412,19 @@ export function initUI() {
                 showToast('Avatar updated');
             }
         });
-        qsa('[data-del]', $grid).forEach(btn => btn.onclick = () => {
+        qsa('[data-del]', $grid).forEach(btn => btn.onclick = async () => {
             const idx = parseInt(btn.dataset.del);
             const charObj = ensureGalleryStore(id);
+            const ref = charObj.extensions.underdark.gallery[idx];
+            if (isIdbImageRef(ref)) await deleteImageBlob(idbImageRefId(ref)).catch(() => {});
             charObj.extensions.underdark.gallery.splice(idx, 1);
             saveState();
             renderGalleryStrip(id);
             renderGalleryModal(id);
         });
-        qsa('[data-dl]', $grid).forEach(btn => btn.onclick = () => {
+        qsa('[data-dl]', $grid).forEach(btn => btn.onclick = async () => {
             const idx = parseInt(btn.dataset.dl);
-            const src = allImages[idx];
+            const src = resolvedUrls[idx];
             if (!src) return;
             const a = document.createElement('a');
             a.href = src;
@@ -2201,25 +2437,185 @@ export function initUI() {
 
     // ── Image Generation Modal ────────────────────────────────────────────────
     let _imgGenModel    = DEFAULT_MODEL;
-    let _imgGenDataUrl  = null;   // last generated image (data URL)
-    let _imgGenPrompt   = '';     // prompt used for last generation
+    let _imgGenDataUrl  = null;
+    let _imgGenPrompt   = '';
     let _imgGenSeed     = null;
 
-    function openImageGenModal(userHint = '') {
+    // Scene Builder state — tracks active selections per group
+    const _scene = {
+        nsfw:     'sfw',
+        clothing: null,
+        pose:     null,
+        style:    'photorealistic',
+        mood:     null,
+        env:      null,
+        expr:     null,
+        cam:      null,
+        clothingCustom: '',
+        poseCustom: '',
+        envCustom: '',
+        positive: '',
+        negative: '',
+    };
+
+    // Read scene builder into a flat extras string for buildImagePrompt
+    function _sceneToExtras() {
+        const parts = [];
+        const val = (group) => {
+            const v = _scene[group];
+            if (!v) return '';
+            if (v === '__custom__') return _scene[`${group}Custom`] || '';
+            return v;
+        };
+        if (val('clothing'))  parts.push(val('clothing'));
+        if (val('pose'))      parts.push(val('pose'));
+        if (val('style'))     parts.push(val('style'));
+        if (val('mood'))      parts.push(val('mood'));
+        if (val('env'))       parts.push(val('env'));
+        if (val('expr'))      parts.push(val('expr'));
+        if (val('cam'))       parts.push(val('cam'));
+        if (_scene.positive)  parts.push(_scene.positive.trim());
+        return parts.filter(Boolean).join(', ');
+    }
+
+    function _sceneNegativeExtras() {
+        return _scene.negative?.trim() || '';
+    }
+
+    function _sceneIsExplicit() {
+        return _scene.nsfw === 'explicit' || _scene.nsfw === 'unrestricted';
+    }
+
+    function _sceneBadgeCount() {
+        let n = 0;
+        for (const k of ['clothing','pose','mood','env','expr','cam']) if (_scene[k]) n++;
+        if (_scene.positive || _scene.negative) n++;
+        if (_scene.nsfw !== 'sfw') n++;
+        return n;
+    }
+
+    function _updateSceneBadge() {
+        const $b = qs('#img-gen-scene-badge');
+        if (!$b) return;
+        const n = _sceneBadgeCount();
+        $b.textContent = n > 0 ? `${n} active` : '';
+    }
+
+    function _rebuildPrompt() {
+        const charId = state.activeBotId;
+        const extras = _sceneToExtras();
+        const includeNsfw = _scene.nsfw !== 'sfw' && (state.config.flags?.injectAdult !== false || _sceneIsExplicit());
+        const autoPr = buildImagePrompt({ charId, userAddition: extras, includeNsfw, nsfwLevel: _scene.nsfw });
+        const $ta = qs('#img-gen-prompt');
+        if ($ta) $ta.value = autoPr;
+    }
+
+    function _wireSceneBuilder() {
         const $modal = qs('#modal-image-gen');
         if (!$modal) return;
 
-        // Build auto-prompt from current scene
-        const charId = state.activeBotId;
-        const nsfw   = state.config.flags?.injectAdult !== false;
-        const autoPr = buildImagePrompt({ charId, userAddition: userHint, includeNsfw: nsfw });
+        // Toggle open/close
+        const $toggle = qs('#img-gen-scene-toggle', $modal);
+        const $panel  = qs('#img-gen-scene-panel', $modal);
+        $toggle?.addEventListener('click', () => {
+            const open = $panel?.hidden;
+            if ($panel) $panel.hidden = !open;
+            $toggle.setAttribute('aria-expanded', String(open));
+            lucideRefresh($toggle);
+        });
+
+        // NSFW pills
+        qsa('.scene-pill', $modal).forEach($p => {
+            $p.addEventListener('click', () => {
+                _scene.nsfw = $p.dataset.nsfw;
+                qsa('.scene-pill', $modal).forEach(x => x.classList.remove('scene-pill--active'));
+                $p.classList.add('scene-pill--active');
+                _updateSceneBadge();
+                _rebuildPrompt();
+            });
+        });
+
+        // Multi-select chips per group
+        qsa('.scene-chip:not(.scene-chip--custom)', $modal).forEach($c => {
+            $c.addEventListener('click', () => {
+                const group = $c.dataset.group;
+                const val   = $c.dataset.val;
+                const already = _scene[group] === val;
+                _scene[group] = already ? null : val;
+                qsa(`.scene-chip[data-group="${group}"]`, $modal).forEach(x => x.classList.remove('scene-chip--active'));
+                if (!already) $c.classList.add('scene-chip--active');
+                // Hide custom input if standard chip selected
+                const $ci = qs(`#scene-${group}-custom`, $modal);
+                if ($ci) $ci.hidden = true;
+                _updateSceneBadge();
+                _rebuildPrompt();
+            });
+        });
+
+        // Custom chips
+        qsa('.scene-chip--custom', $modal).forEach($c => {
+            $c.addEventListener('click', () => {
+                const group = $c.dataset.group;
+                const $ci   = qs(`#scene-${group}-custom`, $modal);
+                if (!$ci) return;
+                const open = $ci.hidden;
+                $ci.hidden = !open;
+                if (open) {
+                    _scene[group] = '__custom__';
+                    qsa(`.scene-chip[data-group="${group}"]`, $modal).forEach(x => x.classList.remove('scene-chip--active'));
+                    $c.classList.add('scene-chip--active');
+                    $ci.focus();
+                } else {
+                    if (_scene[group] === '__custom__') { _scene[group] = null; $c.classList.remove('scene-chip--active'); }
+                }
+                _updateSceneBadge();
+                _rebuildPrompt();
+            });
+        });
+
+        // Custom input changes
+        [['scene-clothing-custom','clothingCustom'],['scene-pose-custom','poseCustom'],['scene-env-custom','envCustom']].forEach(([id, key]) => {
+            qs(`#${id}`, $modal)?.addEventListener('input', e => {
+                _scene[key] = e.target.value;
+                _updateSceneBadge();
+                _rebuildPrompt();
+            });
+        });
+
+        // Homebrew textareas
+        qs('#scene-positive', $modal)?.addEventListener('input', e => {
+            _scene.positive = e.target.value;
+            _updateSceneBadge();
+        });
+        qs('#scene-negative', $modal)?.addEventListener('input', e => {
+            _scene.negative = e.target.value;
+            _updateSceneBadge();
+        });
+    }
+
+    function openImageGenModal(userHint = '', targetCharId = null) {
+        const $modal = qs('#modal-image-gen');
+        if (!$modal) return;
+
+        const charId = targetCharId || state.activeBotId;
+
+        // Sync NSFW pill to reality flag
+        const nsfwFlag = state.config.flags?.injectAdult !== false;
+        if (!nsfwFlag && _scene.nsfw !== 'sfw') {
+            _scene.nsfw = 'sfw';
+            qsa('.scene-pill', $modal).forEach(p => p.classList.toggle('scene-pill--active', p.dataset.nsfw === 'sfw'));
+        }
+
+        // Build prompt with current scene state
+        const extras = _sceneToExtras();
+        const includeNsfw = _scene.nsfw !== 'sfw' && (nsfwFlag || _sceneIsExplicit());
+        const autoPr = buildImagePrompt({ charId, userAddition: userHint || extras, includeNsfw, nsfwLevel: _scene.nsfw });
         const $ta    = qs('#img-gen-prompt', $modal);
         if ($ta) $ta.value = autoPr;
 
-        // Populate model grid
         _renderImgGenModelGrid();
 
-        // Context strip — show char name + recent scene snippet
+        // Context strip
         const $ctx = qs('#img-gen-context', $modal);
         if ($ctx) {
             const char = charId ? state.loadedCharacters[charId] : null;
@@ -2234,11 +2630,11 @@ export function initUI() {
             lucideRefresh($ctx);
         }
 
-        // Hide previous preview
         const $prev = qs('#img-gen-preview', $modal);
         if ($prev) $prev.hidden = true;
         _imgGenDataUrl = null;
 
+        _updateSceneBadge();
         qs('#img-gen-cost', $modal).textContent = '';
         $modal.hidden = false;
         lucideRefresh($modal);
@@ -2282,8 +2678,12 @@ export function initUI() {
         const $prevImg  = qs('#img-gen-preview-img', $modal);
         const $cost     = qs('#img-gen-cost', $modal);
 
-        const prompt = qs('#img-gen-prompt', $modal)?.value.trim();
+        let prompt = qs('#img-gen-prompt', $modal)?.value.trim();
         if (!prompt) { showToast('Enter a prompt first', 'warn'); return; }
+
+        // Append negative homebrew if set
+        const negExtra = _sceneNegativeExtras();
+        if (negExtra) prompt = `${prompt} ### Negative: ${negExtra}`;
 
         const size = qs('#img-gen-size', $modal)?.value || '1024x1024';
         const seedRaw = qs('#img-gen-seed', $modal)?.value;
@@ -2307,16 +2707,12 @@ export function initUI() {
             // Auto-insert image into chat thread as a collapsed image message
             _injectImageMessage(dataUrl, prompt, _imgGenModel);
 
-            // Auto-save to character gallery
+            // Auto-save to character gallery (offloads data URL to IDB)
             const charId = state.activeBotId;
             if (charId) {
-                const charObj = ensureGalleryStore(charId);
-                if (charObj) {
-                    charObj.extensions.underdark.gallery.push(dataUrl);
-                    saveState();
-                    renderGalleryStrip(charId);
-                    showToast('Image saved to gallery', 'info', 2000);
-                }
+                await addToGallery(charId, dataUrl);
+                renderGalleryStrip(charId);
+                showToast('Image saved to gallery', 'info', 2000);
             }
 
         } catch (err) {
@@ -2396,25 +2792,19 @@ export function initUI() {
             a.click();
         });
 
-        // Delete from thread and history
-        qs('.msg-action--img-del', $msg).addEventListener('click', () => {
-            deleteMessage(msgId);
+        // Delete from thread and history (also purges IDB blob)
+        qs('.msg-action--img-del', $msg).addEventListener('click', async () => {
+            await deleteImageMessage(msgId);
             $msg.remove();
         });
 
         // Save to gallery (re-save in case user closes modal without saving)
-        qs('.msg-action--img-save', $msg).addEventListener('click', () => {
+        qs('.msg-action--img-save', $msg).addEventListener('click', async () => {
             const cid = state.activeBotId;
             if (!cid) { showToast('No active character', 'warn'); return; }
-            const co = ensureGalleryStore(cid);
-            if (co) {
-                if (!co.extensions.underdark.gallery.includes(dataUrl)) {
-                    co.extensions.underdark.gallery.push(dataUrl);
-                    saveState();
-                    renderGalleryStrip(cid);
-                }
-                showToast('Saved to gallery', 'info', 1800);
-            }
+            await addToGallery(cid, dataUrl);
+            renderGalleryStrip(cid);
+            showToast('Saved to gallery', 'info', 1800);
         });
 
         lucideRefresh($msg);
@@ -2429,6 +2819,8 @@ export function initUI() {
     qs('#img-gen-generate')?.addEventListener('click', _runImageGeneration);
     qs('#img-gen-regenerate')?.addEventListener('click', _runImageGeneration);
 
+    qs('#img-gen-rebuild-prompt')?.addEventListener('click', _rebuildPrompt);
+
     // ── AI Prompt generation ──────────────────────────────────────────────────
     qs('#img-gen-ai-prompt')?.addEventListener('click', async () => {
         const $btn = qs('#img-gen-ai-prompt');
@@ -2436,8 +2828,9 @@ export function initUI() {
         if (!$btn || !$ta) return;
 
         const charId    = state.activeBotId;
-        const nsfw      = state.config.flags?.injectAdult !== false;
-        const userHint  = $ta.value.trim(); // treat current text as directional hint
+        const nsfw      = _sceneIsExplicit() || (state.config.flags?.injectAdult !== false);
+        const sceneHint = _sceneToExtras();
+        const userHint  = [$ta.value.trim(), sceneHint].filter(Boolean).join(', ');
 
         const origHtml = $btn.innerHTML;
         $btn.disabled = true;
@@ -2457,19 +2850,13 @@ export function initUI() {
         }
     });
 
-    qs('#img-gen-save-gallery')?.addEventListener('click', () => {
+    qs('#img-gen-save-gallery')?.addEventListener('click', async () => {
         if (!_imgGenDataUrl) return;
         const cid = state.activeBotId;
         if (!cid) { showToast('No active character', 'warn'); return; }
-        const co = ensureGalleryStore(cid);
-        if (co) {
-            if (!co.extensions.underdark.gallery.includes(_imgGenDataUrl)) {
-                co.extensions.underdark.gallery.push(_imgGenDataUrl);
-                saveState();
-                renderGalleryStrip(cid);
-            }
-            showToast('Saved to gallery', 'info', 1800);
-        }
+        await addToGallery(cid, _imgGenDataUrl);
+        renderGalleryStrip(cid);
+        showToast('Saved to gallery', 'info', 1800);
     });
 
     qs('#img-gen-download')?.addEventListener('click', () => {
@@ -2478,6 +2865,39 @@ export function initUI() {
         a.href     = _imgGenDataUrl;
         a.download = `underdark-gen-${Date.now()}.png`;
         a.click();
+    });
+
+    // Set as avatar from preview
+    qs('#img-gen-set-avatar')?.addEventListener('click', async () => {
+        if (!_imgGenDataUrl) return;
+        const cid = state.activeBotId;
+        if (!cid) { showToast('No active character', 'warn'); return; }
+        const meta = state.characters.find(c => c.id === cid);
+        const co   = ensureGalleryStore(cid);
+        if (!meta || !co) return;
+        const gallery = co.extensions.underdark.gallery;
+        // Archive old avatar to gallery if it exists
+        if (meta.avatar_path && !gallery.includes(meta.avatar_path)) gallery.unshift(meta.avatar_path);
+        // Offload new avatar data URL to IDB
+        const stored = isDataUrl(_imgGenDataUrl)
+            ? await saveImageBlob(`avatar-gen-${cid}-${Date.now()}`, _imgGenDataUrl).catch(() => _imgGenDataUrl)
+            : _imgGenDataUrl;
+        meta.avatar_path = stored;
+        if (!gallery.includes(stored)) gallery.push(stored);
+        saveState();
+        renderRoster();
+        renderGalleryStrip(cid);
+        showToast('Avatar updated');
+    });
+
+    // Wire scene builder (chips, toggles, custom inputs) — called once at boot
+    _wireSceneBuilder();
+
+    // Gallery → Generate New
+    qs('#gallery-gen-new')?.addEventListener('click', () => {
+        const cid = galleryCharId || state.activeBotId;
+        qs('#modal-gallery').hidden = true;
+        openImageGenModal('', cid);
     });
 
     // Also allow opening from a toolbar button (quick access)
@@ -3017,56 +3437,89 @@ export function initUI() {
     }
 
     // ── Lightbox ──────────────────────────────────────────────────────────────
-    function openLightbox(charId, startIndex) {
-        lbImages   = getAllGalleryImages(charId);
-        lbIndex    = startIndex;
+    async function openLightbox(charId, startIndex) {
         galleryCharId = charId;
-        renderLightbox();
-        qs('#lightbox').hidden = false;
-        lucideRefresh(qs('#lightbox'));
+        lbIndex       = startIndex;
+        const $lb = qs('#lightbox');
+        $lb.hidden = false;
+        lucideRefresh($lb);
+        // Resolve all IDB refs so lightbox has actual displayable URLs
+        lbRefs   = getAllGalleryImages(charId);
+        lbImages = await Promise.all(lbRefs.map(ref => resolveImageUrl(ref)));
+        renderLightbox(0);
     }
 
-    function renderLightbox() {
+    function renderLightbox(dir = 0) {
         if (!lbImages.length) return;
         lbIndex = Math.max(0, Math.min(lbImages.length - 1, lbIndex));
-        const src = lbImages[lbIndex];
-        qs('#lb-img').src = src;
-        qs('#lb-idx').textContent  = lbIndex + 1;
-        qs('#lb-total').textContent = lbImages.length;
-        const $lbCap = qs('#lb-caption'); if ($lbCap) $lbCap.textContent = lbIndex === 0 ? 'Cover Image' : `Image ${lbIndex + 1}`;
-        // Disable set-avatar for cover
+        const src   = lbImages[lbIndex];
+        const $img  = qs('#lb-img');
+
+        if ($img) {
+            $img.classList.remove('lb-anim-next', 'lb-anim-prev');
+            void $img.offsetWidth; // force reflow for animation reset
+            if (dir > 0) $img.classList.add('lb-anim-next');
+            else if (dir < 0) $img.classList.add('lb-anim-prev');
+            $img.src = src;
+        }
+
+        const $idx   = qs('#lb-idx');
+        const $total = qs('#lb-total');
+        if ($idx)   $idx.textContent   = lbIndex + 1;
+        if ($total) $total.textContent = lbImages.length;
+
+        const $cap = qs('#lb-caption');
+        if ($cap) $cap.textContent = lbIndex === 0 ? 'Cover Image' : `Image ${lbIndex + 1} of ${lbImages.length}`;
+
         const $setAv = qs('#lb-set-avatar');
         if ($setAv) $setAv.disabled = (lbIndex === 0);
+
         const $del = qs('#lb-remove');
-        if ($del) $del.disabled = (lbIndex === 0);
-        // Prev/next visibility
-        qs('#lb-prev').style.opacity = lbIndex > 0 ? '1' : '0.25';
-        qs('#lb-next').style.opacity = lbIndex < lbImages.length - 1 ? '1' : '0.25';
+        if ($del)  $del.disabled = (lbIndex === 0);
+
+        const $dl = qs('#lb-download');
+        if ($dl) $dl.disabled = !src;
+
+        const $prev = qs('#lb-prev');
+        const $next = qs('#lb-next');
+        if ($prev) $prev.disabled = lbIndex <= 0;
+        if ($next) $next.disabled = lbIndex >= lbImages.length - 1;
     }
 
-    qs('#lb-prev')?.addEventListener('click', () => { lbIndex--; renderLightbox(); });
-    qs('#lb-next')?.addEventListener('click', () => { lbIndex++; renderLightbox(); });
+    qs('#lb-prev')?.addEventListener('click', () => { lbIndex--; renderLightbox(-1); });
+    qs('#lb-next')?.addEventListener('click', () => { lbIndex++; renderLightbox(1); });
     qs('#lb-close')?.addEventListener('click', () => { qs('#lightbox').hidden = true; });
     qs('.lightbox__backdrop')?.addEventListener('click', () => { qs('#lightbox').hidden = true; });
 
-    qs('#lb-set-avatar')?.addEventListener('click', () => {
+    qs('#lb-download')?.addEventListener('click', () => {
+        const src = lbImages[lbIndex];
+        if (!src) return;
+        const meta = galleryCharId ? state.characters.find(c => c.id === galleryCharId) : null;
+        const a = document.createElement('a');
+        a.href = src;
+        a.download = `${(meta?.name || 'image').toLowerCase().replace(/\s+/g, '-')}-${String(lbIndex + 1).padStart(3, '0')}.png`;
+        a.click();
+    });
+
+    qs('#lb-set-avatar')?.addEventListener('click', async () => {
         if (!galleryCharId || lbIndex === 0) return;
-        const src  = lbImages[lbIndex];
+        const ref  = lbRefs[lbIndex];   // storage ref
         const meta = state.characters.find(c => c.id === galleryCharId);
         const char = ensureGalleryStore(galleryCharId);
         if (!meta || !char) return;
         const gallery = char.extensions.underdark.gallery;
         if (meta.avatar_path) gallery.unshift(meta.avatar_path);
-        const idx = gallery.indexOf(src);
+        const idx = gallery.indexOf(ref);
         if (idx !== -1) gallery.splice(idx, 1);
-        meta.avatar_path = src;
+        meta.avatar_path = ref;
         saveState();
         renderRoster();
         renderGalleryStrip(galleryCharId);
         renderGalleryModal(galleryCharId);
-        lbImages = getAllGalleryImages(galleryCharId);
+        lbRefs   = getAllGalleryImages(galleryCharId);
+        lbImages = await Promise.all(lbRefs.map(r => resolveImageUrl(r)));
         lbIndex  = 0;
-        renderLightbox();
+        renderLightbox(0);
         showToast('Cover image updated');
     });
 
@@ -3074,22 +3527,25 @@ export function initUI() {
         if (!galleryCharId || lbIndex === 0) return;
         const char = ensureGalleryStore(galleryCharId);
         if (!char) return;
+        const ref = char.extensions.underdark.gallery[lbIndex - 1];
+        if (isIdbImageRef(ref)) await deleteImageBlob(idbImageRefId(ref)).catch(() => {});
         char.extensions.underdark.gallery.splice(lbIndex - 1, 1);
         saveState();
-        lbImages = getAllGalleryImages(galleryCharId);
+        lbRefs   = getAllGalleryImages(galleryCharId);
+        lbImages = await Promise.all(lbRefs.map(r => resolveImageUrl(r)));
         renderGalleryStrip(galleryCharId);
         renderGalleryModal(galleryCharId);
-        if (!lbImages.length) { qs('#lightbox').hidden = true; return; }
+        if (!lbImages.filter(Boolean).length) { qs('#lightbox').hidden = true; return; }
         lbIndex = Math.min(lbIndex, lbImages.length - 1);
-        renderLightbox();
+        renderLightbox(0);
         showToast('Image removed');
     });
 
     // Keyboard nav in lightbox
     document.addEventListener('keydown', e => {
         if (qs('#lightbox')?.hidden === false) {
-            if (e.key === 'ArrowLeft')  { lbIndex--; renderLightbox(); }
-            if (e.key === 'ArrowRight') { lbIndex++; renderLightbox(); }
+            if (e.key === 'ArrowLeft')  { lbIndex--; renderLightbox(-1); }
+            if (e.key === 'ArrowRight') { lbIndex++; renderLightbox(1); }
             if (e.key === 'Escape')     { qs('#lightbox').hidden = true; }
         }
     });
@@ -3104,20 +3560,20 @@ export function initUI() {
         const files = [...e.target.files];
         e.target.value = '';
         if (!galleryCharId) return;
-        const char = ensureGalleryStore(galleryCharId);
-        if (!char) return;
         let added = 0;
         for (const file of files) {
             if (file.size > 10 * 1024 * 1024) { showToast(`${file.name} exceeds 10 MB limit`, 'error'); continue; }
-            await new Promise(resolve => {
+            const dataUrl = await new Promise((resolve, reject) => {
                 const reader = new FileReader();
-                reader.onload = ev => { char.extensions.underdark.gallery.push(ev.target.result); added++; resolve(); };
-                reader.onerror = () => { showToast(`Failed to read ${file.name}`, 'error'); resolve(); };
+                reader.onload  = ev => resolve(ev.target.result);
+                reader.onerror = () => reject(new Error(`Failed to read ${file.name}`));
                 reader.readAsDataURL(file);
-            });
+            }).catch(err => { showToast(err.message, 'error'); return null; });
+            if (!dataUrl) continue;
+            await addToGallery(galleryCharId, dataUrl);
+            added++;
         }
         if (added) {
-            saveState();
             renderGalleryStrip(galleryCharId);
             renderGalleryModal(galleryCharId);
             showToast(`${added} image${added !== 1 ? 's' : ''} added`);
@@ -3125,18 +3581,14 @@ export function initUI() {
     });
 
     // Add by URL
-    qs('#gallery-url-add')?.addEventListener('click', () => {
+    qs('#gallery-url-add')?.addEventListener('click', async () => {
         const $input = qs('#gallery-url-input');
         const url = $input?.value.trim();
         if (!url) return;
-        // Basic URL validation
         try { new URL(url); } catch { showToast('Invalid URL', 'error'); return; }
         if (!galleryCharId) return;
-        const char = ensureGalleryStore(galleryCharId);
-        if (!char) return;
-        char.extensions.underdark.gallery.push(url);
+        await addToGallery(galleryCharId, url);
         $input.value = '';
-        saveState();
         renderGalleryStrip(galleryCharId);
         renderGalleryModal(galleryCharId);
         showToast('Image URL added');
@@ -3148,16 +3600,16 @@ export function initUI() {
     // Export all gallery images as individual downloads
     qs('#gallery-export-all')?.addEventListener('click', async () => {
         if (!galleryCharId) return;
-        const allImages = getAllGalleryImages(galleryCharId);
-        if (!allImages.length) { showToast('No images to export', 'warn'); return; }
+        const allRefs = getAllGalleryImages(galleryCharId);
+        if (!allRefs.length) { showToast('No images to export', 'warn'); return; }
         const meta = state.characters.find(c => c.id === galleryCharId);
         const nameSlug = (meta?.name || 'gallery').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+        const allImages = await Promise.all(allRefs.map(ref => resolveImageUrl(ref)));
         let count = 0;
         for (let i = 0; i < allImages.length; i++) {
             const src = allImages[i];
-            // Only download data URLs directly; skip external URLs (they would CORS)
+            if (!src) continue;
             if (!src.startsWith('data:')) {
-                // For external URLs, open in new tab
                 window.open(src, '_blank', 'noopener');
                 continue;
             }
@@ -3168,7 +3620,6 @@ export function initUI() {
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
-                // Stagger downloads slightly to avoid browser blocking
                 setTimeout(resolve, 200);
             });
             count++;
@@ -3889,7 +4340,14 @@ export function initUI() {
         state.history.forEach(msg => {
             if (!$thread) return;
             if (msg.role === 'image') {
-                _injectImageMessage(msg.content, msg.prompt || '', msg.model || '', msg.id);
+                // Resolve IDB reference before injecting
+                resolveImageUrl(msg.content).then(dataUrl => {
+                    if (dataUrl) _injectImageMessage(dataUrl, msg.prompt || '', msg.model || '', msg.id);
+                }).catch(() => {
+                    if (msg.content && !isIdbImageRef(msg.content)) {
+                        _injectImageMessage(msg.content, msg.prompt || '', msg.model || '', msg.id);
+                    }
+                });
                 return;
             }
             const char = msg.botId ? state.loadedCharacters[msg.botId] : null;

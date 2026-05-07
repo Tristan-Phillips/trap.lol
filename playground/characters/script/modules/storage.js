@@ -69,10 +69,6 @@ export async function idbClear() {
 }
 
 // ── Avatar helpers ─────────────────────────────────────────────────────────────
-// Avatars are stored under key `avatar:<charId>` so they don't bloat localStorage.
-// The character card's `.avatar` field stores the key reference ("idb:<charId>")
-// rather than the raw data URL.
-
 const AVATAR_PREFIX = 'avatar:';
 
 export async function saveAvatar(charId, dataUrl) {
@@ -86,6 +82,40 @@ export async function loadAvatar(charId) {
 
 export async function deleteAvatar(charId) {
     return idbDelete(`${AVATAR_PREFIX}${charId}`);
+}
+
+// ── Image blob helpers (gallery + chat image messages) ─────────────────────────
+// Stored under key `img:<blobId>` to keep large data URLs out of localStorage.
+// References are stored as "idb:img:<blobId>" in history/gallery arrays.
+
+const IMG_PREFIX = 'img:';
+
+export async function saveImageBlob(blobId, dataUrl) {
+    await idbSet(`${IMG_PREFIX}${blobId}`, dataUrl);
+    return `idb:img:${blobId}`;
+}
+
+export async function loadImageBlob(blobId) {
+    return idbGet(`${IMG_PREFIX}${blobId}`);
+}
+
+export async function deleteImageBlob(blobId) {
+    return idbDelete(`${IMG_PREFIX}${blobId}`);
+}
+
+export function isIdbImageRef(str) {
+    return typeof str === 'string' && str.startsWith('idb:img:');
+}
+
+export function idbImageRefId(str) {
+    return str.replace(/^idb:img:/, '');
+}
+
+// Resolve any value that may be a data URL or idb:img: reference to a data URL.
+export async function resolveImageUrl(val) {
+    if (!val) return null;
+    if (isIdbImageRef(val)) return loadImageBlob(idbImageRefId(val)).catch(() => null);
+    return val;
 }
 
 // Check if a string is a raw base64 data URL (should be migrated to IDB)

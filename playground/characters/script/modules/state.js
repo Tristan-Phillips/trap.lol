@@ -6,7 +6,7 @@
  * and isolated continuities.
  */
 
-import { saveAvatar, loadAvatar, deleteAvatar, isDataUrl } from './storage.js';
+import { saveAvatar, loadAvatar, deleteAvatar, isDataUrl, saveImageBlob, deleteImageBlob, isIdbImageRef, idbImageRefId } from './storage.js';
 
 const STORAGE_KEY = 'underdark_v4';
 const CHARS_KEY   = 'underdark_chars_v4';
@@ -335,8 +335,9 @@ export function renameChat(id, name) {
 // ── Message Helpers ──────────────────────────────────────────────────────────
 
 export function addMessage(role, content, botId = null, meta = {}) {
+    const msgId = `msg-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
     const msg = {
-        id: `msg-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        id: msgId,
         role,
         content,
         botId,
@@ -349,6 +350,17 @@ export function addMessage(role, content, botId = null, meta = {}) {
         reactions: {},
         edited: false
     };
+
+    // Offload image data URLs to IndexedDB to avoid localStorage quota exhaustion.
+    if (role === 'image' && isDataUrl(content)) {
+        saveImageBlob(msgId, content).then(idbRef => {
+            msg.content = idbRef;
+            saveState();
+        }).catch(() => {
+            // Keep raw data URL in memory if IDB fails; saveState() already called below
+        });
+    }
+
     state.chat.history.push(msg);
     state.chat.updatedAt = Date.now();
     state.reality.updatedAt = Date.now();
@@ -368,6 +380,15 @@ export function addMessage(role, content, botId = null, meta = {}) {
 
     saveState();
     return msg;
+}
+
+export async function deleteImageMessage(msgId) {
+    const msg = state.chat.history.find(m => m.id === msgId);
+    if (msg?.role === 'image' && isIdbImageRef(msg.content)) {
+        await deleteImageBlob(idbImageRefId(msg.content)).catch(() => {});
+    }
+    state.chat.history = state.chat.history.filter(m => m.id !== msgId);
+    saveState();
 }
 
 export function editMessage(msgId, newContent) {

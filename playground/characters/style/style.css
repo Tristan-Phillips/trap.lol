@@ -31,6 +31,7 @@
 @import './reinject.css';
 @import './config-panel.css';
 @import './image-gen.css';
+@import './lightbox.css';
 
 /* ── Wallhaven Arena ── */
 @import './wallhaven.css';

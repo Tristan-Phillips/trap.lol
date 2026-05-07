@@ -153,9 +153,10 @@ export const DEFAULT_MODEL = 'hidream';
 export function buildImagePrompt(opts = {}) {
     const {
         charId          = state.activeBotId,
-        userAddition    = '',   // text from /image command
+        userAddition    = '',   // free text and scene-builder extras (comma-separated)
         historyDepth    = 6,    // recent messages to pull scene context from
         includeNsfw     = true,
+        nsfwLevel       = 'explicit', // 'sfw' | 'suggestive' | 'explicit' | 'unrestricted'
     } = opts;
 
     const char     = charId ? state.loadedCharacters[charId] : null;
@@ -249,14 +250,25 @@ export function buildImagePrompt(opts = {}) {
         parts.push(userAddition.trim());
     }
 
-    // 6. Technical quality suffix ──────────────────────────────────────────────
+    // 6. NSFW content gate ────────────────────────────────────────────────────
+    if (includeNsfw) {
+        const nsfwMap = {
+            suggestive:   'suggestive, tasteful nudity allowed, semi-explicit',
+            explicit:     'explicit adult content, NSFW, uncensored, explicit nudity',
+            unrestricted: 'fully uncensored, no restrictions, maximally explicit adult content, hyper-detailed genitals, raw explicit scene',
+        };
+        const nsfwTag = nsfwMap[nsfwLevel] || nsfwMap['explicit'];
+        if (nsfwLevel !== 'sfw') parts.push(nsfwTag);
+    }
+
+    // 7. Technical quality suffix ──────────────────────────────────────────────
     const qualitySuffix = [
         'masterpiece', 'best quality', 'highly detailed', 'sharp focus',
         '8k resolution', 'cinematic lighting', 'professional photograph',
+        'award winning composition', 'anatomically correct',
     ].join(', ');
 
     const rawPrompt = parts.join('. ').trim();
-    // Ensure there is always a meaningful subject — fall back to char name or generic
     const subject = rawPrompt || charName || 'a person';
     return `${subject}. ${qualitySuffix}`;
 }
