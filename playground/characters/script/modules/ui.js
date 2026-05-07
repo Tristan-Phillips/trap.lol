@@ -519,7 +519,7 @@ export function initUI() {
     _loadScenarioCache().then(() => {
         const $sel = qs('#reality-scenario-preset-select');
         if ($sel) {
-            _populateScenarioSelect($sel, { includeCustom: true });
+            _populateScenarioSelect($sel, { blankLabel: '— None —', includeCustom: true });
             $sel.value = 'blank';
         }
     });
@@ -734,26 +734,44 @@ export function initUI() {
         if ($badge) $badge.textContent = mode === 'group' ? 'Group' : 'DM';
         if ($title) $title.textContent = mode === 'group' ? 'New Group Thread' : 'New DM Thread';
 
-        // Reset fields
+        // Reset fields — show current reality values as context for "inherit" fields
+        const rc = state.config;
         const $scenarioText = qs('#ts-scenario-text');
         const $scenarioPreset = qs('#ts-scenario-preset');
         const $userName  = qs('#ts-user-name');
         const $userPers  = qs('#ts-user-persona');
         const $threadName = qs('#ts-thread-name');
-        if ($scenarioText) $scenarioText.value = '';
-        if ($userName) $userName.value = '';
-        if ($userPers) $userPers.value = '';
+        if ($scenarioText) {
+            $scenarioText.value = '';
+            const inheritedScenario = state.reality?.worldConfig?.scenario || '';
+            $scenarioText.placeholder = inheritedScenario
+                ? `Reality scenario: "${inheritedScenario.slice(0, 120)}${inheritedScenario.length > 120 ? '…' : ''}"\n\nLeave blank to inherit, or override/extend here…`
+                : 'Leave blank to use the reality\'s shared scenario. Override or extend it here for this thread specifically…';
+        }
+        if ($userName) {
+            $userName.value = '';
+            $userName.placeholder = `Inheriting: ${rc.userName || 'User'}`;
+        }
+        if ($userPers) {
+            $userPers.value = '';
+            $userPers.placeholder = rc.userPersona
+                ? `Inheriting: "${rc.userPersona.slice(0, 100)}${rc.userPersona.length > 100 ? '…' : ''}"\n\nOverride for this thread only…`
+                : 'Describe your character\'s identity, role, background…';
+        }
         if ($threadName) $threadName.value = '';
         // Auto-lorebooks default on
         const $autoLore = qs('#ts-auto-lorebooks');
         if ($autoLore) $autoLore.checked = true;
-        // Inherit checkboxes
+        // Inherit checkboxes — show actual reality values in badge
         qs('#ts-maxout-inherit').checked = true;
         qs('#ts-temp-inherit').checked = true;
         qs('#ts-maxout-input').disabled = true;
         qs('#ts-temp-input').disabled = true;
-        qs('#ts-maxout-val').textContent = 'inherit';
-        qs('#ts-temp-val').textContent = 'inherit';
+        qs('#ts-maxout-val').textContent = `inherit (${rc.maxOutput ?? 512})`;
+        qs('#ts-temp-val').textContent = `inherit (${(rc.temperature ?? 0.80).toFixed(2)})`;
+        // Sync slider defaults to reality values so unchecking shows a sensible starting point
+        qs('#ts-maxout-input').value = rc.maxOutput ?? 2048;
+        qs('#ts-temp-input').value = rc.temperature ?? 0.8;
 
         // Populate scenario preset via shared cache helper
         const $sp = qs('#ts-scenario-preset');
@@ -768,8 +786,10 @@ export function initUI() {
         const $tmsel = qs('#ts-model-select');
         const $gmsel = qs('#model-select');
         if ($tmsel && $gmsel) {
-            $tmsel.innerHTML = '<option value="">— Inherit global model —</option>'
+            const inheritedModel = rc.model || 'global default';
+            $tmsel.innerHTML = `<option value="">— Inherit (${esc(inheritedModel)}) —</option>`
                 + $gmsel.innerHTML.replace(/<option value="">[^<]*<\/option>/gi, '');
+            $tmsel.value = '';
         }
 
         _tsPopulatePersonaSelect();
@@ -872,12 +892,15 @@ export function initUI() {
         const $next   = qs('#ts-next');
         const $create = qs('#ts-create');
         const last = TS_TABS.length - 1;
-        if ($prev)   $prev.disabled   = _tsCurrentTab === 0;
+        const hasChar = _tsSelectedIds.size > 0;
+        if ($prev)   $prev.disabled = _tsCurrentTab === 0;
         const isLast = _tsCurrentTab === last;
-        if ($next)   { $next.hidden   = isLast; }
-        if ($create) { $create.hidden = !isLast; }
-        // Disable create if no character selected
-        if ($create) $create.disabled = _tsSelectedIds.size === 0;
+        // Show "Begin Thread" once a character is selected — on any tab
+        if ($next)   $next.hidden   = isLast;
+        if ($create) {
+            $create.hidden   = !hasChar;
+            $create.disabled = !hasChar;
+        }
     }
 
     async function _tsCommit() {
@@ -1014,7 +1037,7 @@ export function initUI() {
                 `<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('');
     }
 
-    // Inherit toggle → enable/disable sliders
+    // Inherit toggle → enable/disable sliders; badge shows override value when unchecked
     function _tsWireInheritToggle(checkboxId, sliderId, valId, formatter) {
         const $cb  = qs(`#${checkboxId}`);
         const $sl  = qs(`#${sliderId}`);
@@ -1022,10 +1045,22 @@ export function initUI() {
         if (!$cb || !$sl) return;
         $cb.addEventListener('change', () => {
             $sl.disabled = $cb.checked;
-            $val.textContent = $cb.checked ? 'inherit' : formatter($sl.value);
+            if (!$cb.checked) {
+                $val.textContent = formatter($sl.value);
+            } else {
+                // Restore inherited value label — recompute from current reality config
+                const rc = state.config;
+                if (sliderId === 'ts-maxout-input') {
+                    $val.textContent = `inherit (${rc.maxOutput ?? 512})`;
+                } else if (sliderId === 'ts-temp-input') {
+                    $val.textContent = `inherit (${(rc.temperature ?? 0.80).toFixed(2)})`;
+                } else {
+                    $val.textContent = 'inherit';
+                }
+            }
         });
         $sl.addEventListener('input', () => {
-            $val.textContent = $cb.checked ? 'inherit' : formatter($sl.value);
+            if (!$cb.checked) $val.textContent = formatter($sl.value);
         });
     }
     _tsWireInheritToggle('ts-maxout-inherit', 'ts-maxout-input', 'ts-maxout-val', v => v);
@@ -3870,54 +3905,39 @@ export function initUI() {
         updateTelemetry();
         applyChatBackground();
 
-        // Pre-load all active bot cards so history renders with correct names/avatars,
-        // then render history + profile once cards are resolved.
-        const botIds = state.chat?.botIds || [];
-        const cardLoads = botIds
-            .filter(id => !state.loadedCharacters[id])
-            .map(id => loadCharacterCard(id).catch(() => null));
+        // Pre-load all active bot cards then render history + profile in the correct order.
+        (async () => {
+            const botIds = state.chat?.botIds || [];
+            const unloaded = botIds.filter(id => !state.loadedCharacters[id]);
+            if (unloaded.length) {
+                await Promise.all(unloaded.map(id => loadCharacterCard(id).catch(() => null)));
+            }
 
-        const doRenderHistory = () => {
             renderFullHistory();
-        };
 
-        if (cardLoads.length) {
-            Promise.all(cardLoads).then(doRenderHistory);
-        } else {
-            doRenderHistory();
-        }
-
-        // Ensure bot cards are loaded for the active chat, then re-render profile/bg
-        const ensureAndRenderProfile = async () => {
             const botId = state.activeBotId;
             if (!botId) {
                 const $pc = qs('#profile-card');
                 if ($pc) $pc.innerHTML = '<div class="profile-view__empty">No character selected</div>';
-                const $pa = qs('#profile-actions');
-                if ($pa) $pa.hidden = true;
-                const $gs = qs('#gallery-strip');
-                if ($gs) $gs.hidden = true;
+                const $pa = qs('#profile-actions'); if ($pa) $pa.hidden = true;
+                const $gs = qs('#gallery-strip');   if ($gs) $gs.hidden = true;
                 return;
             }
-            // Load card from disk if not already in memory
-            if (!state.loadedCharacters[botId]) await loadCharacterCard(botId).catch(() => null);
+
             const activeChar = state.loadedCharacters[botId];
             const activeMeta = state.characters.find(c => c.id === botId);
             if (activeChar) {
                 renderProfile(activeChar, botId);
                 const url = await getAvatarUrl(botId, activeMeta?.avatar_path || activeChar.avatar).catch(() => null);
                 updateCinematicBackground(url);
-                renderActiveBots(); // re-render now that avatar may be resolved
+                renderActiveBots(); // re-render with resolved avatar
             } else {
                 const $pc = qs('#profile-card');
                 if ($pc) $pc.innerHTML = '<div class="profile-view__empty">No character selected</div>';
-                const $pa = qs('#profile-actions');
-                if ($pa) $pa.hidden = true;
-                const $gs = qs('#gallery-strip');
-                if ($gs) $gs.hidden = true;
+                const $pa = qs('#profile-actions'); if ($pa) $pa.hidden = true;
+                const $gs = qs('#gallery-strip');   if ($gs) $gs.hidden = true;
             }
-        };
-        ensureAndRenderProfile();
+        })();
     }
 
     // ── System / Command Message Renderer ────────────────────────────────────
@@ -4556,9 +4576,9 @@ export function initUI() {
         if (!$sel) return;
 
         if (_scenarioPresets.length) {
-            _populateScenarioSelect($sel, { includeCustom: true });
+            _populateScenarioSelect($sel, { blankLabel: '— None —', includeCustom: true });
         } else {
-            $sel.innerHTML = '<option value="">— None —</option>';
+            $sel.innerHTML = '<option value="blank">— None —</option>';
         }
 
         // Sync select to current stored world scenario
