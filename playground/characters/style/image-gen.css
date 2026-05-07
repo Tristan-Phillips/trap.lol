@@ -458,6 +458,83 @@
 }
 .scene-label svg { width: 11px; height: 11px; }
 .scene-label--warn { color: rgba(251,191,36,0.7); }
+.scene-label-note {
+    font-size: 0.58rem;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--text-muted);
+    opacity: 0.65;
+    font-family: var(--font-mono);
+}
+
+/* Quick presets row */
+.scene-row--presets {
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--glass-border-mute);
+}
+.scene-chips--presets { gap: 4px; }
+.scene-chip--preset {
+    font-size: 0.63rem;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: rgba(var(--accent-rgb), 0.04);
+    border: 1px solid rgba(var(--accent-rgb), 0.12);
+    color: rgba(var(--accent-rgb), 0.7);
+    font-family: var(--font-mono);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+.scene-chip--preset:hover {
+    background: rgba(var(--accent-rgb), 0.1) !important;
+    border-color: rgba(var(--accent-rgb), 0.3) !important;
+    color: var(--theme-accent) !important;
+}
+.scene-chip--preset.scene-chip--active {
+    background: rgba(var(--accent-rgb), 0.2) !important;
+    border-color: var(--theme-accent) !important;
+    color: var(--theme-accent) !important;
+    box-shadow: 0 0 0 1px rgba(var(--accent-rgb), 0.3);
+}
+
+/* Category tabs */
+.scene-tabs {
+    display: flex;
+    gap: 2px;
+    border-bottom: 1px solid var(--glass-border-mute);
+    padding-bottom: 0;
+    margin-bottom: 2px;
+}
+.scene-tab {
+    padding: 5px 11px;
+    font-size: 0.63rem;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+    white-space: nowrap;
+}
+.scene-tab:hover { color: var(--text-main); }
+.scene-tab--active {
+    color: var(--theme-accent);
+    border-bottom-color: var(--theme-accent);
+}
+
+/* Tab panels */
+.scene-tab-panel {
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+}
+.scene-tab-panel--active { display: flex; }
 
 /* Chip strips */
 .scene-chips {
@@ -489,6 +566,12 @@
     border-color: rgba(var(--accent-rgb), 0.45) !important;
     color: var(--theme-accent) !important;
 }
+.scene-chip--multi { border-radius: 6px; }
+.scene-chip--multi.scene-chip--active {
+    background: rgba(74,222,128,0.1) !important;
+    border-color: rgba(74,222,128,0.4) !important;
+    color: #4ade80 !important;
+}
 .scene-chip--custom {
     border-style: dashed;
     opacity: 0.6;
@@ -515,11 +598,11 @@
     transition: background 0.12s, border-color 0.12s;
     text-align: center;
 }
-.scene-pill--sfw        { background: rgba(74,222,128,0.08);  color: #4ade80; border-color: rgba(74,222,128,0.15); }
-.scene-pill--suggestive { background: rgba(251,191,36,0.08);  color: #fbbf24; border-color: rgba(251,191,36,0.15); }
-.scene-pill--explicit   { background: rgba(239,68,68,0.08);   color: #f87171; border-color: rgba(239,68,68,0.15); }
-.scene-pill--unrestricted { background: rgba(168,85,247,0.08); color: #a855f7; border-color: rgba(168,85,247,0.15); }
-.scene-pill--active     { filter: saturate(1.8); box-shadow: 0 0 0 1px currentColor; }
+.scene-pill--sfw          { background: rgba(74,222,128,0.08);  color: #4ade80;  border-color: rgba(74,222,128,0.15); }
+.scene-pill--suggestive   { background: rgba(251,191,36,0.08);  color: #fbbf24;  border-color: rgba(251,191,36,0.15); }
+.scene-pill--explicit     { background: rgba(239,68,68,0.08);   color: #f87171;  border-color: rgba(239,68,68,0.15); }
+.scene-pill--unrestricted { background: rgba(168,85,247,0.08);  color: #a855f7;  border-color: rgba(168,85,247,0.15); }
+.scene-pill--active       { filter: saturate(1.8); box-shadow: 0 0 0 1px currentColor; }
 
 /* Custom input fields */
 .scene-custom-input {
@@ -565,6 +648,36 @@
     border-bottom: 1px solid var(--glass-border-mute);
     margin-bottom: 2px;
 }
+
+/* Reset row */
+.scene-reset-row {
+    padding-top: 8px;
+    border-top: 1px solid var(--glass-border-mute);
+    display: flex;
+    justify-content: flex-end;
+}
+.scene-reset-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    font-size: 0.62rem;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    background: transparent;
+    border: 1px solid var(--glass-border-mute);
+    border-radius: 5px;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+}
+.scene-reset-btn:hover {
+    color: #f87171;
+    border-color: rgba(239,68,68,0.35);
+}
+.scene-reset-btn svg { width: 11px; height: 11px; }
 
 /* ── Mobile ── */
 @media (max-width: 600px) {

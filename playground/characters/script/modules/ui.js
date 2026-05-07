@@ -2444,38 +2444,68 @@ export function initUI() {
     let _imgGenFilter   = 'all'; // 'all' | 'nsfw' | 'edit'
 
     // Scene Builder state — tracks active selections per group
+    // single-select groups: one value or null
+    // multi-select groups (accessories, quality, skinEffects, fantasyFx): Set of values
     const _scene = {
-        nsfw:     'sfw',
-        clothing: null,
-        pose:     null,
-        style:    'photorealistic',
-        mood:     null,
-        env:      null,
-        expr:     null,
-        cam:      null,
-        clothingCustom: '',
-        poseCustom: '',
-        envCustom: '',
+        nsfw:          'sfw',
+        // Outfit tab
+        clothingState: null,
+        clothing:      null,
+        accessories:   new Set(),
+        hair:          null,
+        // Pose & Act tab
+        cam:           null,
+        pose:          null,
+        activity:      null,
+        bodyFocus:     null,
+        partners:      null,
+        // Scene tab
+        env:           null,
+        timeOfDay:     null,
+        weather:       null,
+        mood:          null,
+        // Style tab
+        style:         'photorealistic photography, 8k',
+        quality:       new Set(),
+        colorTone:     null,
+        composition:   null,
+        // Extra tab
+        expr:          null,
+        skinEffects:   new Set(),
+        vibe:          null,
+        fantasyFx:     new Set(),
+        // Custom text fields
+        clothingCustom:  '',
+        poseCustom:      '',
+        envCustom:       '',
+        activityCustom:  '',
+        // Homebrew
         positive: '',
         negative: '',
     };
 
+    // Groups that are multi-select (use Sets)
+    const _MULTI_GROUPS = new Set(['accessories','quality','skinEffects','fantasyFx']);
+
     function _sceneToExtras() {
-        const parts = [];
-        const val = (group) => {
-            const v = _scene[group];
+        // Returns a flat comma string of all active single-select scene values
+        // (used only as a legacy fallback; buildImagePrompt receives _scene directly)
+        const sv = (k) => {
+            const v = _scene[k];
             if (!v) return '';
-            if (v === '__custom__') return _scene[`${group}Custom`] || '';
+            if (v === '__custom__') return _scene[`${k}Custom`] || '';
             return v;
         };
-        if (val('clothing'))  parts.push(val('clothing'));
-        if (val('pose'))      parts.push(val('pose'));
-        if (val('style'))     parts.push(val('style'));
-        if (val('mood'))      parts.push(val('mood'));
-        if (val('env'))       parts.push(val('env'));
-        if (val('expr'))      parts.push(val('expr'));
-        if (val('cam'))       parts.push(val('cam'));
-        if (_scene.positive)  parts.push(_scene.positive.trim());
+        const parts = [
+            sv('clothingState'), sv('clothing'), sv('hair'),
+            sv('cam'), sv('pose'), sv('activity'), sv('bodyFocus'), sv('partners'),
+            sv('env'), sv('timeOfDay'), sv('weather'), sv('mood'),
+            sv('style'), sv('colorTone'), sv('composition'),
+            sv('expr'), sv('vibe'),
+            ...[..._scene.accessories], ...[..._scene.quality],
+            ...[..._scene.skinEffects], ...[..._scene.fantasyFx],
+        ];
+        if (_scene.positive) parts.push(_scene.positive.trim());
         return parts.filter(Boolean).join(', ');
     }
 
@@ -2489,7 +2519,11 @@ export function initUI() {
 
     function _sceneBadgeCount() {
         let n = 0;
-        for (const k of ['clothing','pose','mood','env','expr','cam']) if (_scene[k]) n++;
+        const singleKeys = ['clothingState','clothing','hair','cam','pose','activity',
+            'bodyFocus','partners','env','timeOfDay','weather','mood','colorTone',
+            'composition','expr','vibe'];
+        for (const k of singleKeys) if (_scene[k]) n++;
+        for (const k of ['accessories','quality','skinEffects','fantasyFx']) n += _scene[k].size;
         if (_scene.positive || _scene.negative) n++;
         if (_scene.nsfw !== 'sfw') n++;
         return n;
@@ -2513,11 +2547,53 @@ export function initUI() {
         if ($neg) $neg.value = negative;
     }
 
+    // Scene presets — sets multiple _scene fields at once
+    const _SCENE_PRESETS = {
+        portrait:  { cam: 'close-up portrait, face', expr: 'seductive, lidded eyes, bedroom eyes', mood: 'soft diffused natural light', style: 'photorealistic photography, 8k', vibe: 'sensual, erotic atmosphere' },
+        boudoir:   { clothingState: 'partially undressed', clothing: 'sexy lingerie set', pose: 'lying on side, seductive', env: 'bedroom, intimate setting', mood: 'candlelight, warm flickering', cam: 'full body shot', vibe: 'sensual, erotic atmosphere' },
+        pinup:     { pose: 'standing, confident pose', style: 'pin-up art style, vintage', cam: 'full body shot', mood: 'studio lighting, professional', vibe: 'playful, fun, teasing' },
+        action:    { pose: 'action pose, fighting stance', cam: 'dynamic diagonal composition', mood: 'dramatic cinematic lighting', vibe: 'aggressive, dominant, intense' },
+        fantasy:   { env: 'fantasy castle throne room', mood: 'volumetric god rays through window', style: 'dark fantasy art, gothic', vibe: 'mysterious, ethereal' },
+        intimate:  { env: 'bedroom, intimate setting', cam: 'tight intimate framing', mood: 'candlelight, warm flickering', expr: 'seductive, lidded eyes, bedroom eyes', vibe: 'romantic, intimate, loving' },
+        poolside:  { env: 'poolside, swimming pool', clothing: 'bikini swimwear', mood: 'warm golden hour light', timeOfDay: 'golden hour sunset, warm tones', vibe: 'playful, fun, teasing' },
+        dungeon:   { env: 'dungeon stone walls chains', mood: 'candlelight, warm flickering', style: 'dark fantasy art, gothic', vibe: 'dark, ominous, dangerous' },
+        school:    { clothing: 'school uniform', env: 'classroom school', timeOfDay: 'morning, bright daylight', vibe: 'playful, fun, teasing' },
+        office:    { clothing: 'business office attire', env: 'office desk', timeOfDay: 'afternoon, midday sun', pose: 'sitting elegantly', vibe: 'sensual, erotic atmosphere' },
+    };
+
+    function _applyScenePreset(presetKey) {
+        const preset = _SCENE_PRESETS[presetKey];
+        if (!preset) return;
+        Object.assign(_scene, preset);
+    }
+
+    function _syncSceneChipsToState($modal) {
+        // Re-syncs all chip active states to match _scene after a preset apply or reset
+        qsa('.scene-chip', $modal).forEach($c => {
+            const group = $c.dataset.group;
+            if (!group) return;
+            if (_MULTI_GROUPS.has(group)) {
+                $c.classList.toggle('scene-chip--active', _scene[group].has($c.dataset.val));
+            } else {
+                $c.classList.toggle('scene-chip--active', _scene[group] === $c.dataset.val);
+            }
+        });
+        // Sync NSFW pills
+        qsa('.scene-pill', $modal).forEach($p => {
+            $p.classList.toggle('scene-pill--active', $p.dataset.nsfw === _scene.nsfw);
+        });
+        // Sync homebrew textareas
+        const $sp = qs('#scene-positive', $modal);
+        const $sn = qs('#scene-negative', $modal);
+        if ($sp) $sp.value = _scene.positive;
+        if ($sn) $sn.value = _scene.negative;
+    }
+
     function _wireSceneBuilder() {
         const $modal = qs('#modal-image-gen');
         if (!$modal) return;
 
-        // Toggle open/close
+        // ── Toggle open/close ──
         const $toggle = qs('#img-gen-scene-toggle', $modal);
         const $panel  = qs('#img-gen-scene-panel', $modal);
         $toggle?.addEventListener('click', () => {
@@ -2527,27 +2603,81 @@ export function initUI() {
             lucideRefresh($toggle);
         });
 
-        // NSFW pills
+        // ── Tab switching ──
+        qs('#scene-tabs', $modal)?.addEventListener('click', e => {
+            const $tab = e.target.closest('.scene-tab');
+            if (!$tab) return;
+            const target = $tab.dataset.tab;
+            qsa('.scene-tab', $modal).forEach(t => t.classList.toggle('scene-tab--active', t.dataset.tab === target));
+            qsa('.scene-tab-panel', $modal).forEach(p => p.classList.toggle('scene-tab-panel--active', p.dataset.panel === target));
+        });
+
+        // ── NSFW pills ──
         qsa('.scene-pill', $modal).forEach($p => {
             $p.addEventListener('click', () => {
                 _scene.nsfw = $p.dataset.nsfw;
                 qsa('.scene-pill', $modal).forEach(x => x.classList.remove('scene-pill--active'));
                 $p.classList.add('scene-pill--active');
+                // When switching to NSFW, auto-switch model filter to NSFW
+                if (_scene.nsfw !== 'sfw' && _imgGenFilter === 'all') {
+                    _imgGenFilter = 'nsfw';
+                }
+                _updateSceneBadge();
+                _rebuildPrompt();
+                _renderImgGenModelGrid();
+            });
+        });
+
+        // ── Scene presets ──
+        qs('#scene-preset-chips', $modal)?.addEventListener('click', e => {
+            const $chip = e.target.closest('[data-preset]');
+            if (!$chip) return;
+            const was = $chip.classList.contains('scene-chip--active');
+            qsa('[data-preset]', $modal).forEach(c => c.classList.remove('scene-chip--active'));
+            if (!was) {
+                _applyScenePreset($chip.dataset.preset);
+                $chip.classList.add('scene-chip--active');
+                _syncSceneChipsToState($modal);
+                _updateSceneBadge();
+                _rebuildPrompt();
+            }
+        });
+
+        // ── Multi-select chips (accessories, quality, skinEffects, fantasyFx) ──
+        qsa('.scene-chip--multi', $modal).forEach($c => {
+            $c.addEventListener('click', () => {
+                const group = $c.dataset.group;
+                const val   = $c.dataset.val;
+                if (_scene[group].has(val)) {
+                    _scene[group].delete(val);
+                    $c.classList.remove('scene-chip--active');
+                } else {
+                    _scene[group].add(val);
+                    $c.classList.add('scene-chip--active');
+                }
                 _updateSceneBadge();
                 _rebuildPrompt();
             });
         });
 
-        // Multi-select chips per group
-        qsa('.scene-chip:not(.scene-chip--custom)', $modal).forEach($c => {
+        // ── Single-select chips ──
+        qsa('.scene-chip:not(.scene-chip--custom):not(.scene-chip--multi):not([data-preset])', $modal).forEach($c => {
             $c.addEventListener('click', () => {
                 const group = $c.dataset.group;
                 const val   = $c.dataset.val;
+                // Nullable: empty-string val = deselect
+                if (val === '') {
+                    _scene[group] = null;
+                    qsa(`.scene-chip[data-group="${group}"]`, $modal).forEach(x => x.classList.remove('scene-chip--active'));
+                    $c.classList.add('scene-chip--active');
+                    _updateSceneBadge();
+                    _rebuildPrompt();
+                    return;
+                }
                 const already = _scene[group] === val;
                 _scene[group] = already ? null : val;
                 qsa(`.scene-chip[data-group="${group}"]`, $modal).forEach(x => x.classList.remove('scene-chip--active'));
                 if (!already) $c.classList.add('scene-chip--active');
-                // Hide custom input if standard chip selected
                 const $ci = qs(`#scene-${group}-custom`, $modal);
                 if ($ci) $ci.hidden = true;
                 _updateSceneBadge();
@@ -2555,7 +2685,7 @@ export function initUI() {
             });
         });
 
-        // Custom chips
+        // ── Custom chips ──
         qsa('.scene-chip--custom', $modal).forEach($c => {
             $c.addEventListener('click', () => {
                 const group = $c.dataset.group;
@@ -2576,8 +2706,13 @@ export function initUI() {
             });
         });
 
-        // Custom input changes
-        [['scene-clothing-custom','clothingCustom'],['scene-pose-custom','poseCustom'],['scene-env-custom','envCustom']].forEach(([id, key]) => {
+        // ── Custom text inputs ──
+        [
+            ['scene-clothing-custom',  'clothingCustom'],
+            ['scene-pose-custom',      'poseCustom'],
+            ['scene-env-custom',       'envCustom'],
+            ['scene-activity-custom',  'activityCustom'],
+        ].forEach(([id, key]) => {
             qs(`#${id}`, $modal)?.addEventListener('input', e => {
                 _scene[key] = e.target.value;
                 _updateSceneBadge();
@@ -2585,7 +2720,7 @@ export function initUI() {
             });
         });
 
-        // Homebrew textareas
+        // ── Homebrew textareas ──
         qs('#scene-positive', $modal)?.addEventListener('input', e => {
             _scene.positive = e.target.value;
             _updateSceneBadge();
@@ -2593,6 +2728,31 @@ export function initUI() {
         qs('#scene-negative', $modal)?.addEventListener('input', e => {
             _scene.negative = e.target.value;
             _updateSceneBadge();
+        });
+
+        // ── Reset button ──
+        qs('#scene-reset-btn', $modal)?.addEventListener('click', () => {
+            // Reset all to defaults
+            _scene.nsfw = 'sfw';
+            _scene.clothingState = null; _scene.clothing = null; _scene.hair = null;
+            _scene.cam = null; _scene.pose = null; _scene.activity = null;
+            _scene.bodyFocus = null; _scene.partners = null;
+            _scene.env = null; _scene.timeOfDay = null; _scene.weather = null; _scene.mood = null;
+            _scene.style = 'photorealistic photography, 8k'; _scene.colorTone = null; _scene.composition = null;
+            _scene.expr = null; _scene.vibe = null;
+            _scene.accessories.clear(); _scene.quality.clear();
+            _scene.skinEffects.clear(); _scene.fantasyFx.clear();
+            _scene.clothingCustom = ''; _scene.poseCustom = '';
+            _scene.envCustom = ''; _scene.activityCustom = '';
+            _scene.positive = ''; _scene.negative = '';
+            // Clear all preset chips
+            qsa('[data-preset]', $modal).forEach(c => c.classList.remove('scene-chip--active'));
+            _syncSceneChipsToState($modal);
+            // Hide all custom inputs
+            qsa('.scene-custom-input', $modal).forEach(i => { i.hidden = true; i.value = ''; });
+            _updateSceneBadge();
+            _rebuildPrompt();
+            showToast('Scene reset', 'info', 1200);
         });
     }
 

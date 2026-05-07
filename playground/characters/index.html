@@ -6,7 +6,7 @@
     <title>The Underdark // Reality Matrix</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2306040A'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%23ef4444' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23ef4444'/%3E%3C/svg%3E" />
     <link rel="stylesheet" href="../../glass/style/style.css">
-    <link rel="stylesheet" href="./style/style.css?v=64">
+    <link rel="stylesheet" href="./style/style.css?v=65">
     <link rel="stylesheet" href="./style/char-editor.css?v=8">
 </head>
 <body class="underdark-page">
@@ -915,7 +915,7 @@
         </button>
         <div class="img-gen-scene-panel" id="img-gen-scene-panel" hidden>
 
-          <!-- NSFW Level -->
+          <!-- ── NSFW Level (always visible at top) ── -->
           <div class="scene-row scene-row--nsfw">
             <span class="scene-label">Explicitness</span>
             <div class="scene-nsfw-pills" id="scene-nsfw-pills">
@@ -926,122 +926,474 @@
             </div>
           </div>
 
-          <!-- Clothing -->
-          <div class="scene-row">
-            <span class="scene-label">Clothing</span>
-            <div class="scene-chips" id="scene-clothing-chips">
-              <button class="scene-chip" data-group="clothing" data-val="casual">Casual</button>
-              <button class="scene-chip" data-group="clothing" data-val="formal">Formal</button>
-              <button class="scene-chip" data-group="clothing" data-val="lingerie">Lingerie</button>
-              <button class="scene-chip" data-group="clothing" data-val="swimwear">Swimwear</button>
-              <button class="scene-chip" data-group="clothing" data-val="armor">Armor</button>
-              <button class="scene-chip" data-group="clothing" data-val="fantasy">Fantasy</button>
-              <button class="scene-chip" data-group="clothing" data-val="uniform">Uniform</button>
-              <button class="scene-chip" data-group="clothing" data-val="bodysuit">Bodysuit</button>
-              <button class="scene-chip" data-group="clothing" data-val="nude">Nude</button>
-              <button class="scene-chip scene-chip--custom" data-group="clothing" data-val="__custom__">Custom…</button>
-            </div>
-            <input type="text" class="scene-custom-input" id="scene-clothing-custom" placeholder="Describe clothing…" hidden>
-          </div>
-
-          <!-- Pose / Position -->
-          <div class="scene-row">
-            <span class="scene-label">Pose</span>
-            <div class="scene-chips" id="scene-pose-chips">
-              <button class="scene-chip" data-group="pose" data-val="standing">Standing</button>
-              <button class="scene-chip" data-group="pose" data-val="sitting">Sitting</button>
-              <button class="scene-chip" data-group="pose" data-val="lying down">Lying Down</button>
-              <button class="scene-chip" data-group="pose" data-val="kneeling">Kneeling</button>
-              <button class="scene-chip" data-group="pose" data-val="close-up portrait">Portrait</button>
-              <button class="scene-chip" data-group="pose" data-val="from behind">From Behind</button>
-              <button class="scene-chip" data-group="pose" data-val="action pose">Action</button>
-              <button class="scene-chip" data-group="pose" data-val="cowgirl position">Cowgirl</button>
-              <button class="scene-chip" data-group="pose" data-val="missionary">Missionary</button>
-              <button class="scene-chip scene-chip--custom" data-group="pose" data-val="__custom__">Custom…</button>
-            </div>
-            <input type="text" class="scene-custom-input" id="scene-pose-custom" placeholder="Describe pose…" hidden>
-          </div>
-
-          <!-- Art Style -->
-          <div class="scene-row">
-            <span class="scene-label">Style</span>
-            <div class="scene-chips" id="scene-style-chips">
-              <button class="scene-chip scene-chip--active" data-group="style" data-val="photorealistic">Photo</button>
-              <button class="scene-chip" data-group="style" data-val="anime style">Anime</button>
-              <button class="scene-chip" data-group="style" data-val="digital illustration">Illustration</button>
-              <button class="scene-chip" data-group="style" data-val="oil painting">Oil Paint</button>
-              <button class="scene-chip" data-group="style" data-val="cinematic">Cinematic</button>
-              <button class="scene-chip" data-group="style" data-val="concept art">Concept Art</button>
-              <button class="scene-chip" data-group="style" data-val="watercolor">Watercolor</button>
-              <button class="scene-chip" data-group="style" data-val="3D render">3D Render</button>
+          <!-- ── Scene Presets ── -->
+          <div class="scene-row scene-row--presets">
+            <span class="scene-label"><i data-lucide="zap"></i> Quick Presets</span>
+            <div class="scene-chips scene-chips--presets" id="scene-preset-chips">
+              <button class="scene-chip scene-chip--preset" data-preset="portrait">Portrait</button>
+              <button class="scene-chip scene-chip--preset" data-preset="boudoir">Boudoir</button>
+              <button class="scene-chip scene-chip--preset" data-preset="pinup">Pin-Up</button>
+              <button class="scene-chip scene-chip--preset" data-preset="action">Action</button>
+              <button class="scene-chip scene-chip--preset" data-preset="fantasy">Fantasy</button>
+              <button class="scene-chip scene-chip--preset" data-preset="intimate">Intimate</button>
+              <button class="scene-chip scene-chip--preset" data-preset="poolside">Poolside</button>
+              <button class="scene-chip scene-chip--preset" data-preset="dungeon">Dungeon</button>
+              <button class="scene-chip scene-chip--preset" data-preset="school">School</button>
+              <button class="scene-chip scene-chip--preset" data-preset="office">Office</button>
             </div>
           </div>
 
-          <!-- Mood / Lighting -->
-          <div class="scene-row">
-            <span class="scene-label">Lighting</span>
-            <div class="scene-chips" id="scene-mood-chips">
-              <button class="scene-chip" data-group="mood" data-val="dramatic lighting">Dramatic</button>
-              <button class="scene-chip" data-group="mood" data-val="soft natural light">Soft</button>
-              <button class="scene-chip" data-group="mood" data-val="golden hour">Golden Hour</button>
-              <button class="scene-chip" data-group="mood" data-val="night, moonlight">Night</button>
-              <button class="scene-chip" data-group="mood" data-val="neon lights">Neon</button>
-              <button class="scene-chip" data-group="mood" data-val="candlelight">Candlelight</button>
-              <button class="scene-chip" data-group="mood" data-val="overcast">Overcast</button>
-            </div>
+          <!-- ── Category Tabs ── -->
+          <div class="scene-tabs" id="scene-tabs">
+            <button class="scene-tab scene-tab--active" data-tab="outfit">Outfit</button>
+            <button class="scene-tab" data-tab="pose">Pose &amp; Act</button>
+            <button class="scene-tab" data-tab="scene">Scene</button>
+            <button class="scene-tab" data-tab="style">Style</button>
+            <button class="scene-tab" data-tab="extra">Extra</button>
           </div>
 
-          <!-- Environment -->
-          <div class="scene-row">
-            <span class="scene-label">Location</span>
-            <div class="scene-chips" id="scene-env-chips">
-              <button class="scene-chip" data-group="env" data-val="bedroom">Bedroom</button>
-              <button class="scene-chip" data-group="env" data-val="outdoors, nature">Outdoors</button>
-              <button class="scene-chip" data-group="env" data-val="city street">City</button>
-              <button class="scene-chip" data-group="env" data-val="fantasy castle interior">Fantasy</button>
-              <button class="scene-chip" data-group="env" data-val="dungeon">Dungeon</button>
-              <button class="scene-chip" data-group="env" data-val="bathhouse">Bathhouse</button>
-              <button class="scene-chip" data-group="env" data-val="forest clearing">Forest</button>
-              <button class="scene-chip scene-chip--custom" data-group="env" data-val="__custom__">Custom…</button>
+          <!-- ── TAB: OUTFIT ── -->
+          <div class="scene-tab-panel scene-tab-panel--active" data-panel="outfit">
+
+            <!-- Clothing state -->
+            <div class="scene-row">
+              <span class="scene-label">Clothing State</span>
+              <div class="scene-chips" id="scene-clothingstate-chips">
+                <button class="scene-chip" data-group="clothingState" data-val="fully clothed">Fully Clothed</button>
+                <button class="scene-chip" data-group="clothingState" data-val="partially undressed">Partially Undressed</button>
+                <button class="scene-chip" data-group="clothingState" data-val="topless">Topless</button>
+                <button class="scene-chip" data-group="clothingState" data-val="bottomless">Bottomless</button>
+                <button class="scene-chip" data-group="clothingState" data-val="completely nude">Fully Nude</button>
+                <button class="scene-chip" data-group="clothingState" data-val="outfit pulled aside">Pulled Aside</button>
+              </div>
             </div>
-            <input type="text" class="scene-custom-input" id="scene-env-custom" placeholder="Describe location…" hidden>
+
+            <!-- Outfit type -->
+            <div class="scene-row">
+              <span class="scene-label">Outfit Type</span>
+              <div class="scene-chips" id="scene-clothing-chips">
+                <button class="scene-chip" data-group="clothing" data-val="casual everyday outfit">Casual</button>
+                <button class="scene-chip" data-group="clothing" data-val="elegant formal dress">Formal</button>
+                <button class="scene-chip" data-group="clothing" data-val="sexy lingerie set">Lingerie</button>
+                <button class="scene-chip" data-group="clothing" data-val="bikini swimwear">Swimwear</button>
+                <button class="scene-chip" data-group="clothing" data-val="sports activewear">Athletic</button>
+                <button class="scene-chip" data-group="clothing" data-val="school uniform">School Uniform</button>
+                <button class="scene-chip" data-group="clothing" data-val="maid outfit">Maid</button>
+                <button class="scene-chip" data-group="clothing" data-val="nurse uniform">Nurse</button>
+                <button class="scene-chip" data-group="clothing" data-val="military uniform">Military</button>
+                <button class="scene-chip" data-group="clothing" data-val="business office attire">Business</button>
+                <button class="scene-chip" data-group="clothing" data-val="fantasy armor">Armor</button>
+                <button class="scene-chip" data-group="clothing" data-val="fantasy robe and cloak">Fantasy</button>
+                <button class="scene-chip" data-group="clothing" data-val="revealing bodysuit">Bodysuit</button>
+                <button class="scene-chip" data-group="clothing" data-val="corset and stockings">Corset</button>
+                <button class="scene-chip" data-group="clothing" data-val="crop top and shorts">Crop Top</button>
+                <button class="scene-chip" data-group="clothing" data-val="sundress">Sundress</button>
+                <button class="scene-chip" data-group="clothing" data-val="leather jacket and jeans">Leather</button>
+                <button class="scene-chip" data-group="clothing" data-val="wedding dress">Wedding</button>
+                <button class="scene-chip" data-group="clothing" data-val="latex catsuit">Latex</button>
+                <button class="scene-chip" data-group="clothing" data-val="bunny suit">Bunny Suit</button>
+                <button class="scene-chip" data-group="clothing" data-val="kimono">Kimono</button>
+                <button class="scene-chip" data-group="clothing" data-val="yukata">Yukata</button>
+                <button class="scene-chip scene-chip--custom" data-group="clothing" data-val="__custom__">Custom…</button>
+              </div>
+              <input type="text" class="scene-custom-input" id="scene-clothing-custom" placeholder="Describe outfit in detail…" hidden>
+            </div>
+
+            <!-- Accessories -->
+            <div class="scene-row">
+              <span class="scene-label">Accessories <span class="scene-label-note">multi-select</span></span>
+              <div class="scene-chips" id="scene-accessories-chips">
+                <button class="scene-chip scene-chip--multi" data-group="accessories" data-val="choker necklace">Choker</button>
+                <button class="scene-chip scene-chip--multi" data-group="accessories" data-val="thigh-high stockings">Stockings</button>
+                <button class="scene-chip scene-chip--multi" data-group="accessories" data-val="high heels">Heels</button>
+                <button class="scene-chip scene-chip--multi" data-group="accessories" data-val="gloves">Gloves</button>
+                <button class="scene-chip scene-chip--multi" data-group="accessories" data-val="cat ears headband">Cat Ears</button>
+                <button class="scene-chip scene-chip--multi" data-group="accessories" data-val="bunny ears">Bunny Ears</button>
+                <button class="scene-chip scene-chip--multi" data-group="accessories" data-val="glasses">Glasses</button>
+                <button class="scene-chip scene-chip--multi" data-group="accessories" data-val="collar with leash">Collar</button>
+                <button class="scene-chip scene-chip--multi" data-group="accessories" data-val="handcuffs">Handcuffs</button>
+                <button class="scene-chip scene-chip--multi" data-group="accessories" data-val="wings">Wings</button>
+                <button class="scene-chip scene-chip--multi" data-group="accessories" data-val="tail">Tail</button>
+                <button class="scene-chip scene-chip--multi" data-group="accessories" data-val="crown and tiara">Crown</button>
+                <button class="scene-chip scene-chip--multi" data-group="accessories" data-val="piercings">Piercings</button>
+                <button class="scene-chip scene-chip--multi" data-group="accessories" data-val="tattoos visible">Tattoos</button>
+                <button class="scene-chip scene-chip--multi" data-group="accessories" data-val="sword and scabbard">Sword</button>
+                <button class="scene-chip scene-chip--multi" data-group="accessories" data-val="flower in hair">Flowers</button>
+              </div>
+            </div>
+
+            <!-- Hair style -->
+            <div class="scene-row">
+              <span class="scene-label">Hair Style</span>
+              <div class="scene-chips" id="scene-hair-chips">
+                <button class="scene-chip" data-group="hair" data-val="hair down, flowing">Down</button>
+                <button class="scene-chip" data-group="hair" data-val="high ponytail">Ponytail</button>
+                <button class="scene-chip" data-group="hair" data-val="twin tails, pigtails">Twin Tails</button>
+                <button class="scene-chip" data-group="hair" data-val="messy bun">Messy Bun</button>
+                <button class="scene-chip" data-group="hair" data-val="braided hair">Braided</button>
+                <button class="scene-chip" data-group="hair" data-val="short bob cut">Bob Cut</button>
+                <button class="scene-chip" data-group="hair" data-val="windswept hair">Windswept</button>
+                <button class="scene-chip" data-group="hair" data-val="wet hair">Wet</button>
+                <button class="scene-chip" data-group="hair" data-val="disheveled messy hair">Disheveled</button>
+              </div>
+            </div>
+
           </div>
 
-          <!-- Expression / Emotion -->
-          <div class="scene-row">
-            <span class="scene-label">Expression</span>
-            <div class="scene-chips" id="scene-expr-chips">
-              <button class="scene-chip" data-group="expr" data-val="neutral expression">Neutral</button>
-              <button class="scene-chip" data-group="expr" data-val="smiling">Smiling</button>
-              <button class="scene-chip" data-group="expr" data-val="seductive expression">Seductive</button>
-              <button class="scene-chip" data-group="expr" data-val="intense gaze">Intense</button>
-              <button class="scene-chip" data-group="expr" data-val="laughing">Laughing</button>
-              <button class="scene-chip" data-group="expr" data-val="crying">Crying</button>
-              <button class="scene-chip" data-group="expr" data-val="lustful expression, ahegao">Ahegao</button>
+          <!-- ── TAB: POSE & ACT ── -->
+          <div class="scene-tab-panel" data-panel="pose">
+
+            <!-- Body framing -->
+            <div class="scene-row">
+              <span class="scene-label">Camera Framing</span>
+              <div class="scene-chips" id="scene-cam-chips">
+                <button class="scene-chip" data-group="cam" data-val="full body shot">Full Body</button>
+                <button class="scene-chip" data-group="cam" data-val="half body shot, waist up">Half Body</button>
+                <button class="scene-chip" data-group="cam" data-val="close-up portrait, face">Portrait</button>
+                <button class="scene-chip" data-group="cam" data-val="chest close-up">Chest</button>
+                <button class="scene-chip" data-group="cam" data-val="rear view, butt focus">Rear View</button>
+                <button class="scene-chip" data-group="cam" data-val="legs and thighs focus">Legs</button>
+                <button class="scene-chip" data-group="cam" data-val="POV shot, first person perspective">POV</button>
+                <button class="scene-chip" data-group="cam" data-val="over the shoulder view">OTS</button>
+                <button class="scene-chip" data-group="cam" data-val="low angle shot, looking up">Low Angle</button>
+                <button class="scene-chip" data-group="cam" data-val="bird's eye view, top down">Bird's Eye</button>
+                <button class="scene-chip" data-group="cam" data-val="extreme close-up">Extreme CU</button>
+              </div>
             </div>
+
+            <!-- Pose -->
+            <div class="scene-row">
+              <span class="scene-label">Pose / Body</span>
+              <div class="scene-chips" id="scene-pose-chips">
+                <button class="scene-chip" data-group="pose" data-val="standing, confident pose">Standing</button>
+                <button class="scene-chip" data-group="pose" data-val="sitting elegantly">Sitting</button>
+                <button class="scene-chip" data-group="pose" data-val="lying on back">Lying Back</button>
+                <button class="scene-chip" data-group="pose" data-val="lying on stomach">Lying Front</button>
+                <button class="scene-chip" data-group="pose" data-val="lying on side, seductive">Lying Side</button>
+                <button class="scene-chip" data-group="pose" data-val="kneeling">Kneeling</button>
+                <button class="scene-chip" data-group="pose" data-val="on all fours">All Fours</button>
+                <button class="scene-chip" data-group="pose" data-val="bent over">Bent Over</button>
+                <button class="scene-chip" data-group="pose" data-val="leaning against wall">Leaning</button>
+                <button class="scene-chip" data-group="pose" data-val="stretching, arched back">Arched Back</button>
+                <button class="scene-chip" data-group="pose" data-val="straddling">Straddling</button>
+                <button class="scene-chip" data-group="pose" data-val="squatting">Squatting</button>
+                <button class="scene-chip" data-group="pose" data-val="dancing">Dancing</button>
+                <button class="scene-chip" data-group="pose" data-val="action pose, fighting stance">Action</button>
+                <button class="scene-chip scene-chip--custom" data-group="pose" data-val="__custom__">Custom…</button>
+              </div>
+              <input type="text" class="scene-custom-input" id="scene-pose-custom" placeholder="Describe pose…" hidden>
+            </div>
+
+            <!-- Activity / Act -->
+            <div class="scene-row">
+              <span class="scene-label">Activity</span>
+              <div class="scene-chips" id="scene-activity-chips">
+                <button class="scene-chip" data-group="activity" data-val="">— None —</button>
+                <button class="scene-chip" data-group="activity" data-val="teasing, seductive look at camera">Teasing</button>
+                <button class="scene-chip" data-group="activity" data-val="reading a book">Reading</button>
+                <button class="scene-chip" data-group="activity" data-val="eating food seductively">Eating</button>
+                <button class="scene-chip" data-group="activity" data-val="bathing in a tub">Bathing</button>
+                <button class="scene-chip" data-group="activity" data-val="showering">Showering</button>
+                <button class="scene-chip" data-group="activity" data-val="undressing, removing clothes">Undressing</button>
+                <button class="scene-chip" data-group="activity" data-val="touching self sensually">Self-Touch</button>
+                <button class="scene-chip" data-group="activity" data-val="masturbating">Masturbating</button>
+                <button class="scene-chip" data-group="activity" data-val="giving oral sex">Oral</button>
+                <button class="scene-chip" data-group="activity" data-val="receiving oral sex">Receiving Oral</button>
+                <button class="scene-chip" data-group="activity" data-val="missionary sex">Missionary</button>
+                <button class="scene-chip" data-group="activity" data-val="cowgirl riding position">Cowgirl</button>
+                <button class="scene-chip" data-group="activity" data-val="reverse cowgirl position">Rev. Cowgirl</button>
+                <button class="scene-chip" data-group="activity" data-val="doggy style sex">Doggy</button>
+                <button class="scene-chip" data-group="activity" data-val="spooning sex">Spooning</button>
+                <button class="scene-chip" data-group="activity" data-val="standing sex from behind">Standing</button>
+                <button class="scene-chip" data-group="activity" data-val="anal sex">Anal</button>
+                <button class="scene-chip" data-group="activity" data-val="creampie, cum inside">Creampie</button>
+                <button class="scene-chip" data-group="activity" data-val="cum on face, facial">Facial</button>
+                <button class="scene-chip" data-group="activity" data-val="cum on breasts">Cum on Chest</button>
+                <button class="scene-chip" data-group="activity" data-val="tied up, bound, rope bondage">Bondage</button>
+                <button class="scene-chip" data-group="activity" data-val="dominant, on top">Dominant</button>
+                <button class="scene-chip" data-group="activity" data-val="submissive, being held down">Submissive</button>
+                <button class="scene-chip scene-chip--custom" data-group="activity" data-val="__custom__">Custom…</button>
+              </div>
+              <input type="text" class="scene-custom-input" id="scene-activity-custom" placeholder="Describe activity…" hidden>
+            </div>
+
+            <!-- Body focus -->
+            <div class="scene-row">
+              <span class="scene-label">Body Focus</span>
+              <div class="scene-chips" id="scene-bodyfocus-chips">
+                <button class="scene-chip" data-group="bodyFocus" data-val="">— None —</button>
+                <button class="scene-chip" data-group="bodyFocus" data-val="face and eyes focus">Face</button>
+                <button class="scene-chip" data-group="bodyFocus" data-val="lips and mouth focus">Lips</button>
+                <button class="scene-chip" data-group="bodyFocus" data-val="neck and collarbone">Neck</button>
+                <button class="scene-chip" data-group="bodyFocus" data-val="breasts, cleavage emphasis">Breasts</button>
+                <button class="scene-chip" data-group="bodyFocus" data-val="stomach and midriff">Stomach</button>
+                <button class="scene-chip" data-group="bodyFocus" data-val="hips and waist">Hips</button>
+                <button class="scene-chip" data-group="bodyFocus" data-val="legs and thighs">Legs</button>
+                <button class="scene-chip" data-group="bodyFocus" data-val="buttocks, rear">Ass</button>
+                <button class="scene-chip" data-group="bodyFocus" data-val="feet">Feet</button>
+                <button class="scene-chip" data-group="bodyFocus" data-val="genitalia, pussy">Pussy</button>
+                <button class="scene-chip" data-group="bodyFocus" data-val="penis, cock">Cock</button>
+                <button class="scene-chip" data-group="bodyFocus" data-val="full figure, hourglass">Full Figure</button>
+              </div>
+            </div>
+
+            <!-- Partners -->
+            <div class="scene-row">
+              <span class="scene-label">Partners</span>
+              <div class="scene-chips" id="scene-partners-chips">
+                <button class="scene-chip" data-group="partners" data-val="">Solo</button>
+                <button class="scene-chip" data-group="partners" data-val="with one male partner">+ Male</button>
+                <button class="scene-chip" data-group="partners" data-val="with one female partner">+ Female</button>
+                <button class="scene-chip" data-group="partners" data-val="with two partners, threesome">Threesome</button>
+                <button class="scene-chip" data-group="partners" data-val="group sex, orgy">Group</button>
+                <button class="scene-chip" data-group="partners" data-val="with a monster creature">Monster</button>
+                <button class="scene-chip" data-group="partners" data-val="with a tentacle creature">Tentacle</button>
+              </div>
+            </div>
+
           </div>
 
-          <!-- Camera / Perspective -->
-          <div class="scene-row">
-            <span class="scene-label">Camera</span>
-            <div class="scene-chips" id="scene-cam-chips">
-              <button class="scene-chip" data-group="cam" data-val="full body shot">Full Body</button>
-              <button class="scene-chip" data-group="cam" data-val="half body shot">Half Body</button>
-              <button class="scene-chip" data-group="cam" data-val="close-up face">Face Close-up</button>
-              <button class="scene-chip" data-group="cam" data-val="POV shot">POV</button>
-              <button class="scene-chip" data-group="cam" data-val="over the shoulder">OTS</button>
-              <button class="scene-chip" data-group="cam" data-val="low angle shot">Low Angle</button>
-              <button class="scene-chip" data-group="cam" data-val="bird's eye view">Bird's Eye</button>
+          <!-- ── TAB: SCENE ── -->
+          <div class="scene-tab-panel" data-panel="scene">
+
+            <!-- Location -->
+            <div class="scene-row">
+              <span class="scene-label">Location</span>
+              <div class="scene-chips" id="scene-env-chips">
+                <button class="scene-chip" data-group="env" data-val="bedroom, intimate setting">Bedroom</button>
+                <button class="scene-chip" data-group="env" data-val="luxury hotel room">Hotel</button>
+                <button class="scene-chip" data-group="env" data-val="bathroom, shower">Bathroom</button>
+                <button class="scene-chip" data-group="env" data-val="living room sofa">Living Room</button>
+                <button class="scene-chip" data-group="env" data-val="kitchen counter">Kitchen</button>
+                <button class="scene-chip" data-group="env" data-val="office desk">Office</button>
+                <button class="scene-chip" data-group="env" data-val="classroom school">Classroom</button>
+                <button class="scene-chip" data-group="env" data-val="poolside, swimming pool">Poolside</button>
+                <button class="scene-chip" data-group="env" data-val="beach, ocean shore">Beach</button>
+                <button class="scene-chip" data-group="env" data-val="forest clearing nature">Forest</button>
+                <button class="scene-chip" data-group="env" data-val="garden flowers">Garden</button>
+                <button class="scene-chip" data-group="env" data-val="city street, urban">City</button>
+                <button class="scene-chip" data-group="env" data-val="rooftop night view">Rooftop</button>
+                <button class="scene-chip" data-group="env" data-val="dungeon stone walls chains">Dungeon</button>
+                <button class="scene-chip" data-group="env" data-val="fantasy castle throne room">Castle</button>
+                <button class="scene-chip" data-group="env" data-val="tavern, inn interior">Tavern</button>
+                <button class="scene-chip" data-group="env" data-val="mystical forest, magic glowing">Magic Forest</button>
+                <button class="scene-chip" data-group="env" data-val="space station sci-fi">Space</button>
+                <button class="scene-chip" data-group="env" data-val="onsen hot spring, steam">Onsen</button>
+                <button class="scene-chip" data-group="env" data-val="car interior">Car</button>
+                <button class="scene-chip scene-chip--custom" data-group="env" data-val="__custom__">Custom…</button>
+              </div>
+              <input type="text" class="scene-custom-input" id="scene-env-custom" placeholder="Describe location…" hidden>
             </div>
+
+            <!-- Time of day -->
+            <div class="scene-row">
+              <span class="scene-label">Time of Day</span>
+              <div class="scene-chips" id="scene-timeofday-chips">
+                <button class="scene-chip" data-group="timeOfDay" data-val="dawn, early morning, soft pink sky">Dawn</button>
+                <button class="scene-chip" data-group="timeOfDay" data-val="morning, bright daylight">Morning</button>
+                <button class="scene-chip" data-group="timeOfDay" data-val="afternoon, midday sun">Afternoon</button>
+                <button class="scene-chip" data-group="timeOfDay" data-val="golden hour sunset, warm tones">Sunset</button>
+                <button class="scene-chip" data-group="timeOfDay" data-val="blue hour, dusk, twilight">Dusk</button>
+                <button class="scene-chip" data-group="timeOfDay" data-val="night, stars">Night</button>
+                <button class="scene-chip" data-group="timeOfDay" data-val="late night, moonlight">Midnight</button>
+              </div>
+            </div>
+
+            <!-- Weather / Atmosphere -->
+            <div class="scene-row">
+              <span class="scene-label">Weather / Atmosphere</span>
+              <div class="scene-chips" id="scene-weather-chips">
+                <button class="scene-chip" data-group="weather" data-val="clear sky, sunny">Clear</button>
+                <button class="scene-chip" data-group="weather" data-val="overcast, cloudy">Overcast</button>
+                <button class="scene-chip" data-group="weather" data-val="rain, wet, stormy">Rain</button>
+                <button class="scene-chip" data-group="weather" data-val="snow, winter cold">Snow</button>
+                <button class="scene-chip" data-group="weather" data-val="fog, misty atmosphere">Fog</button>
+                <button class="scene-chip" data-group="weather" data-val="thunder and lightning">Storm</button>
+                <button class="scene-chip" data-group="weather" data-val="cherry blossoms falling, sakura">Sakura</button>
+                <button class="scene-chip" data-group="weather" data-val="autumn leaves, fall">Autumn</button>
+              </div>
+            </div>
+
+            <!-- Lighting mood -->
+            <div class="scene-row">
+              <span class="scene-label">Lighting</span>
+              <div class="scene-chips" id="scene-mood-chips">
+                <button class="scene-chip" data-group="mood" data-val="dramatic cinematic lighting">Dramatic</button>
+                <button class="scene-chip" data-group="mood" data-val="soft diffused natural light">Soft</button>
+                <button class="scene-chip" data-group="mood" data-val="warm golden hour light">Golden Hour</button>
+                <button class="scene-chip" data-group="mood" data-val="moonlight, cool blue night">Moonlight</button>
+                <button class="scene-chip" data-group="mood" data-val="neon lights, cyberpunk glow">Neon</button>
+                <button class="scene-chip" data-group="mood" data-val="candlelight, warm flickering">Candlelight</button>
+                <button class="scene-chip" data-group="mood" data-val="firelight, campfire">Firelight</button>
+                <button class="scene-chip" data-group="mood" data-val="studio lighting, professional">Studio</button>
+                <button class="scene-chip" data-group="mood" data-val="backlit, rim light silhouette">Backlit</button>
+                <button class="scene-chip" data-group="mood" data-val="volumetric god rays through window">God Rays</button>
+                <button class="scene-chip" data-group="mood" data-val="colored gels, pink and purple light">Colored</button>
+              </div>
+            </div>
+
           </div>
 
-          <!-- Homebrew / Jailbreak inject -->
-          <div class="scene-row scene-row--homebrew">
-            <span class="scene-label scene-label--warn"><i data-lucide="flask-conical"></i> Homebrew</span>
-            <div class="scene-homebrew-fields">
-              <textarea id="scene-positive" class="scene-textarea" rows="2" placeholder="Additional positive prompt injection… (appended verbatim)"></textarea>
-              <textarea id="scene-negative" class="scene-textarea" rows="2" placeholder="Negative prompt injection… (what to avoid)"></textarea>
+          <!-- ── TAB: STYLE ── -->
+          <div class="scene-tab-panel" data-panel="style">
+
+            <!-- Art medium -->
+            <div class="scene-row">
+              <span class="scene-label">Art Medium</span>
+              <div class="scene-chips" id="scene-style-chips">
+                <button class="scene-chip scene-chip--active" data-group="style" data-val="photorealistic photography, 8k">Photorealistic</button>
+                <button class="scene-chip" data-group="style" data-val="hyperrealistic, ultra detailed skin">Hyperreal</button>
+                <button class="scene-chip" data-group="style" data-val="anime style illustration">Anime</button>
+                <button class="scene-chip" data-group="style" data-val="hentai illustration style">Hentai</button>
+                <button class="scene-chip" data-group="style" data-val="digital art illustration">Digital Art</button>
+                <button class="scene-chip" data-group="style" data-val="oil painting, painterly">Oil Painting</button>
+                <button class="scene-chip" data-group="style" data-val="watercolor painting, soft washes">Watercolor</button>
+                <button class="scene-chip" data-group="style" data-val="comic book art, cel shaded">Comic</button>
+                <button class="scene-chip" data-group="style" data-val="concept art, detailed render">Concept Art</button>
+                <button class="scene-chip" data-group="style" data-val="3D CGI render">3D Render</button>
+                <button class="scene-chip" data-group="style" data-val="cinematic film still">Cinematic</button>
+                <button class="scene-chip" data-group="style" data-val="pin-up art style, vintage">Pin-Up</button>
+                <button class="scene-chip" data-group="style" data-val="dark fantasy art, gothic">Dark Fantasy</button>
+                <button class="scene-chip" data-group="style" data-val="impressionist painting">Impressionist</button>
+                <button class="scene-chip" data-group="style" data-val="pencil sketch, detailed linework">Sketch</button>
+              </div>
             </div>
+
+            <!-- Render quality -->
+            <div class="scene-row">
+              <span class="scene-label">Quality / Detail</span>
+              <div class="scene-chips" id="scene-quality-chips">
+                <button class="scene-chip scene-chip--multi" data-group="quality" data-val="masterpiece">Masterpiece</button>
+                <button class="scene-chip scene-chip--multi" data-group="quality" data-val="ultra high resolution">Ultra HD</button>
+                <button class="scene-chip scene-chip--multi" data-group="quality" data-val="sharp focus, in focus">Sharp Focus</button>
+                <button class="scene-chip scene-chip--multi" data-group="quality" data-val="detailed skin texture">Skin Detail</button>
+                <button class="scene-chip scene-chip--multi" data-group="quality" data-val="subsurface scattering skin">SSS Skin</button>
+                <button class="scene-chip scene-chip--multi" data-group="quality" data-val="bokeh depth of field">Bokeh DOF</button>
+                <button class="scene-chip scene-chip--multi" data-group="quality" data-val="film grain, analog">Film Grain</button>
+                <button class="scene-chip scene-chip--multi" data-group="quality" data-val="soft glow, bloom">Bloom</button>
+              </div>
+            </div>
+
+            <!-- Color tone -->
+            <div class="scene-row">
+              <span class="scene-label">Color Tone</span>
+              <div class="scene-chips" id="scene-colortone-chips">
+                <button class="scene-chip" data-group="colorTone" data-val="warm color palette, golden tones">Warm</button>
+                <button class="scene-chip" data-group="colorTone" data-val="cool color palette, blue tones">Cool</button>
+                <button class="scene-chip" data-group="colorTone" data-val="moody dark desaturated">Moody</button>
+                <button class="scene-chip" data-group="colorTone" data-val="vibrant saturated colors">Vibrant</button>
+                <button class="scene-chip" data-group="colorTone" data-val="pastel soft colors">Pastel</button>
+                <button class="scene-chip" data-group="colorTone" data-val="black and white monochrome">B&amp;W</button>
+                <button class="scene-chip" data-group="colorTone" data-val="neon cyberpunk color palette">Neon</button>
+                <button class="scene-chip" data-group="colorTone" data-val="sepia vintage tones">Sepia</button>
+                <button class="scene-chip" data-group="colorTone" data-val="red and black dramatic">Red/Black</button>
+              </div>
+            </div>
+
+            <!-- Aspect / composition -->
+            <div class="scene-row">
+              <span class="scene-label">Composition</span>
+              <div class="scene-chips" id="scene-composition-chips">
+                <button class="scene-chip" data-group="composition" data-val="centered symmetrical composition">Centered</button>
+                <button class="scene-chip" data-group="composition" data-val="rule of thirds framing">Rule of Thirds</button>
+                <button class="scene-chip" data-group="composition" data-val="dynamic diagonal composition">Dynamic</button>
+                <button class="scene-chip" data-group="composition" data-val="wide establishing shot">Wide Shot</button>
+                <button class="scene-chip" data-group="composition" data-val="tight intimate framing">Tight Frame</button>
+                <button class="scene-chip" data-group="composition" data-val="mirror reflection">Mirror</button>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- ── TAB: EXTRA ── -->
+          <div class="scene-tab-panel" data-panel="extra">
+
+            <!-- Expression / Emotion -->
+            <div class="scene-row">
+              <span class="scene-label">Expression</span>
+              <div class="scene-chips" id="scene-expr-chips">
+                <button class="scene-chip" data-group="expr" data-val="neutral expression">Neutral</button>
+                <button class="scene-chip" data-group="expr" data-val="warm natural smile">Smiling</button>
+                <button class="scene-chip" data-group="expr" data-val="seductive, lidded eyes, bedroom eyes">Seductive</button>
+                <button class="scene-chip" data-group="expr" data-val="intense piercing gaze">Intense</button>
+                <button class="scene-chip" data-group="expr" data-val="laughing, joyful">Laughing</button>
+                <button class="scene-chip" data-group="expr" data-val="crying, tears running down face">Crying</button>
+                <button class="scene-chip" data-group="expr" data-val="surprised, mouth open, shocked">Surprised</button>
+                <button class="scene-chip" data-group="expr" data-val="pouting, sulking">Pouting</button>
+                <button class="scene-chip" data-group="expr" data-val="blushing, embarrassed, red cheeks">Blushing</button>
+                <button class="scene-chip" data-group="expr" data-val="open mouth, tongue out">Tongue Out</button>
+                <button class="scene-chip" data-group="expr" data-val="drunk, flushed face, hazy eyes">Drunk</button>
+                <button class="scene-chip" data-group="expr" data-val="pleasure, ecstasy, moaning expression">Ecstasy</button>
+                <button class="scene-chip" data-group="expr" data-val="lustful expression, ahegao, eyes rolled back">Ahegao</button>
+                <button class="scene-chip" data-group="expr" data-val="dominant smirk, confident">Dominant</button>
+                <button class="scene-chip" data-group="expr" data-val="submissive, pleading eyes">Submissive</button>
+              </div>
+            </div>
+
+            <!-- Skin / body effects -->
+            <div class="scene-row">
+              <span class="scene-label">Skin &amp; Body Effects <span class="scene-label-note">multi-select</span></span>
+              <div class="scene-chips" id="scene-skineffects-chips">
+                <button class="scene-chip scene-chip--multi" data-group="skinEffects" data-val="sweaty glistening skin">Sweaty</button>
+                <button class="scene-chip scene-chip--multi" data-group="skinEffects" data-val="wet skin, dripping water">Wet</button>
+                <button class="scene-chip scene-chip--multi" data-group="skinEffects" data-val="oiled shiny skin">Oiled</button>
+                <button class="scene-chip scene-chip--multi" data-group="skinEffects" data-val="tan lines visible">Tan Lines</button>
+                <button class="scene-chip scene-chip--multi" data-group="skinEffects" data-val="goosebumps, cold skin">Goosebumps</button>
+                <button class="scene-chip scene-chip--multi" data-group="skinEffects" data-val="glowing magical aura skin">Magic Glow</button>
+                <button class="scene-chip scene-chip--multi" data-group="skinEffects" data-val="freckles">Freckles</button>
+                <button class="scene-chip scene-chip--multi" data-group="skinEffects" data-val="bite marks, hickeys">Hickeys</button>
+                <button class="scene-chip scene-chip--multi" data-group="skinEffects" data-val="cum covered, cum dripping">Cum Covered</button>
+              </div>
+            </div>
+
+            <!-- Mood / vibe -->
+            <div class="scene-row">
+              <span class="scene-label">Scene Vibe</span>
+              <div class="scene-chips" id="scene-vibe-chips">
+                <button class="scene-chip" data-group="vibe" data-val="romantic, intimate, loving">Romantic</button>
+                <button class="scene-chip" data-group="vibe" data-val="sensual, erotic atmosphere">Sensual</button>
+                <button class="scene-chip" data-group="vibe" data-val="dark, ominous, dangerous">Dark</button>
+                <button class="scene-chip" data-group="vibe" data-val="playful, fun, teasing">Playful</button>
+                <button class="scene-chip" data-group="vibe" data-val="aggressive, dominant, intense">Aggressive</button>
+                <button class="scene-chip" data-group="vibe" data-val="tender, gentle, caring">Tender</button>
+                <button class="scene-chip" data-group="vibe" data-val="mysterious, ethereal">Mysterious</button>
+                <button class="scene-chip" data-group="vibe" data-val="dreamy, surreal, soft focus">Dreamy</button>
+                <button class="scene-chip" data-group="vibe" data-val="raw, gritty, realistic">Raw</button>
+                <button class="scene-chip" data-group="vibe" data-val="power, dominance, control">Power</button>
+              </div>
+            </div>
+
+            <!-- Special / fantasy elements -->
+            <div class="scene-row">
+              <span class="scene-label">Fantasy Elements <span class="scene-label-note">multi-select</span></span>
+              <div class="scene-chips" id="scene-fantasy-chips">
+                <button class="scene-chip scene-chip--multi" data-group="fantasyFx" data-val="magic particles, glowing spells">Magic</button>
+                <button class="scene-chip scene-chip--multi" data-group="fantasyFx" data-val="demonic aura, hellfire">Demonic</button>
+                <button class="scene-chip scene-chip--multi" data-group="fantasyFx" data-val="angelic halo, divine light">Angelic</button>
+                <button class="scene-chip scene-chip--multi" data-group="fantasyFx" data-val="elven features, pointed ears">Elven</button>
+                <button class="scene-chip scene-chip--multi" data-group="fantasyFx" data-val="dragon scales, horns">Draconic</button>
+                <button class="scene-chip scene-chip--multi" data-group="fantasyFx" data-val="vampire pale skin, fangs">Vampire</button>
+                <button class="scene-chip scene-chip--multi" data-group="fantasyFx" data-val="succubus tail and wings">Succubus</button>
+                <button class="scene-chip scene-chip--multi" data-group="fantasyFx" data-val="neko cat girl features">Neko</button>
+                <button class="scene-chip scene-chip--multi" data-group="fantasyFx" data-val="sci-fi cybernetic implants">Cyborg</button>
+                <button class="scene-chip scene-chip--multi" data-group="fantasyFx" data-val="ethereal ghost transparency">Ethereal</button>
+              </div>
+            </div>
+
+            <!-- Homebrew / Jailbreak inject -->
+            <div class="scene-row scene-row--homebrew">
+              <span class="scene-label scene-label--warn"><i data-lucide="flask-conical"></i> Homebrew Inject</span>
+              <div class="scene-homebrew-fields">
+                <textarea id="scene-positive" class="scene-textarea" rows="2" placeholder="Positive inject (appended verbatim to prompt)…"></textarea>
+                <textarea id="scene-negative" class="scene-textarea" rows="2" placeholder="Negative inject (what to exclude)…"></textarea>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- ── Reset button ── -->
+          <div class="scene-reset-row">
+            <button class="scene-reset-btn" id="scene-reset-btn" type="button"><i data-lucide="rotate-ccw"></i> Reset Scene</button>
           </div>
 
         </div>
@@ -2150,7 +2502,7 @@
 
 <div id="toast-container" class="toast-container"></div>
 <script src="../../shards/lucide.min.js"></script><script src="../../shards/marked.min.js"></script><script src="../../shards/purify.min.js"></script>
-<script type="module" src="./script/main.js?v=52"></script>
+<script type="module" src="./script/main.js?v=53"></script>
 <!-- ── Wallhaven Arena ── -->
 <script src="./script/modules/wallhaven.js"></script>
 </body>

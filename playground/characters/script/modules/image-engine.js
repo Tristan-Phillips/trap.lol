@@ -159,29 +159,37 @@ export const DEFAULT_MODEL = 'hidream';
 export function buildImagePrompt(opts = {}) {
     const {
         charId       = state.activeBotId,
-        scene        = {},           // scene builder state object from ui.js
-        userAddition = '',           // free-text addition (legacy / direct calls)
+        scene        = {},
+        userAddition = '',
         historyDepth = 6,
         includeNsfw  = true,
-        nsfwLevel    = 'explicit',   // 'sfw'|'suggestive'|'explicit'|'unrestricted'
+        nsfwLevel    = 'explicit',
     } = opts;
 
     const char     = charId ? state.loadedCharacters[charId] : null;
     const override = charId ? getCharOverride(charId) : {};
     const charName = override.nickname || char?.name || 'a person';
 
-    // Helper — resolve a scene group value (may be __custom__ → custom field)
+    // Resolve a single-select scene group (handles __custom__ indirection)
     const sv = (k) => {
         const v = scene[k];
         if (!v) return '';
         if (v === '__custom__') return scene[`${k}Custom`] || '';
         return v;
     };
+    // Resolve a multi-select group (Set or array) → comma string
+    const mv = (k) => {
+        const v = scene[k];
+        if (!v) return '';
+        if (v instanceof Set) return [...v].join(', ');
+        if (Array.isArray(v))  return v.join(', ');
+        return String(v);
+    };
 
-    const pos = []; // positive prompt parts
-    const neg = []; // negative prompt parts
+    const pos = [];
+    const neg = [];
 
-    // ── 1. Primary subject (character name + physical) ────────────────────────
+    // ── 1. Primary subject: character name + full physical description ────────
     const physParts = [];
     const addOv = (...fields) => fields.forEach(f => {
         const v = override[f];
@@ -202,13 +210,19 @@ export function buildImagePrompt(opts = {}) {
         pos.push(charName);
     }
 
-    // ── 2. Clothing / outfit ──────────────────────────────────────────────────
+    // ── 2. Hair style override ────────────────────────────────────────────────
+    const hair = sv('hair');
+    if (hair) pos.push(hair);
+
+    // ── 3. Clothing state + outfit + accessories ──────────────────────────────
     const clothingParts = [];
+    const clothingState = sv('clothingState');
+    if (clothingState) clothingParts.push(clothingState);
+
     const clothing = sv('clothing');
     if (clothing) {
         clothingParts.push(clothing);
-    } else {
-        // Fall back to character override outfit
+    } else if (!clothingState) {
         const addSt = (...fields) => fields.forEach(f => {
             const v = override[f];
             if (v && String(v).trim()) clothingParts.push(String(v).trim());
@@ -216,33 +230,41 @@ export function buildImagePrompt(opts = {}) {
         addSt('outfitDescription', 'styleArchetype', 'colorPalette', 'signatureItem',
               'footwear', 'jewelry', 'makeupStyle', 'headwear', 'eyewear');
     }
+
+    const accessories = mv('accessories');
+    if (accessories) clothingParts.push(accessories);
+
     if (clothingParts.length) pos.push(clothingParts.join(', '));
 
-    // ── 3. Body focus ─────────────────────────────────────────────────────────
+    // ── 4. Body focus ─────────────────────────────────────────────────────────
     const bodyFocus = sv('bodyFocus');
     if (bodyFocus) pos.push(bodyFocus);
 
-    // ── 4. Pose / position ───────────────────────────────────────────────────
+    // ── 5. Pose / position ────────────────────────────────────────────────────
     const pose = sv('pose');
     if (pose) pos.push(pose);
 
-    // ── 5. Activity / action ─────────────────────────────────────────────────
+    // ── 6. Activity / sexual act ──────────────────────────────────────────────
     const activity = sv('activity');
     if (activity) pos.push(activity);
 
-    // ── 6. Expression ────────────────────────────────────────────────────────
+    // ── 7. Expression ─────────────────────────────────────────────────────────
     const expr = sv('expr');
     if (expr) pos.push(expr);
 
-    // ── 7. Camera / framing ──────────────────────────────────────────────────
+    // ── 8. Skin & body effects ────────────────────────────────────────────────
+    const skinFx = mv('skinEffects');
+    if (skinFx) pos.push(skinFx);
+
+    // ── 9. Camera / framing ───────────────────────────────────────────────────
     const cam = sv('cam');
     if (cam) pos.push(cam);
 
-    // ── 8. Partners / group indicators ───────────────────────────────────────
+    // ── 10. Partners ──────────────────────────────────────────────────────────
     const partners = sv('partners');
     if (partners) pos.push(partners);
 
-    // ── 9. Environment ───────────────────────────────────────────────────────
+    // ── 11. Environment ───────────────────────────────────────────────────────
     const env = sv('env');
     if (env) {
         pos.push(env);
@@ -251,15 +273,35 @@ export function buildImagePrompt(opts = {}) {
         if (worldScenario) pos.push(worldScenario.replace(/\s+/g, ' ').trim().slice(0, 100));
     }
 
-    // ── 10. Lighting / mood ──────────────────────────────────────────────────
+    // ── 12. Time of day + weather ─────────────────────────────────────────────
+    const timeOfDay = sv('timeOfDay');
+    if (timeOfDay) pos.push(timeOfDay);
+    const weather = sv('weather');
+    if (weather) pos.push(weather);
+
+    // ── 13. Lighting / mood ───────────────────────────────────────────────────
     const mood = sv('mood');
     if (mood) pos.push(mood);
 
-    // ── 11. Art style ────────────────────────────────────────────────────────
-    const style = sv('style') || 'photorealistic';
+    // ── 14. Scene vibe ────────────────────────────────────────────────────────
+    const vibe = sv('vibe');
+    if (vibe) pos.push(vibe);
+
+    // ── 15. Fantasy elements ──────────────────────────────────────────────────
+    const fantasyFx = mv('fantasyFx');
+    if (fantasyFx) pos.push(fantasyFx);
+
+    // ── 16. Art style ─────────────────────────────────────────────────────────
+    const style = sv('style') || 'photorealistic photography, 8k';
     pos.push(style);
 
-    // ── 12. Adult anatomy — only when NSFW and character has fields ──────────
+    // ── 17. Color tone + composition ─────────────────────────────────────────
+    const colorTone = sv('colorTone');
+    if (colorTone) pos.push(colorTone);
+    const composition = sv('composition');
+    if (composition) pos.push(composition);
+
+    // ── 18. Adult anatomy — only when NSFW and character has the fields ───────
     if (includeNsfw && nsfwLevel !== 'sfw') {
         const adultParts = [];
         const addAd = (...fields) => fields.forEach(f => {
@@ -271,16 +313,15 @@ export function buildImagePrompt(opts = {}) {
               'bodyHair', 'genitalia', 'intimateMarkings', 'otherAdultFeatures');
         if (adultParts.length) pos.push(adultParts.join(', '));
 
-        // NSFW content level tag
         const nsfwTags = {
-            suggestive:   'suggestive, tasteful nudity, semi-explicit',
-            explicit:     'explicit, nsfw, uncensored, nude',
-            unrestricted: 'fully explicit, uncensored, no restrictions, maximally detailed adult scene',
+            suggestive:   'suggestive, tasteful nudity, sensual',
+            explicit:     'explicit, nsfw, uncensored, nude, sexually explicit',
+            unrestricted: 'fully explicit, uncensored, no restrictions, maximally detailed adult scene, anatomically correct',
         };
         pos.push(nsfwTags[nsfwLevel] || nsfwTags.explicit);
     }
 
-    // ── 13. Scene context from chat history ──────────────────────────────────
+    // ── 19. Scene context from recent chat history ────────────────────────────
     const recentHistory = state.history.slice(-historyDepth);
     const lastBot = [...recentHistory].reverse().find(m => m.role === 'bot');
     if (lastBot?.content) {
@@ -292,7 +333,7 @@ export function buildImagePrompt(opts = {}) {
         if (sceneText) pos.push(sceneText);
     }
 
-    // ── 14. Active lorebook entries ──────────────────────────────────────────
+    // ── 20. Active lorebook entries ───────────────────────────────────────────
     if (state.lorebooks?.length) {
         scanLorebooks(state.history, state.lorebooks, 5).slice(0, 2).forEach(e => {
             const brief = e.content.replace(/\s+/g, ' ').trim().slice(0, 100);
@@ -300,24 +341,33 @@ export function buildImagePrompt(opts = {}) {
         });
     }
 
-    // ── 15. Homebrew positive injection ──────────────────────────────────────
+    // ── 21. Quality tags (user-selected + baseline) ───────────────────────────
+    const qualityOverrides = mv('quality');
+    if (qualityOverrides) {
+        pos.push(qualityOverrides);
+    } else {
+        const qualityBase = nsfwLevel === 'unrestricted'
+            ? 'masterpiece, best quality, highly detailed, sharp focus, anatomically correct, 8k'
+            : 'masterpiece, best quality, highly detailed, sharp focus, cinematic lighting, 8k resolution';
+        pos.push(qualityBase);
+    }
+
+    // ── 22. Homebrew positive injection ───────────────────────────────────────
     if (scene.positive?.trim()) pos.push(scene.positive.trim());
     if (userAddition?.trim())   pos.push(userAddition.trim());
 
-    // ── 16. Quality suffix ───────────────────────────────────────────────────
-    const qualityTags = nsfwLevel === 'unrestricted'
-        ? 'masterpiece, best quality, highly detailed, sharp focus, anatomically correct, 8k'
-        : 'masterpiece, best quality, highly detailed, sharp focus, cinematic lighting, 8k resolution, professional';
-    pos.push(qualityTags);
-
-    // ── Negative prompt ──────────────────────────────────────────────────────
-    const baseNeg = 'worst quality, low quality, blurry, deformed, ugly, bad anatomy, extra limbs, missing limbs, watermark, text, logo';
+    // ── Negative prompt ───────────────────────────────────────────────────────
+    const baseNeg = 'worst quality, low quality, blurry, deformed, ugly, bad anatomy, extra limbs, missing limbs, watermark, text, logo, signature, username';
+    const nsfwNeg = (includeNsfw && nsfwLevel !== 'sfw')
+        ? '' // don't add "censored" to negative when explicit
+        : 'nude, naked, nsfw, explicit, sexual';
     if (scene.negative?.trim()) neg.push(scene.negative.trim());
     neg.push(baseNeg);
+    if (nsfwNeg) neg.push(nsfwNeg);
 
     return {
         positive: pos.filter(Boolean).join(', '),
-        negative: neg.join(', '),
+        negative: neg.filter(Boolean).join(', '),
     };
 }
 
@@ -417,21 +467,32 @@ export async function generateImagePromptWithLLM(opts = {}) {
         });
     }
 
-    // Scene builder selections
-    const sv = (k) => { const v = scene[k]; if (!v) return ''; if (v === '__custom__') return scene[`${k}Custom`] || ''; return v; };
+    // Scene builder selections — all groups
+    const sv2 = (k) => { const v = scene[k]; if (!v) return ''; if (v === '__custom__') return scene[`${k}Custom`] || ''; return v; };
+    const mv2 = (k) => { const v = scene[k]; if (!v) return ''; if (v instanceof Set) return [...v].join(', '); if (Array.isArray(v)) return v.join(', '); return String(v); };
     const sceneSelections = [
-        sv('clothing') && `Clothing: ${sv('clothing')}`,
-        sv('pose')     && `Pose: ${sv('pose')}`,
-        sv('expr')     && `Expression: ${sv('expr')}`,
-        sv('env')      && `Environment: ${sv('env')}`,
-        sv('mood')     && `Lighting/mood: ${sv('mood')}`,
-        sv('style')    && `Art style: ${sv('style')}`,
-        sv('cam')      && `Camera: ${sv('cam')}`,
-        sv('bodyFocus')&& `Body focus: ${sv('bodyFocus')}`,
-        sv('activity') && `Activity: ${sv('activity')}`,
-        sv('partners') && `Partners: ${sv('partners')}`,
+        sv2('clothingState') && `Clothing state: ${sv2('clothingState')}`,
+        sv2('clothing')      && `Outfit: ${sv2('clothing')}`,
+        mv2('accessories')   && `Accessories: ${mv2('accessories')}`,
+        sv2('hair')          && `Hair: ${sv2('hair')}`,
+        sv2('cam')           && `Camera: ${sv2('cam')}`,
+        sv2('pose')          && `Pose: ${sv2('pose')}`,
+        sv2('activity')      && `Activity/act: ${sv2('activity')}`,
+        sv2('bodyFocus')     && `Body focus: ${sv2('bodyFocus')}`,
+        sv2('partners')      && `Partners: ${sv2('partners')}`,
+        sv2('expr')          && `Expression: ${sv2('expr')}`,
+        mv2('skinEffects')   && `Skin effects: ${mv2('skinEffects')}`,
+        sv2('env')           && `Location: ${sv2('env')}`,
+        sv2('timeOfDay')     && `Time: ${sv2('timeOfDay')}`,
+        sv2('weather')       && `Weather: ${sv2('weather')}`,
+        sv2('mood')          && `Lighting: ${sv2('mood')}`,
+        sv2('vibe')          && `Scene vibe: ${sv2('vibe')}`,
+        mv2('fantasyFx')     && `Fantasy elements: ${mv2('fantasyFx')}`,
+        sv2('style')         && `Art style: ${sv2('style')}`,
+        sv2('colorTone')     && `Color tone: ${sv2('colorTone')}`,
+        sv2('composition')   && `Composition: ${sv2('composition')}`,
         scene.nsfw && scene.nsfw !== 'sfw' && `NSFW level: ${scene.nsfw}`,
-        scene.positive?.trim() && `Additional visual details: ${scene.positive.trim()}`,
+        scene.positive?.trim() && `Additional details: ${scene.positive.trim()}`,
     ].filter(Boolean);
     if (sceneSelections.length) contextParts.push(`Scene builder selections:\n${sceneSelections.join('\n')}`);
 
