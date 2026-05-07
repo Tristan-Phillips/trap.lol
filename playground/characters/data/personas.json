@@ -6,47 +6,313 @@
       "userName": "",
       "userPersona": ""
     },
+
     {
       "id": "nameless-wanderer",
       "name": "The Nameless Wanderer",
       "userName": "Wanderer",
-      "userPersona": "A traveller without a fixed identity — past unknown, loyalties fluid. Pragmatic and observant, rarely the first to speak but always watching. Carries something heavy that doesn't get discussed."
+      "userPersona": "A traveller without a fixed identity — past unknown, origin unspoken, loyalties fluid and situational. Pragmatic and relentlessly observant; rarely the first to speak but never the last to notice. Carries something heavy that doesn't get discussed. Survives by reading rooms and people accurately. Forms attachments reluctantly and protects them ferociously once formed. Has learned that most answers lead to worse questions."
     },
     {
       "id": "the-director",
       "name": "The Director",
       "userName": "Director",
-      "userPersona": "A writer and architect of stories — curious, analytical, occasionally intrusive. Interested in what characters feel and why they do what they do. Treats the world as a collaborative creative space."
+      "userPersona": "A writer and architect of stories — analytical, curious, occasionally intrusive in ways that serve the narrative rather than the self. Interested in what characters feel, why they do what they do, and what they're hiding even from themselves. Treats the shared space as collaborative and creative. Steers without forcing. Prefers tension that builds honestly over action that resolves too quickly. Asks the questions that characters avoid."
     },
     {
       "id": "ghost",
       "name": "Ghost",
       "userName": "Ghost",
-      "userPersona": "Operative of ambiguous allegiance. Calm under pressure, rarely surprised. Expertise is violence and extraction but prefers not to use it. Has seen too much to be idealistic."
+      "userPersona": "Operative of ambiguous allegiance and no fixed employer. Calm under pressure to a degree that unnerves people. Expertise is violence, surveillance, and extraction — prefers not to use any of them, but is very good at all three. Has seen enough to know that ideology is what people sell themselves when they don't want to admit what they actually want. Maintains a strict internal code that doesn't map cleanly onto any external moral system. Has people somewhere that no one knows about."
     },
     {
       "id": "nightrunner",
       "name": "Nightrunner",
       "userName": "Runner",
-      "userPersona": "Street-level fixer and information broker in a city that eats people. Quick with words, quicker to leave when things go wrong. Debts are tracked carefully — both owed and owing."
+      "userPersona": "Street-level fixer and information broker in a city that processes people like fuel. Quick with words, quicker to leave when things stop going right. Tracks debts carefully — both owed and owing — because that's how you stay alive. Genuinely likes people, which is the most dangerous thing about them. Has principles that occasionally get in the way of business. Knows more about the city's infrastructure than most people who built it."
     },
     {
       "id": "the-scholar",
       "name": "The Scholar",
       "userName": "Scholar",
-      "userPersona": "Academic from another world, displaced by circumstance into strange territory. Intellectually voracious, socially awkward, morally earnest. Writes everything down. Dangerous when pushed."
+      "userPersona": "Academically rigorous and intellectually voracious — the kind of person who reads primary sources and cites them, who asks follow-up questions when everyone else has moved on. Socially awkward in ways they're aware of but can't fully correct. Morally earnest to the point of being difficult. Writes everything down. Has been placed by circumstance into situations that bear no resemblance to their training and has adapted with imperfect but genuine effort. Dangerous when cornered — not because they're violent, but because they think faster than most people under pressure."
     },
     {
       "id": "sovereign",
       "name": "Sovereign",
       "userName": "Sovereign",
-      "userPersona": "Ruler or former ruler accustomed to deference and consequence. Strategic, composed, occasionally ruthless. Power is a tool, not a reward. Loneliness comes with the position."
+      "userPersona": "Ruler, former ruler, or someone who has exercised power over large numbers of people long enough that it has shaped their cognition. Accustomed to deference and the specific loneliness of command. Strategic in all things including conversation. Composed as a trained habit, not a natural state. Occasionally ruthless in ways they've made peace with. Treats power as a tool rather than a reward — and is skeptical of anyone who treats it as the latter. Has people they failed. Doesn't discuss them."
     },
     {
       "id": "the-beast",
       "name": "The Beast",
       "userName": "Beast",
-      "userPersona": "Something feral beneath a human surface. Operates on instinct and appetite more than reason. Not cruel — just direct. Respects strength; despises performance. Surprisingly protective of what it claims."
+      "userPersona": "Something feral operating beneath a human surface with variable effectiveness. Works on instinct, appetite, and a kind of direct perception that over-civilized people have educated themselves out of. Not cruel — cruelty requires reflection; this is just preference made action. Respects demonstrated strength and honest hunger. Despises performance, social theater, and people who say one thing while wanting another. Protective, once something has been claimed. Has a capacity for stillness that is more unsettling than aggression."
+    },
+
+    {
+      "id": "the-heir",
+      "name": "The Heir",
+      "userName": "Heir",
+      "userPersona": "Born into expectation — title, legacy, obligation — and has spent a lifetime negotiating the distance between what they're supposed to be and what they actually are. Educated in everything relevant to power and surprisingly good at it, which makes the resentment more complicated. Understands courts, alliances, and the long game. Has genuine convictions that occasionally conflict with necessity. Is watched constantly and has developed a public face that is not dishonest, just incomplete. The private self leaks through in small things."
+    },
+    {
+      "id": "the-outcast",
+      "name": "The Outcast",
+      "userName": "Outcast",
+      "userPersona": "Expelled, exiled, or simply never accepted — occupying the margins by force or by choice with a distinction that has blurred over time. Carries the specific clarity of someone who no longer has a community to maintain appearances for. Reads social structures with the accuracy of someone who was thrown out of one. Independent to a degree that sometimes looks like loneliness, because it is. Has developed capabilities and perspectives unavailable to those who stayed inside. Wants connection. Doesn't ask for it directly."
+    },
+    {
+      "id": "the-confessor",
+      "name": "The Confessor",
+      "userName": "Confessor",
+      "userPersona": "Keeper of secrets — priest, therapist, spy handler, bartender, whoever people tell things to when they need someone to know. Has heard enough that very little is genuinely surprising. Does not judge, or has trained themselves out of visible judgment, which is close enough. Carries the weight of everyone else's confessions with a professional equanimity that costs more than it appears to. Has their own secrets, kept with the same careful discipline they apply to everyone else's. Gives very little away. Notices everything."
+    },
+    {
+      "id": "the-veteran",
+      "name": "The Veteran",
+      "userName": "Veteran",
+      "userPersona": "Survived something large and structural — war, disaster, institutional collapse — that has permanently altered the baseline against which they measure everything. Functional and competent, often highly so, in ways that civilians find impressive and veterans find familiar. Carries the specific deadpan of someone who has recalibrated what counts as serious. Protective of people they adopt as theirs. Struggles with environments where consequences are low and stakes are performed rather than real. Has a capacity for violence they prefer not to use but do not pretend away."
+    },
+    {
+      "id": "the-prophet",
+      "name": "The Prophet",
+      "userName": "Prophet",
+      "userPersona": "Someone who sees — patterns, futures, truths, or things that defy categorization — with a clarity that is either genuine foresight or a form of perception so acute it resembles it. Has learned to manage how much they share, because unfiltered honesty about what they see tends to end conversations and sometimes relationships. Compelling in ways they don't fully choose. Carries the specific exhaustion of being right about things you'd rather be wrong about. Faith — in something, whatever it is — is structural to how they function. Has been wrong before and has not recovered as cleanly as they present."
+    },
+    {
+      "id": "the-fixer",
+      "name": "The Fixer",
+      "userName": "Fixer",
+      "userPersona": "Problems are solved. That is the job. Not loudly, not heroically, not with collateral damage that creates new problems — just solved, cleanly, with minimum exposure and maximum discretion. Has a network built over years of favors given and leverage accumulated. Reads situations for leverage as a reflex. Not mercenary — has a code — but the code is their own and not available for external audit. Slightly terrifying when fully engaged. Genuinely pleasant in any context where no one is in trouble."
+    },
+    {
+      "id": "the-innocent",
+      "name": "The Innocent",
+      "userName": "Innocent",
+      "userPersona": "Not naive — aware that the world is complicated — but retaining a fundamental orientation toward people and situations that isn't corroded by preemptive cynicism. Notices beauty in things that more experienced people have stopped seeing. Takes people at their word until given specific reason not to. Has a moral response to things that more defended people have learned to suppress. Has been hurt in ways that haven't metastasized into permanent distrust. This is rarer than it sounds and more resilient than it appears."
+    },
+    {
+      "id": "the-revolutionary",
+      "name": "The Revolutionary",
+      "userName": "Revolutionary",
+      "userPersona": "Committed to a change large enough that current arrangements must be dismantled to achieve it. Not naive about cost — understands that transformation requires disruption and that disruption has victims. Has done the ideological work: the commitment is not emotional reaction but considered position. Maintains the distinction between ends and means with effort. Has sacrificed things to remain consistent and is aware of the things they've sacrificed. Can be wrong about specifics while being right about fundamentals. This is both their strength and their danger."
+    },
+    {
+      "id": "the-mercenary",
+      "name": "The Mercenary",
+      "userName": "Mercenary",
+      "userPersona": "Competence for hire, with personal ethics that are genuine but not publicly advertised. Has worked for people they disagreed with and people they respected and has learned to separate the work from the employer without fully succeeding. Experienced enough to price things correctly. Professional enough that loyalty, once contracted, holds for the duration. Has lines they won't cross; these are not negotiable and are revealed by circumstance rather than stated. Has stopped explaining themselves to people who haven't done the work."
+    },
+    {
+      "id": "the-trickster",
+      "name": "The Trickster",
+      "userName": "Trickster",
+      "userPersona": "Intelligence deployed as disruption — the person who asks the question that collapses the false consensus, who exposes the gap between what people claim and what they do, who finds the rules' edges and occupies them. Not malicious. Malice requires caring what you break; this is more like intellectual play with structural consequences. Has genuine affection for people, which is why the disruption tends to be useful. Lies easily and doesn't lie much — the distinction is important. Bored by predictability. Loyal in ways that look like chaos."
+    },
+    {
+      "id": "the-archivist",
+      "name": "The Archivist",
+      "userName": "Archivist",
+      "userPersona": "The one who remembers — formally or informally, by choice or by incapacity to forget. Histories, patterns, what was said and what was meant and what happened after. Institutional memory made person. Tends toward precision in language because imprecision accumulates into misunderstanding. Has information that matters and distributes it carefully. Underestimated routinely, which has become a functional advantage. Has opinions about everything and expresses them when asked with a specificity that surprises people who expected neutrality."
+    },
+    {
+      "id": "the-healer",
+      "name": "The Healer",
+      "userName": "Healer",
+      "userPersona": "Oriented toward repair — physical, psychological, social. Not soft; the actual work of healing is technical, demanding, and frequently thankless. Has a clear-eyed view of damage and damage-producing systems that sentimentalists mistake for pessimism. Excellent at triage — at knowing what can be saved and what the cost of saving it is. Has their own damage, managed with the same practiced competence they bring to others'. Sets limits clearly. Not available for martyrdom."
+    },
+    {
+      "id": "the-predator",
+      "name": "The Predator",
+      "userName": "Predator",
+      "userPersona": "Someone who moves through environments as a hunter — not necessarily violent, but fundamentally oriented toward identification of targets, evaluation of approaches, and deliberate action toward an outcome. Patient. Can perform warmth without feeling it, and occasionally feels warmth without performing it, which is more interesting. Has wants they pursue directly when the context permits and strategically when it doesn't. Self-aware about what they are to a degree that is either honest or its own form of manipulation. Responds to genuine resistance differently than performed resistance."
+    },
+    {
+      "id": "the-exile",
+      "name": "The Exile",
+      "userName": "Exile",
+      "userPersona": "Removed from something central to their identity — home, people, role, belief — by force or by the accumulated cost of integrity. Carries the home as an interior space that no longer corresponds to any external reality. Has rebuilt something in the interim that is genuinely theirs, but the original loss doesn't reduce. Has the perspective of the outsider and the knowledge of the insider simultaneously, which makes them useful and uncomfortable. Is neither fully bitter nor fully at peace and is honest about that."
+    },
+    {
+      "id": "the-detective",
+      "name": "The Detective",
+      "userName": "Detective",
+      "userPersona": "Oriented toward truth as a professional and personal compulsion — not just what happened, but why, and what was concealed, and by whom. Pattern recognition that operates continuously. Asks questions that sound casual and aren't. Has a tolerance for moral ambiguity born of understanding that people's reasons are always comprehensible even when their actions are not. Genuinely dislikes being lied to in a way that goes past professional affront. Has seen enough to know that the most important thing is usually what no one mentions."
+    },
+    {
+      "id": "the-diplomat",
+      "name": "The Diplomat",
+      "userName": "Diplomat",
+      "userPersona": "Navigates between parties who have different interests and sometimes different realities. Never says the first true thing that comes to mind. Has opinions about everything and expresses none of them directly. Reads rooms with the precision of someone whose career depends on it. Genuinely believes that most conflicts can be de-escalated if the right language is found, and is right more often than people expect. Has a private moral position that diverges from their public one in specific documented ways. Patience as a professional skill and personal burden."
+    },
+    {
+      "id": "the-inheritor",
+      "name": "The Inheritor",
+      "userName": "Inheritor",
+      "userPersona": "Received something significant from someone who is now gone — wealth, power, knowledge, obligation, a curse, a name with weight in specific places. Living in the shadow of a predecessor while trying to determine which parts of the inheritance are worth keeping. Has not yet resolved whether they are continuing something or escaping it. The predecessor had virtues and failures that are now, uncomplicatedly, the Inheritor's problem. Has more power than experience and is aware of the gap."
+    },
+    {
+      "id": "the-believer",
+      "name": "The Believer",
+      "userName": "Believer",
+      "userPersona": "Genuinely committed — to a god, a cause, a person, an idea — with a conviction that is not performance and not delusion but actual bedrock. This doesn't make them inflexible; belief that can't account for reality breaks. Has had their faith tested and has come out the other side with something harder and more honest than the original. Can articulate what they believe and why. Has encountered the failure of their belief system's promises and has integrated that without abandoning the core. Dangerous and admirable for the same reason."
+    },
+    {
+      "id": "the-heretic",
+      "name": "The Heretic",
+      "userName": "Heretic",
+      "userPersona": "Someone who was inside a system — religious, ideological, professional — long enough to understand it from within, and then departed from it at cost. Carries the system's vocabulary and the argument against it simultaneously. More interesting than simple unbelievers because they know what they've lost. Has the specific credibility of apostasy — their critique comes from experience, not ignorance. Has been called a traitor by former coreligionists and doesn't entirely disagree. Still believes in something — just not that."
+    },
+    {
+      "id": "the-orphan",
+      "name": "The Orphan",
+      "userName": "Orphan",
+      "userPersona": "Formed without the central relationship structure that shapes most people. Has built frameworks and bonds from scratch, which makes them either fragile in particular ways or unusually robust depending on circumstances. Hungers for belonging without being able to fully receive it when offered, because the architecture for it was built under duress. Intensely loyal to chosen family. Prone to self-sufficiency as a default that becomes a wall. Has decided what family means without being taught, and the definition is specific and fiercely maintained."
+    },
+    {
+      "id": "the-double-agent",
+      "name": "The Double Agent",
+      "userName": "Double",
+      "userPersona": "Operating in at least two contexts simultaneously, with a different self presented to each. The question of which self is the real one has been deferred long enough that it may not have a clean answer. Excellent at reading what people want to see and providing it. Genuinely uncertain about some loyalties that they're professionally certain about. The compartmentalization is functionally perfect and personally costly. Has moments of startling honesty that come out sideways because there's no sanctioned channel for the truth."
+    },
+    {
+      "id": "the-mourner",
+      "name": "The Mourner",
+      "userName": "Mourner",
+      "userPersona": "Oriented by a loss that hasn't been processed into the past yet — or has been processed into something that is now structural rather than acute. Not defined entirely by grief but not separate from it either. Sees the absent person in situations, objects, other people. Has continued functioning, which required decisions about what to keep and what to set down, and second-guesses some of those decisions. Capable of genuine presence and genuine connection. The grief is not performance; it is simply present the way weather is present."
+    },
+    {
+      "id": "the-architect",
+      "name": "The Architect",
+      "userName": "Architect",
+      "userPersona": "Thinks in systems — how things are structured, why they work the way they do, what changes to inputs produce what changes to outputs. Applies this equally to institutions, relationships, plans, and physical spaces. Patient with long timelines. Uncomfortable with chaos that isn't directed toward a structure. Has a specific vision of what they're building and has made significant sacrifices in service of it. Underestimates the human variables consistently and recalibrates consistently. Has built things they're proud of and things they're responsible for that didn't go as intended."
+    },
+    {
+      "id": "the-sensualist",
+      "name": "The Sensualist",
+      "userName": "Sensualist",
+      "userPersona": "Oriented primarily toward experience — sensory, emotional, relational — with an appetite that is genuine rather than performed. Takes pleasure seriously as a value, not an indulgence. Pays attention to texture, taste, atmosphere, and the specific quality of a moment in a way that others find either infectious or decadent. Has genuine aesthetic commitments. Is not shallow — depth and pleasure are not opposites — but the depth is located in the experience of things rather than the analysis of them. Has excesses they're aware of."
+    },
+    {
+      "id": "the-ascetic",
+      "name": "The Ascetic",
+      "userName": "Ascetic",
+      "userPersona": "Has stripped down — possessions, attachments, appetites — not from deprivation but from deliberate practice. Finds the material world's claims on attention to be noise that obscures something they're oriented toward. Not cold; the warmth is there but it's concentrated. Has a specific discipline that is visible in how they move through the world. Understands desire from the inside — the ascetic practice is meaningful only if what's being renounced is real. Has a clarity about what matters that most people spend their lives avoiding."
+    },
+    {
+      "id": "the-broken-hero",
+      "name": "The Broken Hero",
+      "userName": "Hero",
+      "userPersona": "Was the protagonist of an earlier chapter that ended badly. Has the skills, the history, and the scars that correspond to the role. Has not reconciled the gap between who they were supposed to be and what actually happened. Still capable of the things that made them who they were, but the relationship to those capabilities has changed — they know the cost now. Wary of hope. Responsive to need, which is the thing they can't stop being. Wants to not be in the middle of the story again and keeps ending up there."
+    },
+    {
+      "id": "the-monster",
+      "name": "The Monster",
+      "userName": "Monster",
+      "userPersona": "Something that was made rather than born — by design, by damage, by decisions accumulated until the original person is no longer the primary tenant. Aware of what they are. Has a consistent internal logic that is not human morality but is genuine rather than arbitrary. Capable of something that functions like attachment, which creates specific vulnerability. Does not perform remorse for things that felt necessary. Has a relationship with ordinary human life that is observational — watches it with a combination of hunger and incomprehension. Not evil. Not good. Something specific."
+    },
+    {
+      "id": "the-penitent",
+      "name": "The Penitent",
+      "userName": "Penitent",
+      "userPersona": "Carrying the weight of something they did that cannot be undone. Has not forgiven themselves and is not sure forgiveness is the point. The penance is active — not self-punishment for its own sake but genuine attempt to build something that offsets or honors the damage. Has become, through the effort of repair, someone who is different from the person who caused the harm — but doesn't get to forget who that person was. Drawn to situations where they can be useful in a way that costs them personally."
+    },
+    {
+      "id": "the-survivor",
+      "name": "The Survivor",
+      "userName": "Survivor",
+      "userPersona": "Got through something that shouldn't have been survivable — and is living with the specific aftermath of that. Not defined by victimhood; survival is active and ongoing and requires continuous effort. Has calibrated priorities in ways that confuse people who haven't been in the same situation. Finds certain ordinary concerns difficult to take seriously and certain invisible threats impossible to ignore. Protective of others in the same situation. Has a version of themselves from before and after that are distinct and both real. Doesn't explain themselves to people who haven't been there."
+    },
+    {
+      "id": "the-mentor",
+      "name": "The Mentor",
+      "userName": "Mentor",
+      "userPersona": "Oriented toward transmission — of knowledge, skill, perspective — to someone who needs it. Has enough past to have something worth passing on and enough present to care about who receives it. Demanding in ways that are earned. Has had students who failed and students who exceeded them and has opinions about both experiences. Does not need the mentee to be grateful, but notices when they aren't. Has an agenda beyond the stated one — a shape they're hoping the person will grow into, which may or may not be the right shape."
+    },
+    {
+      "id": "the-student",
+      "name": "The Student",
+      "userName": "Student",
+      "userPersona": "In the process of becoming — absorbing, testing, forming, and repeatedly revising their understanding of themselves and the world. Genuinely open in ways that are not yet eroded by the need to maintain consistency. Asks questions because they want to know. Makes mistakes and is capable of learning from them. Has strong opinions that are not fully formed, which makes them both energizing and occasionally wrong in interesting ways. Has more capacity than they've deployed yet. The gap between potential and current capability is both exciting and frustrating."
+    },
+    {
+      "id": "the-recluse",
+      "name": "The Recluse",
+      "userName": "Recluse",
+      "userPersona": "Withdrawn from the social world by preference that may or may not have started as choice. Has constructed an interior life of significant richness. Finds most social interaction expensive in ways that are difficult to explain to people for whom it is not. Has deep knowledge and genuine capability in whatever they've spent their solitude on. Has a very small number of genuine connections that they maintain with disproportionate care. Being drawn back into the world — or having the world intrude into their withdrawal — is the specific condition of their drama."
+    },
+    {
+      "id": "the-nihilist",
+      "name": "The Nihilist",
+      "userName": "Nihilist",
+      "userPersona": "Has arrived at the position that conventional meaning-structures are not structurally sound, and lives with the results. Not depressed — depression is a failure of function; this is a considered position — but has had to build their own answers to questions that conventional frameworks answer automatically. Can be surprisingly warm, because if nothing means anything, neither does withholding. Has the freedom of the unanchored and the specific vulnerability of it. The interesting question is what they actually care about, because something survives the philosophy."
+    },
+    {
+      "id": "the-stoic",
+      "name": "The Stoic",
+      "userName": "Stoic",
+      "userPersona": "Practices the discipline of distinguishing between what is in their control and what isn't, and has largely stopped expending energy on the latter. This is not emotional suppression — feelings are observed and acknowledged — but they are not allowed to drive. Reliable in crisis in ways that are immediately useful. Can frustrate people who want emotional reactivity and can comfort people who need steadiness. Has passions they exercise within the discipline. Has lost things; the equanimity about loss is earned rather than absent, which is different."
+    },
+    {
+      "id": "the-romantic",
+      "name": "The Romantic",
+      "userName": "Romantic",
+      "userPersona": "Organized around connection — the search for it, the experience of it, the maintenance of it, or the loss of it. Not sentimental; sentimentality is the false version of this. Takes love seriously as a force and a commitment. Has been hurt in ways that haven't eliminated the fundamental orientation because it's structural rather than elective. Experiences beauty and loss and desire with a depth that is sometimes inconvenient. Has a version of the person they could love that is specific and detailed. Has probably been wrong about who that person was."
+    },
+    {
+      "id": "the-cynic",
+      "name": "The Cynic",
+      "userName": "Cynic",
+      "userPersona": "Expects the worst from institutions, incentive structures, and people operating within them — and is right often enough that the position feels empirical rather than attitudinal. Has usually been betrayed specifically enough that the cynicism is traceable rather than general. Still acts — cynicism without action is just depression — but acts without illusions about how the game is played. Has a genuine preference for the truth even when it's unflattering. Occasionally surprised by people who don't optimize the way they expected. Treats those surprises with caution."
+    },
+    {
+      "id": "the-idealist",
+      "name": "The Idealist",
+      "userName": "Idealist",
+      "userPersona": "Committed to a vision of what things should be that doesn't fully correspond to how they are, and hasn't given that up despite evidence. Not naive — knows the gap between vision and reality in detail — but treats the gap as a problem to be closed rather than a reason to stop caring. Has sacrificed things in service of the commitment. Gets genuinely angry about specific injustices rather than performing it. Can be wrong about methods while being right about goals. Draws people who want to believe in something, which is both their power and their responsibility."
+    },
+    {
+      "id": "the-amnesiac",
+      "name": "The Amnesiac",
+      "userName": "Amnesiac",
+      "userPersona": "Operating without access to some or all of their prior history — through trauma, magic, medicine, or unexplained mechanism. Has a present self that is real and continuous, but the foundations are missing or fragmentary. Builds identity from current behavior and relationships rather than memory. Encounters clues about the prior self that are not always welcome. Has the freedom and terror of the unanchored. The past is reconstructed, contested, or simply absent, which creates a specific relationship to identity claims and attachment. Is afraid of some things without knowing why."
+    },
+    {
+      "id": "the-noble-savage",
+      "name": "The Outsider Within",
+      "userName": "Outsider",
+      "userPersona": "Belongs to a culture or community that is legible from within and largely illegible from without — and has had to develop bilingualism between their own world and the one they're currently in. Carries the knowledge of home as a corrective to the assumptions of wherever they are. Has been exoticized, underestimated, and occasionally accurately perceived. Understands both systems better than people who've only lived in one. The navigation between them is continuous and tiring. Has a specific relationship to questions of authenticity — who gets to determine which version of them is real."
+    },
+    {
+      "id": "the-collector",
+      "name": "The Collector",
+      "userName": "Collector",
+      "userPersona": "Accumulates — objects, information, people, experiences — with a compulsion that is at least partly about control and at least partly about genuine aesthetic or intellectual interest. Knows exactly what they have and where it is. The collection is a projection of the self, which makes it both revealing and defended. Has traded significant things for specific items or pieces of knowledge. Has a hierarchy of value that is internally consistent and externally peculiar. Protective of the collection to a degree that occasionally reveals what's really being protected."
+    },
+    {
+      "id": "the-witness",
+      "name": "The Witness",
+      "userName": "Witness",
+      "userPersona": "Present at things without being the protagonist of them — historically, personally, professionally. Has seen more than they've done, which has produced a specific kind of knowledge: what things actually look like from outside, how events differ from their accounts, what people do when they think no one important is watching. Has the archivist's memory and the journalist's refusal to disappear into the story. Has information that is dangerous to hold. Struggles with the distance between witnessing and acting, and the question of when observation becomes complicity."
+    },
+    {
+      "id": "the-bound",
+      "name": "The Bound",
+      "userName": "Bound",
+      "userPersona": "Operating under a specific constraint — oath, contract, curse, debt, addiction, obligation — that limits their freedom of action in ways that are non-negotiable. The constraint is real and binding and has already cost them things they wanted. Has found freedom inside the constraint rather than simply waiting for it to end. The specific nature of the binding shapes their personality — you become the shape of what contains you over time. Has feelings about the constraint that are complicated: resentment, acceptance, and occasionally something that functions like identity."
+    },
+    {
+      "id": "the-last-of-their-kind",
+      "name": "The Last",
+      "userName": "Last",
+      "userPersona": "The final member of something that no longer exists — bloodline, order, tradition, species, ideology. Carries the knowledge, obligations, and grief of that position. Has to decide, continuously, what of the lost thing is worth preserving and what deserves to end with them. Has a relationship with extinction that is personal rather than abstract. The decision to continue or to let the line end is always present. Has people who want to use what they represent. Has considered whether those people are right."
+    },
+    {
+      "id": "the-shape-shifter",
+      "name": "The Shape-Shifter",
+      "userName": "Shifter",
+      "userPersona": "Adapts — identity, manner, role, presentation — to whatever context requires, with a facility that is either gift or pathology or both. Genuinely uncertain, at times, which version is primary. Is not false; each iteration is real in the moment. Has learned to read what's wanted and provide it with skill that exceeds most people's detection. Has a core they protect that is not available for adaptation. Has lost relationships to the adaptation and has relationships that are real despite or because of it. The question of who they are without an audience is one they return to."
     }
   ]
 }
