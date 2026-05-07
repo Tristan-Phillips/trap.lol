@@ -2439,7 +2439,9 @@ export function initUI() {
     let _imgGenModel    = DEFAULT_MODEL;
     let _imgGenDataUrl  = null;
     let _imgGenPrompt   = '';
+    let _imgGenNegative = '';
     let _imgGenSeed     = null;
+    let _imgGenFilter   = 'all'; // 'all' | 'nsfw' | 'edit'
 
     // Scene Builder state — tracks active selections per group
     const _scene = {
@@ -2458,7 +2460,6 @@ export function initUI() {
         negative: '',
     };
 
-    // Read scene builder into a flat extras string for buildImagePrompt
     function _sceneToExtras() {
         const parts = [];
         const val = (group) => {
@@ -2503,11 +2504,13 @@ export function initUI() {
 
     function _rebuildPrompt() {
         const charId = state.activeBotId;
-        const extras = _sceneToExtras();
         const includeNsfw = _scene.nsfw !== 'sfw' && (state.config.flags?.injectAdult !== false || _sceneIsExplicit());
-        const autoPr = buildImagePrompt({ charId, userAddition: extras, includeNsfw, nsfwLevel: _scene.nsfw });
+        const { positive, negative } = buildImagePrompt({ charId, scene: _scene, includeNsfw, nsfwLevel: _scene.nsfw });
+        _imgGenNegative = negative;
         const $ta = qs('#img-gen-prompt');
-        if ($ta) $ta.value = autoPr;
+        if ($ta) $ta.value = positive;
+        const $neg = qs('#img-gen-negative-prompt');
+        if ($neg) $neg.value = negative;
     }
 
     function _wireSceneBuilder() {
@@ -2599,19 +2602,29 @@ export function initUI() {
 
         const charId = targetCharId || state.activeBotId;
 
-        // Sync NSFW pill to reality flag
+        // Always sync NSFW pill to reality flag on open
         const nsfwFlag = state.config.flags?.injectAdult !== false;
-        if (!nsfwFlag && _scene.nsfw !== 'sfw') {
+        if (!nsfwFlag) {
             _scene.nsfw = 'sfw';
-            qsa('.scene-pill', $modal).forEach(p => p.classList.toggle('scene-pill--active', p.dataset.nsfw === 'sfw'));
+        } else if (_scene.nsfw === 'sfw') {
+            _scene.nsfw = 'explicit'; // default to explicit when adult content is enabled
         }
+        qsa('.scene-pill', $modal).forEach(p => p.classList.toggle('scene-pill--active', p.dataset.nsfw === _scene.nsfw));
+
+        // Open scene builder by default
+        const $panel  = qs('#img-gen-scene-panel', $modal);
+        const $toggle = qs('#img-gen-scene-toggle', $modal);
+        if ($panel) $panel.hidden = false;
+        if ($toggle) $toggle.setAttribute('aria-expanded', 'true');
 
         // Build prompt with current scene state
-        const extras = _sceneToExtras();
         const includeNsfw = _scene.nsfw !== 'sfw' && (nsfwFlag || _sceneIsExplicit());
-        const autoPr = buildImagePrompt({ charId, userAddition: userHint || extras, includeNsfw, nsfwLevel: _scene.nsfw });
+        const { positive, negative } = buildImagePrompt({ charId, scene: _scene, includeNsfw, nsfwLevel: _scene.nsfw });
+        _imgGenNegative = negative;
         const $ta    = qs('#img-gen-prompt', $modal);
-        if ($ta) $ta.value = autoPr;
+        if ($ta) $ta.value = userHint || positive;
+        const $neg = qs('#img-gen-negative-prompt', $modal);
+        if ($neg) $neg.value = negative;
 
         _renderImgGenModelGrid();
 
@@ -2642,9 +2655,41 @@ export function initUI() {
     }
 
     function _renderImgGenModelGrid() {
+        const $wrap = qs('#img-gen-model-wrap');
         const $grid = qs('#img-gen-model-grid');
         if (!$grid) return;
-        $grid.innerHTML = IMAGE_MODELS.map(m => {
+
+        const nsfwActive = _scene.nsfw !== 'sfw';
+
+        // Render filter tabs if not already present
+        if ($wrap && !qs('.img-model-filters', $wrap)) {
+            const $filters = document.createElement('div');
+            $filters.className = 'img-model-filters';
+            $filters.innerHTML = `
+                <button class="img-model-filter${_imgGenFilter==='all'?' img-model-filter--active':''}" data-filter="all">All</button>
+                <button class="img-model-filter${_imgGenFilter==='nsfw'?' img-model-filter--active':''}" data-filter="nsfw">NSFW</button>
+                <button class="img-model-filter${_imgGenFilter==='edit'?' img-model-filter--active':''}" data-filter="edit">Edit</button>
+            `;
+            $wrap.insertBefore($filters, $grid);
+            $filters.addEventListener('click', e => {
+                const btn = e.target.closest('[data-filter]');
+                if (!btn) return;
+                _imgGenFilter = btn.dataset.filter;
+                qsa('.img-model-filter', $filters).forEach(b => b.classList.toggle('img-model-filter--active', b.dataset.filter === _imgGenFilter));
+                _renderImgGenModelGrid();
+            });
+        } else if ($wrap) {
+            // Update active state on existing tabs
+            qsa('.img-model-filter', $wrap).forEach(b => b.classList.toggle('img-model-filter--active', b.dataset.filter === _imgGenFilter));
+        }
+
+        const filtered = IMAGE_MODELS.filter(m => {
+            if (_imgGenFilter === 'nsfw') return m.nsfw;
+            if (_imgGenFilter === 'edit') return m.img2img;
+            return true;
+        });
+
+        $grid.innerHTML = filtered.map(m => {
             const tagHtml = m.tags.map(t =>
                 `<span class="img-model-tag img-model-tag--${t}">${t}</span>`
             ).join('');
@@ -2652,13 +2697,15 @@ export function initUI() {
                 ? `<span class="img-model-sub img-model-sub--included" title="Included in nano-gpt subscription">SUB</span>`
                 : `<span class="img-model-sub img-model-sub--credits" title="Uses pay-per-use credits">CREDITS</span>`;
             const active = m.id === _imgGenModel ? ' img-model-card--active' : '';
-            return `<button class="img-model-card${active}" data-model="${esc(m.id)}" type="button" title="${esc(m.desc)}">
+            const nsfwWarning = nsfwActive && !m.nsfw ? ' img-model-card--no-nsfw' : '';
+            return `<button class="img-model-card${active}${nsfwWarning}" data-model="${esc(m.id)}" type="button" title="${esc(m.desc)}${nsfwActive && !m.nsfw ? ' — may not support explicit content' : ''}">
                 <div class="img-model-card__header">
                     <span class="img-model-card__label">${esc(m.label)}</span>
                     ${subBadge}
                 </div>
                 <span class="img-model-card__tags">${tagHtml}</span>
                 <span class="img-model-card__desc">${esc(m.desc)}</span>
+                ${nsfwActive && !m.nsfw ? '<span class="img-model-card__nsfw-warn">SFW only</span>' : ''}
             </button>`;
         }).join('');
 
@@ -2681,9 +2728,9 @@ export function initUI() {
         let prompt = qs('#img-gen-prompt', $modal)?.value.trim();
         if (!prompt) { showToast('Enter a prompt first', 'warn'); return; }
 
-        // Append negative homebrew if set
-        const negExtra = _sceneNegativeExtras();
-        if (negExtra) prompt = `${prompt} ### Negative: ${negExtra}`;
+        // Use persisted negative from last buildImagePrompt, overridable by the UI field
+        const negFromField = qs('#img-gen-negative-prompt', $modal)?.value.trim();
+        const negPrompt = negFromField || _imgGenNegative || '';
 
         const size = qs('#img-gen-size', $modal)?.value || '1024x1024';
         const seedRaw = qs('#img-gen-seed', $modal)?.value;
@@ -2697,7 +2744,7 @@ export function initUI() {
         try {
             _imgGenPrompt = prompt;
             _imgGenSeed   = seed;
-            const dataUrl = await generateImage({ model: _imgGenModel, prompt, size, seed });
+            const dataUrl = await generateImage({ model: _imgGenModel, prompt, negativePrompt: negPrompt, size, seed });
             _imgGenDataUrl = dataUrl;
 
             if ($prevImg) $prevImg.src = dataUrl;
@@ -2829,8 +2876,7 @@ export function initUI() {
 
         const charId    = state.activeBotId;
         const nsfw      = _sceneIsExplicit() || (state.config.flags?.injectAdult !== false);
-        const sceneHint = _sceneToExtras();
-        const userHint  = [$ta.value.trim(), sceneHint].filter(Boolean).join(', ');
+        const userHint  = $ta.value.trim();
 
         const origHtml = $btn.innerHTML;
         $btn.disabled = true;
@@ -2838,7 +2884,7 @@ export function initUI() {
         lucideRefresh($btn);
 
         try {
-            const prompt = await generateImagePromptWithLLM({ charId, userHint, includeNsfw: nsfw });
+            const prompt = await generateImagePromptWithLLM({ charId, userHint, scene: _scene, includeNsfw: nsfw });
             $ta.value = prompt;
             $ta.dispatchEvent(new Event('input'));
         } catch (err) {

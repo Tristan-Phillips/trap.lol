@@ -149,128 +149,176 @@ export const IMAGE_MODELS = [
 export const DEFAULT_MODEL = 'hidream';
 
 // ── Prompt Builder ────────────────────────────────────────────────────────────
-// Assembles the most accurate, detailed prompt possible from all available context.
+// Structured prompt assembly. Scene builder fields are injected into the exact
+// structural position that image models expect them — not dumped as a suffix.
+//
+// Output order: SUBJECT > PHYSICAL > CLOTHING/POSE > ACTION > ENVIRONMENT >
+//               LIGHTING > ADULT > SCENE CONTEXT > LORE > HOMEBREW > QUALITY
+//
+// Returns { positive, negative } — callers combine them as needed for each API.
 export function buildImagePrompt(opts = {}) {
     const {
-        charId          = state.activeBotId,
-        userAddition    = '',   // free text and scene-builder extras (comma-separated)
-        historyDepth    = 6,    // recent messages to pull scene context from
-        includeNsfw     = true,
-        nsfwLevel       = 'explicit', // 'sfw' | 'suggestive' | 'explicit' | 'unrestricted'
+        charId       = state.activeBotId,
+        scene        = {},           // scene builder state object from ui.js
+        userAddition = '',           // free-text addition (legacy / direct calls)
+        historyDepth = 6,
+        includeNsfw  = true,
+        nsfwLevel    = 'explicit',   // 'sfw'|'suggestive'|'explicit'|'unrestricted'
     } = opts;
 
     const char     = charId ? state.loadedCharacters[charId] : null;
-    const meta     = charId ? state.characters.find(c => c.id === charId) : null;
     const override = charId ? getCharOverride(charId) : {};
-    const charName = override.nickname || char?.name || 'character';
-    const userName = state.config.userName || 'User';
+    const charName = override.nickname || char?.name || 'a person';
 
-    const parts = [];
+    // Helper — resolve a scene group value (may be __custom__ → custom field)
+    const sv = (k) => {
+        const v = scene[k];
+        if (!v) return '';
+        if (v === '__custom__') return scene[`${k}Custom`] || '';
+        return v;
+    };
 
-    // 1. Scene context from recent history ─────────────────────────────────────
+    const pos = []; // positive prompt parts
+    const neg = []; // negative prompt parts
+
+    // ── 1. Primary subject (character name + physical) ────────────────────────
+    const physParts = [];
+    const addOv = (...fields) => fields.forEach(f => {
+        const v = override[f];
+        if (v && String(v).trim() && String(v).toLowerCase() !== 'n/a')
+            physParts.push(String(v).trim());
+    });
+    addOv('species', 'gender', 'age', 'height', 'bodyType', 'skinTone');
+    if (override.hairColor) physParts.push(`${override.hairColor}${override.hairStyle ? ` ${override.hairStyle}` : ''} hair`);
+    if (override.eyeColor)  physParts.push(`${override.eyeColor} eyes`);
+    addOv('faceShape', 'complexion', 'jawType', 'cheekbones', 'eyeShape', 'lipsType',
+          'distinctiveFeatures', 'tattoos', 'scarsMarks');
+
+    if (physParts.length) {
+        pos.push(`${charName}, ${physParts.join(', ')}`);
+    } else if (char?.description) {
+        pos.push(`${charName}, ${char.description.replace(/\s+/g, ' ').trim().slice(0, 180)}`);
+    } else {
+        pos.push(charName);
+    }
+
+    // ── 2. Clothing / outfit ──────────────────────────────────────────────────
+    const clothingParts = [];
+    const clothing = sv('clothing');
+    if (clothing) {
+        clothingParts.push(clothing);
+    } else {
+        // Fall back to character override outfit
+        const addSt = (...fields) => fields.forEach(f => {
+            const v = override[f];
+            if (v && String(v).trim()) clothingParts.push(String(v).trim());
+        });
+        addSt('outfitDescription', 'styleArchetype', 'colorPalette', 'signatureItem',
+              'footwear', 'jewelry', 'makeupStyle', 'headwear', 'eyewear');
+    }
+    if (clothingParts.length) pos.push(clothingParts.join(', '));
+
+    // ── 3. Body focus ─────────────────────────────────────────────────────────
+    const bodyFocus = sv('bodyFocus');
+    if (bodyFocus) pos.push(bodyFocus);
+
+    // ── 4. Pose / position ───────────────────────────────────────────────────
+    const pose = sv('pose');
+    if (pose) pos.push(pose);
+
+    // ── 5. Activity / action ─────────────────────────────────────────────────
+    const activity = sv('activity');
+    if (activity) pos.push(activity);
+
+    // ── 6. Expression ────────────────────────────────────────────────────────
+    const expr = sv('expr');
+    if (expr) pos.push(expr);
+
+    // ── 7. Camera / framing ──────────────────────────────────────────────────
+    const cam = sv('cam');
+    if (cam) pos.push(cam);
+
+    // ── 8. Partners / group indicators ───────────────────────────────────────
+    const partners = sv('partners');
+    if (partners) pos.push(partners);
+
+    // ── 9. Environment ───────────────────────────────────────────────────────
+    const env = sv('env');
+    if (env) {
+        pos.push(env);
+    } else {
+        const worldScenario = state.reality?.worldConfig?.scenario || '';
+        if (worldScenario) pos.push(worldScenario.replace(/\s+/g, ' ').trim().slice(0, 100));
+    }
+
+    // ── 10. Lighting / mood ──────────────────────────────────────────────────
+    const mood = sv('mood');
+    if (mood) pos.push(mood);
+
+    // ── 11. Art style ────────────────────────────────────────────────────────
+    const style = sv('style') || 'photorealistic';
+    pos.push(style);
+
+    // ── 12. Adult anatomy — only when NSFW and character has fields ──────────
+    if (includeNsfw && nsfwLevel !== 'sfw') {
+        const adultParts = [];
+        const addAd = (...fields) => fields.forEach(f => {
+            const v = override[f];
+            if (v && String(v).trim() && String(v).toLowerCase() !== 'n/a') adultParts.push(String(v).trim());
+        });
+        addAd('breastSize', 'breastShape', 'areolaeSize', 'nippleColor',
+              'penisSize', 'penisShape', 'buttocksSize', 'buttocksShape',
+              'bodyHair', 'genitalia', 'intimateMarkings', 'otherAdultFeatures');
+        if (adultParts.length) pos.push(adultParts.join(', '));
+
+        // NSFW content level tag
+        const nsfwTags = {
+            suggestive:   'suggestive, tasteful nudity, semi-explicit',
+            explicit:     'explicit, nsfw, uncensored, nude',
+            unrestricted: 'fully explicit, uncensored, no restrictions, maximally detailed adult scene',
+        };
+        pos.push(nsfwTags[nsfwLevel] || nsfwTags.explicit);
+    }
+
+    // ── 13. Scene context from chat history ──────────────────────────────────
     const recentHistory = state.history.slice(-historyDepth);
-    if (recentHistory.length) {
-        const lastBot = [...recentHistory].reverse().find(m => m.role === 'bot');
-        if (lastBot?.content) {
-            // Strip markdown/HTML, take the first 300 chars as scene anchor
-            const sceneText = lastBot.content
-                .replace(/<[^>]+>/g, '')
-                .replace(/\*{1,3}([^*]+)\*{1,3}/g, '$1')
-                .replace(/_([^_]+)_/g, '$1')
-                .replace(/\s+/g, ' ')
-                .trim()
-                .slice(0, 300);
-            if (sceneText) parts.push(`Scene: ${sceneText}`);
-        }
+    const lastBot = [...recentHistory].reverse().find(m => m.role === 'bot');
+    if (lastBot?.content) {
+        const sceneText = lastBot.content
+            .replace(/<[^>]+>/g, '')
+            .replace(/\*{1,3}([^*]+)\*{1,3}/g, '$1')
+            .replace(/_([^_]+)_/g, '$1')
+            .replace(/\s+/g, ' ').trim().slice(0, 200);
+        if (sceneText) pos.push(sceneText);
     }
 
-    // 2. World scenario / reality override ─────────────────────────────────────
-    const worldScenario = state.reality?.worldConfig?.scenario || state.config.groupScenario || '';
-    if (worldScenario) {
-        const brief = worldScenario.replace(/\s+/g, ' ').trim().slice(0, 150);
-        parts.push(`Setting: ${brief}`);
-    }
-
-    // 3. Character appearance ──────────────────────────────────────────────────
-    if (char) {
-        const appearanceParts = [];
-
-        // From override fields (most specific)
-        const addOv = (...fields) => {
-            fields.forEach(f => { if (override[f] && String(override[f]).trim()) appearanceParts.push(String(override[f]).trim()); });
-        };
-        addOv('species', 'gender', 'age', 'height', 'bodyType', 'skinTone');
-        if (override.hairColor) appearanceParts.push(`${override.hairColor} ${override.hairStyle || ''}`.trim() + ' hair');
-        if (override.eyeColor)  appearanceParts.push(`${override.eyeColor} eyes`);
-        addOv('distinctiveFeatures', 'posture', 'gait');
-
-        // From card description (fallback)
-        if (!appearanceParts.length && char.description) {
-            const brief = char.description.replace(/\s+/g, ' ').trim().slice(0, 200);
-            if (brief) appearanceParts.push(brief);
-        }
-
-        if (appearanceParts.length) {
-            parts.push(`${charName}: ${appearanceParts.join(', ')}`);
-        }
-
-        // Style / fashion
-        const styleParts = [];
-        const addSt = (...fields) => {
-            fields.forEach(f => { if (override[f] && String(override[f]).trim()) styleParts.push(String(override[f]).trim()); });
-        };
-        addSt('styleArchetype', 'outfitDescription', 'colorPalette', 'signatureItem', 'footwear', 'jewelry', 'makeupStyle');
-        if (styleParts.length) parts.push(`Outfit: ${styleParts.join(', ')}`);
-
-        // Adult physical (if nsfw allowed)
-        if (includeNsfw) {
-            const adultParts = [];
-            const addAd = (...fields) => {
-                fields.forEach(f => {
-                    const v = override[f];
-                    if (v && String(v).trim() && String(v).toLowerCase() !== 'n/a') adultParts.push(String(v).trim());
-                });
-            };
-            addAd('breastSize', 'breastShape', 'areolaeSize', 'nippleColor', 'penisSize', 'penisShape', 'buttocksSize', 'bodyHair', 'genitalia', 'otherAdultFeatures');
-            if (adultParts.length) parts.push(`Physical details: ${adultParts.join(', ')}`);
-        }
-    }
-
-    // 4. Active lorebook entries ───────────────────────────────────────────────
+    // ── 14. Active lorebook entries ──────────────────────────────────────────
     if (state.lorebooks?.length) {
-        const loreEntries = scanLorebooks(state.history, state.lorebooks, 5);
-        loreEntries.slice(0, 2).forEach(e => {
-            const brief = e.content.replace(/\s+/g, ' ').trim().slice(0, 120);
-            if (brief) parts.push(`World detail: ${brief}`);
+        scanLorebooks(state.history, state.lorebooks, 5).slice(0, 2).forEach(e => {
+            const brief = e.content.replace(/\s+/g, ' ').trim().slice(0, 100);
+            if (brief) pos.push(brief);
         });
     }
 
-    // 5. User addition (explicit direction from /image command) ────────────────
-    if (userAddition.trim()) {
-        parts.push(userAddition.trim());
-    }
+    // ── 15. Homebrew positive injection ──────────────────────────────────────
+    if (scene.positive?.trim()) pos.push(scene.positive.trim());
+    if (userAddition?.trim())   pos.push(userAddition.trim());
 
-    // 6. NSFW content gate ────────────────────────────────────────────────────
-    if (includeNsfw) {
-        const nsfwMap = {
-            suggestive:   'suggestive, tasteful nudity allowed, semi-explicit',
-            explicit:     'explicit adult content, NSFW, uncensored, explicit nudity',
-            unrestricted: 'fully uncensored, no restrictions, maximally explicit adult content, hyper-detailed genitals, raw explicit scene',
-        };
-        const nsfwTag = nsfwMap[nsfwLevel] || nsfwMap['explicit'];
-        if (nsfwLevel !== 'sfw') parts.push(nsfwTag);
-    }
+    // ── 16. Quality suffix ───────────────────────────────────────────────────
+    const qualityTags = nsfwLevel === 'unrestricted'
+        ? 'masterpiece, best quality, highly detailed, sharp focus, anatomically correct, 8k'
+        : 'masterpiece, best quality, highly detailed, sharp focus, cinematic lighting, 8k resolution, professional';
+    pos.push(qualityTags);
 
-    // 7. Technical quality suffix ──────────────────────────────────────────────
-    const qualitySuffix = [
-        'masterpiece', 'best quality', 'highly detailed', 'sharp focus',
-        '8k resolution', 'cinematic lighting', 'professional photograph',
-        'award winning composition', 'anatomically correct',
-    ].join(', ');
+    // ── Negative prompt ──────────────────────────────────────────────────────
+    const baseNeg = 'worst quality, low quality, blurry, deformed, ugly, bad anatomy, extra limbs, missing limbs, watermark, text, logo';
+    if (scene.negative?.trim()) neg.push(scene.negative.trim());
+    neg.push(baseNeg);
 
-    const rawPrompt = parts.join('. ').trim();
-    const subject = rawPrompt || charName || 'a person';
-    return `${subject}. ${qualitySuffix}`;
+    return {
+        positive: pos.filter(Boolean).join(', '),
+        negative: neg.join(', '),
+    };
 }
 
 // ── LLM-assisted prompt generation ───────────────────────────────────────────
@@ -286,6 +334,7 @@ export async function generateImagePromptWithLLM(opts = {}) {
     const {
         charId       = state.activeBotId,
         userHint     = '',
+        scene        = {},
         historyDepth = 8,
         includeNsfw  = true,
     } = opts;
@@ -368,6 +417,24 @@ export async function generateImagePromptWithLLM(opts = {}) {
         });
     }
 
+    // Scene builder selections
+    const sv = (k) => { const v = scene[k]; if (!v) return ''; if (v === '__custom__') return scene[`${k}Custom`] || ''; return v; };
+    const sceneSelections = [
+        sv('clothing') && `Clothing: ${sv('clothing')}`,
+        sv('pose')     && `Pose: ${sv('pose')}`,
+        sv('expr')     && `Expression: ${sv('expr')}`,
+        sv('env')      && `Environment: ${sv('env')}`,
+        sv('mood')     && `Lighting/mood: ${sv('mood')}`,
+        sv('style')    && `Art style: ${sv('style')}`,
+        sv('cam')      && `Camera: ${sv('cam')}`,
+        sv('bodyFocus')&& `Body focus: ${sv('bodyFocus')}`,
+        sv('activity') && `Activity: ${sv('activity')}`,
+        sv('partners') && `Partners: ${sv('partners')}`,
+        scene.nsfw && scene.nsfw !== 'sfw' && `NSFW level: ${scene.nsfw}`,
+        scene.positive?.trim() && `Additional visual details: ${scene.positive.trim()}`,
+    ].filter(Boolean);
+    if (sceneSelections.length) contextParts.push(`Scene builder selections:\n${sceneSelections.join('\n')}`);
+
     // User's additional direction
     if (userHint.trim()) contextParts.push(`User direction: ${userHint.trim()}`);
 
@@ -421,7 +488,7 @@ Rules:
 // ── Fetch generated image as a local data URL ─────────────────────────────────
 // Always converts to data URL immediately — URL format signs expire in ~1h,
 // so we download and cache locally the moment we get a response.
-export async function generateImage({ model, prompt, size = '1024x1024', seed, strength }) {
+export async function generateImage({ model, prompt, negativePrompt, size = '1024x1024', seed, strength }) {
     const apiKey = getApiKey();
     if (!apiKey) throw new Error('No API key configured.');
 
@@ -435,8 +502,9 @@ export async function generateImage({ model, prompt, size = '1024x1024', seed, s
         size,
         response_format: 'b64_json',  // inline — no second fetch, no CORS
     };
-    if (seed !== undefined && seed !== null) body.seed = seed;
-    if (strength !== undefined)             body.strength = strength;
+    if (seed !== undefined && seed !== null)           body.seed = seed;
+    if (strength !== undefined)                        body.strength = strength;
+    if (negativePrompt && negativePrompt.trim())       body.negative_prompt = negativePrompt.trim();
 
     const res = await fetch(API_BASE, {
         method:  'POST',

@@ -58,6 +58,50 @@
 /* ── Options row ── */
 .img-gen-opts { margin-top: 0; }
 
+/* ── Negative prompt textarea ── */
+.img-gen-neg-ta {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    border-color: rgba(251,191,36,0.2);
+}
+.img-gen-neg-ta:focus {
+    border-color: rgba(251,191,36,0.45);
+}
+
+/* ── Model wrap + filter tabs ── */
+.img-gen-model-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.img-model-filters {
+    display: flex;
+    gap: 4px;
+}
+.img-model-filter {
+    padding: 3px 10px;
+    font-size: 0.65rem;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    border: 1px solid var(--glass-border-mute);
+    border-radius: 4px;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.img-model-filter:hover {
+    border-color: var(--glass-border);
+    color: var(--text-main);
+}
+.img-model-filter--active {
+    border-color: var(--theme-accent);
+    color: var(--theme-accent);
+    background: rgba(var(--accent-rgb), 0.08);
+}
+
 /* ── Model grid ── */
 .img-gen-model-grid {
     display: grid;
@@ -134,6 +178,25 @@
     font-size: 0.62rem;
     color: var(--text-muted);
     line-height: 1.3;
+    margin-top: 2px;
+}
+
+/* NSFW-incompatible model dim state */
+.img-model-card--no-nsfw {
+    opacity: 0.5;
+    border-color: rgba(239,68,68,0.2);
+}
+.img-model-card--no-nsfw:hover {
+    opacity: 0.75;
+    border-color: rgba(239,68,68,0.4);
+}
+.img-model-card__nsfw-warn {
+    font-size: 0.55rem;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #f87171;
+    letter-spacing: 0.05em;
     margin-top: 2px;
 }
 
