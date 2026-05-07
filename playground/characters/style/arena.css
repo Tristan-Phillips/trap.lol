@@ -645,3 +645,11 @@
 }
 .input-container__send:hover { filter: brightness(1.2); box-shadow: 0 0 14px var(--theme-glow); }
 .input-container__send--stop { background: #ef4444; }
+
+/* ── Social feed arena ── */
+.arena--feed {
+    position: absolute;
+    inset: 0;
+    z-index: 50;
+    background: var(--bg-base);
+}

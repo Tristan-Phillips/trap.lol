@@ -3,6 +3,13 @@
    Sovereign Codex aesthetic: Dune × Arcane × cyberpunk terminal
    ═══════════════════════════════════════════════════════════════════════════ */
 
+/* ── Token aliases — bridge between glass variables and component CSS ── */
+:root {
+    --text-primary:   var(--text-main);
+    --text-secondary: var(--text-muted);
+    --bg-raised:      var(--bg-surface);
+}
+
 /* ── Global Hidden State ── */
 [hidden] { display: none !important; }
 

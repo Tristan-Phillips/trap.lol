@@ -20,6 +20,14 @@
     cursor: pointer;
 }
 
+/* ── Modal header icon+title row ── */
+.modal__header-icon-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.modal__header-icon-title svg { width: 16px; height: 16px; color: var(--theme-accent); }
+
 /* ── .modal__content — mirrors .modal__box; used by all modals in HTML ── */
 .modal__content {
     position: relative;
@@ -35,7 +43,9 @@
     overflow: hidden;
     box-shadow: 0 24px 80px rgba(0,0,0,0.8);
 }
-.modal__content--large { max-width: 720px; }
+.modal__content--large  { max-width: 720px; }
+.modal__content--sm     { max-width: 400px; }
+.modal__content--picker { max-width: 600px; }
 
 .modal__box {
     position: relative;
@@ -93,6 +103,12 @@
     scrollbar-color: var(--glass-border-mute) transparent;
 }
 .modal__body p { margin: 0; color: var(--text-muted); font-size: var(--text-sm); }
+.modal__body--form   { display: grid; gap: 12px; }
+.modal__body--picker { display: flex; flex-direction: column; gap: var(--space-sm); padding: var(--space-md); overflow: hidden; }
+
+/* Picker search bar variant (no icon offset) */
+.picker-search-bar { padding: 0 0 4px; }
+.picker-search-bar input { padding: 7px 10px; }
 
 .modal__footer-hint {
     margin-right: auto;

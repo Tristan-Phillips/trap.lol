@@ -66,6 +66,9 @@
 .btn-icon:hover { color: var(--text-main); background: rgba(255,255,255,0.08); }
 .btn-icon svg   { width: 15px; height: 15px; }
 .btn-icon--small svg { width: 13px; height: 13px; }
+@media (hover: hover) and (pointer: fine) {
+    .btn-icon--small { min-width: 28px; min-height: 28px; padding: 4px; }
+}
 .btn-icon--xs svg    { width: 11px; height: 11px; }
 .btn-icon--xs        { padding: 3px; }
 .btn-icon--danger:hover { color: #ef4444; }
@@ -149,3 +152,19 @@ body.roster-collapsed #roster-reveal-tab {
 
 /* Loading spinner */
 .spin { animation: spin 1.2s linear infinite; }
+
+/* ── Flex utilities ── */
+.btn--flex { flex: 1; }
+.config-row--flex {
+    display: flex;
+    gap: 6px;
+}
+
+/* ── Arena stack (wraps both arenas) ── */
+.arena-stack {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+}

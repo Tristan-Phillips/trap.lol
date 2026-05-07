@@ -56,6 +56,9 @@
 .modal__content--reality { max-width: 540px; }
 .reality-editor-body { display: flex; flex-direction: column; gap: 14px; }
 
+/* ── Lore Editor Modal ── */
+.lore-editor-body { display: flex; flex-direction: column; gap: 0; }
+
 #reinject-toggle-btn.has-pending { color: #fb923c; }
 #reinject-toggle-btn.tray-open   { color: #fb923c; }
 

@@ -317,3 +317,229 @@ input:checked + .toggle-switch__slider::before        { transform: translateX(16
 }
 .flag-toggle input { cursor: pointer; accent-color: var(--theme-accent); }
 .flag-toggle:hover { color: var(--text-main); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SLASH COMMAND SYSTEM
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Autocomplete Dropdown ── */
+.cmd-autocomplete {
+    position: absolute;
+    bottom: calc(100% + 4px);
+    left: 0; right: 0;
+    z-index: 300;
+    background: rgba(10,6,18,0.97);
+    border: 1px solid rgba(var(--accent-rgb), 0.25);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 -12px 40px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04);
+    backdrop-filter: blur(20px);
+    animation: cmdAcIn 0.1s ease;
+    max-height: 280px;
+    overflow-y: auto;
+    scrollbar-width: none;
+}
+@keyframes cmdAcIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.cmd-ac-item {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    width: 100%;
+    padding: 9px 14px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.1s;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.cmd-ac-item:last-child { border-bottom: none; }
+.cmd-ac-item:hover,
+.cmd-ac-item--active { background: rgba(var(--accent-rgb), 0.1); }
+.cmd-ac-cmd {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--theme-accent);
+    flex-shrink: 0;
+}
+.cmd-ac-args {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+.cmd-ac-desc {
+    font-size: 0.72rem;
+    color: rgba(255,255,255,0.45);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ── System / Command Messages ── */
+.message--system {
+    padding: 4px var(--space-md);
+    display: flex;
+    justify-content: center;
+}
+.message__system-inner {
+    display: inline-flex;
+    align-items: flex-start;
+    gap: 6px;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 8px;
+    padding: 6px 12px;
+    max-width: 100%;
+    line-height: 1.5;
+}
+.message__system-label {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--theme-accent);
+    opacity: 0.7;
+    flex-shrink: 0;
+    padding-top: 1px;
+}
+
+/* ── OOC message ── */
+.cmd-ooc {
+    font-style: italic;
+    color: rgba(255,255,255,0.55);
+}
+.cmd-ooc strong {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #fb923c;
+    font-style: normal;
+    margin-right: 4px;
+}
+
+/* ── /as message ── */
+.cmd-as strong {
+    color: var(--text-main);
+    font-size: 0.78rem;
+}
+.cmd-as { color: var(--text-muted); font-size: 0.78rem; }
+
+/* ── /scene beat ── */
+.cmd-scene {
+    font-style: italic;
+    color: rgba(var(--accent-rgb), 0.8);
+    font-size: 0.75rem;
+    font-family: var(--font-sans);
+}
+
+/* ── /mood / /pov / /persona / /remember directives ── */
+.cmd-directive {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+}
+.cmd-directive i { width: 12px; height: 12px; color: var(--theme-accent); opacity: 0.8; }
+.cmd-directive em { color: var(--text-main); font-style: normal; }
+.cmd-directive strong { color: var(--text-main); }
+
+/* ── /summary output ── */
+.cmd-summary {
+    width: 100%;
+    max-width: 560px;
+}
+.cmd-summary__label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--theme-accent);
+    margin-bottom: 8px;
+    opacity: 0.8;
+}
+.cmd-summary__label i { width: 11px; height: 11px; }
+.cmd-summary__body {
+    font-size: 0.78rem;
+    color: var(--text-main);
+    line-height: 1.7;
+}
+.cmd-summary__body p { margin: 0 0 8px; }
+.cmd-summary__body p:last-child { margin-bottom: 0; }
+
+/* ── /compact output ── */
+.cmd-compact {
+    width: 100%;
+    max-width: 560px;
+}
+.cmd-compact__label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #fb923c;
+    margin-bottom: 6px;
+    opacity: 0.85;
+}
+.cmd-compact__label i { width: 11px; height: 11px; }
+.cmd-compact__preview {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    line-height: 1.55;
+    font-style: italic;
+    border-left: 2px solid rgba(251,146,60,0.3);
+    padding-left: 8px;
+}
+
+/* ── /help table ── */
+.cmd-help {
+    width: 100%;
+    max-width: 520px;
+}
+.cmd-help__header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--theme-accent);
+    margin-bottom: 8px;
+    opacity: 0.8;
+}
+.cmd-help__header i { width: 11px; height: 11px; }
+.cmd-help__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.72rem;
+}
+.cmd-help__table td { padding: 3px 8px 3px 0; vertical-align: top; }
+.cmd-help__cmd {
+    font-family: var(--font-mono);
+    color: var(--theme-accent);
+    white-space: nowrap;
+    padding-right: 12px !important;
+}
+.cmd-help__arg {
+    color: var(--text-muted);
+    font-size: 0.65rem;
+}
+.cmd-help__desc { color: rgba(255,255,255,0.5); }
+
+/* ── Input container: relative for autocomplete positioning ── */
+.input-container { position: relative; }

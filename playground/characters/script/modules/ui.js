@@ -17,6 +17,7 @@ import {
     addReaction, getReactions, exportSessionJson, importSessionJson
 } from './state.js';
 import { buildPayload, streamCompletion } from './llm-engine.js';
+import { parseCommand, executeCommand, filterCommands, COMMANDS } from './commands.js';
 import { addBook, removeBook, addEntry, updateEntry, removeEntry, createBook } from './lorebook.js';
 import { parseCharacterCard, buildCard, normalizeData } from './parser-v2.js';
 import { getApiKey, setApiKey, clearApiKey, isValidKeyFormat, restoreKeyFromCookie } from '../../../../glass/script/modules/llm-auth.js';
@@ -139,14 +140,6 @@ function isEmoji(str) {
     return !/[/.:]/.test(str) && /\p{Emoji_Presentation}/u.test(str);
 }
 
-function renderMediaHtml(src, className = '', alt = 'Post') {
-    if (!src) return `<div class="${className} media--empty"></div>`;
-    if (isEmoji(src)) {
-        return `<div class="${className} media--emoji" style="display:flex;align-items:center;justify-content:center;background:rgba(var(--accent-rgb),0.1);font-size:2rem;aspect-ratio:1/1;">${src}</div>`;
-    }
-    return `<img src="${esc(src)}" alt="${esc(alt)}" loading="lazy" class="${className}" style="width:100%;height:auto;display:block;">`;
-}
-
 // ── Avatar resolver cache ─────────────────────────────────────────────────────
 const _avatarCache = {};
 async function getAvatarUrl(charId, stored) {
@@ -163,13 +156,13 @@ function getAvatarUrlSync(charId, stored) {
     return _avatarCache[charId] || null;
 }
 
-window.buildAvatarHtml = function(av, className = '', extraAttr = '') {
+function buildAvatarHtml(av, className = '', extraAttr = '') {
     if (!av) return `<div class="${className} avatar--emoji" ${extraAttr}>👤</div>`;
     if (isEmoji(av)) {
         return `<div class="${className} avatar--emoji" ${extraAttr}>${av}</div>`;
     }
     return `<div class="${className}" style="background-image:url('${esc(av)}')" ${extraAttr}></div>`;
-};
+}
 
 // ── Markdown Renderer ─────────────────────────────────────────────────────────
 // RP text layer detection — logic-based, no codes required from the LLM.
@@ -774,8 +767,6 @@ export function initUI() {
         _pickerMode = 'dm';
         openCharPicker();
     });
-
-    // Removed the old session select event listeners
 
     // ── API Key ───────────────────────────────────────────────────────────────
     const $apiInput  = qs('#api-key-input');
@@ -3335,6 +3326,83 @@ export function initUI() {
         ensureAndRenderProfile();
     }
 
+    // ── System / Command Message Renderer ────────────────────────────────────
+    function appendSystemMessage(html, { raw = false, label = 'System', replaceThread = false } = {}) {
+        const $t = qs('#message-thread');
+        if (!$t) return;
+        if (replaceThread) {
+            // Re-render full thread after a compact operation
+            $t.innerHTML = '';
+            state.history.forEach(m => {
+                if (m._isAnchor) {
+                    appendSystemMessage(
+                        `<div class="cmd-compact"><div class="cmd-compact__label"><i data-lucide="archive"></i> Story Anchor</div><div class="cmd-compact__preview">${esc(m.content.replace(/^\[STORY ANCHOR[^\]]*\]\n/, ''))}</div></div>`,
+                        { raw: true, label: 'Anchor' }
+                    );
+                } else {
+                    const char   = m.botId ? state.loadedCharacters[m.botId] : null;
+                    const meta   = m.botId ? state.characters.find(c => c.id === m.botId) : null;
+                    const rawAv  = meta?.avatar_path || char?.avatar || null;
+                    const av     = rawAv ? getAvatarUrlSync(m.botId, rawAv) : null;
+                    appendMessage(m, null, av);
+                }
+            });
+            lucideRefresh($t);
+            return;
+        }
+        const $el = document.createElement('div');
+        $el.className = 'message message--system';
+        if (raw) {
+            $el.innerHTML = `<div class="message__system-inner">${html}</div>`;
+        } else {
+            $el.innerHTML = `<div class="message__system-inner"><span class="message__system-label">${esc(label)}</span> ${html}</div>`;
+        }
+        $t.appendChild($el);
+        lucideRefresh($el);
+        $t.scrollTop = $t.scrollHeight;
+    }
+
+    // ── Slash Command Autocomplete ────────────────────────────────────────────
+    const $cmdAc = qs('#cmd-autocomplete');
+    let _acIndex = -1;
+
+    function updateAutocomplete(val) {
+        if (!$cmdAc) return;
+        const matches = filterCommands(val.trimStart());
+        if (!matches.length || !val.startsWith('/') || val.includes(' ')) {
+            $cmdAc.hidden = true;
+            return;
+        }
+        $cmdAc.innerHTML = matches.map((c, i) =>
+            `<button class="cmd-ac-item${i === _acIndex ? ' cmd-ac-item--active' : ''}" data-cmd="${esc(c.cmd)}" type="button">
+                <span class="cmd-ac-cmd">${esc(c.cmd)}</span>
+                ${c.args ? `<span class="cmd-ac-args">${esc(c.args)}</span>` : ''}
+                <span class="cmd-ac-desc">${esc(c.desc)}</span>
+            </button>`
+        ).join('');
+        $cmdAc.hidden = false;
+    }
+
+    $cmdAc?.addEventListener('click', e => {
+        const btn = e.target.closest('.cmd-ac-item');
+        if (!btn) return;
+        const $ta = qs('#rp-input');
+        if (!$ta) return;
+        $ta.value = btn.dataset.cmd + ' ';
+        $ta.dispatchEvent(new Event('input'));
+        $ta.focus();
+        $cmdAc.hidden = true;
+        _acIndex = -1;
+    });
+
+    // Close autocomplete when clicking outside the input container
+    document.addEventListener('click', e => {
+        if ($cmdAc && !$cmdAc.hidden && !e.target.closest('.input-container')) {
+            $cmdAc.hidden = true;
+            _acIndex = -1;
+        }
+    }, true);
+
     // ── Streaming Bot Response ────────────────────────────────────────────────
     async function triggerBotResponse(botId, pendingReinject = '') {
         const char = state.loadedCharacters[botId];
@@ -3517,9 +3585,43 @@ export function initUI() {
         $textarea.style.height = Math.min($textarea.scrollHeight, 200) + 'px';
         const est = Math.ceil($textarea.value.length / 4);
         if ($tokenEst) $tokenEst.textContent = est > 10 ? `~${est} tokens` : '';
+        _acIndex = -1;
+        updateAutocomplete($textarea.value);
     });
 
     $textarea?.addEventListener('keydown', e => {
+        // Arrow navigation for autocomplete
+        if ($cmdAc && !$cmdAc.hidden) {
+            const items = qsa('.cmd-ac-item', $cmdAc);
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                _acIndex = Math.min(_acIndex + 1, items.length - 1);
+                items.forEach((el, i) => el.classList.toggle('cmd-ac-item--active', i === _acIndex));
+                return;
+            }
+            if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                _acIndex = Math.max(_acIndex - 1, -1);
+                items.forEach((el, i) => el.classList.toggle('cmd-ac-item--active', i === _acIndex));
+                return;
+            }
+            if ((e.key === 'Tab' || e.key === 'Enter') && _acIndex >= 0) {
+                e.preventDefault();
+                const active = items[_acIndex];
+                if (active) {
+                    $textarea.value = active.dataset.cmd + ' ';
+                    $textarea.dispatchEvent(new Event('input'));
+                    $cmdAc.hidden = true;
+                    _acIndex = -1;
+                }
+                return;
+            }
+            if (e.key === 'Escape') {
+                $cmdAc.hidden = true;
+                _acIndex = -1;
+                return;
+            }
+        }
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             $form?.requestSubmit();
@@ -3545,9 +3647,48 @@ export function initUI() {
         const text = $textarea.value.trim();
         if (!text) return;
 
+        // ── Slash command intercept ───────────────────────────────────────────
+        if (text.startsWith('/')) {
+            $textarea.value = '';
+            $textarea.style.height = 'auto';
+            if ($tokenEst) $tokenEst.textContent = '';
+            if ($cmdAc) $cmdAc.hidden = true;
+            qs('#arena-welcome')?.remove();
+
+            const result = await executeCommand(text, {
+                triggerBotResponse,
+                appendSystemMessage,
+                showToast,
+                syncConfigUI
+            });
+
+            if (result?.handled) {
+                // /scene and /mood may want to queue a reinject and optionally fire bot
+                if (result.reinject) {
+                    const $ta = qs('#rp-input');
+                    if ($ta) $ta.dataset.pendingReinject = result.reinject;
+                    updateReinjectUI();
+                    qsa('.reinject-btn').forEach(b => b.classList.add('reinject-btn--active'));
+                }
+                if (result.triggerResponse && state.activeBotId) {
+                    const ri = result.reinject || '';
+                    if ($textarea.dataset.pendingReinject) delete $textarea.dataset.pendingReinject;
+                    updateReinjectUI();
+                    qsa('.reinject-btn').forEach(b => b.classList.remove('reinject-btn--active'));
+                    await triggerBotResponse(state.activeBotId, ri);
+                }
+                $textarea.focus();
+                return;
+            }
+            // Unknown command already showed a toast; bail out
+            $textarea.focus();
+            return;
+        }
+
         $textarea.value = '';
         $textarea.style.height = 'auto';
         if ($tokenEst) $tokenEst.textContent = '';
+        if ($cmdAc) $cmdAc.hidden = true;
 
         // Remove welcome screen
         qs('#arena-welcome')?.remove();
@@ -3718,7 +3859,6 @@ export function initUI() {
         set('maxctx-input',    c.maxContext);          setBadge('maxctx-val',    c.maxContext);
         set('maxout-input',    c.maxOutput);           setBadge('maxout-val',    c.maxOutput);
         set('sys-directive',   c.sysDirective);
-        set('group-scenario-input', c.groupScenario);
         set('authors-note',    c.authorsNote);
         set('nsfw-bypass',     c.nsfwBypass);
         set('user-name-input',    c.userName);
