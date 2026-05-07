@@ -470,16 +470,15 @@ export function initUI() {
             ? (_scenarioPresets.find(s => s.id === preset)?.scenario || '')
             : '';
         newReality(name);
-        if (scenario) {
-            const r = state.reality;
-            if (!r.worldConfig) r.worldConfig = { scenario: '', activeLorebooks: [] };
-            r.worldConfig.scenario = scenario;
-            saveState();
-        }
+        const r = state.reality;
+        if (!r.worldConfig) r.worldConfig = { scenario: '', activeLorebooks: [] };
+        if (scenario) r.worldConfig.scenario = scenario;
+        saveState();
         hideModal('modal-new-reality');
         renderRealities();
         renderAll();
-        showToast(`Continuity "${name}" created`, 'info', 2000);
+        // Open full editor so user can set universals for this new continuity
+        openRealityEditor();
     });
 
     qs('#new-reality-name')?.addEventListener('keydown', e => {
@@ -536,30 +535,208 @@ export function initUI() {
         $ta.value = preset.scenario;
     });
 
-    // Pre-select the matching preset when the editor opens
-    qs('#reality-config')?.addEventListener('click', () => {
-        const r = state.reality;
-        qs('#reality-name-input').value     = r.name;
-        qs('#reality-scenario-input').value = r.worldConfig?.scenario || '';
-        // Try to match current scenario to a preset
+    // ── Reality Editor tab switching ──────────────────────────────────────────
+    qsa('.re-tab').forEach((tab, i) => {
+        tab.addEventListener('click', () => {
+            qsa('.re-tab').forEach((t, j) => {
+                t.classList.toggle('active', j === i);
+                t.setAttribute('aria-selected', j === i ? 'true' : 'false');
+            });
+            qsa('.re-panel').forEach((p, j) => {
+                p.classList.toggle('active', j === i);
+                p.hidden = j !== i;
+            });
+            const $panel = qsa('.re-panel')[i];
+            if ($panel) lucideRefresh($panel);
+        });
+    });
+
+    // Populate model select in Reality Editor from the global model select
+    function _rePopulateModelSelect() {
+        const $gmsel = qs('#model-select');
+        const $rmsel = qs('#re-model-select');
+        if ($rmsel && $gmsel) {
+            $rmsel.innerHTML = '<option value="">— Use global default —</option>'
+                + $gmsel.innerHTML.replace(/<option value="">[^<]*<\/option>/gi, '');
+        }
+    }
+
+    // Wire live-update badges for generation sliders
+    function _reWireSlider(sliderId, badgeId, formatter) {
+        const $sl  = qs(`#${sliderId}`);
+        const $val = qs(`#${badgeId}`);
+        if (!$sl || !$val) return;
+        $sl.addEventListener('input', () => { $val.textContent = formatter($sl.value); });
+    }
+    _reWireSlider('re-temp-input',   're-temp-val',   v => parseFloat(v).toFixed(2));
+    _reWireSlider('re-maxout-input', 're-maxout-val', v => v);
+    _reWireSlider('re-maxctx-input', 're-maxctx-val', v => v);
+    _reWireSlider('re-lore-input',   're-lore-val',   v => v);
+
+    // Open Reality Editor — populate all tabs from current reality
+    function openRealityEditor() {
+        const r  = state.reality;
+        const rc = r.config || {};
+        const flags = rc.flags || {};
+
+        // Reset to first tab
+        qsa('.re-tab').forEach((t, i) => {
+            t.classList.toggle('active', i === 0);
+            t.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
+        });
+        qsa('.re-panel').forEach((p, i) => {
+            p.classList.toggle('active', i === 0);
+            p.hidden = i !== 0;
+        });
+
+        // World tab
+        const $nameInput = qs('#reality-name-input');
+        if ($nameInput) $nameInput.value = r.name;
+        const $scenInput = qs('#reality-scenario-input');
+        if ($scenInput) $scenInput.value = r.worldConfig?.scenario || '';
         const $sel = qs('#reality-scenario-preset-select');
         if ($sel && _scenarioPresets.length) {
             const current = (r.worldConfig?.scenario || '').trim();
-            const match = _scenarioPresets.find(s => s.scenario && s.scenario.trim() === current);
-            $sel.value = match ? match.id : (current ? 'custom' : 'blank');
+            const match   = _scenarioPresets.find(s => s.scenario && s.scenario.trim() === current);
+            $sel.value    = match ? match.id : (current ? 'custom' : 'blank');
         }
+
+        // Badge = reality name
+        const $badge = qs('#re-name-badge');
+        if ($badge) $badge.textContent = r.name;
+
+        // Persona tab — populate preset select then restore current values
+        _ensurePersonasLoaded().then(() => {
+            _populatePersonaSelect(qs('#re-persona-preset'), { blankLabel: '— Custom / None —' });
+            // Try to match current persona to a preset
+            const $psel = qs('#re-persona-preset');
+            if ($psel && _personaPresets.length) {
+                const curName = (rc.userName || '').trim();
+                const curBio  = (rc.userPersona || '').trim();
+                const match   = curBio
+                    ? _personaPresets.find(p => p.userPersona?.trim() === curBio)
+                    : (curName ? _personaPresets.find(p => p.userName?.trim() === curName) : null);
+                $psel.value = match ? match.id : 'blank';
+            }
+        });
+        const $uname = qs('#re-user-name');
+        const $upers = qs('#re-user-persona');
+        if ($uname) $uname.value = rc.userName || '';
+        if ($upers) $upers.value = rc.userPersona || '';
+
+        // Generation tab
+        _rePopulateModelSelect();
+        const $rmsel = qs('#re-model-select');
+        if ($rmsel) $rmsel.value = rc.model || '';
+
+        const setSlider = (id, badgeId, val, fmt) => {
+            const $sl = qs(`#${id}`);
+            const $b  = qs(`#${badgeId}`);
+            if ($sl) $sl.value = val;
+            if ($b)  $b.textContent = fmt(val);
+        };
+        setSlider('re-temp-input',   're-temp-val',   rc.temperature  ?? 0.80, v => parseFloat(v).toFixed(2));
+        setSlider('re-maxout-input', 're-maxout-val', rc.maxOutput    ?? 512,  v => v);
+        setSlider('re-maxctx-input', 're-maxctx-val', rc.maxContext   ?? 8192, v => v);
+        setSlider('re-lore-input',   're-lore-val',   rc.lorebookScanDepth ?? 5, v => v);
+
+        const $ctxStrat = qs('#re-context-strategy');
+        if ($ctxStrat) $ctxStrat.value = rc.contextStrategy || 'sliding';
+
+        // Flags tab
+        const flagMap = {
+            'injectConsistency':   're-flag-injectConsistency',
+            'injectAppearance':    're-flag-injectAppearance',
+            'injectPersonality':   're-flag-injectPersonality',
+            'injectVoice':         're-flag-injectVoice',
+            'injectStyle':         're-flag-injectStyle',
+            'injectSliders':       're-flag-injectSliders',
+            'injectAdult':         're-flag-injectAdult',
+            'injectAIDirectives':  're-flag-injectAIDirectives',
+            'impersonationBlock':  're-flag-impersonationBlock',
+            'povFirst':            're-flag-povFirst',
+            'jailbreakResistance': 're-flag-jailbreakResistance',
+            'showThoughts':        're-flag-showThoughts',
+        };
+        Object.entries(flagMap).forEach(([key, elId]) => {
+            const $cb = qs(`#${elId}`);
+            if ($cb) $cb.checked = flags[key] ?? true;
+        });
+
+        const $sysDir = qs('#re-sys-directive');
+        const $anote  = qs('#re-authors-note');
+        if ($sysDir) $sysDir.value = rc.sysDirective || '';
+        if ($anote)  $anote.value  = rc.authorsNote   || '';
+
         showModal('modal-reality-editor');
-    });
+        lucideRefresh(qs('#modal-reality-editor'));
+    }
+
+    qs('#reality-config')?.addEventListener('click', openRealityEditor);
 
     qs('#reality-save-btn')?.addEventListener('click', () => {
-        const r = state.reality;
-        r.name = qs('#reality-name-input').value.trim() || r.name;
+        const r  = state.reality;
+        const rc = r.config;
+
+        // World
+        r.name = qs('#reality-name-input')?.value.trim() || r.name;
         if (!r.worldConfig) r.worldConfig = { scenario: '', activeLorebooks: [] };
-        r.worldConfig.scenario = qs('#reality-scenario-input').value.trim();
+        r.worldConfig.scenario = qs('#reality-scenario-input')?.value.trim() || '';
+
+        // Persona
+        rc.userName    = qs('#re-user-name')?.value.trim()  || 'User';
+        rc.userPersona = qs('#re-user-persona')?.value.trim() || '';
+
+        // Generation
+        const modelVal = qs('#re-model-select')?.value || '';
+        rc.model = modelVal;
+        rc.temperature       = parseFloat(qs('#re-temp-input')?.value   || 0.80);
+        rc.maxOutput         = parseInt(qs('#re-maxout-input')?.value    || 512,  10);
+        rc.maxContext        = parseInt(qs('#re-maxctx-input')?.value    || 8192, 10);
+        rc.lorebookScanDepth = parseInt(qs('#re-lore-input')?.value      || 5,    10);
+        rc.contextStrategy   = qs('#re-context-strategy')?.value         || 'sliding';
+
+        // Flags
+        const flagMap = {
+            'injectConsistency':   're-flag-injectConsistency',
+            'injectAppearance':    're-flag-injectAppearance',
+            'injectPersonality':   're-flag-injectPersonality',
+            'injectVoice':         're-flag-injectVoice',
+            'injectStyle':         're-flag-injectStyle',
+            'injectSliders':       're-flag-injectSliders',
+            'injectAdult':         're-flag-injectAdult',
+            'injectAIDirectives':  're-flag-injectAIDirectives',
+            'impersonationBlock':  're-flag-impersonationBlock',
+            'povFirst':            're-flag-povFirst',
+            'jailbreakResistance': 're-flag-jailbreakResistance',
+            'showThoughts':        're-flag-showThoughts',
+        };
+        if (!rc.flags) rc.flags = {};
+        Object.entries(flagMap).forEach(([key, elId]) => {
+            const $cb = qs(`#${elId}`);
+            if ($cb) rc.flags[key] = $cb.checked;
+        });
+
+        rc.sysDirective = qs('#re-sys-directive')?.value.trim() || '';
+        rc.authorsNote  = qs('#re-authors-note')?.value.trim()  || '';
+
         saveState();
         renderRealities();
+        syncConfigUI();
         hideModal('modal-reality-editor');
-        showToast('Continuity saved', 'info', 1600);
+        showToast(`Continuity "${r.name}" saved`, 'info', 1800);
+    });
+
+    // Reality Editor persona preset → fill name + bio fields
+    qs('#re-persona-preset')?.addEventListener('change', e => {
+        const id = e.target.value;
+        if (!id || id === 'blank') return;
+        const entry = _personaPresets.find(p => p.id === id);
+        if (!entry) return;
+        const $n = qs('#re-user-name');
+        const $b = qs('#re-user-persona');
+        if ($n && entry.userName    != null) $n.value = entry.userName;
+        if ($b && entry.userPersona != null) $b.value = entry.userPersona;
     });
 
     qs('#reality-editor-close')?.addEventListener('click',  () => hideModal('modal-reality-editor'));
@@ -1030,11 +1207,9 @@ export function initUI() {
     });
 
     function _tsPopulatePersonaSelect() {
-        const $psel = qs('#ts-persona-preset');
-        if (!$psel || !_personaPresets.length) return;
-        $psel.innerHTML = '<option value="blank">— Inherit from Reality —</option>'
-            + _personaPresets.filter(p => p.id !== 'blank').map(p =>
-                `<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('');
+        _ensurePersonasLoaded().then(() => {
+            _populatePersonaSelect(qs('#ts-persona-preset'), { blankLabel: '— Inherit from Reality —' });
+        });
     }
 
     // Inherit toggle → enable/disable sliders; badge shows override value when unchecked
@@ -4610,37 +4785,45 @@ export function initUI() {
 
     // ── Persona Presets ───────────────────────────────────────────────────────
     let _personaPresets = [];
+    let _personaLoadPromise = null;
 
+    // Loads personas.json once; returns promise that resolves when cache is ready
+    function _ensurePersonasLoaded() {
+        if (_personaLoadPromise) return _personaLoadPromise;
+        _personaLoadPromise = fetch('./data/personas.json')
+            .then(r => r.json())
+            .then(data => { _personaPresets = data.personas || []; })
+            .catch(() => { _personaPresets = []; });
+        return _personaLoadPromise;
+    }
+
+    // Populate any persona <select> with the standard blank option + all presets
+    function _populatePersonaSelect($sel, { blankLabel = '— Custom / None —', includeBlank = true } = {}) {
+        if (!$sel) return;
+        const opts = [];
+        if (includeBlank) opts.push(`<option value="blank">${esc(blankLabel)}</option>`);
+        opts.push(..._personaPresets
+            .filter(p => p.id !== 'blank')
+            .map(p => `<option value="${esc(p.id)}">${esc(p.name)}</option>`));
+        $sel.innerHTML = opts.join('');
+    }
+
+    // Config-panel persona preset (writes directly to reality config)
     async function loadPersonaPresets() {
+        await _ensurePersonasLoaded();
         const $sel = qs('#persona-preset-select');
         if (!$sel) return;
-        if (_personaPresets.length) {
-            // Already loaded — just re-populate the select (DOM may have been re-rendered)
-            $sel.innerHTML = _personaPresets.map(p =>
-                `<option value="${esc(p.id)}">${esc(p.name)}</option>`
-            ).join('');
-            return;
-        }
-        try {
-            const res  = await fetch('./data/personas.json');
-            const data = await res.json();
-            _personaPresets = data.personas || [];
-            $sel.innerHTML = _personaPresets.map(p =>
-                `<option value="${esc(p.id)}">${esc(p.name)}</option>`
-            ).join('');
-            $sel.addEventListener('change', () => {
-                const id = $sel.value;
-                if (!id || id === 'blank') return;
-                const entry = _personaPresets.find(p => p.id === id);
-                if (!entry) return;
-                const $name = qs('#user-name-input');
-                const $bio  = qs('#user-persona-input');
-                if ($name) { $name.value = entry.userName; setConfig({ userName: entry.userName }); }
-                if ($bio)  { $bio.value  = entry.userPersona; setConfig({ userPersona: entry.userPersona }); }
-            }, { once: true });
-        } catch {
-            $sel.innerHTML = '<option value="">— None —</option>';
-        }
+        _populatePersonaSelect($sel, { blankLabel: '— Custom / None —' });
+        $sel.addEventListener('change', () => {
+            const id = $sel.value;
+            if (!id || id === 'blank') return;
+            const entry = _personaPresets.find(p => p.id === id);
+            if (!entry) return;
+            const $name = qs('#user-name-input');
+            const $bio  = qs('#user-persona-input');
+            if ($name) { $name.value = entry.userName;    setConfig({ userName:    entry.userName    }); }
+            if ($bio)  { $bio.value  = entry.userPersona; setConfig({ userPersona: entry.userPersona }); }
+        });
     }
 
     // Load models
@@ -5214,6 +5397,8 @@ export function initUI() {
     });
 
     // ── Initial Render ────────────────────────────────────────────────────────
+    // Kick off persona + scenario fetches immediately (parallel with manifest)
+    _ensurePersonasLoaded();
     loadManifest().then(() => {
         renderAll();
         initChatBackground();

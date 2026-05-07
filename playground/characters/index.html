@@ -7,7 +7,7 @@
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2306040A'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%23ef4444' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23ef4444'/%3E%3C/svg%3E" />
     <link rel="stylesheet" href="../../glass/style/style.css">
     <link rel="stylesheet" href="./style/style.css?v=62">
-    <link rel="stylesheet" href="./style/char-editor.css?v=5">
+    <link rel="stylesheet" href="./style/char-editor.css?v=7">
 </head>
 <body class="underdark-page">
 
@@ -583,38 +583,161 @@
   </div>
 </div>
 
-<div id="modal-reality-editor" class="modal" hidden>
-  <div class="modal__backdrop" data-close></div>
-  <div class="modal__content modal__content--reality">
-    <header class="modal__header">
-      <div class="modal__header-icon-title">
-        <i data-lucide="globe-2"></i>
-        <h3>Continuity Config</h3>
+<div id="modal-reality-editor" class="modal ts-modal" hidden role="dialog" aria-modal="true" aria-labelledby="re-title">
+  <div class="modal__backdrop ts-backdrop"></div>
+  <div class="ts-studio ts-studio--reality">
+
+    <!-- Header -->
+    <header class="ts-header">
+      <div class="ts-header__left">
+        <i data-lucide="globe-2" class="ts-header__icon"></i>
+        <h2 id="re-title" class="ts-header__title">Continuity Config</h2>
+        <span id="re-name-badge" class="ts-badge"></span>
       </div>
-      <button id="reality-editor-close" class="btn-icon"><i data-lucide="x"></i></button>
+      <button id="reality-editor-close" class="ce-btn ce-btn--ghost ce-btn--icon" aria-label="Close"><i data-lucide="x"></i></button>
     </header>
-    <div class="modal__body reality-editor-body">
-      <div class="config-group">
-        <label>Continuity Name</label>
-        <input type="text" id="reality-name-input" class="control-input" placeholder="Name this reality…">
+
+    <!-- Tab nav -->
+    <nav class="ts-tabs" role="tablist">
+      <button class="ts-tab re-tab active" data-re-tab="world" role="tab" aria-selected="true"><i data-lucide="globe-2"></i> World</button>
+      <button class="ts-tab re-tab" data-re-tab="persona" role="tab" aria-selected="false"><i data-lucide="user-cog"></i> Persona</button>
+      <button class="ts-tab re-tab" data-re-tab="generation" role="tab" aria-selected="false"><i data-lucide="sliders-horizontal"></i> Generation</button>
+      <button class="ts-tab re-tab" data-re-tab="flags" role="tab" aria-selected="false"><i data-lucide="toggle-right"></i> Flags</button>
+    </nav>
+
+    <!-- Body -->
+    <div class="ts-body">
+
+      <!-- ── TAB: World ── -->
+      <div class="ts-panel re-panel active" id="re-panel-world" role="tabpanel">
+        <p class="ts-panel__desc">Universal world rules for this continuity. Every thread inherits this scenario unless it overrides or extends it.</p>
+
+        <div class="ts-field-group">
+          <label class="ts-label">Continuity Name</label>
+          <input type="text" id="reality-name-input" class="ce-input" placeholder="e.g. Cyberpunk 2077, Fantasy Kingdom…">
+        </div>
+
+        <div class="ts-field-group">
+          <label class="ts-label">Scenario Preset</label>
+          <select id="reality-scenario-preset-select" class="control-select control-select--sm ts-select">
+            <option value="blank">— None —</option>
+          </select>
+        </div>
+
+        <div class="ts-field-group">
+          <label class="ts-label">World Scenario <span class="ts-hint">injected into every thread in this continuity</span></label>
+          <textarea id="reality-scenario-input" class="control-textarea ts-textarea" rows="7" placeholder="Describe the world, setting, and rules that apply to all threads in this continuity…"></textarea>
+        </div>
       </div>
-      <div class="config-group">
-        <label>Scenario Preset</label>
-        <select id="reality-scenario-preset-select" class="control-select control-select--sm">
-          <option value="blank">— No scenario —</option>
-          <option value="custom">Custom (edit below)</option>
-        </select>
+
+      <!-- ── TAB: Persona ── -->
+      <div class="ts-panel re-panel" id="re-panel-persona" role="tabpanel" hidden>
+        <p class="ts-panel__desc">Default player identity for all threads. Individual threads can override these values.</p>
+
+        <div class="ts-field-group">
+          <label class="ts-label">Persona Preset <span class="ts-hint">load a preset to fill name &amp; bio</span></label>
+          <select id="re-persona-preset" class="control-select control-select--sm ts-select">
+            <option value="blank">— Custom / None —</option>
+          </select>
+        </div>
+
+        <div class="ts-field-group">
+          <label class="ts-label">Your Name <span class="ts-hint">how characters address you</span></label>
+          <input type="text" id="re-user-name" class="ce-input" placeholder="User">
+        </div>
+
+        <div class="ts-field-group">
+          <label class="ts-label">Your Persona / Bio <span class="ts-hint">who you are in this world</span></label>
+          <textarea id="re-user-persona" class="control-textarea ts-textarea" rows="6" placeholder="Describe your character's identity, role, background, relationships…"></textarea>
+        </div>
       </div>
-      <div class="config-group">
-        <label>World Scenario</label>
-        <textarea id="reality-scenario-input" class="control-textarea" rows="8" placeholder="Describe the world, setting, and context that applies to all threads in this reality…"></textarea>
+
+      <!-- ── TAB: Generation ── -->
+      <div class="ts-panel re-panel" id="re-panel-generation" role="tabpanel" hidden>
+        <p class="ts-panel__desc">Default generation settings for all threads in this continuity.</p>
+
+        <div class="ts-field-group">
+          <label class="ts-label">Default Model</label>
+          <select id="re-model-select" class="control-select control-select--sm ts-select">
+            <option value="">— Use global default —</option>
+          </select>
+        </div>
+
+        <div class="ts-gen-grid">
+          <div class="ts-field-group">
+            <label class="ts-label">Temperature <span id="re-temp-val" class="ts-badge ts-badge--sm">0.80</span></label>
+            <input type="range" id="re-temp-input" class="config-range" min="0" max="2" step="0.01" value="0.8">
+          </div>
+          <div class="ts-field-group">
+            <label class="ts-label">Max Output <span id="re-maxout-val" class="ts-badge ts-badge--sm">512</span></label>
+            <input type="range" id="re-maxout-input" class="config-range" min="256" max="8192" step="256" value="512">
+          </div>
+          <div class="ts-field-group">
+            <label class="ts-label">Max Context <span id="re-maxctx-val" class="ts-badge ts-badge--sm">8192</span></label>
+            <input type="range" id="re-maxctx-input" class="config-range" min="1024" max="131072" step="1024" value="8192">
+          </div>
+          <div class="ts-field-group">
+            <label class="ts-label">Lorebook Scan Depth <span id="re-lore-val" class="ts-badge ts-badge--sm">5</span></label>
+            <input type="range" id="re-lore-input" class="config-range" min="1" max="30" step="1" value="5">
+          </div>
+        </div>
+
+        <div class="ts-field-group">
+          <label class="ts-label">Context Strategy</label>
+          <select id="re-context-strategy" class="control-select control-select--sm ts-select">
+            <option value="sliding">Sliding Window (anchor-preserving)</option>
+            <option value="truncate">Truncate (oldest messages dropped)</option>
+            <option value="summarize">Summarize (background compression)</option>
+          </select>
+        </div>
       </div>
-    </div>
-    <footer class="modal__footer">
-      <button id="reality-editor-cancel" class="btn btn--ghost" data-close>Cancel</button>
-      <button id="reality-save-btn" class="btn btn--accent">Save Reality</button>
+
+      <!-- ── TAB: Flags ── -->
+      <div class="ts-panel re-panel" id="re-panel-flags" role="tabpanel" hidden>
+        <p class="ts-panel__desc">Narrative injection flags. These control which character fields and prompt blocks are active for all threads.</p>
+
+        <div class="ts-field-group">
+          <label class="ts-label">Narrative Injections</label>
+          <div class="config-flags-grid re-flags-grid">
+            <label class="config-flag-toggle"><input type="checkbox" id="re-flag-injectConsistency"> Consistency</label>
+            <label class="config-flag-toggle"><input type="checkbox" id="re-flag-injectAppearance"> Appearance</label>
+            <label class="config-flag-toggle"><input type="checkbox" id="re-flag-injectPersonality"> Personality</label>
+            <label class="config-flag-toggle"><input type="checkbox" id="re-flag-injectVoice"> Voice</label>
+            <label class="config-flag-toggle"><input type="checkbox" id="re-flag-injectStyle"> Style</label>
+            <label class="config-flag-toggle"><input type="checkbox" id="re-flag-injectSliders"> Sliders</label>
+            <label class="config-flag-toggle"><input type="checkbox" id="re-flag-injectAdult"> Adult Content</label>
+            <label class="config-flag-toggle"><input type="checkbox" id="re-flag-injectAIDirectives"> AI Directives</label>
+            <label class="config-flag-toggle"><input type="checkbox" id="re-flag-impersonationBlock"> Impersonation Block</label>
+            <label class="config-flag-toggle"><input type="checkbox" id="re-flag-povFirst"> POV First-Person</label>
+            <label class="config-flag-toggle"><input type="checkbox" id="re-flag-jailbreakResistance"> Jailbreak Resistance</label>
+            <label class="config-flag-toggle"><input type="checkbox" id="re-flag-showThoughts"> Show Thoughts</label>
+          </div>
+        </div>
+
+        <div class="ts-field-group">
+          <label class="ts-label">System Directive <span class="ts-hint">prepended to every system prompt</span></label>
+          <textarea id="re-sys-directive" class="control-textarea ts-textarea" rows="4" placeholder="e.g. Always respond in character. Never break the fourth wall…"></textarea>
+        </div>
+
+        <div class="ts-field-group">
+          <label class="ts-label">Author's Note <span class="ts-hint">injected near end of context</span></label>
+          <textarea id="re-authors-note" class="control-textarea ts-textarea" rows="3" placeholder="e.g. [Write with vivid sensory detail. Slow burn.]"></textarea>
+        </div>
+      </div>
+
+    </div><!-- .ts-body -->
+
+    <!-- Footer -->
+    <footer class="ts-footer">
+      <div class="ts-footer__left">
+        <button id="reality-editor-cancel" class="ce-btn ce-btn--ghost">Cancel</button>
+      </div>
+      <div class="ts-footer__right">
+        <button id="reality-save-btn" class="ce-btn ce-btn--accent"><i data-lucide="save"></i> Save Continuity</button>
+      </div>
     </footer>
-  </div>
+
+  </div><!-- .ts-studio -->
 </div>
 
 <!-- ══════════════════════════════════════════════

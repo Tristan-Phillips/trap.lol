@@ -52,9 +52,9 @@
 .config-flag-toggle:hover { background: rgba(255,255,255,0.04); color: var(--text-main); }
 .config-flag-toggle input[type=checkbox] { accent-color: var(--theme-accent); }
 
-/* ── Reality Editor Modal ── */
-.modal__content--reality { max-width: 540px; }
-.reality-editor-body { display: flex; flex-direction: column; gap: 14px; }
+/* ── Reality Editor Modal (now uses ts-studio layout) ── */
+.ts-studio--reality { max-width: 620px; }
+.re-flags-grid { grid-template-columns: 1fr 1fr; }
 
 /* ── Lore Editor Modal ── */
 .lore-editor-body { display: flex; flex-direction: column; gap: 0; }
