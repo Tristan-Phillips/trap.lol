@@ -108,33 +108,6 @@
                     }
                 }
             ]
-        },
-        {
-            "id": "6BE6B9",
-            "name": "site-extra_trap-lol_llm-characters-info",
-            "defaults": {
-                "nsfw": true
-            },
-            "artifacts": [
-                {
-                    "id": "89DEB5",
-                    "compositeId": "6BE6B9::89DEB5",
-                    "src": {
-                        "small": "119oy1R0uW6U/89DEB5_t.webp",
-                        "original": "xGCKfJ99O5jD/89DEB5.webp"
-                    },
-                    "uploadDate": "2026/05/03",
-                    "tags": [],
-                    "type": "art",
-                    "metadata": {
-                        "medium": "digital",
-                        "description": null,
-                        "verse": null,
-                        "mood": null,
-                        "chaos": null
-                    }
-                }
-            ]
         }
     ]
 }
