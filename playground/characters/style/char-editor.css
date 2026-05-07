@@ -1006,7 +1006,7 @@
     overflow-x: auto;
 }
 
-.ts-tab {
+.ts-tab, .re-tab {
     display: flex;
     align-items: center;
     gap: 6px;
@@ -1023,17 +1023,18 @@
     letter-spacing: 0.02em;
 }
 
-.ts-tab svg, .ts-tab i {
+.ts-tab svg, .ts-tab i,
+.re-tab svg, .re-tab i {
     width: 14px;
     height: 14px;
     opacity: 0.7;
 }
 
-.ts-tab:hover {
+.ts-tab:hover, .re-tab:hover {
     color: rgba(220,190,255,0.85);
 }
 
-.ts-tab.active {
+.ts-tab.active, .re-tab.active {
     color: rgba(200,140,255,0.95);
     border-bottom-color: rgba(168,85,247,0.8);
 }
@@ -1047,7 +1048,7 @@
 }
 
 /* ── Panels ── */
-.ts-panel {
+.ts-panel, .re-panel {
     position: absolute;
     inset: 0;
     padding: 28px 32px;
@@ -1064,7 +1065,7 @@
     scrollbar-color: rgba(168,85,247,0.25) transparent;
 }
 
-.ts-panel.active {
+.ts-panel.active, .re-panel.active {
     opacity: 1;
     pointer-events: auto;
     transform: none;
@@ -1331,8 +1332,8 @@
         height: 100dvh;
         border-radius: 0;
     }
-    .ts-panel { padding: 18px 16px; }
+    .ts-panel, .re-panel { padding: 18px 16px; }
     .ts-gen-grid { grid-template-columns: 1fr; }
     .ts-tabs { padding: 0 6px; }
-    .ts-tab { padding: 10px 10px; font-size: 0.72rem; }
+    .ts-tab, .re-tab { padding: 10px 10px; font-size: 0.72rem; }
 }

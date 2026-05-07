@@ -7,7 +7,7 @@
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2306040A'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%23ef4444' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23ef4444'/%3E%3C/svg%3E" />
     <link rel="stylesheet" href="../../glass/style/style.css">
     <link rel="stylesheet" href="./style/style.css?v=62">
-    <link rel="stylesheet" href="./style/char-editor.css?v=7">
+    <link rel="stylesheet" href="./style/char-editor.css?v=8">
 </head>
 <body class="underdark-page">
 
@@ -584,7 +584,7 @@
 </div>
 
 <div id="modal-reality-editor" class="modal ts-modal" hidden role="dialog" aria-modal="true" aria-labelledby="re-title">
-  <div class="modal__backdrop ts-backdrop"></div>
+  <div class="modal__backdrop"></div>
   <div class="ts-studio ts-studio--reality">
 
     <!-- Header -->
@@ -599,17 +599,17 @@
 
     <!-- Tab nav -->
     <nav class="ts-tabs" role="tablist">
-      <button class="ts-tab re-tab active" data-re-tab="world" role="tab" aria-selected="true"><i data-lucide="globe-2"></i> World</button>
-      <button class="ts-tab re-tab" data-re-tab="persona" role="tab" aria-selected="false"><i data-lucide="user-cog"></i> Persona</button>
-      <button class="ts-tab re-tab" data-re-tab="generation" role="tab" aria-selected="false"><i data-lucide="sliders-horizontal"></i> Generation</button>
-      <button class="ts-tab re-tab" data-re-tab="flags" role="tab" aria-selected="false"><i data-lucide="toggle-right"></i> Flags</button>
+      <button class="re-tab active" data-re-tab="world" role="tab" aria-selected="true"><i data-lucide="globe-2"></i> World</button>
+      <button class="re-tab" data-re-tab="persona" role="tab" aria-selected="false"><i data-lucide="user-cog"></i> Persona</button>
+      <button class="re-tab" data-re-tab="generation" role="tab" aria-selected="false"><i data-lucide="sliders-horizontal"></i> Generation</button>
+      <button class="re-tab" data-re-tab="flags" role="tab" aria-selected="false"><i data-lucide="toggle-right"></i> Flags</button>
     </nav>
 
     <!-- Body -->
     <div class="ts-body">
 
       <!-- ── TAB: World ── -->
-      <div class="ts-panel re-panel active" id="re-panel-world" role="tabpanel">
+      <div class="re-panel active" id="re-panel-world" role="tabpanel">
         <p class="ts-panel__desc">Universal world rules for this continuity. Every thread inherits this scenario unless it overrides or extends it.</p>
 
         <div class="ts-field-group">
@@ -631,7 +631,7 @@
       </div>
 
       <!-- ── TAB: Persona ── -->
-      <div class="ts-panel re-panel" id="re-panel-persona" role="tabpanel" hidden>
+      <div class="re-panel" id="re-panel-persona" role="tabpanel" hidden>
         <p class="ts-panel__desc">Default player identity for all threads. Individual threads can override these values.</p>
 
         <div class="ts-field-group">
@@ -653,7 +653,7 @@
       </div>
 
       <!-- ── TAB: Generation ── -->
-      <div class="ts-panel re-panel" id="re-panel-generation" role="tabpanel" hidden>
+      <div class="re-panel" id="re-panel-generation" role="tabpanel" hidden>
         <p class="ts-panel__desc">Default generation settings for all threads in this continuity.</p>
 
         <div class="ts-field-group">
@@ -693,7 +693,7 @@
       </div>
 
       <!-- ── TAB: Flags ── -->
-      <div class="ts-panel re-panel" id="re-panel-flags" role="tabpanel" hidden>
+      <div class="re-panel" id="re-panel-flags" role="tabpanel" hidden>
         <p class="ts-panel__desc">Narrative injection flags. These control which character fields and prompt blocks are active for all threads.</p>
 
         <div class="ts-field-group">

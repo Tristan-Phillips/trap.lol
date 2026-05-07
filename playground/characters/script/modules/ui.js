@@ -487,16 +487,15 @@ export function initUI() {
 
     // ── Scenario preset cache (shared across Reality Editor, World tab, Thread Setup) ──
     let _scenarioPresets = [];
+    let _scenarioLoadPromise = null;
 
-    async function _loadScenarioCache() {
-        if (_scenarioPresets.length) return; // already loaded
-        try {
-            const res  = await fetch('data/scenarios.json');
-            const data = await res.json();
-            _scenarioPresets = data.scenarios || [];
-        } catch (e) {
-            console.warn('[underdark] Failed to load scenarios.json', e);
-        }
+    function _loadScenarioCache() {
+        if (_scenarioLoadPromise) return _scenarioLoadPromise;
+        _scenarioLoadPromise = fetch('data/scenarios.json')
+            .then(r => r.json())
+            .then(data => { _scenarioPresets = data.scenarios || []; })
+            .catch(e => { console.warn('[underdark] Failed to load scenarios.json', e); });
+        return _scenarioLoadPromise;
     }
 
     function _populateScenarioSelect($sel, { includeInherit = false, includeCustom = true, blankLabel = null } = {}) {
@@ -515,14 +514,6 @@ export function initUI() {
     }
 
     // Boot: load cache then populate the Reality Editor preset select
-    _loadScenarioCache().then(() => {
-        const $sel = qs('#reality-scenario-preset-select');
-        if ($sel) {
-            _populateScenarioSelect($sel, { blankLabel: '— None —', includeCustom: true });
-            $sel.value = 'blank';
-        }
-    });
-
     qs('#reality-scenario-preset-select')?.addEventListener('change', e => {
         const preset = _scenarioPresets.find(s => s.id === e.target.value);
         if (!preset) return;
@@ -594,16 +585,20 @@ export function initUI() {
         if ($nameInput) $nameInput.value = r.name;
         const $scenInput = qs('#reality-scenario-input');
         if ($scenInput) $scenInput.value = r.worldConfig?.scenario || '';
-        const $sel = qs('#reality-scenario-preset-select');
-        if ($sel && _scenarioPresets.length) {
-            const current = (r.worldConfig?.scenario || '').trim();
-            const match   = _scenarioPresets.find(s => s.scenario && s.scenario.trim() === current);
-            $sel.value    = match ? match.id : (current ? 'custom' : 'blank');
-        }
 
         // Badge = reality name
         const $badge = qs('#re-name-badge');
         if ($badge) $badge.textContent = r.name;
+
+        // Populate scenario preset select (ensure cache loaded) then match current value
+        _loadScenarioCache().then(() => {
+            const $sel = qs('#reality-scenario-preset-select');
+            if (!$sel) return;
+            _populateScenarioSelect($sel, { blankLabel: '— None —', includeCustom: true });
+            const current = (r.worldConfig?.scenario || '').trim();
+            const match   = _scenarioPresets.find(s => s.scenario && s.scenario.trim() === current);
+            $sel.value    = match ? match.id : (current ? 'custom' : 'blank');
+        });
 
         // Persona tab — populate preset select then restore current values
         _ensurePersonasLoaded().then(() => {
@@ -741,7 +736,7 @@ export function initUI() {
 
     qs('#reality-editor-close')?.addEventListener('click',  () => hideModal('modal-reality-editor'));
     qs('#reality-editor-cancel')?.addEventListener('click', () => hideModal('modal-reality-editor'));
-    qs('.modal__backdrop', qs('#modal-reality-editor'))?.addEventListener('click', () => hideModal('modal-reality-editor'));
+    qs('#modal-reality-editor .modal__backdrop')?.addEventListener('click', () => hideModal('modal-reality-editor'));
 
     // ── Chat List ─────────────────────────────────────────────────────────────
     function relativeTime(ts) {
@@ -1167,7 +1162,7 @@ export function initUI() {
     // Wire Thread Setup modal
     qs('#ts-close')?.addEventListener('click',   () => hideModal('modal-thread-setup'));
     qs('#ts-cancel')?.addEventListener('click',  () => hideModal('modal-thread-setup'));
-    qs('.ts-backdrop')?.addEventListener('click', () => hideModal('modal-thread-setup'));
+    qs('#modal-thread-setup .modal__backdrop')?.addEventListener('click', () => hideModal('modal-thread-setup'));
 
     qs('#ts-prev')?.addEventListener('click', () => {
         if (_tsCurrentTab > 0) _tsSwitchTab(_tsCurrentTab - 1);
@@ -5399,6 +5394,7 @@ export function initUI() {
     // ── Initial Render ────────────────────────────────────────────────────────
     // Kick off persona + scenario fetches immediately (parallel with manifest)
     _ensurePersonasLoaded();
+    _loadScenarioCache();
     loadManifest().then(() => {
         renderAll();
         initChatBackground();
