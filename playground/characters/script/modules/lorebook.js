@@ -100,25 +100,28 @@ export function scanLorebooks(history, lorebooks, globalScanDepth = 5) {
             .map(m => m.content)
             .join('\n');
 
+        const safeCorpus     = corpus.length > 20000 ? corpus.slice(-20000) : corpus;
+        const safeCorpusLow  = safeCorpus.toLowerCase();
+
         book.entries.forEach(entry => {
             if (entry.disabled || seen.has(entry.id)) return;
             if (!entry.keywords.length) return;
 
-            const safeCorpus = corpus.length > 20000 ? corpus.slice(-20000) : corpus;
-            const matched = entry.keywords.some(kw => {
-                if (!kw) return false;
-                try {
-                    if (entry.useRegex) {
-                        if (kw.length >= 500) return false; // guard against ReDoS via huge patterns
-                        const flags = entry.caseSensitive ? 'u' : 'iu';
-                        return new RegExp(kw, flags).test(safeCorpus);
-                    }
-                    const haystack = entry.caseSensitive ? safeCorpus : safeCorpus.toLowerCase();
-                    const needle   = entry.caseSensitive ? kw : kw.toLowerCase();
-                    return haystack.includes(needle);
-                } catch (_) {
-                    return false;
+            // Compile matchers once per entry, not once per keyword per test
+            const matchers = entry.keywords.map(kw => {
+                if (!kw) return null;
+                if (entry.useRegex) {
+                    if (kw.length >= 500) return null; // guard against ReDoS via huge patterns
+                    try {
+                        return new RegExp(kw, entry.caseSensitive ? 'u' : 'iu');
+                    } catch (_) { return null; }
                 }
+                return entry.caseSensitive ? kw : kw.toLowerCase();
+            }).filter(Boolean);
+
+            const matched = matchers.some(m => {
+                if (m instanceof RegExp) return m.test(safeCorpus);
+                return (entry.caseSensitive ? safeCorpus : safeCorpusLow).includes(m);
             });
 
             if (matched) {

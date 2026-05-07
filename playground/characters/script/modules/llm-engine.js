@@ -485,9 +485,12 @@ function buildSystemPrompt(character, config, override) {
         .replace(/\{\{user\}\}/gi, userName);
 
     const sections = [base];
-    
-    if (config.groupScenario) {
-        sections.unshift(`[GROUP SCENARIO / REALITY OVERRIDE]\n${config.groupScenario.replace(/\{\{char\}\}/gi, charName).replace(/\{\{user\}\}/gi, userName)}`);
+
+    // worldScenario (from reality.worldConfig.scenario) takes precedence over
+    // config.groupScenario (legacy World-tab field). Both are passed via ctx.
+    const activeScenario = config._worldScenario || config.groupScenario;
+    if (activeScenario) {
+        sections.unshift(`[GROUP SCENARIO / REALITY OVERRIDE]\n${activeScenario.replace(/\{\{char\}\}/gi, charName).replace(/\{\{user\}\}/gi, userName)}`);
     }
 
     if (character.description) sections.push(`Character Persona:\n${character.description}`);
@@ -624,26 +627,32 @@ function applyContextStrategy(history, config, systemTokens) {
         // Messages between index 1 and cutoff-1 were dropped — summarize them async
         // and inject as a synthetic system message. We trigger the summary call here
         // and embed a placeholder; on next call the cached summary is used.
+        // Cache lives in sessionStorage so it survives page reload within the same tab.
         const droppedMsgs = history.slice(1, cutoff);
         const sessionId = config._sessionId || 'default';
-        const cacheKey = `${sessionId}__sum_${history[cutoff - 1]?.id || cutoff}`;
-        if (!applyContextStrategy._summaryCache) applyContextStrategy._summaryCache = {};
-        const cache = applyContextStrategy._summaryCache;
+        const cacheKey = `underdark_sum__${sessionId}__${history[cutoff - 1]?.id || cutoff}`;
 
-        // Evict entries from other sessions and cap total size at 50 entries
-        const keys = Object.keys(cache);
-        if (keys.length > 50) {
-            const stale = keys.filter(k => !k.startsWith(sessionId + '__'));
-            (stale.length ? stale : keys.slice(0, 10)).forEach(k => delete cache[k]);
-        }
+        const readCache  = k => { try { return sessionStorage.getItem(k) || null; } catch (_) { return null; } };
+        const writeCache = (k, v) => {
+            try {
+                // Evict stale keys for other sessions (cap total underdark_sum__ keys at 50)
+                const allKeys = Object.keys(sessionStorage).filter(sk => sk.startsWith('underdark_sum__'));
+                if (allKeys.length >= 50) {
+                    const stale = allKeys.filter(sk => !sk.includes(`__${sessionId}__`));
+                    (stale.length ? stale : allKeys.slice(0, 10)).forEach(sk => sessionStorage.removeItem(sk));
+                }
+                sessionStorage.setItem(k, v);
+            } catch (_) {}
+        };
 
-        if (cache[cacheKey]) {
-            result.unshift({ role: 'system', content: `[Story so far: ${cache[cacheKey]}]`, id: '_summary', timestamp: 0, tokens: 0 });
+        const cached = readCache(cacheKey);
+        if (cached) {
+            result.unshift({ role: 'system', content: `[Story so far: ${cached}]`, id: '_summary', timestamp: 0, tokens: 0 });
         } else {
             // Kick off background summarization (non-blocking)
             summarizeDropped(droppedMsgs, config).then(summary => {
                 if (summary) {
-                    cache[cacheKey] = summary;
+                    writeCache(cacheKey, summary);
                     console.debug('[llm] summary cached for', cacheKey);
                 }
             }).catch(() => {});
@@ -741,10 +750,9 @@ export function buildPayload(ctx) {
         messages.push({ role: 'system', content: expanded });
     }
 
-    // 4b. Re-inject directive (ephemeral — cleared after use)
-    if (config._pendingReinject) {
-        messages.push({ role: 'system', content: config._pendingReinject });
-        delete config._pendingReinject;
+    // 4b. Re-inject directive (ephemeral, passed via ctx — never touches saved state)
+    if (ctx.pendingReinject) {
+        messages.push({ role: 'system', content: ctx.pendingReinject });
     }
 
     // 5. Author's Note at injection depth

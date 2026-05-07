@@ -72,7 +72,6 @@
             </div>
             <div id="character-list" class="sidebar__content character-list" style="flex:1; overflow-y:auto;"></div>
             <footer class="sidebar__footer sidebar__footer--col" style="padding:10px; display:flex; flex-direction:column; gap:8px;">
-                <button id="maintenance-purge" class="btn btn--ghost btn--full btn--sm" style="opacity: 0.4;"><i data-lucide="refresh-cw"></i> Purge &amp; Re-align</button>
                 <button id="create-character" class="btn btn--accent btn--full"><i data-lucide="wand-2"></i> Create Fragment</button>
                 <button id="import-card" class="btn btn--ghost btn--full"><i data-lucide="upload"></i> Import Card</button>
                 <input type="file" id="card-input" accept=".png,.json" hidden multiple>
@@ -431,6 +430,9 @@
     <!-- Danger Zone -->
     <div class="config-section config-section--danger">
       <div class="config-section__title"><i data-lucide="alert-triangle"></i> Danger Zone</div>
+      <button id="maintenance-purge" class="btn btn--ghost btn--full btn--sm btn--danger-ghost">
+        <i data-lucide="refresh-cw"></i> Purge &amp; Re-align
+      </button>
       <button id="btn-clear-all-data" class="btn btn--ghost btn--full btn--sm btn--danger-ghost">
         <i data-lucide="trash-2"></i> Wipe All Data
       </button>
@@ -540,7 +542,7 @@
       </div>
       <div class="config-group">
         <label>Scenario Preset</label>
-        <select id="scenario-preset-select" class="control-select control-select--sm">
+        <select id="reality-scenario-preset-select" class="control-select control-select--sm">
           <option value="blank">— No scenario —</option>
           <option value="custom">Custom (edit below)</option>
         </select>
@@ -1825,6 +1827,24 @@
 
     <!-- slide counter -->
     <div class="wh-lb-counter" id="wh-lb-counter"></div>
+  </div>
+</div>
+
+<!-- ── Generic text-input modal (replaces native prompt()) ── -->
+<div id="modal-text-input" class="modal" hidden>
+  <div class="modal__backdrop" data-close></div>
+  <div class="modal__content modal__content--sm">
+    <header class="modal__header">
+      <h3 id="text-input-modal-title">Enter value</h3>
+      <button class="btn-icon" id="text-input-modal-close"><i data-lucide="x"></i></button>
+    </header>
+    <div class="modal__body">
+      <input type="text" id="text-input-modal-field" class="control-input" placeholder="">
+    </div>
+    <footer class="modal__footer">
+      <button id="text-input-modal-cancel" class="btn btn--ghost" data-close>Cancel</button>
+      <button id="text-input-modal-ok" class="btn btn--accent">OK</button>
+    </footer>
   </div>
 </div>
 

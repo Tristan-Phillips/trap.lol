@@ -74,6 +74,42 @@ function confirm(title, body, opts = {}) {
 function showModal(id) { const m = qs(`#${id}`); if (m) { m.hidden = false; lucideRefresh(m); } }
 function hideModal(id) { const m = qs(`#${id}`); if (m) m.hidden = true; }
 
+function promptModal(title, defaultValue = '', placeholder = '') {
+    return new Promise(res => {
+        const modal  = qs('#modal-text-input');
+        if (!modal) { res(window.prompt(title, defaultValue)); return; }
+        const $title = qs('#text-input-modal-title', modal);
+        const $field = qs('#text-input-modal-field', modal);
+        const $ok    = qs('#text-input-modal-ok',    modal);
+        const $cancel= qs('#text-input-modal-cancel',modal);
+        const $close = qs('#text-input-modal-close', modal);
+        const $bd    = qs('.modal__backdrop',        modal);
+        if ($title)  $title.textContent    = title;
+        if ($field) { $field.value = defaultValue; $field.placeholder = placeholder; }
+        modal.hidden = false;
+        lucideRefresh(modal);
+        setTimeout(() => { $field?.focus(); $field?.select(); }, 60);
+
+        const cleanup = val => {
+            modal.hidden = true;
+            $ok?.removeEventListener('click', onOk);
+            $cancel?.removeEventListener('click', onCancel);
+            $close?.removeEventListener('click', onCancel);
+            $bd?.removeEventListener('click', onCancel);
+            $field?.removeEventListener('keydown', onKey);
+            res(val);
+        };
+        const onOk     = () => cleanup($field?.value.trim() || null);
+        const onCancel = () => cleanup(null);
+        const onKey    = e => { if (e.key === 'Enter') onOk(); if (e.key === 'Escape') onCancel(); };
+        $ok?.addEventListener('click', onOk);
+        $cancel?.addEventListener('click', onCancel);
+        $close?.addEventListener('click', onCancel);
+        $bd?.addEventListener('click', onCancel);
+        $field?.addEventListener('keydown', onKey);
+    });
+}
+
 function lucideRefresh(_node) {
     if (window.lucide) window.lucide.createIcons();
 }
@@ -146,43 +182,45 @@ window.buildAvatarHtml = function(av, className = '', extraAttr = '') {
 // and DOMPurify.sanitize(), so neither library can interfere with the spans we inject.
 // “straight quotes” are handled pre-parse via placeholder tokens to survive marked's
 // quote-entity conversion; curly/smart quotes are handled post-sanitize directly.
-
-const _rpTokens = [];
-function _rpToken(type, inner) {
-    const idx = _rpTokens.length;
-    _rpTokens.push({ type, inner });
-    // Use a placeholder with no underscores/asterisks so marked.js never interprets it
-    return `«rp${idx}»`;
-}
-function _rpFlush(html) {
-    return html.replace(/«rp(\d+)»/g, (_, i) => {
-        const { type, inner } = _rpTokens[Number(i)];
-        return `<span class="rp-${type}">${inner}</span>`;
-    });
-}
+//
+// Token array is local to each call — safe under concurrent group-chat streaming.
 
 function renderMarkdown(text) {
-    _rpTokens.length = 0;
+    // Local token table per invocation — no shared mutable state
+    const rpTokens = [];
+    const rpToken = (type, inner) => {
+        const idx = rpTokens.length;
+        rpTokens.push({ type, inner });
+        return `«rp${idx}»`;
+    };
+    const rpFlush = html => html.replace(/«rp(\d+)»/g, (_, i) => {
+        const { type, inner } = rpTokens[Number(i)];
+        return `<span class=”rp-${type}”>${inner}</span>`;
+    });
+
     try {
         // _inner thought_ — consume before marked.js can interpret the underscores
         text = text.replace(/(?<![_\w])_([^_\n]{2,}?)_(?![_\w])/g, (_, inner) =>
-            _rpToken('thought', inner));
-        // "straight quoted speech" — tokenise pre-parse so marked can't entity-encode the quotes
-        text = text.replace(/"([^"\n]{2,}?)"/g, (_, inner) =>
-            _rpToken('speech', `"${inner}"`));
+            rpToken('thought', inner));
+        // “straight quoted speech” — tokenise pre-parse so marked can't entity-encode the quotes
+        text = text.replace(/”([^”\n]{2,}?)”/g, (_, inner) =>
+            rpToken('speech', `”${inner}”`));
         // *action/narration* — left for marked.js, which converts it to <em> natively
         let html = marked.parse(text, { breaks: true, gfm: true });
         if (typeof DOMPurify !== 'undefined') {
             html = DOMPurify.sanitize(html, { USE_PROFILES: { html: true } });
+        } else {
+            // DOMPurify shard failed to load — fall back to escaped plain text
+            // rather than injecting unsanitized model HTML into the DOM.
+            return `<p>${esc(text).replace(/\n/g, '<br>')}</p>`;
         }
         // Restore RP spans after sanitisation (DOMPurify never sees them)
-        html = _rpFlush(html);
+        html = rpFlush(html);
         // Curly/smart quotes output by the LLM — safe to handle post-sanitize
-        html = html.replace(/“([^“”<>\n]{2,}?)”/g,
-            (_, inner) => `<span class="rp-speech">“${inner}”</span>`);
+        html = html.replace(/”([^””<>\n]{2,}?)”/g,
+            (_, inner) => `<span class=”rp-speech”>”${inner}”</span>`);
         return html;
     } catch (_) {
-        _rpTokens.length = 0;
         return `<p>${esc(text).replace(/\n/g, '<br>')}</p>`;
     }
 }
@@ -206,19 +244,11 @@ const FLAG_KEYS = [
 export function initUI() {
     loadState();
     restoreKeyFromCookie();
+    // Guard: clear any _pendingReinject that may have survived a previous session in localStorage
+    if (state.config._pendingReinject) delete state.config._pendingReinject;
 
-    // ── Helper for Emoji Avatars ──
-    window.buildAvatarHtml = function(av, className = '', extraAttr = '') {
-        if (!av) return `<div class="${className} avatar--emoji" ${extraAttr}>👤</div>`;
-        
-        // Better emoji detection: no slashes/dots/colons and contains an emoji character
-        const isEmo = !/[/.:]/.test(av) && /\p{Emoji_Presentation}/u.test(av);
-        
-        if (isEmo) {
-            return `<div class="${className} avatar--emoji" ${extraAttr}>${av}</div>`;
-        }
-        return `<div class="${className}" style="background-image:url('${esc(av)}')" ${extraAttr}></div>`;
-    };
+    // ── Picker mode — closure variable, not window global ────────────────────
+    let _pickerMode = null;
 
     // ── API Key Gate ──────────────────────────────────────────────────────────
     // Block the entire UI until a valid key is stored. Skipped if key already present.
@@ -463,14 +493,14 @@ export function initUI() {
         if (e.key === 'Enter') qs('#new-reality-create')?.click();
     });
 
-    // ── Scenario preset loader ────────────────────────────────────────────────
+    // ── Scenario preset loader (Reality Editor modal) ─────────────────────────
     let _scenarioPresets = [];
     (async () => {
         try {
             const res  = await fetch('data/scenarios.json');
             const data = await res.json();
             _scenarioPresets = data.scenarios || [];
-            const $sel = qs('#scenario-preset-select');
+            const $sel = qs('#reality-scenario-preset-select');
             if ($sel) {
                 $sel.innerHTML = _scenarioPresets.map(s =>
                     `<option value="${esc(s.id)}">${esc(s.name)}</option>`
@@ -482,7 +512,7 @@ export function initUI() {
         }
     })();
 
-    qs('#scenario-preset-select')?.addEventListener('change', e => {
+    qs('#reality-scenario-preset-select')?.addEventListener('change', e => {
         const preset = _scenarioPresets.find(s => s.id === e.target.value);
         if (!preset) return;
         const $ta = qs('#reality-scenario-input');
@@ -500,7 +530,7 @@ export function initUI() {
         qs('#reality-name-input').value     = r.name;
         qs('#reality-scenario-input').value = r.worldConfig?.scenario || '';
         // Try to match current scenario to a preset
-        const $sel = qs('#scenario-preset-select');
+        const $sel = qs('#reality-scenario-preset-select');
         if ($sel && _scenarioPresets.length) {
             const current = (r.worldConfig?.scenario || '').trim();
             const match = _scenarioPresets.find(s => s.scenario && s.scenario.trim() === current);
@@ -565,7 +595,7 @@ export function initUI() {
                 </div>`;
             lucideRefresh($chatList);
             qs('#empty-new-dm', $chatList)?.addEventListener('click', () => {
-                window._pickerMode = 'dm';
+                _pickerMode = 'dm';
                 openCharPicker();
             });
             return;
@@ -648,7 +678,7 @@ export function initUI() {
                 const chatId = el.dataset.id;
                 const chat = allChats.find(c => c.id === chatId);
                 if (!chat) return;
-                const newName = prompt('Rename conversation:', chat.name || '');
+                const newName = await promptModal('Rename Conversation', chat.name || '', 'Conversation name…');
                 if (!newName?.trim()) return;
                 renameChat(chatId, newName.trim());
                 renderChats(qs('#chat-search-input')?.value || '');
@@ -741,7 +771,7 @@ export function initUI() {
 
     qs('#chat-new-dm')?.addEventListener('click', () => {
         // Set a global flag so the picker knows we are starting a DM
-        window._pickerMode = 'dm';
+        _pickerMode = 'dm';
         openCharPicker();
     });
 
@@ -1187,9 +1217,9 @@ export function initUI() {
                     <div class="profile-view__info">
                         <h3 class="profile-view__name">${esc(char.name)}</h3>
                         <div class="profile-view__stats">
-                            <span><strong>${Math.floor(Math.random()*20)+5}</strong> posts</span>
-                            <span><strong>${(Math.random()*50).toFixed(1)}k</strong> followers</span>
-                            <span><strong>${Math.floor(Math.random()*100)+100}</strong> following</span>
+                            <span><strong>${getAllGalleryImages(id).length}</strong> posts</span>
+                            <span><strong>${(((id.charCodeAt(0) * 137 + id.charCodeAt(1 % id.length) * 31) % 491) / 10).toFixed(1)}k</strong> followers</span>
+                            <span><strong>${((id.charCodeAt(0) * 53 + id.length * 17) % 900) + 100}</strong> following</span>
                         </div>
                         <p class="profile-view__bio">${esc(meta?.tagline || char.tagline || 'Fragment of the Underdark')}</p>
                     </div>
@@ -1525,8 +1555,8 @@ export function initUI() {
                 const id = $card.dataset.id;
                 
                 // If we are in DM mode, start a new DM chat in this reality
-                if (window._pickerMode === 'dm') {
-                    window._pickerMode = null;
+                if (_pickerMode === 'dm') {
+                    _pickerMode = null;
                     let chat = state.reality.chats.find(c => c.type === 'dm' && c.botIds.includes(id));
                     if (!chat) {
                         const char = await loadCharacterCard(id);
@@ -2211,11 +2241,12 @@ export function initUI() {
         await new Promise(r => setTimeout(r, 1200 + Math.random() * 2000));
 
         try {
+            const _worldScenario = state.reality?.worldConfig?.scenario || '';
             const payload = buildPayload({
                 character:  { ...char, id: charId },
                 history:    [{ role: 'user', content: `[SOCIAL MEDIA COMMENT ON YOUR POST #${postIdx+1}]\nUser commented: "${text}"\n\nReply briefly as a social media comment. Keep it in character but short (1-3 sentences max).` }],
                 lore:       state.lorebooks,
-                config:     { ...state.config, stream: true },
+                config:     { ...state.config, stream: true, ...(_worldScenario ? { _worldScenario } : {}) },
                 isGroup:    false,
                 sessionId:  `social-${charId}-${postIdx}`
             });
@@ -2554,8 +2585,8 @@ export function initUI() {
         showToast(`Lorebook "${book.name}" deleted`, 'warn');
     });
 
-    qs('#add-book')?.addEventListener('click', () => {
-        const name = prompt('Lorebook name:', 'New Lorebook');
+    qs('#add-book')?.addEventListener('click', async () => {
+        const name = await promptModal('New Lorebook', 'New Lorebook', 'Lorebook name…');
         if (!name?.trim()) return;
         addBook(state.lorebooks, name.trim());
         saveState();
@@ -3305,7 +3336,7 @@ export function initUI() {
     }
 
     // ── Streaming Bot Response ────────────────────────────────────────────────
-    async function triggerBotResponse(botId) {
+    async function triggerBotResponse(botId, pendingReinject = '') {
         const char = state.loadedCharacters[botId];
         const meta = state.characters.find(c => c.id === botId);
         if (!char || state.isStreaming) return;
@@ -3338,15 +3369,19 @@ export function initUI() {
         let isInsideThink   = false;
 
         try {
+            const _worldScenario = state.reality?.worldConfig?.scenario || '';
             const payload = buildPayload({
-                character:  { ...char, id: botId },
-                history:    state.history,
-                lore:       state.lorebooks,
-                config:     state.config,
-                isGroup:    state.chat.type === 'group',
-                allChars:   state.chat.botIds.map(id => ({ ...state.loadedCharacters[id], id })),
-                sessionId:  state.chat.id,
-                shareMemory: state.chat.shareMemory
+                character:       { ...char, id: botId },
+                history:         state.history,
+                lore:            state.lorebooks,
+                config:          _worldScenario
+                    ? { ...state.config, _worldScenario }
+                    : state.config,
+                isGroup:         state.chat.type === 'group',
+                allChars:        state.chat.botIds.map(id => ({ ...state.loadedCharacters[id], id })),
+                sessionId:       state.chat.id,
+                shareMemory:     state.chat.shareMemory,
+                pendingReinject: pendingReinject || ''
             });
 
             // Debug: show built system prompt as a one-time collapsible block,
@@ -3517,16 +3552,13 @@ export function initUI() {
         // Remove welcome screen
         qs('#arena-welcome')?.remove();
 
-        // Flush any queued re-inject directives as an ephemeral system message
-        // These are prepended to the payload by llm-engine via state.config._pendingReinject
+        // Flush any queued re-inject directives as an ephemeral system message.
+        // Stored only in the DOM dataset — never written to state.config.
         const $ta2 = qs('#rp-input');
-        const pendingReinject = $ta2?.dataset.pendingReinject || '';
-        if (pendingReinject.trim()) {
-            state.config._pendingReinject = pendingReinject.trim();
-            if ($ta2) delete $ta2.dataset.pendingReinject;
+        const pendingReinject = ($ta2?.dataset.pendingReinject || '').trim();
+        if (pendingReinject) {
+            delete $ta2.dataset.pendingReinject;
             qsa('.reinject-btn').forEach(b => b.classList.remove('reinject-btn--active'));
-        } else {
-            delete state.config._pendingReinject;
         }
         updateReinjectUI();
 
@@ -3557,16 +3589,19 @@ export function initUI() {
         }
 
         if (respondingBots.length === 1) {
-            await triggerBotResponse(respondingBots[0]);
+            await triggerBotResponse(respondingBots[0], pendingReinject);
         } else {
-            // Sequential queue: each bot awaits the previous, with a brief gap
+            // Sequential queue: each bot awaits the previous, with a brief gap.
+            // pendingReinject only fires on the first bot of the turn.
             const delay = state.config.groupAutoDelay || 600;
             (async () => {
+                let first = true;
                 for (const botId of respondingBots) {
                     if (_groupAbort) break;
                     await new Promise(r => setTimeout(r, delay));
                     if (_groupAbort) break;
-                    await triggerBotResponse(botId);
+                    await triggerBotResponse(botId, first ? pendingReinject : '');
+                    first = false;
                 }
             })();
         }
@@ -3695,7 +3730,10 @@ export function initUI() {
         if (qs('#model-select') && c.model) qs('#model-select').value = c.model;
         if (qs('#stream-toggle')) qs('#stream-toggle').checked = c.stream;
 
-        // World tab
+        // World tab — sync worldConfig.scenario as the authoritative source into the textarea
+        const worldScenario = state.reality?.worldConfig?.scenario || c.groupScenario || '';
+        if (qs('#group-scenario-input')) qs('#group-scenario-input').value = worldScenario;
+
         const scanDepth = c.lorebookScanDepth ?? 5;
         if (qs('#lore-scan-input'))  qs('#lore-scan-input').value   = scanDepth;
         if (qs('#lore-scan-val'))    qs('#lore-scan-val').textContent = scanDepth;
@@ -3732,7 +3770,19 @@ export function initUI() {
         if ($el) $el.addEventListener('input', debounce(() => setConfig({ [key]: $el.value }), 300));
     };
     bindText('sys-directive',      'sysDirective');
-    bindText('group-scenario-input', 'groupScenario');
+    // Keep groupScenario and worldConfig.scenario in sync — both paths write to both stores
+    const $groupScenarioEl = qs('#group-scenario-input');
+    if ($groupScenarioEl) {
+        $groupScenarioEl.addEventListener('input', debounce(() => {
+            const val = $groupScenarioEl.value;
+            setConfig({ groupScenario: val });
+            if (state.reality) {
+                if (!state.reality.worldConfig) state.reality.worldConfig = { scenario: '', activeLorebooks: [] };
+                state.reality.worldConfig.scenario = val;
+                saveState();
+            }
+        }, 300));
+    }
     bindText('authors-note',       'authorsNote');
     bindText('nsfw-bypass',        'nsfwBypass');
     bindText('user-name-input',    'userName');
@@ -3754,40 +3804,43 @@ export function initUI() {
         const $sel = qs('#scenario-preset-select');
         const $ta  = qs('#group-scenario-input');
         if (!$sel) return;
+        let presets = [];
         try {
             const res  = await fetch('./data/scenarios.json');
             const data = await res.json();
-            $sel.innerHTML = (data.scenarios || []).map(s =>
+            presets = data.scenarios || [];
+            $sel.innerHTML = presets.map(s =>
                 `<option value="${esc(s.id)}">${esc(s.name)}</option>`
             ).join('');
         } catch {
             $sel.innerHTML = '<option value="">— None —</option>';
         }
         // Sync select to current stored scenario text
-        const current = state.config.groupScenario || '';
-        const matchOpt = [...$sel.options].find(o => {
-            const val = o.value;
-            if (!val || val === 'blank' || val === 'custom') return false;
-            return false; // text-matching is unreliable — leave at blank by default
-        });
-        if (!matchOpt) $sel.value = current ? 'custom' : 'blank';
+        const current = (state.config.groupScenario || '').trim();
+        const match = presets.find(s => s.scenario && s.scenario.trim() === current);
+        $sel.value = match ? match.id : (current ? 'custom' : 'blank');
 
-        $sel.addEventListener('change', async () => {
+        $sel.addEventListener('change', () => {
             const id = $sel.value;
+            const applyScenario = (val) => {
+                setConfig({ groupScenario: val });
+                if (state.reality) {
+                    if (!state.reality.worldConfig) state.reality.worldConfig = { scenario: '', activeLorebooks: [] };
+                    state.reality.worldConfig.scenario = val;
+                    saveState();
+                }
+            };
             if (!id || id === 'blank') {
-                if ($ta) { $ta.value = ''; setConfig({ groupScenario: '' }); }
+                if ($ta) $ta.value = '';
+                applyScenario('');
                 return;
             }
-            if (id === 'custom') return; // let user type freely
-            try {
-                const res  = await fetch('./data/scenarios.json');
-                const data = await res.json();
-                const entry = (data.scenarios || []).find(s => s.id === id);
-                if (entry && $ta) {
-                    $ta.value = entry.scenario;
-                    setConfig({ groupScenario: entry.scenario });
-                }
-            } catch { /* ignore */ }
+            if (id === 'custom') return;
+            const entry = presets.find(s => s.id === id);
+            if (entry && $ta) {
+                $ta.value = entry.scenario;
+                applyScenario(entry.scenario);
+            }
         });
     }
 
@@ -4277,10 +4330,12 @@ export function initUI() {
 
         // Build payload using current character context + oracle history, never writing to state
         const { buildPayload: bp, streamCompletion: sc } = await import('./llm-engine.js');
+        const _worldScenario = state.reality?.worldConfig?.scenario || '';
         const oracleConfig = {
             ...state.config,
             maxOutput: Math.max(state.config.maxOutput || 512, 1024),
-            stream: true
+            stream: true,
+            ...(_worldScenario ? { _worldScenario } : {})
         };
         const fullPayload = bp({
             character: { ...char, id: charId },
