@@ -18,6 +18,7 @@ import {
 } from './state.js';
 import { buildPayload, streamCompletion } from './llm-engine.js';
 import { parseCommand, executeCommand, filterCommands, COMMANDS } from './commands.js';
+import { IMAGE_MODELS, DEFAULT_MODEL, buildImagePrompt, generateImage } from './image-engine.js';
 import { addBook, removeBook, addEntry, updateEntry, removeEntry, createBook } from './lorebook.js';
 import { parseCharacterCard, buildCard, normalizeData } from './parser-v2.js';
 import { getApiKey, setApiKey, clearApiKey, isValidKeyFormat, restoreKeyFromCookie } from '../../../../glass/script/modules/llm-auth.js';
@@ -1734,6 +1735,245 @@ export function initUI() {
 
         lucideRefresh($grid);
     }
+
+    // ── Image Generation Modal ────────────────────────────────────────────────
+    let _imgGenModel    = DEFAULT_MODEL;
+    let _imgGenDataUrl  = null;   // last generated image (data URL)
+    let _imgGenPrompt   = '';     // prompt used for last generation
+    let _imgGenSeed     = null;
+
+    function openImageGenModal(userHint = '') {
+        const $modal = qs('#modal-image-gen');
+        if (!$modal) return;
+
+        // Build auto-prompt from current scene
+        const charId = state.activeBotId;
+        const nsfw   = state.config.flags?.injectAdult !== false;
+        const autoPr = buildImagePrompt({ charId, userAddition: userHint, includeNsfw: nsfw });
+        const $ta    = qs('#img-gen-prompt', $modal);
+        if ($ta) $ta.value = autoPr;
+
+        // Populate model grid
+        _renderImgGenModelGrid();
+
+        // Context strip — show char name + recent scene snippet
+        const $ctx = qs('#img-gen-context', $modal);
+        if ($ctx) {
+            const char = charId ? state.loadedCharacters[charId] : null;
+            const override = charId ? getCharOverride(charId) : {};
+            const charName = override.nickname || char?.name || '';
+            const lastBot = [...state.history].reverse().find(m => m.role === 'bot');
+            const snippet = lastBot?.content
+                ?.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 80) || '';
+            $ctx.innerHTML = charName
+                ? `<span class="img-gen-ctx__char"><i data-lucide="user"></i> ${esc(charName)}</span>${snippet ? `<span class="img-gen-ctx__scene">${esc(snippet)}…</span>` : ''}`
+                : '';
+            lucideRefresh($ctx);
+        }
+
+        // Hide previous preview
+        const $prev = qs('#img-gen-preview', $modal);
+        if ($prev) $prev.hidden = true;
+        _imgGenDataUrl = null;
+
+        qs('#img-gen-cost', $modal).textContent = '';
+        $modal.hidden = false;
+        lucideRefresh($modal);
+        setTimeout(() => $ta?.focus(), 80);
+    }
+
+    function _renderImgGenModelGrid() {
+        const $grid = qs('#img-gen-model-grid');
+        if (!$grid) return;
+        $grid.innerHTML = IMAGE_MODELS.map(m => {
+            const tagHtml = m.tags.map(t =>
+                `<span class="img-model-tag img-model-tag--${t}">${t}</span>`
+            ).join('');
+            const active = m.id === _imgGenModel ? ' img-model-card--active' : '';
+            return `<button class="img-model-card${active}" data-model="${esc(m.id)}" type="button" title="${esc(m.desc)}">
+                <span class="img-model-card__label">${esc(m.label)}</span>
+                <span class="img-model-card__tags">${tagHtml}</span>
+                <span class="img-model-card__desc">${esc(m.desc)}</span>
+            </button>`;
+        }).join('');
+
+        qsa('.img-model-card', $grid).forEach(btn => {
+            btn.addEventListener('click', () => {
+                _imgGenModel = btn.dataset.model;
+                qsa('.img-model-card', $grid).forEach(b => b.classList.toggle('img-model-card--active', b.dataset.model === _imgGenModel));
+            });
+        });
+    }
+
+    async function _runImageGeneration() {
+        const $modal    = qs('#modal-image-gen');
+        const $genBtn   = qs('#img-gen-generate', $modal);
+        const $regenBtn = qs('#img-gen-regenerate', $modal);
+        const $prev     = qs('#img-gen-preview', $modal);
+        const $prevImg  = qs('#img-gen-preview-img', $modal);
+        const $cost     = qs('#img-gen-cost', $modal);
+
+        const prompt = qs('#img-gen-prompt', $modal)?.value.trim();
+        if (!prompt) { showToast('Enter a prompt first', 'warn'); return; }
+
+        const size = qs('#img-gen-size', $modal)?.value || '1024x1024';
+        const seedRaw = qs('#img-gen-seed', $modal)?.value;
+        const seed = seedRaw ? parseInt(seedRaw) : undefined;
+
+        // Disable buttons, show loading state
+        if ($genBtn) { $genBtn.disabled = true; $genBtn.innerHTML = '<i data-lucide="loader-2" class="spin"></i> Generating…'; lucideRefresh($genBtn); }
+        if ($regenBtn) $regenBtn.disabled = true;
+        if ($cost) $cost.textContent = 'Generating…';
+
+        try {
+            _imgGenPrompt = prompt;
+            _imgGenSeed   = seed;
+            const dataUrl = await generateImage({ model: _imgGenModel, prompt, size, seed });
+            _imgGenDataUrl = dataUrl;
+
+            if ($prevImg) $prevImg.src = dataUrl;
+            if ($prev)    $prev.hidden = false;
+            if ($cost)    $cost.textContent = `Model: ${_imgGenModel}`;
+
+            // Auto-insert image into chat thread as a collapsed image message
+            _injectImageMessage(dataUrl, prompt, _imgGenModel);
+
+            // Auto-save to character gallery
+            const charId = state.activeBotId;
+            if (charId) {
+                const charObj = ensureGalleryStore(charId);
+                if (charObj) {
+                    charObj.extensions.underdark.gallery.push(dataUrl);
+                    saveState();
+                    renderGalleryStrip(charId);
+                    showToast('Image saved to gallery', 'info', 2000);
+                }
+            }
+
+        } catch (err) {
+            if ($cost) $cost.textContent = '';
+            showToast(`Image generation failed: ${err.message}`, 'error', 5000);
+        } finally {
+            if ($genBtn) { $genBtn.disabled = false; $genBtn.innerHTML = '<i data-lucide="sparkles"></i> Generate'; lucideRefresh($genBtn); }
+            if ($regenBtn) $regenBtn.disabled = false;
+        }
+    }
+
+    function _injectImageMessage(dataUrl, prompt, model) {
+        const $t = qs('#message-thread');
+        if (!$t) return;
+
+        const charId   = state.activeBotId;
+        const char     = charId ? state.loadedCharacters[charId] : null;
+        const override = charId ? getCharOverride(charId) : {};
+        const charName = override.nickname || char?.name || 'Scene';
+
+        const msgId = `img-msg-${Date.now()}`;
+        const $msg  = document.createElement('div');
+        $msg.className = 'message message--image';
+        $msg.dataset.imgMsgId = msgId;
+
+        $msg.innerHTML = `
+            <div class="message__img-bubble">
+                <div class="message__img-header">
+                    <span class="message__img-label"><i data-lucide="image"></i> ${esc(charName)}</span>
+                    <button class="message__img-toggle btn-icon btn-icon--small" title="Toggle image" aria-expanded="false">
+                        <i data-lucide="eye"></i>
+                    </button>
+                </div>
+                <div class="message__img-content" hidden>
+                    <img src="${esc(dataUrl)}" class="message__img-photo" alt="Generated scene" loading="lazy">
+                    <details class="message__img-details">
+                        <summary class="message__img-details-label"><i data-lucide="info"></i> Prompt details</summary>
+                        <div class="message__img-details-body">
+                            <div class="message__img-details-row"><strong>Model</strong><span>${esc(model)}</span></div>
+                            <div class="message__img-details-row"><strong>Prompt</strong><span class="message__img-details-prompt">${esc(prompt)}</span></div>
+                        </div>
+                    </details>
+                    <div class="message__img-actions">
+                        <button class="msg-action msg-action--img-save" data-img-msg="${esc(msgId)}" title="Save to gallery"><i data-lucide="image-plus"></i></button>
+                        <button class="msg-action msg-action--img-dl" data-img-msg="${esc(msgId)}" title="Download"><i data-lucide="download"></i></button>
+                        <button class="msg-action msg-action--img-del" data-img-msg="${esc(msgId)}" title="Remove from thread"><i data-lucide="trash-2"></i></button>
+                    </div>
+                </div>
+            </div>`;
+
+        // Store data URL on element for action handlers
+        $msg._imgDataUrl = dataUrl;
+
+        // Toggle visibility
+        qs('.message__img-toggle', $msg).addEventListener('click', btn => {
+            const $content = qs('.message__img-content', $msg);
+            const open     = $content.hidden;
+            $content.hidden = !open;
+            btn.target.closest('button').setAttribute('aria-expanded', String(open));
+            btn.target.closest('button').querySelector('i').setAttribute('data-lucide', open ? 'eye-off' : 'eye');
+            lucideRefresh(btn.target.closest('button'));
+        });
+
+        // Download
+        qs('.msg-action--img-dl', $msg).addEventListener('click', () => {
+            const a    = document.createElement('a');
+            a.href     = dataUrl;
+            a.download = `underdark-img-${Date.now()}.png`;
+            a.click();
+        });
+
+        // Delete from thread
+        qs('.msg-action--img-del', $msg).addEventListener('click', () => $msg.remove());
+
+        // Save to gallery (re-save in case user closes modal without saving)
+        qs('.msg-action--img-save', $msg).addEventListener('click', () => {
+            const cid = state.activeBotId;
+            if (!cid) { showToast('No active character', 'warn'); return; }
+            const co = ensureGalleryStore(cid);
+            if (co) {
+                if (!co.extensions.underdark.gallery.includes(dataUrl)) {
+                    co.extensions.underdark.gallery.push(dataUrl);
+                    saveState();
+                    renderGalleryStrip(cid);
+                }
+                showToast('Saved to gallery', 'info', 1800);
+            }
+        });
+
+        lucideRefresh($msg);
+        $t.appendChild($msg);
+        $t.scrollTop = $t.scrollHeight;
+    }
+
+    // Modal event bindings
+    qs('#img-gen-close')?.addEventListener('click', () => { qs('#modal-image-gen').hidden = true; });
+    qs('#img-gen-cancel')?.addEventListener('click', () => { qs('#modal-image-gen').hidden = true; });
+    qs('.modal__backdrop', qs('#modal-image-gen'))?.addEventListener('click', () => { qs('#modal-image-gen').hidden = true; });
+    qs('#img-gen-generate')?.addEventListener('click', _runImageGeneration);
+    qs('#img-gen-regenerate')?.addEventListener('click', _runImageGeneration);
+
+    qs('#img-gen-save-gallery')?.addEventListener('click', () => {
+        if (!_imgGenDataUrl) return;
+        const cid = state.activeBotId;
+        if (!cid) { showToast('No active character', 'warn'); return; }
+        const co = ensureGalleryStore(cid);
+        if (co) {
+            if (!co.extensions.underdark.gallery.includes(_imgGenDataUrl)) {
+                co.extensions.underdark.gallery.push(_imgGenDataUrl);
+                saveState();
+                renderGalleryStrip(cid);
+            }
+            showToast('Saved to gallery', 'info', 1800);
+        }
+    });
+
+    qs('#img-gen-download')?.addEventListener('click', () => {
+        if (!_imgGenDataUrl) return;
+        const a    = document.createElement('a');
+        a.href     = _imgGenDataUrl;
+        a.download = `underdark-gen-${Date.now()}.png`;
+        a.click();
+    });
+
+    // Also allow opening from a toolbar button (quick access)
+    qs('#btn-image-gen')?.addEventListener('click', () => openImageGenModal(''));
 
     // ── Social Feed ────────────────────────────────────────────────────────────
     const $chatArena = qs('#chat-arena');
@@ -3663,6 +3903,12 @@ export function initUI() {
             });
 
             if (result?.handled) {
+                // /image — open the image generation studio
+                if (result.action === 'open-image-gen') {
+                    openImageGenModal(result.args || '');
+                    $textarea.focus();
+                    return;
+                }
                 // /scene and /mood may want to queue a reinject and optionally fire bot
                 if (result.reinject) {
                     const $ta = qs('#rp-input');

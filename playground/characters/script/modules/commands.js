@@ -11,6 +11,7 @@
  */
 
 import { state, setConfig, saveState, getCharOverride } from './state.js';
+export { IMAGE_MODELS, DEFAULT_MODEL, buildImagePrompt, generateImage } from './image-engine.js';
 
 // ── Registry ──────────────────────────────────────────────────────────────────
 // Each entry: { cmd, args, desc, detail }
@@ -25,6 +26,7 @@ export const COMMANDS = [
     { cmd: '/pov',      args: '[first|third|second]', desc: 'Switch narrative POV for all future replies' },
     { cmd: '/persona',  args: '<description>', desc: 'Update your persona description on the fly' },
     { cmd: '/remember', args: '<fact>',        desc: 'Append a fact to the active character\'s persistent memory' },
+    { cmd: '/image',    args: '[description]', desc: 'Generate an image — opens the image studio' },
     { cmd: '/help',     args: '',              desc: 'Show this command list' },
 ];
 
@@ -284,6 +286,11 @@ export async function executeCommand(raw, { triggerBotResponse, appendSystemMess
             showToast(`Compact failed: ${err.message}`, 'error');
             return { handled: true };
         }
+    }
+
+    // ── /image [description] ──────────────────────────────────────────────────
+    if (cmd === '/image') {
+        return { handled: true, action: 'open-image-gen', args };
     }
 
     // ── Unknown command ────────────────────────────────────────────────────────
