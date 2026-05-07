@@ -503,8 +503,12 @@ export function initUI() {
     function _populateScenarioSelect($sel, { includeInherit = false, includeCustom = true, blankLabel = null } = {}) {
         if (!$sel || !_scenarioPresets.length) return;
         const opts = [];
-        if (blankLabel)      opts.push(`<option value="blank">${esc(blankLabel)}</option>`);
-        if (includeInherit)  opts.push('<option value="blank">— Inherit from Reality —</option>');
+        // blankLabel and includeInherit are mutually exclusive — blankLabel takes precedence
+        if (blankLabel) {
+            opts.push(`<option value="blank">${esc(blankLabel)}</option>`);
+        } else if (includeInherit) {
+            opts.push('<option value="blank">— Inherit from Reality —</option>');
+        }
         opts.push(..._scenarioPresets
             .filter(s => s.id !== 'blank' && (includeCustom || s.id !== 'custom'))
             .map(s => `<option value="${esc(s.id)}">${esc(s.name)}</option>`));
@@ -857,6 +861,9 @@ export function initUI() {
             p.classList.toggle('active', i === idx);
             p.hidden = i !== idx;
         });
+        // Re-init Lucide icons in the newly revealed panel (icons hidden by default are not processed)
+        const $activePanel = qsa('.ts-panel')[idx];
+        if ($activePanel) lucideRefresh($activePanel);
         _tsUpdateFooter();
     }
 
@@ -3858,11 +3865,27 @@ export function initUI() {
         renderRoster();
         renderActiveBots();
         renderLorebooks();
-        renderFullHistory();
         syncConfigUI();
         renderPersonaCharSelect();
         updateTelemetry();
         applyChatBackground();
+
+        // Pre-load all active bot cards so history renders with correct names/avatars,
+        // then render history + profile once cards are resolved.
+        const botIds = state.chat?.botIds || [];
+        const cardLoads = botIds
+            .filter(id => !state.loadedCharacters[id])
+            .map(id => loadCharacterCard(id).catch(() => null));
+
+        const doRenderHistory = () => {
+            renderFullHistory();
+        };
+
+        if (cardLoads.length) {
+            Promise.all(cardLoads).then(doRenderHistory);
+        } else {
+            doRenderHistory();
+        }
 
         // Ensure bot cards are loaded for the active chat, then re-render profile/bg
         const ensureAndRenderProfile = async () => {
@@ -4562,7 +4585,7 @@ export function initUI() {
                 $ta.value = entry.scenario;
                 applyScenario(entry.scenario);
             }
-        });
+        }, { once: false }); // Called once at boot — listener is intentionally permanent
     }
 
     // ── Persona Presets ───────────────────────────────────────────────────────
@@ -4571,6 +4594,13 @@ export function initUI() {
     async function loadPersonaPresets() {
         const $sel = qs('#persona-preset-select');
         if (!$sel) return;
+        if (_personaPresets.length) {
+            // Already loaded — just re-populate the select (DOM may have been re-rendered)
+            $sel.innerHTML = _personaPresets.map(p =>
+                `<option value="${esc(p.id)}">${esc(p.name)}</option>`
+            ).join('');
+            return;
+        }
         try {
             const res  = await fetch('./data/personas.json');
             const data = await res.json();
@@ -4587,7 +4617,7 @@ export function initUI() {
                 const $bio  = qs('#user-persona-input');
                 if ($name) { $name.value = entry.userName; setConfig({ userName: entry.userName }); }
                 if ($bio)  { $bio.value  = entry.userPersona; setConfig({ userPersona: entry.userPersona }); }
-            });
+            }, { once: true });
         } catch {
             $sel.innerHTML = '<option value="">— None —</option>';
         }
