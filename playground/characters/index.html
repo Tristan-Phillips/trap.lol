@@ -6,8 +6,8 @@
     <title>The Underdark // Reality Matrix</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2306040A'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%23ef4444' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23ef4444'/%3E%3C/svg%3E" />
     <link rel="stylesheet" href="../../glass/style/style.css">
-    <link rel="stylesheet" href="./style/style.css?v=61">
-    <link rel="stylesheet" href="./style/char-editor.css?v=3">
+    <link rel="stylesheet" href="./style/style.css?v=62">
+    <link rel="stylesheet" href="./style/char-editor.css?v=5">
 </head>
 <body class="underdark-page">
 
@@ -617,28 +617,147 @@
   </div>
 </div>
 
-<div id="modal-group-creator" class="modal" hidden>
-  <div class="modal__backdrop" data-close></div>
-  <div class="modal__content">
-    <header class="modal__header">
-      <div class="modal__header-icon-title"><i data-lucide="users"></i><h3>Assemble Group</h3></div>
-      <button id="group-creator-close" class="btn-icon"><i data-lucide="x"></i></button>
+<!-- ══════════════════════════════════════════════
+     THREAD SETUP WIZARD
+══════════════════════════════════════════════ -->
+<div id="modal-thread-setup" class="modal ts-modal" hidden role="dialog" aria-modal="true" aria-labelledby="ts-title">
+  <div class="modal__backdrop ts-backdrop"></div>
+  <div class="ts-studio">
+
+    <!-- Header -->
+    <header class="ts-header">
+      <div class="ts-header__left">
+        <i data-lucide="wand-2" class="ts-header__icon"></i>
+        <h2 id="ts-title" class="ts-header__title">New Thread</h2>
+        <span id="ts-type-badge" class="ts-badge">DM</span>
+      </div>
+      <button id="ts-close" class="ce-btn ce-btn--ghost ce-btn--icon" aria-label="Close"><i data-lucide="x"></i></button>
     </header>
-    <div class="modal__body">
-      <div class="config-group">
-        <label>Group Name <span class="config-hint" style="font-weight:400;">— optional</span></label>
-        <input type="text" id="group-name-input" class="control-input control-input--sm" placeholder="e.g. The Crew, Study Group…">
+
+    <!-- Tab nav -->
+    <nav class="ts-tabs" role="tablist">
+      <button class="ts-tab active" data-ts-tab="characters" role="tab" aria-selected="true"><i data-lucide="user"></i> Characters</button>
+      <button class="ts-tab" data-ts-tab="world" role="tab" aria-selected="false"><i data-lucide="globe-2"></i> World</button>
+      <button class="ts-tab" data-ts-tab="persona" role="tab" aria-selected="false"><i data-lucide="user-cog"></i> Persona</button>
+      <button class="ts-tab" data-ts-tab="generation" role="tab" aria-selected="false"><i data-lucide="sliders-horizontal"></i> Generation</button>
+    </nav>
+
+    <!-- Body -->
+    <div class="ts-body">
+
+      <!-- ── TAB: Characters ── -->
+      <div class="ts-panel active" id="ts-panel-characters" role="tabpanel">
+        <p class="ts-panel__desc">Choose who participates in this thread. The first selection becomes the default active character.</p>
+        <div class="ts-search-bar">
+          <i data-lucide="search" class="ts-search-icon"></i>
+          <input type="text" id="ts-char-search" class="ce-input" placeholder="Filter characters…">
+        </div>
+        <div id="ts-char-grid" class="ts-char-grid"></div>
+        <div id="ts-selected-strip" class="ts-selected-strip" hidden>
+          <span class="ts-selected-strip__label">Selected:</span>
+          <div id="ts-selected-chips" class="ts-selected-chips"></div>
+        </div>
       </div>
-      <div class="config-group">
-        <label>Participants</label>
-        <div id="group-participant-list" class="participant-grid"></div>
+
+      <!-- ── TAB: World ── -->
+      <div class="ts-panel" id="ts-panel-world" role="tabpanel" hidden>
+        <p class="ts-panel__desc">Set the world context for this specific thread. This layers on top of (or replaces) the reality's shared scenario.</p>
+
+        <div class="ts-field-group">
+          <label class="ts-label">Scenario Preset</label>
+          <select id="ts-scenario-preset" class="control-select control-select--sm ts-select">
+            <option value="blank">— Inherit from Reality —</option>
+          </select>
+        </div>
+
+        <div class="ts-field-group">
+          <label class="ts-label">Thread Scenario <span class="ts-hint">injected for every message in this thread only</span></label>
+          <textarea id="ts-scenario-text" class="control-textarea ts-textarea" rows="6" placeholder="Leave blank to use the reality's shared scenario. Override or extend it here for this thread specifically…"></textarea>
+        </div>
+
+        <div class="ts-field-group">
+          <label class="ts-label ts-label--row">
+            <input type="checkbox" id="ts-auto-lorebooks" class="ts-checkbox" checked>
+            Auto-attach character lorebooks
+          </label>
+          <p class="ts-hint ts-hint--indent">When enabled, each character's associated lorebook is automatically loaded into this thread when they're added.</p>
+        </div>
       </div>
-    </div>
-    <footer class="modal__footer">
-      <button id="group-creator-cancel" class="btn btn--ghost" data-close>Cancel</button>
-      <button id="group-create-btn" class="btn btn--accent"><i data-lucide="users"></i> Assemble</button>
+
+      <!-- ── TAB: Persona ── -->
+      <div class="ts-panel" id="ts-panel-persona" role="tabpanel" hidden>
+        <p class="ts-panel__desc">Define who <em>you</em> are in this thread. Overrides the reality-wide identity for this chat only.</p>
+
+        <div class="ts-field-group">
+          <label class="ts-label">Persona Preset</label>
+          <select id="ts-persona-preset" class="control-select control-select--sm ts-select">
+            <option value="blank">— Inherit from Reality —</option>
+          </select>
+        </div>
+
+        <div class="ts-field-group">
+          <label class="ts-label">Your Name in this Thread</label>
+          <input type="text" id="ts-user-name" class="ce-input" placeholder="Inherit from reality settings…">
+        </div>
+
+        <div class="ts-field-group">
+          <label class="ts-label">Your Persona / Bio <span class="ts-hint">who you are in this world</span></label>
+          <textarea id="ts-user-persona" class="control-textarea ts-textarea" rows="5" placeholder="Describe your character's identity, role, background, relationship to the characters in this thread…"></textarea>
+        </div>
+      </div>
+
+      <!-- ── TAB: Generation ── -->
+      <div class="ts-panel" id="ts-panel-generation" role="tabpanel" hidden>
+        <p class="ts-panel__desc">Override generation settings for this thread. Leave fields at <strong>Inherit</strong> to use the reality's global settings.</p>
+
+        <div class="ts-field-group">
+          <label class="ts-label">Model <span class="ts-hint">override for this thread</span></label>
+          <select id="ts-model-select" class="control-select control-select--sm ts-select">
+            <option value="">— Inherit global model —</option>
+          </select>
+        </div>
+
+        <div class="ts-gen-grid">
+          <div class="ts-field-group">
+            <label class="ts-label">Max Output <span id="ts-maxout-val" class="ts-badge ts-badge--sm">inherit</span></label>
+            <div class="ts-inherit-row">
+              <input type="checkbox" id="ts-maxout-inherit" class="ts-checkbox" checked>
+              <label for="ts-maxout-inherit" class="ts-inherit-label">Inherit</label>
+            </div>
+            <input type="range" id="ts-maxout-input" class="config-range" min="256" max="8192" step="256" value="2048" disabled>
+          </div>
+
+          <div class="ts-field-group">
+            <label class="ts-label">Temperature <span id="ts-temp-val" class="ts-badge ts-badge--sm">inherit</span></label>
+            <div class="ts-inherit-row">
+              <input type="checkbox" id="ts-temp-inherit" class="ts-checkbox" checked>
+              <label for="ts-temp-inherit" class="ts-inherit-label">Inherit</label>
+            </div>
+            <input type="range" id="ts-temp-input" class="config-range" min="0" max="2" step="0.01" value="0.8" disabled>
+          </div>
+        </div>
+
+        <div class="ts-field-group">
+          <label class="ts-label">Thread Name <span class="ts-hint">auto-generated from characters if left blank</span></label>
+          <input type="text" id="ts-thread-name" class="ce-input" placeholder="Auto-name…">
+        </div>
+      </div>
+
+    </div><!-- .ts-body -->
+
+    <!-- Footer -->
+    <footer class="ts-footer">
+      <div class="ts-footer__left">
+        <button id="ts-cancel" class="ce-btn ce-btn--ghost">Cancel</button>
+      </div>
+      <div class="ts-footer__right">
+        <button id="ts-prev" class="ce-btn ce-btn--ghost" disabled><i data-lucide="chevron-left"></i> Back</button>
+        <button id="ts-next" class="ce-btn ce-btn--ghost">Next <i data-lucide="chevron-right"></i></button>
+        <button id="ts-create" class="ce-btn ce-btn--accent" hidden><i data-lucide="wand-2"></i> Begin Thread</button>
+      </div>
     </footer>
-  </div>
+
+  </div><!-- .ts-studio -->
 </div>
 
 <!-- ══════════════════════════════════════════════
@@ -1730,7 +1849,7 @@
 
 <div id="toast-container" class="toast-container"></div>
 <script src="../../shards/lucide.min.js"></script><script src="../../shards/marked.min.js"></script><script src="../../shards/purify.min.js"></script>
-<script type="module" src="./script/main.js?v=49"></script>
+<script type="module" src="./script/main.js?v=50"></script>
 <!-- ── Wallhaven Arena ── -->
 <script src="./script/modules/wallhaven.js"></script>
 </body>

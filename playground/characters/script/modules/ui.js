@@ -13,7 +13,7 @@ import {
     setActiveBot, removeBotFromChat,
     getCharOverride, setCharOverride,
     setConfig, saveCharacter, deleteCharacter,
-    defaultCharOverride, resolveCharAvatar,
+    defaultCharOverride, defaultThreadConfig, resolveCharAvatar,
     addReaction, getReactions, exportSessionJson, importSessionJson
 } from './state.js';
 import { buildPayload, streamCompletion } from './llm-engine.js';
@@ -443,11 +443,11 @@ export function initUI() {
     });
 
     qs('#reality-new')?.addEventListener('click', () => {
-        // Populate preset select (same source as reality editor)
         const $sel = qs('#new-reality-preset');
-        if ($sel && _scenarioPresets.length) {
-            $sel.innerHTML = '<option value="blank">— Blank —</option>'
-                + _scenarioPresets.map(s => `<option value="${esc(s.id)}">${esc(s.name)}</option>`).join('');
+        if ($sel) {
+            _loadScenarioCache().then(() => {
+                _populateScenarioSelect($sel, { blankLabel: '— Blank —', includeCustom: false });
+            });
         }
         qs('#new-reality-name').value = '';
         showModal('modal-new-reality');
@@ -486,24 +486,39 @@ export function initUI() {
         if (e.key === 'Enter') qs('#new-reality-create')?.click();
     });
 
-    // ── Scenario preset loader (Reality Editor modal) ─────────────────────────
+    // ── Scenario preset cache (shared across Reality Editor, World tab, Thread Setup) ──
     let _scenarioPresets = [];
-    (async () => {
+
+    async function _loadScenarioCache() {
+        if (_scenarioPresets.length) return; // already loaded
         try {
             const res  = await fetch('data/scenarios.json');
             const data = await res.json();
             _scenarioPresets = data.scenarios || [];
-            const $sel = qs('#reality-scenario-preset-select');
-            if ($sel) {
-                $sel.innerHTML = _scenarioPresets.map(s =>
-                    `<option value="${esc(s.id)}">${esc(s.name)}</option>`
-                ).join('');
-                $sel.value = 'blank';
-            }
         } catch (e) {
             console.warn('[underdark] Failed to load scenarios.json', e);
         }
-    })();
+    }
+
+    function _populateScenarioSelect($sel, { includeInherit = false, includeCustom = true, blankLabel = null } = {}) {
+        if (!$sel || !_scenarioPresets.length) return;
+        const opts = [];
+        if (blankLabel)      opts.push(`<option value="blank">${esc(blankLabel)}</option>`);
+        if (includeInherit)  opts.push('<option value="blank">— Inherit from Reality —</option>');
+        opts.push(..._scenarioPresets
+            .filter(s => s.id !== 'blank' && (includeCustom || s.id !== 'custom'))
+            .map(s => `<option value="${esc(s.id)}">${esc(s.name)}</option>`));
+        $sel.innerHTML = opts.join('');
+    }
+
+    // Boot: load cache then populate the Reality Editor preset select
+    _loadScenarioCache().then(() => {
+        const $sel = qs('#reality-scenario-preset-select');
+        if ($sel) {
+            _populateScenarioSelect($sel, { includeCustom: true });
+            $sel.value = 'blank';
+        }
+    });
 
     qs('#reality-scenario-preset-select')?.addEventListener('change', e => {
         const preset = _scenarioPresets.find(s => s.id === e.target.value);
@@ -588,8 +603,7 @@ export function initUI() {
                 </div>`;
             lucideRefresh($chatList);
             qs('#empty-new-dm', $chatList)?.addEventListener('click', () => {
-                _pickerMode = 'dm';
-                openCharPicker();
+                openThreadSetup('dm');
             });
             return;
         }
@@ -695,59 +709,240 @@ export function initUI() {
         renderChats(e.target.value);
     });
 
-    // ── Group Chat Creator ────────────────────────────────────────────────────
-    const $groupModal = qs('#modal-group-creator');
-    const $groupPartList = qs('#group-participant-list');
-    let selectedGroupBots = new Set();
+    qs('#chat-new-group')?.addEventListener('click', () => openThreadSetup('group'));
 
-    qs('#chat-new-group')?.addEventListener('click', () => {
-        selectedGroupBots.clear();
-        if (qs('#group-name-input')) qs('#group-name-input').value = '';
-        renderGroupParticipantList();
-        showModal('modal-group-creator');
-    });
+    // ── Thread Setup Wizard ───────────────────────────────────────────────────
+    // Launched for both New DM and New Group — replaces the old pickers.
 
-    qs('#group-creator-close')?.addEventListener('click',  () => hideModal('modal-group-creator'));
-    qs('#group-creator-cancel')?.addEventListener('click', () => hideModal('modal-group-creator'));
-    qs('.modal__backdrop', qs('#modal-group-creator'))?.addEventListener('click', () => hideModal('modal-group-creator'));
+    let _tsMode = 'dm'; // 'dm' | 'group'
+    let _tsSelectedIds = new Set();
+    let _tsCurrentTab  = 0;
+    const TS_TABS = ['characters', 'world', 'persona', 'generation'];
 
-    function renderGroupParticipantList() {
-        $groupPartList.innerHTML = state.characters.map(c => {
+    function openThreadSetup(mode = 'dm') {
+        _tsMode = mode;
+        _tsSelectedIds.clear();
+        _tsCurrentTab = 0;
+
+        const $modal  = qs('#modal-thread-setup');
+        const $badge  = qs('#ts-type-badge');
+        const $title  = qs('#ts-title');
+        if ($badge) $badge.textContent = mode === 'group' ? 'Group' : 'DM';
+        if ($title) $title.textContent = mode === 'group' ? 'New Group Thread' : 'New DM Thread';
+
+        // Reset fields
+        const $scenarioText = qs('#ts-scenario-text');
+        const $scenarioPreset = qs('#ts-scenario-preset');
+        const $userName  = qs('#ts-user-name');
+        const $userPers  = qs('#ts-user-persona');
+        const $threadName = qs('#ts-thread-name');
+        if ($scenarioText) $scenarioText.value = '';
+        if ($userName) $userName.value = '';
+        if ($userPers) $userPers.value = '';
+        if ($threadName) $threadName.value = '';
+        // Auto-lorebooks default on
+        const $autoLore = qs('#ts-auto-lorebooks');
+        if ($autoLore) $autoLore.checked = true;
+        // Inherit checkboxes
+        qs('#ts-maxout-inherit').checked = true;
+        qs('#ts-temp-inherit').checked = true;
+        qs('#ts-maxout-input').disabled = true;
+        qs('#ts-temp-input').disabled = true;
+        qs('#ts-maxout-val').textContent = 'inherit';
+        qs('#ts-temp-val').textContent = 'inherit';
+
+        // Populate scenario preset via shared cache helper
+        const $sp = qs('#ts-scenario-preset');
+        if ($sp) {
+            _loadScenarioCache().then(() => {
+                _populateScenarioSelect($sp, { includeInherit: true, includeCustom: true });
+                $sp.value = 'blank';
+            });
+        }
+
+        // Populate model select (share with loadModels result)
+        const $tmsel = qs('#ts-model-select');
+        const $gmsel = qs('#model-select');
+        if ($tmsel && $gmsel) {
+            $tmsel.innerHTML = '<option value="">— Inherit global model —</option>'
+                + $gmsel.innerHTML.replace(/<option value="">[^<]*<\/option>/gi, '');
+        }
+
+        _tsPopulatePersonaSelect();
+        _tsRenderCharGrid('');
+        _tsSwitchTab(0);
+        _tsUpdateFooter();
+
+        $modal.hidden = false;
+        lucideRefresh($modal);
+        qs('#ts-char-search')?.focus();
+    }
+
+    function _tsRenderCharGrid(query) {
+        const $grid = qs('#ts-char-grid');
+        if (!$grid) return;
+        const q = query.toLowerCase();
+        const chars = state.characters.filter(c =>
+            !q || c.name.toLowerCase().includes(q));
+
+        if (!chars.length) {
+            $grid.innerHTML = '<div style="color:rgba(180,160,210,0.4);font-size:.8rem;grid-column:1/-1;padding:16px 0;">No characters found.</div>';
+            return;
+        }
+
+        $grid.innerHTML = chars.map(c => {
             const rawAv = c.avatar_path || state.loadedCharacters[c.id]?.avatar;
             const av = getAvatarUrlSync(c.id, rawAv) || rawAv;
-            return `
-            <div class="participant-item" data-id="${esc(c.id)}">
-                ${buildAvatarHtml(av, 'participant-item__avatar')}
-                <span class="participant-item__name">${esc(c.name)}</span>
+            const hasLore = !!c.lorebook_path;
+            const sel = _tsSelectedIds.has(c.id) ? ' selected' : '';
+            const loreBadge = hasLore ? `<span class="ts-char-card__lorebook-badge">lorebook</span>` : '';
+            const avHtml = buildAvatarHtml(av, 'ts-char-card__avatar');
+            return `<div class="ts-char-card${sel}${hasLore ? ' has-lorebook' : ''}" data-id="${esc(c.id)}" title="${esc(c.name)}">
+                ${avHtml}
+                <span class="ts-char-card__name">${esc(c.name)}</span>
+                ${loreBadge}
             </div>`;
         }).join('');
 
-        qsa('.participant-item', $groupPartList).forEach(el => {
+        qsa('.ts-char-card', $grid).forEach(el => {
             el.addEventListener('click', () => {
                 const id = el.dataset.id;
-                if (selectedGroupBots.has(id)) {
-                    selectedGroupBots.delete(id);
-                    el.classList.remove('selected');
-                } else {
-                    selectedGroupBots.add(id);
+                if (_tsMode === 'dm') {
+                    // DM = single selection
+                    _tsSelectedIds.clear();
+                    qsa('.ts-char-card', $grid).forEach(x => x.classList.remove('selected'));
+                    _tsSelectedIds.add(id);
                     el.classList.add('selected');
+                } else {
+                    // Group = multi
+                    if (_tsSelectedIds.has(id)) {
+                        _tsSelectedIds.delete(id);
+                        el.classList.remove('selected');
+                    } else {
+                        _tsSelectedIds.add(id);
+                        el.classList.add('selected');
+                    }
                 }
+                _tsUpdateSelectedStrip();
+                _tsUpdateFooter();
             });
         });
+
+        _tsUpdateSelectedStrip();
     }
 
-    qs('#group-create-btn')?.addEventListener('click', async () => {
-        if (selectedGroupBots.size === 0) return showToast('Select at least one participant', 'error');
-        const botIds   = Array.from(selectedGroupBots);
-        const autoName = botIds.map(id => state.characters.find(c => c.id === id)?.name || id).join(', ');
-        const name     = qs('#group-name-input')?.value.trim() || autoName;
-        hideModal('modal-group-creator');
-        // Pre-load all participant cards so the thread is ready immediately
+    function _tsUpdateSelectedStrip() {
+        const $strip = qs('#ts-selected-strip');
+        const $chips = qs('#ts-selected-chips');
+        if (!$strip || !$chips) return;
+        if (!_tsSelectedIds.size) { $strip.hidden = true; return; }
+        $strip.hidden = false;
+        $chips.innerHTML = Array.from(_tsSelectedIds).map(id => {
+            const c = state.characters.find(x => x.id === id);
+            if (!c) return '';
+            const rawAv = c.avatar_path || state.loadedCharacters[id]?.avatar;
+            const av = getAvatarUrlSync(id, rawAv) || rawAv;
+            const avHtml = buildAvatarHtml(av, 'ts-chip__avatar');
+            return `<div class="ts-chip">${avHtml}<span>${esc(c.name)}</span></div>`;
+        }).join('');
+    }
+
+    function _tsSwitchTab(idx) {
+        _tsCurrentTab = idx;
+        qsa('.ts-tab').forEach((t, i) => {
+            t.classList.toggle('active', i === idx);
+            t.setAttribute('aria-selected', i === idx ? 'true' : 'false');
+        });
+        qsa('.ts-panel').forEach((p, i) => {
+            p.classList.toggle('active', i === idx);
+            p.hidden = i !== idx;
+        });
+        _tsUpdateFooter();
+    }
+
+    function _tsUpdateFooter() {
+        const $prev   = qs('#ts-prev');
+        const $next   = qs('#ts-next');
+        const $create = qs('#ts-create');
+        const last = TS_TABS.length - 1;
+        if ($prev)   $prev.disabled   = _tsCurrentTab === 0;
+        const isLast = _tsCurrentTab === last;
+        if ($next)   { $next.hidden   = isLast; }
+        if ($create) { $create.hidden = !isLast; }
+        // Disable create if no character selected
+        if ($create) $create.disabled = _tsSelectedIds.size === 0;
+    }
+
+    async function _tsCommit() {
+        if (!_tsSelectedIds.size) return;
+
+        const botIds = Array.from(_tsSelectedIds);
+
+        // Thread name
+        const manualName = qs('#ts-thread-name')?.value.trim();
+        const autoName   = botIds.map(id => state.characters.find(c => c.id === id)?.name || id).join(', ');
+        const name       = manualName || autoName;
+
+        // Build threadConfig overrides
+        const tc = defaultThreadConfig();
+
+        const $scenarioText = qs('#ts-scenario-text')?.value.trim();
+        if ($scenarioText) tc.threadScenario = $scenarioText;
+
+        const $autoLore = qs('#ts-auto-lorebooks');
+        tc.autoAttachLorebooks = $autoLore ? $autoLore.checked : true;
+
+        const $tsName = qs('#ts-user-name')?.value.trim();
+        if ($tsName) tc.userName = $tsName;
+        const $tsPers = qs('#ts-user-persona')?.value.trim();
+        if ($tsPers) tc.userPersona = $tsPers;
+
+        const $tsModel = qs('#ts-model-select')?.value;
+        if ($tsModel) tc.model = $tsModel;
+
+        if (!qs('#ts-maxout-inherit')?.checked) {
+            tc.maxOutput = parseInt(qs('#ts-maxout-input')?.value || '2048', 10);
+        }
+        if (!qs('#ts-temp-inherit')?.checked) {
+            tc.temperature = parseFloat(qs('#ts-temp-input')?.value || '0.8');
+        }
+
+        hideModal('modal-thread-setup');
+
+        // Pre-load all participant cards
         await Promise.all(botIds.map(id => loadCharacterCard(id)));
-        newChat('group', botIds, name);
+
+        const chat = newChat(_tsMode, botIds, name);
+        chat.threadConfig = tc;
+        saveState();
+
         renderChats();
         renderAll();
-        // Show first messages for each bot if the thread is fresh
+
+        // Auto-attach lorebooks per character if enabled
+        if (tc.autoAttachLorebooks) {
+            for (const id of botIds) {
+                const meta = state.characters.find(c => c.id === id);
+                if (meta?.lorebook_path) {
+                    const alreadyAttached = state.reality.worldConfig.activeLorebooks
+                        .some(b => b._sourcePath === meta.lorebook_path);
+                    if (!alreadyAttached) {
+                        try {
+                            const lbRes  = await fetch(meta.lorebook_path);
+                            const lbData = await lbRes.json();
+                            lbData._sourcePath = meta.lorebook_path;
+                            state.reality.worldConfig.activeLorebooks.push(lbData);
+                            saveState();
+                            renderLorebooks();
+                        } catch (e) {
+                            console.warn('[underdark] Thread setup: lorebook attach failed:', e);
+                        }
+                    }
+                }
+            }
+        }
+
+        // First messages
         if (!state.history.length) {
             for (const botId of botIds) {
                 const char = state.loadedCharacters[botId];
@@ -759,13 +954,78 @@ export function initUI() {
             }
         }
         qs('#arena-welcome')?.remove();
-        showToast(`Group chat created with ${botIds.length} characters`, 'info', 2200);
+        showToast(`Thread created — ${name}`, 'info', 2200);
+    }
+
+    // Wire Thread Setup modal
+    qs('#ts-close')?.addEventListener('click',   () => hideModal('modal-thread-setup'));
+    qs('#ts-cancel')?.addEventListener('click',  () => hideModal('modal-thread-setup'));
+    qs('.ts-backdrop')?.addEventListener('click', () => hideModal('modal-thread-setup'));
+
+    qs('#ts-prev')?.addEventListener('click', () => {
+        if (_tsCurrentTab > 0) _tsSwitchTab(_tsCurrentTab - 1);
+    });
+    qs('#ts-next')?.addEventListener('click', () => {
+        if (_tsCurrentTab < TS_TABS.length - 1) _tsSwitchTab(_tsCurrentTab + 1);
+    });
+    qs('#ts-create')?.addEventListener('click', _tsCommit);
+
+    qsa('.ts-tab').forEach((tab, i) => {
+        tab.addEventListener('click', () => _tsSwitchTab(i));
     });
 
+    qs('#ts-char-search')?.addEventListener('input', e => {
+        _tsRenderCharGrid(e.target.value);
+    });
+
+    // Scenario preset → populate textarea
+    qs('#ts-scenario-preset')?.addEventListener('change', e => {
+        const id = e.target.value;
+        if (id === 'blank') { qs('#ts-scenario-text').value = ''; return; }
+        if (id === 'custom') return;
+        const p = _scenarioPresets.find(s => s.id === id);
+        if (p) qs('#ts-scenario-text').value = p.scenario;
+    });
+
+    // Persona preset → populate name + bio (uses _personaPresets cache set by loadPersonaPresets)
+    qs('#ts-persona-preset')?.addEventListener('change', e => {
+        const id = e.target.value;
+        if (!id || id === 'blank') return;
+        const entry = _personaPresets.find(p => p.id === id);
+        if (!entry) return;
+        const $n = qs('#ts-user-name');
+        const $b = qs('#ts-user-persona');
+        if ($n && entry.userName)    $n.value = entry.userName;
+        if ($b && entry.userPersona) $b.value = entry.userPersona;
+    });
+
+    function _tsPopulatePersonaSelect() {
+        const $psel = qs('#ts-persona-preset');
+        if (!$psel || !_personaPresets.length) return;
+        $psel.innerHTML = '<option value="blank">— Inherit from Reality —</option>'
+            + _personaPresets.filter(p => p.id !== 'blank').map(p =>
+                `<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('');
+    }
+
+    // Inherit toggle → enable/disable sliders
+    function _tsWireInheritToggle(checkboxId, sliderId, valId, formatter) {
+        const $cb  = qs(`#${checkboxId}`);
+        const $sl  = qs(`#${sliderId}`);
+        const $val = qs(`#${valId}`);
+        if (!$cb || !$sl) return;
+        $cb.addEventListener('change', () => {
+            $sl.disabled = $cb.checked;
+            $val.textContent = $cb.checked ? 'inherit' : formatter($sl.value);
+        });
+        $sl.addEventListener('input', () => {
+            $val.textContent = $cb.checked ? 'inherit' : formatter($sl.value);
+        });
+    }
+    _tsWireInheritToggle('ts-maxout-inherit', 'ts-maxout-input', 'ts-maxout-val', v => v);
+    _tsWireInheritToggle('ts-temp-inherit',   'ts-temp-input',   'ts-temp-val',   v => parseFloat(v).toFixed(2));
+
     qs('#chat-new-dm')?.addEventListener('click', () => {
-        // Set a global flag so the picker knows we are starting a DM
-        _pickerMode = 'dm';
-        openCharPicker();
+        openThreadSetup('dm');
     });
 
     // ── API Key ───────────────────────────────────────────────────────────────
@@ -1014,8 +1274,9 @@ export function initUI() {
         if (!char) return;
         const meta = state.characters.find(c => c.id === id);
 
-        // Auto-attach lorebook if specified and not already in this reality
-        if (meta.lorebook_path) {
+        // Auto-attach lorebook — only if thread config allows it (defaults true)
+        const _autoAttach = state.chat?.threadConfig?.autoAttachLorebooks !== false;
+        if (_autoAttach && meta.lorebook_path) {
             const alreadyAttached = state.reality.worldConfig.activeLorebooks.some(b => b._sourcePath === meta.lorebook_path);
             if (!alreadyAttached) {
                 try {
@@ -1542,25 +1803,8 @@ export function initUI() {
         qsa('.picker-char-card', $grid).forEach($card => {
             $card.addEventListener('click', async () => {
                 const id = $card.dataset.id;
-                
-                // If we are in DM mode, start a new DM chat in this reality
-                if (_pickerMode === 'dm') {
-                    _pickerMode = null;
-                    let chat = state.reality.chats.find(c => c.type === 'dm' && c.botIds.includes(id));
-                    if (!chat) {
-                        const char = await loadCharacterCard(id);
-                        chat = newChat('dm', [id], char?.name || 'Direct Message');
-                        // Fire first message for new DM
-                        if (char?.first_mes) {
-                            switchChat(chat.id);
-                            const meta = state.characters.find(c => c.id === id);
-                            const msg = addMessage('bot', char.first_mes, id);
-                            appendMessage(msg, char.name, meta?.avatar_path || char.avatar);
-                        }
-                    }
-                    switchChat(chat.id);
-                    renderAll();
-                } else if (state.activeBotIds.includes(id)) {
+
+                if (state.activeBotIds.includes(id)) {
                     // Already in thread — switch active bot
                     setActiveBot(id);
                     renderActiveBots();
@@ -3767,13 +4011,24 @@ export function initUI() {
 
         try {
             const _worldScenario = state.reality?.worldConfig?.scenario || '';
+            const tc = state.chat?.threadConfig || {};
+            // Build effective scenario: thread override replaces reality scenario if set
+            const _effectiveScenario = tc.threadScenario || _worldScenario;
+            // Merge threadConfig overrides (non-null values only) on top of reality config
+            const _effectiveConfig = {
+                ...state.config,
+                ...(tc.model       != null ? { model: tc.model }             : {}),
+                ...(tc.maxOutput   != null ? { maxOutput: tc.maxOutput }     : {}),
+                ...(tc.temperature != null ? { temperature: tc.temperature } : {}),
+                ...(tc.userName    != null ? { userName: tc.userName }       : {}),
+                ...(tc.userPersona != null ? { userPersona: tc.userPersona } : {}),
+                ...(_effectiveScenario ? { _worldScenario: _effectiveScenario } : {})
+            };
             const payload = buildPayload({
                 character:       { ...char, id: botId },
                 history:         state.history,
                 lore:            state.lorebooks,
-                config:          _worldScenario
-                    ? { ...state.config, _worldScenario }
-                    : state.config,
+                config:          _effectiveConfig,
                 isGroup:         state.chat.type === 'group',
                 allChars:        state.chat.botIds.map(id => ({ ...state.loadedCharacters[id], id })),
                 sessionId:       state.chat.id,
@@ -4205,8 +4460,8 @@ export function initUI() {
         if (qs('#model-select') && c.model) qs('#model-select').value = c.model;
         if (qs('#stream-toggle')) qs('#stream-toggle').checked = c.stream;
 
-        // World tab — sync worldConfig.scenario as the authoritative source into the textarea
-        const worldScenario = state.reality?.worldConfig?.scenario || c.groupScenario || '';
+        // World tab — worldConfig.scenario is authoritative
+        const worldScenario = state.reality?.worldConfig?.scenario || '';
         if (qs('#group-scenario-input')) qs('#group-scenario-input').value = worldScenario;
 
         const scanDepth = c.lorebookScanDepth ?? 5;
@@ -4245,17 +4500,13 @@ export function initUI() {
         if ($el) $el.addEventListener('input', debounce(() => setConfig({ [key]: $el.value }), 300));
     };
     bindText('sys-directive',      'sysDirective');
-    // Keep groupScenario and worldConfig.scenario in sync — both paths write to both stores
     const $groupScenarioEl = qs('#group-scenario-input');
     if ($groupScenarioEl) {
         $groupScenarioEl.addEventListener('input', debounce(() => {
-            const val = $groupScenarioEl.value;
-            setConfig({ groupScenario: val });
-            if (state.reality) {
-                if (!state.reality.worldConfig) state.reality.worldConfig = { scenario: '', activeLorebooks: [] };
-                state.reality.worldConfig.scenario = val;
-                saveState();
-            }
+            if (!state.reality) return;
+            if (!state.reality.worldConfig) state.reality.worldConfig = { scenario: '', activeLorebooks: [] };
+            state.reality.worldConfig.scenario = $groupScenarioEl.value;
+            saveState();
         }, 300));
     }
     bindText('authors-note',       'authorsNote');
@@ -4274,36 +4525,31 @@ export function initUI() {
         });
     });
 
-    // ── Scenario Presets ──────────────────────────────────────────────────────
+    // ── Scenario Presets (World tab) ──────────────────────────────────────────
     async function loadScenarioPresets() {
+        await _loadScenarioCache();
         const $sel = qs('#scenario-preset-select');
         const $ta  = qs('#group-scenario-input');
         if (!$sel) return;
-        let presets = [];
-        try {
-            const res  = await fetch('./data/scenarios.json');
-            const data = await res.json();
-            presets = data.scenarios || [];
-            $sel.innerHTML = presets.map(s =>
-                `<option value="${esc(s.id)}">${esc(s.name)}</option>`
-            ).join('');
-        } catch {
+
+        if (_scenarioPresets.length) {
+            _populateScenarioSelect($sel, { includeCustom: true });
+        } else {
             $sel.innerHTML = '<option value="">— None —</option>';
         }
-        // Sync select to current stored scenario text
-        const current = (state.config.groupScenario || '').trim();
-        const match = presets.find(s => s.scenario && s.scenario.trim() === current);
+
+        // Sync select to current stored world scenario
+        const current = (state.reality?.worldConfig?.scenario || '').trim();
+        const match = _scenarioPresets.find(s => s.scenario && s.scenario.trim() === current);
         $sel.value = match ? match.id : (current ? 'custom' : 'blank');
 
         $sel.addEventListener('change', () => {
             const id = $sel.value;
             const applyScenario = (val) => {
-                setConfig({ groupScenario: val });
-                if (state.reality) {
-                    if (!state.reality.worldConfig) state.reality.worldConfig = { scenario: '', activeLorebooks: [] };
-                    state.reality.worldConfig.scenario = val;
-                    saveState();
-                }
+                if (!state.reality.worldConfig)
+                    state.reality.worldConfig = { scenario: '', activeLorebooks: [] };
+                state.reality.worldConfig.scenario = val;
+                saveState();
             };
             if (!id || id === 'blank') {
                 if ($ta) $ta.value = '';
@@ -4311,7 +4557,7 @@ export function initUI() {
                 return;
             }
             if (id === 'custom') return;
-            const entry = presets.find(s => s.id === id);
+            const entry = _scenarioPresets.find(s => s.id === id);
             if (entry && $ta) {
                 $ta.value = entry.scenario;
                 applyScenario(entry.scenario);
@@ -4320,21 +4566,22 @@ export function initUI() {
     }
 
     // ── Persona Presets ───────────────────────────────────────────────────────
+    let _personaPresets = [];
+
     async function loadPersonaPresets() {
         const $sel = qs('#persona-preset-select');
         if (!$sel) return;
         try {
             const res  = await fetch('./data/personas.json');
             const data = await res.json();
-            $sel.innerHTML = (data.personas || []).map(p =>
+            _personaPresets = data.personas || [];
+            $sel.innerHTML = _personaPresets.map(p =>
                 `<option value="${esc(p.id)}">${esc(p.name)}</option>`
             ).join('');
-            $sel.addEventListener('change', async () => {
+            $sel.addEventListener('change', () => {
                 const id = $sel.value;
                 if (!id || id === 'blank') return;
-                const res2  = await fetch('./data/personas.json');
-                const data2 = await res2.json();
-                const entry = (data2.personas || []).find(p => p.id === id);
+                const entry = _personaPresets.find(p => p.id === id);
                 if (!entry) return;
                 const $name = qs('#user-name-input');
                 const $bio  = qs('#user-persona-input');
@@ -4361,12 +4608,6 @@ export function initUI() {
                     }).join('')}
                 </optgroup>`).join('');
 
-            // Also populate the sims editor model select
-            const $simsModel = qs('#sims-model-select');
-            if ($simsModel) {
-                $simsModel.innerHTML = '<option value="">— Use global model —</option>' + optHtml;
-            }
-
             selects.forEach(($sel, i) => {
                 const prefix = i > 0 ? '<option value="">— Use global model —</option>' : '';
                 $sel.innerHTML = prefix + optHtml;
@@ -4382,17 +4623,15 @@ export function initUI() {
             selects.forEach(($sel, i) => {
                 $sel.innerHTML = (i > 0 ? '<option value="">— Use global model —</option>' : '') + fallbackOpt;
             });
-            const $simsModel = qs('#sims-model-select');
-            if ($simsModel) $simsModel.innerHTML = '<option value="">— Use global model —</option>' + fallbackOpt;
             setConfig({ model: 'deepseek-r1' });
         }
 
-        qs('#stat-model').textContent = state.config.model || '—';
+        updateTelemetry();
     }
 
     qs('#model-select')?.addEventListener('change', e => {
         setConfig({ model: e.target.value });
-        qs('#stat-model').textContent = e.target.value || '—';
+        updateTelemetry();
     });
 
     // ── Persona / Override Editor ─────────────────────────────────────────────
@@ -4535,7 +4774,10 @@ export function initUI() {
         const $model = qs('#stat-model');
         if ($turns) $turns.textContent  = state.telemetry.turns;
         if ($tokens) $tokens.textContent = state.telemetry.sessionTokens;
-        if ($model) $model.textContent  = state.config.model || '—';
+        if ($model) {
+            const tc = state.chat?.threadConfig;
+            $model.textContent = (tc?.model || state.config.model) || '—';
+        }
     }
 
     // ── Modal: message edit backdrop ─────────────────────────────────────────
@@ -4820,7 +5062,6 @@ export function initUI() {
         _oracleHistory.push({ role: 'user', content: resolvedText });
 
         // Build payload using current character context + oracle history, never writing to state
-        const { buildPayload: bp, streamCompletion: sc } = await import('./llm-engine.js');
         const _worldScenario = state.reality?.worldConfig?.scenario || '';
         const oracleConfig = {
             ...state.config,
@@ -4828,7 +5069,7 @@ export function initUI() {
             stream: true,
             ...(_worldScenario ? { _worldScenario } : {})
         };
-        const fullPayload = bp({
+        const fullPayload = buildPayload({
             character: { ...char, id: charId },
             history:   _oracleHistory.slice(0, -1), // omit last user msg — it's in messages already
             lore:      state.lorebooks,
@@ -4854,7 +5095,7 @@ export function initUI() {
         if ($sendBtn) { $sendBtn.disabled = true; $sendBtn.innerHTML = '<i data-lucide="square"></i>'; lucideRefresh($sendBtn); }
 
         let finalText = '';
-        await sc(fullPayload,
+        await streamCompletion(fullPayload,
             (_delta, full) => {
                 $botBubble.innerHTML = renderMarkdown(full);
                 $thread.scrollTop = $thread.scrollHeight;

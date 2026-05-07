@@ -19,7 +19,6 @@ export function defaultConfig() {
     return {
         model: '',
         contextStrategy: 'sliding',
-        groupScenario: '', // Shared context for all chats in a reality
         temperature: 0.80,
         topP: 0.95,
         topK: 40,
@@ -92,6 +91,24 @@ export function defaultCharOverride() {
     };
 }
 
+// ── Per-thread config (overrides reality.config for this chat only) ─────────
+export function defaultThreadConfig() {
+    return {
+        // null = inherit from reality.config; set a value to override
+        model:            null,
+        maxOutput:        null,
+        temperature:      null,
+        userName:         null,
+        userPersona:      null,
+        // Thread-scoped world context (layered on top of reality scenario)
+        threadScenario:   '',
+        // Lorebook overrides: array of lorebook IDs that should always be active for this thread
+        // Characters' lorebooks are auto-attached unless autoAttachLorebooks === false
+        autoAttachLorebooks: true,
+        pinnedLoreBookIds:   []
+    };
+}
+
 // ── Chat & Reality shapes ────────────────────────────────────────────────────
 
 export function createChat(type = 'dm', botIds = [], name = '') {
@@ -104,9 +121,10 @@ export function createChat(type = 'dm', botIds = [], name = '') {
         history: [],
         createdAt: Date.now(),
         updatedAt: Date.now(),
-        shareMemory: true, // If true, other chats in the reality are context-accessible
+        shareMemory: true,
         activeBotId: botIds[0] || null,
-        config: {} // Optional chat-specific overrides if needed later
+        config: {},
+        threadConfig: defaultThreadConfig()
     };
 }
 
@@ -239,6 +257,11 @@ export function loadState() {
         const saved = real.config || {};
         real.config = { ...defaultConfig(), ...saved };
         real.config.flags = { ...defaultConfig().flags, ...(saved.flags || {}) };
+        // Backfill threadConfig for chats created before this feature
+        real.chats.forEach(chat => {
+            if (!chat.threadConfig) chat.threadConfig = defaultThreadConfig();
+            else chat.threadConfig = { ...defaultThreadConfig(), ...chat.threadConfig };
+        });
     });
 
     if (!state.activeRealityId || !state.realities.find(r => r.id === state.activeRealityId)) {
