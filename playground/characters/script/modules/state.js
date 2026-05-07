@@ -320,6 +320,7 @@ export function addMessage(role, content, botId = null, meta = {}) {
         timestamp: Date.now(),
         tokens: meta.tokens || 0,
         model: meta.model || '',
+        prompt: meta.prompt || null,
         thoughts: meta.thoughts || null,
         comments: [],
         reactions: {},

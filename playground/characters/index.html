@@ -6,7 +6,8 @@
     <title>The Underdark // Reality Matrix</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2306040A'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%23ef4444' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23ef4444'/%3E%3C/svg%3E" />
     <link rel="stylesheet" href="../../glass/style/style.css">
-    <link rel="stylesheet" href="./style/style.css?v=59">
+    <link rel="stylesheet" href="./style/style.css?v=61">
+    <link rel="stylesheet" href="./style/char-editor.css?v=3">
 </head>
 <body class="underdark-page">
 
@@ -228,9 +229,8 @@
                 <div id="profile-card"></div>
                 <div id="profile-actions" class="profile-actions" hidden>
                     <button id="btn-add-to-thread" class="btn btn--accent btn--full">Add to Thread</button>
-                    <button id="btn-sims-edit" class="btn btn--accent btn--full">Sims Editor</button>
+                    <button id="btn-sims-edit" class="btn btn--secondary btn--full"><i data-lucide="sliders-horizontal"></i> Edit Character</button>
                     <button id="btn-gallery-add" class="btn btn--ghost btn--full"><i data-lucide="images"></i> View Gallery</button>
-                    <button id="btn-edit-char" class="btn btn--ghost btn--full">Edit Card (Basic)</button>
                     <button id="btn-remove-char" class="btn btn--ghost btn--full">Remove from Thread</button>
                     <button id="btn-delete-char" class="btn btn--ghost btn--full btn--danger-ghost">Delete Character</button>
                 </div>
@@ -663,7 +663,10 @@
 
       <!-- Prompt -->
       <div class="config-group">
-        <label>Prompt <span class="config-sub-label">auto-built from scene · edit freely</span></label>
+        <label class="img-gen-prompt-label">
+            Prompt <span class="config-sub-label">auto-built from scene · edit freely</span>
+            <button id="img-gen-ai-prompt" class="btn btn--ghost btn--xs img-gen-ai-btn" title="Generate prompt with AI — reads character + scene for maximum accuracy"><i data-lucide="sparkles"></i> AI Prompt</button>
+        </label>
         <textarea id="img-gen-prompt" class="control-textarea img-gen-prompt-ta" rows="5" placeholder="Describe the image…"></textarea>
       </div>
 
@@ -721,7 +724,10 @@
           <span id="gallery-count" class="gallery-modal-header__count"></span>
         </div>
       </div>
-      <button id="gallery-close" class="btn-icon" title="Close"><i data-lucide="x"></i></button>
+      <div class="gallery-modal-header__actions">
+        <button id="gallery-export-all" class="btn btn--ghost btn--sm" title="Download all images as ZIP"><i data-lucide="archive"></i> Export All</button>
+        <button id="gallery-close" class="btn-icon" title="Close"><i data-lucide="x"></i></button>
+      </div>
     </header>
 
     <div id="gallery-grid" class="gallery-grid"></div>
@@ -784,849 +790,581 @@
 </div>
 
 <!-- ══════════════════════════════════════════════
-     CHARACTER CREATOR / EDITOR — Full Studio
+     UNIFIED CHARACTER EDITOR — Full Studio
 ══════════════════════════════════════════════ -->
-<div id="modal-char-creator" class="modal cc-modal" hidden role="dialog" aria-modal="true" aria-labelledby="cc-modal-title">
-    <div class="cc-backdrop"></div>
-    <div class="cc-studio">
+<div id="modal-char-editor" class="modal ce-modal" hidden role="dialog" aria-modal="true" aria-labelledby="ce-modal-title">
+    <div class="ce-backdrop"></div>
+    <div class="ce-studio">
 
         <!-- ── Topbar ── -->
-        <header class="cc-topbar">
-            <div class="cc-topbar__left">
-                <i data-lucide="sparkles" class="cc-topbar__icon"></i>
-                <h2 id="cc-modal-title" class="cc-topbar__title">Create Character</h2>
-                <span id="cc-char-badge" class="cc-char-badge">—</span>
+        <header class="ce-topbar">
+            <div class="ce-topbar__left">
+                <i data-lucide="sparkles" class="ce-topbar__icon"></i>
+                <h2 id="ce-modal-title" class="ce-topbar__title">Create Character</h2>
+                <span id="ce-char-badge" class="ce-char-badge">—</span>
             </div>
-            <div class="cc-topbar__right">
-                <button id="cc-open-sims" class="cc-btn cc-btn--ghost cc-btn--sm" title="Switch to visual trait editor"><i data-lucide="wand-2"></i> Visual Traits</button>
-                <button id="cc-topbar-export" class="cc-btn cc-btn--ghost cc-btn--sm" title="Download card JSON"><i data-lucide="download"></i> Export</button>
-                <button id="cc-import-btn" class="cc-btn cc-btn--ghost cc-btn--sm" title="Import existing card to prefill"><i data-lucide="upload"></i> Import Card</button>
-                <input type="file" id="cc-import-file" accept=".json,.png" hidden>
-                <button id="cc-close" class="cc-btn cc-btn--ghost cc-btn--icon" aria-label="Close"><i data-lucide="x"></i></button>
+            <div class="ce-topbar__right">
+                <button id="ce-random-btn" class="ce-btn ce-btn--ghost ce-btn--sm" title="Randomize all fields"><i data-lucide="shuffle"></i> Randomize</button>
+                <button id="ce-reset-btn" class="ce-btn ce-btn--ghost ce-btn--sm" title="Reset overrides to defaults"><i data-lucide="rotate-ccw"></i> Reset</button>
+                <button id="ce-topbar-export" class="ce-btn ce-btn--ghost ce-btn--sm" title="Download card JSON"><i data-lucide="download"></i> Export</button>
+                <button id="ce-import-btn" class="ce-btn ce-btn--ghost ce-btn--sm" title="Import existing card to prefill"><i data-lucide="upload"></i> Import Card</button>
+                <input type="file" id="ce-import-file" accept=".json,.png" hidden>
+                <button id="ce-close" class="ce-btn ce-btn--ghost ce-btn--icon" aria-label="Close"><i data-lucide="x"></i></button>
             </div>
         </header>
 
-        <div class="cc-body">
+        <div class="ce-body">
 
-            <!-- ── Left: Avatar + Quick Identity ── -->
-            <aside class="cc-sidebar">
-                <div class="cc-avatar-zone">
-                    <div id="cc-avatar-preview" class="cc-avatar-preview" title="Character avatar"></div>
-                    <div class="cc-avatar-controls">
-                        <button id="cc-avatar-upload-btn" class="cc-btn cc-btn--ghost cc-btn--sm"><i data-lucide="image-up"></i> Upload</button>
-                        <button id="cc-avatar-clear" class="cc-btn cc-btn--ghost cc-btn--sm cc-btn--danger"><i data-lucide="trash-2"></i></button>
-                        <input type="file" id="cc-avatar-file" accept="image/*" hidden>
+            <!-- ── Left: Sidebar ── -->
+            <aside class="ce-sidebar">
+
+                <!-- Avatar zone -->
+                <div class="ce-avatar-zone">
+                    <div id="ce-avatar-preview" class="ce-avatar-preview" title="Character avatar"></div>
+                    <div class="ce-avatar-controls">
+                        <button id="ce-avatar-upload-btn" class="ce-btn ce-btn--ghost ce-btn--sm"><i data-lucide="image-up"></i> Upload</button>
+                        <button id="ce-avatar-clear" class="ce-btn ce-btn--ghost ce-btn--sm ce-btn--danger"><i data-lucide="trash-2"></i></button>
+                        <input type="file" id="ce-avatar-file" accept="image/*" hidden>
                     </div>
-                    <div class="cc-avatar-url-row">
-                        <input type="text" id="cc-avatar-url-input" class="cc-input cc-input--sm" placeholder="…or paste image URL">
-                        <button id="cc-avatar-url-btn" class="cc-btn cc-btn--ghost cc-btn--sm"><i data-lucide="link"></i></button>
+                    <div class="ce-avatar-url-row">
+                        <input type="text" id="ce-avatar-url-input" class="ce-input ce-input--sm" placeholder="…or paste image URL">
+                        <button id="ce-avatar-url-btn" class="ce-btn ce-btn--ghost ce-btn--sm"><i data-lucide="link"></i></button>
                     </div>
                 </div>
 
-                <!-- Quick identity summary -->
-                <div class="cc-quick-fields">
-                    <div class="cc-field-row">
-                        <label class="cc-label">Name *</label>
-                        <input type="text" id="cc-name" class="cc-input" placeholder="Character name…">
+                <!-- Quick identity -->
+                <div class="ce-quick-fields">
+                    <div class="ce-field-row">
+                        <label class="ce-label">Name *</label>
+                        <input type="text" id="ce-name" class="ce-input" placeholder="Character name…">
                     </div>
-                    <div class="cc-field-row">
-                        <label class="cc-label">Tagline</label>
-                        <input type="text" id="cc-tagline" class="cc-input" placeholder="Short descriptor…">
+                    <div class="ce-field-row">
+                        <label class="ce-label">Tagline</label>
+                        <input type="text" id="ce-tagline" class="ce-input" placeholder="Short descriptor…">
                     </div>
-                    <div class="cc-field-row">
-                        <label class="cc-label">Tags</label>
-                        <input type="text" id="cc-tags" class="cc-input" placeholder="tag1, tag2, tag3">
+                    <div class="ce-field-row">
+                        <label class="ce-label">Tags</label>
+                        <input type="text" id="ce-tags" class="ce-input" placeholder="tag1, tag2, tag3">
                     </div>
-                    <div class="cc-field-row">
-                        <label class="cc-label cc-label--muted">ID preview</label>
-                        <input type="text" id="cc-id-preview" class="cc-input cc-input--mono cc-input--sm" placeholder="auto-generated" readonly>
+                    <div class="ce-field-row">
+                        <label class="ce-label ce-label--muted">ID preview</label>
+                        <input type="text" id="ce-id-preview" class="ce-input ce-input--mono ce-input--sm" placeholder="auto-generated" readonly>
                     </div>
-                    <div class="cc-field-row cc-field-row--inline">
-                        <label class="cc-label">Enabled</label>
-                        <input type="checkbox" id="cc-enabled" checked class="cc-checkbox">
+                    <div class="ce-field-row ce-field-row--inline">
+                        <label class="ce-label">Enabled</label>
+                        <input type="checkbox" id="ce-enabled" checked class="ce-checkbox">
                     </div>
                 </div>
 
-                <!-- Gallery strip -->
-                <div class="cc-gallery-section">
-                    <div class="cc-section-label"><i data-lucide="images"></i> Image Gallery</div>
-                    <div id="cc-gallery-strip" class="cc-gallery-strip"></div>
-                    <div class="cc-gallery-add-row">
-                        <button id="cc-gallery-add-btn" class="cc-btn cc-btn--ghost cc-btn--sm"><i data-lucide="plus"></i> Add Image</button>
-                        <input type="file" id="cc-gallery-file" accept="image/*" hidden multiple>
+                <!-- Body map -->
+                <div class="ce-bodymap-zone">
+                    <div class="ce-bodymap-frame">
+                        <div class="ce-body-avatar" id="ce-body-avatar"></div>
+                        <div class="ce-body-svg-wrap" aria-label="Body map — click region to edit">
+                            <svg class="ce-body-svg" viewBox="0 0 200 480" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Body regions">
+                                <ellipse cx="100" cy="52" rx="30" ry="36" class="ce-region" data-region="head" tabindex="0" role="button" aria-label="Head / Face" />
+                                <rect x="88" y="83" width="24" height="18" rx="4" class="ce-region" data-region="neck" tabindex="0" role="button" aria-label="Neck" />
+                                <ellipse cx="62" cy="110" rx="22" ry="14" class="ce-region" data-region="shoulders" tabindex="0" role="button" aria-label="Shoulders" />
+                                <ellipse cx="138" cy="110" rx="22" ry="14" class="ce-region" data-region="shoulders" tabindex="0" role="button" aria-label="Shoulders" />
+                                <rect x="72" y="100" width="56" height="50" rx="6" class="ce-region" data-region="chest" tabindex="0" role="button" aria-label="Chest" />
+                                <rect x="42" y="108" width="20" height="58" rx="10" class="ce-region" data-region="arms" tabindex="0" role="button" aria-label="Arms" />
+                                <rect x="138" y="108" width="20" height="58" rx="10" class="ce-region" data-region="arms" tabindex="0" role="button" aria-label="Arms" />
+                                <rect x="44" y="170" width="16" height="50" rx="8" class="ce-region ce-region--secondary" data-region="arms" tabindex="0" />
+                                <rect x="140" y="170" width="16" height="50" rx="8" class="ce-region ce-region--secondary" data-region="arms" tabindex="0" />
+                                <ellipse cx="52" cy="230" rx="12" ry="10" class="ce-region ce-region--secondary" data-region="arms" tabindex="0" />
+                                <ellipse cx="148" cy="230" rx="12" ry="10" class="ce-region ce-region--secondary" data-region="arms" tabindex="0" />
+                                <rect x="76" y="150" width="48" height="50" rx="5" class="ce-region" data-region="abdomen" tabindex="0" role="button" aria-label="Abdomen" />
+                                <ellipse cx="100" cy="215" rx="40" ry="24" class="ce-region" data-region="hips" tabindex="0" role="button" aria-label="Hips" />
+                                <rect x="64" y="232" width="30" height="70" rx="10" class="ce-region" data-region="legs" tabindex="0" role="button" aria-label="Legs" />
+                                <rect x="106" y="232" width="30" height="70" rx="10" class="ce-region" data-region="legs" tabindex="0" role="button" aria-label="Legs" />
+                                <rect x="68" y="305" width="22" height="65" rx="8" class="ce-region ce-region--secondary" data-region="legs" tabindex="0" />
+                                <rect x="110" y="305" width="22" height="65" rx="8" class="ce-region ce-region--secondary" data-region="legs" tabindex="0" />
+                                <ellipse cx="79" cy="378" rx="18" ry="10" class="ce-region ce-region--secondary" data-region="legs" tabindex="0" />
+                                <ellipse cx="121" cy="378" rx="18" ry="10" class="ce-region ce-region--secondary" data-region="legs" tabindex="0" />
+                            </svg>
+                            <div class="ce-region-tooltip" id="ce-region-tooltip"></div>
+                        </div>
                     </div>
-                    <div class="cc-gallery-url-row">
-                        <input type="text" id="cc-gallery-url-input" class="cc-input cc-input--sm" placeholder="Image URL…">
-                        <button id="cc-gallery-url-btn" class="cc-btn cc-btn--ghost cc-btn--sm"><i data-lucide="link"></i></button>
+                    <!-- Stat pills -->
+                    <div class="ce-stat-pills" id="ce-stat-pills"></div>
+                    <!-- Colour swatches -->
+                    <div class="ce-swatches">
+                        <div class="ce-swatch-group">
+                            <span class="ce-swatch-label">Skin</span>
+                            <div class="ce-swatch-row" id="ce-skin-swatches">
+                                <button class="ce-color-dot" style="background:#FDDBB4" title="Light"></button>
+                                <button class="ce-color-dot" style="background:#E8B88A" title="Beige"></button>
+                                <button class="ce-color-dot" style="background:#C8956C" title="Tan"></button>
+                                <button class="ce-color-dot" style="background:#A0624A" title="Brown"></button>
+                                <button class="ce-color-dot" style="background:#6B3A2A" title="Dark"></button>
+                                <button class="ce-color-dot" style="background:#2D1B0E" title="Deep"></button>
+                                <button class="ce-color-dot" style="background:#F5E6D0" title="Pale"></button>
+                                <button class="ce-color-dot ce-color-dot--custom" data-swatch-target="skinTone" title="Custom…">+</button>
+                            </div>
+                        </div>
+                        <div class="ce-swatch-group">
+                            <span class="ce-swatch-label">Hair</span>
+                            <div class="ce-swatch-row" id="ce-hair-swatches">
+                                <button class="ce-color-dot" style="background:#1A0A00" title="Black"></button>
+                                <button class="ce-color-dot" style="background:#3B1F0A" title="Dark Brown"></button>
+                                <button class="ce-color-dot" style="background:#6B3A1F" title="Brown"></button>
+                                <button class="ce-color-dot" style="background:#A0522D" title="Auburn"></button>
+                                <button class="ce-color-dot" style="background:#D4A520" title="Blonde"></button>
+                                <button class="ce-color-dot" style="background:#F5E6C8" title="Platinum"></button>
+                                <button class="ce-color-dot" style="background:#C0C0C0" title="Silver"></button>
+                                <button class="ce-color-dot" style="background:#CC2244" title="Red"></button>
+                                <button class="ce-color-dot" style="background:#3B1F6B" title="Violet"></button>
+                                <button class="ce-color-dot" style="background:#1A5C8A" title="Blue"></button>
+                                <button class="ce-color-dot ce-color-dot--custom" data-swatch-target="hairColor" title="Custom…">+</button>
+                            </div>
+                        </div>
+                        <div class="ce-swatch-group">
+                            <span class="ce-swatch-label">Eyes</span>
+                            <div class="ce-swatch-row" id="ce-eye-swatches">
+                                <button class="ce-color-dot" style="background:#4B8BBE" title="Blue"></button>
+                                <button class="ce-color-dot" style="background:#6B8E5A" title="Green"></button>
+                                <button class="ce-color-dot" style="background:#8B6914" title="Amber"></button>
+                                <button class="ce-color-dot" style="background:#5C3A1F" title="Brown"></button>
+                                <button class="ce-color-dot" style="background:#2D2D2D" title="Black"></button>
+                                <button class="ce-color-dot" style="background:#9B59B6" title="Violet"></button>
+                                <button class="ce-color-dot" style="background:#E0E0E0" title="Grey"></button>
+                                <button class="ce-color-dot" style="background:#E84393" title="Pink"></button>
+                                <button class="ce-color-dot ce-color-dot--custom" data-swatch-target="eyeColor" title="Custom…">+</button>
+                            </div>
+                        </div>
                     </div>
+                </div>
+
+                <!-- Save status -->
+                <div class="ce-sidebar-footer">
+                    <span class="ce-save-status" id="ce-save-status"></span>
                 </div>
 
                 <!-- Meta -->
-                <div class="cc-meta-fields">
-                    <div class="cc-field-row">
-                        <label class="cc-label">Creator</label>
-                        <input type="text" id="cc-creator" class="cc-input cc-input--sm" value="trap.lol">
+                <div class="ce-meta-fields">
+                    <div class="ce-field-row">
+                        <label class="ce-label">Creator</label>
+                        <input type="text" id="ce-creator" class="ce-input ce-input--sm" value="trap.lol">
                     </div>
-                    <div class="cc-field-row">
-                        <label class="cc-label">Version</label>
-                        <input type="text" id="cc-version" class="cc-input cc-input--sm" value="1.0">
+                    <div class="ce-field-row">
+                        <label class="ce-label">Version</label>
+                        <input type="text" id="ce-version" class="ce-input ce-input--sm" value="1.0">
                     </div>
-                    <input type="hidden" id="cc-spec-version" value="2.0">
+                    <input type="hidden" id="ce-spec-version" value="2.0">
                 </div>
             </aside>
 
-            <!-- ── Right: Tabbed editor ── -->
-            <div class="cc-main">
+            <!-- ── Right: Tab nav + panels ── -->
+            <div class="ce-main">
 
-                <nav class="cc-tabs">
-                    <button class="cc-tab-btn active" data-tab="card">Card</button>
-                    <button class="cc-tab-btn" data-tab="identity">Identity</button>
-                    <button class="cc-tab-btn" data-tab="appearance">Appearance</button>
-                    <button class="cc-tab-btn" data-tab="personality">Personality</button>
-                    <button class="cc-tab-btn" data-tab="voice">Voice & Style</button>
-                    <button class="cc-tab-btn" data-tab="behavior">Behavior</button>
-                    <button class="cc-tab-btn" data-tab="adult">Adult</button>
-                    <button class="cc-tab-btn" data-tab="ai">AI / Prompt</button>
-                    <button class="cc-tab-btn" data-tab="overrides">Overrides</button>
+                <nav class="ce-nav" role="tablist" aria-label="Editor categories">
+                    <button class="ce-nav-btn active" data-tab="card" role="tab" aria-selected="true"><i data-lucide="file-text"></i><span>Card</span></button>
+                    <button class="ce-nav-btn" data-tab="identity" role="tab"><i data-lucide="user"></i><span>Identity</span></button>
+                    <button class="ce-nav-btn" data-tab="face" role="tab"><i data-lucide="scan-face"></i><span>Face</span></button>
+                    <button class="ce-nav-btn" data-tab="hair" role="tab"><i data-lucide="wind"></i><span>Hair</span></button>
+                    <button class="ce-nav-btn" data-tab="body" role="tab"><i data-lucide="person-standing"></i><span>Body</span></button>
+                    <button class="ce-nav-btn" data-tab="style" role="tab"><i data-lucide="shirt"></i><span>Style</span></button>
+                    <button class="ce-nav-btn" data-tab="voice" role="tab"><i data-lucide="mic-2"></i><span>Voice</span></button>
+                    <button class="ce-nav-btn" data-tab="personality" role="tab"><i data-lucide="brain"></i><span>Personality</span></button>
+                    <button class="ce-nav-btn" data-tab="behavior" role="tab"><i data-lucide="activity"></i><span>Behavior</span></button>
+                    <button class="ce-nav-btn" data-tab="adult" role="tab"><i data-lucide="lock"></i><span>Adult</span><span class="ce-nav-badge">18+</span></button>
+                    <button class="ce-nav-btn" data-tab="ai" role="tab"><i data-lucide="cpu"></i><span>AI / Prompt</span></button>
+                    <button class="ce-nav-btn" data-tab="overrides" role="tab"><i data-lucide="sliders-horizontal"></i><span>Overrides</span></button>
+                    <button class="ce-nav-btn" data-tab="gallery" role="tab"><i data-lucide="images"></i><span>Gallery</span></button>
                 </nav>
 
-                <div class="cc-panels">
+                <div class="ce-panels">
 
                     <!-- ═══ CARD ═══ -->
-                    <div class="cc-tab-panel" data-panel="card">
-                        <div class="cc-section-label">Core Card Fields</div>
-                        <div class="cc-field-group">
-                            <label class="cc-label">Description <span class="cc-hint">Physical appearance, presence, mannerisms</span></label>
-                            <textarea id="cc-description" class="cc-textarea cc-textarea--tall" placeholder="Physical appearance, aura, first impressions…"></textarea>
+                    <section class="ce-panel" data-panel="card">
+                        <div class="ce-section-label">Core Card Fields</div>
+                        <div class="ce-field-group">
+                            <label class="ce-label">Name *</label>
+                            <input type="text" id="ce-name-tab" class="ce-input" placeholder="Character name…">
                         </div>
-                        <div class="cc-field-group">
-                            <label class="cc-label">Personality <span class="cc-hint">Psychological profile, core traits, motivations</span></label>
-                            <textarea id="cc-personality" class="cc-textarea cc-textarea--tall" placeholder="Who they are beneath the surface…"></textarea>
+                        <div class="ce-field-group">
+                            <label class="ce-label">Tagline (Sync)</label>
+                            <input type="text" id="ce-tagline-tab" class="ce-input" placeholder="Short tagline…">
                         </div>
-                        <div class="cc-field-group">
-                            <label class="cc-label">Scenario <span class="cc-hint">Opening scene / context for roleplay</span></label>
-                            <textarea id="cc-scenario" class="cc-textarea" placeholder="The setting and situation when the chat begins…"></textarea>
+                        <div class="ce-field-group">
+                            <label class="ce-label">Description <span class="ce-hint">Physical appearance, presence, mannerisms</span></label>
+                            <textarea id="ce-description" class="ce-textarea ce-textarea--tall" placeholder="Physical appearance, aura, first impressions…"></textarea>
                         </div>
-                        <div class="cc-field-group">
-                            <label class="cc-label">First Message <span class="cc-hint">Opening line (*actions* + dialogue)</span></label>
-                            <textarea id="cc-first-mes" class="cc-textarea cc-textarea--tall" placeholder="*Character action* &quot;Opening dialogue…&quot;"></textarea>
+                        <div class="ce-field-group">
+                            <label class="ce-label">Personality <span class="ce-hint">Psychological profile, core traits, motivations</span></label>
+                            <textarea id="ce-personality" class="ce-textarea ce-textarea--tall" placeholder="Who they are beneath the surface…"></textarea>
                         </div>
-                        <div class="cc-field-group">
-                            <label class="cc-label">Message Examples <span class="cc-hint">Format: &lt;START&gt; blocks with {{user}}/{{char}}</span></label>
-                            <textarea id="cc-mes-example" class="cc-textarea cc-textarea--tall" placeholder="&lt;START&gt;&#10;{{user}}: …&#10;{{char}}: …"></textarea>
+                        <div class="ce-field-group">
+                            <label class="ce-label">Scenario <span class="ce-hint">Opening scene / context for roleplay</span></label>
+                            <textarea id="ce-scenario" class="ce-textarea" placeholder="The setting and situation when the chat begins…"></textarea>
                         </div>
-                        <div class="cc-field-group">
-                            <label class="cc-label">Alternate Greetings <span class="cc-hint">Separate each with --- on its own line</span></label>
-                            <textarea id="cc-alt-greetings" class="cc-textarea cc-textarea--tall" placeholder="First alternate greeting…&#10;---&#10;Second alternate greeting…"></textarea>
+                        <div class="ce-field-group">
+                            <label class="ce-label">First Message <span class="ce-hint">Opening line (*actions* + dialogue)</span></label>
+                            <textarea id="ce-first-mes" class="ce-textarea ce-textarea--tall" placeholder="*Character action* &quot;Opening dialogue…&quot;"></textarea>
                         </div>
-                        <div class="cc-field-group">
-                            <label class="cc-label">Creator Notes</label>
-                            <textarea id="cc-creator-notes" class="cc-textarea" placeholder="Meta notes, usage tips, trigger warnings…"></textarea>
+                        <div class="ce-field-group">
+                            <label class="ce-label">Message Examples <span class="ce-hint">Format: &lt;START&gt; blocks with {{user}}/{{char}}</span></label>
+                            <textarea id="ce-mes-example" class="ce-textarea ce-textarea--tall" placeholder="&lt;START&gt;&#10;{{user}}: …&#10;{{char}}: …"></textarea>
                         </div>
-                    </div>
+                        <div class="ce-field-group">
+                            <label class="ce-label">Alternate Greetings <span class="ce-hint">Separate each with --- on its own line</span></label>
+                            <textarea id="ce-alt-greetings" class="ce-textarea ce-textarea--tall" placeholder="First alternate greeting…&#10;---&#10;Second alternate greeting…"></textarea>
+                        </div>
+                        <div class="ce-field-group">
+                            <label class="ce-label">Creator Notes</label>
+                            <textarea id="ce-creator-notes" class="ce-textarea" placeholder="Meta notes, usage tips, trigger warnings…"></textarea>
+                        </div>
+                    </section>
 
                     <!-- ═══ IDENTITY ═══ -->
-                    <div class="cc-tab-panel" data-panel="identity" hidden>
-                        <div class="cc-section-label">Identity & Background</div>
-                        <div class="cc-grid-2">
-                            <div class="cc-field-group"><label class="cc-label">Name (Sync)</label><input type="text" id="cc-name-sync" class="cc-input" placeholder="Character name…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Tagline (Sync)</label><input type="text" id="cc-tagline-sync" class="cc-input" placeholder="Short tagline…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Full Name</label><input type="text" id="cc-ext-name" class="cc-input" placeholder="Full / canonical name"></div>
-                            <div class="cc-field-group"><label class="cc-label">Pronouns</label><input type="text" id="cc-ext-pronouns" class="cc-input" placeholder="she/her"></div>
-                            <div class="cc-field-group"><label class="cc-label">Occupation</label><input type="text" id="cc-ext-occupation" class="cc-input" placeholder="Role / job / title"></div>
-                            <div class="cc-field-group"><label class="cc-label">Aliases / Nicknames</label><input type="text" id="cc-ext-aliases" class="cc-input" placeholder="Other names"></div>
-                            <div class="cc-field-group"><label class="cc-label">Ethnicity</label><input type="text" id="cc-ext-ethnicity" class="cc-input" placeholder="e.g. Android, Japanese"></div>
-                            <div class="cc-field-group"><label class="cc-label">Nationality</label><input type="text" id="cc-ext-nationality" class="cc-input" placeholder="Country / faction"></div>
-                            <div class="cc-field-group"><label class="cc-label">Birthday</label><input type="text" id="cc-ext-birthday" class="cc-input" placeholder="Month Day or Unknown"></div>
-                            <div class="cc-field-group"><label class="cc-label">Location</label><input type="text" id="cc-ext-location" class="cc-input" placeholder="Primary setting"></div>
-                            <div class="cc-field-group"><label class="cc-label">Native Language</label><input type="text" id="cc-ext-native-lang" class="cc-input" placeholder="e.g. Japanese"></div>
-                            <div class="cc-field-group"><label class="cc-label">Languages Spoken</label><input type="text" id="cc-ext-languages" class="cc-input" placeholder="English, Japanese…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Zodiac</label><input type="text" id="cc-ext-zodiac" class="cc-input" placeholder="e.g. Scorpio"></div>
-                            <div class="cc-field-group"><label class="cc-label">MBTI</label><input type="text" id="cc-ext-mbti" class="cc-input" placeholder="e.g. ISTP"></div>
-                            <div class="cc-field-group"><label class="cc-label">Enneagram</label><input type="text" id="cc-ext-enneagram" class="cc-input" placeholder="e.g. 8w9"></div>
+                    <section class="ce-panel" data-panel="identity" hidden>
+                        <div class="ce-section-label">Identity &amp; Background</div>
+                        <div class="ce-grid-2">
+                            <div class="ce-field-group"><label class="ce-label">Full Name</label><input type="text" id="ce-ext-name" class="ce-input" placeholder="Full / canonical name"></div>
+                            <div class="ce-field-group"><label class="ce-label">Pronouns</label><input type="text" id="ce-ext-pronouns" class="ce-input" data-spo="pronouns" placeholder="she/her"></div>
+                            <div class="ce-field-group"><label class="ce-label">Species / Race</label><input type="text" id="ce-species" class="ce-input" placeholder="Human, Elf, Android…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Gender Identity</label><input type="text" id="ce-gender" class="ce-input" placeholder="Woman, Man, Non-binary…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Age</label><input type="text" id="ce-age" class="ce-input" placeholder="25"></div>
+                            <div class="ce-field-group"><label class="ce-label">Occupation</label><input type="text" id="ce-ext-occupation" class="ce-input" data-spo="occupation" placeholder="Role / job / title"></div>
+                            <div class="ce-field-group"><label class="ce-label">Aliases / Nicknames</label><input type="text" id="ce-ext-aliases" class="ce-input" placeholder="Other names"></div>
+                            <div class="ce-field-group"><label class="ce-label">Ethnicity</label><input type="text" id="ce-ext-ethnicity" class="ce-input" placeholder="e.g. Android, Japanese"></div>
+                            <div class="ce-field-group"><label class="ce-label">Nationality</label><input type="text" id="ce-ext-nationality" class="ce-input" data-spo="nationality" placeholder="Country / faction"></div>
+                            <div class="ce-field-group"><label class="ce-label">Birthday</label><input type="text" id="ce-ext-birthday" class="ce-input" placeholder="Month Day or Unknown"></div>
+                            <div class="ce-field-group"><label class="ce-label">Location</label><input type="text" id="ce-ext-location" class="ce-input" data-spo="location" placeholder="Primary setting"></div>
+                            <div class="ce-field-group"><label class="ce-label">Native Language</label><input type="text" id="ce-ext-native-lang" class="ce-input" placeholder="e.g. Japanese"></div>
+                            <div class="ce-field-group"><label class="ce-label">Languages Spoken</label><input type="text" id="ce-ext-languages" class="ce-input" placeholder="English, Japanese…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Zodiac</label><input type="text" id="ce-ext-zodiac" class="ce-input" data-spo="zodiac" placeholder="e.g. Scorpio"></div>
+                            <div class="ce-field-group"><label class="ce-label">MBTI</label><input type="text" id="ce-ext-mbti" class="ce-input" placeholder="e.g. ISTP"></div>
+                            <div class="ce-field-group"><label class="ce-label">Enneagram</label><input type="text" id="ce-ext-enneagram" class="ce-input" placeholder="e.g. 8w9"></div>
                         </div>
-                    </div>
+                    </section>
 
-                    <!-- ═══ APPEARANCE ═══ -->
-                    <div class="cc-tab-panel" data-panel="appearance" hidden>
-                        <div class="cc-section-label">Core Appearance</div>
-                        <div class="cc-grid-2">
-                            <div class="cc-field-group"><label class="cc-label">Species</label><input type="text" id="cc-species" class="cc-input" placeholder="Human, Elf, Android…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Gender</label><input type="text" id="cc-gender" class="cc-input" placeholder="Female, Male, Non-binary…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Age</label><input type="text" id="cc-age" class="cc-input" placeholder="25 or &quot;Appears 20s&quot;"></div>
-                            <div class="cc-field-group"><label class="cc-label">Height</label><input type="text" id="cc-height" class="cc-input" placeholder="5'6&quot; (168cm)"></div>
-                            <div class="cc-field-group"><label class="cc-label">Body Type</label><input type="text" id="cc-body-type" class="cc-input" placeholder="Slender, Athletic, Curvy…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Skin Tone</label><input type="text" id="cc-skin-tone" class="cc-input" placeholder="Pale, Golden tan…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Hair Color</label><input type="text" id="cc-hair-color" class="cc-input" placeholder="Raven black, Platinum…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Hair Style</label><input type="text" id="cc-hair-style" class="cc-input" placeholder="Long straight, Twin tails…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Eye Color</label><input type="text" id="cc-eye-color" class="cc-input" placeholder="Emerald, Ice blue…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Distinctive Features</label><input type="text" id="cc-distinctive-features" class="cc-input" placeholder="Scars, marks, auras…"></div>
-                        </div>
-
-                        <div class="cc-section-label cc-section-label--sm">Face Detail</div>
-                        <div class="cc-grid-2">
-                            <div class="cc-field-group"><label class="cc-label">Face Shape</label><input type="text" id="cc-ext-face-shape" class="cc-input" placeholder="Slim, angular…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Complexion</label><input type="text" id="cc-ext-complexion" class="cc-input" placeholder="Flawless, Scarred…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Jaw Type</label><input type="text" id="cc-ext-jaw" class="cc-input" placeholder="Defined, Soft…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Cheekbones</label><input type="text" id="cc-ext-cheekbones" class="cc-input" placeholder="High, Prominent…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Forehead</label><input type="text" id="cc-ext-forehead" class="cc-input" placeholder="Average, High…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Skin Undertone</label><input type="text" id="cc-ext-undertone" class="cc-input" placeholder="Cool, Warm, Neutral"></div>
-                            <div class="cc-field-group"><label class="cc-label">Skin Texture</label><input type="text" id="cc-ext-skin-texture" class="cc-input" placeholder="Smooth, Artificial…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Eye Shape</label><input type="text" id="cc-ext-eye-shape" class="cc-input" placeholder="Almond, Round…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Eye Spacing</label><input type="text" id="cc-ext-eye-spacing" class="cc-input" placeholder="Average, Close-set…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Eye Detail</label><input type="text" id="cc-ext-eye-detail" class="cc-input" placeholder="Unique iris detail…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Eye Size <span class="cc-badge-inline" id="cc-sl-badge-eyeSize">5</span></label>
-                                <input type="range" id="cc-sl-eyeSize" class="cc-slider" data-key="eyeSize" min="1" max="10" value="5" step="1">
+                    <!-- ═══ FACE ═══ -->
+                    <section class="ce-panel" data-panel="face" hidden>
+                        <div class="ce-section-label">Face &amp; Head</div>
+                        <div class="ce-grid-2">
+                            <div class="ce-field-group"><label class="ce-label">Skin Tone</label><input type="text" id="ce-skin-tone" class="ce-input" data-spo="skinTone" placeholder="pale alabaster, warm olive…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Distinctive Features</label><input type="text" id="ce-distinctive-features" class="ce-input" placeholder="Scars, marks, auras…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Face Shape</label>
+                                <div class="ce-chip-group" data-spo="faceShape"><button class="ce-chip" data-val="oval">Oval</button><button class="ce-chip" data-val="round">Round</button><button class="ce-chip" data-val="square">Square</button><button class="ce-chip" data-val="heart">Heart</button><button class="ce-chip" data-val="diamond">Diamond</button><button class="ce-chip" data-val="oblong">Oblong</button></div>
                             </div>
-                            <div class="cc-field-group"><label class="cc-label">Eyebrow Shape</label><input type="text" id="cc-ext-eyebrow" class="cc-input" placeholder="Arched, Straight…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Eyelashes</label><input type="text" id="cc-ext-eyelashes" class="cc-input" placeholder="Long, Thin, Dark…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Nose Type</label><input type="text" id="cc-ext-nose" class="cc-input" placeholder="Petite, Straight…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Lips Type</label><input type="text" id="cc-ext-lips" class="cc-input" placeholder="Full, Thin…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Lip Color</label><input type="text" id="cc-ext-lip-color" class="cc-input" placeholder="Natural rose, Crimson…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Teeth</label><input type="text" id="cc-ext-teeth" class="cc-input" placeholder="Perfect, Fanged…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Facial Hair</label><input type="text" id="cc-ext-facial-hair" class="cc-input" placeholder="None, Stubble…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Face Piercings</label><input type="text" id="cc-ext-face-piercings" class="cc-input" placeholder="None, Septum…"></div>
-                        </div>
-
-                        <div class="cc-section-label cc-section-label--sm">Hair Detail</div>
-                        <div class="cc-grid-2">
-                            <div class="cc-field-group"><label class="cc-label">Hair Length</label><input type="text" id="cc-ext-hair-length" class="cc-input" placeholder="Mid-back, Cropped…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Hair Texture</label><input type="text" id="cc-ext-hair-texture" class="cc-input" placeholder="Straight, Wavy, Coiled…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Hair Density</label><input type="text" id="cc-ext-hair-density" class="cc-input" placeholder="Medium, Thick, Thin"></div>
-                            <div class="cc-field-group"><label class="cc-label">Hair Highlights</label><input type="text" id="cc-ext-hair-highlights" class="cc-input" placeholder="None, Platinum tips…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Dyed?</label><input type="text" id="cc-ext-hair-dyed" class="cc-input" placeholder="Natural, Dyed red…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Fade</label><input type="text" id="cc-ext-hair-fade" class="cc-input" placeholder="None, Undercut…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Accessories</label><input type="text" id="cc-ext-hair-accessories" class="cc-input" placeholder="Crown, Bow, None…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Hair Shine <span class="cc-badge-inline" id="cc-sl-badge-hairShine">5</span></label>
-                                <input type="range" id="cc-sl-hairShine" class="cc-slider" data-key="hairShine" min="1" max="10" value="5" step="1">
+                            <div class="ce-field-group"><label class="ce-label">Complexion</label>
+                                <div class="ce-chip-group" data-spo="complexion"><button class="ce-chip" data-val="clear">Clear</button><button class="ce-chip" data-val="freckled">Freckled</button><button class="ce-chip" data-val="tattooed">Tattooed</button><button class="ce-chip" data-val="scarred">Scarred</button><button class="ce-chip" data-val="weathered">Weathered</button></div>
+                            </div>
+                            <div class="ce-field-group"><label class="ce-label">Eye Color</label><input type="text" id="ce-eye-color" class="ce-input" data-spo="eyeColor" placeholder="amber, violet, silver…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Eye Shape</label>
+                                <div class="ce-chip-group" data-spo="eyeShape"><button class="ce-chip" data-val="almond">Almond</button><button class="ce-chip" data-val="round">Round</button><button class="ce-chip" data-val="hooded">Hooded</button><button class="ce-chip" data-val="upturned">Upturned</button><button class="ce-chip" data-val="deep-set">Deep-set</button></div>
+                            </div>
+                            <div class="ce-field-group"><label class="ce-label">Nose Type</label>
+                                <div class="ce-chip-group" data-spo="noseType"><button class="ce-chip" data-val="button">Button</button><button class="ce-chip" data-val="aquiline">Aquiline</button><button class="ce-chip" data-val="snub">Snub</button><button class="ce-chip" data-val="broad">Broad</button><button class="ce-chip" data-val="pointed">Pointed</button><button class="ce-chip" data-val="straight">Straight</button></div>
+                            </div>
+                            <div class="ce-field-group"><label class="ce-label">Lips</label>
+                                <div class="ce-chip-group" data-spo="lipsType"><button class="ce-chip" data-val="thin">Thin</button><button class="ce-chip" data-val="full">Full</button><button class="ce-chip" data-val="bow">Cupid's Bow</button><button class="ce-chip" data-val="wide">Wide</button><button class="ce-chip" data-val="pouty">Pouty</button></div>
                             </div>
                         </div>
-
-                        <div class="cc-section-label cc-section-label--sm">Body Detail</div>
-                        <div class="cc-grid-2">
-                            <div class="cc-field-group"><label class="cc-label">Weight</label><input type="text" id="cc-ext-weight" class="cc-input" placeholder="110 lbs / 50 kg"></div>
-                            <div class="cc-field-group"><label class="cc-label">Shoulder Width</label><input type="text" id="cc-ext-shoulder" class="cc-input" placeholder="Narrow, Broad…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Waist Type</label><input type="text" id="cc-ext-waist" class="cc-input" placeholder="Slim, Hourglass…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Leg Type</label><input type="text" id="cc-ext-leg-type" class="cc-input" placeholder="Long, Powerful…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Hand Size</label><input type="text" id="cc-ext-hand-size" class="cc-input" placeholder="Delicate, Large…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Posture</label><input type="text" id="cc-ext-posture" class="cc-input" placeholder="Upright, Slouched…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Gait</label><input type="text" id="cc-ext-gait" class="cc-input" placeholder="Prowling, Deliberate…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Muscle Tone <span class="cc-badge-inline" id="cc-sl-badge-muscleTone">5</span></label>
-                                <input type="range" id="cc-sl-muscleTone" class="cc-slider" data-key="muscleTone" min="1" max="10" value="5" step="1">
+                        <div class="ce-slider-field"><label>Eye Size <span id="ce-sl-badge-eyeSize" class="ce-badge">5</span></label><input type="range" id="ce-sl-eyeSize" class="ce-range" data-key="eyeSize" data-spo="eyeSize" min="1" max="10" step="1" value="5"><div class="ce-range-ends"><span>Narrow</span><span>Wide</span></div><div class="ce-slider-desc" id="ce-sl-desc-eyeSize"></div></div>
+                        <div class="ce-grid-2">
+                            <div class="ce-field-group"><label class="ce-label">Jaw Type</label><input type="text" id="ce-ext-jaw" class="ce-input" placeholder="Defined, Soft…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Cheekbones</label><input type="text" id="ce-ext-cheekbones" class="ce-input" placeholder="High, Prominent…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Skin Undertone</label><input type="text" id="ce-ext-undertone" class="ce-input" placeholder="Cool, Warm, Neutral"></div>
+                            <div class="ce-field-group"><label class="ce-label">Skin Texture</label><input type="text" id="ce-ext-skin-texture" class="ce-input" placeholder="Smooth, Artificial…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Eye Spacing</label><input type="text" id="ce-ext-eye-spacing" class="ce-input" placeholder="Average, Close-set…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Eye Detail</label><input type="text" id="ce-ext-eye-detail" class="ce-input" placeholder="Unique iris detail…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Eyebrow Shape</label><input type="text" id="ce-ext-eyebrow" class="ce-input" placeholder="Arched, Straight…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Eyelashes</label><input type="text" id="ce-ext-eyelashes" class="ce-input" placeholder="Long, Thin, Dark…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Lip Color</label><input type="text" id="ce-ext-lip-color" class="ce-input" placeholder="Natural rose, Crimson…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Teeth</label><input type="text" id="ce-ext-teeth" class="ce-input" placeholder="Perfect, Fanged…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Facial Hair</label>
+                                <div class="ce-chip-group" data-spo="facialHair"><button class="ce-chip" data-val="none">None</button><button class="ce-chip" data-val="stubble">Stubble</button><button class="ce-chip" data-val="short-beard">Short Beard</button><button class="ce-chip" data-val="full-beard">Full Beard</button><button class="ce-chip" data-val="goatee">Goatee</button></div>
                             </div>
-                            <div class="cc-field-group"><label class="cc-label">Body Fat <span class="cc-badge-inline" id="cc-sl-badge-bodyFat">5</span></label>
-                                <input type="range" id="cc-sl-bodyFat" class="cc-slider" data-key="bodyFat" min="1" max="10" value="5" step="1">
-                            </div>
-                            <div class="cc-field-group"><label class="cc-label">Body Markings</label><input type="text" id="cc-ext-body-markings" class="cc-input" placeholder="Birthmarks, vitiligo…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Tattoos</label><input type="text" id="cc-ext-tattoos" class="cc-input" placeholder="Sleeve, Back piece…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Scars / Marks</label><input type="text" id="cc-ext-scars" class="cc-input" placeholder="Blade scar, burn…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Body Piercings</label><input type="text" id="cc-ext-body-piercings" class="cc-input" placeholder="Navel, etc."></div>
-                            <div class="cc-field-group"><label class="cc-label">Scent</label><input type="text" id="cc-ext-scent" class="cc-input" placeholder="Gunpowder, Florals…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Nail Length</label><input type="text" id="cc-ext-nail-length" class="cc-input" placeholder="Short, Long, Claw…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Nail Shape</label><input type="text" id="cc-ext-nail-shape" class="cc-input" placeholder="Square, Almond…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Nail Color</label><input type="text" id="cc-ext-nail-color" class="cc-input" placeholder="Black, Nude…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Physical Quirks</label><input type="text" id="cc-ext-physical-quirks" class="cc-input" placeholder="Twitches, fidgets…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Face Piercings</label><input type="text" id="ce-ext-face-piercings" class="ce-input" placeholder="None, Septum…"></div>
                         </div>
-                    </div>
+                    </section>
+
+                    <!-- ═══ HAIR ═══ -->
+                    <section class="ce-panel" data-panel="hair" hidden>
+                        <div class="ce-section-label">Hair &amp; Head Style</div>
+                        <div class="ce-field-group"><label class="ce-label">Hair Color</label><input type="text" id="ce-hair-color" class="ce-input" data-spo="hairColor" placeholder="raven black, platinum blonde…"></div>
+                        <div class="ce-field-group"><label class="ce-label">Hair Style</label>
+                            <div class="ce-chip-group" data-spo="hairStyle"><button class="ce-chip" data-val="straight">Straight</button><button class="ce-chip" data-val="wavy">Wavy</button><button class="ce-chip" data-val="curly">Curly</button><button class="ce-chip" data-val="coily">Coily</button><button class="ce-chip" data-val="braided">Braided</button><button class="ce-chip" data-val="dreadlocks">Dreadlocks</button><button class="ce-chip" data-val="bun">Bun</button><button class="ce-chip" data-val="ponytail">Ponytail</button><button class="ce-chip" data-val="pixie">Pixie</button><button class="ce-chip" data-val="undercut">Undercut</button><button class="ce-chip" data-val="mohawk">Mohawk</button><button class="ce-chip" data-val="messy">Messy</button></div>
+                        </div>
+                        <div class="ce-field-group"><label class="ce-label">Hair Length</label>
+                            <div class="ce-chip-group" data-spo="hairLength"><button class="ce-chip" data-val="shaved">Shaved</button><button class="ce-chip" data-val="buzz">Buzz Cut</button><button class="ce-chip" data-val="short">Short</button><button class="ce-chip" data-val="medium">Medium</button><button class="ce-chip" data-val="long">Long</button><button class="ce-chip" data-val="very-long">Very Long</button><button class="ce-chip" data-val="floor-length">Floor-length</button></div>
+                        </div>
+                        <div class="ce-field-group"><label class="ce-label">Hair Texture</label>
+                            <div class="ce-chip-group" data-spo="hairTexture"><button class="ce-chip" data-val="silky">Silky</button><button class="ce-chip" data-val="thick">Thick</button><button class="ce-chip" data-val="fine">Fine</button><button class="ce-chip" data-val="coarse">Coarse</button><button class="ce-chip" data-val="kinky">Kinky</button></div>
+                        </div>
+                        <div class="ce-slider-field"><label>Shine <span id="ce-sl-badge-hairShine" class="ce-badge">5</span></label><input type="range" id="ce-sl-hairShine" class="ce-range" data-key="hairShine" data-spo="hairShine" min="1" max="10" step="1" value="5"><div class="ce-range-ends"><span>Matte/Dry</span><span>Lustrous</span></div><div class="ce-slider-desc" id="ce-sl-desc-hairShine"></div></div>
+                        <div class="ce-grid-2">
+                            <div class="ce-field-group"><label class="ce-label">Highlights</label><input type="text" id="ce-ext-hair-highlights" class="ce-input" placeholder="None, Platinum tips…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Density</label><input type="text" id="ce-ext-hair-density" class="ce-input" placeholder="Medium, Thick, Thin"></div>
+                            <div class="ce-field-group"><label class="ce-label">Dyed?</label><input type="text" id="ce-ext-hair-dyed" class="ce-input" placeholder="Natural, Dyed red…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Fade</label><input type="text" id="ce-ext-hair-fade" class="ce-input" placeholder="None, Undercut…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Accessories</label><input type="text" id="ce-ext-hair-accessories" class="ce-input" placeholder="Crown, Bow, None…"></div>
+                        </div>
+                    </section>
+
+                    <!-- ═══ BODY ═══ -->
+                    <section class="ce-panel" data-panel="body" hidden>
+                        <div class="ce-section-label">Body &amp; Physique</div>
+                        <div class="ce-grid-2">
+                            <div class="ce-field-group"><label class="ce-label">Height</label><input type="text" id="ce-height" class="ce-input" placeholder="5'6&quot; (168cm)"></div>
+                            <div class="ce-field-group"><label class="ce-label">Weight / Build Feel</label><input type="text" id="ce-ext-weight" class="ce-input" placeholder="slender, athletic, curvy…"></div>
+                        </div>
+                        <div class="ce-field-group"><label class="ce-label">Body Type</label>
+                            <div class="ce-chip-group" data-spo="bodyType"><button class="ce-chip" data-val="petite">Petite</button><button class="ce-chip" data-val="slender">Slender</button><button class="ce-chip" data-val="lean">Lean</button><button class="ce-chip" data-val="average">Average</button><button class="ce-chip" data-val="athletic">Athletic</button><button class="ce-chip" data-val="muscular">Muscular</button><button class="ce-chip" data-val="curvy">Curvy</button><button class="ce-chip" data-val="full-figured">Full-figured</button><button class="ce-chip" data-val="stocky">Stocky</button><button class="ce-chip" data-val="bulky">Bulky</button></div>
+                        </div>
+                        <div class="ce-slider-field"><label>Muscle Tone <span id="ce-sl-badge-muscleTone" class="ce-badge">5</span></label><input type="range" id="ce-sl-muscleTone" class="ce-range" data-key="muscleTone" data-spo="muscleTone" min="1" max="10" step="1" value="5"><div class="ce-range-ends"><span>Soft</span><span>Chiseled</span></div><div class="ce-slider-desc" id="ce-sl-desc-muscleTone"></div></div>
+                        <div class="ce-slider-field"><label>Body Fat <span id="ce-sl-badge-bodyFat" class="ce-badge">5</span></label><input type="range" id="ce-sl-bodyFat" class="ce-range" data-key="bodyFat" data-spo="bodyFat" min="1" max="10" step="1" value="5"><div class="ce-range-ends"><span>Very lean</span><span>Voluptuous</span></div><div class="ce-slider-desc" id="ce-sl-desc-bodyFat"></div></div>
+                        <div class="ce-grid-2">
+                            <div class="ce-field-group"><label class="ce-label">Shoulder Width</label>
+                                <div class="ce-chip-group" data-spo="shoulderWidth"><button class="ce-chip" data-val="narrow">Narrow</button><button class="ce-chip" data-val="medium">Medium</button><button class="ce-chip" data-val="broad">Broad</button><button class="ce-chip" data-val="very-broad">Very Broad</button></div>
+                            </div>
+                            <div class="ce-field-group"><label class="ce-label">Waist</label>
+                                <div class="ce-chip-group" data-spo="waistType"><button class="ce-chip" data-val="narrow">Narrow</button><button class="ce-chip" data-val="defined">Defined</button><button class="ce-chip" data-val="wide">Wide</button><button class="ce-chip" data-val="straight">Straight</button></div>
+                            </div>
+                            <div class="ce-field-group"><label class="ce-label">Leg Type</label><input type="text" id="ce-ext-leg-type" class="ce-input" placeholder="Long, Powerful…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Posture</label><input type="text" id="ce-ext-posture" class="ce-input" placeholder="Upright, Slouched…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Gait</label><input type="text" id="ce-ext-gait" class="ce-input" placeholder="Prowling, Deliberate…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Scent</label><input type="text" id="ce-ext-scent" class="ce-input" placeholder="Gunpowder, Florals…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Body Markings</label><input type="text" id="ce-ext-body-markings" class="ce-input" placeholder="Birthmarks, vitiligo…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Tattoos</label><input type="text" id="ce-ext-tattoos" class="ce-input" placeholder="Sleeve, Back piece…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Scars / Marks</label><input type="text" id="ce-ext-scars" class="ce-input" placeholder="Blade scar, burn…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Body Piercings</label><input type="text" id="ce-ext-body-piercings" class="ce-input" placeholder="Navel, etc."></div>
+                            <div class="ce-field-group"><label class="ce-label">Nail Length</label><input type="text" id="ce-ext-nail-length" class="ce-input" placeholder="Short, Long, Claw…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Nail Shape</label><input type="text" id="ce-ext-nail-shape" class="ce-input" placeholder="Square, Almond…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Nail Color</label><input type="text" id="ce-ext-nail-color" class="ce-input" placeholder="Black, Nude…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Physical Quirks</label><input type="text" id="ce-ext-physical-quirks" class="ce-input" placeholder="Twitches, fidgets…"></div>
+                        </div>
+                    </section>
+
+                    <!-- ═══ STYLE ═══ -->
+                    <section class="ce-panel" data-panel="style" hidden>
+                        <div class="ce-section-label">Style &amp; Fashion</div>
+                        <div class="ce-field-group"><label class="ce-label">Style Archetype</label>
+                            <div class="ce-chip-group" data-spo="styleArchetype"><button class="ce-chip" data-val="casual">Casual</button><button class="ce-chip" data-val="formal">Formal</button><button class="ce-chip" data-val="military">Military</button><button class="ce-chip" data-val="streetwear">Streetwear</button><button class="ce-chip" data-val="gothic">Gothic</button><button class="ce-chip" data-val="cyberpunk">Cyberpunk</button><button class="ce-chip" data-val="fantasy">Fantasy Robes</button><button class="ce-chip" data-val="elegant">Elegant</button><button class="ce-chip" data-val="leather">Leather &amp; Chains</button><button class="ce-chip" data-val="punk">Punk</button><button class="ce-chip" data-val="minimalist">Minimalist</button><button class="ce-chip" data-val="bohemian">Bohemian</button><button class="ce-chip" data-val="uniform">Uniform</button></div>
+                        </div>
+                        <div class="ce-field-group"><label class="ce-label">Primary Outfit</label><textarea id="ce-ext-outfit" class="ce-textarea" data-spo="outfitDescription" placeholder="Describe what they typically wear…"></textarea></div>
+                        <div class="ce-grid-2">
+                            <div class="ce-field-group"><label class="ce-label">Color Palette</label><input type="text" id="ce-ext-color-palette" class="ce-input" placeholder="Black &amp; crimson…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Signature Item</label><input type="text" id="ce-ext-signature-item" class="ce-input" placeholder="Katana, locket…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Footwear</label><input type="text" id="ce-ext-footwear" class="ce-input" placeholder="Combat boots…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Jewelry</label><input type="text" id="ce-ext-jewelry" class="ce-input" placeholder="None, Gold chain…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Eyewear</label><input type="text" id="ce-ext-eyewear" class="ce-input" placeholder="None, Goggles…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Headwear</label><input type="text" id="ce-ext-headwear" class="ce-input" placeholder="None, Crown…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Carried Items</label><input type="text" id="ce-ext-carried-items" class="ce-input" placeholder="Switchblade, notebook…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Underwear</label><input type="text" id="ce-ext-underwear" class="ce-input" placeholder="Black lace, None…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Grooming Standard</label><input type="text" id="ce-ext-grooming" class="ce-input" placeholder="Meticulous, Wild…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Makeup Style</label><input type="text" id="ce-ext-makeup-style" class="ce-input" placeholder="None, Smoky eye…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Lipstick Color</label><input type="text" id="ce-ext-lipstick" class="ce-input" placeholder="Crimson, Nude…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Eye Makeup</label><input type="text" id="ce-ext-eye-makeup" class="ce-input" placeholder="Kohl, Shadow…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Formal Outfit</label><input type="text" id="ce-ext-formal-outfit" class="ce-input" placeholder="Evening dress…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Combat Outfit</label><input type="text" id="ce-ext-combat-outfit" class="ce-input" placeholder="Armour, tactical gear…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Sleepwear</label><input type="text" id="ce-ext-sleepwear" class="ce-input" placeholder="Nothing, oversized tee…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Swimwear</label><input type="text" id="ce-ext-swimwear" class="ce-input" placeholder="Bikini, swim shorts…"></div>
+                        </div>
+                    </section>
+
+                    <!-- ═══ VOICE ═══ -->
+                    <section class="ce-panel" data-panel="voice" hidden>
+                        <div class="ce-section-label">Voice &amp; Speech</div>
+                        <div class="ce-field-group"><label class="ce-label">Voice Tone</label>
+                            <div class="ce-chip-group" data-spo="voiceTone"><button class="ce-chip" data-val="high">High/Soft</button><button class="ce-chip" data-val="melodic">Melodic</button><button class="ce-chip" data-val="medium">Neutral</button><button class="ce-chip" data-val="husky">Husky</button><button class="ce-chip" data-val="low">Low/Deep</button><button class="ce-chip" data-val="gravelly">Gravelly</button><button class="ce-chip" data-val="raspy">Raspy</button><button class="ce-chip" data-val="whispery">Whispery</button></div>
+                        </div>
+                        <div class="ce-grid-2">
+                            <div class="ce-field-group"><label class="ce-label">Accent</label><input type="text" id="ce-ext-accent" class="ce-input" placeholder="British RP, Tokyo-ben…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Accent Strength</label><input type="text" id="ce-ext-accent-strength" class="ce-input" placeholder="Subtle, Heavy…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Voice Resonance</label><input type="text" id="ce-ext-voice-resonance" class="ce-input" placeholder="Deep, Thin, Warm…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Voice Volume</label><input type="text" id="ce-ext-voice-volume" class="ce-input" placeholder="Quiet, Loud…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Laugh Style</label><input type="text" id="ce-ext-laugh-style" class="ce-input" placeholder="Rare, Cackle, Soft…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Signature Sounds</label><input type="text" id="ce-ext-signature-sounds" class="ce-input" placeholder="Clicks, hums, sighs…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Vocabulary Style</label><input type="text" id="ce-ext-vocabulary" class="ce-input" placeholder="Archaic, Street, Technical…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Swearing Level</label><input type="text" id="ce-ext-swearing" class="ce-input" placeholder="None, Casual, Heavy…"></div>
+                        </div>
+                        <div class="ce-slider-field"><label>Verbosity <span id="ce-sl-badge-verbosity" class="ce-badge">5</span></label><input type="range" id="ce-sl-verbosity" class="ce-range" data-key="verbosity" data-spo="verbosity" min="1" max="10" step="1" value="5"><div class="ce-range-ends"><span>Terse</span><span>Verbose</span></div><div class="ce-slider-desc" id="ce-sl-desc-verbosity"></div></div>
+                        <div class="ce-slider-field"><label>Formality <span id="ce-sl-badge-formality" class="ce-badge">5</span></label><input type="range" id="ce-sl-formality" class="ce-range" data-key="formality" data-spo="formality" min="1" max="10" step="1" value="5"><div class="ce-range-ends"><span>Crude/Casual</span><span>Formal/Refined</span></div><div class="ce-slider-desc" id="ce-sl-desc-formality"></div></div>
+                        <div class="ce-slider-field"><label>Speech Pace <span id="ce-sl-badge-speechPace" class="ce-badge">5</span></label><input type="range" id="ce-sl-speechPace" class="ce-range" data-key="speechPace" data-spo="speechPace" min="1" max="10" step="1" value="5"><div class="ce-range-ends"><span>Glacially slow</span><span>Rapid-fire</span></div><div class="ce-slider-desc" id="ce-sl-desc-speechPace"></div></div>
+                        <div class="ce-field-group"><label class="ce-label">Catchphrases</label><textarea id="ce-ext-catchphrases" class="ce-textarea ce-textarea--sm" placeholder="&quot;I'll kill every last one of you.&quot;…"></textarea></div>
+                        <div class="ce-field-group"><label class="ce-label">Speech Patterns / Quirks</label><textarea id="ce-speech-patterns" class="ce-textarea ce-textarea--sm" data-spo="speechPatterns" placeholder="Trailing off, over-explains, interrupts…"></textarea></div>
+                    </section>
 
                     <!-- ═══ PERSONALITY ═══ -->
-                    <div class="cc-tab-panel" data-panel="personality" hidden>
-                        <div class="cc-section-label">Core Personality</div>
-                        <div class="cc-grid-2">
-                            <div class="cc-field-group"><label class="cc-label">Core Traits</label><input type="text" id="cc-ext-core-traits" class="cc-input" placeholder="Cynical, fiercely loyal…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Archetype</label><input type="text" id="cc-ext-archetype" class="cc-input" placeholder="Broken hero, seducer…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Alignment</label><input type="text" id="cc-ext-alignment" class="cc-input" placeholder="Chaotic neutral…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Mood Baseline</label><input type="text" id="cc-ext-mood-baseline" class="cc-input" placeholder="Bleak, stoic, warm…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Attachment Style</label><input type="text" id="cc-ext-attachment" class="cc-input" placeholder="Avoidant, secure…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Love Languages</label><input type="text" id="cc-ext-love-langs" class="cc-input" placeholder="Acts of service…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Conflict Style</label><input type="text" id="cc-ext-conflict-style" class="cc-input" placeholder="Confrontational…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Moral Philosophy</label><input type="text" id="cc-ext-moral-philosophy" class="cc-input" placeholder="Survival of fittest…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Spirituality</label><input type="text" id="cc-ext-spirituality" class="cc-input" placeholder="Atheist, Buddhist…"></div>
+                    <section class="ce-panel" data-panel="personality" hidden>
+                        <div class="ce-section-label">Personality &amp; Psychology</div>
+                        <div class="ce-field-group"><label class="ce-label">Core Traits</label><textarea id="ce-ext-core-traits" class="ce-textarea" data-spo="coreTraits" placeholder="Fiercely loyal, deeply sarcastic, secretly tender…"></textarea></div>
+                        <div class="ce-field-group"><label class="ce-label">Archetype / Trope</label>
+                            <div class="ce-chip-group ce-chip-group--wrap" data-spo="archetype"><button class="ce-chip" data-val="tsundere">Tsundere</button><button class="ce-chip" data-val="yandere">Yandere</button><button class="ce-chip" data-val="kuudere">Kuudere</button><button class="ce-chip" data-val="dandere">Dandere</button><button class="ce-chip" data-val="gentle-giant">Gentle Giant</button><button class="ce-chip" data-val="noble-rogue">Noble Rogue</button><button class="ce-chip" data-val="broken-hero">Broken Hero</button><button class="ce-chip" data-val="villain">Villain</button><button class="ce-chip" data-val="trickster">Trickster</button><button class="ce-chip" data-val="caretaker">Caretaker</button><button class="ce-chip" data-val="sage">Sage</button><button class="ce-chip" data-val="rebel">Rebel</button><button class="ce-chip" data-val="seducer">Seducer</button><button class="ce-chip" data-val="innocent">Innocent</button></div>
                         </div>
-                        <div class="cc-field-group"><label class="cc-label">Backstory</label><textarea id="cc-ext-backstory" class="cc-textarea" placeholder="History, formative events, origin…"></textarea></div>
-                        <div class="cc-field-group"><label class="cc-label">Fears</label><textarea id="cc-ext-fears" class="cc-textarea cc-textarea--sm" placeholder="Deep fears and anxieties…"></textarea></div>
-                        <div class="cc-field-group"><label class="cc-label">Desires</label><textarea id="cc-ext-desires" class="cc-textarea cc-textarea--sm" placeholder="Core wants and goals…"></textarea></div>
-                        <div class="cc-field-group"><label class="cc-label">Secrets</label><textarea id="cc-ext-secrets" class="cc-textarea cc-textarea--sm" placeholder="Hidden truths…"></textarea></div>
-                        <div class="cc-field-group"><label class="cc-label">Hobbies</label><input type="text" id="cc-ext-hobbies" class="cc-input" placeholder="Weapon maintenance, painting…"></div>
-                        <div class="cc-field-group"><label class="cc-label">Triggers</label><textarea id="cc-ext-triggers" class="cc-textarea cc-textarea--sm" placeholder="Specific words or events that destabilize…"></textarea></div>
-                        <div class="cc-field-group"><label class="cc-label">Pet Peeves</label><input type="text" id="cc-ext-pet-peeves" class="cc-input" placeholder="Minor irritants…"></div>
-                        <div class="cc-field-group"><label class="cc-label">Comfort Objects</label><input type="text" id="cc-ext-comfort-objects" class="cc-input" placeholder="Soothing items, people…"></div>
-                    </div>
+                        <div class="ce-field-group"><label class="ce-label">Moral Alignment</label>
+                            <div class="ce-chip-group" data-spo="alignment"><button class="ce-chip" data-val="lawful-good">Lawful Good</button><button class="ce-chip" data-val="neutral-good">Neutral Good</button><button class="ce-chip" data-val="chaotic-good">Chaotic Good</button><button class="ce-chip" data-val="lawful-neutral">Lawful Neutral</button><button class="ce-chip" data-val="true-neutral">True Neutral</button><button class="ce-chip" data-val="chaotic-neutral">Chaotic Neutral</button><button class="ce-chip" data-val="lawful-evil">Lawful Evil</button><button class="ce-chip" data-val="neutral-evil">Neutral Evil</button><button class="ce-chip" data-val="chaotic-evil">Chaotic Evil</button></div>
+                        </div>
+                        <div class="ce-grid-2">
+                            <div class="ce-field-group"><label class="ce-label">Mood Baseline</label><input type="text" id="ce-ext-mood-baseline" class="ce-input" data-spo="moodBaseline" placeholder="Bleak, stoic, warm…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Attachment Style</label>
+                                <div class="ce-chip-group" data-spo="attachmentStyle"><button class="ce-chip" data-val="secure">Secure</button><button class="ce-chip" data-val="anxious">Anxious</button><button class="ce-chip" data-val="avoidant">Avoidant</button><button class="ce-chip" data-val="fearful">Fearful</button></div>
+                            </div>
+                            <div class="ce-field-group"><label class="ce-label">Love Languages</label><input type="text" id="ce-ext-love-langs" class="ce-input" placeholder="Acts of service…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Conflict Style</label><input type="text" id="ce-ext-conflict-style" class="ce-input" placeholder="Confrontational…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Moral Philosophy</label><input type="text" id="ce-ext-moral-philosophy" class="ce-input" placeholder="Survival of fittest…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Spirituality</label><input type="text" id="ce-ext-spirituality" class="ce-input" placeholder="Atheist, Buddhist…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Hobbies</label><input type="text" id="ce-ext-hobbies" class="ce-input" placeholder="Weapon maintenance, painting…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Pet Peeves</label><input type="text" id="ce-ext-pet-peeves" class="ce-input" placeholder="Minor irritants…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Comfort Objects</label><input type="text" id="ce-ext-comfort-objects" class="ce-input" placeholder="Soothing items, people…"></div>
+                        </div>
+                        <div class="ce-field-group"><label class="ce-label">Backstory</label><textarea id="ce-ext-backstory" class="ce-textarea" data-spo="backstory" placeholder="History, formative events, origin…"></textarea></div>
+                        <div class="ce-field-group"><label class="ce-label">Fears</label><textarea id="ce-ext-fears" class="ce-textarea ce-textarea--sm" data-spo="fears" placeholder="Deep fears and anxieties…"></textarea></div>
+                        <div class="ce-field-group"><label class="ce-label">Desires</label><textarea id="ce-ext-desires" class="ce-textarea ce-textarea--sm" data-spo="desires" placeholder="Core wants and goals…"></textarea></div>
+                        <div class="ce-field-group"><label class="ce-label">Secrets</label><textarea id="ce-ext-secrets" class="ce-textarea ce-textarea--sm" data-spo="secrets" placeholder="Hidden truths…"></textarea></div>
+                        <div class="ce-field-group"><label class="ce-label">Triggers</label><textarea id="ce-ext-triggers" class="ce-textarea ce-textarea--sm" data-spo="triggers" placeholder="Specific words or events that destabilize…"></textarea></div>
+                    </section>
 
-                    <!-- ═══ VOICE & STYLE ═══ -->
-                    <div class="cc-tab-panel" data-panel="voice" hidden>
-                        <div class="cc-section-label">Voice</div>
-                        <div class="cc-grid-2">
-                            <div class="cc-field-group"><label class="cc-label">Voice Tone</label><input type="text" id="cc-voice-tone" class="cc-input" placeholder="Husky, melodic, raspy…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Accent</label><input type="text" id="cc-ext-accent" class="cc-input" placeholder="British RP, Tokyo-ben…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Accent Strength</label><input type="text" id="cc-ext-accent-strength" class="cc-input" placeholder="Subtle, Heavy…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Voice Resonance</label><input type="text" id="cc-ext-voice-resonance" class="cc-input" placeholder="Deep, Thin, Warm…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Voice Volume</label><input type="text" id="cc-ext-voice-volume" class="cc-input" placeholder="Quiet, Loud…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Laugh Style</label><input type="text" id="cc-ext-laugh-style" class="cc-input" placeholder="Rare, Cackle, Soft…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Signature Sounds</label><input type="text" id="cc-ext-signature-sounds" class="cc-input" placeholder="Clicks, hums, sighs…"></div>
+                    <!-- ═══ BEHAVIOR ═══ -->
+                    <section class="ce-panel" data-panel="behavior" hidden>
+                        <div class="ce-section-label">Core Behavior Dials</div>
+                        <p class="ce-panel-desc">These sliders directly influence how the character responds in every scene.</p>
+                        <div class="ce-sliders-grid">
+                            <div class="ce-slider-row"><div class="ce-slider-label">Dominance <span id="ce-sl-badge-dominanceLevel" class="ce-badge">50</span></div><div class="ce-dual-label"><span>Submissive</span><span>Dominant</span></div><input type="range" id="ce-sl-dominanceLevel" class="ce-range ce-range--lg" data-key="dominanceLevel" data-spo="dominanceLevel" min="0" max="100" value="50"><div class="ce-slider-desc" id="ce-sl-desc-dominanceLevel"></div></div>
+                            <div class="ce-slider-row"><div class="ce-slider-label">Explicitness <span id="ce-sl-badge-explicitnessLevel" class="ce-badge">50</span></div><div class="ce-dual-label"><span>Fade-to-Black</span><span>Fully Explicit</span></div><input type="range" id="ce-sl-explicitnessLevel" class="ce-range ce-range--lg" data-key="explicitnessLevel" data-spo="explicitnessLevel" min="0" max="100" value="50"><div class="ce-slider-desc" id="ce-sl-desc-explicitnessLevel"></div></div>
+                            <div class="ce-slider-row"><div class="ce-slider-label">Romanticism <span id="ce-sl-badge-romanticismLevel" class="ce-badge">50</span></div><div class="ce-dual-label"><span>Cold</span><span>Passionate</span></div><input type="range" id="ce-sl-romanticismLevel" class="ce-range ce-range--lg" data-key="romanticismLevel" data-spo="romanticismLevel" min="0" max="100" value="50"><div class="ce-slider-desc" id="ce-sl-desc-romanticismLevel"></div></div>
+                            <div class="ce-slider-row"><div class="ce-slider-label">Violence <span id="ce-sl-badge-violenceLevel" class="ce-badge">30</span></div><div class="ce-dual-label"><span>Non-violent</span><span>Graphic</span></div><input type="range" id="ce-sl-violenceLevel" class="ce-range ce-range--lg" data-key="violenceLevel" data-spo="violenceLevel" min="0" max="100" value="30"><div class="ce-slider-desc" id="ce-sl-desc-violenceLevel"></div></div>
+                            <div class="ce-slider-row"><div class="ce-slider-label">Empathy <span id="ce-sl-badge-empathyLevel" class="ce-badge">50</span></div><div class="ce-dual-label"><span>Callous</span><span>Deeply empathic</span></div><input type="range" id="ce-sl-empathyLevel" class="ce-range ce-range--lg" data-key="empathyLevel" data-spo="empathyLevel" min="0" max="100" value="50"><div class="ce-slider-desc" id="ce-sl-desc-empathyLevel"></div></div>
+                            <div class="ce-slider-row"><div class="ce-slider-label">Playfulness <span id="ce-sl-badge-playfulnessLevel" class="ce-badge">50</span></div><div class="ce-dual-label"><span>Serious</span><span>Mischievous</span></div><input type="range" id="ce-sl-playfulnessLevel" class="ce-range ce-range--lg" data-key="playfulnessLevel" data-spo="playfulnessLevel" min="0" max="100" value="50"><div class="ce-slider-desc" id="ce-sl-desc-playfulnessLevel"></div></div>
+                            <div class="ce-slider-row"><div class="ce-slider-label">Obedience <span id="ce-sl-badge-obedienceLevel" class="ce-badge">50</span></div><div class="ce-dual-label"><span>Defiant</span><span>Eager to please</span></div><input type="range" id="ce-sl-obedienceLevel" class="ce-range ce-range--lg" data-key="obedienceLevel" data-spo="obedienceLevel" min="0" max="100" value="50"><div class="ce-slider-desc" id="ce-sl-desc-obedienceLevel"></div></div>
+                            <div class="ce-slider-row"><div class="ce-slider-label">Jealousy <span id="ce-sl-badge-jealousyLevel" class="ce-badge">30</span></div><div class="ce-dual-label"><span>Unattached</span><span>Possessive</span></div><input type="range" id="ce-sl-jealousyLevel" class="ce-range ce-range--lg" data-key="jealousyLevel" data-spo="jealousyLevel" min="0" max="100" value="30"><div class="ce-slider-desc" id="ce-sl-desc-jealousyLevel"></div></div>
+                            <div class="ce-slider-row"><div class="ce-slider-label">Humor <span id="ce-sl-badge-humorLevel" class="ce-badge">50</span></div><div class="ce-dual-label"><span>Humorless</span><span>Comedic</span></div><input type="range" id="ce-sl-humorLevel" class="ce-range ce-range--lg" data-key="humorLevel" data-spo="humorLevel" min="0" max="100" value="50"><div class="ce-slider-desc" id="ce-sl-desc-humorLevel"></div></div>
+                            <div class="ce-slider-row"><div class="ce-slider-label">Sadism <span id="ce-sl-badge-sadismLevel" class="ce-badge">10</span></div><div class="ce-dual-label"><span>Gentle</span><span>Sadistic</span></div><input type="range" id="ce-sl-sadismLevel" class="ce-range ce-range--lg" data-key="sadismLevel" data-spo="sadismLevel" min="0" max="100" value="10"><div class="ce-slider-desc" id="ce-sl-desc-sadismLevel"></div></div>
                         </div>
-                        <div class="cc-grid-2">
-                            <div class="cc-field-group"><label class="cc-label">Verbosity <span class="cc-badge-inline" id="cc-sl-badge-verbosity">5</span></label>
-                                <input type="range" id="cc-sl-verbosity" class="cc-slider" data-key="verbosity" min="1" max="10" value="5" step="1">
-                            </div>
-                            <div class="cc-field-group"><label class="cc-label">Formality <span class="cc-badge-inline" id="cc-sl-badge-formality">5</span></label>
-                                <input type="range" id="cc-sl-formality" class="cc-slider" data-key="formality" min="1" max="10" value="5" step="1">
-                            </div>
-                            <div class="cc-field-group"><label class="cc-label">Speech Pace <span class="cc-badge-inline" id="cc-sl-badge-speechPace">5</span></label>
-                                <input type="range" id="cc-sl-speechPace" class="cc-slider" data-key="speechPace" min="1" max="10" value="5" step="1">
-                            </div>
+                        <div class="ce-section-label ce-section-label--sm">Extended Behavior</div>
+                        <div class="ce-sliders-grid">
+                            <div class="ce-slider-row"><div class="ce-slider-label">Anxiety <span id="ce-sl-badge-anxietyLevel" class="ce-badge">40</span></div><input type="range" id="ce-sl-anxietyLevel" class="ce-range" data-key="anxietyLevel" data-spo="anxietyLevel" min="0" max="100" value="40"><div class="ce-slider-desc" id="ce-sl-desc-anxietyLevel"></div></div>
+                            <div class="ce-slider-row"><div class="ce-slider-label">Loyalty <span id="ce-sl-badge-loyaltyLevel" class="ce-badge">60</span></div><input type="range" id="ce-sl-loyaltyLevel" class="ce-range" data-key="loyaltyLevel" data-spo="loyaltyLevel" min="0" max="100" value="60"><div class="ce-slider-desc" id="ce-sl-desc-loyaltyLevel"></div></div>
+                            <div class="ce-slider-row"><div class="ce-slider-label">Stubbornness <span id="ce-sl-badge-stubbornness" class="ce-badge">50</span></div><input type="range" id="ce-sl-stubbornness" class="ce-range" data-key="stubbornness" data-spo="stubbornness" min="0" max="100" value="50"><div class="ce-slider-desc" id="ce-sl-desc-stubbornness"></div></div>
+                            <div class="ce-slider-row"><div class="ce-slider-label">Self-Esteem <span id="ce-sl-badge-selfEsteemLevel" class="ce-badge">55</span></div><input type="range" id="ce-sl-selfEsteemLevel" class="ce-range" data-key="selfEsteemLevel" data-spo="selfEsteemLevel" min="0" max="100" value="55"><div class="ce-slider-desc" id="ce-sl-desc-selfEsteemLevel"></div></div>
+                            <div class="ce-slider-row"><div class="ce-slider-label">Curiosity <span id="ce-sl-badge-curiosityLevel" class="ce-badge">60</span></div><input type="range" id="ce-sl-curiosityLevel" class="ce-range" data-key="curiosityLevel" data-spo="curiosityLevel" min="0" max="100" value="60"><div class="ce-slider-desc" id="ce-sl-desc-curiosityLevel"></div></div>
+                            <div class="ce-slider-row"><div class="ce-slider-label">Sociability <span id="ce-sl-badge-sociabilityLevel" class="ce-badge">50</span></div><input type="range" id="ce-sl-sociabilityLevel" class="ce-range" data-key="sociabilityLevel" data-spo="sociabilityLevel" min="0" max="100" value="50"><div class="ce-slider-desc" id="ce-sl-desc-sociabilityLevel"></div></div>
+                            <div class="ce-slider-row"><div class="ce-slider-label">Impulsivity <span id="ce-sl-badge-impulsivityLevel" class="ce-badge">50</span></div><input type="range" id="ce-sl-impulsivityLevel" class="ce-range" data-key="impulsivityLevel" data-spo="impulsivityLevel" min="0" max="100" value="50"><div class="ce-slider-desc" id="ce-sl-desc-impulsivityLevel"></div></div>
+                            <div class="ce-slider-row"><div class="ce-slider-label">Deceptiveness <span id="ce-sl-badge-deceptivenessLevel" class="ce-badge">30</span></div><input type="range" id="ce-sl-deceptivenessLevel" class="ce-range" data-key="deceptivenessLevel" data-spo="deceptivenessLevel" min="0" max="100" value="30"><div class="ce-slider-desc" id="ce-sl-desc-deceptivenessLevel"></div></div>
+                            <div class="ce-slider-row"><div class="ce-slider-label">Narcissism <span id="ce-sl-badge-narcissismLevel" class="ce-badge">30</span></div><input type="range" id="ce-sl-narcissismLevel" class="ce-range" data-key="narcissismLevel" data-spo="narcissismLevel" min="0" max="100" value="30"><div class="ce-slider-desc" id="ce-sl-desc-narcissismLevel"></div></div>
+                            <div class="ce-slider-row"><div class="ce-slider-label">Protectiveness <span id="ce-sl-badge-protectivenessLevel" class="ce-badge">50</span></div><input type="range" id="ce-sl-protectivenessLevel" class="ce-range" data-key="protectivenessLevel" data-spo="protectivenessLevel" min="0" max="100" value="50"><div class="ce-slider-desc" id="ce-sl-desc-protectivenessLevel"></div></div>
                         </div>
-                        <div class="cc-field-group"><label class="cc-label">Vocabulary Style</label><input type="text" id="cc-ext-vocabulary" class="cc-input" placeholder="Archaic, Street, Technical…"></div>
-                        <div class="cc-field-group"><label class="cc-label">Swearing Level</label><input type="text" id="cc-ext-swearing" class="cc-input" placeholder="None, Casual, Heavy…"></div>
-                        <div class="cc-field-group"><label class="cc-label">Catchphrases</label><textarea id="cc-ext-catchphrases" class="cc-textarea cc-textarea--sm" placeholder="&quot;I'll kill every last one of you.&quot;…"></textarea></div>
-                        <div class="cc-field-group"><label class="cc-label">Speech Patterns / Quirks</label><textarea id="cc-ext-speech-patterns" class="cc-textarea cc-textarea--sm" placeholder="Trailing off, over-explains, interrupts…"></textarea></div>
-
-                        <div class="cc-section-label cc-section-label--sm">Style & Clothing</div>
-                        <div class="cc-grid-2">
-                            <div class="cc-field-group"><label class="cc-label">Style Archetype</label><input type="text" id="cc-ext-style-archetype" class="cc-input" placeholder="Cyberpunk, Gothic…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Color Palette</label><input type="text" id="cc-ext-color-palette" class="cc-input" placeholder="Black & crimson…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Signature Item</label><input type="text" id="cc-ext-signature-item" class="cc-input" placeholder="Katana, locket…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Footwear</label><input type="text" id="cc-ext-footwear" class="cc-input" placeholder="Combat boots…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Jewelry</label><input type="text" id="cc-ext-jewelry" class="cc-input" placeholder="None, Gold chain…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Eyewear</label><input type="text" id="cc-ext-eyewear" class="cc-input" placeholder="None, Goggles…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Headwear</label><input type="text" id="cc-ext-headwear" class="cc-input" placeholder="None, Crown…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Carried Items</label><input type="text" id="cc-ext-carried-items" class="cc-input" placeholder="Switchblade, notebook…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Underwear</label><input type="text" id="cc-ext-underwear" class="cc-input" placeholder="Black lace, None…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Grooming Standard</label><input type="text" id="cc-ext-grooming" class="cc-input" placeholder="Meticulous, Wild…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Makeup Style</label><input type="text" id="cc-ext-makeup-style" class="cc-input" placeholder="None, Smoky eye…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Lipstick Color</label><input type="text" id="cc-ext-lipstick" class="cc-input" placeholder="Crimson, Nude…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Eye Makeup</label><input type="text" id="cc-ext-eye-makeup" class="cc-input" placeholder="Kohl, Shadow…"></div>
-                        </div>
-                        <div class="cc-field-group"><label class="cc-label">Default Outfit</label><textarea id="cc-ext-outfit" class="cc-textarea" placeholder="Detailed clothing description…"></textarea></div>
-                        <div class="cc-field-group"><label class="cc-label">Formal Outfit</label><input type="text" id="cc-ext-formal-outfit" class="cc-input" placeholder="Evening dress…"></div>
-                        <div class="cc-field-group"><label class="cc-label">Combat Outfit</label><input type="text" id="cc-ext-combat-outfit" class="cc-input" placeholder="Armour, tactical gear…"></div>
-                        <div class="cc-field-group"><label class="cc-label">Sleepwear</label><input type="text" id="cc-ext-sleepwear" class="cc-input" placeholder="Nothing, oversized tee…"></div>
-                        <div class="cc-field-group"><label class="cc-label">Swimwear</label><input type="text" id="cc-ext-swimwear" class="cc-input" placeholder="Bikini, swim shorts…"></div>
-                    </div>
-
-                    <!-- ═══ BEHAVIOR SLIDERS ═══ -->
-                    <div class="cc-tab-panel" data-panel="behavior" hidden>
-                        <div class="cc-section-label">Core Behavior Dials</div>
-                        <div class="cc-sliders-grid">
-                            <div class="cc-slider-row">
-                                <div class="cc-slider-label">Dominance <span class="cc-badge-inline" id="cc-sl-badge-dominanceLevel">50</span></div>
-                                <input type="range" id="cc-sl-dominanceLevel" class="cc-slider" data-key="dominanceLevel" min="0" max="100" value="50">
-                                <div class="cc-slider-desc" id="cc-sl-desc-dominanceLevel"></div>
-                            </div>
-                            <div class="cc-slider-row">
-                                <div class="cc-slider-label">Explicitness <span class="cc-badge-inline" id="cc-sl-badge-explicitnessLevel">50</span></div>
-                                <input type="range" id="cc-sl-explicitnessLevel" class="cc-slider" data-key="explicitnessLevel" min="0" max="100" value="50">
-                                <div class="cc-slider-desc" id="cc-sl-desc-explicitnessLevel"></div>
-                            </div>
-                            <div class="cc-slider-row">
-                                <div class="cc-slider-label">Romanticism <span class="cc-badge-inline" id="cc-sl-badge-romanticismLevel">50</span></div>
-                                <input type="range" id="cc-sl-romanticismLevel" class="cc-slider" data-key="romanticismLevel" min="0" max="100" value="50">
-                                <div class="cc-slider-desc" id="cc-sl-desc-romanticismLevel"></div>
-                            </div>
-                            <div class="cc-slider-row">
-                                <div class="cc-slider-label">Violence <span class="cc-badge-inline" id="cc-sl-badge-violenceLevel">30</span></div>
-                                <input type="range" id="cc-sl-violenceLevel" class="cc-slider" data-key="violenceLevel" min="0" max="100" value="30">
-                                <div class="cc-slider-desc" id="cc-sl-desc-violenceLevel"></div>
-                            </div>
-                            <div class="cc-slider-row">
-                                <div class="cc-slider-label">Anxiety <span class="cc-badge-inline" id="cc-sl-badge-anxietyLevel">40</span></div>
-                                <input type="range" id="cc-sl-anxietyLevel" class="cc-slider" data-key="anxietyLevel" min="0" max="100" value="40">
-                                <div class="cc-slider-desc" id="cc-sl-desc-anxietyLevel"></div>
-                            </div>
-                            <div class="cc-slider-row">
-                                <div class="cc-slider-label">Loyalty <span class="cc-badge-inline" id="cc-sl-badge-loyaltyLevel">60</span></div>
-                                <input type="range" id="cc-sl-loyaltyLevel" class="cc-slider" data-key="loyaltyLevel" min="0" max="100" value="60">
-                                <div class="cc-slider-desc" id="cc-sl-desc-loyaltyLevel"></div>
-                            </div>
-                            <div class="cc-slider-row">
-                                <div class="cc-slider-label">Stubbornness <span class="cc-badge-inline" id="cc-sl-badge-stubbornness">50</span></div>
-                                <input type="range" id="cc-sl-stubbornness" class="cc-slider" data-key="stubbornness" min="0" max="100" value="50">
-                                <div class="cc-slider-desc" id="cc-sl-desc-stubbornness"></div>
-                            </div>
-                            <div class="cc-slider-row">
-                                <div class="cc-slider-label">Self-Esteem <span class="cc-badge-inline" id="cc-sl-badge-selfEsteemLevel">55</span></div>
-                                <input type="range" id="cc-sl-selfEsteemLevel" class="cc-slider" data-key="selfEsteemLevel" min="0" max="100" value="55">
-                                <div class="cc-slider-desc" id="cc-sl-desc-selfEsteemLevel"></div>
-                            </div>
-                            <div class="cc-slider-row">
-                                <div class="cc-slider-label">Curiosity <span class="cc-badge-inline" id="cc-sl-badge-curiosityLevel">60</span></div>
-                                <input type="range" id="cc-sl-curiosityLevel" class="cc-slider" data-key="curiosityLevel" min="0" max="100" value="60">
-                                <div class="cc-slider-desc" id="cc-sl-desc-curiosityLevel"></div>
-                            </div>
-                            <div class="cc-slider-row">
-                                <div class="cc-slider-label">Empathy <span class="cc-badge-inline" id="cc-sl-badge-empathyLevel">50</span></div>
-                                <input type="range" id="cc-sl-empathyLevel" class="cc-slider" data-key="empathyLevel" min="0" max="100" value="50">
-                                <div class="cc-slider-desc" id="cc-sl-desc-empathyLevel"></div>
-                            </div>
-                        </div>
-
-                        <div class="cc-section-label cc-section-label--sm">Extended Behavior Sliders</div>
-                        <div class="cc-sliders-grid">
-                            <div class="cc-slider-row">
-                                <div class="cc-slider-label">Sociability <span class="cc-badge-inline" id="cc-sl-badge-sociabilityLevel">50</span></div>
-                                <input type="range" id="cc-sl-sociabilityLevel" class="cc-slider" data-key="sociabilityLevel" min="0" max="100" value="50">
-                            </div>
-                            <div class="cc-slider-row">
-                                <div class="cc-slider-label">Impulsivity <span class="cc-badge-inline" id="cc-sl-badge-impulsivityLevel">50</span></div>
-                                <input type="range" id="cc-sl-impulsivityLevel" class="cc-slider" data-key="impulsivityLevel" min="0" max="100" value="50">
-                            </div>
-                            <div class="cc-slider-row">
-                                <div class="cc-slider-label">Deceptiveness <span class="cc-badge-inline" id="cc-sl-badge-deceptivenessLevel">30</span></div>
-                                <input type="range" id="cc-sl-deceptivenessLevel" class="cc-slider" data-key="deceptivenessLevel" min="0" max="100" value="30">
-                            </div>
-                            <div class="cc-slider-row">
-                                <div class="cc-slider-label">Narcissism <span class="cc-badge-inline" id="cc-sl-badge-narcissismLevel">30</span></div>
-                                <input type="range" id="cc-sl-narcissismLevel" class="cc-slider" data-key="narcissismLevel" min="0" max="100" value="30">
-                            </div>
-                            <div class="cc-slider-row">
-                                <div class="cc-slider-label">Protectiveness <span class="cc-badge-inline" id="cc-sl-badge-protectivenessLevel">50</span></div>
-                                <input type="range" id="cc-sl-protectivenessLevel" class="cc-slider" data-key="protectivenessLevel" min="0" max="100" value="50">
-                            </div>
-                            <div class="cc-slider-row">
-                                <div class="cc-slider-label">Playfulness <span class="cc-badge-inline" id="cc-sl-badge-playfulnessLevel">50</span></div>
-                                <input type="range" id="cc-sl-playfulnessLevel" class="cc-slider" data-key="playfulnessLevel" min="0" max="100" value="50">
-                            </div>
-                            <div class="cc-slider-row">
-                                <div class="cc-slider-label">Obedience <span class="cc-badge-inline" id="cc-sl-badge-obedienceLevel">50</span></div>
-                                <input type="range" id="cc-sl-obedienceLevel" class="cc-slider" data-key="obedienceLevel" min="0" max="100" value="50">
-                            </div>
-                            <div class="cc-slider-row">
-                                <div class="cc-slider-label">Jealousy <span class="cc-badge-inline" id="cc-sl-badge-jealousyLevel">30</span></div>
-                                <input type="range" id="cc-sl-jealousyLevel" class="cc-slider" data-key="jealousyLevel" min="0" max="100" value="30">
-                            </div>
-                            <div class="cc-slider-row">
-                                <div class="cc-slider-label">Humor <span class="cc-badge-inline" id="cc-sl-badge-humorLevel">50</span></div>
-                                <input type="range" id="cc-sl-humorLevel" class="cc-slider" data-key="humorLevel" min="0" max="100" value="50">
-                            </div>
-                            <div class="cc-slider-row">
-                                <div class="cc-slider-label">Sadism <span class="cc-badge-inline" id="cc-sl-badge-sadismLevel">10</span></div>
-                                <input type="range" id="cc-sl-sadismLevel" class="cc-slider" data-key="sadismLevel" min="0" max="100" value="10">
-                            </div>
-                        </div>
-                    </div>
+                    </section>
 
                     <!-- ═══ ADULT ═══ -->
-                    <div class="cc-tab-panel" data-panel="adult" hidden>
-                        <div class="cc-section-label">Physical (Adult)</div>
-                        <div class="cc-grid-2">
-                            <div class="cc-field-group"><label class="cc-label">Breast Size</label><input type="text" id="cc-breast-size" class="cc-input" placeholder="B-cup (73cm), n/a…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Nipple Color</label><input type="text" id="cc-nipple-color" class="cc-input" placeholder="Pale pink, n/a…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Areolae Size</label><input type="text" id="cc-areolae-size" class="cc-input" placeholder="Small, n/a…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Body Hair</label><input type="text" id="cc-body-hair" class="cc-input" placeholder="None, Light…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Genitalia</label><input type="text" id="cc-genitalia" class="cc-input" placeholder="Female, n/a…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Chest Type</label><input type="text" id="cc-ext-chest-type" class="cc-input" placeholder="Soft, Taut…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Breast Shape</label><input type="text" id="cc-ext-breast-shape" class="cc-input" placeholder="Teardrop, Full…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Buttocks Size</label><input type="text" id="cc-ext-buttocks-size" class="cc-input" placeholder="Small, Full…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Buttocks Shape</label><input type="text" id="cc-ext-buttocks-shape" class="cc-input" placeholder="Round, Heart…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Intimate Markings</label><input type="text" id="cc-ext-intimate-markings" class="cc-input" placeholder="None, Tattoo…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Penis Size</label><input type="text" id="cc-ext-penis-size" class="cc-input" placeholder="n/a, Above avg…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Penis Shape</label><input type="text" id="cc-ext-penis-shape" class="cc-input" placeholder="n/a, Curved…"></div>
+                    <section class="ce-panel" data-panel="adult" hidden>
+                        <div class="ce-section-label">Physical (Adult)</div>
+                        <div class="ce-grid-2">
+                            <div class="ce-field-group"><label class="ce-label">Breast Size</label>
+                                <div class="ce-chip-group" data-spo="breastSize"><button class="ce-chip" data-val="flat">Flat</button><button class="ce-chip" data-val="small">Small</button><button class="ce-chip" data-val="b-cup">B-Cup</button><button class="ce-chip" data-val="c-cup">C-Cup</button><button class="ce-chip" data-val="d-cup">D-Cup</button><button class="ce-chip" data-val="dd-cup">DD-Cup</button><button class="ce-chip" data-val="large">Large</button><button class="ce-chip" data-val="very-large">Very Large</button><button class="ce-chip" data-val="n/a">N/A</button></div>
+                            </div>
+                            <div class="ce-field-group"><label class="ce-label">Breast Shape</label>
+                                <div class="ce-chip-group" data-spo="breastShape"><button class="ce-chip" data-val="round">Round</button><button class="ce-chip" data-val="perky">Perky</button><button class="ce-chip" data-val="natural">Natural</button><button class="ce-chip" data-val="teardrop">Teardrop</button><button class="ce-chip" data-val="wide-set">Wide-set</button></div>
+                            </div>
+                            <div class="ce-field-group"><label class="ce-label">Areolae Size</label>
+                                <div class="ce-chip-group" data-spo="areolaeSize"><button class="ce-chip" data-val="small">Small</button><button class="ce-chip" data-val="medium">Medium</button><button class="ce-chip" data-val="large">Large</button><button class="ce-chip" data-val="puffy">Puffy</button></div>
+                            </div>
+                            <div class="ce-field-group"><label class="ce-label">Nipple Color</label><input type="text" id="ce-nipple-color" class="ce-input" data-spo="nippleColor" placeholder="pink, rosy, dark brown…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Buttocks</label>
+                                <div class="ce-chip-group" data-spo="buttocksSize"><button class="ce-chip" data-val="flat">Flat</button><button class="ce-chip" data-val="small">Small</button><button class="ce-chip" data-val="average">Average</button><button class="ce-chip" data-val="full">Full</button><button class="ce-chip" data-val="large">Large</button><button class="ce-chip" data-val="very-large">Very Large</button></div>
+                            </div>
+                            <div class="ce-field-group"><label class="ce-label">Butt Shape</label>
+                                <div class="ce-chip-group" data-spo="buttocksShape"><button class="ce-chip" data-val="round">Round</button><button class="ce-chip" data-val="heart">Heart</button><button class="ce-chip" data-val="square">Square</button><button class="ce-chip" data-val="bubble">Bubble</button><button class="ce-chip" data-val="flat">Flat</button></div>
+                            </div>
+                            <div class="ce-field-group"><label class="ce-label">Body Hair</label>
+                                <div class="ce-chip-group" data-spo="bodyHair"><button class="ce-chip" data-val="none/bare">None/Bare</button><button class="ce-chip" data-val="minimal">Minimal</button><button class="ce-chip" data-val="trimmed">Trimmed</button><button class="ce-chip" data-val="natural">Natural</button><button class="ce-chip" data-val="thick">Thick</button></div>
+                            </div>
+                            <div class="ce-field-group"><label class="ce-label">Chest Type</label><input type="text" id="ce-ext-chest-type" class="ce-input" placeholder="Soft, Taut…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Intimate Markings</label><input type="text" id="ce-ext-intimate-markings" class="ce-input" placeholder="None, Tattoo…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Penis Size</label><input type="text" id="ce-ext-penis-size" class="ce-input" placeholder="n/a, Above avg…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Penis Shape</label><input type="text" id="ce-ext-penis-shape" class="ce-input" placeholder="n/a, Curved…"></div>
                         </div>
-                        <div class="cc-field-group"><label class="cc-label">Other Adult Features</label><textarea id="cc-other-adult" class="cc-textarea cc-textarea--sm" placeholder="Sensitivity, smell, temperature, texture…"></textarea></div>
+                        <div class="ce-field-group"><label class="ce-label">Genitalia / Anatomy</label><textarea id="ce-genitalia" class="ce-textarea ce-textarea--sm" data-spo="genitalia" placeholder="Detailed physical description for anatomical consistency…"></textarea></div>
+                        <div class="ce-field-group"><label class="ce-label">Other Adult Features</label><textarea id="ce-other-adult" class="ce-textarea ce-textarea--sm" data-spo="otherAdultFeatures" placeholder="Sensitivity, smell, temperature, texture…"></textarea></div>
 
-                        <div class="cc-section-label cc-section-label--sm">Sexual Behavior</div>
-                        <div class="cc-grid-2">
-                            <div class="cc-field-group"><label class="cc-label">Sexual Orientation</label><input type="text" id="cc-ext-sexual-orientation" class="cc-input" placeholder="Bisexual, Straight…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Dominant Role</label><input type="text" id="cc-ext-dominant-role" class="cc-input" placeholder="Dominant, Switch…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Erogenous Zones</label><input type="text" id="cc-ext-erogenous" class="cc-input" placeholder="Neck, ears, inner thigh…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Vocal Response</label><input type="text" id="cc-ext-vocal-response" class="cc-input" placeholder="Quiet, Loud, Whimpers…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Aftercare Style</label><input type="text" id="cc-ext-aftercare" class="cc-input" placeholder="Cuddly, Distant…"></div>
+                        <div class="ce-section-label ce-section-label--sm">Sexual Behavior</div>
+                        <div class="ce-grid-2">
+                            <div class="ce-field-group"><label class="ce-label">Sexual Orientation</label><input type="text" id="ce-ext-sexual-orientation" class="ce-input" placeholder="Bisexual, Straight…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Dominant Role</label><input type="text" id="ce-ext-dominant-role" class="ce-input" placeholder="Dominant, Switch…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Erogenous Zones</label><input type="text" id="ce-ext-erogenous" class="ce-input" placeholder="Neck, ears, inner thigh…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Vocal Response</label><input type="text" id="ce-ext-vocal-response" class="ce-input" placeholder="Quiet, Loud, Whimpers…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Aftercare Style</label><input type="text" id="ce-ext-aftercare" class="ce-input" placeholder="Cuddly, Distant…"></div>
                         </div>
-                        <div class="cc-grid-2">
-                            <div class="cc-slider-row">
-                                <div class="cc-slider-label">Libido <span class="cc-badge-inline" id="cc-sl-badge-libido">5</span></div>
-                                <input type="range" id="cc-sl-libido" class="cc-slider" data-key="libido" min="1" max="10" value="5" step="1">
-                            </div>
-                            <div class="cc-slider-row">
-                                <div class="cc-slider-label">Stamina <span class="cc-badge-inline" id="cc-sl-badge-stamina">5</span></div>
-                                <input type="range" id="cc-sl-stamina" class="cc-slider" data-key="stamina" min="1" max="10" value="5" step="1">
-                            </div>
-                            <div class="cc-slider-row">
-                                <div class="cc-slider-label">Exhibitionism <span class="cc-badge-inline" id="cc-sl-badge-exhibitionism">5</span></div>
-                                <input type="range" id="cc-sl-exhibitionism" class="cc-slider" data-key="exhibitionism" min="1" max="10" value="5" step="1">
-                            </div>
-                        </div>
-                        <div class="cc-field-group"><label class="cc-label">Kinks</label><textarea id="cc-ext-kinks" class="cc-textarea cc-textarea--sm" placeholder="BDSM, roleplay, voyeurism…"></textarea></div>
-                        <div class="cc-field-group"><label class="cc-label">Fantasies</label><textarea id="cc-ext-fantasies" class="cc-textarea cc-textarea--sm" placeholder="Core sexual fantasies…"></textarea></div>
-                        <div class="cc-field-group"><label class="cc-label">Hard Limits</label><textarea id="cc-ext-hard-limits" class="cc-textarea cc-textarea--sm" placeholder="Absolute no-goes…"></textarea></div>
-                    </div>
+                        <div class="ce-slider-field"><label>Libido <span id="ce-sl-badge-libido" class="ce-badge">5</span></label><input type="range" id="ce-sl-libido" class="ce-range" data-key="libido" data-spo="libido" min="1" max="10" step="1" value="5"><div class="ce-slider-desc" id="ce-sl-desc-libido"></div></div>
+                        <div class="ce-slider-field"><label>Stamina <span id="ce-sl-badge-stamina" class="ce-badge">5</span></label><input type="range" id="ce-sl-stamina" class="ce-range" data-key="stamina" data-spo="stamina" min="1" max="10" step="1" value="5"><div class="ce-slider-desc" id="ce-sl-desc-stamina"></div></div>
+                        <div class="ce-slider-field"><label>Exhibitionism <span id="ce-sl-badge-exhibitionism" class="ce-badge">5</span></label><input type="range" id="ce-sl-exhibitionism" class="ce-range" data-key="exhibitionism" data-spo="exhibitionism" min="1" max="10" step="1" value="5"><div class="ce-slider-desc" id="ce-sl-desc-exhibitionism"></div></div>
+                        <div class="ce-field-group"><label class="ce-label">Kinks / Turn-ons</label><textarea id="ce-ext-kinks" class="ce-textarea ce-textarea--sm" data-spo="kinks" placeholder="BDSM, roleplay, voyeurism…"></textarea></div>
+                        <div class="ce-field-group"><label class="ce-label">Fantasies</label><textarea id="ce-ext-fantasies" class="ce-textarea ce-textarea--sm" data-spo="fantasies" placeholder="Core sexual fantasies…"></textarea></div>
+                        <div class="ce-field-group"><label class="ce-label">Hard Limits</label><textarea id="ce-ext-hard-limits" class="ce-textarea ce-textarea--sm" data-spo="hardLimits" placeholder="Absolute no-goes…"></textarea></div>
+                    </section>
 
                     <!-- ═══ AI / PROMPT ═══ -->
-                    <div class="cc-tab-panel" data-panel="ai" hidden>
-                        <div class="cc-section-label">System Prompt & Instructions</div>
-                        <div class="cc-field-group">
-                            <label class="cc-label">System Prompt <span class="cc-hint">Core AI roleplay instructions</span></label>
-                            <textarea id="cc-system-prompt" class="cc-textarea cc-textarea--xl" placeholder="You are {{char}}. Write in third-person limited present tense…"></textarea>
+                    <section class="ce-panel" data-panel="ai" hidden>
+                        <div class="ce-section-label">System Prompt &amp; Instructions</div>
+                        <div class="ce-field-group"><label class="ce-label">System Prompt <span class="ce-hint">Core AI roleplay instructions</span></label><textarea id="ce-system-prompt" class="ce-textarea ce-textarea--xl" placeholder="You are {{char}}. Write in third-person limited present tense…"></textarea></div>
+                        <div class="ce-field-group"><label class="ce-label">Post-History Instructions</label><textarea id="ce-post-history" class="ce-textarea" placeholder="Maintain {{char}}'s voice. Avoid breaking character…"></textarea></div>
+                        <div class="ce-section-label ce-section-label--sm">AI Behavior</div>
+                        <div class="ce-grid-2">
+                            <div class="ce-field-group"><label class="ce-label">Narrative POV</label>
+                                <div class="ce-chip-group" data-spo="narrativePOV"><button class="ce-chip" data-val="first">First Person</button><button class="ce-chip" data-val="third-limited">Third Limited</button><button class="ce-chip" data-val="third-omniscient">Third Omniscient</button></div>
+                            </div>
+                            <div class="ce-field-group"><label class="ce-label">Prose Style</label>
+                                <div class="ce-chip-group" data-spo="proseStyle"><button class="ce-chip" data-val="literary">Literary</button><button class="ce-chip" data-val="cinematic">Cinematic</button><button class="ce-chip" data-val="punchy">Punchy</button><button class="ce-chip" data-val="lyrical">Lyrical</button><button class="ce-chip" data-val="minimalist">Minimalist</button></div>
+                            </div>
+                            <div class="ce-field-group"><label class="ce-label">Response Format</label><input type="text" id="ce-ext-response-format" class="ce-input" placeholder="*actions* + dialogue"></div>
+                            <div class="ce-field-group"><label class="ce-label">Response Length</label><input type="text" id="ce-ext-response-length" class="ce-input" placeholder="3-5 paragraphs…"></div>
+                            <div class="ce-field-group"><label class="ce-label">Context Priority</label><input type="text" id="ce-ext-context-priority" class="ce-input" placeholder="Card, lorebook, user…"></div>
                         </div>
-                        <div class="cc-field-group">
-                            <label class="cc-label">Post-History Instructions <span class="cc-hint">Tone &amp; continuity reminder injected after messages</span></label>
-                            <textarea id="cc-post-history" class="cc-textarea" placeholder="Maintain {{char}}'s voice. Avoid breaking character…"></textarea>
-                        </div>
-                        <div class="cc-section-label cc-section-label--sm">AI Behavior</div>
-                        <div class="cc-grid-2">
-                            <div class="cc-field-group"><label class="cc-label">Narrative POV</label><input type="text" id="cc-ext-narrative-pov" class="cc-input" placeholder="third-limited, first"></div>
-                            <div class="cc-field-group"><label class="cc-label">Prose Style</label><input type="text" id="cc-ext-prose-style" class="cc-input" placeholder="Literary, cinematic, punchy…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Response Format</label><input type="text" id="cc-ext-response-format" class="cc-input" placeholder="*actions* + dialogue"></div>
-                            <div class="cc-field-group"><label class="cc-label">Response Length</label><input type="text" id="cc-ext-response-length" class="cc-input" placeholder="3-5 paragraphs…"></div>
-                            <div class="cc-field-group"><label class="cc-label">Context Priority</label><input type="text" id="cc-ext-context-priority" class="cc-input" placeholder="Card, lorebook, user…"></div>
-                        </div>
-                        <div class="cc-field-group"><label class="cc-label">Allowed Topics</label><textarea id="cc-ext-allowed-topics" class="cc-textarea cc-textarea--sm" placeholder="Combat, romance, dark themes…"></textarea></div>
-                        <div class="cc-field-group"><label class="cc-label">Forbidden Topics</label><textarea id="cc-ext-forbidden-topics" class="cc-textarea cc-textarea--sm" placeholder="Topics to strictly avoid…"></textarea></div>
-                        <div class="cc-field-group"><label class="cc-label">World Rules</label><textarea id="cc-ext-world-rules" class="cc-textarea cc-textarea--sm" placeholder="Canon constraints, world physics…"></textarea></div>
-                    </div>
+                        <div class="ce-field-group"><label class="ce-label">Allowed Topics</label><textarea id="ce-ext-allowed-topics" class="ce-textarea ce-textarea--sm" data-spo="allowedTopics" placeholder="Combat, romance, dark themes…"></textarea></div>
+                        <div class="ce-field-group"><label class="ce-label">Forbidden Topics</label><textarea id="ce-ext-forbidden-topics" class="ce-textarea ce-textarea--sm" data-spo="forbiddenTopics" placeholder="Topics to strictly avoid…"></textarea></div>
+                        <div class="ce-field-group"><label class="ce-label">World Rules</label><textarea id="ce-ext-world-rules" class="ce-textarea ce-textarea--sm" data-spo="worldRules" placeholder="Canon constraints, world physics…"></textarea></div>
+                    </section>
 
                     <!-- ═══ OVERRIDES ═══ -->
-                    <div class="cc-tab-panel" data-panel="overrides" hidden>
-                        <div class="cc-section-label">Runtime Overrides</div>
-                        <div class="cc-field-group"><label class="cc-label">Nickname</label><input type="text" id="cc-nickname" class="cc-input" placeholder="Short in-chat name"></div>
-                        <div class="cc-field-group"><label class="cc-label">Model Override <span class="cc-hint">Leave blank to use global model</span></label><input type="text" id="cc-model-override" class="cc-input cc-input--mono" placeholder="e.g. gemini-2.0-flash-thinking"></div>
-                        <div class="cc-field-group">
-                            <label class="cc-label">System Prompt Override <span class="cc-hint">Replaces card system prompt for this reality</span></label>
-                            <textarea id="cc-system-override" class="cc-textarea" placeholder="Full override…"></textarea>
-                        </div>
-                        <div class="cc-field-group">
-                            <label class="cc-label">Post-History Override</label>
-                            <textarea id="cc-post-override" class="cc-textarea" placeholder="Full override…"></textarea>
-                        </div>
-                        <div class="cc-field-group">
-                            <label class="cc-label">Append to System <span class="cc-hint">Appended after the system prompt, not replacing it</span></label>
-                            <textarea id="cc-append-system" class="cc-textarea" placeholder="Extra context added to every prompt…"></textarea>
-                        </div>
-                        <div class="cc-field-group">
-                            <label class="cc-label">Persistent Memory <span class="cc-hint">Injected as fixed context across all chats</span></label>
-                            <textarea id="cc-persistent-memory" class="cc-textarea" placeholder="Core memories the character always carries…"></textarea>
-                        </div>
-                    </div>
+                    <section class="ce-panel" data-panel="overrides" hidden>
+                        <div class="ce-section-label">Runtime Overrides</div>
+                        <div class="ce-field-group"><label class="ce-label">Nickname</label><input type="text" id="ce-nickname" class="ce-input" placeholder="Short in-chat name"></div>
+                        <div class="ce-field-group"><label class="ce-label">Model Override <span class="ce-hint">Leave blank to use global model</span></label><select class="ce-select" data-spo="modelOverride" id="ce-model-select"><option value="">— Use global model —</option></select></div>
+                        <div class="ce-field-group"><label class="ce-label">System Prompt Override <span class="ce-hint">Replaces card system prompt</span></label><textarea id="ce-system-override" class="ce-textarea" data-spo="systemPromptOverride" placeholder="Full override…"></textarea></div>
+                        <div class="ce-field-group"><label class="ce-label">Post-History Override</label><textarea id="ce-post-override" class="ce-textarea" data-spo="postHistoryOverride" placeholder="Full override…"></textarea></div>
+                        <div class="ce-field-group"><label class="ce-label">Append to System <span class="ce-hint">Appended after system prompt</span></label><textarea id="ce-append-system" class="ce-textarea" data-spo="appendToSystem" placeholder="Extra context added to every prompt…"></textarea></div>
+                        <div class="ce-field-group"><label class="ce-label">Persistent Memory <span class="ce-hint">Injected as fixed context across all chats</span></label><textarea id="ce-persistent-memory" class="ce-textarea" data-spo="persistentMemory" placeholder="Core memories the character always carries…"></textarea></div>
+                    </section>
 
-                </div><!-- .cc-panels -->
-
-                <!-- ── Footer actions ── -->
-                <footer class="cc-footer">
-                    <div class="cc-footer__left">
-                        <button id="cc-cancel" class="cc-btn cc-btn--ghost">Cancel</button>
-                    </div>
-                    <div class="cc-footer__right">
-                        <button id="cc-export-json" class="cc-btn cc-btn--ghost" title="Download card JSON (for data/cards/)"><i data-lucide="download"></i> Export JSON</button>
-                        <button id="cc-export-codebase" class="cc-btn cc-btn--ghost" title="Download card + index entry (for full codebase placement)"><i data-lucide="package-open"></i> Export to Codebase</button>
-                        <button id="cc-save" class="cc-btn cc-btn--secondary"><i data-lucide="save"></i> Save</button>
-                        <button id="cc-save-activate" class="cc-btn cc-btn--accent"><i data-lucide="zap"></i> Save &amp; Activate</button>
-                    </div>
-                </footer>
-
-            </div><!-- .cc-main -->
-        </div><!-- .cc-body -->
-    </div><!-- .cc-studio -->
-</div><!-- #modal-char-creator -->
-
-<div id="modal-sims-editor" class="modal sims-modal" hidden role="dialog" aria-modal="true" aria-labelledby="sims-editor-title">
-    <div class="modal__backdrop"></div>
-    <div class="sims-editor">
-
-        <header class="sims-editor__topbar">
-            <div class="sims-editor__topbar-left">
-                <i data-lucide="wand-2" class="sims-editor__topbar-icon"></i>
-                <h2 id="sims-editor-title" class="sims-editor__topbar-title">Character Editor</h2>
-                <span id="sims-char-name-badge" class="sims-char-badge">—</span>
-            </div>
-            <div class="sims-editor__topbar-right">
-                <button id="sims-random-btn" class="sims-btn sims-btn--ghost" title="Randomize all fields"><i data-lucide="shuffle"></i> Randomize</button>
-                <button id="sims-reset-btn" class="sims-btn sims-btn--ghost" title="Reset all overrides to defaults"><i data-lucide="rotate-ccw"></i> Reset</button>
-                <button id="sims-close-btn" class="sims-btn sims-btn--ghost sims-btn--icon" aria-label="Close"><i data-lucide="x"></i></button>
-            </div>
-        </header>
-
-        <div class="sims-editor__body">
-
-            <aside class="sims-preview-panel">
-                <div class="sims-preview-panel__inner">
-                    <div class="sims-avatar-frame" id="sims-avatar-frame">
-                        <div class="sims-avatar-frame__img" id="sims-avatar-img"></div>
-                        <div class="sims-avatar-frame__silhouette" id="sims-silhouette" aria-label="Body map — click region to edit">
-                            <svg class="sims-body-svg" viewBox="0 0 200 480" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Body regions">
-                                <ellipse cx="100" cy="52" rx="30" ry="36" class="sims-region" data-region="head" tabindex="0" role="button" aria-label="Head / Face" />
-                                <rect x="88" y="83" width="24" height="18" rx="4" class="sims-region" data-region="neck" tabindex="0" role="button" aria-label="Neck" />
-                                <ellipse cx="62" cy="110" rx="22" ry="14" class="sims-region" data-region="shoulders" tabindex="0" role="button" aria-label="Shoulders" />
-                                <ellipse cx="138" cy="110" rx="22" ry="14" class="sims-region" data-region="shoulders" tabindex="0" role="button" aria-label="Shoulders" />
-                                <rect x="72" y="100" width="56" height="50" rx="6" class="sims-region" data-region="chest" tabindex="0" role="button" aria-label="Chest" />
-                                <rect x="42" y="108" width="20" height="58" rx="10" class="sims-region" data-region="arms" tabindex="0" role="button" aria-label="Arms" />
-                                <rect x="138" y="108" width="20" height="58" rx="10" class="sims-region" data-region="arms" tabindex="0" role="button" aria-label="Arms" />
-                                <rect x="44" y="170" width="16" height="50" rx="8" class="sims-region sims-region--secondary" data-region="arms" tabindex="0" />
-                                <rect x="140" y="170" width="16" height="50" rx="8" class="sims-region sims-region--secondary" data-region="arms" tabindex="0" />
-                                <ellipse cx="52" cy="230" rx="12" ry="10" class="sims-region sims-region--secondary" data-region="arms" tabindex="0" />
-                                <ellipse cx="148" cy="230" rx="12" ry="10" class="sims-region sims-region--secondary" data-region="arms" tabindex="0" />
-                                <rect x="76" y="150" width="48" height="50" rx="5" class="sims-region" data-region="abdomen" tabindex="0" role="button" aria-label="Abdomen" />
-                                <ellipse cx="100" cy="215" rx="40" ry="24" class="sims-region" data-region="hips" tabindex="0" role="button" aria-label="Hips" />
-                                <rect x="64" y="232" width="30" height="70" rx="10" class="sims-region" data-region="legs" tabindex="0" role="button" aria-label="Legs" />
-                                <rect x="106" y="232" width="30" height="70" rx="10" class="sims-region" data-region="legs" tabindex="0" role="button" aria-label="Legs" />
-                                <rect x="68" y="305" width="22" height="65" rx="8" class="sims-region sims-region--secondary" data-region="legs" tabindex="0" />
-                                <rect x="110" y="305" width="22" height="65" rx="8" class="sims-region sims-region--secondary" data-region="legs" tabindex="0" />
-                                <ellipse cx="79" cy="378" rx="18" ry="10" class="sims-region sims-region--secondary" data-region="legs" tabindex="0" />
-                                <ellipse cx="121" cy="378" rx="18" ry="10" class="sims-region sims-region--secondary" data-region="legs" tabindex="0" />
-                                <circle id="sims-region-indicator" cx="-999" cy="-999" r="0" class="sims-region-indicator" />
-                            </svg>
-                            <div class="sims-region-tooltip" id="sims-region-tooltip"></div>
-                        </div>
-                    </div>
-                    <div class="sims-stat-pills" id="sims-stat-pills"></div>
-                    <div class="sims-quick-swatches">
-                        <div class="sims-swatch-group">
-                            <span class="sims-swatch-label">Skin</span>
-                            <div class="sims-swatch-row" id="sims-skin-swatches">
-                                <button class="sims-color-dot" style="background:#FDDBB4" title="Light"></button>
-                                <button class="sims-color-dot" style="background:#E8B88A" title="Beige"></button>
-                                <button class="sims-color-dot" style="background:#C8956C" title="Tan"></button>
-                                <button class="sims-color-dot" style="background:#A0624A" title="Brown"></button>
-                                <button class="sims-color-dot" style="background:#6B3A2A" title="Dark"></button>
-                                <button class="sims-color-dot" style="background:#2D1B0E" title="Deep"></button>
-                                <button class="sims-color-dot" style="background:#F5E6D0" title="Pale"></button>
-                                <button class="sims-color-dot sims-color-dot--custom" data-swatch-target="skinTone" title="Custom…">+</button>
+                    <!-- ═══ GALLERY ═══ -->
+                    <section class="ce-panel" data-panel="gallery" hidden>
+                        <div class="ce-section-label">Image Gallery</div>
+                        <div class="ce-gallery-toolbar">
+                            <button id="ce-gallery-add-btn" class="ce-btn ce-btn--ghost ce-btn--sm"><i data-lucide="plus"></i> Add Image</button>
+                            <input type="file" id="ce-gallery-file" accept="image/*" hidden multiple>
+                            <div class="ce-gallery-url-row">
+                                <input type="text" id="ce-gallery-url-input" class="ce-input ce-input--sm" placeholder="Image URL…">
+                                <button id="ce-gallery-url-btn" class="ce-btn ce-btn--ghost ce-btn--sm"><i data-lucide="link"></i></button>
                             </div>
+                            <button id="ce-gallery-export-all" class="ce-btn ce-btn--ghost ce-btn--sm" title="Download all as ZIP"><i data-lucide="archive"></i> Export All</button>
                         </div>
-                        <div class="sims-swatch-group">
-                            <span class="sims-swatch-label">Hair</span>
-                            <div class="sims-swatch-row" id="sims-hair-swatches">
-                                <button class="sims-color-dot" style="background:#1A0A00" title="Black"></button>
-                                <button class="sims-color-dot" style="background:#3B1F0A" title="Dark Brown"></button>
-                                <button class="sims-color-dot" style="background:#6B3A1F" title="Brown"></button>
-                                <button class="sims-color-dot" style="background:#A0522D" title="Auburn"></button>
-                                <button class="sims-color-dot" style="background:#D4A520" title="Blonde"></button>
-                                <button class="sims-color-dot" style="background:#F5E6C8" title="Platinum"></button>
-                                <button class="sims-color-dot" style="background:#C0C0C0" title="Silver"></button>
-                                <button class="sims-color-dot" style="background:#CC2244" title="Red"></button>
-                                <button class="sims-color-dot" style="background:#3B1F6B" title="Violet"></button>
-                                <button class="sims-color-dot" style="background:#1A5C8A" title="Blue"></button>
-                                <button class="sims-color-dot sims-color-dot--custom" data-swatch-target="hairColor" title="Custom…">+</button>
-                            </div>
-                        </div>
-                        <div class="sims-swatch-group">
-                            <span class="sims-swatch-label">Eyes</span>
-                            <div class="sims-swatch-row" id="sims-eye-swatches">
-                                <button class="sims-color-dot" style="background:#4B8BBE" title="Blue"></button>
-                                <button class="sims-color-dot" style="background:#6B8E5A" title="Green"></button>
-                                <button class="sims-color-dot" style="background:#8B6914" title="Amber"></button>
-                                <button class="sims-color-dot" style="background:#5C3A1F" title="Brown"></button>
-                                <button class="sims-color-dot" style="background:#2D2D2D" title="Black"></button>
-                                <button class="sims-color-dot" style="background:#9B59B6" title="Violet"></button>
-                                <button class="sims-color-dot" style="background:#E0E0E0" title="Grey"></button>
-                                <button class="sims-color-dot" style="background:#E84393" title="Pink"></button>
-                                <button class="sims-color-dot sims-color-dot--custom" data-swatch-target="eyeColor" title="Custom…">+</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </aside>
+                        <div id="ce-gallery-grid" class="ce-gallery-grid"></div>
+                    </section>
 
-            <nav class="sims-category-nav" id="sims-category-nav" role="tablist" aria-label="Editor categories">
-                <button class="sims-cat-btn active" data-cat="identity" role="tab" aria-selected="true"><i data-lucide="user"></i><span>Identity</span></button>
-                <button class="sims-cat-btn" data-cat="face" role="tab"><i data-lucide="scan-face"></i><span>Face</span></button>
-                <button class="sims-cat-btn" data-cat="hair" role="tab"><i data-lucide="wind"></i><span>Hair</span></button>
-                <button class="sims-cat-btn" data-cat="body" role="tab"><i data-lucide="person-standing"></i><span>Body</span></button>
-                <button class="sims-cat-btn" data-cat="style" role="tab"><i data-lucide="shirt"></i><span>Style</span></button>
-                <button class="sims-cat-btn" data-cat="voice" role="tab"><i data-lucide="mic-2"></i><span>Voice</span></button>
-                <button class="sims-cat-btn" data-cat="personality" role="tab"><i data-lucide="brain"></i><span>Personality</span></button>
-                <button class="sims-cat-btn" data-cat="behavior" role="tab"><i data-lucide="activity"></i><span>Behavior</span></button>
-                <button class="sims-cat-btn" data-cat="adult" role="tab"><i data-lucide="lock"></i><span>Adult</span><span class="sims-cat-badge">18+</span></button>
-                <button class="sims-cat-btn" data-cat="ai" role="tab"><i data-lucide="cpu"></i><span>AI / Model</span></button>
-            </nav>
+                </div><!-- .ce-panels -->
 
-            <main class="sims-detail-panel" id="sims-detail-panel" aria-live="polite">
+            </div><!-- .ce-main -->
+        </div><!-- .ce-body -->
 
-                <!-- IDENTITY -->
-                <section class="sims-panel" id="sims-panel-identity" data-panel="identity">
-                    <div class="sims-panel__header"><i data-lucide="user"></i> Identity &amp; Basics</div>
-                    <div class="sims-fields">
-                        <div class="sims-field sims-field--full"><label>Full Name</label><input type="text" class="sims-input" data-spo="name" placeholder="Character's full name" spellcheck="false"></div>
-                        <div class="sims-field sims-field--full"><label>Nickname / Call Sign</label><input type="text" class="sims-input" data-spo="nickname" placeholder="How others address them"></div>
-                        <div class="sims-field-row">
-                            <div class="sims-field"><label>Species / Race</label><input type="text" class="sims-input" data-spo="species" placeholder="Human, Elf, Android…"></div>
-                            <div class="sims-field"><label>Gender Identity</label><input type="text" class="sims-input" data-spo="gender" placeholder="Woman, Man, Non-binary…"></div>
-                        </div>
-                        <div class="sims-field-row">
-                            <div class="sims-field"><label>Age</label><input type="text" class="sims-input" data-spo="age" placeholder="25"></div>
-                            <div class="sims-field"><label>Pronouns</label><input type="text" class="sims-input" data-spo="pronouns" placeholder="she/her, they/them…"></div>
-                        </div>
-                        <div class="sims-field sims-field--full"><label>Occupation / Role</label><input type="text" class="sims-input" data-spo="occupation" placeholder="Netrunner, Spy, Café Owner…"></div>
-                        <div class="sims-field sims-field--full"><label>Nationality / Origin</label><input type="text" class="sims-input" data-spo="nationality" placeholder="Martian, British, Unknown…"></div>
-                        <div class="sims-field sims-field--full"><label>Tags <span class="sims-hint-inline">(comma-separated)</span></label><input type="text" class="sims-input" data-spo="tagsRaw" placeholder="Fantasy, Sci-Fi, NSFW, Romance…"></div>
-                    </div>
-                </section>
-
-                <!-- FACE -->
-                <section class="sims-panel" id="sims-panel-face" data-panel="face" hidden>
-                    <div class="sims-panel__header"><i data-lucide="scan-face"></i> Face &amp; Head</div>
-                    <div class="sims-fields">
-                        <div class="sims-field-row">
-                            <div class="sims-field"><label>Face Shape</label><div class="sims-chip-group" data-spo="faceShape"><button class="sims-chip" data-val="oval">Oval</button><button class="sims-chip" data-val="round">Round</button><button class="sims-chip" data-val="square">Square</button><button class="sims-chip" data-val="heart">Heart</button><button class="sims-chip" data-val="diamond">Diamond</button><button class="sims-chip" data-val="oblong">Oblong</button></div></div>
-                            <div class="sims-field"><label>Complexion</label><div class="sims-chip-group" data-spo="complexion"><button class="sims-chip" data-val="clear">Clear</button><button class="sims-chip" data-val="freckled">Freckled</button><button class="sims-chip" data-val="tattooed">Tattooed</button><button class="sims-chip" data-val="scarred">Scarred</button><button class="sims-chip" data-val="weathered">Weathered</button></div></div>
-                        </div>
-                        <div class="sims-field-row">
-                            <div class="sims-field"><label>Eye Color</label><input type="text" class="sims-input" data-spo="eyeColor" placeholder="amber, violet, silver…"></div>
-                            <div class="sims-field"><label>Eye Shape</label><div class="sims-chip-group" data-spo="eyeShape"><button class="sims-chip" data-val="almond">Almond</button><button class="sims-chip" data-val="round">Round</button><button class="sims-chip" data-val="hooded">Hooded</button><button class="sims-chip" data-val="upturned">Upturned</button><button class="sims-chip" data-val="deep-set">Deep-set</button></div></div>
-                        </div>
-                        <div class="sims-slider-field"><label>Eye Size <span id="sims-val-eyeSize" class="sims-badge">5</span></label><input type="range" class="sims-range" data-spo="eyeSize" min="1" max="10" step="1" value="5"><div class="sims-range-ends"><span>Narrow</span><span>Wide</span></div><div class="sims-slider-desc" id="sims-desc-eyeSize">Average eye size.</div></div>
-                        <div class="sims-field-row">
-                            <div class="sims-field"><label>Nose Type</label><div class="sims-chip-group" data-spo="noseType"><button class="sims-chip" data-val="button">Button</button><button class="sims-chip" data-val="aquiline">Aquiline</button><button class="sims-chip" data-val="snub">Snub</button><button class="sims-chip" data-val="broad">Broad</button><button class="sims-chip" data-val="pointed">Pointed</button><button class="sims-chip" data-val="straight">Straight</button></div></div>
-                            <div class="sims-field"><label>Lips</label><div class="sims-chip-group" data-spo="lipsType"><button class="sims-chip" data-val="thin">Thin</button><button class="sims-chip" data-val="full">Full</button><button class="sims-chip" data-val="bow">Cupid's Bow</button><button class="sims-chip" data-val="wide">Wide</button><button class="sims-chip" data-val="pouty">Pouty</button></div></div>
-                        </div>
-                        <div class="sims-field sims-field--full"><label>Skin Tone</label><input type="text" class="sims-input" data-spo="skinTone" placeholder="pale alabaster, warm olive, deep umber…"></div>
-                        <div class="sims-field sims-field--full"><label>Distinctive Facial Features</label><input type="text" class="sims-input" data-spo="distinctiveFeatures" placeholder="scar above eyebrow, beauty mark, dimples…"></div>
-                        <div class="sims-field sims-field--full"><label>Facial Hair</label><div class="sims-chip-group" data-spo="facialHair"><button class="sims-chip" data-val="none">None</button><button class="sims-chip" data-val="stubble">Stubble</button><button class="sims-chip" data-val="short-beard">Short Beard</button><button class="sims-chip" data-val="full-beard">Full Beard</button><button class="sims-chip" data-val="goatee">Goatee</button><button class="sims-chip" data-val="mustache">Mustache</button></div></div>
-                        <div class="sims-field sims-field--full"><label>Piercings (face)</label><input type="text" class="sims-input" data-spo="facePiercings" placeholder="nostril ring, septum, eyebrow bar, none…"></div>
-                    </div>
-                </section>
-
-                <!-- HAIR -->
-                <section class="sims-panel" id="sims-panel-hair" data-panel="hair" hidden>
-                    <div class="sims-panel__header"><i data-lucide="wind"></i> Hair &amp; Head Style</div>
-                    <div class="sims-fields">
-                        <div class="sims-field sims-field--full"><label>Hair Color</label><input type="text" class="sims-input" data-spo="hairColor" placeholder="raven black, platinum blonde, deep auburn…"></div>
-                        <div class="sims-field sims-field--full"><label>Highlights / Streaks</label><input type="text" class="sims-input" data-spo="hairHighlights" placeholder="neon pink tips, silver streaks, none…"></div>
-                        <div class="sims-field sims-field--full"><label>Hair Length</label><div class="sims-chip-group" data-spo="hairLength"><button class="sims-chip" data-val="shaved">Shaved</button><button class="sims-chip" data-val="buzz">Buzz Cut</button><button class="sims-chip" data-val="short">Short</button><button class="sims-chip" data-val="medium">Medium</button><button class="sims-chip" data-val="long">Long</button><button class="sims-chip" data-val="very-long">Very Long</button><button class="sims-chip" data-val="floor-length">Floor-length</button></div></div>
-                        <div class="sims-field sims-field--full"><label>Hair Style / Cut</label><div class="sims-chip-group" data-spo="hairStyle"><button class="sims-chip" data-val="straight">Straight</button><button class="sims-chip" data-val="wavy">Wavy</button><button class="sims-chip" data-val="curly">Curly</button><button class="sims-chip" data-val="coily">Coily</button><button class="sims-chip" data-val="braided">Braided</button><button class="sims-chip" data-val="dreadlocks">Dreadlocks</button><button class="sims-chip" data-val="bun">Bun</button><button class="sims-chip" data-val="ponytail">Ponytail</button><button class="sims-chip" data-val="pixie">Pixie</button><button class="sims-chip" data-val="undercut">Undercut</button><button class="sims-chip" data-val="mohawk">Mohawk</button><button class="sims-chip" data-val="messy">Messy / Tousled</button></div></div>
-                        <div class="sims-field sims-field--full"><label>Hair Texture</label><div class="sims-chip-group" data-spo="hairTexture"><button class="sims-chip" data-val="silky">Silky</button><button class="sims-chip" data-val="thick">Thick</button><button class="sims-chip" data-val="fine">Fine</button><button class="sims-chip" data-val="coarse">Coarse</button><button class="sims-chip" data-val="kinky">Kinky</button></div></div>
-                        <div class="sims-slider-field"><label>Shine <span id="sims-val-hairShine" class="sims-badge">5</span></label><input type="range" class="sims-range" data-spo="hairShine" min="1" max="10" step="1" value="5"><div class="sims-range-ends"><span>Matte / Dry</span><span>Lustrous</span></div><div class="sims-slider-desc" id="sims-desc-hairShine">Healthy — normal shine.</div></div>
-                        <div class="sims-field sims-field--full"><label>Accessories</label><input type="text" class="sims-input" data-spo="hairAccessories" placeholder="flower pins, headband, ribbon, none…"></div>
-                    </div>
-                </section>
-
-                <!-- BODY -->
-                <section class="sims-panel" id="sims-panel-body" data-panel="body" hidden>
-                    <div class="sims-panel__header"><i data-lucide="person-standing"></i> Body &amp; Physique</div>
-                    <div class="sims-fields">
-                        <div class="sims-field-row">
-                            <div class="sims-field"><label>Height</label><input type="text" class="sims-input" data-spo="height" placeholder='5&apos;8" / 172cm'></div>
-                            <div class="sims-field"><label>Weight / Build Feel</label><input type="text" class="sims-input" data-spo="weight" placeholder="slender, athletic, curvy…"></div>
-                        </div>
-                        <div class="sims-field sims-field--full"><label>Body Type</label><div class="sims-chip-group" data-spo="bodyType"><button class="sims-chip" data-val="petite">Petite</button><button class="sims-chip" data-val="slender">Slender</button><button class="sims-chip" data-val="lean">Lean</button><button class="sims-chip" data-val="average">Average</button><button class="sims-chip" data-val="athletic">Athletic</button><button class="sims-chip" data-val="muscular">Muscular</button><button class="sims-chip" data-val="curvy">Curvy</button><button class="sims-chip" data-val="full-figured">Full-figured</button><button class="sims-chip" data-val="stocky">Stocky</button><button class="sims-chip" data-val="bulky">Bulky</button></div></div>
-                        <div class="sims-slider-field"><label>Muscle Tone <span id="sims-val-muscleTone" class="sims-badge">5</span></label><input type="range" class="sims-range" data-spo="muscleTone" min="1" max="10" step="1" value="5"><div class="sims-range-ends"><span>Soft</span><span>Chiseled</span></div><div class="sims-slider-desc" id="sims-desc-muscleTone">Average — some tone, not remarkable.</div></div>
-                        <div class="sims-slider-field"><label>Body Fat <span id="sims-val-bodyFat" class="sims-badge">5</span></label><input type="range" class="sims-range" data-spo="bodyFat" min="1" max="10" step="1" value="5"><div class="sims-range-ends"><span>Very lean</span><span>Voluptuous</span></div><div class="sims-slider-desc" id="sims-desc-bodyFat">Average body composition.</div></div>
-                        <div class="sims-field-row">
-                            <div class="sims-field"><label>Shoulder Width</label><div class="sims-chip-group" data-spo="shoulderWidth"><button class="sims-chip" data-val="narrow">Narrow</button><button class="sims-chip" data-val="medium">Medium</button><button class="sims-chip" data-val="broad">Broad</button><button class="sims-chip" data-val="very-broad">Very Broad</button></div></div>
-                            <div class="sims-field"><label>Waist</label><div class="sims-chip-group" data-spo="waistType"><button class="sims-chip" data-val="narrow">Narrow</button><button class="sims-chip" data-val="defined">Defined</button><button class="sims-chip" data-val="wide">Wide</button><button class="sims-chip" data-val="straight">Straight</button></div></div>
-                        </div>
-                        <div class="sims-field sims-field--full"><label>Body Markings</label><input type="text" class="sims-input" data-spo="bodyMarkings" placeholder="dragon tattoo on back, bite scar on shoulder…"></div>
-                        <div class="sims-field sims-field--full"><label>Piercings (body)</label><input type="text" class="sims-input" data-spo="bodyPiercings" placeholder="navel ring, nipple piercings, none…"></div>
-                        <div class="sims-field sims-field--full"><label>Nails</label><div class="sims-chip-group" data-spo="nails"><button class="sims-chip" data-val="short">Short</button><button class="sims-chip" data-val="medium">Medium</button><button class="sims-chip" data-val="long">Long</button><button class="sims-chip" data-val="stiletto">Stiletto</button><button class="sims-chip" data-val="bitten">Bitten</button><button class="sims-chip" data-val="painted">Painted</button></div></div>
-                        <div class="sims-field sims-field--full"><label>Scent / Fragrance</label><input type="text" class="sims-input" data-spo="scent" placeholder="smoky vetiver, cherry blossom, motor oil…"></div>
-                    </div>
-                </section>
-
-                <!-- STYLE -->
-                <section class="sims-panel" id="sims-panel-style" data-panel="style" hidden>
-                    <div class="sims-panel__header"><i data-lucide="shirt"></i> Style &amp; Fashion</div>
-                    <div class="sims-fields">
-                        <div class="sims-field sims-field--full"><label>Style Archetype</label><div class="sims-chip-group" data-spo="styleArchetype"><button class="sims-chip" data-val="casual">Casual</button><button class="sims-chip" data-val="formal">Formal</button><button class="sims-chip" data-val="military">Military</button><button class="sims-chip" data-val="streetwear">Streetwear</button><button class="sims-chip" data-val="gothic">Gothic</button><button class="sims-chip" data-val="cyberpunk">Cyberpunk</button><button class="sims-chip" data-val="fantasy">Fantasy Robes</button><button class="sims-chip" data-val="elegant">Elegant</button><button class="sims-chip" data-val="leather">Leather &amp; Chains</button><button class="sims-chip" data-val="punk">Punk</button><button class="sims-chip" data-val="minimalist">Minimalist</button><button class="sims-chip" data-val="bohemian">Bohemian</button><button class="sims-chip" data-val="uniform">Uniform</button><button class="sims-chip" data-val="nude">Nude / Minimal</button></div></div>
-                        <div class="sims-field sims-field--full"><label>Primary Outfit Description</label><textarea class="sims-textarea" data-spo="outfitDescription" rows="3" placeholder="Describe what they typically wear…"></textarea></div>
-                        <div class="sims-field sims-field--full"><label>Color Palette</label><input type="text" class="sims-input" data-spo="colorPalette" placeholder="blacks, deep purples, chrome accents…"></div>
-                        <div class="sims-field sims-field--full"><label>Signature Item / Accessory</label><input type="text" class="sims-input" data-spo="signatureItem" placeholder="worn leather jacket, silver locket, katana…"></div>
-                        <div class="sims-field-row">
-                            <div class="sims-field"><label>Footwear</label><input type="text" class="sims-input" data-spo="footwear" placeholder="combat boots, bare feet…"></div>
-                            <div class="sims-field"><label>Jewelry</label><input type="text" class="sims-input" data-spo="jewelry" placeholder="nose ring, dog tags, none…"></div>
-                        </div>
-                        <div class="sims-field sims-field--full"><label>Underwear / Lingerie</label><input type="text" class="sims-input" data-spo="underwear" placeholder="lace, boyshorts, none, boxers…"></div>
-                    </div>
-                </section>
-
-                <!-- VOICE -->
-                <section class="sims-panel" id="sims-panel-voice" data-panel="voice" hidden>
-                    <div class="sims-panel__header"><i data-lucide="mic-2"></i> Voice &amp; Speech</div>
-                    <div class="sims-fields">
-                        <div class="sims-field sims-field--full"><label>Voice Tone</label><div class="sims-chip-group" data-spo="voiceTone"><button class="sims-chip" data-val="high">High / Soft</button><button class="sims-chip" data-val="melodic">Melodic</button><button class="sims-chip" data-val="medium">Neutral</button><button class="sims-chip" data-val="husky">Husky</button><button class="sims-chip" data-val="low">Low / Deep</button><button class="sims-chip" data-val="gravelly">Gravelly</button><button class="sims-chip" data-val="raspy">Raspy</button><button class="sims-chip" data-val="whispery">Whispery</button></div></div>
-                        <div class="sims-field sims-field--full"><label>Accent / Dialect</label><input type="text" class="sims-input" data-spo="accent" placeholder="Southern drawl, crisp British, no accent…"></div>
-                        <div class="sims-field sims-field--full"><label>Speech Patterns / Quirks</label><textarea class="sims-textarea" data-spo="speechPatterns" rows="3" placeholder="Short clipped sentences. Uses technical jargon. Never swears…"></textarea></div>
-                        <div class="sims-field sims-field--full"><label>Catchphrases / Verbal Tics</label><input type="text" class="sims-input" data-spo="catchphrases" placeholder='"Ghost-code." ends sentences with "understood?" …'></div>
-                        <div class="sims-slider-field"><label>Verbosity <span id="sims-val-verbosity" class="sims-badge">5</span></label><input type="range" class="sims-range" data-spo="verbosity" min="1" max="10" step="1" value="5"><div class="sims-range-ends"><span>Terse / Minimal</span><span>Elaborate / Verbose</span></div><div class="sims-slider-desc" id="sims-desc-verbosity">Measured — says what needs saying, nothing more.</div></div>
-                        <div class="sims-slider-field"><label>Formality <span id="sims-val-formality" class="sims-badge">5</span></label><input type="range" class="sims-range" data-spo="formality" min="1" max="10" step="1" value="5"><div class="sims-range-ends"><span>Crude / Casual</span><span>Formal / Refined</span></div><div class="sims-slider-desc" id="sims-desc-formality">Conversational — relaxed, everyday speech.</div></div>
-                        <div class="sims-field sims-field--full"><label>Language / Vocabulary</label><input type="text" class="sims-input" data-spo="vocabulary" placeholder="archaic, street slang, highly technical, poetic…"></div>
-                    </div>
-                </section>
-
-                <!-- PERSONALITY -->
-                <section class="sims-panel" id="sims-panel-personality" data-panel="personality" hidden>
-                    <div class="sims-panel__header"><i data-lucide="brain"></i> Personality &amp; Psychology</div>
-                    <div class="sims-fields">
-                        <div class="sims-field sims-field--full"><label>Core Traits</label><textarea class="sims-textarea" data-spo="coreTraits" rows="3" placeholder="Fiercely loyal, deeply sarcastic, secretly tender…"></textarea></div>
-                        <div class="sims-field sims-field--full"><label>Archetype / Trope</label><div class="sims-chip-group sims-chip-group--wrap" data-spo="archetype"><button class="sims-chip" data-val="tsundere">Tsundere</button><button class="sims-chip" data-val="yandere">Yandere</button><button class="sims-chip" data-val="kuudere">Kuudere</button><button class="sims-chip" data-val="dandere">Dandere</button><button class="sims-chip" data-val="gentle-giant">Gentle Giant</button><button class="sims-chip" data-val="noble-rogue">Noble Rogue</button><button class="sims-chip" data-val="broken-hero">Broken Hero</button><button class="sims-chip" data-val="villain">Villain</button><button class="sims-chip" data-val="trickster">Trickster</button><button class="sims-chip" data-val="caretaker">Caretaker</button><button class="sims-chip" data-val="sage">Sage</button><button class="sims-chip" data-val="rebel">Rebel</button><button class="sims-chip" data-val="seducer">Seducer</button><button class="sims-chip" data-val="innocent">Innocent</button></div></div>
-                        <div class="sims-field sims-field--full"><label>Fears &amp; Vulnerabilities</label><textarea class="sims-textarea" data-spo="fears" rows="2" placeholder="Abandonment, intimacy, the dark, failure…"></textarea></div>
-                        <div class="sims-field sims-field--full"><label>Desires &amp; Motivations</label><textarea class="sims-textarea" data-spo="desires" rows="2" placeholder="Power, love, revenge, freedom, redemption…"></textarea></div>
-                        <div class="sims-field sims-field--full"><label>Moral Alignment</label><div class="sims-chip-group" data-spo="alignment"><button class="sims-chip" data-val="lawful-good">Lawful Good</button><button class="sims-chip" data-val="neutral-good">Neutral Good</button><button class="sims-chip" data-val="chaotic-good">Chaotic Good</button><button class="sims-chip" data-val="lawful-neutral">Lawful Neutral</button><button class="sims-chip" data-val="true-neutral">True Neutral</button><button class="sims-chip" data-val="chaotic-neutral">Chaotic Neutral</button><button class="sims-chip" data-val="lawful-evil">Lawful Evil</button><button class="sims-chip" data-val="neutral-evil">Neutral Evil</button><button class="sims-chip" data-val="chaotic-evil">Chaotic Evil</button></div></div>
-                        <div class="sims-field sims-field--full"><label>Backstory Summary</label><textarea class="sims-textarea" data-spo="backstory" rows="4" placeholder="Brief origin. Key formative events. What shaped them…"></textarea></div>
-                        <div class="sims-field sims-field--full"><label>Secrets</label><textarea class="sims-textarea" data-spo="secrets" rows="2" placeholder="What they hide. What they'd never admit…"></textarea></div>
-                        <div class="sims-field sims-field--full"><label>Hobbies &amp; Interests</label><input type="text" class="sims-input" data-spo="hobbies" placeholder="hacking, poetry, blade maintenance, cooking…"></div>
-                    </div>
-                </section>
-
-                <!-- BEHAVIOR -->
-                <section class="sims-panel" id="sims-panel-behavior" data-panel="behavior" hidden>
-                    <div class="sims-panel__header"><i data-lucide="activity"></i> Behavioral Dials</div>
-                    <p class="sims-panel__desc">These sliders directly influence how the character responds. Injected as directives into every system prompt.</p>
-                    <div class="sims-fields">
-                        <div class="sims-slider-field sims-slider-field--prominent"><label>Dominance <span id="sims-val-dominanceLevel" class="sims-badge">50</span></label><div class="sims-dual-label"><span>Deeply Submissive</span><span>Dominant / Alpha</span></div><input type="range" class="sims-range sims-range--lg" data-spo="dominanceLevel" min="0" max="100" step="1" value="50"><div class="sims-slider-desc" id="sims-desc-dominanceLevel">Balanced — neither dominant nor submissive.</div></div>
-                        <div class="sims-slider-field sims-slider-field--prominent"><label>Explicitness <span id="sims-val-explicitnessLevel" class="sims-badge">50</span></label><div class="sims-dual-label"><span>Fade-to-Black</span><span>Fully Explicit</span></div><input type="range" class="sims-range sims-range--lg" data-spo="explicitnessLevel" min="0" max="100" step="1" value="50"><div class="sims-slider-desc" id="sims-desc-explicitnessLevel">Moderate — sensual but not graphic.</div></div>
-                        <div class="sims-slider-field sims-slider-field--prominent"><label>Romanticism <span id="sims-val-romanticismLevel" class="sims-badge">50</span></label><div class="sims-dual-label"><span>Cold / Detached</span><span>Deeply Passionate</span></div><input type="range" class="sims-range sims-range--lg" data-spo="romanticismLevel" min="0" max="100" step="1" value="50"><div class="sims-slider-desc" id="sims-desc-romanticismLevel">Neutral emotional temperature.</div></div>
-                        <div class="sims-slider-field sims-slider-field--prominent"><label>Violence <span id="sims-val-violenceLevel" class="sims-badge">30</span></label><div class="sims-dual-label"><span>Non-violent</span><span>Graphic Violence</span></div><input type="range" class="sims-range sims-range--lg" data-spo="violenceLevel" min="0" max="100" step="1" value="30"><div class="sims-slider-desc" id="sims-desc-violenceLevel">Low — minimal combat description.</div></div>
-                        <div class="sims-slider-field sims-slider-field--prominent"><label>Empathy <span id="sims-val-empathyLevel" class="sims-badge">50</span></label><div class="sims-dual-label"><span>Callous / Predatory</span><span>Deeply Empathic</span></div><input type="range" class="sims-range sims-range--lg" data-spo="empathyLevel" min="0" max="100" step="1" value="50"><div class="sims-slider-desc" id="sims-desc-empathyLevel">Moderate empathy and emotional awareness.</div></div>
-                        <div class="sims-slider-field sims-slider-field--prominent"><label>Playfulness <span id="sims-val-playfulnessLevel" class="sims-badge">50</span></label><div class="sims-dual-label"><span>Serious / Grave</span><span>Mischievous / Playful</span></div><input type="range" class="sims-range sims-range--lg" data-spo="playfulnessLevel" min="0" max="100" step="1" value="50"><div class="sims-slider-desc" id="sims-desc-playfulnessLevel">Balanced tone.</div></div>
-                        <div class="sims-slider-field sims-slider-field--prominent"><label>Obedience <span id="sims-val-obedienceLevel" class="sims-badge">50</span></label><div class="sims-dual-label"><span>Defiant / Willful</span><span>Compliant / Eager</span></div><input type="range" class="sims-range sims-range--lg" data-spo="obedienceLevel" min="0" max="100" step="1" value="50"><div class="sims-slider-desc" id="sims-desc-obedienceLevel">Neither pushes back nor blindly complies.</div></div>
-                        <div class="sims-slider-field sims-slider-field--prominent"><label>Jealousy / Possessiveness <span id="sims-val-jealousyLevel" class="sims-badge">30</span></label><div class="sims-dual-label"><span>Unattached</span><span>Obsessively Possessive</span></div><input type="range" class="sims-range sims-range--lg" data-spo="jealousyLevel" min="0" max="100" step="1" value="30"><div class="sims-slider-desc" id="sims-desc-jealousyLevel">Low — relaxed and non-territorial.</div></div>
-                        <div class="sims-slider-field sims-slider-field--prominent"><label>Humor <span id="sims-val-humorLevel" class="sims-badge">50</span></label><div class="sims-dual-label"><span>Humorless</span><span>Witty / Comic</span></div><input type="range" class="sims-range sims-range--lg" data-spo="humorLevel" min="0" max="100" step="1" value="50"><div class="sims-slider-desc" id="sims-desc-humorLevel">Average comedic presence.</div></div>
-                        <div class="sims-slider-field sims-slider-field--prominent"><label>Sadism / Cruelty <span id="sims-val-sadismLevel" class="sims-badge">10</span></label><div class="sims-dual-label"><span>Gentle / Kind</span><span>Sadistic / Cruel</span></div><input type="range" class="sims-range sims-range--lg" data-spo="sadismLevel" min="0" max="100" step="1" value="10"><div class="sims-slider-desc" id="sims-desc-sadismLevel">Essentially non-cruel.</div></div>
-                    </div>
-                </section>
-
-                <!-- ADULT -->
-                <section class="sims-panel" id="sims-panel-adult" data-panel="adult" hidden>
-                    <div class="sims-panel__header sims-panel__header--adult"><i data-lucide="lock"></i> Adult / NSFW Anchors <span class="sims-badge sims-badge--warn">18+ Only</span></div>
-                    <p class="sims-panel__desc">These fields are injected into every system context for physical consistency during explicit content. Leave blank to skip.</p>
-                    <div class="sims-fields">
-                        <div class="sims-field-row">
-                            <div class="sims-field"><label>Breast Size</label><div class="sims-chip-group" data-spo="breastSize"><button class="sims-chip" data-val="flat">Flat</button><button class="sims-chip" data-val="small">Small</button><button class="sims-chip" data-val="b-cup">B-Cup</button><button class="sims-chip" data-val="c-cup">C-Cup</button><button class="sims-chip" data-val="d-cup">D-Cup</button><button class="sims-chip" data-val="dd-cup">DD-Cup</button><button class="sims-chip" data-val="large">Large</button><button class="sims-chip" data-val="very-large">Very Large</button><button class="sims-chip" data-val="massive">Massive</button><button class="sims-chip" data-val="n/a">N/A</button></div></div>
-                            <div class="sims-field"><label>Breast Shape</label><div class="sims-chip-group" data-spo="breastShape"><button class="sims-chip" data-val="round">Round</button><button class="sims-chip" data-val="perky">Perky</button><button class="sims-chip" data-val="natural">Natural</button><button class="sims-chip" data-val="teardrop">Teardrop</button><button class="sims-chip" data-val="wide-set">Wide-set</button></div></div>
-                        </div>
-                        <div class="sims-field-row">
-                            <div class="sims-field"><label>Areolae Size</label><div class="sims-chip-group" data-spo="areolaeSize"><button class="sims-chip" data-val="small">Small</button><button class="sims-chip" data-val="medium">Medium</button><button class="sims-chip" data-val="large">Large</button><button class="sims-chip" data-val="puffy">Puffy</button></div></div>
-                            <div class="sims-field"><label>Nipple Color</label><input type="text" class="sims-input" data-spo="nippleColor" placeholder="pink, rosy, dark brown, dusky…"></div>
-                        </div>
-                        <div class="sims-field-row">
-                            <div class="sims-field"><label>Buttocks</label><div class="sims-chip-group" data-spo="buttocksSize"><button class="sims-chip" data-val="flat">Flat</button><button class="sims-chip" data-val="small">Small</button><button class="sims-chip" data-val="average">Average</button><button class="sims-chip" data-val="full">Full</button><button class="sims-chip" data-val="large">Large</button><button class="sims-chip" data-val="very-large">Very Large</button></div></div>
-                            <div class="sims-field"><label>Butt Shape</label><div class="sims-chip-group" data-spo="buttocksShape"><button class="sims-chip" data-val="round">Round</button><button class="sims-chip" data-val="heart">Heart</button><button class="sims-chip" data-val="square">Square</button><button class="sims-chip" data-val="bubble">Bubble</button><button class="sims-chip" data-val="flat">Flat</button></div></div>
-                        </div>
-                        <div class="sims-field sims-field--full"><label>Body Hair</label><div class="sims-chip-group" data-spo="bodyHair"><button class="sims-chip" data-val="none/bare">None / Bare</button><button class="sims-chip" data-val="minimal">Minimal</button><button class="sims-chip" data-val="trimmed">Trimmed</button><button class="sims-chip" data-val="natural">Natural</button><button class="sims-chip" data-val="thick">Thick</button></div></div>
-                        <div class="sims-field sims-field--full"><label>Genitalia / Intimate Anatomy</label><textarea class="sims-textarea" data-spo="genitalia" rows="3" placeholder="Detailed physical description for anatomical consistency during explicit scenes…"></textarea></div>
-                        <div class="sims-field sims-field--full"><label>Intimate Piercings / Tattoos</label><input type="text" class="sims-input" data-spo="intimateMarkings" placeholder="VCH piercing, lower back tattoo, none…"></div>
-                        <div class="sims-field sims-field--full"><label>Other Adult Features</label><textarea class="sims-textarea" data-spo="otherAdultFeatures" rows="3" placeholder="Any remaining physical details important for explicit scene consistency…"></textarea></div>
-                        <div class="sims-field sims-field--full"><label>Sexual Orientation / Preferences</label><input type="text" class="sims-input" data-spo="sexualOrientation" placeholder="bisexual, lesbian, heterosexual, fluid…"></div>
-                        <div class="sims-field sims-field--full"><label>Turn-ons / Kinks</label><textarea class="sims-textarea" data-spo="kinks" rows="3" placeholder="List specific turn-ons, kinks, fetishes…"></textarea></div>
-                        <div class="sims-field sims-field--full"><label>Hard Limits / Dislikes</label><textarea class="sims-textarea" data-spo="hardLimits" rows="2" placeholder="What this character will never do or find repulsive…"></textarea></div>
-                    </div>
-                </section>
-
-                <!-- AI / MODEL -->
-                <section class="sims-panel" id="sims-panel-ai" data-panel="ai" hidden>
-                    <div class="sims-panel__header"><i data-lucide="cpu"></i> AI &amp; Model Settings</div>
-                    <div class="sims-fields">
-                        <div class="sims-field sims-field--full"><label>Model Override <span class="sims-hint-inline">(overrides global model for this character)</span></label><select class="sims-select" data-spo="modelOverride" id="sims-model-select"><option value="">— Use global model —</option></select></div>
-                        <div class="sims-field sims-field--full"><label>System Prompt Override <span class="sims-hint-inline">(replaces default RP template for this character)</span></label><textarea class="sims-textarea sims-textarea--code" data-spo="systemPromptOverride" rows="5" placeholder="Custom system prompt. Use {{char}} and {{user}} macros…"></textarea></div>
-                        <div class="sims-field sims-field--full"><label>Append to System Prompt</label><textarea class="sims-textarea sims-textarea--code" data-spo="appendToSystem" rows="4" placeholder="Text appended after the system prompt. Useful for persistent reminders or extra context…"></textarea></div>
-                        <div class="sims-field sims-field--full"><label>Post-History Instructions</label><textarea class="sims-textarea sims-textarea--code" data-spo="postHistoryOverride" rows="3" placeholder="Injected after conversation history. Strong anchor for recurring behaviors…"></textarea></div>
-                    </div>
-                </section>
-
-            </main>
-        </div>
-
-        <footer class="sims-editor__footer">
-            <div class="sims-editor__footer-left">
-                <span class="sims-save-status" id="sims-save-status"></span>
+        <!-- ── Footer — full-width, pinned to studio bottom ── -->
+        <footer class="ce-footer">
+            <div class="ce-footer__left">
+                <button id="ce-cancel" class="ce-btn ce-btn--ghost">Cancel</button>
+                <button id="ce-apply-btn" class="ce-btn ce-btn--ghost"><i data-lucide="check"></i> Apply</button>
             </div>
-            <div class="sims-editor__footer-right">
-                <button id="sims-cancel-btn" class="sims-btn sims-btn--ghost">Cancel</button>
-                <button id="sims-apply-btn" class="sims-btn sims-btn--accent"><i data-lucide="check"></i> Apply Changes</button>
+            <div class="ce-footer__right">
+                <button id="ce-export-json" class="ce-btn ce-btn--ghost" title="Download card JSON"><i data-lucide="download"></i> Export JSON</button>
+                <button id="ce-export-codebase" class="ce-btn ce-btn--ghost" title="Download card + index entry"><i data-lucide="package-open"></i> Export to Codebase</button>
+                <button id="ce-save" class="ce-btn ce-btn--secondary"><i data-lucide="save"></i> Save</button>
+                <button id="ce-save-activate" class="ce-btn ce-btn--accent"><i data-lucide="zap"></i> Save &amp; Activate</button>
             </div>
         </footer>
 
-    </div>
-</div>
+    </div><!-- .ce-studio -->
+</div><!-- #modal-char-editor -->
 
 <div id="reaction-picker" class="reaction-picker" hidden>
     <button class="reaction-picker__btn" data-emoji="❤️">❤️</button><button class="reaction-picker__btn" data-emoji="😂">😂</button><button class="reaction-picker__btn" data-emoji="🔥">🔥</button><button class="reaction-picker__btn" data-emoji="😭">😭</button><button class="reaction-picker__btn" data-emoji="😮">😮</button><button class="reaction-picker__btn" data-emoji="👍">👍</button>
@@ -1992,7 +1730,7 @@
 
 <div id="toast-container" class="toast-container"></div>
 <script src="../../shards/lucide.min.js"></script><script src="../../shards/marked.min.js"></script><script src="../../shards/purify.min.js"></script>
-<script type="module" src="./script/main.js?v=46"></script>
+<script type="module" src="./script/main.js?v=49"></script>
 <!-- ── Wallhaven Arena ── -->
 <script src="./script/modules/wallhaven.js"></script>
 </body>

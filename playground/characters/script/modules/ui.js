@@ -18,12 +18,11 @@ import {
 } from './state.js';
 import { buildPayload, streamCompletion } from './llm-engine.js';
 import { parseCommand, executeCommand, filterCommands, COMMANDS } from './commands.js';
-import { IMAGE_MODELS, DEFAULT_MODEL, buildImagePrompt, generateImage } from './image-engine.js';
+import { IMAGE_MODELS, DEFAULT_MODEL, buildImagePrompt, generateImagePromptWithLLM, generateImage } from './image-engine.js';
 import { addBook, removeBook, addEntry, updateEntry, removeEntry, createBook } from './lorebook.js';
 import { parseCharacterCard, buildCard, normalizeData } from './parser-v2.js';
 import { getApiKey, setApiKey, clearApiKey, isValidKeyFormat, restoreKeyFromCookie } from '../../../../glass/script/modules/llm-auth.js';
-import { initSimsEditor } from './sims-editor.js';
-import { initCharCreator } from './char-creator.js';
+import { initCharEditor } from './char-editor.js';
 
 // ── Utility ───────────────────────────────────────────────────────────────────
 const qs  = (sel, ctx = document) => ctx ? ctx.querySelector(sel) : null;
@@ -883,7 +882,7 @@ export function initUI() {
                         ? `<button class="character-card__btn character-card__btn--remove" data-remove="${esc(c.id)}" title="Remove from thread"><i data-lucide="log-out"></i></button>`
                         : `<button class="character-card__btn character-card__btn--add" data-add="${esc(c.id)}" title="Add to thread"><i data-lucide="plus"></i></button>`
                     }
-                    <button class="character-card__btn character-card__btn--edit" data-edit="${esc(c.id)}" title="Open Sims Editor  [E]"><i data-lucide="sliders-horizontal"></i></button>
+                    <button class="character-card__btn character-card__btn--edit" data-edit="${esc(c.id)}" title="Edit Character  [E]"><i data-lucide="sliders-horizontal"></i></button>
                 </div>
             </div>`;
         };
@@ -947,11 +946,10 @@ export function initUI() {
             });
         });
 
-        // Edit (Sims Editor)
         qsa('[data-edit]', $charList).forEach(btn => {
             btn.addEventListener('click', e => {
                 e.stopPropagation();
-                openSimsEditor(btn.dataset.edit);
+                openCharEditor(btn.dataset.edit);
             });
         });
 
@@ -1292,9 +1290,8 @@ export function initUI() {
 
         // Profile action buttons
         qs('#btn-add-to-thread').onclick = () => addCharacterToThread(id);
-        qs('#btn-sims-edit').onclick     = () => openSimsEditor(id);
+        qs('#btn-sims-edit').onclick     = () => openCharEditor(id);
         qs('#btn-gallery-add').onclick   = () => { switchSidebarTab('social'); openSocialFeed(id); renderSocialSidebar(); };
-        qs('#btn-edit-char').onclick     = () => document.dispatchEvent(new CustomEvent('char-creator:open', { detail: { charId: id } }));
         qs('#btn-remove-char').onclick = () => {
             removeBotFromChat(id);
             delete _rrIndex[state.chat.id];
@@ -1701,7 +1698,8 @@ export function initUI() {
                 ${isCover ? `<span class="gallery-item__badge">Avatar</span>` : ''}
                 <div class="gallery-item__overlay">
                     <button class="gallery-item__btn" data-lb="${i}" title="Expand"><i data-lucide="expand"></i></button>
-                    ${!isCover ? `<button class="gallery-item__btn gallery-item__btn--set" data-set-cover="${i - 1}" title="Set as avatar"><i data-lucide="user-check"></i></button>` : ''}
+                    ${src.startsWith('data:') ? `<button class="gallery-item__btn gallery-item__btn--dl" data-dl="${i}" title="Download"><i data-lucide="download"></i></button>` : ''}
+                    ${isCover ? `<button class="gallery-item__btn gallery-item__btn--set" data-set-cover="-1" title="Already profile picture" disabled><i data-lucide="star"></i></button>` : `<button class="gallery-item__btn gallery-item__btn--set" data-set-cover="${i - 1}" title="Set as profile picture"><i data-lucide="user-check"></i></button>`}
                     ${!isCover ? `<button class="gallery-item__btn gallery-item__btn--del" data-del="${i - 1}" title="Remove"><i data-lucide="trash-2"></i></button>` : ''}
                 </div>
             </div>`;
@@ -1731,6 +1729,15 @@ export function initUI() {
             saveState();
             renderGalleryStrip(id);
             renderGalleryModal(id);
+        });
+        qsa('[data-dl]', $grid).forEach(btn => btn.onclick = () => {
+            const idx = parseInt(btn.dataset.dl);
+            const src = allImages[idx];
+            if (!src) return;
+            const a = document.createElement('a');
+            a.href = src;
+            a.download = `${(meta?.name || 'image').toLowerCase().replace(/\s+/g, '-')}-${String(idx + 1).padStart(3, '0')}.png`;
+            a.click();
         });
 
         lucideRefresh($grid);
@@ -1789,9 +1796,15 @@ export function initUI() {
             const tagHtml = m.tags.map(t =>
                 `<span class="img-model-tag img-model-tag--${t}">${t}</span>`
             ).join('');
+            const subBadge = m.sub
+                ? `<span class="img-model-sub img-model-sub--included" title="Included in nano-gpt subscription">SUB</span>`
+                : `<span class="img-model-sub img-model-sub--credits" title="Uses pay-per-use credits">CREDITS</span>`;
             const active = m.id === _imgGenModel ? ' img-model-card--active' : '';
             return `<button class="img-model-card${active}" data-model="${esc(m.id)}" type="button" title="${esc(m.desc)}">
-                <span class="img-model-card__label">${esc(m.label)}</span>
+                <div class="img-model-card__header">
+                    <span class="img-model-card__label">${esc(m.label)}</span>
+                    ${subBadge}
+                </div>
                 <span class="img-model-card__tags">${tagHtml}</span>
                 <span class="img-model-card__desc">${esc(m.desc)}</span>
             </button>`;
@@ -1859,7 +1872,7 @@ export function initUI() {
         }
     }
 
-    function _injectImageMessage(dataUrl, prompt, model) {
+    function _injectImageMessage(dataUrl, prompt, model, existingMsgId = null) {
         const $t = qs('#message-thread');
         if (!$t) return;
 
@@ -1868,7 +1881,15 @@ export function initUI() {
         const override = charId ? getCharOverride(charId) : {};
         const charName = override.nickname || char?.name || 'Scene';
 
-        const msgId = `img-msg-${Date.now()}`;
+        // Persist to history on first injection (not on replay from history)
+        let msgId;
+        if (!existingMsgId) {
+            const histMsg = addMessage('image', dataUrl, charId, { model, prompt });
+            msgId = histMsg.id;
+        } else {
+            msgId = existingMsgId;
+        }
+
         const $msg  = document.createElement('div');
         $msg.className = 'message message--image';
         $msg.dataset.imgMsgId = msgId;
@@ -1919,8 +1940,11 @@ export function initUI() {
             a.click();
         });
 
-        // Delete from thread
-        qs('.msg-action--img-del', $msg).addEventListener('click', () => $msg.remove());
+        // Delete from thread and history
+        qs('.msg-action--img-del', $msg).addEventListener('click', () => {
+            deleteMessage(msgId);
+            $msg.remove();
+        });
 
         // Save to gallery (re-save in case user closes modal without saving)
         qs('.msg-action--img-save', $msg).addEventListener('click', () => {
@@ -1948,6 +1972,34 @@ export function initUI() {
     qs('.modal__backdrop', qs('#modal-image-gen'))?.addEventListener('click', () => { qs('#modal-image-gen').hidden = true; });
     qs('#img-gen-generate')?.addEventListener('click', _runImageGeneration);
     qs('#img-gen-regenerate')?.addEventListener('click', _runImageGeneration);
+
+    // ── AI Prompt generation ──────────────────────────────────────────────────
+    qs('#img-gen-ai-prompt')?.addEventListener('click', async () => {
+        const $btn = qs('#img-gen-ai-prompt');
+        const $ta  = qs('#img-gen-prompt');
+        if (!$btn || !$ta) return;
+
+        const charId    = state.activeBotId;
+        const nsfw      = state.config.flags?.injectAdult !== false;
+        const userHint  = $ta.value.trim(); // treat current text as directional hint
+
+        const origHtml = $btn.innerHTML;
+        $btn.disabled = true;
+        $btn.innerHTML = '<i data-lucide="loader-2" class="spin"></i>';
+        lucideRefresh($btn);
+
+        try {
+            const prompt = await generateImagePromptWithLLM({ charId, userHint, includeNsfw: nsfw });
+            $ta.value = prompt;
+            $ta.dispatchEvent(new Event('input'));
+        } catch (err) {
+            showToast(`AI prompt failed: ${err.message}`, 'error', 4000);
+        } finally {
+            $btn.disabled = false;
+            $btn.innerHTML = origHtml;
+            lucideRefresh($btn);
+        }
+    });
 
     qs('#img-gen-save-gallery')?.addEventListener('click', () => {
         if (!_imgGenDataUrl) return;
@@ -2637,6 +2689,37 @@ export function initUI() {
         if (e.key === 'Enter') qs('#gallery-url-add').click();
     });
 
+    // Export all gallery images as individual downloads
+    qs('#gallery-export-all')?.addEventListener('click', async () => {
+        if (!galleryCharId) return;
+        const allImages = getAllGalleryImages(galleryCharId);
+        if (!allImages.length) { showToast('No images to export', 'warn'); return; }
+        const meta = state.characters.find(c => c.id === galleryCharId);
+        const nameSlug = (meta?.name || 'gallery').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+        let count = 0;
+        for (let i = 0; i < allImages.length; i++) {
+            const src = allImages[i];
+            // Only download data URLs directly; skip external URLs (they would CORS)
+            if (!src.startsWith('data:')) {
+                // For external URLs, open in new tab
+                window.open(src, '_blank', 'noopener');
+                continue;
+            }
+            await new Promise(resolve => {
+                const a = document.createElement('a');
+                a.href = src;
+                a.download = `${nameSlug}-${String(i + 1).padStart(3, '0')}.png`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                // Stagger downloads slightly to avoid browser blocking
+                setTimeout(resolve, 200);
+            });
+            count++;
+        }
+        showToast(`Exported ${count} image${count !== 1 ? 's' : ''}`, 'info', 2500);
+    });
+
     // ── Chat Background ────────────────────────────────────────────────────────
     function initChatBackground() {
         const bgCfg = state.config.chatBackground || {};
@@ -2726,7 +2809,7 @@ export function initUI() {
 
     // ── Edit Character Trigger ────────────────────────────────────────────────
     const triggerEditCreator = (charId) => {
-        document.dispatchEvent(new CustomEvent('char-creator:open', { detail: { charId } }));
+        document.dispatchEvent(new CustomEvent('char-editor:open', { detail: { charId } }));
     };
 
 
@@ -3338,7 +3421,7 @@ export function initUI() {
                     </div>`;
                 $thread.appendChild(welcome);
                 qs('#welcome-create', welcome)?.addEventListener('click', () => {
-                    document.dispatchEvent(new CustomEvent('char-creator:open'));
+                    document.dispatchEvent(new CustomEvent('char-editor:open'));
                 });
                 qs('#welcome-import', welcome)?.addEventListener('click', () => qs('#card-input').click());
                 lucideRefresh(welcome);
@@ -3349,6 +3432,10 @@ export function initUI() {
 
         state.history.forEach(msg => {
             if (!$thread) return;
+            if (msg.role === 'image') {
+                _injectImageMessage(msg.content, msg.prompt || '', msg.model || '', msg.id);
+                return;
+            }
             const char = msg.botId ? state.loadedCharacters[msg.botId] : null;
             const meta = msg.botId ? state.characters.find(c => c.id === msg.botId) : null;
             appendMessage(msg, char?.name || null, meta?.avatar_path || char?.avatar, msg.thoughts || null);
@@ -3579,6 +3666,8 @@ export function initUI() {
                         `<div class="cmd-compact"><div class="cmd-compact__label"><i data-lucide="archive"></i> Story Anchor</div><div class="cmd-compact__preview">${esc(m.content.replace(/^\[STORY ANCHOR[^\]]*\]\n/, ''))}</div></div>`,
                         { raw: true, label: 'Anchor' }
                     );
+                } else if (m.role === 'image') {
+                    _injectImageMessage(m.content, m.prompt || '', m.model || '', m.id);
                 } else {
                     const char   = m.botId ? state.loadedCharacters[m.botId] : null;
                     const meta   = m.botId ? state.characters.find(c => c.id === m.botId) : null;
@@ -4517,8 +4606,8 @@ export function initUI() {
 
         if (e.key === 't' || e.key === 'T') toggleTerminal();
         if (e.key === 'r' || e.key === 'R') setRosterCollapsed($rosterSidebar.dataset.collapsed !== 'true');
-        if (e.key === 'n' || e.key === 'N') document.dispatchEvent(new CustomEvent('char-creator:open'));
-        if (e.key === 'e' || e.key === 'E') { if (state.activeBotId) openSimsEditor(state.activeBotId); }
+        if (e.key === 'n' || e.key === 'N') document.dispatchEvent(new CustomEvent('char-editor:open'));
+        if (e.key === 'e' || e.key === 'E') { if (state.activeBotId) openCharEditor(state.activeBotId); }
         if (e.key === 'a' || e.key === 'A') openCharPicker();
         if (e.key === 'g' || e.key === 'G') { if (state.activeBotId) openGalleryModal(state.activeBotId); }
         if (e.key === 'f' || e.key === 'F') toggleFocusMode();
@@ -4550,14 +4639,12 @@ export function initUI() {
     // Restore on load
     if (localStorage.getItem(FOCUS_KEY)) toggleFocusMode(true);
 
-    // ── Sims Editor ───────────────────────────────────────────────────────────
-    const simsEditor = initSimsEditor();
-    initCharCreator();
+    // ── Unified Character Editor ──────────────────────────────────────────────
+    initCharEditor();
 
-    // Always re-fetch the card from disk before opening the editor so that
-    // extensions.underdark fields are guaranteed to be present even if localStorage
-    // was full and the card data didn't survive the previous session's saveState().
-    async function openSimsEditor(id) {
+    // Pre-fetch card from disk/state before opening the editor so that all
+    // extensions.underdark fields are present even after a partial session restore.
+    async function openCharEditor(id) {
         if (!id) return;
         const meta = state.characters.find(c => c.id === id);
         if (meta?.card_path) {
@@ -4566,21 +4653,39 @@ export function initUI() {
                 const raw = await res.json();
                 state.loadedCharacters[id] = normalizeData(raw);
             } catch (_) {
-                // fall through to whatever is already in memory
                 await loadCharacterCard(id);
             }
         } else {
             await loadCharacterCard(id);
         }
-        simsEditor?.open(id);
+        document.dispatchEvent(new CustomEvent('char-editor:open', { detail: { charId: id } }));
     }
 
     qs('#btn-sims-edit')?.addEventListener('click', () => {
-        if (state.activeBotId) openSimsEditor(state.activeBotId);
+        if (state.activeBotId) openCharEditor(state.activeBotId);
+    });
+
+    // ── char-editor:saved — refresh all UI that depends on character data ────
+    document.addEventListener('char-editor:saved', e => {
+        const { id, activate } = e.detail || {};
+        if (!id) return;
+
+        renderRoster();
+        renderChats();
+
+        if (activate || id === state.activeBotId) {
+            if (state.chat && !state.chat.botIds.includes(id)) {
+                setActiveBot(id);
+            }
+            renderAll();
+        }
+
+        const $psel = qs('#persona-char-select');
+        if ($psel && $psel.value === id) loadPersonaFields(id);
     });
 
     // ── Welcome screen static button wiring ─────────────────────────────────
-    qs('#welcome-create')?.addEventListener('click', () => document.dispatchEvent(new CustomEvent('char-creator:open')));
+    qs('#welcome-create')?.addEventListener('click', () => document.dispatchEvent(new CustomEvent('char-editor:open')));
     qs('#welcome-import')?.addEventListener('click', () => qs('#card-input').click());
 
     // ── Oracle button ─────────────────────────────────────────────────────────

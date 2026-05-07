@@ -4,7 +4,7 @@
  * Produces ready-to-use JSON that drops into data/cards/ and data/index.json.
  */
 
-import { state, saveCharacter, deleteCharacter } from './state.js';
+import { state, saveCharacter, deleteCharacter, getCharOverride, setCharOverride, defaultCharOverride } from './state.js';
 import { normalizeData } from './parser-v2.js';
 import { saveAvatar, loadAvatar, isDataUrl } from './storage.js';
 
@@ -308,41 +308,49 @@ async function populateFromCard(meta, card, charId) {
     setField('tags',           (meta?.tags || card.tags || []).join(', '));
     setField('id-preview',     charId || '');
 
-    const ud = card.extensions?.underdark || {};
-    const ext = ud.ext || {};
+    // Use merged getCharOverride view (card data + any sims/persona edits layered on top)
+    // so both editors always show the same values.
+    const merged = charId ? getCharOverride(charId) : null;
+    const ud  = card.extensions?.underdark || {};
+    // For each field: merged view wins when charId is known; card data is fallback for new imports
+    const ov  = merged || ud;
+    const ext = merged?.ext || ud.ext || {};
 
     // Core underdark overrides
-    setField('nickname',             ud.nickname || '');
-    setField('voice-tone',           ud.voiceTone || '');
-    setField('speech-patterns',      ud.speechPatterns || '');
-    setField('species',              ud.species || '');
-    setField('gender',               ud.gender || '');
-    setField('age',                  ud.age || '');
-    setField('height',               ud.height || '');
-    setField('body-type',            ud.bodyType || '');
-    setField('skin-tone',            ud.skinTone || '');
-    setField('hair-color',           ud.hairColor || '');
-    setField('hair-style',           ud.hairStyle || '');
-    setField('eye-color',            ud.eyeColor || '');
-    setField('distinctive-features', ud.distinctiveFeatures || '');
-    setField('breast-size',          ud.breastSize || '');
-    setField('nipple-color',         ud.nippleColor || '');
-    setField('areolae-size',         ud.areolaeSize || '');
-    setField('body-hair',            ud.bodyHair || '');
-    setField('genitalia',            ud.genitalia || '');
-    setField('other-adult',          ud.otherAdultFeatures || '');
-    setField('append-system',        ud.appendToSystem || '');
-    setField('persistent-memory',    ud.persistentMemory || '');
-    setField('model-override',       ud.modelOverride || '');
-    setField('system-override',      ud.systemPromptOverride || '');
-    setField('post-override',        ud.postHistoryOverride || '');
+    setField('nickname',             ov.nickname             || ud.nickname             || '');
+    setField('voice-tone',           ov.voiceTone            || ud.voiceTone            || '');
+    setField('speech-patterns',      ov.speechPatterns       || ud.speechPatterns       || '');
+    setField('species',              ov.species              || ud.species              || '');
+    setField('gender',               ov.gender               || ud.gender               || '');
+    setField('age',                  ov.age                  || ud.age                  || '');
+    setField('height',               ov.height               || ud.height               || '');
+    setField('body-type',            ov.bodyType             || ud.bodyType             || '');
+    setField('skin-tone',            ov.skinTone             || ud.skinTone             || '');
+    setField('hair-color',           ov.hairColor            || ud.hairColor            || '');
+    setField('hair-style',           ov.hairStyle            || ud.hairStyle            || '');
+    setField('eye-color',            ov.eyeColor             || ud.eyeColor             || '');
+    setField('distinctive-features', ov.distinctiveFeatures  || ud.distinctiveFeatures  || '');
+    setField('breast-size',          ov.breastSize           || ud.breastSize           || '');
+    setField('nipple-color',         ov.nippleColor          || ud.nippleColor          || '');
+    setField('areolae-size',         ov.areolaeSize          || ud.areolaeSize          || '');
+    setField('body-hair',            ov.bodyHair             || ud.bodyHair             || '');
+    setField('genitalia',            ov.genitalia            || ud.genitalia            || '');
+    setField('other-adult',          ov.otherAdultFeatures   || ud.otherAdultFeatures   || '');
+    setField('append-system',        ov.appendToSystem       || ud.appendToSystem       || '');
+    setField('persistent-memory',    ov.persistentMemory     || ud.persistentMemory     || '');
+    setField('model-override',       ov.modelOverride        || ud.modelOverride        || '');
+    setField('system-override',      ov.systemPromptOverride || ud.systemPromptOverride || '');
+    setField('post-override',        ov.postHistoryOverride  || ud.postHistoryOverride  || '');
 
     const sliderKeys = ['dominanceLevel','explicitnessLevel','romanticismLevel','violenceLevel',
                         'anxietyLevel','loyaltyLevel','stubbornness','selfEsteemLevel','curiosityLevel','empathyLevel'];
-    sliderKeys.forEach(k => { if (ud[k] != null) setSlider(k, ud[k]); });
+    sliderKeys.forEach(k => {
+        const v = ov[k] ?? ud[k];
+        if (v != null) setSlider(k, v);
+    });
 
     const enabledCb = qs('#cc-enabled');
-    if (enabledCb) enabledCb.checked = ud.enabled !== false;
+    if (enabledCb) enabledCb.checked = (ov.enabled ?? ud.enabled) !== false;
 
     // Extended fields
     const EXT_MAP = [
@@ -419,12 +427,14 @@ async function populateFromCard(meta, card, charId) {
         'libido','stamina','exhibitionism'];
 
     EXT_MAP.forEach(([fieldId, extKey]) => {
-        const val = ext[extKey] ?? '';
+        // merged (getCharOverride flat-merges ext into the top object) wins; ext fallback for import
+        const val = (merged != null ? (merged[extKey] ?? ext[extKey]) : ext[extKey]) ?? '';
         setField(fieldId, val);
     });
 
     EXT_SLIDERS.forEach(k => {
-        if (ext[k] != null) setSlider(k, ext[k]);
+        const v = merged != null ? (merged[k] ?? ext[k]) : ext[k];
+        if (v != null) setSlider(k, v);
     });
 
     // Avatar
@@ -681,9 +691,22 @@ async function saveCard(activate = false) {
     if (_editId) meta.id = _editId;
 
     await saveCharacter(meta, card.data);
+
+    // Sync charOverrides from the newly written card so sims-editor stays in sync.
+    // Preserve any sims-editor user edits for fields NOT explicitly authored here,
+    // but let the card values win for fields the creator just wrote.
+    const ud  = card.data.extensions?.underdark || {};
+    const ext = ud.ext || {};
+    const existing = state.config?.charOverrides?.[meta.id] || {};
+    const existingExt = existing.ext || {};
+    // Card values always win — merge card ext on top of any prior ext
+    const mergedExt = { ...existingExt, ...ext };
+    // Build a full core object from card ud (strip ext/gallery keys)
+    const { ext: _e, gallery: _g, ...coreFromCard } = ud;
+    setCharOverride(meta.id, { ...existing, ...coreFromCard, ext: mergedExt });
+
     closeCreator();
 
-    // Refresh roster
     document.dispatchEvent(new CustomEvent('char-creator:saved', { detail: { id: meta.id, activate } }));
     showToast(`${meta.name} ${_editId ? 'updated' : 'created'}.`, 'info');
 }

@@ -27,6 +27,7 @@ export const IMAGE_MODELS = [
         tags:  ['hq', 'photo', 'art'],
         desc:  'Best overall quality — photorealistic + artistic, slow',
         nsfw:  true,
+        sub:   true,
         sizes: ['1024x1024', '512x512'],
     },
     {
@@ -35,6 +36,7 @@ export const IMAGE_MODELS = [
         tags:  ['fast', 'art', 'nsfw'],
         desc:  'Fast & uncensored — good for explicit RP scenes',
         nsfw:  true,
+        sub:   true,
         sizes: ['1024x1024', '512x512'],
     },
     {
@@ -43,6 +45,7 @@ export const IMAGE_MODELS = [
         tags:  ['hq', 'photo', 'art'],
         desc:  'High-fidelity photorealistic output, detail-rich',
         nsfw:  true,
+        sub:   true,
         sizes: ['1024x1024', '512x512'],
     },
     {
@@ -51,6 +54,7 @@ export const IMAGE_MODELS = [
         tags:  ['fast'],
         desc:  'Fastest FLUX — quick previews and iterations',
         nsfw:  false,
+        sub:   true,
         sizes: ['1024x1024', '512x512'],
     },
     {
@@ -59,6 +63,7 @@ export const IMAGE_MODELS = [
         tags:  ['edit', 'hq'],
         desc:  'Context-aware editing — use an existing image as base',
         nsfw:  true,
+        sub:   false,
         sizes: ['1024x1024', '512x512'],
         img2img: true,
     },
@@ -68,6 +73,7 @@ export const IMAGE_MODELS = [
         tags:  ['photo', 'hq', 'art'],
         desc:  'OpenAI vision model — strong prompt adherence',
         nsfw:  false,
+        sub:   false,
         sizes: ['1024x1024', '512x512'],
     },
     {
@@ -76,6 +82,7 @@ export const IMAGE_MODELS = [
         tags:  ['photo', 'hq'],
         desc:  'OpenAI photorealistic — excellent faces and lighting',
         nsfw:  false,
+        sub:   false,
         sizes: ['1024x1024', '512x512'],
     },
     {
@@ -84,6 +91,7 @@ export const IMAGE_MODELS = [
         tags:  ['anime', 'art'],
         desc:  'Studio Ghibli style — painterly, warm, soft',
         nsfw:  false,
+        sub:   true,
         sizes: ['1024x1024', '512x512'],
         img2img: true,
     },
@@ -93,6 +101,7 @@ export const IMAGE_MODELS = [
         tags:  ['art', 'nsfw'],
         desc:  'Artistic / illustrative — flexible style, uncensored',
         nsfw:  true,
+        sub:   true,
         sizes: ['1024x1024', '512x512'],
         img2img: true,
     },
@@ -102,6 +111,7 @@ export const IMAGE_MODELS = [
         tags:  ['anime', 'art', 'nsfw'],
         desc:  'SDXL anime/art mix — detailed, vibrant, uncensored',
         nsfw:  true,
+        sub:   true,
         sizes: ['1024x1024', '512x512'],
     },
     {
@@ -110,6 +120,7 @@ export const IMAGE_MODELS = [
         tags:  ['edit', 'hq'],
         desc:  'Advanced image editing with prompt-guided changes',
         nsfw:  true,
+        sub:   true,
         sizes: ['1024x1024', '512x512'],
         img2img: true,
     },
@@ -119,6 +130,7 @@ export const IMAGE_MODELS = [
         tags:  ['edit', 'fast'],
         desc:  'Fast Gemini-based editing — good for quick touch-ups',
         nsfw:  false,
+        sub:   false,
         sizes: ['1024x1024', '512x512'],
         img2img: true,
     },
@@ -128,6 +140,7 @@ export const IMAGE_MODELS = [
         tags:  ['edit'],
         desc:  'Upscale any image to higher resolution',
         nsfw:  true,
+        sub:   true,
         sizes: ['1024x1024'],
         img2img: true,
     },
@@ -246,6 +259,151 @@ export function buildImagePrompt(opts = {}) {
     // Ensure there is always a meaningful subject — fall back to char name or generic
     const subject = rawPrompt || charName || 'a person';
     return `${subject}. ${qualitySuffix}`;
+}
+
+// ── LLM-assisted prompt generation ───────────────────────────────────────────
+// Calls the LLM (character's model or global model) to write a rich, coherent
+// image generation prompt that:
+//   • Anchors to the character's precise physical description
+//   • Captures the current scene context and emotional tone
+//   • Maintains continuity with what has happened in the chat
+//   • Translates narrative text into concrete, painterly image-prompt language
+//
+// Returns the prompt string. Throws on API failure.
+export async function generateImagePromptWithLLM(opts = {}) {
+    const {
+        charId       = state.activeBotId,
+        userHint     = '',
+        historyDepth = 8,
+        includeNsfw  = true,
+    } = opts;
+
+    const apiKey = getApiKey();
+    if (!apiKey) throw new Error('No API key configured.');
+
+    const char     = charId ? state.loadedCharacters[charId] : null;
+    const meta     = charId ? state.characters.find(c => c.id === charId) : null;
+    const override = charId ? getCharOverride(charId) : {};
+    const charName = override.nickname || char?.name || 'the character';
+    const userName = state.config.userName || 'User';
+
+    // Pick which model to call — character override first, then global config
+    const llmModel = override.modelOverride || state.config.selectedModel || 'gemini-2.0-flash';
+
+    // Build a rich context document for the LLM
+    const contextParts = [];
+
+    // Character physical sheet
+    const physFields = [];
+    const addPh = (...keys) => keys.forEach(k => { const v = override[k]; if (v && String(v).trim()) physFields.push(String(v).trim()); });
+    addPh('species','gender','age','height','bodyType','skinTone');
+    if (override.hairColor) physFields.push(`${override.hairColor} ${override.hairStyle || ''}`.trim() + ' hair');
+    if (override.eyeColor)  physFields.push(`${override.eyeColor} eyes`);
+    addPh('distinctiveFeatures','faceShape','complexion','jawType','cheekbones',
+          'eyeShape','noseType','lipsType','tattoos','scarsMarks','posture','gait');
+    if (physFields.length) contextParts.push(`Character: ${charName}\nPhysical: ${physFields.join(', ')}`);
+
+    // Style
+    const styleFields = [];
+    const addSt = (...keys) => keys.forEach(k => { const v = override[k]; if (v && String(v).trim()) styleFields.push(String(v).trim()); });
+    addSt('styleArchetype','outfitDescription','colorPalette','signatureItem','footwear','jewelry','makeupStyle','lipstickColor','eyeMakeup','headwear','eyewear');
+    if (styleFields.length) contextParts.push(`Style/outfit: ${styleFields.join(', ')}`);
+
+    // Adult anatomy (when nsfw enabled)
+    if (includeNsfw) {
+        const adultFields = [];
+        const addAd = (...keys) => keys.forEach(k => {
+            const v = override[k];
+            if (v && String(v).trim() && String(v).toLowerCase() !== 'n/a') adultFields.push(String(v).trim());
+        });
+        addAd('breastSize','breastShape','areolaeSize','nippleColor','buttocksSize','buttocksShape','bodyHair','genitalia','otherAdultFeatures','intimateMarkings');
+        if (adultFields.length) contextParts.push(`Adult anatomy: ${adultFields.join(', ')}`);
+    }
+
+    // World scenario
+    const worldScenario = state.reality?.worldConfig?.scenario || state.config.groupScenario || '';
+    if (worldScenario) contextParts.push(`World/setting: ${worldScenario.trim().slice(0, 300)}`);
+
+    // Character scenario from card
+    if (char?.scenario) contextParts.push(`Scene context: ${char.scenario.trim().slice(0, 200)}`);
+
+    // Recent chat history — last N messages, both user and bot
+    const recent = state.history.slice(-historyDepth);
+    if (recent.length) {
+        const transcript = recent
+            .filter(m => m.role === 'user' || m.role === 'bot')
+            .map(m => {
+                const speaker = m.role === 'user' ? userName : charName;
+                const text = m.content
+                    .replace(/<[^>]+>/g, '')
+                    .replace(/\*{1,3}([^*]+)\*{1,3}/g, '$1')
+                    .replace(/_([^_]+)_/g, '$1')
+                    .replace(/\s+/g, ' ')
+                    .trim()
+                    .slice(0, 300);
+                return `${speaker}: ${text}`;
+            })
+            .join('\n');
+        if (transcript) contextParts.push(`Recent conversation:\n${transcript}`);
+    }
+
+    // Active lorebook
+    if (state.lorebooks?.length) {
+        const lore = scanLorebooks(state.history, state.lorebooks, 5);
+        lore.slice(0, 3).forEach(e => {
+            const brief = e.content.replace(/\s+/g, ' ').trim().slice(0, 150);
+            if (brief) contextParts.push(`Lore: ${brief}`);
+        });
+    }
+
+    // User's additional direction
+    if (userHint.trim()) contextParts.push(`User direction: ${userHint.trim()}`);
+
+    const systemPrompt = `You are an expert image prompt engineer for AI art generators (Stable Diffusion, FLUX, HiDream, etc).
+
+Given detailed context about a character and the current scene, write a single, highly-specific image generation prompt.
+
+Rules:
+- Write ONLY the prompt text — no preamble, no explanation, no markdown
+- Describe what is visually present: character appearance, pose, expression, clothing, lighting, environment, mood
+- Use comma-separated descriptive phrases in natural English
+- Anchor to the character's exact physical traits (do not invent new ones)
+- Reflect the emotional tone and setting from the recent conversation
+- If explicit anatomy is included in the context, include it naturally in physical detail descriptions
+- End with quality keywords: masterpiece, best quality, highly detailed, sharp focus, cinematic lighting
+- Maximum 250 words`;
+
+    const userMessage = `${contextParts.join('\n\n')}\n\nWrite the image generation prompt now.`;
+
+    const LLM_API = 'https://nano-gpt.com/v1/chat/completions';
+    const res = await fetch(LLM_API, {
+        method: 'POST',
+        headers: {
+            'Content-Type':  'application/json',
+            'Authorization': `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+            model: llmModel,
+            messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user',   content: userMessage  },
+            ],
+            max_tokens: 400,
+            temperature: 0.7,
+            stream: false,
+        }),
+    });
+
+    if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        try { const j = await res.json(); msg = j.error?.message || (typeof j.error === 'string' ? j.error : msg); } catch (_) {}
+        throw new Error(msg);
+    }
+
+    const data = await res.json();
+    const content = data.choices?.[0]?.message?.content?.trim();
+    if (!content) throw new Error('LLM returned empty prompt.');
+    return content;
 }
 
 // ── Fetch generated image as a local data URL ─────────────────────────────────

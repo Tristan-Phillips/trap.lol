@@ -796,8 +796,7 @@ export function initSimsEditor() {
             else extFields[k] = v;
         }
 
-        // Read raw stored override once — used both to preserve existing ext fields
-        // and to layer user edits on top of card defaults.
+        // Write to charOverrides (runtime layer)
         const stored = state.config?.charOverrides?.[activeCharId] || {};
         const prevUserEdits = stored._userEdits || { core: {}, ext: {} };
         const newUserEdits = {
@@ -806,6 +805,20 @@ export function initSimsEditor() {
         };
         const newExt = { ...(stored.ext || {}), ...extFields };
         setCharOverride(activeCharId, { ...coreFields, ext: newExt, _userEdits: newUserEdits });
+
+        // Mirror back to loadedCharacters card data so char-creator stays in sync
+        const card = state.loadedCharacters[activeCharId];
+        if (card) {
+            if (!card.extensions)           card.extensions = {};
+            if (!card.extensions.underdark) card.extensions.underdark = {};
+            const ud = card.extensions.underdark;
+            if (!ud.ext) ud.ext = {};
+            // Write core fields directly to ud
+            for (const [k, v] of Object.entries(coreFields)) { ud[k] = v; }
+            // Write ext fields to ud.ext
+            for (const [k, v] of Object.entries(extFields))  { ud.ext[k] = v; }
+            saveState();
+        }
 
         pendingChanges = {};
         setSaveStatus('Saved ✓');
