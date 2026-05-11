@@ -11,6 +11,11 @@ import { getCharOverride, setCharOverride, defaultCharOverride, state, saveState
 const qs  = (sel, ctx = document) => ctx.querySelector(sel);
 const qsa = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
 
+function esc(s) {
+    return String(s ?? '').replace(/[&<>"']/g, c =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
 function debounce(fn, ms) {
     let t;
     return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
@@ -847,7 +852,7 @@ export function initSimsEditor() {
         const $pills = qs('#sims-stat-pills');
         if (!$pills) return;
         $pills.innerHTML = pills.map(p =>
-            `<span class="sims-stat-pill"><span class="sims-stat-pill__icon">${p.icon}</span>${p.label}</span>`
+            `<span class="sims-stat-pill"><span class="sims-stat-pill__icon">${p.icon}</span>${esc(p.label)}</span>`
         ).join('');
     }
 

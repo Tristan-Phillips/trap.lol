@@ -86,6 +86,7 @@ function renderHosting() {
           <a href="${esc(node.url)}" target="_blank" rel="noopener" class="card-primary" aria-label="${esc(node.name)} — ${esc(node.hosting)}">
             <i data-lucide="${esc(node.icon)}"></i>
             <div class="card-primary__body">
+              <h3>${esc(node.name)}${node.shortcut ? `<span class="card-primary__shortcut">[${esc(node.shortcut)}]</span>` : ""}</h3>
               <span class="card-primary__sub">${esc(node.hosting)}</span>
             </div>
             <div class="card-primary__status ${esc(node.status || "online")}"></div>
@@ -159,6 +160,9 @@ function renderTools() {
 function renderBots() {
   const $container = document.getElementById("bots-container");
   if (!$container || !botsData?.manifest) return;
+
+  // Remove any stale tooltip nodes from a previous render
+  document.querySelectorAll('[id^="bot-tip-"]').forEach(el => el.remove());
 
   try {
     $container.innerHTML = Object.values(botsData.manifest).map(bot => {

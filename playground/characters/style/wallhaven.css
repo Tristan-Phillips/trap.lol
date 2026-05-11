@@ -139,6 +139,7 @@ kbd{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);bo
 .wh-tile__img{width:100%;height:100%;object-fit:cover;display:block;transition:filter 0.18s,opacity 0.35s;}
 .wh-tile__img--pending{opacity:0;}
 .wh-tile__img--reveal{opacity:1;}
+.wh-tile__img--error{opacity:0.12;filter:grayscale(1);}
 .wh-tile:hover .wh-tile__img{filter:brightness(0.65);}
 .wh-tile__overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.85) 0%,transparent 50%);opacity:0;transition:opacity 0.18s;display:flex;flex-direction:column;justify-content:space-between;padding:8px;}
 .wh-tile:hover .wh-tile__overlay{opacity:1;}
@@ -179,8 +180,25 @@ kbd{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);bo
 .wh-lightbox{position:fixed;inset:0;z-index:9500;}
 .wh-lightbox__backdrop{position:absolute;inset:0;background:rgba(0,0,0,0.93);backdrop-filter:blur(18px) saturate(0.25);-webkit-backdrop-filter:blur(18px) saturate(0.25);}
 .wh-lightbox__stage{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;}
-.wh-lightbox__img{max-width:88vw;max-height:82vh;object-fit:contain;border-radius:8px;box-shadow:0 0 120px rgba(0,0,0,0.85);transition:opacity 0.2s;}
+.wh-lightbox__img{max-width:88vw;max-height:82vh;object-fit:contain;border-radius:8px;box-shadow:0 0 120px rgba(0,0,0,0.85);transition:opacity 0.2s;display:block;user-select:none;-webkit-user-select:none;}
 .wh-lb-img--loading{opacity:0.15;}
+
+/* Zoom / pan viewport */
+.wh-lb-viewport{transform-origin:center center;transition:transform 0.14s cubic-bezier(0.22,1,0.36,1);will-change:transform;touch-action:none;}
+.wh-lb-viewport.wh-lb-dragging{transition:none;}
+.wh-lb-stage--can-pan .wh-lb-viewport{cursor:grab;}
+.wh-lb-stage--panning .wh-lb-viewport{cursor:grabbing;}
+
+/* Zoom level indicator pill */
+.wh-lb-zoom-pill{
+  position:absolute;top:44px;left:50%;transform:translateX(-50%);
+  font-size:0.62rem;font-family:var(--font-mono,monospace);
+  background:rgba(0,0,0,0.65);border:1px solid rgba(255,255,255,0.14);
+  padding:3px 10px;border-radius:20px;color:rgba(255,255,255,0.75);
+  z-index:3;pointer-events:none;white-space:nowrap;
+  opacity:0;transition:opacity 0.22s;
+}
+.wh-lb-zoom-pill--visible{opacity:1;}
 
 .wh-lb-corner{position:absolute;top:14px;right:14px;display:flex;gap:6px;z-index:2;}
 .wh-lb-corner-btn{background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.12);border-radius:8px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:rgba(255,255,255,0.6);transition:all 0.15s;}

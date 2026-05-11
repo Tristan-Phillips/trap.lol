@@ -121,6 +121,8 @@ const lbClose        = document.getElementById('wh-lb-close');
 const lbCounter      = document.getElementById('wh-lb-counter');
 const lbAssignSel    = document.getElementById('wh-lb-assign-select');
 const lbAssignBtn    = document.getElementById('wh-lb-assign-btn');
+const lbViewport     = document.getElementById('wh-lb-viewport');
+const lbZoomPill     = document.getElementById('wh-lb-zoom-pill');
 
 // Header button (new, in arena header)
 const whOpenBtn      = document.getElementById('wh-open-btn');
@@ -128,6 +130,7 @@ const whOpenBtn      = document.getElementById('wh-open-btn');
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // HELPERS
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
 // Intersection Observer — swap data-src → src when tile enters the viewport
 const tileObserver = new IntersectionObserver((entries, obs) => {
@@ -135,6 +138,12 @@ const tileObserver = new IntersectionObserver((entries, obs) => {
     if (!entry.isIntersecting) return;
     const img = entry.target.querySelector('.wh-tile__img--pending');
     if (img && img.dataset.src) {
+      img.onerror = () => {
+        const fb = img.dataset.fallback;
+        if (fb && img.src !== fb) { img.src = fb; return; }
+        img.classList.add('wh-tile__img--error');
+        img.removeAttribute('onerror');
+      };
       img.src = img.dataset.src;
       img.removeAttribute('data-src');
       img.classList.remove('wh-tile__img--pending');
@@ -170,14 +179,13 @@ function updateBadges(){
   if(msc) msc.textContent=ss;
 }
 
-// Returns all characters from main app (reads localStorage key used by the RP app)
+// Returns all characters from main app (reads underdark_chars_v4 — the actual storage key)
 function getAllChars(){
   try {
-    // The main app stores characters under 'characters' as an array of objects with .id and .name
-    const raw = localStorage.getItem('characters');
+    const raw = localStorage.getItem('underdark_chars_v4');
     if (!raw) return [];
-    const arr = JSON.parse(raw);
-    return Array.isArray(arr) ? arr : [];
+    const data = JSON.parse(raw);
+    return Array.isArray(data.characters) ? data.characters : [];
   } catch { return []; }
 }
 
@@ -256,7 +264,7 @@ apikeyToggle.addEventListener('click',()=>{
   const show=apikeyInput.type==='password';
   apikeyInput.type=show?'text':'password';
   apikeyToggle.innerHTML=show?'<i data-lucide="eye-off"></i>':'<i data-lucide="eye"></i>';
-  lucide.createIcons({nodes:[apikeyToggle]});
+  window.lucide?.createIcons({nodes:[apikeyToggle]});
 });
 apikeySave.addEventListener('click',()=>{
   WH.apiKey=apikeyInput.value.trim();
@@ -372,13 +380,13 @@ function renderCurrentView(){
     const items=[...WH.likedData.values()];
     if(!items.length){likedEmpty.hidden=false;return;}
     items.forEach((w,i)=>buildTile(w,i,'liked'));
-    lucide.createIcons({nodes:[grid]});
+    window.lucide?.createIcons({nodes:[grid]});
     statusText.textContent='Liked'; resultCount.textContent=items.length+' images';
   } else if(WH.view==='saved'){
     const items=[...WH.savedData.values()];
     if(!items.length){savedEmpty.hidden=false;return;}
     items.forEach((w,i)=>buildTile(w,i,'saved'));
-    lucide.createIcons({nodes:[grid]});
+    window.lucide?.createIcons({nodes:[grid]});
     statusText.textContent='Saved'; resultCount.textContent=items.length+' images';
   } else if(WH.view==='assigned'){
     let items=[...WH.assignedData.values()];
@@ -390,13 +398,13 @@ function renderCurrentView(){
     }
     if(!items.length){assignedEmpty.hidden=false;return;}
     items.forEach((w,i)=>buildTile(w,i,'assigned'));
-    lucide.createIcons({nodes:[grid]});
+    window.lucide?.createIcons({nodes:[grid]});
     const label=WH.assignedCharFilter?`Assigned — ${getCharName(WH.assignedCharFilter)}`:'Assigned';
     statusText.textContent=label; resultCount.textContent=items.length+' images';
   } else {
     if(!WH.results.length){emptyBrowse.hidden=false;return;}
     WH.results.forEach((w,i)=>buildTile(w,i,'browse'));
-    lucide.createIcons({nodes:[grid]});
+    window.lucide?.createIcons({nodes:[grid]});
     statusText.textContent=WH.query?`"${WH.query}"`:'';;
     resultCount.textContent=WH.total>0?WH.total.toLocaleString()+' results':'';
     pageControls.hidden=false;
@@ -443,11 +451,10 @@ async function fetchWallpapers(append){
     const meta=json.meta||{};
     WH.totalPages=meta.last_page||1; WH.total=meta.total||json.data.length;
     if(meta.seed)WH.seed=meta.seed;
-    const pageData=json.data.slice(0,10);
-    WH.results=append?WH.results.concat(pageData):pageData;
+    WH.results=append?WH.results.concat(json.data):json.data;
     grid.innerHTML='';
     WH.results.forEach((w,i)=>buildTile(w,i,'browse'));
-    lucide.createIcons({nodes:[grid]});
+    window.lucide?.createIcons({nodes:[grid]});
     pageNum.textContent=WH.page; pageTotal.textContent=WH.totalPages;
     statusText.textContent=q?`"${q}"`:'Top results';
     resultCount.textContent=WH.total.toLocaleString()+' results';
@@ -471,7 +478,10 @@ function charBadgesHtml(wallId){
   const chars=getAllChars();
   return charIds.map(id=>{
     const c=chars.find(c=>String(c.id)===String(id));
-    return c?`<span class="wh-tile__char-badge" title="Assigned to ${c.name||'?'}">${(c.name||'?').slice(0,1)}</span>`:'';
+    if(!c)return'';
+    const name=c.name||'?';
+    const safeName=name.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+    return `<span class="wh-tile__char-badge" title="Assigned to ${safeName}">${esc(name.slice(0,1))}</span>`;
   }).join('');
 }
 
@@ -486,7 +496,7 @@ function buildTile(w,idx,set){
 
   tile.innerHTML=`
     <div class="wh-tile__img-wrap">
-      <img class="wh-tile__img wh-tile__img--pending" data-src="${w.thumbs.large}" draggable="false" alt="">
+      <img class="wh-tile__img wh-tile__img--pending" data-src="${esc(w.thumbs.large)}" data-fallback="${esc(w.thumbs.small||w.thumbs.large)}" draggable="false" alt="">
       ${isAssigned?`<div class="wh-tile__char-badges">${charBadgesHtml(w.id)}</div>`:''}
       <div class="wh-tile__overlay">
         <div class="wh-tile__overlay-top">
@@ -579,18 +589,20 @@ function assignToChar(w, charId){
 }
 
 // Push image into the main app's character gallery
+// Gallery entries are URL strings stored at loadedCharacters[id].extensions.underdark.gallery
 function addToCharacterGalleryInApp(charId, url, thumb, wallId){
   try {
-    const raw=localStorage.getItem('characters'); if(!raw)return;
-    const chars=JSON.parse(raw); if(!Array.isArray(chars))return;
-    const idx=chars.findIndex(c=>String(c.id)===String(charId)); if(idx===-1)return;
-    const char=chars[idx];
-    if(!char.gallery)char.gallery=[];
-    // Avoid duplicates
-    if(!char.gallery.find(g=>g.url===url)){
-      char.gallery.push({url,thumb:thumb||url,wh:wallId,addedAt:Date.now()});
-      chars[idx]=char;
-      localStorage.setItem('characters',JSON.stringify(chars));
+    const raw=localStorage.getItem('underdark_chars_v4'); if(!raw)return;
+    const data=JSON.parse(raw); if(!data||!data.loadedCharacters)return;
+    const char=data.loadedCharacters[String(charId)]; if(!char)return;
+    if(!char.extensions)               char.extensions={};
+    if(!char.extensions.underdark)     char.extensions.underdark={};
+    if(!char.extensions.underdark.gallery) char.extensions.underdark.gallery=[];
+    // Avoid duplicates — gallery stores plain URL strings
+    if(!char.extensions.underdark.gallery.includes(url)){
+      char.extensions.underdark.gallery.push(url);
+      data.loadedCharacters[String(charId)]=char;
+      localStorage.setItem('underdark_chars_v4',JSON.stringify(data));
     }
     // Also push a social post to the character's feed
     addToCharacterFeedInApp(charId, url, thumb, wallId);
@@ -680,6 +692,7 @@ function openLightbox(idx,set){
   lb.hidden=false; renderLightbox();
 }
 function renderLightbox(){
+  resetLbView();
   const ds=lbDataset(), w=ds[WH.lbIndex]; if(!w)return;
   lbImg.classList.add('wh-lb-img--loading'); lbImg.src='';
   const t=new Image();
@@ -725,17 +738,20 @@ function lbToggleSave(){
 
 lbLike.addEventListener('click',lbToggleLike);
 lbSave.addEventListener('click',lbToggleSave);
-lbClose.addEventListener('click',()=>{lb.hidden=true;});
-lbBackdrop.addEventListener('click',()=>{lb.hidden=true;});
+lbClose.addEventListener('click',()=>{lb.hidden=true;resetLbView();});
+lbBackdrop.addEventListener('click',()=>{lb.hidden=true;resetLbView();});
 lbPrev.addEventListener('click',()=>{if(WH.lbIndex>0){WH.lbIndex--;renderLightbox();}});
 lbNext.addEventListener('click',()=>{const ds=lbDataset();if(WH.lbIndex<ds.length-1){WH.lbIndex++;renderLightbox();}});
 
-// Touch swipe for lightbox
+// Touch swipe for lightbox — disabled when zoomed (pinch/pan takes over)
 (function(){
   let _sx=0,_sy=0;
-  lb.addEventListener('touchstart',e=>{if(e.touches.length!==1)return;_sx=e.touches[0].clientX;_sy=e.touches[0].clientY;},{passive:true});
+  lb.addEventListener('touchstart',e=>{
+    if(e.touches.length!==1||LBV.scale>1)return;
+    _sx=e.touches[0].clientX;_sy=e.touches[0].clientY;
+  },{passive:true});
   lb.addEventListener('touchend',e=>{
-    if(e.changedTouches.length!==1)return;
+    if(e.changedTouches.length!==1||LBV.scale>1)return;
     const dx=e.changedTouches[0].clientX-_sx;
     const dy=e.changedTouches[0].clientY-_sy;
     if(Math.abs(dy)>Math.abs(dx)||Math.abs(dx)<40)return;
@@ -746,16 +762,183 @@ lbNext.addEventListener('click',()=>{const ds=lbDataset();if(WH.lbIndex<ds.lengt
 
 document.addEventListener('keydown',e=>{
   if(!lb.hidden){
-    if(e.key==='ArrowLeft'&&WH.lbIndex>0){WH.lbIndex--;renderLightbox();}
-    else if(e.key==='ArrowRight'){const ds=lbDataset();if(WH.lbIndex<ds.length-1){WH.lbIndex++;renderLightbox();}}
-    else if(e.key==='Escape'){lb.hidden=true;}
-    else if(e.key==='l'||e.key==='L') lbToggleLike();
-    else if(e.key==='s'||e.key==='S') lbToggleSave();
-    else if(e.key==='d'||e.key==='D'){const w=lbDataset()[WH.lbIndex];if(w)downloadWallpaper(w);}
+    // Escape — first reset zoom if zoomed, then close
+    if(e.key==='Escape'){
+      if(LBV.scale!==1){resetLbView();return;}
+      lb.hidden=true;return;
+    }
+    // Zoom controls
+    if((e.key==='+'||e.key==='=')&&!e.ctrlKey){e.preventDefault();zoomLbCentre(+LB_ZOOM_STEP);return;}
+    if((e.key==='-'||e.key==='_')&&!e.ctrlKey){e.preventDefault();zoomLbCentre(-LB_ZOOM_STEP);return;}
+    if(e.key==='0'&&!e.ctrlKey&&!e.metaKey){resetLbView();return;}
+    // Arrow keys: pan image when zoomed, navigate slides when at 1:1
+    if(e.key==='ArrowLeft'){
+      if(LBV.scale>1){e.preventDefault();LBV.tx-=lbPanStep();clampLbPan();applyLbT(true);}
+      else if(WH.lbIndex>0){WH.lbIndex--;renderLightbox();}
+      return;
+    }
+    if(e.key==='ArrowRight'){
+      if(LBV.scale>1){e.preventDefault();LBV.tx+=lbPanStep();clampLbPan();applyLbT(true);}
+      else{const ds=lbDataset();if(WH.lbIndex<ds.length-1){WH.lbIndex++;renderLightbox();}}
+      return;
+    }
+    if(e.key==='ArrowUp'&&LBV.scale>1){e.preventDefault();LBV.ty-=lbPanStep();clampLbPan();applyLbT(true);return;}
+    if(e.key==='ArrowDown'&&LBV.scale>1){e.preventDefault();LBV.ty+=lbPanStep();clampLbPan();applyLbT(true);return;}
+    // Action shortcuts
+    if(e.key==='l'||e.key==='L'){lbToggleLike();return;}
+    if(e.key==='s'||e.key==='S'){lbToggleSave();return;}
+    if(e.key==='d'||e.key==='D'){const w=lbDataset()[WH.lbIndex];if(w)downloadWallpaper(w);return;}
     return;
   }
   if(!arena.hidden&&e.key==='Escape')closeArena();
 });
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// LIGHTBOX ZOOM / PAN ENGINE
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const LBV={scale:1,tx:0,ty:0};
+const LB_ZOOM_MIN=0.15,LB_ZOOM_MAX=8,LB_WHEEL_SENS=0.12,LB_ZOOM_STEP=0.25;
+let _lbZPillTimer=null;
+
+function lbPanStep(){ return Math.max(20,80/LBV.scale); }
+
+function applyLbT(anim){
+  if(!lbViewport)return;
+  lbViewport.classList.toggle('wh-lb-dragging',!anim);
+  lbViewport.style.transform=`translate(${LBV.tx}px,${LBV.ty}px) scale(${LBV.scale})`;
+  const $s=lb.querySelector('.wh-lightbox__stage');
+  if($s)$s.classList.toggle('wh-lb-stage--can-pan',LBV.scale>1);
+  if(lbZoomPill){
+    lbZoomPill.textContent=Math.round(LBV.scale*100)+'%';
+    lbZoomPill.classList.add('wh-lb-zoom-pill--visible');
+    clearTimeout(_lbZPillTimer);
+    _lbZPillTimer=setTimeout(()=>lbZoomPill.classList.remove('wh-lb-zoom-pill--visible'),1400);
+  }
+}
+
+function clampLbPan(){
+  if(!lbImg||!lbViewport)return;
+  const $s=lb.querySelector('.wh-lightbox__stage'); if(!$s)return;
+  const iW=lbImg.offsetWidth,iH=lbImg.offsetHeight;
+  const sW=$s.offsetWidth,sH=$s.offsetHeight;
+  const bX=Math.max(0,(iW*LBV.scale-sW)/2);
+  const bY=Math.max(0,(iH*LBV.scale-sH)/2);
+  LBV.tx=Math.min(bX,Math.max(-bX,LBV.tx));
+  LBV.ty=Math.min(bY,Math.max(-bY,LBV.ty));
+}
+
+function zoomLbAt(ns,fx,fy){
+  ns=Math.min(LB_ZOOM_MAX,Math.max(LB_ZOOM_MIN,ns));
+  const $s=lb.querySelector('.wh-lightbox__stage'); if(!$s)return;
+  const r=$s.getBoundingClientRect();
+  const ox=fx-r.left-r.width/2, oy=fy-r.top-r.height/2;
+  const ratio=ns/LBV.scale;
+  LBV.tx=ox-(ox-LBV.tx)*ratio;
+  LBV.ty=oy-(oy-LBV.ty)*ratio;
+  LBV.scale=ns;
+  clampLbPan();
+  applyLbT(false);
+}
+
+function zoomLbCentre(d){
+  const $s=lb.querySelector('.wh-lightbox__stage'); if(!$s)return;
+  const r=$s.getBoundingClientRect();
+  zoomLbAt(LBV.scale+d,r.left+r.width/2,r.top+r.height/2);
+}
+
+function resetLbView(){
+  LBV.scale=1;LBV.tx=0;LBV.ty=0;
+  if(lbViewport){lbViewport.style.transform='';lbViewport.classList.remove('wh-lb-dragging');}
+  const $s=lb.querySelector('.wh-lightbox__stage');
+  if($s){$s.classList.remove('wh-lb-stage--can-pan','wh-lb-stage--panning');}
+  if(lbZoomPill)lbZoomPill.classList.remove('wh-lb-zoom-pill--visible');
+  clearTimeout(_lbZPillTimer);
+}
+
+(function initLbZoomPan(){
+  if(!lb||!lbViewport)return;
+  const $s=lb.querySelector('.wh-lightbox__stage'); if(!$s)return;
+
+  // ── Wheel zoom (focal point at cursor) ─────────────────────────────────
+  $s.addEventListener('wheel',e=>{
+    if(lb.hidden)return;
+    e.preventDefault();
+    let d=e.deltaY;
+    if(e.deltaMode===1)d*=32;
+    if(e.deltaMode===2)d*=$s.offsetHeight;
+    const dir=d>0?-1:1;
+    const sens=LB_WHEEL_SENS*(e.ctrlKey?2:1);
+    zoomLbAt(LBV.scale*(1+dir*sens),e.clientX,e.clientY);
+  },{passive:false});
+
+  // ── Mouse drag pan (only when zoomed in) ───────────────────────────────
+  let _md=false,_msx=0,_msy=0,_mtx=0,_mty=0,_mDragged=false;
+  $s.addEventListener('mousedown',e=>{
+    if(lb.hidden||e.button!==0||LBV.scale<=1)return;
+    if(e.target.closest('.wh-lb-corner,.wh-lb-nav,.wh-lightbox__ui,.wh-lb-zoom-pill'))return;
+    _md=true;_mDragged=false;
+    _msx=e.clientX;_msy=e.clientY;_mtx=LBV.tx;_mty=LBV.ty;
+    $s.classList.add('wh-lb-stage--panning');
+    e.preventDefault();
+  });
+  window.addEventListener('mousemove',e=>{
+    if(!_md)return;
+    const dx=e.clientX-_msx,dy=e.clientY-_msy;
+    if(Math.abs(dx)>3||Math.abs(dy)>3)_mDragged=true;
+    LBV.tx=_mtx+dx;LBV.ty=_mty+dy;
+    clampLbPan();applyLbT(false);
+  });
+  window.addEventListener('mouseup',()=>{
+    if(!_md)return;
+    _md=false;
+    $s.classList.remove('wh-lb-stage--panning');
+  });
+
+  // ── Double-click to reset ───────────────────────────────────────────────
+  $s.addEventListener('dblclick',e=>{
+    if(e.target.closest('.wh-lb-corner,.wh-lb-nav,.wh-lightbox__ui'))return;
+    resetLbView();
+  });
+
+  // ── Touch pinch-to-zoom + single-finger pan when zoomed ────────────────
+  let _td=null,_tmx=null,_tmy=null,_tpx=null,_tpy=null,_totx=0,_toty=0,_pinch=false;
+  const tdist=(a,b)=>Math.hypot(b.clientX-a.clientX,b.clientY-a.clientY);
+  const tmid =(a,b)=>({x:(a.clientX+b.clientX)/2,y:(a.clientY+b.clientY)/2});
+
+  lbViewport.addEventListener('touchstart',e=>{
+    if(e.target.closest('.wh-lb-corner,.wh-lb-nav,.wh-lightbox__ui'))return;
+    if(e.touches.length===2){
+      _pinch=true;
+      _td=tdist(e.touches[0],e.touches[1]);
+      const m=tmid(e.touches[0],e.touches[1]);
+      _tmx=m.x;_tmy=m.y;
+    } else if(e.touches.length===1&&LBV.scale>1){
+      _tpx=e.touches[0].clientX;_tpy=e.touches[0].clientY;
+      _totx=LBV.tx;_toty=LBV.ty;
+    }
+  },{passive:true});
+
+  lbViewport.addEventListener('touchmove',e=>{
+    if(e.touches.length===2&&_pinch){
+      e.preventDefault();
+      const d=tdist(e.touches[0],e.touches[1]);
+      const m=tmid(e.touches[0],e.touches[1]);
+      if(_td)zoomLbAt(LBV.scale*(d/_td),m.x,m.y);
+      if(_tmx!==null){LBV.tx+=m.x-_tmx;LBV.ty+=m.y-_tmy;clampLbPan();applyLbT(false);}
+      _td=d;_tmx=m.x;_tmy=m.y;
+    } else if(e.touches.length===1&&LBV.scale>1&&_tpx!==null){
+      e.preventDefault();
+      LBV.tx=_totx+(e.touches[0].clientX-_tpx);
+      LBV.ty=_toty+(e.touches[0].clientY-_tpy);
+      clampLbPan();applyLbT(false);
+    }
+  },{passive:false});
+
+  lbViewport.addEventListener('touchend',e=>{
+    if(e.touches.length<2){_td=null;_tmx=null;_tmy=null;_pinch=false;}
+    if(e.touches.length===0){_tpx=null;_tpy=null;}
+  },{passive:true});
+})();
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // ARENA OPEN / CLOSE
@@ -780,11 +963,12 @@ window.openWallhavenGallery = function(charName, charId){
   searchInput.value=charName||''; searchClear.hidden=!charName;
   apikeyInput.value=WH.apiKey;
   arena.hidden=false;
-  updateBadges(); populateCharSelects(); lucide.createIcons();
+  updateBadges(); populateCharSelects(); window.lucide?.createIcons();
   document.querySelectorAll('.wh-view-tab').forEach(b=>b.classList.toggle('active',b.dataset.wview==='browse'));
   WH.view='browse'; filtersPanel.style.display=''; charFilterWrap.hidden=true;
-  if(charName&&WH.results.length===0){
-    WH.query=charName; WH.page=1; WH.seed=null; fetchWallpapers(false);
+  const nameChanged=charName&&charName!==WH.charName;
+  if(charName&&(WH.results.length===0||nameChanged)){
+    WH.results=[]; WH.query=charName; WH.page=1; WH.seed=null; fetchWallpapers(false);
   } else { renderCurrentView(); }
 };
 
@@ -793,7 +977,7 @@ window.openWallhavenGallery = function(charName, charId){
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 document.addEventListener('DOMContentLoaded',()=>{
   updateBadges();
-  lucide.createIcons({nodes:[document.getElementById('wh-open-btn')]});
+  window.lucide?.createIcons({nodes:[document.getElementById('wh-open-btn')]});
 });
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

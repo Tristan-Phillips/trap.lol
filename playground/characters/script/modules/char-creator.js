@@ -55,7 +55,6 @@ const SLIDER_DESCS = {
     explicitnessLevel: [[0,15,'Fade-to-black'],[16,30,'Tasteful'],[31,45,'Suggestive'],[46,55,'Moderate'],[56,70,'Mature'],[71,85,'Explicit'],[86,100,'Fully explicit']],
     romanticismLevel: [[0,15,'Ice cold'],[16,30,'Distant'],[31,45,'Reserved'],[46,55,'Warm'],[56,70,'Romantic'],[71,85,'Intensely romantic'],[86,100,'Achingly passionate']],
     violenceLevel: [[0,15,'Non-violent'],[16,30,'Low'],[31,45,'Moderate'],[46,55,'Visceral'],[56,70,'Graphic'],[71,85,'Very graphic'],[86,100,'Extreme']],
-    dominanceLevel2: [],
     anxietyLevel: [[0,15,'Unflappable'],[16,30,'Serene'],[31,45,'Mildly anxious'],[46,55,'Moderate'],[56,70,'Anxious'],[71,85,'Hypervigilant'],[86,100,'Paranoid']],
     loyaltyLevel: [[0,15,'Self-serving'],[16,30,'Fickle'],[31,45,'Conditional'],[46,55,'Reliable'],[56,70,'Loyal'],[71,85,'Fiercely loyal'],[86,100,'Absolute loyalty']],
     stubbornness: [[0,15,'Malleable'],[16,30,'Open'],[31,45,'Adaptable'],[46,55,'Steady'],[56,70,'Stubborn'],[71,85,'Obstinate'],[86,100,'Immovable']],

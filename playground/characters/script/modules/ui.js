@@ -207,7 +207,9 @@ function renderMarkdown(text) {
     };
     const rpFlush = html => html.replace(/«rp(\d+)»/g, (_, i) => {
         const { type, inner } = rpTokens[Number(i)];
-        return `<span class=”rp-${type}”>${inner}</span>`;
+        // esc() here: inner was captured before DOMPurify ran, so it must be
+        // escaped before re-injection to prevent post-sanitisation XSS.
+        return `<span class=”rp-${type}”>${esc(inner)}</span>`;
     });
 
     try {

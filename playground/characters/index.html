@@ -2442,7 +2442,11 @@
 <div id="wh-lightbox" class="wh-lightbox" hidden>
   <div class="wh-lightbox__backdrop" id="wh-lb-backdrop"></div>
   <div class="wh-lightbox__stage">
-    <img id="wh-lb-img" class="wh-lightbox__img" src="" alt="">
+    <div id="wh-lb-viewport" class="wh-lb-viewport">
+      <img id="wh-lb-img" class="wh-lightbox__img" src="" alt="">
+    </div>
+    <!-- zoom level indicator — appears on zoom change, fades automatically -->
+    <div id="wh-lb-zoom-pill" class="wh-lb-zoom-pill" aria-hidden="true">100%</div>
 
     <!-- top-right corner controls -->
     <div class="wh-lb-corner">

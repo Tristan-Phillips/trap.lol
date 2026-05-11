@@ -29,6 +29,26 @@
       "tags": ["ai", "llm", "roleplay", "characters"],
       "keyed": true,
       "status": "live"
+    },
+    "3": {
+      "name": "ECHOES",
+      "slug": "art",
+      "path": "/art/",
+      "icon": "images",
+      "description": "Gacha-pull art gallery. Rarity tiers, lightbox with full zoom and rotation.",
+      "tags": ["art", "gallery", "visual"],
+      "keyed": false,
+      "status": "live"
+    },
+    "4": {
+      "name": "Uplink Sentinel",
+      "slug": "status",
+      "path": "/status/",
+      "icon": "activity",
+      "description": "Live infrastructure monitor. Sovereign nodes, app uplinks, and drone fleet.",
+      "tags": ["infra", "monitoring", "uptime"],
+      "keyed": false,
+      "status": "live"
     }
   }
 }
