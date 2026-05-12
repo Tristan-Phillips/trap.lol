@@ -422,7 +422,7 @@
 
   "commits": [
     {
-      "hash": "pending",
+      "hash": "e355d69",
       "date": "2026-05-12",
       "message": "fix: studio char load, clothing field pass-through, rel accessories guard",
       "scope": "playground/characters",
