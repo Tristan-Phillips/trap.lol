@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.1.2",
+    "schema_version": "1.1.3",
     "last_updated": "2026-05-12",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": ["_protocol", "identity", "philosophy", "architecture", "pages", "design_system", "rules", "anti_patterns", "language_fingerprint", "evolution", "commits", "sessions", "for_new_llm"]
@@ -421,6 +421,15 @@
   },
 
   "commits": [
+    {
+      "hash": "aa69439",
+      "date": "2026-05-12",
+      "message": "Replace shard-based markdown with inline renderer for chat",
+      "scope": "logs",
+      "impact": "medium",
+      "files": ["status/logs/index.html"],
+      "why": "CDN shard globals are not reliably accessible inside type=module scripts. Inline renderer has no dependencies and no timing risk."
+    },
     {
       "hash": "e0f9adf",
       "date": "2026-05-12",
