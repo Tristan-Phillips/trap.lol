@@ -1800,3 +1800,137 @@ body.lb-open .pull-zone {
     transform: rotate(90deg);
   }
 }
+
+/* ══ UPLINK HOME NODE ══════════════════════════════════════════════════════ */
+
+.uplink-node {
+  position: fixed;
+  bottom: 1.25rem;
+  left: 1.25rem;
+  z-index: 8800;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  width: 36px;
+  overflow: hidden;
+  text-decoration: none;
+  color: var(--text-muted);
+  background: rgba(6, 4, 10, 0.72);
+  border: 1px solid rgba(190, 41, 236, 0.18);
+  border-radius: 8px;
+  padding: 0;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 0 0 rgba(190, 41, 236, 0);
+  transition:
+    width 0.38s cubic-bezier(0.25, 0, 0, 1),
+    border-color 0.22s ease-out,
+    box-shadow 0.38s cubic-bezier(0.25, 0, 0, 1),
+    background 0.22s ease-out,
+    color 0.22s ease-out;
+  cursor: none;
+  user-select: none;
+  -webkit-user-select: none;
+  animation: uplink-node-idle-pulse 3.2s ease-in-out infinite;
+}
+.uplink-node__sigil {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.uplink-node__sigil svg {
+  transition: transform 0.38s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.22s;
+}
+.uplink-node__drain {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1.5px solid rgba(190, 41, 236, 0);
+  pointer-events: none;
+  transform: scale(0.4);
+  opacity: 0;
+}
+.uplink-node__label {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateX(-4px);
+  transition:
+    opacity 0.22s ease-out 0.1s,
+    transform 0.3s cubic-bezier(0.25, 0, 0, 1) 0.08s;
+  padding-right: 12px;
+  padding-left: 2px;
+  position: relative;
+}
+.uplink-node__label::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(190, 41, 236, 0.55), transparent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.38s cubic-bezier(0.25, 0, 0, 1) 0.12s;
+}
+.uplink-node:hover,
+.uplink-node:focus-visible {
+  width: 110px;
+  border-color: rgba(190, 41, 236, 0.45);
+  box-shadow: 0 0 22px rgba(190, 41, 236, 0.2), 0 0 6px rgba(190, 41, 236, 0.1), inset 0 0 12px rgba(190, 41, 236, 0.04);
+  background: rgba(14, 6, 24, 0.85);
+  color: rgba(190, 41, 236, 0.9);
+  outline: none;
+  animation: none;
+}
+.uplink-node:hover .uplink-node__sigil svg,
+.uplink-node:focus-visible .uplink-node__sigil svg {
+  transform: rotate(15deg) scale(1.1);
+}
+.uplink-node:hover .uplink-node__label,
+.uplink-node:focus-visible .uplink-node__label {
+  opacity: 1;
+  transform: translateX(0);
+}
+.uplink-node:hover .uplink-node__label::after,
+.uplink-node:focus-visible .uplink-node__label::after {
+  transform: scaleX(1);
+}
+.uplink-node:active { transform: scale(0.93); }
+.uplink-node.uplink-node--firing .uplink-node__sigil svg {
+  transform: scale(0) rotate(-30deg);
+  transition: transform 0.28s cubic-bezier(0.25, 0, 0, 1);
+  opacity: 0;
+}
+.uplink-node.uplink-node--firing .uplink-node__drain {
+  animation: uplink-drain 0.32s cubic-bezier(0.25, 0, 0.5, 1) forwards;
+}
+.uplink-node.uplink-node--firing {
+  border-color: rgba(190, 41, 236, 0.8);
+  box-shadow: 0 0 40px rgba(190, 41, 236, 0.45), 0 0 80px rgba(190, 41, 236, 0.15);
+  animation: none;
+}
+@keyframes uplink-drain {
+  0%   { transform: scale(0.4); opacity: 0; border-color: rgba(190, 41, 236, 0.9); }
+  40%  { transform: scale(1.1); opacity: 1; border-color: rgba(244, 168, 48, 0.7); }
+  80%  { transform: scale(0.15); opacity: 0.8; border-color: rgba(190, 41, 236, 0.6); }
+  100% { transform: scale(0); opacity: 0; }
+}
+@keyframes uplink-node-idle-pulse {
+  0%, 100% { box-shadow: 0 0 4px rgba(190, 41, 236, 0.08); }
+  50%       { box-shadow: 0 0 12px rgba(190, 41, 236, 0.18), 0 0 24px rgba(190, 41, 236, 0.06); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .uplink-node { animation: none !important; }
+  .uplink-node,
+  .uplink-node__sigil svg,
+  .uplink-node__label { transition-duration: 0.01ms !important; }
+}

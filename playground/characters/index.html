@@ -11,22 +11,129 @@
 </head>
 <body class="underdark-page">
 
-<!-- ── API Key Gate ── -->
+<!-- ── Initiation Gate ── -->
 <div id="api-gate" class="api-gate" hidden>
-    <div class="api-gate__backdrop"></div>
-    <div class="api-gate__panel">
-        <div class="api-gate__logo"><i data-lucide="key-round"></i></div>
-        <h1 class="api-gate__title">The Underdark</h1>
-        <p class="api-gate__sub">Enter your API key to begin synchronization.</p>
-        <div class="api-gate__form">
-            <div class="api-gate__input-row">
-                <input type="password" id="gate-key-input" class="api-gate__input" placeholder="sk-nano-...">
-                <button id="gate-key-toggle" class="api-gate__toggle"><i data-lucide="eye"></i></button>
-            </div>
-            <p id="gate-key-error" class="api-gate__error" hidden>Invalid key format.</p>
-            <button id="gate-key-submit" class="api-gate__submit"><i data-lucide="zap"></i> Connect</button>
+    <div class="api-gate__backdrop">
+        <div class="api-gate__particles" aria-hidden="true">
+            <span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span>
         </div>
     </div>
+
+    <!-- Rune progress track -->
+    <div class="api-gate__runes" aria-label="Initiation progress">
+        <span class="api-gate__rune active" data-step="0" aria-hidden="true">⬡</span>
+        <span class="api-gate__rune-line"></span>
+        <span class="api-gate__rune" data-step="1" aria-hidden="true">⬡</span>
+        <span class="api-gate__rune-line"></span>
+        <span class="api-gate__rune" data-step="2" aria-hidden="true">⬡</span>
+        <span class="api-gate__rune-line"></span>
+        <span class="api-gate__rune" data-step="3" aria-hidden="true">⬡</span>
+    </div>
+
+    <div class="api-gate__panel">
+
+        <!-- ── Step 0: Ritual Intro ── -->
+        <div class="api-gate__step" data-gate-step="0">
+            <div class="api-gate__sigil" aria-hidden="true">
+                <svg class="api-gate__sigil-svg" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="40" cy="40" r="36" stroke="currentColor" stroke-width="1" stroke-dasharray="4 3" opacity="0.35" class="sigil-ring sigil-ring--outer"/>
+                    <circle cx="40" cy="40" r="24" stroke="currentColor" stroke-width="1.2" stroke-dasharray="3 4" opacity="0.55" class="sigil-ring sigil-ring--mid"/>
+                    <circle cx="40" cy="40" r="10" stroke="currentColor" stroke-width="1.5" opacity="0.8" class="sigil-ring sigil-ring--inner"/>
+                    <circle cx="40" cy="40" r="3.5" fill="currentColor" class="sigil-core"/>
+                    <line x1="40" y1="4" x2="40" y2="76" stroke="currentColor" stroke-width="0.5" stroke-dasharray="2 8" opacity="0.25" class="sigil-axis"/>
+                    <line x1="4" y1="40" x2="76" y2="40" stroke="currentColor" stroke-width="0.5" stroke-dasharray="2 8" opacity="0.25" class="sigil-axis"/>
+                    <path d="M40 16 L48 32 L40 28 L32 32 Z" stroke="currentColor" stroke-width="0.8" fill="none" opacity="0.5" class="sigil-glyph"/>
+                    <path d="M40 64 L32 48 L40 52 L48 48 Z" stroke="currentColor" stroke-width="0.8" fill="none" opacity="0.5" class="sigil-glyph"/>
+                </svg>
+            </div>
+            <h1 class="api-gate__title api-gate__title--glitch" data-text="THE UNDERDARK">THE UNDERDARK</h1>
+            <p class="api-gate__lore">
+                You stand at the threshold of a synthetic reality.<br>
+                Characters wait. Continuities hunger.<br>
+                <em>Authentication opens the breach.</em>
+            </p>
+            <button id="gate-begin" class="api-gate__submit api-gate__submit--begin">
+                <i data-lucide="zap"></i> Begin Initiation
+            </button>
+            <p class="api-gate__hint">First-time setup · ~30 seconds</p>
+        </div>
+
+        <!-- ── Step 1: Authentication ── -->
+        <div class="api-gate__step" data-gate-step="1" hidden>
+            <div class="api-gate__step-header">
+                <span class="api-gate__step-rune" aria-hidden="true">⬡</span>
+                <span class="api-gate__step-label">Authentication</span>
+            </div>
+            <h2 class="api-gate__step-title">Access Token</h2>
+            <p class="api-gate__sub">Your NanoGPT API key. Stored locally — never transmitted to this server.</p>
+            <div class="api-gate__form">
+                <div class="api-gate__input-row">
+                    <input type="password" id="gate-key-input" class="api-gate__input" placeholder="sk-nano-..." autocomplete="off" spellcheck="false">
+                    <button id="gate-key-toggle" class="api-gate__toggle" type="button" aria-label="Toggle key visibility"><i data-lucide="eye"></i></button>
+                </div>
+                <p id="gate-key-error" class="api-gate__error" hidden>Invalid key format — expected sk-nano-...</p>
+                <div class="api-gate__nav-row">
+                    <button id="gate-back-1" class="api-gate__back" type="button"><i data-lucide="arrow-left"></i> Back</button>
+                    <button id="gate-key-submit" class="api-gate__submit api-gate__submit--next" type="button"><i data-lucide="arrow-right"></i> Continue</button>
+                </div>
+            </div>
+            <a class="api-gate__hint" href="https://nano-gpt.com" target="_blank" rel="noopener">Get a key at nano-gpt.com ↗</a>
+        </div>
+
+        <!-- ── Step 2: Entity Config ── -->
+        <div class="api-gate__step" data-gate-step="2" hidden>
+            <div class="api-gate__step-header">
+                <span class="api-gate__step-rune" aria-hidden="true">⬡</span>
+                <span class="api-gate__step-label">Entity Protocol</span>
+            </div>
+            <h2 class="api-gate__step-title">Choose Your Engine</h2>
+            <div id="gate-model-grid" class="api-gate__model-grid">
+                <!-- Populated by JS -->
+            </div>
+            <div class="api-gate__threshold-block">
+                <div class="api-gate__threshold-header">
+                    <span class="api-gate__threshold-label">Content Threshold</span>
+                    <span id="gate-threshold-value" class="api-gate__threshold-badge">Balanced</span>
+                </div>
+                <input type="range" id="gate-threshold" class="api-gate__threshold-range" min="0" max="100" value="40" step="10">
+                <div class="api-gate__threshold-marks">
+                    <span>Tasteful</span><span>Balanced</span><span>Explicit</span><span>Unfiltered</span>
+                </div>
+            </div>
+            <div class="api-gate__nav-row">
+                <button id="gate-back-2" class="api-gate__back" type="button"><i data-lucide="arrow-left"></i> Back</button>
+                <button id="gate-next-2" class="api-gate__submit api-gate__submit--next" type="button"><i data-lucide="arrow-right"></i> Continue</button>
+            </div>
+        </div>
+
+        <!-- ── Step 3: Identity ── -->
+        <div class="api-gate__step" data-gate-step="3" hidden>
+            <div class="api-gate__step-header">
+                <span class="api-gate__step-rune" aria-hidden="true">⬡</span>
+                <span class="api-gate__step-label">Identity Matrix</span>
+            </div>
+            <h2 class="api-gate__step-title">Who Are You?</h2>
+            <p class="api-gate__sub">Characters use this to address and understand you. Optional — skip freely.</p>
+            <div class="api-gate__form">
+                <div class="api-gate__field-group">
+                    <label class="api-gate__field-label" for="gate-user-name">Your name</label>
+                    <input type="text" id="gate-user-name" class="api-gate__input" placeholder="e.g. Tristan" maxlength="64" autocomplete="name">
+                </div>
+                <div class="api-gate__field-group">
+                    <label class="api-gate__field-label" for="gate-user-persona">Brief persona <span class="api-gate__field-opt">(optional)</span></label>
+                    <textarea id="gate-user-persona" class="api-gate__input api-gate__input--textarea" placeholder="e.g. A wandering mage who values honesty above all. Prefers dry wit and hates being called 'my lord'." rows="3" maxlength="512"></textarea>
+                </div>
+                <div class="api-gate__nav-row">
+                    <button id="gate-back-3" class="api-gate__back" type="button"><i data-lucide="arrow-left"></i> Back</button>
+                    <button id="gate-finish" class="api-gate__submit api-gate__submit--finish" type="button">
+                        <i data-lucide="door-open"></i> Enter the Underdark
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /.api-gate__panel -->
 </div>
 
 <div id="app-root" class="underdark-layout">
@@ -2489,5 +2596,28 @@
 <script type="module" src="./script/main.js?v=55"></script>
 <!-- ── Wallhaven Arena ── -->
 <script src="./script/modules/wallhaven.js"></script>
+
+<!-- ── Uplink Home Node ── -->
+<a id="uplink-node" href="../../" class="uplink-node" aria-label="Return to trap.lol hub">
+  <span class="uplink-node__sigil" aria-hidden="true">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 2" opacity="0.45"/>
+      <circle cx="12" cy="12" r="3.5" fill="currentColor"/>
+    </svg>
+    <span class="uplink-node__drain" aria-hidden="true"></span>
+  </span>
+  <span class="uplink-node__label">uplink</span>
+</a>
+<script>
+  (function() {
+    const node = document.getElementById('uplink-node');
+    node.addEventListener('click', function(e) {
+      e.preventDefault();
+      const href = node.getAttribute('href');
+      node.classList.add('uplink-node--firing');
+      setTimeout(function() { window.location.href = href; }, 310);
+    });
+  })();
+</script>
 </body>
 </html>

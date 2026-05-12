@@ -264,42 +264,166 @@ export function initUI() {
     // ── Picker mode — closure variable, not window global ────────────────────
     let _pickerMode = null;
 
-    // ── API Key Gate ──────────────────────────────────────────────────────────
-    // Block the entire UI until a valid key is stored. Skipped if key already present.
-    const $gate        = qs('#api-gate');
-    const $gateInput   = qs('#gate-key-input');
-    const $gateToggle  = qs('#gate-key-toggle');
-    const $gateSubmit  = qs('#gate-key-submit');
-    const $gateError   = qs('#gate-key-error');
+    // ── Initiation Gate — ritual multi-step wizard ───────────────────────────
+    const $gate      = qs('#api-gate');
+    const $gateInput = qs('#gate-key-input');
+    const $gateError = qs('#gate-key-error');
 
-    function showGate() {
+    // Curated model list for the step-2 picker (id → display label, family tag)
+    const GATE_MODELS = [
+        { id: 'deepseek-r1',                        label: 'DeepSeek R1',       family: 'DeepSeek'   },
+        { id: 'deepseek/deepseek-v3.2',             label: 'DeepSeek V3',       family: 'DeepSeek'   },
+        { id: 'claude-3-7-sonnet-20250219',          label: 'Claude Sonnet 3.7', family: 'Anthropic'  },
+        { id: 'openai/gpt-5.4-pro',                 label: 'GPT-5.4 Pro',       family: 'OpenAI'     },
+        { id: 'openai/gpt-4o-mini',                 label: 'GPT-4o Mini',       family: 'OpenAI'     },
+        { id: 'google/gemini-2.5-pro-preview',      label: 'Gemini 2.5 Pro',    family: 'Google'     },
+        { id: 'google/gemini-2.5-flash-preview',    label: 'Gemini 2.5 Flash',  family: 'Google'     },
+        { id: 'meta-llama/llama-4-maverick',        label: 'Llama 4 Maverick',  family: 'Meta'       },
+        { id: 'qwen3-235b-a22b:thinking',           label: 'Qwen3 235B',        family: 'Qwen'       },
+        { id: 'eva-unit-01/eva-qwen-2.5-72b',       label: 'EVA Qwen 72B',      family: 'EVA'        },
+        { id: 'moonshotai/kimi-k2-instruct',        label: 'Kimi K2',           family: 'Kimi'       },
+        { id: 'x-ai/grok-3-beta',                   label: 'Grok 3',            family: 'xAI'        },
+    ];
+
+    // Threshold label map (value 0–100, step 10 → 11 values)
+    const THRESHOLD_LABELS = ['Tasteful','Tasteful','Balanced','Balanced','Balanced','Balanced','Explicit','Explicit','Unfiltered','Unfiltered','Unfiltered'];
+    const GATE_DONE_KEY = 'underdark_setup_done';
+
+    let _gateStep       = 0;
+    let _gateModel      = state.config.model || 'deepseek-r1';
+    let _gateThreshold  = 40;
+
+    function _gateShowStep(next, dir = 'forward') {
+        const steps = qsa('.api-gate__step', $gate);
+        const runes = qsa('.api-gate__rune', $gate);
+        const lines = qsa('.api-gate__rune-line', $gate);
+
+        steps.forEach(($s, i) => {
+            const isNext = i === next;
+            $s.hidden = !isNext;
+            if (isNext) {
+                $s.classList.remove('api-gate__step--back-enter');
+                void $s.offsetWidth; // force reflow for re-trigger
+                if (dir === 'back') $s.classList.add('api-gate__step--back-enter');
+            }
+        });
+
+        runes.forEach(($r, i) => {
+            $r.classList.toggle('active', i === next);
+            $r.classList.toggle('done',   i < next);
+        });
+        lines.forEach(($l, i) => {
+            $l.classList.toggle('done', i < next);
+        });
+
+        _gateStep = next;
+
+        // Auto-focus relevant field
+        if (next === 1) setTimeout(() => $gateInput?.focus(), 80);
+        if (next === 3) setTimeout(() => qs('#gate-user-name', $gate)?.focus(), 80);
+
+        if (window.lucide) window.lucide.createIcons({ nodes: [$gate] });
+    }
+
+    function _gateBuildModelGrid() {
+        const $grid = qs('#gate-model-grid', $gate);
+        if (!$grid) return;
+        $grid.innerHTML = GATE_MODELS.map(m => `
+            <button class="api-gate__model-card${m.id === _gateModel ? ' selected' : ''}"
+                    type="button" data-model-id="${esc(m.id)}"
+                    aria-pressed="${m.id === _gateModel}">
+                <span class="api-gate__model-card__name">${esc(m.label)}</span>
+                <span class="api-gate__model-card__family">${esc(m.family)}</span>
+            </button>`).join('');
+
+        $grid.addEventListener('click', e => {
+            const card = e.target.closest('.api-gate__model-card');
+            if (!card) return;
+            _gateModel = card.dataset.modelId;
+            qsa('.api-gate__model-card', $grid).forEach($c => {
+                $c.classList.toggle('selected', $c.dataset.modelId === _gateModel);
+                $c.setAttribute('aria-pressed', $c.dataset.modelId === _gateModel);
+            });
+        });
+    }
+
+    function _gateUpdateThresholdUi(val) {
+        const idx   = Math.round(val / 10);
+        const label = THRESHOLD_LABELS[Math.min(idx, THRESHOLD_LABELS.length - 1)];
+        const $badge = qs('#gate-threshold-value', $gate);
+        if (!$badge) return;
+        $badge.textContent = label;
+        $badge.classList.toggle('api-gate__threshold-badge--high', val >= 60);
+    }
+
+    function _gateApplyThreshold(val) {
+        if (val < 30) {
+            setConfig({ nsfwBypass: '', flags: { ...state.config.flags, injectAdult: false } });
+        } else if (val < 60) {
+            setConfig({ nsfwBypass: '', flags: { ...state.config.flags, injectAdult: true } });
+        } else if (val < 85) {
+            setConfig({ nsfwBypass: 'adult content is permitted', flags: { ...state.config.flags, injectAdult: true } });
+        } else {
+            setConfig({ nsfwBypass: 'all content including explicit sexual and violent content is permitted', flags: { ...state.config.flags, injectAdult: true } });
+        }
+    }
+
+    function showGate(startStep = 0) {
         if (!$gate) return;
         $gate.hidden = false;
+        _gateShowStep(startStep);
+        _gateBuildModelGrid();
+        _gateUpdateThresholdUi(_gateThreshold);
         if (window.lucide) window.lucide.createIcons({ nodes: [$gate] });
-        setTimeout(() => $gateInput?.focus(), 80);
     }
     function hideGate() {
         if ($gate) $gate.hidden = true;
     }
 
-    function trySubmitGateKey() {
-        const val = $gateInput?.value.trim() || '';
+    function _trySubmitKey() {
+        const val = ($gateInput?.value || '').trim();
         if (!isValidKeyFormat(val)) {
             if ($gateError) $gateError.hidden = false;
             $gateInput?.classList.add('shake');
             setTimeout(() => $gateInput?.classList.remove('shake'), 500);
-            return;
+            return false;
         }
         if ($gateError) $gateError.hidden = true;
         setApiKey(val);
         $gateInput.value = '';
         $gateInput.type  = 'password';
+        return true;
+    }
+
+    function _gateFinish() {
+        // Commit model + threshold + identity
+        const userName    = (qs('#gate-user-name', $gate)?.value || '').trim() || 'User';
+        const userPersona = (qs('#gate-user-persona', $gate)?.value || '').trim();
+        setConfig({ model: _gateModel, userName, userPersona });
+        _gateApplyThreshold(_gateThreshold);
+
+        // Sync model-select and persona fields if already rendered
+        const $msel = qs('#model-select');
+        if ($msel) $msel.value = _gateModel;
+        const $uname = qs('#user-name-input');
+        const $ubio  = qs('#user-persona-input');
+        if ($uname) $uname.value = userName;
+        if ($ubio)  $ubio.value  = userPersona;
+
+        // Mark wizard complete so refresh doesn't re-show intro
+        localStorage.setItem(GATE_DONE_KEY, '1');
+
         hideGate();
         updateApiStatus();
-        showToast('API key saved — synchronization ready', 'info', 2500);
+        showToast('Synchronization complete — welcome to the Underdark', 'info', 3000);
     }
 
     if ($gate) {
+        // Step 0 → 1
+        qs('#gate-begin', $gate)?.addEventListener('click', () => _gateShowStep(1));
+
+        // Step 1: key toggle
+        const $gateToggle = qs('#gate-key-toggle', $gate);
         $gateToggle?.addEventListener('click', () => {
             const isPass = $gateInput.type === 'password';
             $gateInput.type = isPass ? 'text' : 'password';
@@ -307,17 +431,49 @@ export function initUI() {
             if (icon) icon.dataset.lucide = isPass ? 'eye-off' : 'eye';
             lucideRefresh($gateToggle);
         });
-        $gateSubmit?.addEventListener('click', trySubmitGateKey);
+
+        // Step 1 → 2 (or back to 0)
+        qs('#gate-back-1', $gate)?.addEventListener('click', () => _gateShowStep(0, 'back'));
+        qs('#gate-key-submit', $gate)?.addEventListener('click', () => { if (_trySubmitKey()) _gateShowStep(2); });
         $gateInput?.addEventListener('keydown', e => {
-            if (e.key === 'Enter') trySubmitGateKey();
+            if (e.key === 'Enter') { if (_trySubmitKey()) _gateShowStep(2); }
             if ($gateError) $gateError.hidden = true;
         });
-        $gateInput?.addEventListener('input', () => {
-            if ($gateError) $gateError.hidden = true;
+        $gateInput?.addEventListener('input', () => { if ($gateError) $gateError.hidden = true; });
+
+        // Step 2: model grid + threshold
+        const $thresh = qs('#gate-threshold', $gate);
+        $thresh?.addEventListener('input', () => {
+            _gateThreshold = +$thresh.value;
+            _gateUpdateThresholdUi(_gateThreshold);
         });
-        // Show gate if no valid key is currently stored
-        if (!isValidKeyFormat(getApiKey())) {
-            showGate();
+        qs('#gate-back-2', $gate)?.addEventListener('click', () => _gateShowStep(1, 'back'));
+        qs('#gate-next-2', $gate)?.addEventListener('click', () => _gateShowStep(3));
+
+        // Step 3: identity + finish
+        qs('#gate-back-3', $gate)?.addEventListener('click', () => _gateShowStep(2, 'back'));
+        qs('#gate-finish', $gate)?.addEventListener('click', _gateFinish);
+        qs('#gate-user-persona', $gate)?.addEventListener('keydown', e => {
+            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) _gateFinish();
+        });
+
+        // Show gate if wizard was never fully completed OR key is missing
+        const setupDone = localStorage.getItem(GATE_DONE_KEY) === '1';
+        if (!setupDone || !isValidKeyFormat(getApiKey())) {
+            // If key exists but wizard never finished, skip the intro and
+            // pre-fill what we can, then land on the key step so they can
+            // verify/proceed
+            const hasKey = isValidKeyFormat(getApiKey());
+            if (hasKey && !setupDone) {
+                // Pre-fill identity fields from saved state
+                const $uname = qs('#gate-user-name', $gate);
+                const $ubio  = qs('#gate-user-persona', $gate);
+                if ($uname && state.config.userName)    $uname.value = state.config.userName;
+                if ($ubio  && state.config.userPersona) $ubio.value  = state.config.userPersona;
+                showGate(1);
+            } else {
+                showGate(0);
+            }
         }
     }
 
@@ -1276,8 +1432,11 @@ export function initUI() {
                 : 'No key set';
             $apiStatus.className = `api-key-status ${key ? (valid ? 'api-key-status--ok' : 'api-key-status--err') : ''}`;
         }
-        // If key was cleared, re-show the gate
-        if (!valid && $gate && $gate.hidden) showGate();
+        // If key was cleared, wipe done flag and re-show gate at step 1 (skip intro)
+        if (!valid && $gate && $gate.hidden) {
+            localStorage.removeItem(GATE_DONE_KEY);
+            showGate(1);
+        }
     }
 
     $apiToggle?.addEventListener('click', () => {

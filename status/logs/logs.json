@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.2.0",
+    "schema_version": "1.2.3",
     "last_updated": "2026-05-12",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -471,6 +471,69 @@
   },
   "commits": [
     {
+      "hash": "PENDING",
+      "date": "2026-05-12",
+      "message": "feat: ritual initiation wizard — multi-step first-run gate for Underdark",
+      "scope": "playground/characters",
+      "impact": "high",
+      "files": [
+        "playground/characters/index.html",
+        "playground/characters/style/api-gate.css",
+        "playground/characters/script/modules/ui.js",
+        "status/logs/logs.json"
+      ],
+      "why": "The API key gate was a single flat panel with no context — new users had no idea what they were entering, which model to pick, or how to configure content expectations before their first conversation. Replaced with a 4-step ritual wizard: animated sigil intro + glitch title, authentication step, model picker (12 curated models in a card grid) + content threshold dial (0-100 → sets nsfwBypass and inject flags), and identity matrix (name + persona). Themed as an 'initiation' to match the Underdark aesthetic."
+    },
+    {
+      "hash": "PENDING",
+      "date": "2026-05-12",
+      "message": "feat: uplink home node — animated portal button across all pages",
+      "scope": "global",
+      "impact": "medium",
+      "files": [
+        "glass/style/modules/components.css",
+        "art/glass/style/style.css",
+        "playground/characters/style/utilities.css",
+        "radar/glass/style/style.css",
+        "art/index.html",
+        "guide/index.html",
+        "playground/index.html",
+        "playground/characters/index.html",
+        "radar/index.html",
+        "status/index.html",
+        "status/logs/index.html",
+        "status/logs/logs.json"
+      ],
+      "why": "No consistent home/uplink affordance existed across the site — some pages had plain text back-links, some had nothing. Added a unified .uplink-node component: a small pulsing sigil that expands on hover to reveal 'UPLINK' with a sweep animation, and fires a portal drain implosion on click before navigating. Each self-contained sub-app gets a palette-matched variant (violet for most, cyan for radar)."
+    },
+    {
+      "hash": "7708857",
+      "date": "2026-05-12",
+      "message": "Additional Changes Submitted",
+      "scope": "playground/characters",
+      "impact": "high",
+      "files": [
+        "playground/characters/index.html",
+        "playground/characters/script/main.js",
+        "playground/characters/script/modules/image-engine.js",
+        "playground/characters/script/modules/ui.js"
+      ],
+      "why": "Large cleanup commit removing ~1300 lines of superseded code: the old compact image-gen modal (#modal-image-gen) and its scene-builder chip system, video generation modal wiring, and associated dead UI scaffolding that had been fully replaced by the Image Studio + snapshot approach. Version bump to v77."
+    },
+    {
+      "hash": "28460e6",
+      "date": "2026-05-12",
+      "message": "characters and lorebook suggestions",
+      "scope": "playground/characters/data",
+      "impact": "low",
+      "files": [
+        "playground/characters/data/characters-tobe.json",
+        "playground/characters/data/lorebooks-tobe.json",
+        "status/logs/logs.json"
+      ],
+      "why": "Gemini CLI session added characters-tobe.json (115 proposed characters spanning dark fantasy, cyberpunk, gothic sci-fi archetypes) and lorebooks-tobe.json (lorebooks grouped by franchise for future world-building); two stub GEMINI.md files were removed."
+    },
+    {
       "hash": "b295373",
       "date": "2026-05-12",
       "message": "refactor: move introspect to god view, restore terminal btn, remove oracle-btn",
@@ -827,6 +890,60 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-12",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Replaced the flat API key gate with a 4-step ritual initiation wizard for The Underdark. Step 0 is an atmospheric intro (animated multi-ring sigil, glitch title with CSS pseudo-element chromatic aberration, lore text). Step 1 is authentication. Step 2 is a curated model picker (12 models in a 2-col card grid) and a content threshold range dial (0–100 mapped to nsfwBypass + inject flags). Step 3 is identity (name + persona). Navigation includes forward/back, rune progress track, and a portal-drain entry animation per step. When the key is cleared post-init, gate re-opens at step 1 to skip the intro.",
+      "decisions": [
+        "4 wizard steps: intro → auth → entity config → identity. Each step slides in with CSS @keyframes step-in/step-in-back.",
+        "Model picker uses card buttons (not <select>) — 12 curated models, 2-col grid, scrollable at max-height 220px.",
+        "Content threshold is a single 0–100 range dial mapping to 4 labelled zones: Tasteful / Balanced / Explicit / Unfiltered. Sets nsfwBypass string + injectAdult flag in state.config.",
+        "Rune progress track uses ⬡ hex glyphs — active rune glows violet, done runes turn amber, connector lines animate to amber.",
+        "Step 0 is the intro — only shown on first-ever open. updateApiStatus re-opens at step 1 (skip intro) if key is cleared post-setup.",
+        "Model + threshold + identity saved to state.config via setConfig on finish, then synced to existing #model-select and #user-name-input if rendered.",
+        "Glitch effect uses CSS ::before/::after with attr(data-text) and clip-path polygon slicing — fires every 7s, no JS required."
+      ],
+      "rules_reinforced": [
+        "Wizard CSS lives in api-gate.css (already a separate stylesheet per existing architecture).",
+        "No JS framework — all step logic is vanilla DOM, array indexing into querySelectorAll results.",
+        "Reduced-motion media query applied to all animations in api-gate.css."
+      ]
+    },
+    {
+      "date": "2026-05-12",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Added the .uplink-node component — a unified home portal button — across all 7 sub-pages. Each page gets a fixed bottom-left sigil (dashed-ring dot icon) that pulses softly at rest, expands on hover to reveal 'UPLINK' with a sweep line animation, and fires an implosion drain animation on click before navigating to the hub. Implemented as: CSS in components.css (shared pages), and self-contained palette-adapted copies in art, underdark, and radar stylesheets. Z-index calibrated per-page to respect existing lightbox stacks.",
+      "decisions": [
+        "Uplink node is a fixed-position overlay element — does not affect page flow or layout.",
+        "Radar gets cyan (#00f0ff) accent to match its own palette instead of violet.",
+        "Art page uplink node uses cursor:none to match the custom cursor orb system.",
+        "Underdark z-index set to 3000 — below lightbox (10000) and char-editor (2500 overlapping), above modals (1000).",
+        "Art page z-index set to 8800 — below lightbox (9000), above everything else.",
+        "Click fires --firing class first (300ms animation window) then navigates — gives the drain implosion time to complete.",
+        "Existing back-links (art header back-link, playground topbar, status back-nav) preserved — uplink node is supplementary, not replacement."
+      ],
+      "rules_reinforced": [
+        "Self-contained sub-apps (art, radar, underdark) require their own copy of shared component CSS — they do not import from glass/style.",
+        "Z-index layers must be checked per-page before setting a fixed overlay — never assume 9999 is safe."
+      ]
+    },
+    {
+      "date": "2026-05-12",
+      "agent": "Claude Sonnet 4.6",
+      "type": "maintenance",
+      "summary": "Codebase scan and logs.json sync. Identified two commits absent from the log (28460e6 — Gemini character/lorebook data additions; 7708857 — large dead-code cleanup removing the old image-gen modal and superseded scene-builder). Added both commit entries and this session entry. No code changed.",
+      "decisions": [
+        "7708857 classified as impact:high — ~1300 lines of dead code removed is a meaningful cleanup even if the visible feature surface didn't change.",
+        "glass/data/llm-toimplement.json noted as untracked — a model reference CSV for future llm.json expansion; not yet committed or recorded.",
+        "No architecture or rule changes warranted."
+      ],
+      "rules_reinforced": [
+        "Scan-only sessions that surface new information about commits or untracked files still warrant a session entry per _protocol.",
+        "Untracked files should be flagged in the session log even if not committed this session."
+      ]
+    },
     {
       "date": "2026-05-12",
       "agent": "Claude Sonnet 4.6",

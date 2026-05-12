@@ -121,5 +121,28 @@
     </footer>
 
     <script type="module" src="glass/script/app.js"></script>
+
+    <!-- ── Uplink Home Node ── -->
+    <a id="uplink-node" href="/" class="uplink-node" aria-label="Return to trap.lol hub">
+      <span class="uplink-node__sigil" aria-hidden="true">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 2" opacity="0.45"/>
+          <circle cx="12" cy="12" r="3.5" fill="currentColor"/>
+        </svg>
+        <span class="uplink-node__drain" aria-hidden="true"></span>
+      </span>
+      <span class="uplink-node__label">uplink</span>
+    </a>
+    <script>
+      (function() {
+        const node = document.getElementById('uplink-node');
+        node.addEventListener('click', function(e) {
+          e.preventDefault();
+          const href = node.getAttribute('href');
+          node.classList.add('uplink-node--firing');
+          setTimeout(function() { window.location.href = href; }, 310);
+        });
+      })();
+    </script>
   </body>
 </html>
