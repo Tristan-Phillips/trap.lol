@@ -968,6 +968,13 @@
     width: 20px;
     height: 20px;
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.ts-header__icon svg, .ts-header__icon i {
+    width: 20px;
+    height: 20px;
 }
 
 .ts-header__title {
@@ -1048,6 +1055,10 @@
 }
 
 /* ── Panels ── */
+/* Override browser [hidden] default so panels can animate; visibility is
+   controlled by .active (opacity + pointer-events), not display. */
+.ts-panel[hidden], .re-panel[hidden] { display: flex !important; }
+
 .ts-panel, .re-panel {
     position: absolute;
     inset: 0;
@@ -1370,6 +1381,14 @@
     box-shadow: inset 0 0 8px rgba(168,85,247,0.15);
 }
 
+/* ── Create button (DM/Group dynamic) ── */
+.ts-create-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.ts-create-btn svg, .ts-create-btn i { width: 14px; height: 14px; }
+
 /* ── Group tab highlight ── */
 .ts-tab--group-only { color: #a78bfa; }
 .ts-tab--group-only.active { color: #c084fc; }
@@ -1377,7 +1396,9 @@
 
 /* ── Group panel sections ── */
 .ts-group-section {
-    margin-bottom: 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 .ts-group-section__label {
     display: flex;
@@ -1388,7 +1409,6 @@
     letter-spacing: 0.07em;
     text-transform: uppercase;
     color: #a78bfa;
-    margin-bottom: 10px;
     padding-bottom: 7px;
     border-bottom: 1px solid rgba(168,85,247,0.15);
 }
@@ -1414,7 +1434,7 @@
 .ts-radio-card {
     position: relative;
     cursor: pointer;
-    display: block;
+    display: flex;   /* flex so child body can stretch to fill */
 }
 .ts-radio-card input[type="radio"] {
     position: absolute;
@@ -1423,6 +1443,7 @@
     pointer-events: none;
 }
 .ts-radio-card__body {
+    position: relative;
     display: flex;
     flex-direction: column;
     gap: 3px;
@@ -1431,7 +1452,7 @@
     border: 1px solid rgba(168,85,247,0.15);
     background: rgba(0,0,0,0.25);
     transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
-    height: 100%;
+    flex: 1;
 }
 .ts-radio-card:hover .ts-radio-card__body {
     border-color: rgba(168,85,247,0.35);
@@ -1440,7 +1461,17 @@
 .ts-radio-card input:checked ~ .ts-radio-card__body {
     border-color: #a78bfa;
     background: rgba(168,85,247,0.15);
-    box-shadow: 0 0 12px rgba(168,85,247,0.18);
+    box-shadow: 0 0 12px rgba(168,85,247,0.18), inset 0 0 0 1px rgba(168,85,247,0.3);
+}
+.ts-radio-card input:checked ~ .ts-radio-card__body::before {
+    content: '✓';
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    font-size: 0.65rem;
+    color: #c084fc;
+    font-weight: 700;
+    line-height: 1;
 }
 .ts-radio-card__icon {
     font-size: 1.2rem;
@@ -1489,9 +1520,15 @@
 .ts-rel-avatar {
     width: 26px; height: 26px;
     border-radius: 50%;
-    object-fit: cover;
+    background-size: cover;
+    background-position: center;
     border: 1px solid rgba(168,85,247,0.25);
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    overflow: hidden;
 }
 .ts-rel-row__name {
     font-size: 0.74rem;

@@ -1087,22 +1087,10 @@ export function initUI() {
     ];
 
     function openThreadSetup(mode = 'dm') {
-        _tsMode = mode;
         _tsSelectedIds.clear();
         _tsCurrentTab = 0;
-        TS_TABS = mode === 'group' ? TS_TABS_GROUP : TS_TABS_DM;
 
-        const $modal  = qs('#modal-thread-setup');
-        const $title  = qs('#ts-title');
-        if ($title) $title.textContent = mode === 'group' ? 'New Group Thread' : 'New DM Thread';
-
-        // Sync mode toggle buttons
-        qs('#ts-mode-dm')?.classList.toggle('active', mode === 'dm');
-        qs('#ts-mode-group')?.classList.toggle('active', mode === 'group');
-
-        // Show/hide group tab
-        const $groupTab = qs('#ts-tab-group');
-        if ($groupTab) $groupTab.hidden = mode !== 'group';
+        const $modal = qs('#modal-thread-setup');
 
         // Reset fields — show current reality values as context for "inherit" fields
         const rc = state.config;
@@ -1176,7 +1164,8 @@ export function initUI() {
         });
 
         _tsPopulatePersonaSelect();
-        _tsRenderCharGrid('');
+        // Apply mode (sets title, icon, tabs, button label, char desc, char grid)
+        _tsSetMode(mode);
         _tsSwitchTab(0);
         _tsUpdateFooter();
 
@@ -1294,14 +1283,51 @@ export function initUI() {
     function _tsSetMode(mode) {
         _tsMode = mode;
         TS_TABS = mode === 'group' ? TS_TABS_GROUP : TS_TABS_DM;
+
+        // Header title + icon
         const $title = qs('#ts-title');
         if ($title) $title.textContent = mode === 'group' ? 'New Group Thread' : 'New DM Thread';
+        const $iconWrap = qs('#ts-header-icon-wrap');
+        if ($iconWrap) {
+            $iconWrap.innerHTML = mode === 'group'
+                ? '<i data-lucide="users"></i>'
+                : '<i data-lucide="message-square"></i>';
+            lucideRefresh($iconWrap);
+        }
+
+        // Mode pill active state
         qs('#ts-mode-dm')?.classList.toggle('active', mode === 'dm');
         qs('#ts-mode-group')?.classList.toggle('active', mode === 'group');
+
+        // Show/hide Group tab button
         const $groupTab = qs('#ts-tab-group');
         if ($groupTab) $groupTab.hidden = mode !== 'group';
+
+        // Show/hide thread-name field in Generation tab
+        // (in group mode the Group tab's name field is canonical — avoid confusion)
+        const $threadNameGroup = qs('#ts-thread-name-group');
+        if ($threadNameGroup) $threadNameGroup.hidden = mode === 'group';
+
+        // Update Begin Thread / Forge Group button label
+        const $create = qs('#ts-create');
+        if ($create) {
+            $create.innerHTML = mode === 'group'
+                ? `<i data-lucide="sparkles"></i> Forge Group`
+                : `<i data-lucide="wand-2"></i> Begin Thread`;
+            lucideRefresh($create);
+        }
+
+        // Update char panel desc for DM/Group hint
+        const $charDesc = qs('#ts-char-desc');
+        if ($charDesc) {
+            $charDesc.textContent = mode === 'group'
+                ? 'Select all characters who will participate. The first selected becomes the default active voice.'
+                : 'Choose who you\'re talking to. Select one character to begin.';
+        }
+
         // DM mode: single-select char grid; group: multi
         _tsRenderCharGrid(qs('#ts-char-search')?.value || '');
+
         // If currently on group tab but switched to DM, revert to characters tab
         if (mode === 'dm' && _tsCurrentTab >= TS_TABS_DM.length) {
             _tsSwitchTab(0);

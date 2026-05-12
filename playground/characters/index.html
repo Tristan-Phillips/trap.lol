@@ -1052,7 +1052,7 @@
     <!-- Header -->
     <header class="ts-header">
       <div class="ts-header__left">
-        <i data-lucide="wand-2" class="ts-header__icon"></i>
+        <div id="ts-header-icon-wrap" class="ts-header__icon"><i data-lucide="message-square"></i></div>
         <h2 id="ts-title" class="ts-header__title">New Thread</h2>
         <!-- DM / Group toggle pill -->
         <div class="ts-mode-toggle" role="group" aria-label="Thread type">
@@ -1077,7 +1077,7 @@
 
       <!-- ── TAB: Characters ── -->
       <div class="ts-panel active" id="ts-panel-characters" role="tabpanel">
-        <p class="ts-panel__desc">Choose who participates in this thread. The first selection becomes the default active character.</p>
+        <p class="ts-panel__desc" id="ts-char-desc">Choose who you're talking to. Select one character to begin.</p>
         <div class="ts-search-bar">
           <i data-lucide="search" class="ts-search-icon"></i>
           <input type="text" id="ts-char-search" class="ce-input" placeholder="Filter characters…">
@@ -1167,7 +1167,7 @@
           </div>
         </div>
 
-        <div class="ts-field-group">
+        <div class="ts-field-group" id="ts-thread-name-group">
           <label class="ts-label">Thread Name <span class="ts-hint">auto-generated from characters if left blank</span></label>
           <input type="text" id="ts-thread-name" class="ce-input" placeholder="Auto-name…">
         </div>
@@ -1354,7 +1354,7 @@
       <div class="ts-footer__right">
         <button id="ts-prev" class="ce-btn ce-btn--ghost" disabled><i data-lucide="chevron-left"></i> Back</button>
         <button id="ts-next" class="ce-btn ce-btn--ghost">Next <i data-lucide="chevron-right"></i></button>
-        <button id="ts-create" class="ce-btn ce-btn--accent" hidden><i data-lucide="wand-2"></i> Begin Thread</button>
+        <button id="ts-create" class="ce-btn ce-btn--accent ts-create-btn" hidden><i data-lucide="wand-2"></i> Begin Thread</button>
       </div>
     </footer>
 
