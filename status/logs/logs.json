@@ -422,9 +422,9 @@
 
   "commits": [
     {
-      "hash": "pending",
+      "hash": "57fd584",
       "date": "2026-05-12",
-      "message": "Underdark Image Studio: full-screen generation wizard with rp-gen-presets.json",
+      "message": "Underdark Image Studio: full-screen generation wizard + rp-gen-presets.json",
       "scope": "playground/characters",
       "impact": "high",
       "files": [
