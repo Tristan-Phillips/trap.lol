@@ -1,0 +1,598 @@
+{
+  "_meta": {
+    "purpose": "Master knowledge base for trap.lol. This file is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
+    "schema_version": "1.0.0",
+    "last_updated": "2026-05-12",
+    "maintained_by": "trap + Claude Sonnet 4.6",
+    "reading_order": ["identity", "philosophy", "architecture", "pages", "design_system", "rules", "anti_patterns", "language_fingerprint", "evolution", "commits", "sessions"]
+  },
+
+  "identity": {
+    "domain": "trap.lol",
+    "tagline": "Sovereign Infrastructure & Spice Routes",
+    "eyebrow": "[ TRAP UPLINK // CHAOS VECTOR ONLINE ]",
+    "author": "trap",
+    "author_real": "Tristan Phillips",
+    "author_github": "Tristan-Phillips",
+    "author_email": "tristan@tristanphillips.xyz",
+    "deployed_via": "GitHub Pages",
+    "repo": "https://git.trap.lol/trap (Forgejo mirror)",
+    "what_it_is": "A personal sovereign infrastructure dashboard. A command centre. A gallery. A playground. A signal hub. It is not a portfolio. It is not a blog. It is an operating environment — a single point of truth for everything trap owns, runs, thinks, and creates.",
+    "what_it_is_not": [
+      "Not a portfolio site",
+      "Not a blog",
+      "Not a SaaS product",
+      "Not built for other people's aesthetics",
+      "Not React, Vue, Angular, or any framework",
+      "Not server-rendered",
+      "Not database-backed",
+      "Not monetised or SEO-optimised"
+    ]
+  },
+
+  "philosophy": {
+    "core_belief": "Sovereignty. Everything runs on trap's own infrastructure, under trap's own domain, under trap's own rules. No third-party platforms, no vendor lock-in, no compromise on control.",
+    "design_philosophy": "Zero build steps. Zero frameworks. Zero server-side processing. Pure vanilla HTML, CSS, JS. Flat JSON as the database. The site must be deployable by dropping files on any static host. Complexity lives in the data layer and the prose, not in the toolchain.",
+    "aesthetic_philosophy": "Dune × Arcane. Desert-night chaos. The palette is deep violet, gold, magenta, teal — never pastel, never corporate, never default. Everything has a glow. Everything has a grain. The UI feels like a terminal from a science fiction universe that takes itself seriously.",
+    "operational_philosophy": "Assume Breach. Stay Sovereign. Everything is monitored. Everything is logged. Shortcuts are typed, not clicked. The site rewards power users.",
+    "content_philosophy": "Content is data. Nothing is hardcoded into HTML. Every string, every link, every card is driven by JSON. If you want to add a service, you edit a JSON file. The HTML is purely structural scaffolding.",
+    "llm_philosophy": "LLMs are tools, not replacements. The playground exists because AI augments trap's thinking — it doesn't replace it. The system prompt is terse, direct, no disclaimers. The models are sovereign (self-hosted routing via nano-gpt, never OpenAI direct when possible).",
+    "evolution_philosophy": "This site evolves. Features are added when they serve a real need, removed when they don't. The guides section has been commented out repeatedly — it may return. The gacha pull mechanic was added not because galleries needed it but because the experience should be unexpected. Never be boring. Never be predictable. But never add noise for its own sake."
+  },
+
+  "architecture": {
+    "stack": {
+      "html": "Vanilla HTML5. Semantic structure. No templating.",
+      "css": "Vanilla CSS. BEM naming. CSS custom properties for theming. No Tailwind, no SASS, no PostCSS.",
+      "js": "Vanilla ES modules. No bundler. No transpiler. Import paths are relative. Runs directly in the browser.",
+      "data": "Flat JSON files in glass/data/. No database. No API. No server.",
+      "cdn": "Self-hosted at cdn.trap.lol. Lucide icons, marked.js, DOMPurify. Never load from npm CDNs in production.",
+      "hosting": "GitHub Pages. Zero config. Push to main = deployed."
+    },
+    "boot_sequence": {
+      "description": "The app boots in a strict sequence. Breaking the sequence breaks the app.",
+      "steps": [
+        "1. Fetch glass/data/config.json (BLOCKING — contains CDN shard URLs needed for step 2)",
+        "2. Parallel: fetch all data JSONs + inject lucide shard script tag into head",
+        "3. Render each section by calling render*() functions which write innerHTML into pre-existing container divs",
+        "4. lucide.createIcons() called ONCE after ALL HTML injection is complete",
+        "5. requestAnimationFrame: initTunnelLight(), updateCarouselArrows(), initGlobalListeners()"
+      ],
+      "critical_rule": "lucide.createIcons() must only be called AFTER all HTML is injected. Calling it mid-render leaves unprocessed <i data-lucide> tags. Exception: clipboard icon swap and pull zone tier icon — these use lucide.createIcons({ nodes: [...] }) scoped to specific elements."
+    },
+    "data_layer": {
+      "config.json": "Site metadata (title, domain, tagline, eyebrow, author, year), CDN shard URLs (lucide, marked, dompurify), LLM config (api_base, api_token, system_prompt), referral codes, social links.",
+      "hosting.json": "Sovereign Nodes section. Self-hosted services. Each entry has: name, hosting (the software), shortcut (2-char unique), icon (lucide name), url, status (online|offline), optional source (git repo URL).",
+      "bots.json": "Drone Fleet section. Telegram bots. Each entry has: name, shortcut, icon, chat_url (nullable), repo_url, status, description.",
+      "tools.json": "Ordnance Depot section. CLI tools/payloads. Each entry has: name, shortcut, icon, description, target (OS), repo_url, install_cmd (the thing the shortcut copies).",
+      "extlinks.json": "Signal Mesh section. External links grouped by category. Each category has: domain, category, visual_class (neon-*), manifest of links with: name, shortcut, url, trust_level (Vetted|High), info.",
+      "guides.json": "Sacred Codex (currently commented out). Array of guide entries: title, description, icon, file (markdown filename), read_time.",
+      "llm.json": "LLM routing table. Keys are model IDs. Each model has: label, provider, pay_per_token (bool). Also contains default_routing.",
+      "apps.json": "App Uplinks section. Each app has: name, slug, path, icon, description, tags[], keyed (bool — requires API key), status (live|planned).",
+      "art/glass/data/detention.json": "ECHOES gallery data. Collections of artwork artifacts. Each artifact has: compositeId (collectionId::artifactId), src.small (thumbnail URL path), src.original (full URL path), uploadDate, tags[], type, metadata (medium, description, verse, mood, chaos). baseUrl in meta is prepended to all src paths."
+    },
+    "shortcut_system": {
+      "description": "The globalRouter (Map) is populated during render. Every item with a shortcut field registers a 2-char keystroke. On desktop (non-touch), typing 2 chars triggers the action.",
+      "types": {
+        "link": "Opens URL in new tab",
+        "copy": "Writes payload to clipboard"
+      },
+      "rules": [
+        "Shortcuts must be globally unique across ALL JSON files",
+        "Exactly 2 characters, alphanumeric",
+        "Case-insensitive (stored lowercase)",
+        "Buffer auto-resets after 2s idle or on match",
+        "Desktop-only — gated by IS_TOUCH check"
+      ],
+      "current_shortcuts": {
+        "N1": "Version Control (link)",
+        "N2": "PDF Manipulation (link)",
+        "N3": "Online Dev Tools (link)",
+        "F0": "Zenith bot (link)",
+        "F1": "Carbon bot (link)",
+        "F2": "Bkup SIMP bot (link)",
+        "X0": "ctxdump install cmd (copy)",
+        "X1": "wbc install cmd (copy)",
+        "X2": "OIDC-Bridge install cmd (copy)",
+        "U0-U4": "extlinks category 1 (link)",
+        "I0-I3": "extlinks category 2 (link)",
+        "D0-D3": "extlinks category 3 (link)"
+      }
+    },
+    "module_structure": {
+      "glass/script/main.js": "Entry point. Calls loadCoreData() then renderUI(). DOMContentLoaded guard.",
+      "glass/script/modules/core.js": "fetchJSON(), loadScript(), esc(), renderError(), loadCoreData() — fetches config.json then all data JSONs in parallel, loads shards. Exports globalRouter, IS_TOUCH, all data variables.",
+      "glass/script/modules/ui.js": "All render functions: renderMeta, renderHeader, renderFooter, renderHosting, renderTools, renderBots, renderSignalMesh, renderCodex (guarded — guides section commented out), renderApps, renderUplinkLaunchpad, renderSocialCluster. All event handlers: initClipboard, initBotTooltips, initScrollTop, initExtTooltips, initTerminal, initFlipCards. updateCarouselArrows.",
+      "glass/script/modules/llm.js": "LLM playground orchestrator. Wires up all UI refs, manages state (history, turnCount, tokenCount), handles form submit, agent roster async loading.",
+      "glass/script/modules/llm-chat.js": "Message rendering, markdown sanitization (DOMPurify + marked), streaming response handler, clipboard copy for code blocks.",
+      "glass/script/modules/llm-auth.js": "API key storage (localStorage), keybar UI.",
+      "glass/script/modules/llm-sessions.js": "Session save/load/export (JSON + MD), bulk delete, import.",
+      "glass/script/modules/llm-settings.js": "Model selector, system prompt override, temperature, context window, streaming toggle, enter-to-send toggle.",
+      "glass/script/modules/tunnel-light.js": "The animated tunnel light effect on the home page header.",
+      "glass/data/llm-agents/": "Per-agent JSON files. index.json lists filenames. Each agent file has spec + data (name, tags, system_prompt, temperature, model override)."
+    }
+  },
+
+  "pages": {
+    "/": {
+      "file": "index.html",
+      "title": "trap.lol // uplink",
+      "purpose": "The hub. Everything starts here. Renders all sections from JSON data.",
+      "sections_in_order": [
+        "ECHOES portal (static HTML link to /art/)",
+        "Sovereign Nodes (hosting.json)",
+        "Signal Mesh (extlinks.json)",
+        "Drone Fleet (bots.json)",
+        "App Uplinks (apps.json)",
+        "Ordnance Depot (tools.json)",
+        "[ GUIDES / Sacred Codex — COMMENTED OUT ]",
+        "Uplink Launchpad (LLM quick-launch, llm.json + llm-agents/)",
+        "Social Cluster (config.json socials)"
+      ],
+      "script": "glass/script/main.js (type=module)"
+    },
+    "/art/": {
+      "file": "art/index.html",
+      "title": "trap.lol // echoes",
+      "purpose": "ECHOES gallery. Gacha pull mechanic reveals artwork in rarity tiers. Lightbox with full zoom, pan, rotate, flip. Filter by medium (all / sketch / digital).",
+      "data": "art/glass/data/detention.json",
+      "script": "art/glass/script/app.js (type=module, self-contained — does NOT use glass/script/)",
+      "css": "art/glass/style/style.css (self-contained — does NOT use glass/style/)",
+      "rarity_tiers": ["TRACE (teal, weight 50)", "VEIL (blue, weight 28)", "CIPHER (purple, weight 15)", "SPICE (gold, weight 6)", "ABYSS (crimson, weight 1 — shows all remaining)"],
+      "pity_system": "After 4 consecutive sub-CIPHER pulls: force min CIPHER. After 7 consecutive sub-SPICE pulls: force min SPICE. Never telegraphed to user."
+    },
+    "/playground/": {
+      "file": "playground/index.html",
+      "title": "trap.lol // neural uplink",
+      "purpose": "LLM playground. Multi-model chat interface. Session management, agent personas, system prompt override, temperature control, streaming.",
+      "api": "nano-gpt.com/api/v1 (OpenAI-compatible, multi-provider routing)",
+      "auth": "API key stored in localStorage. Key never sent anywhere except the API endpoint.",
+      "models": "Defined in glass/data/llm.json routing_table. Includes DeepSeek, Claude, GPT, Llama, Qwen, Gemini, Mistral, GLM.",
+      "agents": "JSON files in glass/data/llm-agents/. Loaded async. Default agent = default.json."
+    },
+    "/playground/characters/": {
+      "file": "playground/characters/index.html",
+      "title": "The Underdark // Reality Matrix",
+      "purpose": "Advanced roleplay interface. Cinematic multi-bot layout. Character creation, lorebooks, scenario editor. The 'Underdark' is the deepest, most immersive LLM experience on the site."
+    },
+    "/radar/": {
+      "file": "radar/index.html",
+      "title": "RADAR // ANOMALY",
+      "purpose": "Torrent scanner and TorBox debrid cache interface. Search for torrents, check TorBox cache, queue downloads. Requires TorBox API key.",
+      "api": "TorBox API. Key stored in localStorage."
+    },
+    "/status/": {
+      "file": "status/index.html",
+      "title": "trap.lol // status",
+      "purpose": "Uplink Sentinel. Live infrastructure monitor. Probes sovereign nodes and app uplinks every 60 seconds. Shows response time, sparkline history, online/offline badge. Drone fleet is static (Telegram bots — not HTTP-probeable). Favicon and tab title update to reflect overall system state.",
+      "probe_method": "nocors fetch for external nodes (opaque response = up), same-origin fetch for apps."
+    },
+    "/status/logs/": {
+      "file": "status/logs/index.html",
+      "title": "trap.lol // logs",
+      "purpose": "Site intelligence log. Reads logs.json and renders the complete evolution history of the site — commits, sessions, design decisions, architectural rules, philosophy, page manifest, and a briefing for any new LLM or context window. The definitive 'what is this and how does it work' document in interactive form."
+    },
+    "/guide/": {
+      "file": "guide/index.html",
+      "title": "trap.lol // docs",
+      "purpose": "Markdown reader. Reads ?md= param, fetches from /glass/markdown/<filename>, renders via marked.js + DOMPurify sanitization. Shares glass/style/style.css.",
+      "note": "The Sacred Codex section on the home page (guides.json + carousel) is currently commented out in index.html but all backend logic (renderCodex, guides.json) is maintained. It will return."
+    }
+  },
+
+  "design_system": {
+    "palette": {
+      "bg_base": "#05030A / #06040A — near-black with a deep violet undertone. Never pure black.",
+      "accent_primary": "#BE29EC — electric violet/magenta. The dominant glow colour.",
+      "accent_warm": "#F4A830 — spice gold. Used for hover states, warm accents, the 'reach' colour.",
+      "accent_rust": "#C4562A — deep rust/orange. Used sparingly for depth.",
+      "accent_cyan": "#2dd4a0 — teal. Used in TRACE tier and cyan neon category.",
+      "text_main": "#EDE8F5 — slightly warm white. Never pure #FFF.",
+      "text_muted": "#6A5C7A — muted violet-grey. Secondary text, labels, hints.",
+      "text_warm": "#C4A862 — warm tan. Used in verse, quotes, warm labels.",
+      "online_green": "#4ade80",
+      "offline_red": "#ef4444"
+    },
+    "typography": {
+      "mono": "ui-monospace, Cascadia Code, Source Code Pro, Menlo, Consolas, monospace — used for ALL UI chrome: eyebrows, labels, badges, stats, code, shortcut keys, technical strings.",
+      "sans": "system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif — used for body text, descriptions.",
+      "serif": "Georgia, Times New Roman, serif — used for verse, italic pull quotes, poetic UI copy.",
+      "rule": "If it's UI chrome, it's mono. If it's prose, it's sans. If it's a verse or CTA italic, it's serif."
+    },
+    "effects": {
+      "glass": "backdrop-filter: blur(12-24px) + rgba background + 1px solid border at low opacity. Every card, every panel.",
+      "glow": "box-shadow with 0 0 Xpx rgba(accent, 0.Y). Glows are never harsh. They bloom softly.",
+      "grain": "SVG feTurbulence filter as a fixed body::before overlay at 3% opacity. Subtle film grain across the entire page.",
+      "scanlines": "repeating-linear-gradient on body::after. 4px pattern at 2.2% opacity.",
+      "sweep": "Horizontal 1px gradient line that slides across card tops on hover. Left to right, warm accent colour.",
+      "accent_bar": "2px left border on cards/sections with a vertical gradient from accent-warm to accent to transparent. Appears on hover or always on sections.",
+      "tunnel_light": "Animated perspective-corridor effect on the home page header. Only initialised on non-touch devices.",
+      "cursor_orb": "Custom cursor orb (ECHOES page). Fine pointer only. 13px circle, lerp-tracked at 0.13 speed. Expands to 24px ring on hover, 18px filled on press.",
+      "particles": "52-particle canvas system (ECHOES page). Slow upward drift, palette colours, fade in/out lifecycle. Paused when tab hidden. Disabled on reduced-motion."
+    },
+    "spacing": {
+      "system": "CSS custom properties: --space-xs through --space-xl. Consistent rhythm.",
+      "padding_desktop": "2.5rem horizontal page padding",
+      "padding_mobile": "1rem horizontal page padding"
+    },
+    "naming_convention": "Strict BEM. Block__element--modifier. No exceptions in new CSS. No utility classes. No inline styles except JS-driven transforms and dynamic values.",
+    "neon_classes": {
+      "neon-cyan": "Signal Mesh category accent — #2dd4a0 family",
+      "neon-magenta": "Sovereign Nodes accent — #BE29EC family",
+      "neon-green": "App Uplinks accent — #4ade80 family",
+      "neon-violet": "Extlinks category accent — #8b5cf6 family",
+      "neon-red": "Tools/Ordnance accent — #ef4444 family"
+    },
+    "animation_principles": [
+      "All animations respect prefers-reduced-motion — kill or minimise when set",
+      "Enter animations: translateY(7-20px) to 0, opacity 0 to 1, 0.4-0.5s ease-out",
+      "Hover transitions: 0.18s ease-out for fast snappy feedback",
+      "State transitions: 0.3-0.5s cubic-bezier(0.25, 0, 0, 1) for smooth state changes",
+      "Glows breathe: 2.4-3.4s infinite ease-in-out",
+      "No spinning loaders — use opacity pulse or scale pulse instead"
+    ]
+  },
+
+  "rules": {
+    "absolute": [
+      "NEVER use innerHTML with unsanitized external data. Always use esc() for JSON data going into innerHTML. Use DOMPurify.sanitize() for markdown content.",
+      "NEVER call lucide.createIcons() mid-render. Only call it after ALL HTML injection is complete. Exception: scoped { nodes: [...] } calls for dynamic icon swaps.",
+      "NEVER use a framework. No React, Vue, Svelte, Angular, Lit, Solid, or anything that requires a build step.",
+      "NEVER use a bundler. No webpack, Vite, Rollup, Parcel, esbuild in the render pipeline.",
+      "NEVER load from npm CDNs (unpkg, jsDelivr, cdnjs) in production. All shards load from cdn.trap.lol first, fall back to local /shards/ for dev, then public CDN as last resort.",
+      "NEVER add comments explaining WHAT the code does. Only comment WHY if non-obvious. No multi-line docblocks. One short line max.",
+      "NEVER create documentation .md files unless explicitly requested.",
+      "NEVER add error handling for scenarios that cannot happen. Trust the data layer.",
+      "NEVER add features beyond what was asked. No scope creep. No 'while I'm here' additions.",
+      "NEVER commit sensitive files (.env, API keys, credentials).",
+      "NEVER break the BEM naming convention in CSS.",
+      "NEVER use pure black (#000) or pure white (#fff) for backgrounds/text — always the slightly-off palette values.",
+      "Shortcut keys must be exactly 2 chars, globally unique across all JSON files.",
+      "status values in hosting.json and bots.json must be 'online' or 'offline' only.",
+      "trust_level in extlinks.json must be 'Vetted' or 'High' only.",
+      "visual_class in extlinks.json categories must be one of the five defined neon-* classes."
+    ],
+    "strong_preferences": [
+      "Prefer editing existing files over creating new ones.",
+      "Prefer CSS custom properties over hardcoded values.",
+      "Prefer document.createElement + direct property setting over innerHTML for dynamic interactive elements (cards, tooltips). Use innerHTML template literals for static display-only content rendered once.",
+      "Prefer flat data structures. Avoid deeply nested JSON.",
+      "Prefer declarative render functions that are idempotent (can be re-called safely).",
+      "CSS should be mobile-first. Base styles are mobile. Desktop overrides go in min-width media queries.",
+      "All interactive elements must be keyboard accessible (tabindex, keydown Enter/Space handlers, aria-label).",
+      "Response times to external fetches should always have an AbortController with an 8s timeout."
+    ],
+    "code_style": [
+      "No trailing comments on code lines.",
+      "Short functions. If a function is doing two things, split it.",
+      "Section separators use the style: /* ══ SECTION NAME ══ */ for major blocks.",
+      "Variable names are camelCase. Constants are UPPER_SNAKE for true constants, camelCase for module-level config.",
+      "Arrow functions for callbacks. function declarations for named top-level functions.",
+      "Prefer const, then let. Never var."
+    ]
+  },
+
+  "anti_patterns": {
+    "things_that_have_been_tried_and_rejected": [
+      "Frameworks — rejected for the 'zero build step' principle",
+      "Service Workers — actively unregistered on every page load (core.js line 5-8). They caused stale cache issues during active development.",
+      "Uplink section on home page — removed because it duplicated the App Uplinks section",
+      "Guides carousel on home page — commented out, not deleted. Kept because it will return when there's enough guide content.",
+      "DOMPurify on the main dashboard — not needed there because all content is owner-controlled JSON, not user input. Only needed where markdown from files is rendered (guide page, playground)."
+    ],
+    "common_mistakes_to_avoid": [
+      "Adding esc() to values you're setting via textContent — esc() is only needed for innerHTML injection",
+      "Calling lucide.createIcons() without { nodes: [...] } scope after DOM is already fully rendered — this rescans everything unnecessarily",
+      "Setting innerHTML on elements that are never re-rendered with static text — use textContent instead",
+      "Adding loading spinners — use the existing CSS animation patterns (opacity pulse, dot-seek)",
+      "Re-observing already-visible cards in IntersectionObserver — use :not(.visible) selector",
+      "Exposing .backup, .bk, .env files in the public directory — gitignored but double-check",
+      "Adding path traversal vectors in URL param-driven fetch calls — always validate params with a strict regex whitelist"
+    ]
+  },
+
+  "language_fingerprint": {
+    "description": "How trap writes, communicates, and thinks. Understanding this lets an LLM match the voice and intent.",
+    "recurring_words_and_phrases": [
+      "sovereign / sovereignty",
+      "uplink",
+      "signal",
+      "mesh",
+      "spice (metaphor for rare/valuable — Dune reference)",
+      "abyss",
+      "cipher",
+      "trace / veil",
+      "ordnance depot",
+      "drone fleet",
+      "reach in",
+      "thought-bleed",
+      "reality matrix",
+      "chaos vector",
+      "fragments",
+      "whisper",
+      "sentinel",
+      "payload (means CLI tool/script)",
+      "uplink (means connection/access to LLM or service)",
+      "detention (the art gallery data file — not a prison, a holding space)",
+      "Assume Breach. Stay Sovereign. (the mantra)",
+      "feel everything. regret nothing. (the echoes mantra)"
+    ],
+    "vocabulary_never_used": [
+      "awesome", "amazing", "cool", "great", "nice",
+      "leveraging", "synergy", "seamless", "robust",
+      "cutting-edge", "state-of-the-art", "best-in-class",
+      "user-friendly", "intuitive", "modern"
+    ],
+    "tone": "Terse. Precise. No preamble. No disclaimers. Commands, not suggestions. The UI copy reads like a military terminal crossed with a drug dealer's poetry — functional, cryptic, beautiful.",
+    "ui_copy_style": "Short fragments. Mono font. ALL CAPS for labels and statuses. Lowercase italic for whispers and subtext. Never full sentences in UI chrome.",
+    "dune_references": "Spice = rare/valuable things. Abyss = total immersion. The vocabulary is deliberately Dune-adjacent without being cosplay.",
+    "how_trap_thinks": "Trap iterates fast. Changes commit messages are often one word ('changes', 'fixes', 'uiux'). But the code itself is highly intentional. The aesthetic is always consistent even when the feature is rough. Trap cares deeply about the experience but moves at speed. Don't over-explain. Don't slow down. Ship and refine."
+  },
+
+  "evolution": {
+    "description": "How the site has changed over time, what drove those changes, and the direction of travel.",
+    "origin": {
+      "date": "2026-04-19",
+      "description": "Initial commit. The site was born as a personal infrastructure dashboard. The core idea — sovereign nodes, JSON-driven, no frameworks — was present from day one."
+    },
+    "phases": [
+      {
+        "phase": "1 — Foundation",
+        "dates": "2026-04-19 to 2026-04-22",
+        "description": "Core dashboard established. Hosting nodes, signal mesh, tools, extlinks. Radar torrent scanner added. ECHOES art page created with initial gallery data. LLM playground first implementation.",
+        "key_commits": ["Initial commit", "Radar torbox based search", "Art page changes", "LLM changes"]
+      },
+      {
+        "phase": "2 — Polish & UX",
+        "dates": "2026-04-23 to 2026-04-24",
+        "description": "Mobile UI improvements. Tunnel light effect added. Tooltip system. Social cluster added. Guide section hidden. Name wrapping fixes. Epilepsy-sensitive animation gating added.",
+        "key_commits": ["Better mobile UI/UX", "Tunnel lights and tooltips", "socials added", "epeleptic sensitive", "guide hide"]
+      },
+      {
+        "phase": "3 — LLM Depth",
+        "dates": "2026-04-29 to 2026-05-01",
+        "description": "LLM playground massively expanded. Character system added (The Underdark). Session management. Roleplay interface. Agent personas. Mobile optimisation of playground.",
+        "key_commits": ["changes LLM characters", "rp", "char creator", "mobile", "LLM opt"]
+      },
+      {
+        "phase": "4 — Underdark",
+        "dates": "2026-05-07",
+        "description": "The Underdark (characters/roleplay) further developed. Char editor, image generator integration, scenario updates, persona system refined. ECHOES data refreshed with new collection.",
+        "key_commits": ["Char editor changes and image generator changes", "personas", "char creator dm", "scenario updates", "LLM Changes and Status Implementation"]
+      },
+      {
+        "phase": "5 — Hardening",
+        "dates": "2026-05-12",
+        "description": "Pre-production security and quality audit. XSS fixes in guide page (DOMPurify + path validation). Art gallery performance fix (IntersectionObserver scoping). Backup file removal. Logs system created.",
+        "key_commits": ["Security hardening and pre-production cleanup", "Add CHANGELOG.md", "Add logs system"]
+      }
+    ],
+    "current_state": "The site is production-ready. All core features are live. The main areas of active development are The Underdark (LLM roleplay) and ECHOES (art gallery). The guides section is on hold pending enough markdown content to justify it.",
+    "intended_future": [
+      "Sacred Codex (guides section) reactivation when enough .md content exists",
+      "More ECHOES collections as artwork is created/curated",
+      "ECHOES metadata enrichment (descriptions, verses, mood/chaos values populated)",
+      "Underdark refinement — lorebooks, multi-character orchestration",
+      "Possible: RSS/activity feed section on home page",
+      "Possible: More sovereign nodes as self-hosting expands",
+      "Possible: Status page historical uptime tracking (persistent data)",
+      "Never: A backend. Never: A framework. Never: A CMS."
+    ]
+  },
+
+  "commits": [
+    {
+      "hash": "c155d34",
+      "date": "2026-05-12",
+      "message": "Add CHANGELOG.md to track pre-production fixes",
+      "scope": "docs",
+      "impact": "low",
+      "files": ["CHANGELOG.md"],
+      "why": "Formalise the change record for future context."
+    },
+    {
+      "hash": "bd8bb1a",
+      "date": "2026-05-12",
+      "message": "Security hardening and pre-production cleanup",
+      "scope": "security, art, infra",
+      "impact": "critical",
+      "files": ["guide/index.html", "art/glass/script/app.js", "art/glass/data/detention.json.backup (deleted)", ".gitignore"],
+      "why": "Pre-production audit found XSS vector in guide page (marked.parse without DOMPurify), path traversal in ?md= param, redundant IntersectionObserver re-observation in art gallery, publicly served backup file. All fixed."
+    },
+    {
+      "hash": "c792aa3",
+      "date": "2026-05-11",
+      "message": "LLM Changes and Status Implementation",
+      "scope": "playground, status",
+      "impact": "high",
+      "files": ["status/index.html", "playground/*"],
+      "why": "Status page (Uplink Sentinel) implemented. LLM playground updates."
+    },
+    {
+      "hash": "b16c69c",
+      "date": "2026-05-07",
+      "message": "changes",
+      "scope": "general",
+      "impact": "medium",
+      "files": ["unknown — commit message non-descriptive"],
+      "why": "Iterative development cycle."
+    },
+    {
+      "hash": "8ce760f",
+      "date": "2026-05-07",
+      "message": "Char editor changes and image generator changes and handling",
+      "scope": "underdark",
+      "impact": "high",
+      "files": ["playground/characters/*"],
+      "why": "The Underdark character editor and image generation integration."
+    },
+    {
+      "hash": "061532c",
+      "date": "2026-05-01",
+      "message": "char and llm improvements",
+      "scope": "playground, underdark",
+      "impact": "medium",
+      "files": ["playground/*"],
+      "why": "Ongoing LLM and character system refinement."
+    },
+    {
+      "hash": "b6492e8",
+      "date": "2026-04-30",
+      "message": "rp",
+      "scope": "underdark",
+      "impact": "high",
+      "files": ["playground/characters/*"],
+      "why": "Roleplay interface implementation — core of The Underdark."
+    },
+    {
+      "hash": "52bb016",
+      "date": "2026-04-24",
+      "message": "Art page thumbnail single column update",
+      "scope": "art",
+      "impact": "low",
+      "files": ["art/glass/style/style.css"],
+      "why": "Portrait images get 3/4 aspect ratio in single-column mobile layout."
+    },
+    {
+      "hash": "22be63e",
+      "date": "2026-04-24",
+      "message": "Tunnel lights and tooltips",
+      "scope": "home",
+      "impact": "medium",
+      "files": ["glass/script/modules/tunnel-light.js", "glass/style/modules/components.css"],
+      "why": "Tunnel light visual effect on header. Bot tooltip system."
+    },
+    {
+      "hash": "41b4a8e",
+      "date": "2026-04-24",
+      "message": "epeleptic sensitive",
+      "scope": "home, art",
+      "impact": "medium",
+      "files": ["glass/style/modules/base.css", "art/glass/style/style.css"],
+      "why": "prefers-reduced-motion gating on all animations. Accessibility requirement."
+    },
+    {
+      "hash": "91149d3",
+      "date": "2026-04-24",
+      "message": "Better mobile UI/UX",
+      "scope": "home",
+      "impact": "medium",
+      "files": ["glass/style/modules/responsive.css"],
+      "why": "Mobile layout pass — responsive improvements across home page."
+    },
+    {
+      "hash": "be6615a",
+      "date": "2026-04-24",
+      "message": "socials added I guess",
+      "scope": "home",
+      "impact": "low",
+      "files": ["glass/script/modules/ui.js", "glass/data/config.json"],
+      "why": "Social cluster component added. Radial layout, nucleus button, 5 platform nodes."
+    },
+    {
+      "hash": "08bbeeb",
+      "date": "2026-04-23",
+      "message": "guide hide",
+      "scope": "home",
+      "impact": "low",
+      "files": ["index.html"],
+      "why": "Guides/Sacred Codex section commented out in index.html. Not enough content yet. Logic preserved."
+    },
+    {
+      "hash": "675c1a0",
+      "date": "2026-04-21",
+      "message": "LLM changes",
+      "scope": "playground",
+      "impact": "high",
+      "files": ["playground/*"],
+      "why": "LLM playground major iteration."
+    },
+    {
+      "hash": "af33ed9",
+      "date": "2026-04-20",
+      "message": "Correction on router .js and .json handling",
+      "scope": "home",
+      "impact": "low",
+      "files": ["glass/script/modules/core.js"],
+      "why": "Router bug fix — shortcut key handling correction."
+    },
+    {
+      "hash": "aec8ca5",
+      "date": "2026-04-20",
+      "message": "radar changed, vps more universally dumb",
+      "scope": "radar",
+      "impact": "medium",
+      "files": ["radar/*"],
+      "why": "RADAR interface changes, VPS integration simplified."
+    },
+    {
+      "hash": "582e9d7",
+      "date": "2026-04-20",
+      "message": "Initial commit",
+      "scope": "all",
+      "impact": "critical",
+      "files": ["everything"],
+      "why": "The beginning."
+    }
+  ],
+
+  "sessions": [
+    {
+      "date": "2026-05-12",
+      "agent": "Claude Sonnet 4.6",
+      "type": "pre_production_audit",
+      "summary": "Full pre-production audit of the entire codebase. Fixed XSS in guide/index.html (DOMPurify + path validation). Fixed IntersectionObserver re-observation in art gallery. Deleted publicly-served detention.json.backup. Added **/*.backup to .gitignore. Updated CHANGELOG.md. Created logs system.",
+      "decisions": [
+        "DOMPurify is already in config.shards but was never loaded on the guide page — added it to the parallel shard load.",
+        "Path traversal fix: regex /^[a-zA-Z0-9_-]+\\.md$/ is the right level of strictness for a filename whitelist.",
+        "The detention.json.backup being all-different IDs from current data confirmed it was safe to delete — not a corrupted current file.",
+        "Lucide icon names boom-box, swords, images, refrigerator are all valid — the audit agent flagged them incorrectly.",
+        "The backup file in art/glass/data/ was identified as the old 71-artifact dataset. Current 5-artifact file is a fresh replacement collection — intentional.",
+        "Logs page created as status/logs/ — reads a JSON knowledge base and renders it as an interactive briefing."
+      ],
+      "rules_reinforced": [
+        "DOMPurify must be loaded on any page that renders user-reachable markdown",
+        "URL params used in fetch() must be validated with a regex whitelist",
+        "IntersectionObserver selectors should use :not(.visible) to avoid re-observing already-entered elements"
+      ]
+    },
+    {
+      "date": "2026-05-07",
+      "agent": "Claude Sonnet 4.6 (inferred from commit pattern)",
+      "type": "feature_development",
+      "summary": "Underdark (characters/roleplay) major expansion. ECHOES data refreshed. Status page implementation. LLM playground updates.",
+      "decisions": [
+        "Status page added as /status/ — live infrastructure monitor with sparklines and response times.",
+        "ECHOES collection replaced — new dataset, different medium types.",
+        "The Underdark: character editor, image generator integration, persona system."
+      ]
+    }
+  ],
+
+  "for_new_llm": {
+    "read_this_first": "You are about to work on trap.lol. This is not a standard web project. Read every field in this file before touching a single line of code. The philosophy, rules, and anti-patterns sections are load-bearing — violating them will produce work that gets reverted.",
+    "the_five_laws": [
+      "1. No frameworks. No build steps. Vanilla only.",
+      "2. All data lives in JSON. All HTML is scaffolding.",
+      "3. esc() on all JSON data going into innerHTML. DOMPurify on markdown.",
+      "4. lucide.createIcons() only after all HTML is injected.",
+      "5. The aesthetic is Dune × Arcane. Dark, glowing, precise, poetic. Never corporate, never default."
+    ],
+    "how_to_help_effectively": [
+      "When asked to add a new section or item: edit the relevant JSON file. Do not touch the HTML.",
+      "When asked to add a new page: follow the pattern of the nearest existing page. Match its CSS variable usage, its glass morphism, its mono typography.",
+      "When asked to fix a bug: read the file top to bottom first. The architecture is intentional. The bug is almost never where you think it is.",
+      "When asked to improve performance: look for DOM thrashing, unnecessary re-renders, unscoped lucide.createIcons() calls, unscoped IntersectionObserver selectors.",
+      "When asked to improve UI: the answer is almost always 'add a glow' or 'add a sweep' or 'add an entrance animation'. The palette is fixed. Don't introduce new colours.",
+      "When unsure about tone for UI copy: terse. mono. ALL CAPS for states. lowercase for whispers. Never full sentences in labels."
+    ],
+    "what_trap_values_most": [
+      "Sovereignty — full control, no external dependencies beyond what's necessary",
+      "Precision — every pixel intentional, every byte justified",
+      "Aesthetic consistency — the palette and feel must be coherent across all pages",
+      "Speed of iteration — ship and refine, don't over-architect",
+      "Security at the boundary — validate user input, sanitize rendered content, expose nothing accidentally",
+      "Surprise — the gacha pull, the terminal shortcut system, the cursor orb — the site rewards exploration"
+    ]
+  }
+}

@@ -1,0 +1,1193 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>trap.lol // logs</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2306040A'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%23BE29EC' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23BE29EC'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="../../glass/style/style.css" />
+    <style>
+      /* ══════════════════════════════════════════════════
+         LOGS — SITE INTELLIGENCE TERMINAL
+         trap.lol × context memory × sovereign record
+         ══════════════════════════════════════════════════ */
+
+      /* ── Nav ── */
+      .back-nav {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+        color: var(--text-muted);
+        text-decoration: none;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        transition: color var(--transition), gap var(--transition-med);
+        margin-bottom: var(--space-md);
+      }
+      .back-nav:hover { color: var(--accent-warm); gap: 0.65rem; }
+      .back-nav svg { width: 0.75rem; height: 0.75rem; flex-shrink: 0; }
+
+      /* ── Tab bar ── */
+      .log-tabs {
+        display: flex;
+        gap: 0.25rem;
+        margin-bottom: var(--space-lg);
+        flex-wrap: wrap;
+        border-bottom: 1px solid var(--glass-border-mute);
+        padding-bottom: 0;
+      }
+      .log-tab {
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        background: none;
+        border: 1px solid transparent;
+        border-bottom: none;
+        border-radius: 4px 4px 0 0;
+        padding: 0.45rem 0.9rem 0.5rem;
+        cursor: pointer;
+        transition: color var(--transition), border-color var(--transition), background var(--transition);
+        position: relative;
+        bottom: -1px;
+      }
+      .log-tab:hover { color: var(--text-main); }
+      .log-tab.active {
+        color: var(--accent);
+        border-color: var(--glass-border-mute);
+        border-bottom-color: var(--bg-main, #06040A);
+        background: var(--glass-bg);
+      }
+      /* Active indicator line */
+      .log-tab.active::after {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, var(--accent), var(--accent-warm));
+        border-radius: 4px 4px 0 0;
+      }
+
+      /* ── Panels ── */
+      .log-panel { display: none; }
+      .log-panel.active { display: block; }
+
+      /* ── Shared card ── */
+      .log-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        border: 1px solid var(--glass-border-mute);
+        border-radius: 8px;
+        padding: 1.5rem 2rem;
+        margin-bottom: var(--space-md);
+        position: relative;
+        overflow: hidden;
+        animation: card-rise 0.4s cubic-bezier(0.25, 0, 0, 1) both;
+      }
+      .log-card::before {
+        content: '';
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 2px;
+        background: linear-gradient(180deg, var(--accent-warm), var(--accent), transparent);
+        opacity: 0.5;
+      }
+      @keyframes card-rise {
+        from { opacity: 0; transform: translateY(8px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+      .log-card + .log-card { animation-delay: 0.04s; }
+
+      /* ── Label / value pairs ── */
+      .kv-grid {
+        display: grid;
+        grid-template-columns: minmax(120px, auto) 1fr;
+        gap: 0.45rem 1.5rem;
+        align-items: baseline;
+      }
+      .kv-key {
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+        color: var(--accent-warm);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        white-space: nowrap;
+      }
+      .kv-val {
+        font-family: var(--font-mono);
+        font-size: var(--text-sm);
+        color: var(--text-main);
+        line-height: 1.5;
+        word-break: break-word;
+      }
+      .kv-val.muted { color: var(--text-muted); }
+      .kv-val.accent { color: var(--accent); }
+      .kv-val.warn { color: #F4A830; }
+      .kv-val.danger { color: #ef4444; }
+
+      /* ── Prose blocks ── */
+      .log-prose {
+        font-family: var(--font-sans);
+        font-size: var(--text-sm);
+        color: var(--text-main);
+        line-height: 1.75;
+        opacity: 0.85;
+        margin-top: 0.75rem;
+      }
+      .log-prose + .log-prose { margin-top: 0.4rem; }
+
+      /* ── Section title inside panel ── */
+      .panel-title {
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--accent-warm);
+        opacity: 0.7;
+        margin: var(--space-lg) 0 var(--space-sm);
+      }
+      .panel-title:first-child { margin-top: 0; }
+
+      /* ── Rule list ── */
+      .rule-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      .rule-item {
+        display: flex;
+        gap: 0.85rem;
+        align-items: flex-start;
+        font-family: var(--font-mono);
+        font-size: 0.78rem;
+        color: var(--text-muted);
+        line-height: 1.55;
+        padding: 0.55rem 0.85rem;
+        background: rgba(0,0,0,0.25);
+        border: 1px solid var(--glass-border-mute);
+        border-radius: 4px;
+        transition: border-color var(--transition), color var(--transition);
+      }
+      .rule-item:hover { border-color: rgba(190,41,236,0.2); color: var(--text-main); }
+      .rule-item.absolute-rule { border-left: 2px solid #ef4444; }
+      .rule-item.absolute-rule .rule-pip { background: #ef4444; }
+      .rule-item.pref-rule { border-left: 2px solid var(--accent-warm); }
+      .rule-item.pref-rule .rule-pip { background: var(--accent-warm); }
+      .rule-pip {
+        width: 5px; height: 5px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        margin-top: 0.45rem;
+        background: var(--accent);
+      }
+
+      /* ── Commit row ── */
+      .commit-row {
+        display: grid;
+        grid-template-columns: 72px 1fr auto;
+        gap: 0.75rem 1.25rem;
+        align-items: start;
+        padding: 0.9rem 1.25rem;
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border-mute);
+        border-radius: 6px;
+        margin-bottom: 0.4rem;
+        transition: border-color var(--transition), background var(--transition);
+        animation: card-rise 0.35s cubic-bezier(0.25, 0, 0, 1) both;
+      }
+      .commit-row:hover {
+        border-color: rgba(190,41,236,0.18);
+        background: var(--glass-bg-warm);
+      }
+      .commit-hash {
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        color: var(--accent);
+        letter-spacing: 0.06em;
+        padding: 0.2rem 0.4rem;
+        background: rgba(190,41,236,0.08);
+        border: 1px solid rgba(190,41,236,0.15);
+        border-radius: 3px;
+        text-align: center;
+        align-self: start;
+      }
+      .commit-body { min-width: 0; }
+      .commit-msg {
+        font-family: var(--font-mono);
+        font-size: var(--text-sm);
+        color: var(--text-main);
+        font-weight: 600;
+        margin-bottom: 0.2rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .commit-why {
+        font-family: var(--font-sans);
+        font-size: var(--text-xs);
+        color: var(--text-muted);
+        line-height: 1.5;
+      }
+      .commit-meta {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 0.25rem;
+        flex-shrink: 0;
+      }
+      .commit-date {
+        font-family: var(--font-mono);
+        font-size: 0.65rem;
+        color: var(--text-muted);
+        white-space: nowrap;
+      }
+      .commit-impact {
+        font-family: var(--font-mono);
+        font-size: 0.6rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        padding: 0.12rem 0.35rem;
+        border-radius: 2px;
+        border: 1px solid transparent;
+      }
+      .impact-critical { color: #ef4444; border-color: rgba(239,68,68,0.25); background: rgba(239,68,68,0.05); }
+      .impact-high     { color: #F4A830; border-color: rgba(244,168,48,0.25); background: rgba(244,168,48,0.05); }
+      .impact-medium   { color: var(--accent); border-color: rgba(190,41,236,0.25); background: rgba(190,41,236,0.05); }
+      .impact-low      { color: var(--text-muted); border-color: var(--glass-border-mute); }
+
+      /* ── Page manifest cards ── */
+      .page-card {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border-mute);
+        border-radius: 8px;
+        padding: 1.25rem 1.5rem;
+        margin-bottom: 0.6rem;
+        position: relative;
+        overflow: hidden;
+        animation: card-rise 0.4s cubic-bezier(0.25, 0, 0, 1) both;
+        transition: border-color var(--transition), background var(--transition);
+      }
+      .page-card:hover { border-color: rgba(190,41,236,0.22); background: var(--glass-bg-warm); }
+      .page-card::before {
+        content: '';
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 2px;
+        background: linear-gradient(180deg, var(--accent), transparent);
+        opacity: 0.4;
+      }
+      .page-url {
+        font-family: var(--font-mono);
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: var(--accent);
+        letter-spacing: 0.04em;
+        margin-bottom: 0.4rem;
+      }
+      .page-title-label {
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+        color: var(--text-muted);
+        letter-spacing: 0.08em;
+        margin-bottom: 0.5rem;
+      }
+      .page-purpose {
+        font-family: var(--font-sans);
+        font-size: var(--text-sm);
+        color: var(--text-main);
+        line-height: 1.65;
+        opacity: 0.82;
+        margin-bottom: 0.6rem;
+      }
+      .page-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.3rem;
+      }
+      .page-tag {
+        font-family: var(--font-mono);
+        font-size: 0.62rem;
+        color: var(--text-muted);
+        letter-spacing: 0.08em;
+        padding: 0.1rem 0.4rem;
+        border: 1px solid var(--glass-border-mute);
+        border-radius: 3px;
+        background: rgba(0,0,0,0.3);
+      }
+
+      /* ── Philosophy / identity big text blocks ── */
+      .belief-block {
+        border-left: 2px solid rgba(190,41,236,0.35);
+        padding: 0.85rem 1.25rem;
+        margin: 0.75rem 0;
+        background: rgba(190,41,236,0.03);
+        border-radius: 0 6px 6px 0;
+      }
+      .belief-block__label {
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+        color: var(--accent-warm);
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        margin-bottom: 0.4rem;
+        opacity: 0.7;
+      }
+      .belief-block__text {
+        font-family: var(--font-sans);
+        font-size: var(--text-sm);
+        color: var(--text-main);
+        line-height: 1.75;
+        opacity: 0.88;
+      }
+
+      /* ── Phase timeline ── */
+      .timeline {
+        position: relative;
+        padding-left: 1.75rem;
+      }
+      .timeline::before {
+        content: '';
+        position: absolute;
+        left: 6px; top: 8px; bottom: 8px;
+        width: 1px;
+        background: linear-gradient(180deg, var(--accent), transparent);
+        opacity: 0.25;
+      }
+      .timeline-item {
+        position: relative;
+        margin-bottom: 1.25rem;
+        animation: card-rise 0.4s cubic-bezier(0.25, 0, 0, 1) both;
+      }
+      .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -1.5rem;
+        top: 0.45rem;
+        width: 8px; height: 8px;
+        border-radius: 50%;
+        background: var(--accent);
+        box-shadow: 0 0 8px rgba(190,41,236,0.5);
+      }
+      .timeline-phase {
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+        color: var(--accent);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        margin-bottom: 0.2rem;
+      }
+      .timeline-dates {
+        font-family: var(--font-mono);
+        font-size: 0.65rem;
+        color: var(--text-muted);
+        margin-bottom: 0.35rem;
+      }
+      .timeline-desc {
+        font-family: var(--font-sans);
+        font-size: var(--text-sm);
+        color: var(--text-main);
+        line-height: 1.65;
+        opacity: 0.82;
+      }
+
+      /* ── Vocabulary pills ── */
+      .vocab-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        margin: 0.5rem 0;
+      }
+      .vocab-pill {
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        letter-spacing: 0.06em;
+        padding: 0.22rem 0.6rem;
+        border-radius: 4px;
+        border: 1px solid rgba(190,41,236,0.22);
+        background: rgba(190,41,236,0.06);
+        color: var(--accent);
+        transition: border-color var(--transition), background var(--transition);
+      }
+      .vocab-pill:hover { border-color: rgba(190,41,236,0.45); background: rgba(190,41,236,0.12); }
+      .vocab-pill.forbidden {
+        border-color: rgba(239,68,68,0.18);
+        background: rgba(239,68,68,0.04);
+        color: rgba(239,68,68,0.6);
+        text-decoration: line-through;
+        opacity: 0.55;
+      }
+
+      /* ── The Five Laws ── */
+      .law-list {
+        counter-reset: law;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      .law-item {
+        counter-increment: law;
+        display: flex;
+        gap: 1rem;
+        align-items: flex-start;
+        padding: 0.85rem 1.1rem;
+        background: rgba(0,0,0,0.3);
+        border: 1px solid rgba(190,41,236,0.15);
+        border-radius: 6px;
+        transition: border-color var(--transition);
+      }
+      .law-item:hover { border-color: rgba(190,41,236,0.35); }
+      .law-num {
+        font-family: var(--font-mono);
+        font-size: 0.65rem;
+        color: var(--accent);
+        background: rgba(190,41,236,0.1);
+        border: 1px solid rgba(190,41,236,0.2);
+        border-radius: 3px;
+        padding: 0.1rem 0.35rem;
+        flex-shrink: 0;
+        letter-spacing: 0.06em;
+      }
+      .law-text {
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        color: var(--text-main);
+        line-height: 1.6;
+      }
+
+      /* ── Session cards ── */
+      .session-card {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border-mute);
+        border-radius: 8px;
+        padding: 1.25rem 1.5rem;
+        margin-bottom: 0.6rem;
+        animation: card-rise 0.4s cubic-bezier(0.25, 0, 0, 1) both;
+        position: relative;
+        overflow: hidden;
+      }
+      .session-card::before {
+        content: '';
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 2px;
+        background: linear-gradient(180deg, var(--accent-warm), transparent);
+        opacity: 0.5;
+      }
+      .session-header {
+        display: flex;
+        align-items: baseline;
+        gap: 1rem;
+        margin-bottom: 0.65rem;
+        flex-wrap: wrap;
+      }
+      .session-date {
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+        color: var(--accent-warm);
+        letter-spacing: 0.1em;
+      }
+      .session-agent {
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+        color: var(--text-muted);
+      }
+      .session-type {
+        font-family: var(--font-mono);
+        font-size: 0.6rem;
+        color: var(--accent);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        padding: 0.1rem 0.35rem;
+        border: 1px solid rgba(190,41,236,0.2);
+        border-radius: 3px;
+        margin-left: auto;
+      }
+      .session-summary {
+        font-family: var(--font-sans);
+        font-size: var(--text-sm);
+        color: var(--text-main);
+        line-height: 1.65;
+        opacity: 0.85;
+        margin-bottom: 0.75rem;
+      }
+      .session-decisions {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+      }
+      .session-decision {
+        display: flex;
+        gap: 0.65rem;
+        align-items: flex-start;
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        line-height: 1.5;
+      }
+      .session-decision::before {
+        content: '→';
+        color: var(--accent);
+        flex-shrink: 0;
+        margin-top: 0.05em;
+      }
+
+      /* ── LLM briefing panel ── */
+      .briefing-card {
+        background: rgba(190,41,236,0.04);
+        border: 1px solid rgba(190,41,236,0.2);
+        border-radius: 10px;
+        padding: 2rem;
+        margin-bottom: var(--space-lg);
+        position: relative;
+        overflow: hidden;
+      }
+      .briefing-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, var(--accent), var(--accent-warm) 50%, transparent);
+        opacity: 0.5;
+      }
+      .briefing-eyebrow {
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+        color: var(--accent-warm);
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        margin-bottom: 0.75rem;
+        opacity: 0.7;
+      }
+      .briefing-text {
+        font-family: var(--font-sans);
+        font-size: var(--text-sm);
+        color: var(--text-main);
+        line-height: 1.8;
+        opacity: 0.9;
+        margin-bottom: 1.25rem;
+      }
+
+      /* ── Copy-to-clipboard button (for LLM briefing) ── */
+      .copy-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+        color: var(--text-muted);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        background: rgba(0,0,0,0.3);
+        border: 1px solid var(--glass-border-mute);
+        border-radius: 4px;
+        padding: 0.45rem 0.85rem;
+        cursor: pointer;
+        transition: color var(--transition), border-color var(--transition), background var(--transition);
+      }
+      .copy-btn:hover { color: var(--accent); border-color: rgba(190,41,236,0.3); background: rgba(190,41,236,0.06); }
+      .copy-btn.copied { color: #4ade80; border-color: rgba(74,222,128,0.3); background: rgba(74,222,128,0.06); }
+      .copy-btn svg { width: 12px; height: 12px; flex-shrink: 0; }
+
+      /* ── Palette swatches ── */
+      .palette-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+        gap: 0.5rem;
+        margin: 0.5rem 0;
+      }
+      .swatch {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+        padding: 0.65rem 0.75rem;
+        border-radius: 6px;
+        border: 1px solid rgba(255,255,255,0.06);
+        background: rgba(0,0,0,0.3);
+      }
+      .swatch__dot {
+        width: 28px; height: 28px;
+        border-radius: 50%;
+        box-shadow: 0 0 12px var(--sw-color, transparent);
+      }
+      .swatch__name {
+        font-family: var(--font-mono);
+        font-size: 0.65rem;
+        color: var(--text-muted);
+        letter-spacing: 0.06em;
+      }
+      .swatch__hex {
+        font-family: var(--font-mono);
+        font-size: 0.62rem;
+        color: var(--text-warm);
+      }
+
+      /* ── Loading skeleton ── */
+      .log-loading {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-family: var(--font-mono);
+        font-size: var(--text-sm);
+        color: var(--text-muted);
+        padding: 3rem 0;
+      }
+      .loading-dot {
+        width: 6px; height: 6px;
+        border-radius: 50%;
+        background: var(--accent);
+        animation: dot-seek 1s ease-in-out infinite;
+      }
+      .loading-dot:nth-child(2) { animation-delay: 0.15s; }
+      .loading-dot:nth-child(3) { animation-delay: 0.3s; }
+      @keyframes dot-seek {
+        0%,100% { opacity: 0.2; transform: scale(0.7); }
+        50%      { opacity: 1;   transform: scale(1.2); }
+      }
+
+      /* ── Error state ── */
+      .log-error {
+        font-family: var(--font-mono);
+        font-size: var(--text-sm);
+        color: #ef4444;
+        padding: 2rem 0;
+      }
+
+      /* ── Responsive ── */
+      @media (max-width: 640px) {
+        .log-card { padding: 1.1rem 1.25rem; }
+        .kv-grid { grid-template-columns: 1fr; gap: 0.2rem; }
+        .kv-key { margin-top: 0.5rem; }
+        .commit-row { grid-template-columns: 1fr auto; }
+        .commit-hash { grid-column: 1 / -1; width: fit-content; }
+        .log-tabs { gap: 0.15rem; }
+        .log-tab { font-size: 0.6rem; padding: 0.4rem 0.65rem 0.45rem; }
+        .briefing-card { padding: 1.25rem; }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .log-card, .commit-row, .page-card, .session-card, .timeline-item {
+          animation: none !important;
+          opacity: 1 !important;
+          transform: none !important;
+        }
+        .loading-dot { animation: none !important; opacity: 0.6 !important; }
+      }
+    </style>
+  </head>
+  <body>
+
+    <a href="/status/" class="back-nav" aria-label="Back to status">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+      status
+    </a>
+
+    <header>
+      <div class="header__eyebrow">[ LOGS // SITE INTELLIGENCE TERMINAL ]</div>
+      <h1 class="header__title" data-text="MEMORY">MEMORY</h1>
+      <p class="header__subtitle">context record — architecture, decisions, evolution, rules</p>
+    </header>
+
+    <main>
+
+      <div id="log-loading" class="log-loading" aria-live="polite">
+        <div class="loading-dot"></div>
+        <div class="loading-dot"></div>
+        <div class="loading-dot"></div>
+        <span>loading intelligence...</span>
+      </div>
+
+      <div id="log-error" class="log-error hidden"></div>
+
+      <div id="log-body" class="hidden">
+
+        <!-- Tab navigation -->
+        <nav class="log-tabs" role="tablist" aria-label="Log sections" id="log-tabs"></nav>
+
+        <!-- Panels injected by JS -->
+        <div id="log-panels"></div>
+
+      </div>
+
+    </main>
+
+    <footer class="site-footer">
+      <div class="site-footer__bar">
+        <span>trap.lol // logs</span>
+        <span class="site-footer__bar-sep">//</span>
+        <span id="footer-meta">—</span>
+      </div>
+    </footer>
+
+    <script type="module">
+      /* ══════════════════════════════════════════════════
+         LOGS — Intelligence Terminal
+         Reads logs.json, renders site memory.
+         GPL-3.0 — trap.lol
+         ══════════════════════════════════════════════════ */
+
+      const DATA_PATH = './logs.json';
+
+      /* ── Utils ── */
+      function esc(s) {
+        return String(s ?? '')
+          .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      }
+      function qs(sel, ctx = document) { return ctx.querySelector(sel); }
+      function el(tag, cls, html = '') {
+        const e = document.createElement(tag);
+        if (cls) e.className = cls;
+        if (html) e.innerHTML = html;
+        return e;
+      }
+
+      /* ── Tab system ── */
+      const $tabs   = document.getElementById('log-tabs');
+      const $panels = document.getElementById('log-panels');
+      let activeTab = null;
+
+      function addTab(id, label) {
+        const btn = el('button', 'log-tab', esc(label));
+        btn.dataset.tab = id;
+        btn.setAttribute('role', 'tab');
+        btn.setAttribute('aria-controls', `panel-${id}`);
+        btn.setAttribute('aria-selected', 'false');
+        btn.addEventListener('click', () => activateTab(id));
+        $tabs.appendChild(btn);
+
+        const panel = el('div', 'log-panel');
+        panel.id = `panel-${id}`;
+        panel.setAttribute('role', 'tabpanel');
+        panel.setAttribute('aria-labelledby', `tab-${id}`);
+        $panels.appendChild(panel);
+        return panel;
+      }
+
+      function activateTab(id) {
+        $tabs.querySelectorAll('.log-tab').forEach(b => {
+          const active = b.dataset.tab === id;
+          b.classList.toggle('active', active);
+          b.setAttribute('aria-selected', active);
+        });
+        $panels.querySelectorAll('.log-panel').forEach(p => p.classList.toggle('active', p.id === `panel-${id}`));
+        activeTab = id;
+        window.location.hash = id;
+      }
+
+      /* ── Small render helpers ── */
+      function kv(key, val, cls = '') {
+        return `<div class="kv-key">${esc(key)}</div><div class="kv-val ${cls}">${esc(String(val))}</div>`;
+      }
+
+      function listItems(arr, cls = '', render = v => esc(v)) {
+        if (!arr?.length) return '<span class="kv-val muted">—</span>';
+        return `<ul class="rule-list">${arr.map(v => `<li class="rule-item ${cls}"><span class="rule-pip"></span>${render(v)}</li>`).join('')}</ul>`;
+      }
+
+      function vocabPills(arr, forbidden = false) {
+        return `<div class="vocab-grid">${arr.map(w =>
+          `<span class="vocab-pill${forbidden ? ' forbidden' : ''}">${esc(w)}</span>`
+        ).join('')}</div>`;
+      }
+
+      function beliefBlock(label, text) {
+        return `<div class="belief-block">
+          <div class="belief-block__label">${esc(label)}</div>
+          <div class="belief-block__text">${esc(text)}</div>
+        </div>`;
+      }
+
+      /* ─────────────────────────────────────────────────
+         PANEL BUILDERS
+         ───────────────────────────────────────────────── */
+
+      function buildBriefing(data) {
+        const panel = addTab('briefing', 'Briefing');
+        const llm = data.for_new_llm;
+
+        const briefingText = [
+          `SITE: ${data.identity.domain} — ${data.identity.tagline}`,
+          `AUTHOR: ${data.identity.author} (${data.identity.author_real})`,
+          `DEPLOYED: ${data.identity.deployed_via}`,
+          '',
+          `IDENTITY: ${data.identity.what_it_is}`,
+          '',
+          `CORE BELIEF: ${data.philosophy.core_belief}`,
+          `DESIGN: ${data.philosophy.design_philosophy}`,
+          `AESTHETIC: ${data.philosophy.aesthetic_philosophy}`,
+          `MANTRA: ${data.philosophy.operational_philosophy}`,
+          '',
+          'THE FIVE LAWS:',
+          ...llm.the_five_laws.map(l => '  ' + l),
+          '',
+          'WHAT TRAP VALUES MOST:',
+          ...llm.what_trap_values_most.map(v => '  — ' + v),
+          '',
+          'HOW TO HELP EFFECTIVELY:',
+          ...llm.how_to_help_effectively.map(h => '  — ' + h),
+          '',
+          `SCHEMA VERSION: ${data._meta.schema_version} | LAST UPDATED: ${data._meta.last_updated}`,
+        ].join('\n');
+
+        panel.innerHTML = `
+          <div class="briefing-card">
+            <div class="briefing-eyebrow">[ FOR NEW CONTEXT WINDOWS & LLMs ]</div>
+            <p class="briefing-text">${esc(llm.read_this_first)}</p>
+            <button class="copy-btn" id="copy-briefing-btn" aria-label="Copy briefing to clipboard">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+              Copy Full Briefing
+            </button>
+          </div>
+
+          <h2 class="panel-title">The Five Laws</h2>
+          <ol class="law-list">${llm.the_five_laws.map(l =>
+            `<li class="law-item"><span class="law-num">${esc(l.charAt(0))}</span><span class="law-text">${esc(l.slice(3))}</span></li>`
+          ).join('')}</ol>
+
+          <h2 class="panel-title">What Trap Values Most</h2>
+          ${listItems(llm.what_trap_values_most)}
+
+          <h2 class="panel-title">How to Help Effectively</h2>
+          ${listItems(llm.how_to_help_effectively)}
+
+          <h2 class="panel-title">Identity</h2>
+          <div class="log-card">
+            <div class="kv-grid">
+              ${kv('domain', data.identity.domain, 'accent')}
+              ${kv('tagline', data.identity.tagline)}
+              ${kv('author', `${data.identity.author} (${data.identity.author_real})`)}
+              ${kv('deployed via', data.identity.deployed_via)}
+              ${kv('what it is', data.identity.what_it_is)}
+            </div>
+          </div>
+        `;
+
+        document.getElementById('copy-briefing-btn').addEventListener('click', function() {
+          navigator.clipboard.writeText(briefingText).then(() => {
+            this.classList.add('copied');
+            this.innerHTML = this.innerHTML.replace('Copy Full Briefing', 'Copied');
+            setTimeout(() => {
+              this.classList.remove('copied');
+              this.innerHTML = this.innerHTML.replace('Copied', 'Copy Full Briefing');
+            }, 2000);
+          });
+        });
+      }
+
+      function buildPhilosophy(data) {
+        const panel = addTab('philosophy', 'Philosophy');
+        const p = data.philosophy;
+        const keys = Object.keys(p);
+        panel.innerHTML = keys.map(k => beliefBlock(k.replace(/_/g, ' '), p[k])).join('');
+      }
+
+      function buildPages(data) {
+        const panel = addTab('pages', 'Pages');
+        const pages = data.pages;
+
+        panel.innerHTML = Object.entries(pages).map(([url, page], i) => {
+          const tags = [
+            page.file && `file: ${page.file}`,
+            page.script && 'js',
+            page.data && 'data-driven',
+            page.api && 'api-key',
+          ].filter(Boolean);
+
+          return `<div class="page-card" style="animation-delay:${i*0.04}s">
+            <div class="page-url">${esc(url)}</div>
+            <div class="page-title-label">${esc(page.title || '')}</div>
+            <div class="page-purpose">${esc(page.purpose || '')}</div>
+            ${page.note ? `<div class="log-prose" style="opacity:0.6;font-size:0.75rem;font-family:var(--font-mono)">${esc(page.note)}</div>` : ''}
+            <div class="page-tags">${tags.map(t => `<span class="page-tag">${esc(t)}</span>`).join('')}</div>
+          </div>`;
+        }).join('');
+      }
+
+      function buildDesign(data) {
+        const panel = addTab('design', 'Design');
+        const ds = data.design_system;
+
+        const swatchDefs = [
+          { name: 'bg base',       hex: '#05030A', glow: '#05030A' },
+          { name: 'accent primary',hex: '#BE29EC', glow: 'rgba(190,41,236,0.6)' },
+          { name: 'accent warm',   hex: '#F4A830', glow: 'rgba(244,168,48,0.5)' },
+          { name: 'accent rust',   hex: '#C4562A', glow: 'rgba(196,86,42,0.4)' },
+          { name: 'accent cyan',   hex: '#2dd4a0', glow: 'rgba(45,212,160,0.5)' },
+          { name: 'text main',     hex: '#EDE8F5', glow: 'transparent' },
+          { name: 'text muted',    hex: '#6A5C7A', glow: 'transparent' },
+          { name: 'online',        hex: '#4ade80', glow: 'rgba(74,222,128,0.5)' },
+          { name: 'offline',       hex: '#ef4444', glow: 'rgba(239,68,68,0.5)' },
+        ];
+
+        panel.innerHTML = `
+          <h2 class="panel-title">Palette</h2>
+          <div class="palette-grid">
+            ${swatchDefs.map(s => `<div class="swatch">
+              <div class="swatch__dot" style="background:${s.hex};--sw-color:${s.glow};box-shadow:0 0 12px ${s.glow}"></div>
+              <div class="swatch__name">${esc(s.name)}</div>
+              <div class="swatch__hex">${esc(s.hex)}</div>
+            </div>`).join('')}
+          </div>
+
+          <h2 class="panel-title">Typography</h2>
+          <div class="log-card">
+            <div class="kv-grid">
+              ${kv('mono', ds.typography.mono)}
+              ${kv('sans', ds.typography.sans)}
+              ${kv('serif', ds.typography.serif)}
+              ${kv('rule', ds.typography.rule)}
+            </div>
+          </div>
+
+          <h2 class="panel-title">Effects Vocabulary</h2>
+          ${Object.entries(ds.effects).map(([name, desc]) =>
+            `<div class="log-card" style="margin-bottom:0.4rem;padding:0.85rem 1.25rem">
+              <div class="kv-grid">${kv(name, desc)}</div>
+            </div>`
+          ).join('')}
+
+          <h2 class="panel-title">Animation Principles</h2>
+          ${listItems(ds.animation_principles)}
+
+          <h2 class="panel-title">Naming Convention</h2>
+          <div class="log-card">
+            <div class="kv-grid">
+              ${kv('css naming', ds.naming_convention)}
+            </div>
+          </div>
+
+          <h2 class="panel-title">Neon Classes</h2>
+          <div class="log-card">
+            <div class="kv-grid">
+              ${Object.entries(ds.neon_classes).map(([k,v]) => kv(k, v)).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      function buildRules(data) {
+        const panel = addTab('rules', 'Rules');
+        const r = data.rules;
+
+        panel.innerHTML = `
+          <h2 class="panel-title">Absolute — Never Violate</h2>
+          <ul class="rule-list">${r.absolute.map(rule =>
+            `<li class="rule-item absolute-rule"><span class="rule-pip"></span>${esc(rule)}</li>`
+          ).join('')}</ul>
+
+          <h2 class="panel-title">Strong Preferences</h2>
+          <ul class="rule-list">${r.strong_preferences.map(rule =>
+            `<li class="rule-item pref-rule"><span class="rule-pip"></span>${esc(rule)}</li>`
+          ).join('')}</ul>
+
+          <h2 class="panel-title">Code Style</h2>
+          <ul class="rule-list">${r.code_style.map(rule =>
+            `<li class="rule-item"><span class="rule-pip"></span>${esc(rule)}</li>`
+          ).join('')}</ul>
+
+          <h2 class="panel-title">Anti-Patterns — Things Tried & Rejected</h2>
+          <ul class="rule-list">${data.anti_patterns.things_that_have_been_tried_and_rejected.map(v =>
+            `<li class="rule-item"><span class="rule-pip"></span>${esc(v)}</li>`
+          ).join('')}</ul>
+
+          <h2 class="panel-title">Common Mistakes to Avoid</h2>
+          <ul class="rule-list">${data.anti_patterns.common_mistakes_to_avoid.map(v =>
+            `<li class="rule-item absolute-rule"><span class="rule-pip"></span>${esc(v)}</li>`
+          ).join('')}</ul>
+        `;
+      }
+
+      function buildLanguage(data) {
+        const panel = addTab('language', 'Language');
+        const lang = data.language_fingerprint;
+
+        panel.innerHTML = `
+          <h2 class="panel-title">Description</h2>
+          ${beliefBlock('fingerprint', lang.description)}
+
+          <h2 class="panel-title">Recurring Words & Phrases</h2>
+          ${vocabPills(lang.recurring_words_and_phrases)}
+
+          <h2 class="panel-title">Vocabulary — Never Used</h2>
+          ${vocabPills(lang.vocabulary_never_used, true)}
+
+          <h2 class="panel-title">Tone</h2>
+          ${beliefBlock('tone', lang.tone)}
+
+          <h2 class="panel-title">UI Copy Style</h2>
+          ${beliefBlock('ui copy', lang.ui_copy_style)}
+
+          <h2 class="panel-title">Dune References</h2>
+          ${beliefBlock('dune', lang.dune_references)}
+
+          <h2 class="panel-title">How Trap Thinks</h2>
+          ${beliefBlock('mindset', lang.how_trap_thinks)}
+        `;
+      }
+
+      function buildEvolution(data) {
+        const panel = addTab('evolution', 'Evolution');
+        const ev = data.evolution;
+
+        panel.innerHTML = `
+          <h2 class="panel-title">Current State</h2>
+          ${beliefBlock('now', ev.current_state)}
+
+          <h2 class="panel-title">Origin</h2>
+          <div class="log-card">
+            <div class="kv-grid">
+              ${kv('date', ev.origin.date)}
+              ${kv('description', ev.origin.description)}
+            </div>
+          </div>
+
+          <h2 class="panel-title">Phases</h2>
+          <div class="timeline">
+            ${ev.phases.map((ph, i) => `
+              <div class="timeline-item" style="animation-delay:${i*0.06}s">
+                <div class="timeline-phase">${esc(ph.phase)}</div>
+                <div class="timeline-dates">${esc(ph.dates)}</div>
+                <div class="timeline-desc">${esc(ph.description)}</div>
+              </div>
+            `).join('')}
+          </div>
+
+          <h2 class="panel-title">Intended Future</h2>
+          ${listItems(ev.intended_future)}
+        `;
+      }
+
+      function buildCommits(data) {
+        const panel = addTab('commits', 'Commits');
+
+        panel.innerHTML = data.commits.map((c, i) => `
+          <div class="commit-row" style="animation-delay:${i*0.03}s">
+            <div class="commit-hash">${esc(c.hash)}</div>
+            <div class="commit-body">
+              <div class="commit-msg">${esc(c.message)}</div>
+              <div class="commit-why">${esc(c.why)}</div>
+            </div>
+            <div class="commit-meta">
+              <div class="commit-date">${esc(c.date)}</div>
+              <div class="commit-impact impact-${esc(c.impact)}">${esc(c.impact)}</div>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      function buildArchitecture(data) {
+        const panel = addTab('arch', 'Architecture');
+        const arch = data.architecture;
+
+        panel.innerHTML = `
+          <h2 class="panel-title">Stack</h2>
+          <div class="log-card">
+            <div class="kv-grid">
+              ${Object.entries(arch.stack).map(([k, v]) => kv(k, v)).join('')}
+            </div>
+          </div>
+
+          <h2 class="panel-title">Boot Sequence</h2>
+          <div class="log-card">
+            <div class="log-prose" style="margin-top:0">${esc(arch.boot_sequence.description)}</div>
+            ${listItems(arch.boot_sequence.steps)}
+            <div class="log-prose" style="margin-top:0.75rem;color:#ef4444;font-family:var(--font-mono);font-size:0.72rem">${esc(arch.boot_sequence.critical_rule)}</div>
+          </div>
+
+          <h2 class="panel-title">Data Layer</h2>
+          ${Object.entries(arch.data_layer).map(([file, desc]) =>
+            `<div class="log-card" style="margin-bottom:0.4rem;padding:0.85rem 1.25rem">
+              <div class="kv-grid">${kv(file, desc)}</div>
+            </div>`
+          ).join('')}
+
+          <h2 class="panel-title">Shortcut System</h2>
+          <div class="log-card">
+            <div class="kv-grid">
+              ${kv('description', arch.shortcut_system.description)}
+            </div>
+            ${listItems(arch.shortcut_system.rules)}
+          </div>
+
+          <h2 class="panel-title">Module Structure</h2>
+          ${Object.entries(arch.module_structure).map(([file, desc]) =>
+            `<div class="log-card" style="margin-bottom:0.4rem;padding:0.85rem 1.25rem">
+              <div class="kv-grid">${kv(file, desc)}</div>
+            </div>`
+          ).join('')}
+        `;
+      }
+
+      function buildSessions(data) {
+        const panel = addTab('sessions', 'Sessions');
+
+        panel.innerHTML = data.sessions.map((s, i) => `
+          <div class="session-card" style="animation-delay:${i*0.04}s">
+            <div class="session-header">
+              <span class="session-date">${esc(s.date)}</span>
+              <span class="session-agent">${esc(s.agent)}</span>
+              <span class="session-type">${esc(s.type)}</span>
+            </div>
+            <div class="session-summary">${esc(s.summary)}</div>
+            <div class="session-decisions">
+              ${(s.decisions || []).map(d => `<div class="session-decision">${esc(d)}</div>`).join('')}
+            </div>
+          </div>
+        `).join('');
+      }
+
+      /* ─────────────────────────────────────────────────
+         BOOT
+         ───────────────────────────────────────────────── */
+      async function boot() {
+        try {
+          const res = await fetch(DATA_PATH);
+          if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+          const data = await res.json();
+
+          buildBriefing(data);
+          buildPhilosophy(data);
+          buildPages(data);
+          buildDesign(data);
+          buildRules(data);
+          buildLanguage(data);
+          buildEvolution(data);
+          buildCommits(data);
+          buildArchitecture(data);
+          buildSessions(data);
+
+          const hash = window.location.hash.replace('#', '');
+          const firstTab = $tabs.querySelector('.log-tab');
+          activateTab(hash && document.getElementById(`panel-${hash}`) ? hash : firstTab?.dataset.tab);
+
+          document.getElementById('log-loading').classList.add('hidden');
+          document.getElementById('log-body').classList.remove('hidden');
+
+          const meta = data._meta;
+          document.getElementById('footer-meta').textContent =
+            `v${meta.schema_version} — updated ${meta.last_updated} — ${meta.maintained_by}`;
+
+        } catch (e) {
+          document.getElementById('log-loading').classList.add('hidden');
+          const errEl = document.getElementById('log-error');
+          errEl.textContent = `ERR: Could not load logs.json — ${e.message}`;
+          errEl.classList.remove('hidden');
+          console.error('[logs]', e);
+        }
+      }
+
+      boot();
+    </script>
+
+  </body>
+</html>
