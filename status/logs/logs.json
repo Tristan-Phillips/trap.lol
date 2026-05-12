@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.1.0",
+    "schema_version": "1.1.1",
     "last_updated": "2026-05-12",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": ["_protocol", "identity", "philosophy", "architecture", "pages", "design_system", "rules", "anti_patterns", "language_fingerprint", "evolution", "commits", "sessions", "for_new_llm"]
@@ -422,6 +422,24 @@
 
   "commits": [
     {
+      "hash": "fe04511",
+      "date": "2026-05-12",
+      "message": "Fix logs page: hidden CSS, chat key state, Protocol tab",
+      "scope": "logs",
+      "impact": "medium",
+      "files": ["status/logs/index.html"],
+      "why": ".hidden had no CSS rule so nothing was hidden; chat widget had no key-absent state so it appeared broken; model string was wrong; Protocol tab was missing from UI."
+    },
+    {
+      "hash": "6372875",
+      "date": "2026-05-12",
+      "message": "Logs protocol, chat widget, and session enforcement",
+      "scope": "logs, status",
+      "impact": "high",
+      "files": ["status/logs/index.html", "status/logs/logs.json", "CLAUDE.md"],
+      "why": "Add _protocol to logs.json (machine-readable update contract), chat widget to index.html (nano-gpt query interface), and session-start/end protocol to CLAUDE.md."
+    },
+    {
       "hash": "4bdcc94",
       "date": "2026-05-12",
       "message": "Add site intelligence terminal at /status/logs/",
@@ -586,6 +604,23 @@
   ],
 
   "sessions": [
+    {
+      "date": "2026-05-12",
+      "agent": "Claude Sonnet 4.6",
+      "type": "bug_fix",
+      "summary": "Fixed critical bugs in status/logs/index.html: .hidden class had no CSS rule (everything showed simultaneously), chat widget had no key-absent state (looked broken/endless), model string was wrong. Added Protocol tab. Hardened copy-briefing text to include sixth law and obligation text.",
+      "decisions": [
+        ".hidden must be defined in each page's own <style> — it is not in the shared glass/style/style.css. Added .hidden { display: none !important } to logs page.",
+        "Chat no-key state: amber banner + disabled textarea + focus to key input. After saving key: focus shifts to textarea.",
+        "nano-gpt model ID for DeepSeek R1 is 'deepseek-r1' not 'deepseek/deepseek-r1'.",
+        "Protocol tab added so _protocol is browsable in the UI — not just machine-read. The obligation and field-update specs are now visible to human users too.",
+        "Copy-briefing text now includes the sixth law, your_obligation_as_an_llm, when_to_update, and staleness_detection — so the copied text is a complete LLM briefing."
+      ],
+      "rules_reinforced": [
+        ".hidden is not a global utility class in this project — define it per page if needed",
+        "Always test the no-key state of any API-dependent widget before shipping"
+      ]
+    },
     {
       "date": "2026-05-12",
       "agent": "Claude Sonnet 4.6",
