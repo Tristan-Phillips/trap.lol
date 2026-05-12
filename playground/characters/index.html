@@ -109,15 +109,15 @@
                     <!-- Primary: always visible -->
                     <button id="scene-codex-btn" class="btn-icon arena-action--primary" title="Scene Codex [C]"><i data-lucide="compass"></i></button>
                     <button id="focus-mode-btn" class="btn-icon arena-action--primary" title="Immersive Mode [F]"><i data-lucide="book-open"></i></button>
-                    <button id="oracle-btn" class="btn-icon arena-action--primary" title="Oracle — opens Scene Codex [O]"><i data-lucide="eye"></i></button>
+                    <button id="toggle-terminal" class="btn-icon arena-action--primary" title="Terminal"><i data-lucide="terminal"></i></button>
                     <button id="search-toggle" class="btn-icon arena-action--primary" title="Search history"><i data-lucide="search"></i></button>
                     <!-- Hidden — IDs kept for JS wiring, accessed via overflow -->
+                    <button id="oracle-btn" hidden></button>
                     <button id="chat-bg-btn" hidden></button>
                     <button id="wh-open-btn" hidden></button>
                     <button id="btn-video-gen" hidden></button>
                     <button id="export-chat" hidden></button>
                     <button id="clear-thread" hidden></button>
-                    <button id="toggle-terminal" hidden></button>
                     <!-- Overflow -->
                     <button id="header-overflow-btn" class="btn-icon arena-action--overflow" title="More" aria-haspopup="true" aria-expanded="false"><i data-lucide="more-vertical"></i></button>
                     <div id="header-overflow-menu" class="header-overflow-menu" hidden role="menu">
@@ -125,7 +125,6 @@
                         <button class="header-overflow-item" data-overflow-for="btn-video-gen"><i data-lucide="film"></i> Generate Video</button>
                         <button class="header-overflow-item" data-overflow-for="chat-bg-btn"><i data-lucide="palette"></i> Chat Tint</button>
                         <button class="header-overflow-item" data-overflow-for="wh-open-btn"><i data-lucide="image-plus"></i> Wallhaven Gallery</button>
-                        <button class="header-overflow-item" data-overflow-for="toggle-terminal"><i data-lucide="terminal"></i> Terminal</button>
                         <button class="header-overflow-item" data-overflow-for="export-chat"><i data-lucide="download"></i> Export Session</button>
                         <button class="header-overflow-item header-overflow-item--danger" data-overflow-for="clear-thread"><i data-lucide="trash-2"></i> Clear Thread</button>
                     </div>
@@ -209,6 +208,13 @@
                         <div class="scene-codex__label scene-codex__label--inner"><i data-lucide="info"></i> Scene Digest</div>
                         <div id="codex-digest" class="codex-digest">
                             <span class="codex-digest__empty">Start a conversation to see scene context.</span>
+                        </div>
+                        <div class="scene-codex__label scene-codex__label--inner" style="margin-top:10px"><i data-lucide="activity"></i> Session</div>
+                        <div id="codex-session-stats" class="codex-session-stats">
+                            <span class="codex-stat"><span class="codex-stat__k">Turns</span><span id="cstat-turns" class="codex-stat__v">—</span></span>
+                            <span class="codex-stat"><span class="codex-stat__k">Tokens</span><span id="cstat-tokens" class="codex-stat__v">—</span></span>
+                            <span class="codex-stat"><span class="codex-stat__k">Model</span><span id="cstat-model" class="codex-stat__v codex-stat__v--accent">—</span></span>
+                            <span class="codex-stat"><span class="codex-stat__k">NSFW</span><span id="cstat-nsfw" class="codex-stat__v">—</span></span>
                         </div>
                     </div>
 

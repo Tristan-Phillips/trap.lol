@@ -471,6 +471,21 @@
   },
   "commits": [
     {
+      "hash": "0000000",
+      "date": "2026-05-12",
+      "message": "refactor: move introspect to god view, restore terminal btn, remove oracle-btn",
+      "scope": "playground/characters",
+      "impact": "medium",
+      "files": [
+        "playground/characters/index.html",
+        "playground/characters/script/main.js",
+        "playground/characters/script/modules/ui.js",
+        "playground/characters/style/scene-codex.css",
+        "status/logs/logs.json"
+      ],
+      "why": "Introspect tab in the terminal sidebar was redundant — the same session/config data is more accessible inline in the Scene Codex god view; oracle-btn was rendered pointless after Oracle merged into Codex; terminal button was incorrectly demoted to reader-mode-only visibility instead of being a primary action."
+    },
+    {
       "hash": "f46ec02",
       "date": "2026-05-12",
       "message": "feat: merge Oracle into Scene Codex col 3; simplify arena header; snapshot one-click image gen",
@@ -812,6 +827,22 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-12",
+      "agent": "Claude Sonnet 4.6",
+      "type": "refactor",
+      "summary": "Moved introspect data (session stats, model, NSFW, turns, tokens) from the terminal sidebar profile tab into the Scene Codex god view col 2 as a live stats strip; removed the profile 'State' tab and renderIntrospectionTab function entirely; removed the now-redundant oracle-btn from the arena header and replaced it with a properly visible terminal toggle button; fixed focus-mode CSS that was hiding the terminal button.",
+      "decisions": [
+        "Session stats now live in the Scene Codex — updated every time the codex opens via updateCodexDigest().",
+        "oracle-btn kept as hidden DOM element so the [O] keyboard shortcut chain (openOracle → openCodex) still works without a visible button.",
+        "Terminal promoted to arena-action--primary so it shows in all modes including focus mode.",
+        "focus-mode CSS explicitly force-shows #toggle-terminal with display:flex to override the secondary/overflow hide rule."
+      ],
+      "rules_reinforced": [
+        "God view (Scene Codex) is the right home for session diagnostics — not buried in a sidebar tab.",
+        "Buttons that are demoted to hidden should keep their DOM ID for JS delegation; buttons that are removed from the flow entirely should be re-evaluated for keyboard shortcut fallback."
+      ]
+    },
     {
       "date": "2026-05-12",
       "agent": "Claude Sonnet 4.6",

@@ -311,6 +311,34 @@
     border-color: rgba(190, 41, 236, 0.4);
 }
 
+/* ── Session stats strip (col 2, below digest) ── */
+.codex-session-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 8px;
+    margin-top: 2px;
+}
+.codex-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+.codex-stat__k {
+    font-size: 0.57rem;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    opacity: 0.45;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+.codex-stat__v {
+    font-size: 0.68rem;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+}
+.codex-stat__v--accent { color: rgba(190, 41, 236, 0.9); }
+.codex-stat__v--dim    { color: rgba(255, 255, 255, 0.25); }
+
 /* ── Oracle column (col 3) ── */
 .scene-codex__col--oracle {
     flex: 0 0 300px;
@@ -681,9 +709,10 @@ body.focus-mode .message--bot .message__bubble {
     line-height: 1.85;
 }
 
-/* Focus mode — hide header secondary actions, show only codex, focus, oracle */
+/* Focus mode — hide secondary/overflow; keep codex, focus, terminal, search */
 body.focus-mode .arena-action--secondary { display: none; }
 body.focus-mode .arena-action--overflow  { display: none; }
+body.focus-mode #toggle-terminal { display: flex; }
 
 /* Ambient glow pulse when streaming in focus mode */
 body.focus-mode .arena__bg.streaming-pulse {

@@ -1713,7 +1713,6 @@ export function initUI() {
                     <button class="profile-tab-btn active" data-profile-tab="feed"><i data-lucide="grid"></i> Feed</button>
                     <button class="profile-tab-btn" data-profile-tab="details"><i data-lucide="info"></i> Details</button>
                     <button class="profile-tab-btn" data-profile-tab="notes"><i data-lucide="file-text"></i> Notes</button>
-                    <button class="profile-tab-btn" data-profile-tab="introspect"><i data-lucide="activity"></i> State</button>
                 </div>
 
                 <div id="profile-content-feed" class="profile-tab-content active">
@@ -1777,9 +1776,6 @@ export function initUI() {
                     </div>
                 </div>
 
-                <div id="profile-content-introspect" class="profile-tab-content" hidden>
-                    <div class="profile-introspect" id="profile-introspect-body"></div>
-                </div>
             </div>`;
 
         // Tab switching
@@ -1790,7 +1786,6 @@ export function initUI() {
                 qsa('.profile-tab-content', $profile).forEach(c => c.hidden = true);
                 $btn.classList.add('active');
                 qs(`#profile-content-${target}`, $profile).hidden = false;
-                if (target === 'introspect') renderIntrospectionTab(char, id);
             };
         });
 
@@ -1848,149 +1843,6 @@ export function initUI() {
             qs('#profile-actions').hidden = true;
             if (qs('#gallery-strip')) qs('#gallery-strip').hidden = true;
         };
-    }
-
-    async function renderIntrospectionTab(char, charId) {
-        const $body = qs('#profile-introspect-body');
-        if (!$body) return;
-
-        const override  = getCharOverride(charId);
-        const tc        = state.chat?.threadConfig || {};
-        const rc        = state.config;
-        const history   = state.history.filter(m => m.role === 'user' || m.role === 'bot');
-        const userMsgs  = history.filter(m => m.role === 'user').length;
-        const botMsgs   = history.filter(m => m.role === 'bot').length;
-        const lastBot   = [...history].reverse().find(m => m.role === 'bot');
-        const lastUser  = [...history].reverse().find(m => m.role === 'user');
-        const totalTok  = state.telemetry?.totalTokens ?? 0;
-        const turns     = state.telemetry?.turns ?? 0;
-
-        // Effective model
-        const effectiveModel = tc.model ?? rc.model ?? '—';
-        const effectiveTemp  = (tc.temperature ?? rc.temperature ?? 0.8).toFixed(2);
-        const effectiveMax   = tc.maxOutput ?? rc.maxOutput ?? 512;
-
-        // Lore active
-        let loreChips = '';
-        if (state.lorebooks?.length) {
-            try {
-                const fired = scanLorebooks(state.history, state.lorebooks, 8);
-                loreChips = fired.slice(0, 6).map(e =>
-                    `<span class="introspect-lore-chip">${esc(e.key || e.title || 'entry')}</span>`
-                ).join('') || '<span style="opacity:.4;font-size:.65rem;font-family:var(--font-mono)">none active</span>';
-            } catch (_) {
-                loreChips = '<span style="opacity:.4;font-size:.65rem;font-family:var(--font-mono)">—</span>';
-            }
-        } else {
-            loreChips = '<span style="opacity:.4;font-size:.65rem;font-family:var(--font-mono)">no lorebooks attached</span>';
-        }
-
-        // Override field completeness (how fully the char is configured)
-        const ovFields = ['species','gender','age','height','bodyType','skinTone','hairColor','eyeColor',
-            'personality','styleArchetype','outfitDescription','voice','speechStyle','tone'];
-        const filled = ovFields.filter(k => override[k] && String(override[k]).trim() && String(override[k]).toLowerCase() !== 'n/a').length;
-        const completeness = Math.round((filled / ovFields.length) * 100);
-        const compColor = completeness >= 70 ? 'green' : completeness >= 40 ? 'yellow' : 'red';
-
-        // Last message snippet
-        const snippet = (msg) => {
-            if (!msg) return '—';
-            return msg.content.replace(/<[^>]+>/g,'').replace(/\*{1,3}([^*]+)\*{1,3}/g,'$1').trim().slice(0,180);
-        };
-
-        const scenarioActive = state.chat?.threadConfig?.threadScenario || state.reality?.worldConfig?.scenario;
-        const personaActive  = state.config.userPersona || '—';
-        const nsfw = state.config.flags?.injectAdult !== false;
-
-        $body.innerHTML = `
-            <!-- Session Stats -->
-            <div class="introspect-section">
-                <div class="introspect-section__label"><i data-lucide="bar-chart-2"></i> Session State</div>
-                <div class="introspect-stat-grid">
-                    <div class="introspect-stat">
-                        <span class="introspect-stat__key">Turns</span>
-                        <span class="introspect-stat__val introspect-stat__val--accent">${turns}</span>
-                    </div>
-                    <div class="introspect-stat">
-                        <span class="introspect-stat__key">Tokens Used</span>
-                        <span class="introspect-stat__val">${totalTok.toLocaleString()}</span>
-                    </div>
-                    <div class="introspect-stat">
-                        <span class="introspect-stat__key">Bot Messages</span>
-                        <span class="introspect-stat__val introspect-stat__val--accent">${botMsgs}</span>
-                    </div>
-                    <div class="introspect-stat">
-                        <span class="introspect-stat__key">User Messages</span>
-                        <span class="introspect-stat__val">${userMsgs}</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Active Config -->
-            <div class="introspect-section">
-                <div class="introspect-section__label"><i data-lucide="settings-2"></i> Active Config</div>
-                <div class="introspect-stat-grid">
-                    <div class="introspect-stat">
-                        <span class="introspect-stat__key">Model</span>
-                        <span class="introspect-stat__val introspect-stat__val--accent" style="font-size:.62rem">${esc(effectiveModel.slice(0,22))}</span>
-                    </div>
-                    <div class="introspect-stat">
-                        <span class="introspect-stat__key">Temperature</span>
-                        <span class="introspect-stat__val">${effectiveTemp}</span>
-                    </div>
-                    <div class="introspect-stat">
-                        <span class="introspect-stat__key">Max Output</span>
-                        <span class="introspect-stat__val">${effectiveMax}</span>
-                    </div>
-                    <div class="introspect-stat">
-                        <span class="introspect-stat__key">NSFW</span>
-                        <span class="introspect-stat__val ${nsfw ? 'introspect-stat__val--accent' : 'introspect-stat__val--red'}">${nsfw ? 'ON' : 'OFF'}</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Character Completeness -->
-            <div class="introspect-section">
-                <div class="introspect-section__label"><i data-lucide="user-cog"></i> Override Coverage</div>
-                <div class="introspect-bar-row">
-                    <span class="introspect-bar-label">Fields</span>
-                    <div class="introspect-bar-track"><div class="introspect-bar-fill introspect-bar-fill--${compColor}" style="width:${completeness}%"></div></div>
-                    <span class="introspect-bar-val">${completeness}%</span>
-                </div>
-                <div style="font-size:.62rem;font-family:var(--font-mono);color:var(--text-muted);opacity:.6;margin-top:2px">${filled} / ${ovFields.length} profile fields populated</div>
-            </div>
-
-            <!-- Scene Context -->
-            <div class="introspect-section">
-                <div class="introspect-section__label"><i data-lucide="map-pin"></i> Scene Context</div>
-                ${scenarioActive ? `<div style="font-size:.65rem;color:var(--text-muted);font-family:var(--font-mono);margin-bottom:5px;opacity:.6">${esc(String(scenarioActive).slice(0,100))}${String(scenarioActive).length > 100 ? '…' : ''}</div>` : '<div style="opacity:.3;font-size:.65rem;font-family:var(--font-mono)">No active scenario</div>'}
-                <div style="font-size:.6rem;font-family:var(--font-mono);color:var(--text-muted);margin-top:4px;opacity:.5">Persona: ${esc(personaActive.slice(0,60))}</div>
-            </div>
-
-            <!-- Last Exchange -->
-            ${lastBot ? `
-            <div class="introspect-section">
-                <div class="introspect-section__label"><i data-lucide="message-square"></i> Last Bot Message</div>
-                <div class="introspect-recent-msg">${esc(snippet(lastBot))}</div>
-            </div>` : ''}
-
-            <!-- Active Lore -->
-            <div class="introspect-section">
-                <div class="introspect-section__label"><i data-lucide="book-open"></i> Lore Active</div>
-                <div>${loreChips}</div>
-            </div>
-
-            <!-- Refresh -->
-            <button class="introspect-refresh-btn" id="introspect-refresh-btn">
-                <i data-lucide="refresh-cw"></i> Refresh State
-            </button>
-        `;
-
-        lucideRefresh($body);
-
-        qs('#introspect-refresh-btn', $body)?.addEventListener('click', () => {
-            renderIntrospectionTab(char, charId);
-        });
     }
 
     function updateCinematicBackground(path) {
@@ -6077,15 +5929,12 @@ export function initUI() {
     const $codexBtn  = qs('#scene-codex-btn');
     const $codexClose = qs('#scene-codex-close');
 
-    const $oracleBtn = qs('#oracle-btn');
-
     function openCodex() {
         if (!$codex) return;
         $codex.hidden = false;
         // Defer so the browser sees display:block before animating
         requestAnimationFrame(() => $codex.classList.add('scene-codex--open'));
         $codexBtn?.classList.add('active');
-        $oracleBtn?.classList.add('active');
         updateCodexDigest();
         lucideRefresh($codex);
     }
@@ -6093,7 +5942,6 @@ export function initUI() {
         if (!$codex) return;
         $codex.classList.remove('scene-codex--open');
         $codexBtn?.classList.remove('active');
-        $oracleBtn?.classList.remove('active');
         // Wait for animation to finish before setting hidden
         $codex.addEventListener('transitionend', () => {
             if (!$codex.classList.contains('scene-codex--open')) $codex.hidden = true;
@@ -6190,14 +6038,34 @@ export function initUI() {
         const lastBot = [...state.history].reverse().find(m => m.role === 'bot');
         if (!lastBot?.content) {
             $digest.innerHTML = '<span class="codex-digest__empty">Start a conversation to see scene context.</span>';
-            return;
+        } else {
+            const plain = lastBot.content
+                .replace(/<[^>]+>/g, '')
+                .replace(/\*{1,3}([^*]+)\*{1,3}/g, '$1')
+                .replace(/_([^_]+)_/g, '$1')
+                .replace(/\s+/g, ' ').trim().slice(0, 280);
+            $digest.textContent = plain + (plain.length === 280 ? '…' : '');
         }
-        const plain = lastBot.content
-            .replace(/<[^>]+>/g, '')
-            .replace(/\*{1,3}([^*]+)\*{1,3}/g, '$1')
-            .replace(/_([^_]+)_/g, '$1')
-            .replace(/\s+/g, ' ').trim().slice(0, 280);
-        $digest.textContent = plain + (plain.length === 280 ? '…' : '');
+
+        // Session stats strip
+        const tc  = state.chat?.threadConfig || {};
+        const rc  = state.config;
+        const nsfw = rc.flags?.injectAdult !== false;
+        const modelRaw = tc.model ?? rc.model ?? '—';
+        const modelShort = modelRaw.split('/').pop().slice(0, 18);
+        const turns  = state.telemetry?.turns ?? 0;
+        const tokens = state.telemetry?.totalTokens ?? 0;
+        const $turns  = qs('#cstat-turns');
+        const $tokens = qs('#cstat-tokens');
+        const $model  = qs('#cstat-model');
+        const $nsfw   = qs('#cstat-nsfw');
+        if ($turns)  $turns.textContent  = turns;
+        if ($tokens) $tokens.textContent = tokens > 999 ? `${(tokens/1000).toFixed(1)}k` : tokens;
+        if ($model)  $model.textContent  = modelShort;
+        if ($nsfw) {
+            $nsfw.textContent = nsfw ? 'ON' : 'OFF';
+            $nsfw.className = `codex-stat__v ${nsfw ? 'codex-stat__v--accent' : 'codex-stat__v--dim'}`;
+        }
     }
 
     // Arc note persistence
@@ -6401,9 +6269,6 @@ export function initUI() {
     // ── Welcome screen static button wiring ─────────────────────────────────
     qs('#welcome-create')?.addEventListener('click', () => document.dispatchEvent(new CustomEvent('char-editor:open')));
     qs('#welcome-import')?.addEventListener('click', () => qs('#card-input').click());
-
-    // ── Oracle button ─────────────────────────────────────────────────────────
-    qs('#oracle-btn')?.addEventListener('click', () => openOracle());
 
     // ── Re-inject tray ───────────────────────────────────────────────────────
     const REINJECT_LABELS = {
