@@ -631,6 +631,243 @@
         color: var(--text-warm);
       }
 
+      /* ── Chat widget ── */
+      .chat-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+        color: var(--text-muted);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        background: rgba(0,0,0,0.3);
+        border: 1px solid var(--glass-border-mute);
+        border-radius: 4px;
+        padding: 0.5rem 0.9rem;
+        cursor: pointer;
+        transition: color var(--transition), border-color var(--transition), background var(--transition);
+        margin-bottom: var(--space-md);
+      }
+      .chat-toggle:hover { color: var(--accent); border-color: rgba(190,41,236,0.3); background: rgba(190,41,236,0.05); }
+      .chat-toggle.open { color: var(--accent); border-color: rgba(190,41,236,0.3); }
+      .chat-toggle svg { width: 13px; height: 13px; flex-shrink: 0; }
+      .chat-toggle__caret { transition: transform var(--transition); }
+      .chat-toggle.open .chat-toggle__caret { transform: rotate(180deg); }
+
+      .chat-panel {
+        display: none;
+        background: var(--glass-bg);
+        border: 1px solid rgba(190,41,236,0.18);
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: var(--space-lg);
+        position: relative;
+        overflow: hidden;
+        animation: card-rise 0.3s cubic-bezier(0.25,0,0,1) both;
+      }
+      .chat-panel::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, var(--accent), transparent 70%);
+        opacity: 0.4;
+      }
+      .chat-panel.visible { display: block; }
+
+      .chat-key-row {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        align-items: center;
+      }
+      .chat-key-input {
+        flex: 1;
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+        color: var(--text-main);
+        background: rgba(0,0,0,0.4);
+        border: 1px solid var(--glass-border-mute);
+        border-radius: 4px;
+        padding: 0.45rem 0.75rem;
+        letter-spacing: 0.06em;
+        transition: border-color var(--transition);
+        outline: none;
+        min-width: 0;
+      }
+      .chat-key-input:focus { border-color: rgba(190,41,236,0.35); }
+      .chat-key-input::placeholder { color: var(--text-muted); opacity: 0.5; }
+      .chat-key-save {
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+        color: var(--text-muted);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        background: rgba(0,0,0,0.3);
+        border: 1px solid var(--glass-border-mute);
+        border-radius: 4px;
+        padding: 0.45rem 0.75rem;
+        cursor: pointer;
+        transition: color var(--transition), border-color var(--transition);
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+      .chat-key-save:hover { color: var(--accent-warm); border-color: rgba(244,168,48,0.3); }
+      .chat-key-save.saved { color: #4ade80; border-color: rgba(74,222,128,0.3); }
+      .chat-key-label {
+        font-family: var(--font-mono);
+        font-size: 0.62rem;
+        color: var(--text-muted);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        white-space: nowrap;
+        flex-shrink: 0;
+        opacity: 0.6;
+      }
+
+      .chat-messages {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        min-height: 48px;
+        max-height: 420px;
+        overflow-y: auto;
+        margin-bottom: 1rem;
+        padding-right: 0.25rem;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(190,41,236,0.2) transparent;
+      }
+      .chat-messages:empty::after {
+        content: 'no messages yet — ask anything about trap.lol';
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        opacity: 0.4;
+        letter-spacing: 0.06em;
+        font-style: italic;
+      }
+      .chat-msg {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        max-width: 88%;
+      }
+      .chat-msg--user { align-self: flex-end; align-items: flex-end; }
+      .chat-msg--assistant { align-self: flex-start; align-items: flex-start; }
+      .chat-msg__role {
+        font-family: var(--font-mono);
+        font-size: 0.6rem;
+        color: var(--text-muted);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        opacity: 0.5;
+      }
+      .chat-msg__bubble {
+        font-family: var(--font-sans);
+        font-size: 0.82rem;
+        line-height: 1.65;
+        padding: 0.65rem 0.95rem;
+        border-radius: 6px;
+        word-break: break-word;
+      }
+      .chat-msg--user .chat-msg__bubble {
+        background: rgba(190,41,236,0.1);
+        border: 1px solid rgba(190,41,236,0.2);
+        color: var(--text-main);
+        border-radius: 6px 6px 2px 6px;
+      }
+      .chat-msg--assistant .chat-msg__bubble {
+        background: rgba(0,0,0,0.35);
+        border: 1px solid var(--glass-border-mute);
+        color: var(--text-main);
+        border-radius: 6px 6px 6px 2px;
+      }
+      .chat-msg--assistant .chat-msg__bubble code {
+        font-family: var(--font-mono);
+        font-size: 0.78rem;
+        background: rgba(190,41,236,0.08);
+        border: 1px solid rgba(190,41,236,0.12);
+        border-radius: 3px;
+        padding: 0.1em 0.3em;
+      }
+      .chat-msg--error .chat-msg__bubble {
+        background: rgba(239,68,68,0.06);
+        border: 1px solid rgba(239,68,68,0.2);
+        color: #ef4444;
+      }
+      .chat-thinking {
+        display: flex;
+        gap: 4px;
+        align-items: center;
+        padding: 0.65rem 0.95rem;
+        background: rgba(0,0,0,0.3);
+        border: 1px solid var(--glass-border-mute);
+        border-radius: 6px;
+        align-self: flex-start;
+      }
+      .chat-thinking span {
+        width: 5px; height: 5px;
+        border-radius: 50%;
+        background: var(--accent);
+        animation: dot-seek 0.9s ease-in-out infinite;
+      }
+      .chat-thinking span:nth-child(2) { animation-delay: 0.15s; }
+      .chat-thinking span:nth-child(3) { animation-delay: 0.3s; }
+
+      .chat-input-row {
+        display: flex;
+        gap: 0.5rem;
+        align-items: flex-end;
+      }
+      .chat-textarea {
+        flex: 1;
+        font-family: var(--font-sans);
+        font-size: 0.82rem;
+        color: var(--text-main);
+        background: rgba(0,0,0,0.4);
+        border: 1px solid var(--glass-border-mute);
+        border-radius: 6px;
+        padding: 0.6rem 0.85rem;
+        resize: none;
+        outline: none;
+        line-height: 1.5;
+        transition: border-color var(--transition);
+        min-height: 42px;
+        max-height: 120px;
+        overflow-y: auto;
+      }
+      .chat-textarea:focus { border-color: rgba(190,41,236,0.35); }
+      .chat-textarea::placeholder { color: var(--text-muted); opacity: 0.45; }
+      .chat-send {
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+        color: var(--accent);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        background: rgba(190,41,236,0.08);
+        border: 1px solid rgba(190,41,236,0.25);
+        border-radius: 6px;
+        padding: 0.6rem 1rem;
+        cursor: pointer;
+        transition: color var(--transition), border-color var(--transition), background var(--transition);
+        white-space: nowrap;
+        flex-shrink: 0;
+        align-self: stretch;
+        display: flex;
+        align-items: center;
+      }
+      .chat-send:hover:not(:disabled) { background: rgba(190,41,236,0.15); border-color: rgba(190,41,236,0.45); }
+      .chat-send:disabled { opacity: 0.35; cursor: not-allowed; }
+      .chat-hint {
+        font-family: var(--font-mono);
+        font-size: 0.62rem;
+        color: var(--text-muted);
+        letter-spacing: 0.06em;
+        opacity: 0.4;
+        margin-top: 0.4rem;
+      }
+
       /* ── Loading skeleton ── */
       .log-loading {
         display: flex;
@@ -709,6 +946,27 @@
       <div id="log-error" class="log-error hidden"></div>
 
       <div id="log-body" class="hidden">
+
+        <!-- Chat widget -->
+        <button class="chat-toggle" id="chat-toggle" aria-expanded="false" aria-controls="chat-panel">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Query Knowledge Base
+          <svg class="chat-toggle__caret" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+
+        <div class="chat-panel" id="chat-panel" role="region" aria-label="Knowledge base chat">
+          <div class="chat-key-row">
+            <span class="chat-key-label">nano-gpt key</span>
+            <input class="chat-key-input" id="chat-key-input" type="password" placeholder="sk-…" autocomplete="off" spellcheck="false" aria-label="nano-gpt API key" />
+            <button class="chat-key-save" id="chat-key-save" aria-label="Save API key">Save</button>
+          </div>
+          <div class="chat-messages" id="chat-messages" aria-live="polite" aria-label="Chat messages"></div>
+          <div class="chat-input-row">
+            <textarea class="chat-textarea" id="chat-textarea" placeholder="Ask anything about trap.lol…" rows="1" aria-label="Chat message"></textarea>
+            <button class="chat-send" id="chat-send" disabled aria-label="Send message">Send</button>
+          </div>
+          <div class="chat-hint">Ctrl+Enter to send — context: full logs.json — model: nano-gpt deepseek-r1</div>
+        </div>
 
         <!-- Tab navigation -->
         <nav class="log-tabs" role="tablist" aria-label="Log sections" id="log-tabs"></nav>
@@ -1147,6 +1405,157 @@
       }
 
       /* ─────────────────────────────────────────────────
+         CHAT WIDGET
+         ───────────────────────────────────────────────── */
+      const NG_API = 'https://nano-gpt.com/api/v1/chat/completions';
+      const NG_MODEL = 'deepseek/deepseek-r1';
+      const LS_KEY = 'logs_ng_key';
+
+      let chatData = null;
+      let chatBusy = false;
+      const chatHistory = [];
+
+      const $toggle    = document.getElementById('chat-toggle');
+      const $chatPanel = document.getElementById('chat-panel');
+      const $keyInput  = document.getElementById('chat-key-input');
+      const $keySave   = document.getElementById('chat-key-save');
+      const $messages  = document.getElementById('chat-messages');
+      const $textarea  = document.getElementById('chat-textarea');
+      const $sendBtn   = document.getElementById('chat-send');
+
+      const savedKey = localStorage.getItem(LS_KEY);
+      if (savedKey) $keyInput.value = savedKey;
+      updateSendState();
+
+      $toggle.addEventListener('click', () => {
+        const open = $chatPanel.classList.toggle('visible');
+        $toggle.classList.toggle('open', open);
+        $toggle.setAttribute('aria-expanded', open);
+        if (open) $textarea.focus();
+      });
+
+      $keyInput.addEventListener('input', updateSendState);
+      $keyInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); saveKey(); } });
+      $keySave.addEventListener('click', saveKey);
+
+      function saveKey() {
+        const v = $keyInput.value.trim();
+        if (!v) return;
+        localStorage.setItem(LS_KEY, v);
+        $keySave.textContent = 'Saved';
+        $keySave.classList.add('saved');
+        setTimeout(() => { $keySave.textContent = 'Save'; $keySave.classList.remove('saved'); }, 1800);
+        updateSendState();
+      }
+
+      function updateSendState() {
+        $sendBtn.disabled = !$keyInput.value.trim() || chatBusy;
+      }
+
+      $textarea.addEventListener('input', () => {
+        $textarea.style.height = 'auto';
+        $textarea.style.height = Math.min($textarea.scrollHeight, 120) + 'px';
+      });
+
+      $textarea.addEventListener('keydown', e => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+          e.preventDefault();
+          if (!$sendBtn.disabled) sendMessage();
+        }
+      });
+
+      $sendBtn.addEventListener('click', sendMessage);
+
+      function appendChatMsg(role, text, error = false) {
+        const wrap = document.createElement('div');
+        wrap.className = `chat-msg chat-msg--${error ? 'error' : role}`;
+        const roleLabel = document.createElement('div');
+        roleLabel.className = 'chat-msg__role';
+        roleLabel.textContent = role === 'user' ? 'you' : 'oracle';
+        const bubble = document.createElement('div');
+        bubble.className = 'chat-msg__bubble';
+        bubble.textContent = text;
+        wrap.appendChild(roleLabel);
+        wrap.appendChild(bubble);
+        $messages.appendChild(wrap);
+        $messages.scrollTop = $messages.scrollHeight;
+      }
+
+      function showThinking() {
+        const node = document.createElement('div');
+        node.className = 'chat-thinking';
+        node.innerHTML = '<span></span><span></span><span></span>';
+        $messages.appendChild(node);
+        $messages.scrollTop = $messages.scrollHeight;
+        return node;
+      }
+
+      async function sendMessage() {
+        const text = $textarea.value.trim();
+        if (!text || chatBusy) return;
+        const key = $keyInput.value.trim();
+        if (!key) return;
+
+        chatBusy = true;
+        updateSendState();
+        $textarea.value = '';
+        $textarea.style.height = 'auto';
+
+        appendChatMsg('user', text);
+        chatHistory.push({ role: 'user', content: text });
+
+        const thinking = showThinking();
+
+        const systemPrompt = chatData
+          ? `You are the Oracle of trap.lol — you have complete knowledge of this site's architecture, history, philosophy, rules, and evolution. Answer questions about it with precision and in the voice of the site itself: terse, exact, no disclaimers. The full knowledge base follows:\n\n${JSON.stringify(chatData, null, 2)}`
+          : 'You are the Oracle of trap.lol. Answer questions about the site with precision.';
+
+        try {
+          const ctrl = new AbortController();
+          const timer = setTimeout(() => ctrl.abort(), 30000);
+
+          const res = await fetch(NG_API, {
+            signal: ctrl.signal,
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${key}`,
+            },
+            body: JSON.stringify({
+              model: NG_MODEL,
+              messages: [
+                { role: 'system', content: systemPrompt },
+                ...chatHistory,
+              ],
+              temperature: 0.4,
+              max_tokens: 1024,
+            }),
+          });
+          clearTimeout(timer);
+
+          if (!res.ok) {
+            const body = await res.text().catch(() => '');
+            throw new Error(`${res.status} — ${body.slice(0, 120)}`);
+          }
+
+          const json = await res.json();
+          const reply = json.choices?.[0]?.message?.content ?? '(no response)';
+          chatHistory.push({ role: 'assistant', content: reply });
+
+          thinking.remove();
+          appendChatMsg('assistant', reply);
+        } catch (err) {
+          thinking.remove();
+          const msg = err.name === 'AbortError' ? 'Request timed out (30s).' : err.message;
+          appendChatMsg('assistant', `ERR: ${msg}`, true);
+          chatHistory.pop();
+        } finally {
+          chatBusy = false;
+          updateSendState();
+        }
+      }
+
+      /* ─────────────────────────────────────────────────
          BOOT
          ───────────────────────────────────────────────── */
       async function boot() {
@@ -1154,6 +1563,7 @@
           const res = await fetch(DATA_PATH);
           if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
           const data = await res.json();
+          chatData = data;
 
           buildBriefing(data);
           buildPhilosophy(data);

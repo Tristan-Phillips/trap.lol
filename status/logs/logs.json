@@ -1,10 +1,44 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.0.0",
+    "schema_version": "1.1.0",
     "last_updated": "2026-05-12",
     "maintained_by": "trap + Claude Sonnet 4.6",
-    "reading_order": ["identity", "philosophy", "architecture", "pages", "design_system", "rules", "anti_patterns", "language_fingerprint", "evolution", "commits", "sessions"]
+    "reading_order": ["_protocol", "identity", "philosophy", "architecture", "pages", "design_system", "rules", "anti_patterns", "language_fingerprint", "evolution", "commits", "sessions", "for_new_llm"]
+  },
+
+  "_protocol": {
+    "what_this_file_is": "This is the living intelligence record of trap.lol. It is not documentation. It is not a README. It is the site's memory — the full context a new LLM or context window needs to operate correctly without any input from the owner (Tristan Phillips / trap). It contains the site's identity, architecture, aesthetic rules, decision history, commit log, session record, and a set of binding laws for any agent working on this codebase.",
+    "your_obligation_as_an_llm": "If you are an LLM or AI agent reading this file: you are REQUIRED to update it as part of your session. This is not optional. This file becomes stale if it is not maintained. A stale file is worse than no file — it will mislead the next agent. Your obligation is: READ before you act, UPDATE before you commit.",
+    "when_to_update": [
+      "After EVERY session where any of the following occurred: a file was changed, a commit was made, a decision was made, a rule was established or changed, a feature was added or removed, a philosophy was clarified.",
+      "Even if you only answered a question and made no code changes — if the question revealed something about trap's thinking or preferences, add it to the sessions array.",
+      "Do NOT update if the session was purely read-only with no new information revealed."
+    ],
+    "how_to_update_each_section": {
+      "_meta.last_updated": "Set to today's date in YYYY-MM-DD format. Always.",
+      "_meta.schema_version": "Increment patch (1.0.X) for content updates. Increment minor (1.X.0) if you add a new top-level section. Increment major (X.0.0) only if the entire schema changes.",
+      "commits": "Prepend a new entry to the front of the array for each commit made this session. Required fields: hash (7-char), date (YYYY-MM-DD), message (exact git commit message), scope (which parts of the site changed), impact (critical|high|medium|low), files (array of files changed), why (one sentence explaining the reason — not what, WHY).",
+      "sessions": "Prepend a new entry to the front of the array. Required fields: date (YYYY-MM-DD), agent (model name + version), type (one of: pre_production_audit | feature_development | bug_fix | refactor | content | security | discussion | maintenance), summary (1-3 sentences describing what happened), decisions (array of key decisions made or things learned), rules_reinforced (array of rules that were confirmed or clarified this session).",
+      "evolution.current_state": "Update this string if the site's overall state has meaningfully changed.",
+      "evolution.phases": "Add a new phase entry if a clearly new chapter of development has begun. Don't add a phase for every session.",
+      "evolution.intended_future": "Update if trap expressed new intentions or removed old ones.",
+      "pages": "Add, update, or remove page entries when pages are created, modified, or deleted.",
+      "rules.absolute": "Add new rules only if trap explicitly stated a hard rule. Do not infer rules — only record what was explicitly said or demonstrated through repeated preference.",
+      "rules.strong_preferences": "Same as above but for preferences (not hard rules).",
+      "anti_patterns": "Add to things_that_have_been_tried_and_rejected when something is removed or reversed. Add to common_mistakes_to_avoid when a class of error is identified.",
+      "language_fingerprint": "Update recurring_words_and_phrases if new vocabulary is consistently used. Add to vocabulary_never_used if trap explicitly rejects a word. Update tone/style descriptions if they become more precise."
+    },
+    "staleness_detection": "If _meta.last_updated is more than 7 days ago, flag this to the user before starting work. The file may be significantly out of date. Ask if they want to do a sync pass before proceeding.",
+    "validation_rules": [
+      "commits[].impact must be one of: critical, high, medium, low",
+      "sessions[].type must be one of: pre_production_audit, feature_development, bug_fix, refactor, content, security, discussion, maintenance",
+      "All dates must be YYYY-MM-DD format",
+      "commit hashes must be exactly 7 characters",
+      "Do NOT remove or rewrite existing entries — only prepend new ones or update specific named fields",
+      "Do NOT change the schema structure — add fields only, never remove"
+    ],
+    "for_claude_code_specifically": "When working in Claude Code (CLI): at session start, read this file. At session end, before committing, update commits[] and sessions[]. The commit entry for the logs update itself should list files: ['status/logs/logs.json'] with scope 'logs' and impact 'low'. Do not create a separate commit just for the logs file — include it in the most relevant commit for the session, or as the last commit if the session had multiple commits."
   },
 
   "identity": {
@@ -69,7 +103,8 @@
       "guides.json": "Sacred Codex (currently commented out). Array of guide entries: title, description, icon, file (markdown filename), read_time.",
       "llm.json": "LLM routing table. Keys are model IDs. Each model has: label, provider, pay_per_token (bool). Also contains default_routing.",
       "apps.json": "App Uplinks section. Each app has: name, slug, path, icon, description, tags[], keyed (bool — requires API key), status (live|planned).",
-      "art/glass/data/detention.json": "ECHOES gallery data. Collections of artwork artifacts. Each artifact has: compositeId (collectionId::artifactId), src.small (thumbnail URL path), src.original (full URL path), uploadDate, tags[], type, metadata (medium, description, verse, mood, chaos). baseUrl in meta is prepended to all src paths."
+      "art/glass/data/detention.json": "ECHOES gallery data. Collections of artwork artifacts. Each artifact has: compositeId (collectionId::artifactId), src.small (thumbnail URL path), src.original (full URL path), uploadDate, tags[], type, metadata (medium, description, verse, mood, chaos). baseUrl in meta is prepended to all src paths.",
+      "status/logs/logs.json": "THIS FILE. The site intelligence record. Updated every session by the working LLM. See _protocol for update rules."
     },
     "shortcut_system": {
       "description": "The globalRouter (Map) is populated during render. Every item with a shortcut field registers a 2-char keystroke. On desktop (non-touch), typing 2 chars triggers the action.",
@@ -109,7 +144,9 @@
       "glass/script/modules/llm-sessions.js": "Session save/load/export (JSON + MD), bulk delete, import.",
       "glass/script/modules/llm-settings.js": "Model selector, system prompt override, temperature, context window, streaming toggle, enter-to-send toggle.",
       "glass/script/modules/tunnel-light.js": "The animated tunnel light effect on the home page header.",
-      "glass/data/llm-agents/": "Per-agent JSON files. index.json lists filenames. Each agent file has spec + data (name, tags, system_prompt, temperature, model override)."
+      "glass/data/llm-agents/": "Per-agent JSON files. index.json lists filenames. Each agent file has spec + data (name, tags, system_prompt, temperature, model override).",
+      "status/logs/index.html": "The intelligence terminal viewer. Reads logs.json and renders it. Contains a chat widget that accepts a nano-gpt API key (localStorage) and lets you query the knowledge base in natural language.",
+      "status/logs/logs.json": "The knowledge base itself. See _protocol for schema and update obligations."
     }
   },
 
@@ -170,7 +207,8 @@
     "/status/logs/": {
       "file": "status/logs/index.html",
       "title": "trap.lol // logs",
-      "purpose": "Site intelligence log. Reads logs.json and renders the complete evolution history of the site — commits, sessions, design decisions, architectural rules, philosophy, page manifest, and a briefing for any new LLM or context window. The definitive 'what is this and how does it work' document in interactive form."
+      "purpose": "Site intelligence terminal. Reads logs.json and renders the complete evolution history of the site — commits, sessions, design decisions, architectural rules, philosophy, page manifest, and a briefing for any new LLM or context window. Includes a chat widget (nano-gpt API key required) to query the knowledge base in natural language. The definitive 'what is this, how does it work, and where is it going' document.",
+      "note": "The chat widget stores the API key in localStorage under 'logs_ng_key'. Messages are sent to the nano-gpt /v1/chat/completions endpoint with the full logs.json injected as system context. Client-side only — no server, no persistence."
     },
     "/guide/": {
       "file": "guide/index.html",
@@ -250,7 +288,8 @@
       "Shortcut keys must be exactly 2 chars, globally unique across all JSON files.",
       "status values in hosting.json and bots.json must be 'online' or 'offline' only.",
       "trust_level in extlinks.json must be 'Vetted' or 'High' only.",
-      "visual_class in extlinks.json categories must be one of the five defined neon-* classes."
+      "visual_class in extlinks.json categories must be one of the five defined neon-* classes.",
+      "ALWAYS update status/logs/logs.json at the end of every session where changes were made. This is non-negotiable. The file is the site's memory."
     ],
     "strong_preferences": [
       "Prefer editing existing files over creating new ones.",
@@ -287,7 +326,8 @@
       "Adding loading spinners — use the existing CSS animation patterns (opacity pulse, dot-seek)",
       "Re-observing already-visible cards in IntersectionObserver — use :not(.visible) selector",
       "Exposing .backup, .bk, .env files in the public directory — gitignored but double-check",
-      "Adding path traversal vectors in URL param-driven fetch calls — always validate params with a strict regex whitelist"
+      "Adding path traversal vectors in URL param-driven fetch calls — always validate params with a strict regex whitelist",
+      "Letting logs.json go stale — it must be updated every session or the next agent starts blind"
     ]
   },
 
@@ -361,13 +401,13 @@
         "key_commits": ["Char editor changes and image generator changes", "personas", "char creator dm", "scenario updates", "LLM Changes and Status Implementation"]
       },
       {
-        "phase": "5 — Hardening",
+        "phase": "5 — Hardening & Memory",
         "dates": "2026-05-12",
-        "description": "Pre-production security and quality audit. XSS fixes in guide page (DOMPurify + path validation). Art gallery performance fix (IntersectionObserver scoping). Backup file removal. Logs system created.",
-        "key_commits": ["Security hardening and pre-production cleanup", "Add CHANGELOG.md", "Add logs system"]
+        "description": "Pre-production security and quality audit. XSS fixes in guide page (DOMPurify + path validation). Art gallery performance fix (IntersectionObserver scoping). Backup file removal. Logs system created — the site's persistent memory. Protocol enforcement added so any future LLM agent knows how and when to update the knowledge base.",
+        "key_commits": ["Security hardening and pre-production cleanup", "Add CHANGELOG.md", "Add site intelligence terminal at /status/logs/", "Logs protocol, chat widget, and CLAUDE.md enforcement"]
       }
     ],
-    "current_state": "The site is production-ready. All core features are live. The main areas of active development are The Underdark (LLM roleplay) and ECHOES (art gallery). The guides section is on hold pending enough markdown content to justify it.",
+    "current_state": "Production-ready. All core features live. The logs system is now the site's persistent memory — a knowledge base that any LLM agent reads at session start and updates at session end. The main areas of active development are The Underdark (LLM roleplay) and ECHOES (art gallery).",
     "intended_future": [
       "Sacred Codex (guides section) reactivation when enough .md content exists",
       "More ECHOES collections as artwork is created/curated",
@@ -381,6 +421,15 @@
   },
 
   "commits": [
+    {
+      "hash": "4bdcc94",
+      "date": "2026-05-12",
+      "message": "Add site intelligence terminal at /status/logs/",
+      "scope": "logs, status",
+      "impact": "high",
+      "files": ["status/logs/index.html", "status/logs/logs.json"],
+      "why": "Create the site's persistent memory system — a JSON knowledge base and interactive viewer so any new LLM or context window can fully understand the site without manual briefing."
+    },
     {
       "hash": "c155d34",
       "date": "2026-05-12",
@@ -540,6 +589,25 @@
     {
       "date": "2026-05-12",
       "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Added _protocol section to logs.json establishing machine-readable update obligations for any LLM working on this codebase. Added chat widget to status/logs/index.html (nano-gpt API key, queries logs.json as context). Updated CLAUDE.md with mandatory session-start/end log obligations. Added the logs update rule to rules.absolute.",
+      "decisions": [
+        "_protocol section is the enforcement mechanism — it tells any LLM what to update, when, how, and in what format. Placed first in reading_order so it is seen before any data.",
+        "Staleness detection: flag to user if last_updated is more than 7 days ago.",
+        "Chat widget uses nano-gpt API (same as playground) with full logs.json as system prompt. Key stored in localStorage under 'logs_ng_key'. No streaming — simpler for an information-retrieval tool.",
+        "CLAUDE.md updated to include a mandatory logs sync section — this fires at start and end of every Claude Code session.",
+        "logs.json update itself is included in the relevant session commit, not as a standalone commit.",
+        "The _protocol section encodes the schema_version increment rules so future agents maintain consistency."
+      ],
+      "rules_reinforced": [
+        "logs.json must be updated every session — added to rules.absolute as a hard rule",
+        "The chat widget is client-side only — API key never leaves the browser except to the API endpoint",
+        "nano-gpt is the canonical LLM API endpoint for all client-side AI features on this site"
+      ]
+    },
+    {
+      "date": "2026-05-12",
+      "agent": "Claude Sonnet 4.6",
       "type": "pre_production_audit",
       "summary": "Full pre-production audit of the entire codebase. Fixed XSS in guide/index.html (DOMPurify + path validation). Fixed IntersectionObserver re-observation in art gallery. Deleted publicly-served detention.json.backup. Added **/*.backup to .gitignore. Updated CHANGELOG.md. Created logs system.",
       "decisions": [
@@ -570,7 +638,7 @@
   ],
 
   "for_new_llm": {
-    "read_this_first": "You are about to work on trap.lol. This is not a standard web project. Read every field in this file before touching a single line of code. The philosophy, rules, and anti-patterns sections are load-bearing — violating them will produce work that gets reverted.",
+    "read_this_first": "You are about to work on trap.lol. This is not a standard web project. Read this entire file before touching a single line of code. The _protocol section is your operating instructions — it tells you exactly what to update and when. The rules and anti_patterns sections are load-bearing — violating them will produce work that gets reverted. Your last act in every session is to update this file.",
     "the_five_laws": [
       "1. No frameworks. No build steps. Vanilla only.",
       "2. All data lives in JSON. All HTML is scaffolding.",
@@ -578,13 +646,15 @@
       "4. lucide.createIcons() only after all HTML is injected.",
       "5. The aesthetic is Dune × Arcane. Dark, glowing, precise, poetic. Never corporate, never default."
     ],
+    "the_sixth_law": "6. Update this file (logs.json) at the end of every session. Prepend to commits[]. Prepend to sessions[]. Update _meta.last_updated. This is not optional.",
     "how_to_help_effectively": [
       "When asked to add a new section or item: edit the relevant JSON file. Do not touch the HTML.",
       "When asked to add a new page: follow the pattern of the nearest existing page. Match its CSS variable usage, its glass morphism, its mono typography.",
       "When asked to fix a bug: read the file top to bottom first. The architecture is intentional. The bug is almost never where you think it is.",
       "When asked to improve performance: look for DOM thrashing, unnecessary re-renders, unscoped lucide.createIcons() calls, unscoped IntersectionObserver selectors.",
       "When asked to improve UI: the answer is almost always 'add a glow' or 'add a sweep' or 'add an entrance animation'. The palette is fixed. Don't introduce new colours.",
-      "When unsure about tone for UI copy: terse. mono. ALL CAPS for states. lowercase for whispers. Never full sentences in labels."
+      "When unsure about tone for UI copy: terse. mono. ALL CAPS for states. lowercase for whispers. Never full sentences in labels.",
+      "At session end: update logs.json per _protocol before committing."
     ],
     "what_trap_values_most": [
       "Sovereignty — full control, no external dependencies beyond what's necessary",
@@ -592,7 +662,8 @@
       "Aesthetic consistency — the palette and feel must be coherent across all pages",
       "Speed of iteration — ship and refine, don't over-architect",
       "Security at the boundary — validate user input, sanitize rendered content, expose nothing accidentally",
-      "Surprise — the gacha pull, the terminal shortcut system, the cursor orb — the site rewards exploration"
+      "Surprise — the gacha pull, the terminal shortcut system, the cursor orb — the site rewards exploration",
+      "Memory — the logs system exists because trap doesn't want to re-explain the same context every session. Honour it."
     ]
   }
 }
