@@ -6,7 +6,7 @@
     <title>The Underdark // Reality Matrix</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2306040A'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%23ef4444' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23ef4444'/%3E%3C/svg%3E" />
     <link rel="stylesheet" href="../../glass/style/style.css">
-    <link rel="stylesheet" href="./style/style.css?v=66">
+    <link rel="stylesheet" href="./style/style.css?v=67">
     <link rel="stylesheet" href="./style/char-editor.css?v=8">
 </head>
 <body class="underdark-page">
@@ -120,6 +120,7 @@
                     <button id="header-overflow-btn" class="btn-icon arena-action--overflow" title="More actions" aria-haspopup="true" aria-expanded="false"><i data-lucide="more-vertical"></i></button>
                     <div id="header-overflow-menu" class="header-overflow-menu" hidden role="menu">
                         <button class="header-overflow-item" data-overflow-for="scene-codex-btn"><i data-lucide="compass"></i> Scene Codex</button>
+                        <button class="header-overflow-item" data-overflow-for="btn-img-studio"><i data-lucide="wand-2"></i> Image Studio</button>
                         <button class="header-overflow-item" data-overflow-for="btn-video-gen"><i data-lucide="film"></i> Generate Video</button>
                         <button class="header-overflow-item" data-overflow-for="search-toggle"><i data-lucide="search"></i> Search</button>
                         <button class="header-overflow-item" data-overflow-for="export-chat"><i data-lucide="download"></i> Export</button>
@@ -249,7 +250,8 @@
                         <button id="reinject-toggle-btn" class="btn-icon btn-icon--small" title="Re-inject directives [I]"><i data-lucide="zap"></i></button>
                         <button id="btn-quick-reply" class="btn-icon btn-icon--small" title="Quick replies"><i data-lucide="list"></i></button>
                         <button id="btn-add-image" class="btn-icon btn-icon--small" title="Attach image"><i data-lucide="image"></i></button>
-                        <button id="btn-image-gen" class="btn-icon btn-icon--small" title="Generate image [/image]"><i data-lucide="image-plus"></i></button>
+                        <button id="btn-image-gen" class="btn-icon btn-icon--small" title="Quick Generate image [/image]"><i data-lucide="image-plus"></i></button>
+                    <button id="btn-img-studio" class="btn-icon btn-icon--small arena-action--studio" title="Image Studio — full generation wizard [S]"><i data-lucide="wand-2"></i></button>
                         <span id="active-bot-label" class="input-container__bot-label"></span>
                         <div class="arena-stats">
                             <span id="token-estimate" class="arena-stats__estimate"></span>
@@ -1041,6 +1043,438 @@
 <!-- ══════════════════════════════════════════════
      IMAGE GENERATION MODAL
 ══════════════════════════════════════════════ -->
+<!-- ══════════════════════════════════════════════
+     IMAGE STUDIO — Full-screen generation wizard
+     (inspired by dreamgf.ai / candy.ai / herahaven.ai)
+     Opened via #btn-img-studio or pressing [S]
+     Separate from the quick-gen modal below
+══════════════════════════════════════════════ -->
+<div id="img-studio" class="img-studio" aria-label="Image Studio" role="dialog">
+
+  <!-- Header -->
+  <header class="img-studio__header">
+    <div class="img-studio__header-icon"><i data-lucide="wand-2"></i></div>
+    <span class="img-studio__title">Image Studio</span>
+    <div id="studio-char-badge" class="img-studio__char-badge" hidden>
+      <img id="studio-char-avatar-sm" class="img-studio__char-avatar" alt="" hidden>
+      <span id="studio-char-badge-name">—</span>
+    </div>
+    <div class="img-studio__header-actions">
+      <button id="studio-quick-gen-btn" class="img-studio__quick-btn" title="Open the compact quick-generate modal instead">
+        <i data-lucide="zap"></i> Quick Gen
+      </button>
+      <button id="studio-close" class="img-studio__close" aria-label="Close Image Studio"><i data-lucide="x"></i></button>
+    </div>
+  </header>
+
+  <div class="img-studio__body">
+
+    <!-- ── LEFT: Configuration Wizard ── -->
+    <div class="img-studio__config">
+
+      <!-- Character info strip (auto-filled from char data) -->
+      <div class="img-studio__char-info">
+        <img id="studio-char-portrait" class="img-studio__char-portrait" alt="" src="">
+        <div class="img-studio__char-details">
+          <div id="studio-char-name" class="img-studio__char-name">No character selected</div>
+          <div id="studio-char-traits" class="img-studio__char-traits"></div>
+          <div id="studio-char-scene-snippet" class="img-studio__char-scene-snippet"></div>
+        </div>
+      </div>
+
+      <!-- NSFW level bar -->
+      <div class="studio-nsfw-bar" id="studio-nsfw-bar">
+        <button class="studio-nsfw-pill studio-nsfw-pill--sfw active" data-nsfw="sfw">SFW</button>
+        <button class="studio-nsfw-pill studio-nsfw-pill--suggestive" data-nsfw="suggestive">Suggestive</button>
+        <button class="studio-nsfw-pill studio-nsfw-pill--explicit" data-nsfw="explicit">Explicit</button>
+        <button class="studio-nsfw-pill studio-nsfw-pill--unrestricted" data-nsfw="unrestricted">Unrestricted</button>
+      </div>
+
+      <!-- Nav tabs -->
+      <nav class="img-studio__nav" id="studio-nav">
+        <button class="img-studio__nav-btn active" data-tab="quick"><i data-lucide="zap"></i> Quick</button>
+        <button class="img-studio__nav-btn" data-tab="char"><i data-lucide="user"></i> Character</button>
+        <button class="img-studio__nav-btn" data-tab="outfit"><i data-lucide="shirt"></i> Outfit <span class="studio-nav-badge" id="studio-badge-outfit" hidden></span></button>
+        <button class="img-studio__nav-btn" data-tab="pose"><i data-lucide="move"></i> Pose <span class="studio-nav-badge" id="studio-badge-pose" hidden></span></button>
+        <button class="img-studio__nav-btn" data-tab="scene"><i data-lucide="map-pin"></i> Scene <span class="studio-nav-badge" id="studio-badge-scene" hidden></span></button>
+        <button class="img-studio__nav-btn" data-tab="style"><i data-lucide="palette"></i> Style <span class="studio-nav-badge" id="studio-badge-style" hidden></span></button>
+        <button class="img-studio__nav-btn" data-tab="model"><i data-lucide="cpu"></i> Model</button>
+      </nav>
+
+      <!-- ── TAB: QUICK ── -->
+      <div class="img-studio__panel active" data-panel="quick">
+
+        <div class="studio-section">
+          <div class="studio-section__label"><i data-lucide="zap"></i> Quick Capture</div>
+          <div class="studio-quick-capture-grid" id="studio-quick-capture-grid">
+            <button class="studio-quick-capture-btn" data-quick="scene_now">
+              <i data-lucide="camera"></i>
+              <div>
+                <div>Capture Scene Now</div>
+                <div class="studio-quick-capture-desc">Auto-prompt from current conversation + char data</div>
+              </div>
+            </button>
+            <button class="studio-quick-capture-btn" data-quick="char_solo">
+              <i data-lucide="user"></i>
+              <div>
+                <div>Character Solo</div>
+                <div class="studio-quick-capture-desc">Full body portrait from physical description</div>
+              </div>
+            </button>
+            <button class="studio-quick-capture-btn" data-quick="char_face">
+              <i data-lucide="smile"></i>
+              <div>
+                <div>Character Face</div>
+                <div class="studio-quick-capture-desc">Close-up, highly character-accurate portrait</div>
+              </div>
+            </button>
+            <button class="studio-quick-capture-btn" data-quick="scene_vibe">
+              <i data-lucide="sparkles"></i>
+              <div>
+                <div>Match Scene Vibe</div>
+                <div class="studio-quick-capture-desc">LLM reads last messages + writes cinematic prompt</div>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <div class="studio-section">
+          <div class="studio-section__label"><i data-lucide="layout-grid"></i> Scene Presets</div>
+          <div class="studio-scene-grid" id="studio-scene-preset-grid">
+            <!-- Populated from rp-gen-presets.json by ui.js -->
+          </div>
+        </div>
+
+        <div class="studio-section">
+          <div class="studio-section__label"><i data-lucide="heart"></i> Relationship Dynamic</div>
+          <div class="studio-relationship-pills" id="studio-rel-pills">
+            <!-- Populated from rp-gen-presets.json by ui.js -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ── TAB: CHARACTER ── -->
+      <div class="img-studio__panel" data-panel="char">
+
+        <div class="studio-section">
+          <div class="studio-section__label"><i data-lucide="user"></i> Character Physical (auto-filled)</div>
+          <div class="studio-char-fields" id="studio-char-fields">
+            <!-- Populated dynamically from char override data -->
+          </div>
+        </div>
+
+        <div class="studio-section">
+          <div class="studio-section__label"><i data-lucide="sparkles"></i> Hair Style</div>
+          <div class="studio-chips" id="studio-hair-chips">
+            <!-- Populated from presets -->
+          </div>
+        </div>
+
+        <div class="studio-section">
+          <div class="studio-section__label"><i data-lucide="tag"></i> Expression / Emotion</div>
+          <div class="studio-chips" id="studio-expr-chips">
+            <!-- Populated from presets -->
+          </div>
+        </div>
+
+        <div class="studio-section">
+          <div class="studio-section__label"><i data-lucide="droplets"></i> Skin &amp; Body Effects <span class="studio-section__multi-note">multi-select</span></div>
+          <div class="studio-chips" id="studio-skineffects-chips">
+            <!-- Populated from presets -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ── TAB: OUTFIT ── -->
+      <div class="img-studio__panel" data-panel="outfit">
+
+        <div class="studio-section">
+          <div class="studio-section__label"><i data-lucide="layers"></i> Clothing State</div>
+          <div class="studio-chips" id="studio-clothingstate-chips">
+            <!-- Populated from presets -->
+          </div>
+        </div>
+
+        <div class="studio-section">
+          <div class="studio-section__label"><i data-lucide="shirt"></i> Outfit Type</div>
+          <div class="studio-chips" id="studio-clothing-chips">
+            <!-- Populated from presets -->
+          </div>
+          <input type="text" class="studio-custom-input" id="studio-clothing-custom" placeholder="Describe outfit in detail…" hidden>
+        </div>
+
+        <div class="studio-section">
+          <div class="studio-section__label"><i data-lucide="layers"></i> Top</div>
+          <div class="studio-chips" id="studio-clothingtop-chips">
+            <!-- Populated from presets -->
+          </div>
+        </div>
+
+        <div class="studio-section">
+          <div class="studio-section__label"><i data-lucide="layers"></i> Bottom</div>
+          <div class="studio-chips" id="studio-clothingbottom-chips">
+            <!-- Populated from presets -->
+          </div>
+        </div>
+
+        <div class="studio-section">
+          <div class="studio-section__label"><i data-lucide="footprints"></i> Footwear</div>
+          <div class="studio-chips" id="studio-footwear-chips">
+            <!-- Populated from presets -->
+          </div>
+        </div>
+
+        <div class="studio-section">
+          <div class="studio-section__label"><i data-lucide="gem"></i> Accessories <span class="studio-section__multi-note">multi-select</span></div>
+          <div class="studio-chips" id="studio-accessories-chips">
+            <!-- Populated from presets -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ── TAB: POSE & ACT ── -->
+      <div class="img-studio__panel" data-panel="pose">
+
+        <div class="studio-section">
+          <div class="studio-section__label"><i data-lucide="scan"></i> Camera Framing</div>
+          <div class="studio-chips" id="studio-cam-chips">
+            <!-- Populated from presets -->
+          </div>
+        </div>
+
+        <div class="studio-section">
+          <div class="studio-section__label"><i data-lucide="move"></i> Pose / Body</div>
+          <div class="studio-chips" id="studio-pose-chips">
+            <!-- Populated from presets -->
+          </div>
+          <input type="text" class="studio-custom-input" id="studio-pose-custom" placeholder="Describe pose in detail…" hidden>
+        </div>
+
+        <div class="studio-section">
+          <div class="studio-section__label"><i data-lucide="crosshair"></i> Body Focus</div>
+          <div class="studio-chips" id="studio-bodyfocus-chips">
+            <!-- Populated from presets -->
+          </div>
+        </div>
+
+        <div class="studio-section">
+          <div class="studio-section__label"><i data-lucide="users"></i> Partners</div>
+          <div class="studio-chips" id="studio-partners-chips">
+            <!-- Populated from presets -->
+          </div>
+        </div>
+
+        <div class="studio-section">
+          <div class="studio-section__label"><i data-lucide="activity"></i> Activity / Act</div>
+          <div id="studio-activity-groups">
+            <!-- Group-labelled activity chips, populated by ui.js -->
+          </div>
+          <input type="text" class="studio-custom-input" id="studio-activity-custom" placeholder="Describe activity…" hidden>
+        </div>
+
+      </div>
+
+      <!-- ── TAB: SCENE ── -->
+      <div class="img-studio__panel" data-panel="scene">
+
+        <div class="studio-section">
+          <div class="studio-section__label"><i data-lucide="map-pin"></i> Location</div>
+          <div id="studio-env-groups">
+            <!-- Group-labelled env chips, populated by ui.js -->
+          </div>
+          <input type="text" class="studio-custom-input" id="studio-env-custom" placeholder="Describe location in detail…" hidden>
+        </div>
+
+        <div class="studio-section">
+          <div class="studio-section__label"><i data-lucide="clock"></i> Time of Day</div>
+          <div class="studio-chips" id="studio-timeofday-chips">
+            <!-- Populated from presets -->
+          </div>
+        </div>
+
+        <div class="studio-section">
+          <div class="studio-section__label"><i data-lucide="cloud"></i> Weather / Atmosphere</div>
+          <div class="studio-chips" id="studio-weather-chips">
+            <!-- Populated from presets -->
+          </div>
+        </div>
+
+        <div class="studio-section">
+          <div class="studio-section__label"><i data-lucide="sun"></i> Lighting</div>
+          <div class="studio-chips" id="studio-mood-chips">
+            <!-- Populated from presets -->
+          </div>
+        </div>
+
+        <div class="studio-section">
+          <div class="studio-section__label"><i data-lucide="waves"></i> Scene Vibe</div>
+          <div class="studio-chips" id="studio-vibe-chips">
+            <!-- Populated from presets -->
+          </div>
+        </div>
+
+        <div class="studio-section">
+          <div class="studio-section__label"><i data-lucide="sparkles"></i> Fantasy / Special FX <span class="studio-section__multi-note">multi-select</span></div>
+          <div class="studio-chips" id="studio-fantasyfx-chips">
+            <!-- Populated from presets -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ── TAB: STYLE ── -->
+      <div class="img-studio__panel" data-panel="style">
+
+        <div class="studio-section">
+          <div class="studio-section__label"><i data-lucide="palette"></i> Art Style / Medium</div>
+          <div class="studio-chips" id="studio-style-chips">
+            <!-- Populated from presets -->
+          </div>
+        </div>
+
+        <div class="studio-section">
+          <div class="studio-section__label"><i data-lucide="droplet"></i> Color Tone</div>
+          <div class="studio-chips" id="studio-colortone-chips">
+            <!-- Populated from presets -->
+          </div>
+        </div>
+
+        <div class="studio-section">
+          <div class="studio-section__label"><i data-lucide="frame"></i> Composition</div>
+          <div class="studio-chips" id="studio-composition-chips">
+            <!-- Populated from presets -->
+          </div>
+        </div>
+
+        <div class="studio-section">
+          <div class="studio-section__label"><i data-lucide="star"></i> Quality / Detail <span class="studio-section__multi-note">multi-select</span></div>
+          <div class="studio-chips" id="studio-quality-chips">
+            <!-- Populated from presets -->
+          </div>
+        </div>
+
+        <div class="studio-section">
+          <div class="studio-section__label"><i data-lucide="flask-conical"></i> Homebrew Inject</div>
+          <div class="studio-homebrew-area">
+            <textarea id="studio-positive" class="studio-homebrew-ta" rows="2" placeholder="Positive inject — appended verbatim to prompt…"></textarea>
+            <textarea id="studio-negative" class="studio-homebrew-ta" rows="2" placeholder="Negative inject — what to exclude…"></textarea>
+          </div>
+        </div>
+
+        <div class="studio-reset-row">
+          <button class="studio-reset-btn" id="studio-reset-btn" type="button"><i data-lucide="rotate-ccw"></i> Reset All</button>
+        </div>
+
+      </div>
+
+      <!-- ── TAB: MODEL ── -->
+      <div class="img-studio__panel" data-panel="model">
+
+        <div class="studio-section">
+          <div class="studio-section__label"><i data-lucide="cpu"></i> Image Model</div>
+        </div>
+        <div class="studio-model-grid" id="studio-model-grid">
+          <!-- Populated by ui.js from IMAGE_MODELS -->
+        </div>
+
+        <div class="studio-section" style="margin-top:10px">
+          <div class="studio-section__label"><i data-lucide="layout-grid"></i> Size / Aspect</div>
+          <div class="studio-chips" style="padding: 0 14px 8px">
+            <button class="studio-chip active" data-field="size" data-val="1024x1024">1024 × 1024</button>
+            <button class="studio-chip" data-field="size" data-val="1024x1792">Portrait 1024×1792</button>
+            <button class="studio-chip" data-field="size" data-val="1792x1024">Landscape 1792×1024</button>
+            <button class="studio-chip" data-field="size" data-val="512x512">512 × 512</button>
+          </div>
+        </div>
+
+        <div class="studio-section">
+          <div class="studio-section__label"><i data-lucide="hash"></i> Seed <span class="studio-section__multi-note">blank = random</span></div>
+          <div style="padding: 0 14px 8px">
+            <input type="number" id="studio-seed" class="studio-char-field-input" placeholder="Random seed…" style="width:140px">
+          </div>
+        </div>
+
+      </div>
+
+    </div><!-- end .img-studio__config -->
+
+    <!-- ── RIGHT: Canvas + Preview ── -->
+    <div class="img-studio__canvas">
+
+      <!-- Gallery strip (current char's recent images) -->
+      <div class="img-studio__gallery-strip" id="studio-gallery-strip">
+        <span class="img-studio__gallery-empty">No images yet</span>
+      </div>
+
+      <!-- Preview area -->
+      <div class="img-studio__preview-area" id="studio-preview-area">
+
+        <!-- Placeholder when no image -->
+        <div class="img-studio__preview-placeholder" id="studio-placeholder">
+          <i data-lucide="image"></i>
+          <div class="img-studio__preview-placeholder-text">Configure your scene and generate</div>
+        </div>
+
+        <!-- Generated image (hidden until first gen) -->
+        <div class="img-studio__preview-img-wrap" id="studio-img-wrap" hidden>
+          <img id="studio-preview-img" class="img-studio__preview-img" alt="Generated scene">
+          <div class="img-studio__preview-img-actions">
+            <button class="img-studio__img-action" id="studio-img-set-avatar" title="Set as character avatar"><i data-lucide="user-check"></i></button>
+            <button class="img-studio__img-action" id="studio-img-save-gallery" title="Save to gallery"><i data-lucide="image-plus"></i></button>
+            <button class="img-studio__img-action" id="studio-img-download" title="Download"><i data-lucide="download"></i></button>
+            <button class="img-studio__img-action" id="studio-img-send-chat" title="Send to chat thread"><i data-lucide="send"></i></button>
+          </div>
+        </div>
+
+        <!-- Generating overlay -->
+        <div class="img-studio__generating-overlay" id="studio-gen-overlay" hidden>
+          <div class="img-studio__gen-spinner"></div>
+          <div class="img-studio__gen-label" id="studio-gen-label">Generating…</div>
+        </div>
+
+      </div>
+
+      <!-- Prompt bar -->
+      <div class="img-studio__prompt-bar">
+        <div class="img-studio__prompt-header">
+          <span class="img-studio__prompt-label">Prompt</span>
+          <div class="img-studio__prompt-actions">
+            <button id="studio-rebuild-prompt" class="btn btn--ghost btn--xs" title="Rebuild prompt from current scene selections"><i data-lucide="refresh-cw"></i> Rebuild</button>
+            <button id="studio-ai-prompt" class="btn btn--ghost btn--xs" title="Use AI to write the best possible prompt from character + scene context"><i data-lucide="sparkles"></i> AI Prompt</button>
+          </div>
+        </div>
+        <textarea id="studio-prompt-ta" class="img-studio__prompt-ta" rows="3" placeholder="Prompt auto-builds from your selections — edit freely…"></textarea>
+        <div class="img-studio__prompt-header" style="margin-top:2px">
+          <span class="img-studio__prompt-label" style="color:rgba(255,100,100,0.5)">Negative</span>
+        </div>
+        <textarea id="studio-neg-ta" class="img-studio__prompt-ta img-studio__neg-ta" rows="2" placeholder="What to exclude from the image…"></textarea>
+      </div>
+
+      <!-- Bottom action row -->
+      <div class="img-studio__action-row">
+        <select id="studio-model-select" class="img-studio__model-select" title="Active model">
+          <!-- Populated by ui.js from IMAGE_MODELS -->
+        </select>
+        <select id="studio-size-select" class="img-studio__size-select">
+          <option value="1024x1024">1024 × 1024</option>
+          <option value="1024x1792">Portrait (1024×1792)</option>
+          <option value="1792x1024">Landscape (1792×1024)</option>
+          <option value="512x512">512 × 512</option>
+        </select>
+        <span id="studio-cost" class="img-studio__cost"></span>
+        <button id="studio-regenerate" class="btn btn--ghost btn--sm" hidden title="Regenerate with same settings"><i data-lucide="refresh-cw"></i></button>
+        <button id="studio-gen-btn" class="img-studio__gen-btn"><i data-lucide="sparkles"></i> Generate</button>
+      </div>
+
+    </div><!-- end .img-studio__canvas -->
+
+  </div><!-- end .img-studio__body -->
+
+</div><!-- end #img-studio -->
+
 <div id="modal-image-gen" class="modal" hidden>
   <div class="modal__backdrop"></div>
   <div class="modal__content modal__content--img-gen">
@@ -2661,7 +3095,7 @@
 
 <div id="toast-container" class="toast-container"></div>
 <script src="../../shards/lucide.min.js"></script><script src="../../shards/marked.min.js"></script><script src="../../shards/purify.min.js"></script>
-<script type="module" src="./script/main.js?v=54"></script>
+<script type="module" src="./script/main.js?v=55"></script>
 <!-- ── Wallhaven Arena ── -->
 <script src="./script/modules/wallhaven.js"></script>
 </body>

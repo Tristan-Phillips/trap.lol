@@ -3156,6 +3156,871 @@ export function initUI() {
     // Also allow opening from a toolbar button (quick access)
     qs('#btn-image-gen')?.addEventListener('click', () => openImageGenModal(''));
 
+    // ── Image Studio — full wizard ─────────────────────────────────────────────
+    // Loaded from rp-gen-presets.json; populated once at boot.
+    let _studioPresets   = null;
+    let _studioWired     = false;
+
+    // Studio scene state — mirrors _scene shape plus extra fields for
+    // the studio-only chip groups (clothingTop, clothingBottom, etc.)
+    let _studioScene = {
+        nsfw:              'sfw',
+        // char tab
+        hair:              null,
+        expr:              null,
+        skinEffects:       new Set(),
+        // outfit tab
+        clothingState:     null,
+        clothing:          null,
+        clothingTop:       null,
+        clothingBottom:    null,
+        clothingFootwear:  null,
+        accessories:       new Set(),
+        clothingCustom:    '',
+        // pose tab
+        cam:               null,
+        pose:              null,
+        bodyFocus:         null,
+        partners:          null,
+        activity:          null,
+        poseCustom:        '',
+        activityCustom:    '',
+        // scene tab
+        env:               null,
+        timeOfDay:         null,
+        weather:           null,
+        mood:              null,
+        vibe:              null,
+        fantasyFx:         new Set(),
+        envCustom:         '',
+        // style tab
+        style:             'photorealistic photography, 8k',
+        colorTone:         null,
+        composition:       null,
+        quality:           new Set(),
+        positive:          '',
+        negative:          '',
+        // model tab
+        size:              '1024x1024',
+        seed:              '',
+    };
+
+    const _STUDIO_MULTI_GROUPS = new Set(['accessories','quality','skinEffects','fantasyFx']);
+
+    let _studioModel   = DEFAULT_MODEL;
+    let _studioDataUrl = null;
+
+    // ── Fetch presets JSON once ───────────────────────────────────────────────
+    async function _loadStudioPresets() {
+        if (_studioPresets) return _studioPresets;
+        try {
+            const res  = await fetch('./data/rp-gen-presets.json');
+            _studioPresets = await res.json();
+        } catch (_) {
+            _studioPresets = {};
+        }
+        return _studioPresets;
+    }
+
+    // ── Render a flat chip list into a container ──────────────────────────────
+    function _renderChips($container, entries, field, multi = false, customId = null) {
+        if (!$container) return;
+        $container.innerHTML = '';
+        entries.forEach(e => {
+            const $c = document.createElement('button');
+            $c.className = `studio-chip${multi ? ' studio-chip--multi' : ''}${e.val === '__custom__' ? ' studio-chip--custom' : ''}`;
+            $c.dataset.field = field;
+            $c.dataset.val   = e.val ?? e.id;
+            $c.textContent   = e.label;
+            $c.type          = 'button';
+            // Sync active state from _studioScene
+            if (multi) {
+                const set = _studioScene[field];
+                if (set instanceof Set && set.has($c.dataset.val)) $c.classList.add('active');
+            } else {
+                if (_studioScene[field] === $c.dataset.val) $c.classList.add('active');
+            }
+            $container.appendChild($c);
+        });
+        // Wire clicks
+        $container.addEventListener('click', e => {
+            const $chip = e.target.closest('.studio-chip');
+            if (!$chip || $chip.dataset.field !== field) return;
+            const val = $chip.dataset.val;
+
+            if ($chip.classList.contains('studio-chip--custom') && customId) {
+                const $ci = qs(`#${customId}`);
+                if ($ci) {
+                    const open = $ci.hidden;
+                    $ci.hidden = !open;
+                    if (open) {
+                        _studioScene[field] = '__custom__';
+                        $container.querySelectorAll('.studio-chip').forEach(x => x.classList.remove('active'));
+                        $chip.classList.add('active');
+                        $ci.focus();
+                    } else {
+                        if (_studioScene[field] === '__custom__') {
+                            _studioScene[field] = null;
+                            $chip.classList.remove('active');
+                        }
+                    }
+                    _studioRebuildPrompt();
+                    return;
+                }
+            }
+
+            if (multi) {
+                const set = _studioScene[field] instanceof Set ? _studioScene[field] : (_studioScene[field] = new Set());
+                if (set.has(val)) {
+                    set.delete(val);
+                    $chip.classList.remove('active');
+                } else {
+                    set.add(val);
+                    $chip.classList.add('active');
+                }
+            } else {
+                const already = _studioScene[field] === val;
+                _studioScene[field] = already ? null : val;
+                $container.querySelectorAll(`.studio-chip[data-field="${field}"]`).forEach(x => x.classList.remove('active'));
+                if (!already) $chip.classList.add('active');
+            }
+            _studioRebuildPrompt();
+            _studioUpdateBadges();
+        });
+    }
+
+    // ── Render grouped chips (env, activity) ─────────────────────────────────
+    function _renderGroupedChips($wrapper, groups, field, customId = null) {
+        if (!$wrapper) return;
+        $wrapper.innerHTML = '';
+        groups.forEach(grp => {
+            const $gl  = document.createElement('div');
+            $gl.className = 'studio-subgroup';
+            $gl.textContent = grp.label;
+            $wrapper.appendChild($gl);
+
+            const $chips = document.createElement('div');
+            $chips.className = 'studio-chips';
+            $chips.style.padding = '0 14px 6px';
+            $wrapper.appendChild($chips);
+            _renderChips($chips, grp.entries, field, false, customId);
+        });
+    }
+
+    // ── Render scene preset cards from JSON ───────────────────────────────────
+    function _renderScenePresetCards() {
+        const $grid = qs('#studio-scene-preset-grid');
+        if (!$grid || !_studioPresets?.scenes?.entries) return;
+        $grid.innerHTML = '';
+        _studioPresets.scenes.entries.forEach(p => {
+            const $c = document.createElement('button');
+            $c.className = 'studio-preset-card';
+            $c.dataset.presetId = p.id;
+            $c.type = 'button';
+            $c.title = _studioPresets.scenes.note || '';
+            $c.innerHTML = `<i data-lucide="${p.icon || 'star'}"></i><span>${esc(p.label)}</span>`;
+            $c.addEventListener('click', () => {
+                const was = $c.classList.contains('active');
+                qs('#studio-scene-preset-grid').querySelectorAll('.studio-preset-card').forEach(x => x.classList.remove('active'));
+                if (!was) {
+                    _applyStudioScenePreset(p);
+                    $c.classList.add('active');
+                }
+                _studioRebuildPrompt();
+                _studioUpdateBadges();
+                lucideRefresh($c);
+            });
+            $grid.appendChild($c);
+        });
+        lucideRefresh($grid);
+    }
+
+    function _applyStudioScenePreset(preset) {
+        const f = preset.fields || {};
+        Object.keys(f).forEach(k => {
+            if (k.endsWith('_add')) {
+                // multi-group additions
+                const realKey = k.slice(0, -4);
+                const set = _studioScene[realKey] instanceof Set ? _studioScene[realKey] : (_studioScene[realKey] = new Set());
+                (Array.isArray(f[k]) ? f[k] : [f[k]]).forEach(v => set.add(v));
+            } else {
+                _studioScene[k] = f[k];
+            }
+        });
+        _syncStudioChipsToState();
+    }
+
+    // ── Render relationship pills ─────────────────────────────────────────────
+    function _renderRelPills() {
+        const $c = qs('#studio-rel-pills');
+        if (!$c || !_studioPresets?.relationships?.entries) return;
+        $c.innerHTML = '';
+        _studioPresets.relationships.entries.forEach(r => {
+            const $p = document.createElement('button');
+            $p.className = 'studio-rel-pill';
+            $p.dataset.relId = r.id;
+            $p.type = 'button';
+            $p.textContent = r.label;
+            $p.addEventListener('click', () => {
+                const was = $p.classList.contains('active');
+                $c.querySelectorAll('.studio-rel-pill').forEach(x => x.classList.remove('active'));
+                if (!was) {
+                    if (r.vibe)        _studioScene.vibe = r.vibe;
+                    if (r.expr)        _studioScene.expr = r.expr;
+                    if (r.accessories) {
+                        if (!(_studioScene.accessories instanceof Set)) _studioScene.accessories = new Set();
+                        _studioScene.accessories.add(r.accessories);
+                    }
+                    $p.classList.add('active');
+                    _syncStudioChipsToState();
+                    _studioRebuildPrompt();
+                    _studioUpdateBadges();
+                }
+            });
+            $c.appendChild($p);
+        });
+    }
+
+    // ── Render model grid inside studio Model tab ─────────────────────────────
+    function _renderStudioModelGrid() {
+        const $grid = qs('#studio-model-grid');
+        if (!$grid) return;
+        const nsfwActive = _studioScene.nsfw !== 'sfw';
+        $grid.innerHTML = IMAGE_MODELS.map(m => {
+            const tags  = m.tags.map(t => `<span class="studio-model-tag studio-model-tag--${t}">${t}</span>`).join('');
+            const sub   = m.sub
+                ? `<span class="studio-model-card__sub studio-model-card__sub--included">SUB</span>`
+                : `<span class="studio-model-card__sub studio-model-card__sub--credits">CREDITS</span>`;
+            const warn  = nsfwActive && !m.nsfw ? ' style="opacity:.55"' : '';
+            const active = m.id === _studioModel ? ' active' : '';
+            return `<button class="studio-model-card${active}" data-model="${esc(m.id)}" type="button"${warn}>
+                <div class="studio-model-card__label">${esc(m.label)}</div>
+                <div class="studio-model-card__tags">${tags}</div>
+                <div class="studio-model-card__desc">${esc(m.desc)}</div>
+                ${sub}
+            </button>`;
+        }).join('');
+        $grid.querySelectorAll('.studio-model-card').forEach($c => {
+            $c.addEventListener('click', () => {
+                _studioModel = $c.dataset.model;
+                $grid.querySelectorAll('.studio-model-card').forEach(x => x.classList.toggle('active', x.dataset.model === _studioModel));
+                // Also sync the action-row select
+                const $sel = qs('#studio-model-select');
+                if ($sel) $sel.value = _studioModel;
+            });
+        });
+        // Also populate action-row select
+        const $sel = qs('#studio-model-select');
+        if ($sel) {
+            $sel.innerHTML = IMAGE_MODELS.map(m =>
+                `<option value="${esc(m.id)}"${m.id === _studioModel ? ' selected' : ''}>${esc(m.label)}${m.nsfw ? '' : ' ★'}</option>`
+            ).join('');
+            $sel.addEventListener('change', () => {
+                _studioModel = $sel.value;
+                $grid.querySelectorAll('.studio-model-card').forEach(x => x.classList.toggle('active', x.dataset.model === _studioModel));
+            });
+        }
+    }
+
+    // ── Build character info strip ────────────────────────────────────────────
+    function _renderStudioCharInfo(charId) {
+        const $name   = qs('#studio-char-name');
+        const $traits = qs('#studio-char-traits');
+        const $snip   = qs('#studio-char-scene-snippet');
+        const $port   = qs('#studio-char-portrait');
+        const $badge  = qs('#studio-char-badge');
+        const $badgeName = qs('#studio-char-badge-name');
+        const $badgeAv   = qs('#studio-char-avatar-sm');
+
+        if (!charId) {
+            if ($name) $name.textContent = 'No character selected';
+            if ($traits) $traits.innerHTML = '';
+            if ($snip)  $snip.textContent = '';
+            if ($badge) $badge.hidden = true;
+            return;
+        }
+
+        const char     = state.loadedCharacters[charId];
+        const override = getCharOverride(charId);
+        const meta     = state.characters.find(c => c.id === charId);
+        const charName = override.nickname || char?.name || 'Character';
+
+        if ($name) $name.textContent = charName;
+        if ($badge) { $badge.hidden = false; }
+        if ($badgeName) $badgeName.textContent = charName;
+
+        // Portrait
+        const avatarSrc = meta?.avatar_path || '';
+        if ($port) {
+            $port.src = avatarSrc || '';
+            $port.hidden = !avatarSrc;
+        }
+        if ($badgeAv) {
+            $badgeAv.src = avatarSrc || '';
+            $badgeAv.hidden = !avatarSrc;
+        }
+
+        // Trait chips: hair, eyes, age, species, body type, skin
+        if ($traits) {
+            const traits = [];
+            if (override.hairColor) traits.push({ label: `${override.hairColor}${override.hairStyle ? ' ' + override.hairStyle : ''} hair`, type: '' });
+            if (override.eyeColor)  traits.push({ label: `${override.eyeColor} eyes`, type: '' });
+            if (override.age)       traits.push({ label: override.age, type: 'gold' });
+            if (override.species && override.species.toLowerCase() !== 'human') traits.push({ label: override.species, type: 'gold' });
+            if (override.bodyType)  traits.push({ label: override.bodyType, type: '' });
+            if (override.skinTone)  traits.push({ label: override.skinTone, type: '' });
+            if (override.height)    traits.push({ label: override.height, type: '' });
+            $traits.innerHTML = traits.map(t =>
+                `<span class="img-studio__char-trait${t.type === 'gold' ? ' img-studio__char-trait--gold' : ''}">${esc(t.label)}</span>`
+            ).join('');
+        }
+
+        // Scene snippet from last bot message
+        if ($snip) {
+            const lastBot = [...state.history].reverse().find(m => m.role === 'bot');
+            const text = lastBot?.content?.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 120) || '';
+            $snip.textContent = text ? text + '…' : '';
+        }
+
+        // Render the char physical data sheet in the Character tab
+        _renderStudioCharFields(charId);
+    }
+
+    function _renderStudioCharFields(charId) {
+        const $fields = qs('#studio-char-fields');
+        if (!$fields) return;
+        const override = getCharOverride(charId);
+        const PHYS_KEYS = [
+            ['species',      'Species'],
+            ['gender',       'Gender'],
+            ['age',          'Age'],
+            ['height',       'Height'],
+            ['bodyType',     'Body Type'],
+            ['skinTone',     'Skin'],
+            ['hairColor',    'Hair Color'],
+            ['hairStyle',    'Hair Style'],
+            ['eyeColor',     'Eye Color'],
+            ['faceShape',    'Face Shape'],
+            ['complexion',   'Complexion'],
+            ['lipsType',     'Lips'],
+            ['distinctiveFeatures', 'Features'],
+            ['tattoos',      'Tattoos'],
+            ['scarsMarks',   'Scars/Marks'],
+            ['styleArchetype','Style'],
+            ['outfitDescription','Outfit'],
+            ['breastSize',   'Breasts'],
+            ['buttocksSize', 'Buttocks'],
+        ];
+        $fields.innerHTML = PHYS_KEYS.map(([k, label]) => {
+            const v = override[k];
+            const filled = v && String(v).trim() && String(v).toLowerCase() !== 'n/a';
+            return `<div class="studio-char-field-row">
+                <span class="studio-char-field-label">${esc(label)}</span>
+                <span class="studio-char-field-val${filled ? ' studio-char-field-val--filled' : ' studio-char-field-val--empty'}">${filled ? esc(String(v).trim()) : '—'}</span>
+            </div>`;
+        }).join('');
+    }
+
+    // ── Badge counts on nav tabs ──────────────────────────────────────────────
+    function _studioUpdateBadges() {
+        const counts = {
+            outfit: (['clothingState','clothing','clothingTop','clothingBottom','clothingFootwear'].filter(k => _studioScene[k]).length + _studioScene.accessories.size),
+            pose:   (['cam','pose','bodyFocus','partners','activity'].filter(k => _studioScene[k]).length),
+            scene:  (['env','timeOfDay','weather','mood','vibe'].filter(k => _studioScene[k]).length + _studioScene.fantasyFx.size),
+            style:  (['colorTone','composition'].filter(k => _studioScene[k]).length + _studioScene.quality.size + (_studioScene.style !== 'photorealistic photography, 8k' ? 1 : 0)),
+        };
+        Object.keys(counts).forEach(tab => {
+            const $b = qs(`#studio-badge-${tab}`);
+            if (!$b) return;
+            if (counts[tab] > 0) {
+                $b.textContent = counts[tab];
+                $b.hidden = false;
+            } else {
+                $b.hidden = true;
+            }
+        });
+    }
+
+    // ── Rebuild prompt from studio state ─────────────────────────────────────
+    function _studioRebuildPrompt() {
+        // Build a merged scene object that maps _studioScene → buildImagePrompt shape
+        const merged = {
+            nsfw:          _studioScene.nsfw,
+            clothingState: _studioScene.clothingState,
+            clothing:      _studioScene.clothing
+                         || [_studioScene.clothingTop, _studioScene.clothingBottom, _studioScene.clothingFootwear].filter(Boolean).join(', ')
+                         || null,
+            clothingCustom: _studioScene.clothingCustom,
+            accessories:   _studioScene.accessories,
+            hair:          _studioScene.hair,
+            cam:           _studioScene.cam,
+            pose:          _studioScene.pose,
+            poseCustom:    _studioScene.poseCustom,
+            activity:      _studioScene.activity,
+            activityCustom: _studioScene.activityCustom,
+            bodyFocus:     _studioScene.bodyFocus,
+            partners:      _studioScene.partners,
+            expr:          _studioScene.expr,
+            skinEffects:   _studioScene.skinEffects,
+            env:           _studioScene.env,
+            envCustom:     _studioScene.envCustom,
+            timeOfDay:     _studioScene.timeOfDay,
+            weather:       _studioScene.weather,
+            mood:          _studioScene.mood,
+            vibe:          _studioScene.vibe,
+            fantasyFx:     _studioScene.fantasyFx,
+            style:         _studioScene.style,
+            colorTone:     _studioScene.colorTone,
+            composition:   _studioScene.composition,
+            quality:       _studioScene.quality,
+            positive:      _studioScene.positive,
+            negative:      _studioScene.negative,
+        };
+
+        const charId = state.activeBotId;
+        const includeNsfw = _studioScene.nsfw !== 'sfw';
+        const { positive, negative } = buildImagePrompt({ charId, scene: merged, includeNsfw, nsfwLevel: _studioScene.nsfw });
+
+        const $ta  = qs('#studio-prompt-ta');
+        const $neg = qs('#studio-neg-ta');
+        if ($ta)  $ta.value  = positive;
+        if ($neg) $neg.value = negative;
+    }
+
+    // ── Sync all chip active states to _studioScene ───────────────────────────
+    function _syncStudioChipsToState() {
+        const $studio = qs('#img-studio');
+        if (!$studio) return;
+        $studio.querySelectorAll('.studio-chip[data-field]').forEach($c => {
+            const field = $c.dataset.field;
+            const val   = $c.dataset.val;
+            if (!field) return;
+            if (_STUDIO_MULTI_GROUPS.has(field)) {
+                const s = _studioScene[field];
+                $c.classList.toggle('active', s instanceof Set && s.has(val));
+            } else {
+                $c.classList.toggle('active', _studioScene[field] === val);
+            }
+        });
+        // Sync NSFW pills
+        $studio.querySelectorAll('.studio-nsfw-pill').forEach($p => {
+            $p.classList.toggle('active', $p.dataset.nsfw === _studioScene.nsfw);
+        });
+        // Sync homebrew textareas
+        const $sp = qs('#studio-positive');
+        const $sn = qs('#studio-negative');
+        if ($sp) $sp.value = _studioScene.positive;
+        if ($sn) $sn.value = _studioScene.negative;
+        // Sync size chips
+        $studio.querySelectorAll('.studio-chip[data-field="size"]').forEach($c => {
+            $c.classList.toggle('active', $c.dataset.val === _studioScene.size);
+        });
+    }
+
+    // ── Full studio population from presets ───────────────────────────────────
+    async function _initStudioPanels() {
+        const p = await _loadStudioPresets();
+        if (!p) return;
+
+        // Quick tab
+        _renderScenePresetCards();
+        _renderRelPills();
+
+        // Char tab
+        _renderChips(qs('#studio-hair-chips'),         p.hair?.entries      || [], 'hair');
+        _renderChips(qs('#studio-expr-chips'),          p.expressions?.entries || [], 'expr');
+        _renderChips(qs('#studio-skineffects-chips'),   p.skin_effects?.entries || [], 'skinEffects', true);
+
+        // Outfit tab
+        const clothingGroups = p.clothing?.groups || [];
+        const stateGrp   = clothingGroups.find(g => g.id === 'state');
+        const typeGrp    = clothingGroups.find(g => g.id === 'type');
+        const topGrp     = clothingGroups.find(g => g.id === 'top');
+        const bottomGrp  = clothingGroups.find(g => g.id === 'bottom');
+        const footwearGrp= clothingGroups.find(g => g.id === 'footwear');
+        if (stateGrp)   _renderChips(qs('#studio-clothingstate-chips'),  stateGrp.entries,    'clothingState');
+        if (typeGrp)    _renderChips(qs('#studio-clothing-chips'),        typeGrp.entries,     'clothing', false, 'studio-clothing-custom');
+        if (topGrp)     _renderChips(qs('#studio-clothingtop-chips'),     topGrp.entries,      'clothingTop');
+        if (bottomGrp)  _renderChips(qs('#studio-clothingbottom-chips'),  bottomGrp.entries,   'clothingBottom');
+        if (footwearGrp)_renderChips(qs('#studio-footwear-chips'),        footwearGrp.entries, 'clothingFootwear');
+        _renderChips(qs('#studio-accessories-chips'), p.accessories?.entries || [], 'accessories', true);
+
+        // Pose tab
+        _renderChips(qs('#studio-cam-chips'),        p.camera?.entries    || [], 'cam');
+        _renderChips(qs('#studio-pose-chips'),        p.poses?.entries     || [], 'pose', false, 'studio-pose-custom');
+        _renderChips(qs('#studio-bodyfocus-chips'),   p.body_focus?.entries || [], 'bodyFocus');
+        _renderChips(qs('#studio-partners-chips'),    p.partners?.entries  || [], 'partners');
+        _renderGroupedChips(qs('#studio-activity-groups'), p.activities?.groups || [], 'activity', 'studio-activity-custom');
+
+        // Scene tab
+        _renderGroupedChips(qs('#studio-env-groups'), p.environments?.groups || [], 'env', 'studio-env-custom');
+        _renderChips(qs('#studio-timeofday-chips'),   p.time_of_day?.entries || [], 'timeOfDay');
+        _renderChips(qs('#studio-weather-chips'),     p.weather?.entries   || [], 'weather');
+        _renderChips(qs('#studio-mood-chips'),        p.lighting?.entries  || [], 'mood');
+        _renderChips(qs('#studio-vibe-chips'),        p.vibes?.entries     || [], 'vibe');
+        _renderChips(qs('#studio-fantasyfx-chips'),   p.fantasy_fx?.entries || [], 'fantasyFx', true);
+
+        // Style tab
+        _renderChips(qs('#studio-style-chips'),       p.art_styles?.entries || [], 'style');
+        _renderChips(qs('#studio-colortone-chips'),    p.color_tones?.entries || [], 'colorTone');
+        _renderChips(qs('#studio-composition-chips'),  p.compositions?.entries || [], 'composition');
+        _renderChips(qs('#studio-quality-chips'),      p.quality_tags?.entries || [], 'quality', true);
+
+        // Model tab
+        _renderStudioModelGrid();
+
+        // Size chips (already in HTML, just wire them)
+        qs('#img-studio')?.querySelectorAll('.studio-chip[data-field="size"]').forEach($c => {
+            $c.addEventListener('click', () => {
+                _studioScene.size = $c.dataset.val;
+                qs('#img-studio').querySelectorAll('.studio-chip[data-field="size"]').forEach(x => x.classList.toggle('active', x.dataset.val === _studioScene.size));
+                const $ss = qs('#studio-size-select');
+                if ($ss) $ss.value = _studioScene.size;
+            });
+        });
+
+        // Custom text inputs
+        const customInputs = [
+            ['#studio-clothing-custom', 'clothingCustom'],
+            ['#studio-pose-custom',     'poseCustom'],
+            ['#studio-activity-custom', 'activityCustom'],
+            ['#studio-env-custom',      'envCustom'],
+        ];
+        customInputs.forEach(([sel, key]) => {
+            qs(sel)?.addEventListener('input', e => {
+                _studioScene[key] = e.target.value;
+                _studioRebuildPrompt();
+            });
+        });
+
+        // Homebrew
+        qs('#studio-positive')?.addEventListener('input', e => { _studioScene.positive = e.target.value; });
+        qs('#studio-negative')?.addEventListener('input', e => { _studioScene.negative = e.target.value; });
+
+        // Reset
+        qs('#studio-reset-btn')?.addEventListener('click', () => {
+            Object.assign(_studioScene, {
+                nsfw: 'sfw', hair: null, expr: null, clothingState: null, clothing: null,
+                clothingTop: null, clothingBottom: null, clothingFootwear: null,
+                cam: null, pose: null, bodyFocus: null, partners: null, activity: null,
+                env: null, timeOfDay: null, weather: null, mood: null, vibe: null,
+                style: 'photorealistic photography, 8k', colorTone: null, composition: null,
+                poseCustom: '', activityCustom: '', clothingCustom: '', envCustom: '',
+                positive: '', negative: '',
+            });
+            _studioScene.accessories.clear();
+            _studioScene.quality.clear();
+            _studioScene.skinEffects.clear();
+            _studioScene.fantasyFx.clear();
+            qs('#img-studio')?.querySelectorAll('.studio-custom-input').forEach(i => { i.hidden = true; i.value = ''; });
+            qs('#img-studio')?.querySelectorAll('.studio-preset-card').forEach(c => c.classList.remove('active'));
+            qs('#img-studio')?.querySelectorAll('.studio-rel-pill').forEach(c => c.classList.remove('active'));
+            _syncStudioChipsToState();
+            _studioRebuildPrompt();
+            _studioUpdateBadges();
+            showToast('Studio reset', 'info', 1200);
+        });
+    }
+
+    // ── Wire studio nav tabs ──────────────────────────────────────────────────
+    function _wireStudioNav() {
+        qs('#studio-nav')?.addEventListener('click', e => {
+            const $btn = e.target.closest('.img-studio__nav-btn');
+            if (!$btn) return;
+            const tab = $btn.dataset.tab;
+            qs('#studio-nav').querySelectorAll('.img-studio__nav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+            qs('#img-studio').querySelectorAll('.img-studio__panel').forEach(p => p.classList.toggle('active', p.dataset.panel === tab));
+        });
+
+        // NSFW bar
+        qs('#studio-nsfw-bar')?.addEventListener('click', e => {
+            const $p = e.target.closest('.studio-nsfw-pill');
+            if (!$p) return;
+            _studioScene.nsfw = $p.dataset.nsfw;
+            qs('#studio-nsfw-bar').querySelectorAll('.studio-nsfw-pill').forEach(x => x.classList.remove('active'));
+            $p.classList.add('active');
+            _studioRebuildPrompt();
+            _renderStudioModelGrid();
+        });
+
+        // Size select in action row
+        qs('#studio-size-select')?.addEventListener('change', e => {
+            _studioScene.size = e.target.value;
+        });
+    }
+
+    // ── Quick capture buttons ─────────────────────────────────────────────────
+    function _wireQuickCapture() {
+        qs('#studio-quick-capture-grid')?.addEventListener('click', async e => {
+            const $btn = e.target.closest('[data-quick]');
+            if (!$btn) return;
+            const type  = $btn.dataset.quick;
+            const charId = state.activeBotId;
+
+            const $ta  = qs('#studio-prompt-ta');
+            const origText = $btn.innerHTML;
+            $btn.disabled = true;
+            $btn.innerHTML = '<i data-lucide="loader-2" class="spin"></i> Working…';
+            lucideRefresh($btn);
+
+            try {
+                let prompt = '';
+                if (type === 'char_solo') {
+                    // Full body, no scene context
+                    const merged = { nsfw: _studioScene.nsfw, cam: 'full body shot', style: _studioScene.style || 'photorealistic photography, 8k' };
+                    const { positive } = buildImagePrompt({ charId, scene: merged, includeNsfw: _studioScene.nsfw !== 'sfw', nsfwLevel: _studioScene.nsfw, historyDepth: 0 });
+                    prompt = positive;
+                } else if (type === 'char_face') {
+                    const merged = { nsfw: _studioScene.nsfw, cam: 'close-up portrait, face', style: _studioScene.style || 'photorealistic photography, 8k', expr: 'natural, beautiful expression' };
+                    const { positive } = buildImagePrompt({ charId, scene: merged, includeNsfw: false, nsfwLevel: 'sfw', historyDepth: 0 });
+                    prompt = positive;
+                } else if (type === 'scene_now') {
+                    // Full scene from current state + history
+                    _studioRebuildPrompt();
+                    return;
+                } else if (type === 'scene_vibe') {
+                    // LLM-assisted — reads last messages
+                    prompt = await generateImagePromptWithLLM({ charId, userHint: '', scene: _studioScene, includeNsfw: _studioScene.nsfw !== 'sfw', historyDepth: 8 });
+                }
+                if ($ta && prompt) $ta.value = prompt;
+            } catch (err) {
+                showToast(`Quick capture failed: ${err.message}`, 'error', 4000);
+            } finally {
+                $btn.disabled = false;
+                $btn.innerHTML = origText;
+                lucideRefresh($btn);
+            }
+        });
+    }
+
+    // ── Studio image generation ───────────────────────────────────────────────
+    async function _runStudioGeneration() {
+        const $genBtn  = qs('#studio-gen-btn');
+        const $regen   = qs('#studio-regenerate');
+        const $overlay = qs('#studio-gen-overlay');
+        const $label   = qs('#studio-gen-label');
+        const $wrap    = qs('#studio-img-wrap');
+        const $pholder = qs('#studio-placeholder');
+        const $img     = qs('#studio-preview-img');
+        const $cost    = qs('#studio-cost');
+
+        const prompt = qs('#studio-prompt-ta')?.value.trim();
+        if (!prompt) { showToast('Prompt is empty — configure your scene first', 'warn'); return; }
+
+        const negPrompt = qs('#studio-neg-ta')?.value.trim();
+        const size   = qs('#studio-size-select')?.value || _studioScene.size || '1024x1024';
+        const seedRaw= qs('#studio-seed')?.value;
+        const seed   = seedRaw ? parseInt(seedRaw) : undefined;
+
+        if ($genBtn)  { $genBtn.disabled = true;  $genBtn.innerHTML = '<i data-lucide="loader-2" class="spin"></i> Generating…'; lucideRefresh($genBtn); }
+        if ($regen)   $regen.disabled = true;
+        if ($overlay) $overlay.hidden = false;
+        if ($label)   $label.textContent = 'Generating…';
+        if ($cost)    $cost.textContent = '';
+
+        try {
+            const dataUrl = await generateImage({ model: _studioModel, prompt, negativePrompt: negPrompt, size, seed });
+            _studioDataUrl = dataUrl;
+
+            if ($img)    $img.src = dataUrl;
+            if ($wrap)   $wrap.hidden = false;
+            if ($pholder)$pholder.hidden = true;
+            if ($cost)   $cost.textContent = `Model: ${_studioModel}`;
+            if ($regen)  $regen.hidden = false;
+
+            // Auto-inject into chat thread
+            _injectImageMessage(dataUrl, prompt, _studioModel);
+
+            // Auto-save to character gallery
+            const charId = state.activeBotId;
+            if (charId) {
+                await addToGallery(charId, dataUrl);
+                renderGalleryStrip(charId);
+                _renderStudioGalleryStrip(charId);
+                showToast('Image saved to gallery', 'info', 2000);
+            }
+
+        } catch (err) {
+            showToast(`Generation failed: ${err.message}`, 'error', 5000);
+        } finally {
+            if ($genBtn) { $genBtn.disabled = false; $genBtn.innerHTML = '<i data-lucide="sparkles"></i> Generate'; lucideRefresh($genBtn); }
+            if ($regen)  $regen.disabled = false;
+            if ($overlay)$overlay.hidden = true;
+        }
+    }
+
+    // ── Gallery strip inside studio ───────────────────────────────────────────
+    async function _renderStudioGalleryStrip(charId) {
+        const $strip = qs('#studio-gallery-strip');
+        if (!$strip) return;
+        $strip.innerHTML = '';
+
+        if (!charId) {
+            $strip.innerHTML = '<span class="img-studio__gallery-empty">No character selected</span>';
+            return;
+        }
+
+        const co = ensureGalleryStore(charId);
+        const gallery = co?.extensions?.underdark?.gallery || [];
+        if (!gallery.length) {
+            $strip.innerHTML = '<span class="img-studio__gallery-empty">No images yet</span>';
+            return;
+        }
+
+        // Show last 20 most recent
+        const recent = [...gallery].reverse().slice(0, 20);
+        for (const ref of recent) {
+            const src = await resolveImageUrl(ref).catch(() => null);
+            if (!src) continue;
+            const $img = document.createElement('img');
+            $img.className = 'img-studio__gallery-thumb';
+            $img.src = src;
+            $img.alt = '';
+            $img.title = 'Click to use as base';
+            $img.addEventListener('click', () => {
+                // Load into preview as current
+                _studioDataUrl = src;
+                const $pImg = qs('#studio-preview-img');
+                const $wrap = qs('#studio-img-wrap');
+                const $ph   = qs('#studio-placeholder');
+                if ($pImg) $pImg.src = src;
+                if ($wrap) $wrap.hidden = false;
+                if ($ph)   $ph.hidden = true;
+                $strip.querySelectorAll('.img-studio__gallery-thumb').forEach(t => t.classList.remove('active'));
+                $img.classList.add('active');
+            });
+            $strip.appendChild($img);
+        }
+    }
+
+    // ── Open/close studio ────────────────────────────────────────────────────
+    async function openImgStudio(charId = null) {
+        const $studio = qs('#img-studio');
+        if (!$studio) return;
+
+        const cid = charId || state.activeBotId;
+
+        // Sync NSFW from reality config
+        const nsfwFlag = state.config.flags?.injectAdult !== false;
+        if (!nsfwFlag) {
+            _studioScene.nsfw = 'sfw';
+        } else if (_studioScene.nsfw === 'sfw') {
+            _studioScene.nsfw = 'explicit';
+        }
+
+        // Sync NSFW pill UI
+        qs('#studio-nsfw-bar')?.querySelectorAll('.studio-nsfw-pill').forEach($p => {
+            $p.classList.toggle('active', $p.dataset.nsfw === _studioScene.nsfw);
+        });
+
+        $studio.classList.add('img-studio--open');
+
+        // Lazy-load + populate panels on first open
+        if (!_studioPresets) {
+            await _initStudioPanels();
+        }
+
+        if (!_studioWired) {
+            _wireStudioNav();
+            _wireQuickCapture();
+            _studioWired = true;
+        }
+
+        _renderStudioCharInfo(cid);
+        _renderStudioModelGrid();
+        _studioRebuildPrompt();
+        _studioUpdateBadges();
+        _renderStudioGalleryStrip(cid);
+
+        lucideRefresh($studio);
+    }
+
+    function closeImgStudio() {
+        const $studio = qs('#img-studio');
+        if ($studio) $studio.classList.remove('img-studio--open');
+    }
+
+    // ── Studio event bindings ────────────────────────────────────────────────
+    qs('#studio-close')?.addEventListener('click', closeImgStudio);
+    qs('#studio-quick-gen-btn')?.addEventListener('click', () => { closeImgStudio(); openImageGenModal(''); });
+    qs('#studio-gen-btn')?.addEventListener('click', _runStudioGeneration);
+    qs('#studio-regenerate')?.addEventListener('click', _runStudioGeneration);
+
+    qs('#studio-rebuild-prompt')?.addEventListener('click', _studioRebuildPrompt);
+
+    qs('#studio-ai-prompt')?.addEventListener('click', async () => {
+        const $btn = qs('#studio-ai-prompt');
+        const $ta  = qs('#studio-prompt-ta');
+        if (!$btn || !$ta) return;
+        const origHtml = $btn.innerHTML;
+        $btn.disabled = true;
+        $btn.innerHTML = '<i data-lucide="loader-2" class="spin"></i>';
+        lucideRefresh($btn);
+        try {
+            const charId = state.activeBotId;
+            const nsfw   = _studioScene.nsfw !== 'sfw';
+            const hint   = $ta.value.trim();
+            const prompt = await generateImagePromptWithLLM({ charId, userHint: hint, scene: _studioScene, includeNsfw: nsfw, historyDepth: 8 });
+            $ta.value = prompt;
+        } catch (err) {
+            showToast(`AI prompt failed: ${err.message}`, 'error', 4000);
+        } finally {
+            $btn.disabled = false;
+            $btn.innerHTML = origHtml;
+            lucideRefresh($btn);
+        }
+    });
+
+    qs('#studio-img-set-avatar')?.addEventListener('click', async () => {
+        if (!_studioDataUrl) return;
+        const cid = state.activeBotId;
+        if (!cid) { showToast('No active character', 'warn'); return; }
+        const meta = state.characters.find(c => c.id === cid);
+        const co   = ensureGalleryStore(cid);
+        if (!meta || !co) return;
+        const gallery = co.extensions.underdark.gallery;
+        if (meta.avatar_path && !gallery.includes(meta.avatar_path)) gallery.unshift(meta.avatar_path);
+        const stored = isDataUrl(_studioDataUrl)
+            ? await saveImageBlob(`avatar-gen-${cid}-${Date.now()}`, _studioDataUrl).catch(() => _studioDataUrl)
+            : _studioDataUrl;
+        meta.avatar_path = stored;
+        if (!gallery.includes(stored)) gallery.push(stored);
+        saveState();
+        renderRoster();
+        renderGalleryStrip(cid);
+        _renderStudioGalleryStrip(cid);
+        _renderStudioCharInfo(cid);
+        showToast('Avatar updated');
+    });
+
+    qs('#studio-img-save-gallery')?.addEventListener('click', async () => {
+        if (!_studioDataUrl) return;
+        const cid = state.activeBotId;
+        if (!cid) { showToast('No active character', 'warn'); return; }
+        await addToGallery(cid, _studioDataUrl);
+        renderGalleryStrip(cid);
+        _renderStudioGalleryStrip(cid);
+        showToast('Saved to gallery', 'info', 1800);
+    });
+
+    qs('#studio-img-download')?.addEventListener('click', () => {
+        if (!_studioDataUrl) return;
+        const a    = document.createElement('a');
+        a.href     = _studioDataUrl;
+        a.download = `underdark-studio-${Date.now()}.png`;
+        a.click();
+    });
+
+    qs('#studio-img-send-chat')?.addEventListener('click', () => {
+        if (!_studioDataUrl) return;
+        const $ta = qs('#studio-prompt-ta');
+        _injectImageMessage(_studioDataUrl, $ta?.value.trim() || '', _studioModel);
+        showToast('Sent to chat thread', 'info', 1600);
+    });
+
+    // Open studio from header button
+    qs('#btn-img-studio')?.addEventListener('click', () => openImgStudio());
+
     // ── Social Feed ────────────────────────────────────────────────────────────
     const $chatArena = qs('#chat-arena');
     const $feedArena = qs('#feed-arena');
@@ -5801,6 +6666,7 @@ export function initUI() {
         if (e.key === 'o' || e.key === 'O') openOracle();
         if (e.key === 'i' || e.key === 'I') qs('#reinject-toggle-btn')?.click();
         if (e.key === 'c' || e.key === 'C') toggleCodex();
+        if (e.key === 's' || e.key === 'S') openImgStudio();
         if (e.key === '/' ) { e.preventDefault(); qs('#search-toggle')?.click(); }
     });
 

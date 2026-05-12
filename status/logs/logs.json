@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.1.5",
+    "schema_version": "1.1.6",
     "last_updated": "2026-05-12",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": ["_protocol", "identity", "philosophy", "architecture", "pages", "design_system", "rules", "anti_patterns", "language_fingerprint", "evolution", "commits", "sessions", "for_new_llm"]
@@ -422,6 +422,23 @@
 
   "commits": [
     {
+      "hash": "pending",
+      "date": "2026-05-12",
+      "message": "Underdark Image Studio: full-screen generation wizard with rp-gen-presets.json",
+      "scope": "playground/characters",
+      "impact": "high",
+      "files": [
+        "playground/characters/index.html",
+        "playground/characters/script/main.js",
+        "playground/characters/script/modules/ui.js",
+        "playground/characters/style/style.css",
+        "playground/characters/style/img-studio.css",
+        "playground/characters/data/rp-gen-presets.json",
+        "status/logs/logs.json"
+      ],
+      "why": "User requested a complete overhaul of the image generation experience — a full-screen studio wizard (inspired by dreamgf.ai/candy.ai) with auto-filled character data, click-and-build chip selectors across every dimension (clothing, pose, activity, scene, style, etc.), gallery strip, quick capture modes, AI prompt, and character portrait/trait auto-fill from char override data."
+    },
+    {
       "hash": "2f55e3d",
       "date": "2026-05-12",
       "message": "Underdark overhaul: Scene Codex, video generation, expanded model list",
@@ -649,6 +666,29 @@
   ],
 
   "sessions": [
+    {
+      "date": "2026-05-12",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Built the Underdark Image Studio — a full-screen generation wizard (dreamgf.ai/candy.ai-inspired) replacing the former collapsed modal for deep image generation. New files: rp-gen-presets.json (rich preset catalog for every scene dimension), img-studio.css (~430 lines of Dune×Arcane styled wizard UI), and comprehensive ui.js additions (~650 lines) for studio state, chip rendering, character auto-fill, quick-capture, and gallery strip.",
+      "decisions": [
+        "Studio is a separate overlay (#img-studio) not a modal — it slides in full-screen so nothing else is visible and immersion is total.",
+        "Existing compact #modal-image-gen kept as 'Quick Gen' — studio header has a 'Quick Gen' button to swap between the two.",
+        "rp-gen-presets.json is fetched once at first open (lazy) and cached in _studioPresets — no bundle cost at boot.",
+        "Chip rendering is fully data-driven from the JSON — _renderChips() / _renderGroupedChips() write DOM from presets entries. No per-chip HTML in index.html except grouping wrappers.",
+        "Character info strip auto-fills portrait, name, hair/eye/age/species/body traits from char override on every open.",
+        "Studio scene state (_studioScene) is a superset of _scene — includes clothing top/bottom/footwear as separate fields. buildImagePrompt receives a merged view.",
+        "Gallery strip inside studio shows last 20 char images; click-to-load lets the user select an existing image as the current preview.",
+        "S key opens the studio. Existing quick modal stays on the toolbar image-plus icon.",
+        "_studioWired flag prevents double-wiring of nav and quick-capture event listeners on repeated opens.",
+        "Activity section uses grouped sub-headers (Solo/Oral/Penetrative/Finishing/BDSM) — rendered via _renderGroupedChips with per-group labels, matching the herahaven.ai UX pattern."
+      ],
+      "rules_reinforced": [
+        "All chip populations are data-driven — no hardcoded chip HTML for studio. Presets JSON is the single source of truth for chip values.",
+        "Studio uses opacity transition (not display toggle) for open/close — consistent with scene-codex pattern.",
+        "Every new overlay must wire close on Escape via existing keydown handler or its own listener — studio closes on X click only currently (intentional: prevent accidental close)."
+      ]
+    },
     {
       "date": "2026-05-12",
       "agent": "Claude Sonnet 4.6",

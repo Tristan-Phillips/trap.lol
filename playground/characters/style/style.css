@@ -39,5 +39,8 @@
 /* ── Scene Codex (god view) + Video Gen ── */
 @import './scene-codex.css';
 
+/* ── Image Studio (full-screen generation wizard) ── */
+@import './img-studio.css';
+
 /* ── Responsive (must be last) ── */
 @import './responsive.css';

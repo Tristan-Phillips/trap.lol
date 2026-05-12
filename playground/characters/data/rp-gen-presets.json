@@ -1,0 +1,666 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "description": "Underdark Image Studio — selectable presets for the character image generation wizard",
+    "note": "All values here are injected verbatim into prompt position-slots. Edit freely."
+  },
+
+  "scenes": {
+    "label": "Scene Presets",
+    "note": "Apply a full multi-field scene state in one click",
+    "entries": [
+      { "id": "portrait",        "label": "Portrait",         "icon": "user",           "fields": { "cam": "close-up portrait, face", "expr": "seductive, lidded eyes, bedroom eyes", "mood": "soft diffused natural light", "style": "photorealistic photography, 8k", "vibe": "sensual, erotic atmosphere" } },
+      { "id": "boudoir",         "label": "Boudoir",          "icon": "bed",            "fields": { "clothingState": "partially undressed", "clothing": "sexy lingerie set", "pose": "lying on side, seductive", "env": "bedroom, intimate setting", "mood": "candlelight, warm flickering", "cam": "full body shot", "vibe": "sensual, erotic atmosphere" } },
+      { "id": "pinup",           "label": "Pin-Up",           "icon": "star",           "fields": { "pose": "standing, confident pose", "style": "pin-up art style, vintage", "cam": "full body shot", "mood": "studio lighting, professional", "vibe": "playful, fun, teasing" } },
+      { "id": "action",          "label": "Action",           "icon": "zap",            "fields": { "pose": "action pose, fighting stance", "composition": "dynamic diagonal composition", "mood": "dramatic cinematic lighting", "vibe": "aggressive, dominant, intense" } },
+      { "id": "fantasy",         "label": "Fantasy",          "icon": "wand-2",         "fields": { "env": "fantasy castle throne room", "mood": "volumetric god rays through window", "style": "dark fantasy art, gothic", "vibe": "mysterious, ethereal" } },
+      { "id": "intimate",        "label": "Intimate",         "icon": "heart",          "fields": { "env": "bedroom, intimate setting", "cam": "tight intimate framing", "mood": "candlelight, warm flickering", "expr": "seductive, lidded eyes, bedroom eyes", "vibe": "romantic, intimate, loving" } },
+      { "id": "poolside",        "label": "Poolside",         "icon": "droplets",       "fields": { "env": "poolside, swimming pool", "clothing": "bikini swimwear", "mood": "warm golden hour light", "timeOfDay": "golden hour sunset, warm tones", "vibe": "playful, fun, teasing" } },
+      { "id": "dungeon",         "label": "Dungeon",          "icon": "lock",           "fields": { "env": "dungeon stone walls chains", "mood": "candlelight, warm flickering", "style": "dark fantasy art, gothic", "vibe": "dark, ominous, dangerous" } },
+      { "id": "school",          "label": "School",           "icon": "book-open",      "fields": { "clothing": "school uniform", "env": "classroom school", "timeOfDay": "morning, bright daylight", "vibe": "playful, fun, teasing" } },
+      { "id": "office",          "label": "Office",           "icon": "briefcase",      "fields": { "clothing": "business office attire", "env": "office desk", "timeOfDay": "afternoon, midday sun", "pose": "sitting elegantly", "vibe": "sensual, erotic atmosphere" } },
+      { "id": "beach",           "label": "Beach",            "icon": "sun",            "fields": { "clothing": "bikini swimwear", "env": "beach, ocean shore", "timeOfDay": "golden hour sunset, warm tones", "mood": "warm golden hour light", "weather": "clear sky, sunny", "vibe": "playful, fun, teasing" } },
+      { "id": "shower",          "label": "Shower",           "icon": "cloud-rain",     "fields": { "clothingState": "completely nude", "env": "bathroom, shower", "skinEffects_add": ["wet skin, dripping water"], "mood": "soft diffused natural light", "vibe": "sensual, erotic atmosphere" } },
+      { "id": "midnight_glow",   "label": "Midnight Glow",    "icon": "moon",           "fields": { "timeOfDay": "late night, moonlight", "mood": "neon lights, cyberpunk glow", "colorTone": "neon cyberpunk color palette", "vibe": "mysterious, ethereal" } },
+      { "id": "domination",      "label": "Domination",       "icon": "flame",          "fields": { "activity": "dominant, on top", "expr": "dominant smirk, confident", "mood": "dramatic cinematic lighting", "vibe": "aggressive, dominant, intense", "skinEffects_add": ["sweaty glistening skin"] } },
+      { "id": "submission",      "label": "Submission",       "icon": "link",           "fields": { "activity": "submissive, being held down", "expr": "submissive, pleading eyes", "accessories_add": ["collar with leash", "handcuffs"], "vibe": "dark, ominous, dangerous" } },
+      { "id": "onsen",           "label": "Onsen",            "icon": "thermometer",    "fields": { "env": "onsen hot spring, steam", "clothingState": "completely nude", "skinEffects_add": ["wet skin, dripping water", "sweaty glistening skin"], "mood": "soft diffused natural light", "weather": "fog, misty atmosphere", "vibe": "romantic, intimate, loving" } },
+      { "id": "witching_hour",   "label": "Witching Hour",    "icon": "sparkles",       "fields": { "timeOfDay": "night, stars", "env": "mystical forest, magic glowing", "fantasyFx_add": ["magic particles, glowing spells", "ethereal ghost transparency"], "mood": "moonlight, cool blue night", "vibe": "mysterious, ethereal" } },
+      { "id": "aftercare",       "label": "Aftercare",        "icon": "hand-heart",     "fields": { "pose": "lying on side, seductive", "env": "bedroom, intimate setting", "mood": "candlelight, warm flickering", "expr": "warm natural smile", "vibe": "tender, gentle, caring" } }
+    ]
+  },
+
+  "relationships": {
+    "label": "Relationship Dynamic",
+    "note": "Sets tone, dynamics, and partner context",
+    "entries": [
+      { "id": "lover",        "label": "Lover",           "partners": "", "vibe": "romantic, intimate, loving",      "expr": "warm natural smile" },
+      { "id": "girlfriend",   "label": "Girlfriend",      "partners": "", "vibe": "tender, gentle, caring",          "expr": "warm natural smile" },
+      { "id": "mistress",     "label": "Mistress",        "partners": "", "vibe": "sensual, erotic atmosphere",       "expr": "dominant smirk, confident" },
+      { "id": "slave",        "label": "Slave",           "partners": "", "vibe": "dark, ominous, dangerous",         "expr": "submissive, pleading eyes", "accessories": "collar with leash" },
+      { "id": "fwb",          "label": "Friends w/ Benefits", "partners": "", "vibe": "playful, fun, teasing",       "expr": "laughing, joyful" },
+      { "id": "stranger",     "label": "Stranger",        "partners": "", "vibe": "raw, gritty, realistic",          "expr": "neutral expression" },
+      { "id": "dom",          "label": "Dominant",        "partners": "", "vibe": "aggressive, dominant, intense",   "expr": "dominant smirk, confident" },
+      { "id": "sub",          "label": "Submissive",      "partners": "", "vibe": "dark, ominous, dangerous",        "expr": "submissive, pleading eyes" },
+      { "id": "idol",         "label": "Idol / Fan",      "partners": "", "vibe": "playful, fun, teasing",           "expr": "blushing, embarrassed, red cheeks" },
+      { "id": "enemies",      "label": "Enemies",         "partners": "", "vibe": "aggressive, dominant, intense",   "expr": "intense piercing gaze" }
+    ]
+  },
+
+  "clothing": {
+    "label": "Clothing & Outfit",
+    "groups": [
+      {
+        "id": "state",
+        "label": "Clothing State",
+        "single": true,
+        "field": "clothingState",
+        "entries": [
+          { "id": "fully_clothed",  "label": "Fully Clothed",        "val": "fully clothed" },
+          { "id": "partially",      "label": "Partially Undressed",   "val": "partially undressed" },
+          { "id": "topless",        "label": "Topless",               "val": "topless" },
+          { "id": "bottomless",     "label": "Bottomless",            "val": "bottomless" },
+          { "id": "nude",           "label": "Fully Nude",            "val": "completely nude" },
+          { "id": "pulled_aside",   "label": "Pulled Aside",          "val": "outfit pulled aside" },
+          { "id": "torn_off",       "label": "Torn / Ripped Off",     "val": "clothing torn and ripped off, disheveled" }
+        ]
+      },
+      {
+        "id": "type",
+        "label": "Outfit Type",
+        "single": true,
+        "field": "clothing",
+        "entries": [
+          { "id": "casual",       "label": "Casual",         "val": "casual everyday outfit" },
+          { "id": "formal",       "label": "Formal",         "val": "elegant formal dress" },
+          { "id": "lingerie",     "label": "Lingerie",       "val": "sexy lingerie set" },
+          { "id": "micro_bikini", "label": "Micro Bikini",   "val": "micro bikini, barely covering" },
+          { "id": "bikini",       "label": "Bikini",         "val": "bikini swimwear" },
+          { "id": "one_piece",    "label": "One-Piece",      "val": "one-piece swimsuit" },
+          { "id": "athletic",     "label": "Athletic",       "val": "sports activewear, yoga pants" },
+          { "id": "school",       "label": "School Uniform", "val": "school uniform, short skirt, white shirt" },
+          { "id": "maid",         "label": "Maid",           "val": "maid outfit, frilly apron, thigh highs" },
+          { "id": "nurse",        "label": "Nurse",          "val": "nurse uniform, short skirt, white coat" },
+          { "id": "military",     "label": "Military",       "val": "military uniform" },
+          { "id": "business",     "label": "Business",       "val": "business office attire, blazer, pencil skirt" },
+          { "id": "armor",        "label": "Fantasy Armor",  "val": "fantasy armor" },
+          { "id": "fantasy_robe", "label": "Fantasy Robe",   "val": "fantasy robe and cloak" },
+          { "id": "bodysuit",     "label": "Bodysuit",       "val": "revealing bodysuit, high cut legs" },
+          { "id": "corset",       "label": "Corset",         "val": "corset and stockings, garter belt" },
+          { "id": "crop_top",     "label": "Crop Top",       "val": "crop top and shorts" },
+          { "id": "sundress",     "label": "Sundress",       "val": "sundress, flowy" },
+          { "id": "leather",      "label": "Leather",        "val": "leather jacket and jeans" },
+          { "id": "wedding",      "label": "Wedding",        "val": "wedding dress, white lace" },
+          { "id": "latex",        "label": "Latex",          "val": "latex catsuit, shiny" },
+          { "id": "bunny_suit",   "label": "Bunny Suit",     "val": "playboy bunny suit, bow tie, bunny ears, fishnet stockings" },
+          { "id": "kimono",       "label": "Kimono",         "val": "kimono, traditional Japanese" },
+          { "id": "yukata",       "label": "Yukata",         "val": "yukata, loosely worn, partially open" },
+          { "id": "streetwear",   "label": "Streetwear",     "val": "streetwear, oversized hoodie, baggy jeans" },
+          { "id": "cheerleader",  "label": "Cheerleader",    "val": "cheerleader outfit, short pleated skirt, pompoms" },
+          { "id": "bikini_armor", "label": "Bikini Armor",   "val": "fantasy bikini armor, revealing, sexy" },
+          { "id": "wedding_lingerie","label": "Bridal Lingerie","val": "bridal lingerie, white lace, garter" },
+          { "id": "strapless",    "label": "Strapless Dress","val": "strapless evening dress, backless" },
+          { "id": "see_through",  "label": "See-Through",    "val": "sheer see-through blouse, visible underneath" }
+        ]
+      },
+      {
+        "id": "top",
+        "label": "Top",
+        "single": true,
+        "field": "clothingTop",
+        "entries": [
+          { "id": "t_shirt",    "label": "T-Shirt",         "val": "simple t-shirt" },
+          { "id": "button_up",  "label": "Button-Up",       "val": "button-up shirt, partially open" },
+          { "id": "tube_top",   "label": "Tube Top",        "val": "tube top, strapless" },
+          { "id": "bra",        "label": "Bra Only",        "val": "bra only, exposed midriff" },
+          { "id": "sports_bra", "label": "Sports Bra",      "val": "sports bra, athletic" },
+          { "id": "halter",     "label": "Halter Top",      "val": "halter top, backless" },
+          { "id": "tanktop",    "label": "Tank Top",        "val": "tank top, thin straps" },
+          { "id": "off_shoulder","label": "Off-Shoulder",   "val": "off-shoulder top, bare shoulder" },
+          { "id": "mesh_top",   "label": "Mesh Top",        "val": "mesh top, see-through, sheer" },
+          { "id": "none",       "label": "Topless",         "val": "topless, bare chest" }
+        ]
+      },
+      {
+        "id": "bottom",
+        "label": "Bottom",
+        "single": true,
+        "field": "clothingBottom",
+        "entries": [
+          { "id": "jeans",         "label": "Jeans",            "val": "jeans" },
+          { "id": "mini_skirt",    "label": "Mini Skirt",       "val": "mini skirt, very short" },
+          { "id": "pleated_skirt", "label": "Pleated Skirt",    "val": "pleated skirt, school girl style" },
+          { "id": "pencil_skirt",  "label": "Pencil Skirt",     "val": "tight pencil skirt" },
+          { "id": "shorts",        "label": "Shorts",           "val": "short shorts, booty shorts" },
+          { "id": "yoga_pants",    "label": "Yoga Pants",       "val": "tight yoga pants, form-fitting" },
+          { "id": "thong",         "label": "Thong",            "val": "thong underwear, barely covering" },
+          { "id": "panties",       "label": "Panties",          "val": "panties only" },
+          { "id": "none",          "label": "Bottomless",       "val": "bottomless, bare lower body" }
+        ]
+      },
+      {
+        "id": "footwear",
+        "label": "Footwear",
+        "single": true,
+        "field": "clothingFootwear",
+        "entries": [
+          { "id": "heels",         "label": "High Heels",       "val": "high heels, stiletto" },
+          { "id": "thigh_boots",   "label": "Thigh-High Boots", "val": "thigh-high boots" },
+          { "id": "knee_boots",    "label": "Knee-High Boots",  "val": "knee-high boots" },
+          { "id": "ankle_boots",   "label": "Ankle Boots",      "val": "ankle boots" },
+          { "id": "sneakers",      "label": "Sneakers",         "val": "sneakers" },
+          { "id": "barefoot",      "label": "Barefoot",         "val": "barefoot, bare feet" },
+          { "id": "thigh_highs",   "label": "Thigh Highs",      "val": "thigh-high stockings, lace top" },
+          { "id": "fishnet",       "label": "Fishnet Stockings","val": "fishnet stockings" },
+          { "id": "platform",      "label": "Platform Shoes",   "val": "platform shoes, chunky sole" }
+        ]
+      }
+    ]
+  },
+
+  "accessories": {
+    "label": "Accessories",
+    "multi": true,
+    "field": "accessories",
+    "entries": [
+      { "id": "choker",     "label": "Choker",         "val": "choker necklace" },
+      { "id": "stockings",  "label": "Stockings",      "val": "thigh-high stockings" },
+      { "id": "heels",      "label": "Heels",          "val": "high heels" },
+      { "id": "gloves",     "label": "Gloves",         "val": "gloves" },
+      { "id": "cat_ears",   "label": "Cat Ears",       "val": "cat ears headband" },
+      { "id": "bunny_ears", "label": "Bunny Ears",     "val": "bunny ears" },
+      { "id": "glasses",    "label": "Glasses",        "val": "glasses" },
+      { "id": "sunglasses", "label": "Sunglasses",     "val": "sunglasses" },
+      { "id": "collar",     "label": "Collar",         "val": "collar with leash" },
+      { "id": "handcuffs",  "label": "Handcuffs",      "val": "handcuffs" },
+      { "id": "rope",       "label": "Rope Bondage",   "val": "rope bondage, shibari" },
+      { "id": "wings",      "label": "Wings",          "val": "wings" },
+      { "id": "tail",       "label": "Tail",           "val": "tail" },
+      { "id": "crown",      "label": "Crown / Tiara",  "val": "crown and tiara" },
+      { "id": "piercings",  "label": "Piercings",      "val": "piercings" },
+      { "id": "tattoos",    "label": "Tattoos",        "val": "tattoos visible" },
+      { "id": "sword",      "label": "Sword",          "val": "sword and scabbard" },
+      { "id": "flowers",    "label": "Flowers in Hair","val": "flower in hair" },
+      { "id": "gag",        "label": "Ball Gag",       "val": "ball gag in mouth" },
+      { "id": "mask",       "label": "Mask",           "val": "mask" },
+      { "id": "pasties",    "label": "Nipple Pasties", "val": "nipple pasties" },
+      { "id": "body_chain", "label": "Body Chain",     "val": "body chain jewelry" },
+      { "id": "anklet",     "label": "Anklet",         "val": "anklet, ankle bracelet" },
+      { "id": "armband",    "label": "Arm Band",       "val": "arm band, bicep cuff" }
+    ]
+  },
+
+  "hair": {
+    "label": "Hair Style",
+    "single": true,
+    "field": "hair",
+    "entries": [
+      { "id": "down",          "label": "Down / Flowing",  "val": "hair down, flowing, loose" },
+      { "id": "ponytail",      "label": "Ponytail",        "val": "high ponytail" },
+      { "id": "low_ponytail",  "label": "Low Ponytail",    "val": "low ponytail, loose strands" },
+      { "id": "twin_tails",    "label": "Twin Tails",      "val": "twin tails, pigtails" },
+      { "id": "messy_bun",     "label": "Messy Bun",       "val": "messy bun" },
+      { "id": "braided",       "label": "Braided",         "val": "braided hair" },
+      { "id": "bob",           "label": "Bob Cut",         "val": "short bob cut" },
+      { "id": "windswept",     "label": "Windswept",       "val": "windswept hair, dramatic movement" },
+      { "id": "wet",           "label": "Wet",             "val": "wet hair, soaked, clinging to skin" },
+      { "id": "disheveled",    "label": "Disheveled",      "val": "disheveled messy hair, just woken up" },
+      { "id": "half_up",       "label": "Half Up",         "val": "half-up half-down hair" },
+      { "id": "curly",         "label": "Curly",           "val": "curly hair, voluminous" },
+      { "id": "wavy",          "label": "Wavy",            "val": "wavy hair" },
+      { "id": "straight",      "label": "Straight",        "val": "straight hair, sleek" },
+      { "id": "ahoge",         "label": "Ahoge",           "val": "ahoge, single hair antenna" },
+      { "id": "side_swept",    "label": "Side Swept",      "val": "side swept bangs" },
+      { "id": "space_buns",    "label": "Space Buns",      "val": "space buns, dual buns on top of head" }
+    ]
+  },
+
+  "poses": {
+    "label": "Pose / Body",
+    "single": true,
+    "field": "pose",
+    "entries": [
+      { "id": "standing",       "label": "Standing",         "val": "standing, confident pose" },
+      { "id": "sitting",        "label": "Sitting",          "val": "sitting elegantly" },
+      { "id": "sitting_spread", "label": "Sitting Spread",   "val": "sitting with legs spread" },
+      { "id": "lying_back",     "label": "Lying Back",       "val": "lying on back" },
+      { "id": "lying_front",    "label": "Lying Front",      "val": "lying on stomach" },
+      { "id": "lying_side",     "label": "Lying Side",       "val": "lying on side, seductive" },
+      { "id": "kneeling",       "label": "Kneeling",         "val": "kneeling" },
+      { "id": "all_fours",      "label": "All Fours",        "val": "on all fours, doggy position" },
+      { "id": "bent_over",      "label": "Bent Over",        "val": "bent over, presenting" },
+      { "id": "leaning",        "label": "Leaning",          "val": "leaning against wall" },
+      { "id": "arched_back",    "label": "Arched Back",      "val": "stretching, arched back, spine curved" },
+      { "id": "straddling",     "label": "Straddling",       "val": "straddling" },
+      { "id": "squatting",      "label": "Squatting",        "val": "squatting, legs spread" },
+      { "id": "dancing",        "label": "Dancing",          "val": "dancing, fluid movement" },
+      { "id": "action",         "label": "Action",           "val": "action pose, fighting stance" },
+      { "id": "spread_eagle",   "label": "Spread Eagle",     "val": "spread eagle, arms and legs spread wide" },
+      { "id": "on_knees",       "label": "On Knees",         "val": "on knees, looking up" },
+      { "id": "over_shoulder",  "label": "Look Over Shoulder","val": "looking over shoulder seductively" },
+      { "id": "legs_up",        "label": "Legs Up",          "val": "lying back, legs raised in the air" },
+      { "id": "lotus",          "label": "Lotus",            "val": "sitting in lotus position, meditative" }
+    ]
+  },
+
+  "camera": {
+    "label": "Camera Framing",
+    "single": true,
+    "field": "cam",
+    "entries": [
+      { "id": "full_body",   "label": "Full Body",      "val": "full body shot" },
+      { "id": "half_body",   "label": "Half Body",      "val": "half body shot, waist up" },
+      { "id": "portrait",    "label": "Portrait",       "val": "close-up portrait, face" },
+      { "id": "chest",       "label": "Chest / Bust",   "val": "chest close-up, bust shot" },
+      { "id": "rear",        "label": "Rear View",      "val": "rear view, butt focus, from behind" },
+      { "id": "legs",        "label": "Legs",           "val": "legs and thighs focus" },
+      { "id": "pov",         "label": "POV",            "val": "POV shot, first person perspective" },
+      { "id": "ots",         "label": "Over-the-Shoulder","val": "over the shoulder view" },
+      { "id": "low_angle",   "label": "Low Angle",      "val": "low angle shot, looking up" },
+      { "id": "bird_eye",    "label": "Bird's Eye",     "val": "bird's eye view, top down" },
+      { "id": "extreme_cu",  "label": "Extreme CU",     "val": "extreme close-up" },
+      { "id": "wide",        "label": "Wide Shot",      "val": "wide establishing shot" },
+      { "id": "dutch_angle", "label": "Dutch Angle",    "val": "dutch angle shot, tilted camera" },
+      { "id": "mirror_pov",  "label": "Mirror POV",     "val": "mirror reflection shot, character facing mirror" }
+    ]
+  },
+
+  "activities": {
+    "label": "Activity / Act",
+    "single": true,
+    "field": "activity",
+    "groups": [
+      {
+        "id": "solo",
+        "label": "Solo / Sensual",
+        "entries": [
+          { "id": "none",         "label": "— None —",         "val": "" },
+          { "id": "teasing",      "label": "Teasing",          "val": "teasing, seductive look at camera" },
+          { "id": "reading",      "label": "Reading",          "val": "reading a book" },
+          { "id": "eating",       "label": "Eating",           "val": "eating food seductively" },
+          { "id": "bathing",      "label": "Bathing",          "val": "bathing in a tub" },
+          { "id": "showering",    "label": "Showering",        "val": "showering, water cascading down body" },
+          { "id": "undressing",   "label": "Undressing",       "val": "undressing, removing clothes seductively" },
+          { "id": "self_touch",   "label": "Self-Touch",       "val": "touching self sensually, hands exploring body" },
+          { "id": "masturbating", "label": "Masturbating",     "val": "masturbating" },
+          { "id": "fingering",    "label": "Fingering Self",   "val": "fingering self, self-penetration" },
+          { "id": "toy",          "label": "Using Toy",        "val": "using a vibrator sex toy" },
+          { "id": "stripping",    "label": "Stripping",        "val": "stripping, pole dance, lap dance" }
+        ]
+      },
+      {
+        "id": "oral",
+        "label": "Oral",
+        "entries": [
+          { "id": "giving_oral",    "label": "Giving Oral",       "val": "giving oral sex, blowjob" },
+          { "id": "receiving_oral", "label": "Receiving Oral",    "val": "receiving oral sex, being eaten out" },
+          { "id": "69",             "label": "69",                "val": "69 position, mutual oral sex" },
+          { "id": "deepthroat",     "label": "Deepthroat",        "val": "deepthroat, gagging on cock" },
+          { "id": "cum_on_face",    "label": "Facial",            "val": "cum on face, facial" },
+          { "id": "cum_in_mouth",   "label": "Cum in Mouth",      "val": "cum in mouth, swallowing" }
+        ]
+      },
+      {
+        "id": "penetrative",
+        "label": "Penetrative",
+        "entries": [
+          { "id": "missionary",    "label": "Missionary",     "val": "missionary sex, legs wrapped around" },
+          { "id": "cowgirl",       "label": "Cowgirl",        "val": "cowgirl riding position" },
+          { "id": "rev_cowgirl",   "label": "Rev. Cowgirl",   "val": "reverse cowgirl position" },
+          { "id": "doggy",         "label": "Doggy",          "val": "doggy style sex, from behind" },
+          { "id": "spooning",      "label": "Spooning",       "val": "spooning sex, side by side" },
+          { "id": "standing",      "label": "Standing",       "val": "standing sex from behind, wall pin" },
+          { "id": "anal",          "label": "Anal",           "val": "anal sex, backdoor" },
+          { "id": "prone_bone",    "label": "Prone Bone",     "val": "prone bone position, lying flat" },
+          { "id": "lotus_sex",     "label": "Lotus Sex",      "val": "lotus sex position, face to face sitting" },
+          { "id": "leg_up",        "label": "Leg Up / Split", "val": "leg raised, leg up sex position, splits" },
+          { "id": "pile_driver",   "label": "Pile Driver",    "val": "pile driver position, legs folded back" },
+          { "id": "mating_press",  "label": "Mating Press",   "val": "mating press, full weight missionary" }
+        ]
+      },
+      {
+        "id": "finishing",
+        "label": "Finishing",
+        "entries": [
+          { "id": "creampie",      "label": "Creampie",       "val": "creampie, cum inside, dripping" },
+          { "id": "facial",        "label": "Cum on Face",    "val": "cum on face, facial" },
+          { "id": "cum_breasts",   "label": "Cum on Chest",   "val": "cum on breasts, chest" },
+          { "id": "cum_body",      "label": "Cum on Body",    "val": "cum all over body, body shot" }
+        ]
+      },
+      {
+        "id": "bdsm",
+        "label": "BDSM / Power",
+        "entries": [
+          { "id": "bondage",    "label": "Bondage",    "val": "tied up, bound, rope bondage, shibari" },
+          { "id": "dominant",   "label": "Dominant",   "val": "dominant, on top, in control" },
+          { "id": "submissive", "label": "Submissive", "val": "submissive, being held down, restrained" },
+          { "id": "spanking",   "label": "Spanking",   "val": "being spanked, reddened ass" },
+          { "id": "choking",    "label": "Choking",    "val": "being choked, hand around throat" }
+        ]
+      }
+    ]
+  },
+
+  "body_focus": {
+    "label": "Body Focus",
+    "single": true,
+    "field": "bodyFocus",
+    "entries": [
+      { "id": "none",       "label": "— None —",       "val": "" },
+      { "id": "face",       "label": "Face",           "val": "face and eyes focus" },
+      { "id": "lips",       "label": "Lips",           "val": "lips and mouth focus" },
+      { "id": "neck",       "label": "Neck",           "val": "neck and collarbone" },
+      { "id": "breasts",    "label": "Breasts",        "val": "breasts, cleavage emphasis" },
+      { "id": "stomach",    "label": "Stomach",        "val": "stomach and midriff" },
+      { "id": "hips",       "label": "Hips",           "val": "hips and waist" },
+      { "id": "legs",       "label": "Legs",           "val": "legs and thighs" },
+      { "id": "ass",        "label": "Ass",            "val": "buttocks, rear, ass cheeks" },
+      { "id": "feet",       "label": "Feet",           "val": "feet, soles, toes" },
+      { "id": "pussy",      "label": "Pussy",          "val": "genitalia, pussy, vulva, close-up" },
+      { "id": "cock",       "label": "Cock",           "val": "penis, cock, erect" },
+      { "id": "full",       "label": "Full Figure",    "val": "full figure, hourglass, entire body" },
+      { "id": "ass_pussy",  "label": "Ass & Pussy",    "val": "ass and pussy, rear spread, presenting" }
+    ]
+  },
+
+  "partners": {
+    "label": "Partners / Scene Count",
+    "single": true,
+    "field": "partners",
+    "entries": [
+      { "id": "solo",       "label": "Solo",           "val": "" },
+      { "id": "male",       "label": "+ Male",         "val": "with one male partner" },
+      { "id": "female",     "label": "+ Female",       "val": "with one female partner" },
+      { "id": "couple",     "label": "Couple",         "val": "couple, two people together" },
+      { "id": "threesome",  "label": "Threesome",      "val": "with two partners, threesome" },
+      { "id": "group",      "label": "Group / Orgy",   "val": "group sex, orgy, multiple partners" },
+      { "id": "monster",    "label": "Monster",        "val": "with a monster creature" },
+      { "id": "tentacle",   "label": "Tentacle",       "val": "with a tentacle creature, tentacle penetration" },
+      { "id": "futa",       "label": "Futanari",       "val": "with a futanari, dickgirl" }
+    ]
+  },
+
+  "expressions": {
+    "label": "Expression / Emotion",
+    "single": true,
+    "field": "expr",
+    "entries": [
+      { "id": "neutral",    "label": "Neutral",        "val": "neutral expression" },
+      { "id": "smiling",    "label": "Smiling",        "val": "warm natural smile" },
+      { "id": "seductive",  "label": "Seductive",      "val": "seductive, lidded eyes, bedroom eyes" },
+      { "id": "intense",    "label": "Intense",        "val": "intense piercing gaze" },
+      { "id": "laughing",   "label": "Laughing",       "val": "laughing, joyful" },
+      { "id": "crying",     "label": "Crying",         "val": "crying, tears running down face" },
+      { "id": "surprised",  "label": "Surprised",      "val": "surprised, mouth open, shocked" },
+      { "id": "pouting",    "label": "Pouting",        "val": "pouting, sulking" },
+      { "id": "blushing",   "label": "Blushing",       "val": "blushing, embarrassed, red cheeks" },
+      { "id": "tongue",     "label": "Tongue Out",     "val": "open mouth, tongue out, ahegao hint" },
+      { "id": "drunk",      "label": "Drunk",          "val": "drunk, flushed face, hazy eyes" },
+      { "id": "ecstasy",    "label": "Ecstasy",        "val": "pleasure, ecstasy, moaning expression, eyes rolling" },
+      { "id": "ahegao",     "label": "Ahegao",         "val": "ahegao, eyes rolled back, tongue out, drooling" },
+      { "id": "dominant",   "label": "Dominant",       "val": "dominant smirk, confident, predatory" },
+      { "id": "submissive", "label": "Submissive",     "val": "submissive, pleading eyes, vulnerable" },
+      { "id": "angry",      "label": "Angry",          "val": "angry expression, furrowed brow" },
+      { "id": "bliss",      "label": "Bliss",          "val": "eyes closed in bliss, serene pleasure" }
+    ]
+  },
+
+  "skin_effects": {
+    "label": "Skin & Body Effects",
+    "multi": true,
+    "field": "skinEffects",
+    "entries": [
+      { "id": "sweaty",    "label": "Sweaty",          "val": "sweaty glistening skin" },
+      { "id": "wet",       "label": "Wet",             "val": "wet skin, dripping water" },
+      { "id": "oiled",     "label": "Oiled",           "val": "oiled shiny skin" },
+      { "id": "tan_lines", "label": "Tan Lines",       "val": "tan lines visible" },
+      { "id": "goosebumps","label": "Goosebumps",      "val": "goosebumps, cold skin" },
+      { "id": "magic_glow","label": "Magic Glow",      "val": "glowing magical aura skin" },
+      { "id": "freckles",  "label": "Freckles",        "val": "freckles" },
+      { "id": "hickeys",   "label": "Hickeys",         "val": "bite marks, hickeys, love bites on neck" },
+      { "id": "cum",       "label": "Cum Covered",     "val": "cum covered, cum dripping" },
+      { "id": "bruises",   "label": "Bruises",         "val": "light bruises, passion marks" },
+      { "id": "blush_body","label": "Blush (body)",    "val": "blush spreading to chest and neck" },
+      { "id": "shiny",     "label": "Shiny",           "val": "shiny skin, reflective skin" }
+    ]
+  },
+
+  "environments": {
+    "label": "Environment / Location",
+    "single": true,
+    "field": "env",
+    "groups": [
+      {
+        "id": "indoor",
+        "label": "Indoor",
+        "entries": [
+          { "id": "bedroom",    "label": "Bedroom",        "val": "bedroom, intimate setting, soft sheets" },
+          { "id": "hotel",      "label": "Hotel",          "val": "luxury hotel room, opulent" },
+          { "id": "bathroom",   "label": "Bathroom",       "val": "bathroom, shower, tiles" },
+          { "id": "living_room","label": "Living Room",    "val": "living room sofa, cozy" },
+          { "id": "kitchen",    "label": "Kitchen",        "val": "kitchen counter, domestic" },
+          { "id": "office",     "label": "Office",         "val": "office desk, corporate setting" },
+          { "id": "classroom",  "label": "Classroom",      "val": "classroom school, desks" },
+          { "id": "library",    "label": "Library",        "val": "library, bookshelves, dim light" },
+          { "id": "nightclub",  "label": "Club",           "val": "nightclub, neon lights, dance floor" },
+          { "id": "gym",        "label": "Gym",            "val": "gym, fitness equipment, mirrors" },
+          { "id": "studio",     "label": "Photo Studio",   "val": "photography studio, white backdrop, professional lights" },
+          { "id": "dressing_room","label": "Dressing Room","val": "dressing room, vanity mirror, backstage" },
+          { "id": "car",        "label": "Car Interior",   "val": "car interior, backseat" }
+        ]
+      },
+      {
+        "id": "outdoor",
+        "label": "Outdoor",
+        "entries": [
+          { "id": "beach",      "label": "Beach",          "val": "beach, ocean shore, sand" },
+          { "id": "poolside",   "label": "Poolside",       "val": "poolside, swimming pool" },
+          { "id": "forest",     "label": "Forest",         "val": "forest clearing nature" },
+          { "id": "garden",     "label": "Garden",         "val": "garden flowers, bloom" },
+          { "id": "city",       "label": "City Street",    "val": "city street, urban, alley" },
+          { "id": "rooftop",    "label": "Rooftop",        "val": "rooftop night view, city skyline" },
+          { "id": "park",       "label": "Park",           "val": "park, trees, open sky" },
+          { "id": "field",      "label": "Open Field",     "val": "open field, tall grass, wide sky" },
+          { "id": "waterfall",  "label": "Waterfall",      "val": "waterfall, jungle, mist" }
+        ]
+      },
+      {
+        "id": "fantasy",
+        "label": "Fantasy / Sci-Fi",
+        "entries": [
+          { "id": "dungeon",    "label": "Dungeon",        "val": "dungeon stone walls chains" },
+          { "id": "castle",     "label": "Castle",         "val": "fantasy castle throne room" },
+          { "id": "tavern",     "label": "Tavern",         "val": "tavern, inn interior, rustic" },
+          { "id": "magic_forest","label": "Magic Forest",  "val": "mystical forest, magic glowing, ethereal" },
+          { "id": "space",      "label": "Space Station",  "val": "space station sci-fi, metallic" },
+          { "id": "onsen",      "label": "Onsen",          "val": "onsen hot spring, steam, bamboo" },
+          { "id": "temple",     "label": "Ancient Temple", "val": "ancient stone temple, mystical ruins" },
+          { "id": "cloud",      "label": "Heavenly Clouds","val": "floating on clouds, heavenly realm, divine light" },
+          { "id": "hell",       "label": "Hellscape",      "val": "infernal realm, hellfire, brimstone" }
+        ]
+      }
+    ]
+  },
+
+  "lighting": {
+    "label": "Lighting",
+    "single": true,
+    "field": "mood",
+    "entries": [
+      { "id": "dramatic",    "label": "Dramatic",        "val": "dramatic cinematic lighting, deep shadows" },
+      { "id": "soft",        "label": "Soft & Natural",  "val": "soft diffused natural light" },
+      { "id": "golden",      "label": "Golden Hour",     "val": "warm golden hour light, haze" },
+      { "id": "moonlight",   "label": "Moonlight",       "val": "moonlight, cool blue night" },
+      { "id": "neon",        "label": "Neon",            "val": "neon lights, cyberpunk glow, colored light" },
+      { "id": "candle",      "label": "Candlelight",     "val": "candlelight, warm flickering" },
+      { "id": "fire",        "label": "Firelight",       "val": "firelight, campfire, orange glow" },
+      { "id": "studio",      "label": "Studio",          "val": "studio lighting, professional, even light" },
+      { "id": "backlit",     "label": "Backlit",         "val": "backlit, rim light silhouette, halo edge" },
+      { "id": "god_rays",    "label": "God Rays",        "val": "volumetric god rays through window" },
+      { "id": "colored",     "label": "Colored Gels",    "val": "colored gels, pink and purple light" },
+      { "id": "dark",        "label": "Dark",            "val": "dark, low-key lighting, shadows" },
+      { "id": "black_light", "label": "Black Light",     "val": "black light, UV glow, neon body paint" }
+    ]
+  },
+
+  "time_of_day": {
+    "label": "Time of Day",
+    "single": true,
+    "field": "timeOfDay",
+    "entries": [
+      { "id": "dawn",       "label": "Dawn",           "val": "dawn, early morning, soft pink sky" },
+      { "id": "morning",    "label": "Morning",        "val": "morning, bright daylight" },
+      { "id": "afternoon",  "label": "Afternoon",      "val": "afternoon, midday sun" },
+      { "id": "sunset",     "label": "Sunset",         "val": "golden hour sunset, warm tones" },
+      { "id": "dusk",       "label": "Dusk",           "val": "blue hour, dusk, twilight" },
+      { "id": "night",      "label": "Night",          "val": "night, stars" },
+      { "id": "midnight",   "label": "Midnight",       "val": "late night, moonlight" }
+    ]
+  },
+
+  "weather": {
+    "label": "Weather / Atmosphere",
+    "single": true,
+    "field": "weather",
+    "entries": [
+      { "id": "clear",    "label": "Clear",          "val": "clear sky, sunny" },
+      { "id": "overcast", "label": "Overcast",       "val": "overcast, cloudy" },
+      { "id": "rain",     "label": "Rain",           "val": "rain, wet, stormy" },
+      { "id": "snow",     "label": "Snow",           "val": "snow, winter cold" },
+      { "id": "fog",      "label": "Fog",            "val": "fog, misty atmosphere" },
+      { "id": "storm",    "label": "Storm",          "val": "thunder and lightning" },
+      { "id": "sakura",   "label": "Cherry Blossoms","val": "cherry blossoms falling, sakura" },
+      { "id": "autumn",   "label": "Autumn",         "val": "autumn leaves, fall" }
+    ]
+  },
+
+  "vibes": {
+    "label": "Scene Vibe",
+    "single": true,
+    "field": "vibe",
+    "entries": [
+      { "id": "romantic",    "label": "Romantic",     "val": "romantic, intimate, loving" },
+      { "id": "sensual",     "label": "Sensual",      "val": "sensual, erotic atmosphere" },
+      { "id": "dark",        "label": "Dark",         "val": "dark, ominous, dangerous" },
+      { "id": "playful",     "label": "Playful",      "val": "playful, fun, teasing" },
+      { "id": "aggressive",  "label": "Aggressive",   "val": "aggressive, dominant, intense" },
+      { "id": "tender",      "label": "Tender",       "val": "tender, gentle, caring" },
+      { "id": "mysterious",  "label": "Mysterious",   "val": "mysterious, ethereal" },
+      { "id": "dreamy",      "label": "Dreamy",       "val": "dreamy, surreal, soft focus" },
+      { "id": "raw",         "label": "Raw",          "val": "raw, gritty, realistic" },
+      { "id": "power",       "label": "Power",        "val": "power, dominance, control" },
+      { "id": "primal",      "label": "Primal",       "val": "primal, animalistic, instinctive" },
+      { "id": "luxurious",   "label": "Luxurious",    "val": "luxurious, opulent, high class" }
+    ]
+  },
+
+  "fantasy_fx": {
+    "label": "Fantasy / Special FX",
+    "multi": true,
+    "field": "fantasyFx",
+    "entries": [
+      { "id": "magic",    "label": "Magic",           "val": "magic particles, glowing spells" },
+      { "id": "demonic",  "label": "Demonic",         "val": "demonic aura, hellfire, dark energy" },
+      { "id": "angelic",  "label": "Angelic",         "val": "angelic halo, divine light, feathers" },
+      { "id": "elven",    "label": "Elven",           "val": "elven features, pointed ears" },
+      { "id": "draconic", "label": "Draconic",        "val": "dragon scales, horns" },
+      { "id": "vampire",  "label": "Vampire",         "val": "vampire pale skin, fangs" },
+      { "id": "succubus", "label": "Succubus",        "val": "succubus tail and wings, horns" },
+      { "id": "neko",     "label": "Neko",            "val": "neko cat girl features, cat ears and tail" },
+      { "id": "cyborg",   "label": "Cyborg",          "val": "sci-fi cybernetic implants, glowing circuits" },
+      { "id": "ethereal", "label": "Ethereal",        "val": "ethereal ghost transparency, otherworldly" },
+      { "id": "mermaid",  "label": "Mermaid",         "val": "mermaid tail, scales, underwater" },
+      { "id": "fairy",    "label": "Fairy",           "val": "fairy wings, tiny, magical glow" }
+    ]
+  },
+
+  "art_styles": {
+    "label": "Art Style / Medium",
+    "single": true,
+    "field": "style",
+    "entries": [
+      { "id": "photo",        "label": "Photorealistic", "val": "photorealistic photography, 8k" },
+      { "id": "hyperreal",    "label": "Hyperreal",      "val": "hyperrealistic, ultra detailed skin, pores visible" },
+      { "id": "anime",        "label": "Anime",          "val": "anime style illustration" },
+      { "id": "hentai",       "label": "Hentai",         "val": "hentai illustration style, detailed" },
+      { "id": "digital_art",  "label": "Digital Art",    "val": "digital art illustration" },
+      { "id": "oil",          "label": "Oil Painting",   "val": "oil painting, painterly, impasto" },
+      { "id": "watercolor",   "label": "Watercolor",     "val": "watercolor painting, soft washes" },
+      { "id": "comic",        "label": "Comic",          "val": "comic book art, cel shaded, inked" },
+      { "id": "concept",      "label": "Concept Art",    "val": "concept art, detailed render" },
+      { "id": "3d_cgi",       "label": "3D CGI",         "val": "3D CGI render, realistic textures" },
+      { "id": "cinematic",    "label": "Cinematic",      "val": "cinematic film still, movie quality" },
+      { "id": "pinup_art",    "label": "Pin-Up Art",     "val": "pin-up art style, vintage illustration" },
+      { "id": "dark_fantasy", "label": "Dark Fantasy",   "val": "dark fantasy art, gothic, moody" },
+      { "id": "impressionist","label": "Impressionist",  "val": "impressionist painting, loose brushwork" },
+      { "id": "sketch",       "label": "Sketch",         "val": "pencil sketch, detailed linework" },
+      { "id": "soft_cg",      "label": "Soft CG",        "val": "soft 3D CG, smooth skin, studio render" },
+      { "id": "eroge",        "label": "Visual Novel",   "val": "visual novel art style, eroge CG style" },
+      { "id": "renaissance",  "label": "Renaissance",    "val": "renaissance painting, classical art, old master" }
+    ]
+  },
+
+  "color_tones": {
+    "label": "Color Tone",
+    "single": true,
+    "field": "colorTone",
+    "entries": [
+      { "id": "warm",     "label": "Warm",           "val": "warm color palette, golden tones" },
+      { "id": "cool",     "label": "Cool",           "val": "cool color palette, blue tones" },
+      { "id": "moody",    "label": "Moody",          "val": "moody dark desaturated" },
+      { "id": "vibrant",  "label": "Vibrant",        "val": "vibrant saturated colors" },
+      { "id": "pastel",   "label": "Pastel",         "val": "pastel soft colors" },
+      { "id": "bw",       "label": "B&W",            "val": "black and white monochrome" },
+      { "id": "neon",     "label": "Neon",           "val": "neon cyberpunk color palette" },
+      { "id": "sepia",    "label": "Sepia",          "val": "sepia vintage tones" },
+      { "id": "red_black","label": "Red / Black",    "val": "red and black dramatic" },
+      { "id": "duotone",  "label": "Duotone",        "val": "duotone, two-color graphic treatment" }
+    ]
+  },
+
+  "quality_tags": {
+    "label": "Quality / Detail",
+    "multi": true,
+    "field": "quality",
+    "entries": [
+      { "id": "masterpiece",  "label": "Masterpiece",      "val": "masterpiece" },
+      { "id": "ultra_hd",     "label": "Ultra HD",         "val": "ultra high resolution, 8k" },
+      { "id": "sharp_focus",  "label": "Sharp Focus",      "val": "sharp focus, in focus" },
+      { "id": "skin_detail",  "label": "Skin Detail",      "val": "detailed skin texture, pores" },
+      { "id": "sss",          "label": "SSS Skin",         "val": "subsurface scattering skin, translucent skin" },
+      { "id": "bokeh",        "label": "Bokeh DOF",        "val": "bokeh depth of field, blurred background" },
+      { "id": "film_grain",   "label": "Film Grain",       "val": "film grain, analog photography" },
+      { "id": "bloom",        "label": "Bloom",            "val": "soft glow, bloom, ethereal light" },
+      { "id": "hdr",          "label": "HDR",              "val": "HDR, high dynamic range" },
+      { "id": "ray_tracing",  "label": "Ray Tracing",      "val": "ray tracing, photorealistic lighting" }
+    ]
+  },
+
+  "compositions": {
+    "label": "Composition",
+    "single": true,
+    "field": "composition",
+    "entries": [
+      { "id": "centered",     "label": "Centered",         "val": "centered symmetrical composition" },
+      { "id": "thirds",       "label": "Rule of Thirds",   "val": "rule of thirds framing" },
+      { "id": "dynamic",      "label": "Dynamic",          "val": "dynamic diagonal composition" },
+      { "id": "wide",         "label": "Wide Shot",        "val": "wide establishing shot" },
+      { "id": "tight",        "label": "Tight Frame",      "val": "tight intimate framing" },
+      { "id": "mirror",       "label": "Mirror",           "val": "mirror reflection" },
+      { "id": "triptych",     "label": "Triptych",         "val": "triptych layout, three-panel" },
+      { "id": "vignette",     "label": "Vignette",         "val": "vignette border, dark edges, drawn focus to center" }
+    ]
+  },
+
+  "quick_capture": {
+    "label": "Quick Scene Capture",
+    "note": "One-click generates with current char + scene context. No configuration needed.",
+    "entries": [
+      { "id": "scene_now",   "label": "Capture Scene Now",  "icon": "camera",         "desc": "Auto-prompt from current chat history, character data, and active scene selections" },
+      { "id": "char_solo",   "label": "Character Solo",     "icon": "user",           "desc": "Full body character portrait from their physical description, no scene context" },
+      { "id": "char_face",   "label": "Character Face",     "icon": "smile",          "desc": "Close-up face portrait — highly character-accurate" },
+      { "id": "scene_vibe",  "label": "Match Scene Vibe",   "icon": "sparkles",       "desc": "LLM reads last 5 messages and writes the most cinematically fitting prompt" }
+    ]
+  }
+}
