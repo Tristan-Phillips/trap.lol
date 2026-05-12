@@ -45,6 +45,7 @@
                 await Promise.all([
                     loadScript(config.shards.lucide),
                     loadScript(config.shards.marked),
+                    loadScript(config.shards.dompurify),
                 ]);
             } catch (e) {
                 contentDiv.innerHTML = '<span style="color:#f87171;">ERR: Could not load required shards.</span>';
@@ -56,7 +57,7 @@
             if (typeof lucide !== 'undefined') lucide.createIcons();
 
             const mdFile = new URLSearchParams(window.location.search).get('md');
-            if (!mdFile) {
+            if (!mdFile || !/^[a-zA-Z0-9_-]+\.md$/.test(mdFile)) {
                 contentDiv.innerHTML = '<span style="color:#f87171;">ERR: No document specified.</span>';
                 return;
             }
@@ -64,11 +65,14 @@
             try {
                 const res = await fetch('../glass/markdown/' + mdFile);
                 if (!res.ok) throw new Error('File not found');
-                contentDiv.innerHTML = marked.parse(await res.text());
+                const raw = typeof DOMPurify !== 'undefined'
+                    ? DOMPurify.sanitize(marked.parse(await res.text()))
+                    : marked.parse(await res.text());
+                contentDiv.innerHTML = raw;
                 // Second pass: render any lucide icons injected by markdown
                 if (typeof lucide !== 'undefined') lucide.createIcons();
             } catch (e) {
-                contentDiv.innerHTML = '<span style="color:#f87171;">ERR: Could not retrieve ' + mdFile + '.</span>';
+                contentDiv.innerHTML = '<span style="color:#f87171;">ERR: Could not retrieve document.</span>';
                 console.error('[guide] markdown fetch failed:', e);
             }
         })();

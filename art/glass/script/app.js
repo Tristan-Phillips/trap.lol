@@ -415,7 +415,7 @@ function makeCard(piece, idx) {
   $card.className = "art-card";
   $card.setAttribute("tabindex", "0");
   $card.setAttribute("role", "button");
-  $card.setAttribute("aria-label", `Open artwork ${idx + 1}`);
+  $card.setAttribute("aria-label", piece._id ? `View ${piece._id}` : "View artwork");
   $card.dataset.idx = idx;
 
   const $thumb = document.createElement("img");
@@ -480,7 +480,7 @@ function initCardEntrance() {
     });
   }, { threshold: 0.08 });
 
-  qsa(".art-card").forEach($c => obs.observe($c));
+  qsa(".art-card:not(.visible)").forEach($c => obs.observe($c));
 }
 
 /* ══════════════════════════════════════════════════

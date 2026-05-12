@@ -1,6 +1,7 @@
 .claude
 .gem
 glass/markdown/*.bk
+**/*.backup
 CLAUDE.md
 .vscode
 .env
