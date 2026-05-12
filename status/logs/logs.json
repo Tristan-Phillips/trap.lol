@@ -422,7 +422,7 @@
 
   "commits": [
     {
-      "hash": "pending",
+      "hash": "ca85a17",
       "date": "2026-05-12",
       "message": "image-engine: rewrite buildImagePrompt for correct token ordering and additive clothing",
       "scope": "playground/characters",
