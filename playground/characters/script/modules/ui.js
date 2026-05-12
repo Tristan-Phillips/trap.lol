@@ -2278,6 +2278,16 @@ export function initUI() {
             $tint.style.backgroundColor = color;
             $tint.style.opacity = opacity / 100;
             $tint.classList.add('arena__tint--active');
+            // Show active character's avatar softly behind the tint if no custom bg overrides it
+            const bgCfg = state.config.chatBackground;
+            if (!bgCfg?.preset && !bgCfg?.url) {
+                const botId = state.activeBotId;
+                const meta  = botId ? state.characters.find(c => c.id === botId) : null;
+                const char  = meta ? state.loadedCharacters[botId] : null;
+                const rawAv = meta?.avatar_path || char?.avatar;
+                const avUrl = botId ? getAvatarUrlSync(botId, rawAv) : null;
+                if (avUrl) updateCinematicBackground(avUrl);
+            }
         } else {
             $tint.style.backgroundColor = '';
             $tint.style.opacity = '0';
