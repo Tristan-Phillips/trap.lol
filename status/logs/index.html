@@ -839,6 +839,7 @@
       }
       .chat-textarea:focus { border-color: rgba(190,41,236,0.35); }
       .chat-textarea::placeholder { color: var(--text-muted); opacity: 0.45; }
+      .chat-textarea:disabled { opacity: 0.3; cursor: not-allowed; }
       .chat-send {
         font-family: var(--font-mono);
         font-size: var(--text-xs);
@@ -859,6 +860,20 @@
       }
       .chat-send:hover:not(:disabled) { background: rgba(190,41,236,0.15); border-color: rgba(190,41,236,0.45); }
       .chat-send:disabled { opacity: 0.35; cursor: not-allowed; }
+      .chat-no-key {
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        color: var(--accent-warm);
+        letter-spacing: 0.06em;
+        padding: 0.6rem 0.9rem;
+        background: rgba(244,168,48,0.05);
+        border: 1px solid rgba(244,168,48,0.15);
+        border-radius: 5px;
+        margin-bottom: 0.75rem;
+        opacity: 0.85;
+      }
+      .chat-no-key.hidden { display: none !important; }
+
       .chat-hint {
         font-family: var(--font-mono);
         font-size: 0.62rem;
@@ -867,6 +882,9 @@
         opacity: 0.4;
         margin-top: 0.4rem;
       }
+
+      /* ── Hidden utility ── */
+      .hidden { display: none !important; }
 
       /* ── Loading skeleton ── */
       .log-loading {
@@ -960,12 +978,13 @@
             <input class="chat-key-input" id="chat-key-input" type="password" placeholder="sk-…" autocomplete="off" spellcheck="false" aria-label="nano-gpt API key" />
             <button class="chat-key-save" id="chat-key-save" aria-label="Save API key">Save</button>
           </div>
+          <div class="chat-no-key" id="chat-no-key">Enter your nano-gpt API key above to query the knowledge base.</div>
           <div class="chat-messages" id="chat-messages" aria-live="polite" aria-label="Chat messages"></div>
           <div class="chat-input-row">
             <textarea class="chat-textarea" id="chat-textarea" placeholder="Ask anything about trap.lol…" rows="1" aria-label="Chat message"></textarea>
             <button class="chat-send" id="chat-send" disabled aria-label="Send message">Send</button>
           </div>
-          <div class="chat-hint">Ctrl+Enter to send — context: full logs.json — model: nano-gpt deepseek-r1</div>
+          <div class="chat-hint">Ctrl+Enter to send — context: full logs.json — model: deepseek-r1</div>
         </div>
 
         <!-- Tab navigation -->
@@ -1073,6 +1092,7 @@
         const panel = addTab('briefing', 'Briefing');
         const llm = data.for_new_llm;
 
+        const proto = data._protocol;
         const briefingText = [
           `SITE: ${data.identity.domain} — ${data.identity.tagline}`,
           `AUTHOR: ${data.identity.author} (${data.identity.author_real})`,
@@ -1085,8 +1105,15 @@
           `AESTHETIC: ${data.philosophy.aesthetic_philosophy}`,
           `MANTRA: ${data.philosophy.operational_philosophy}`,
           '',
-          'THE FIVE LAWS:',
+          'THE LAWS (read all before touching code):',
           ...llm.the_five_laws.map(l => '  ' + l),
+          `  ${llm.the_sixth_law}`,
+          '',
+          '!! YOUR OBLIGATION !!',
+          `  ${proto.your_obligation_as_an_llm}`,
+          '',
+          'WHEN TO UPDATE:',
+          ...proto.when_to_update.map(w => '  — ' + w),
           '',
           'WHAT TRAP VALUES MOST:',
           ...llm.what_trap_values_most.map(v => '  — ' + v),
@@ -1095,6 +1122,7 @@
           ...llm.how_to_help_effectively.map(h => '  — ' + h),
           '',
           `SCHEMA VERSION: ${data._meta.schema_version} | LAST UPDATED: ${data._meta.last_updated}`,
+          `STALENESS RULE: ${proto.staleness_detection}`,
         ].join('\n');
 
         panel.innerHTML = `
@@ -1107,10 +1135,22 @@
             </button>
           </div>
 
-          <h2 class="panel-title">The Five Laws</h2>
-          <ol class="law-list">${llm.the_five_laws.map(l =>
-            `<li class="law-item"><span class="law-num">${esc(l.charAt(0))}</span><span class="law-text">${esc(l.slice(3))}</span></li>`
-          ).join('')}</ol>
+          <h2 class="panel-title">The Laws — Non-Negotiable</h2>
+          <ol class="law-list">
+            ${llm.the_five_laws.map(l =>
+              `<li class="law-item"><span class="law-num">${esc(l.charAt(0))}</span><span class="law-text">${esc(l.slice(3))}</span></li>`
+            ).join('')}
+            <li class="law-item" style="border-color:rgba(244,168,48,0.3);background:rgba(244,168,48,0.04)">
+              <span class="law-num" style="color:var(--accent-warm);border-color:rgba(244,168,48,0.3);background:rgba(244,168,48,0.1)">6</span>
+              <span class="law-text" style="color:var(--accent-warm)">${esc(llm.the_sixth_law.slice(3))}</span>
+            </li>
+          </ol>
+
+          <h2 class="panel-title">Your Obligation</h2>
+          <div class="belief-block" style="border-color:rgba(244,168,48,0.4);background:rgba(244,168,48,0.04)">
+            <div class="belief-block__label" style="color:var(--accent-warm)">protocol</div>
+            <div class="belief-block__text">${esc(proto.your_obligation_as_an_llm)}</div>
+          </div>
 
           <h2 class="panel-title">What Trap Values Most</h2>
           ${listItems(llm.what_trap_values_most)}
@@ -1140,6 +1180,49 @@
             }, 2000);
           });
         });
+      }
+
+      function buildProtocol(data) {
+        const panel = addTab('protocol', 'Protocol');
+        const p = data._protocol;
+
+        panel.innerHTML = `
+          <div class="belief-block" style="border-color:rgba(244,168,48,0.4);background:rgba(244,168,48,0.04);margin-bottom:1rem">
+            <div class="belief-block__label" style="color:var(--accent-warm)">what this file is</div>
+            <div class="belief-block__text">${esc(p.what_this_file_is)}</div>
+          </div>
+
+          <h2 class="panel-title">Your Obligation as an LLM</h2>
+          <div class="belief-block" style="border-color:rgba(239,68,68,0.4);background:rgba(239,68,68,0.04)">
+            <div class="belief-block__label" style="color:#ef4444">mandatory</div>
+            <div class="belief-block__text">${esc(p.your_obligation_as_an_llm)}</div>
+          </div>
+
+          <h2 class="panel-title">When to Update</h2>
+          ${listItems(p.when_to_update, 'pref-rule')}
+
+          <h2 class="panel-title">How to Update Each Section</h2>
+          ${Object.entries(p.how_to_update_each_section).map(([field, rule]) =>
+            `<div class="log-card" style="margin-bottom:0.4rem;padding:0.75rem 1.1rem">
+              <div class="kv-grid">${kv(field, rule)}</div>
+            </div>`
+          ).join('')}
+
+          <h2 class="panel-title">Staleness Rule</h2>
+          <div class="belief-block" style="border-color:rgba(244,168,48,0.3)">
+            <div class="belief-block__label">staleness</div>
+            <div class="belief-block__text">${esc(p.staleness_detection)}</div>
+          </div>
+
+          <h2 class="panel-title">Validation Rules</h2>
+          ${listItems(p.validation_rules, 'absolute-rule')}
+
+          <h2 class="panel-title">For Claude Code Specifically</h2>
+          <div class="belief-block">
+            <div class="belief-block__label">claude code</div>
+            <div class="belief-block__text">${esc(p.for_claude_code_specifically)}</div>
+          </div>
+        `;
       }
 
       function buildPhilosophy(data) {
@@ -1408,7 +1491,7 @@
          CHAT WIDGET
          ───────────────────────────────────────────────── */
       const NG_API = 'https://nano-gpt.com/api/v1/chat/completions';
-      const NG_MODEL = 'deepseek/deepseek-r1';
+      const NG_MODEL = 'deepseek-r1';
       const LS_KEY = 'logs_ng_key';
 
       let chatData = null;
@@ -1419,6 +1502,7 @@
       const $chatPanel = document.getElementById('chat-panel');
       const $keyInput  = document.getElementById('chat-key-input');
       const $keySave   = document.getElementById('chat-key-save');
+      const $noKey     = document.getElementById('chat-no-key');
       const $messages  = document.getElementById('chat-messages');
       const $textarea  = document.getElementById('chat-textarea');
       const $sendBtn   = document.getElementById('chat-send');
@@ -1431,7 +1515,13 @@
         const open = $chatPanel.classList.toggle('visible');
         $toggle.classList.toggle('open', open);
         $toggle.setAttribute('aria-expanded', open);
-        if (open) $textarea.focus();
+        if (open) {
+          if ($keyInput.value.trim()) {
+            $textarea.focus();
+          } else {
+            $keyInput.focus();
+          }
+        }
       });
 
       $keyInput.addEventListener('input', updateSendState);
@@ -1446,10 +1536,14 @@
         $keySave.classList.add('saved');
         setTimeout(() => { $keySave.textContent = 'Save'; $keySave.classList.remove('saved'); }, 1800);
         updateSendState();
+        $textarea.focus();
       }
 
       function updateSendState() {
-        $sendBtn.disabled = !$keyInput.value.trim() || chatBusy;
+        const hasKey = !!$keyInput.value.trim();
+        $sendBtn.disabled = !hasKey || chatBusy;
+        $noKey.classList.toggle('hidden', hasKey);
+        $textarea.disabled = !hasKey;
       }
 
       $textarea.addEventListener('input', () => {
@@ -1566,6 +1660,7 @@
           chatData = data;
 
           buildBriefing(data);
+          buildProtocol(data);
           buildPhilosophy(data);
           buildPages(data);
           buildDesign(data);
