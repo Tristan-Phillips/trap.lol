@@ -8,31 +8,7 @@
 import { state, saveCharacter, deleteCharacter, getCharOverride, setCharOverride, defaultCharOverride, saveState } from './state.js';
 import { normalizeData } from './parser-v2.js';
 import { saveAvatar, loadAvatar, isDataUrl } from './storage.js';
-
-const qs  = (sel, ctx = document) => ctx.querySelector(sel);
-const qsa = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
-
-function debounce(fn, ms) {
-    let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); };
-}
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function slugify(str) {
-    return str.toLowerCase().trim()
-        .replace(/['']/g, '')
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '');
-}
-
-function generateId(name) {
-    return `${slugify(name) || 'char'}-${Date.now().toString(36)}`;
-}
-
-function esc(s) {
-    return String(s ?? '').replace(/[&<>"']/g, c =>
-        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-}
+import { qs, qsa, esc, debounce, slugify, generateId, pick, showToast } from './shared-utils.js';
 
 // ── Editor-scoped DOM helpers (scoped to the modal) ───────────────────────────
 
@@ -239,8 +215,6 @@ const RAND = {
     proseStyle:     ['literary','cinematic','punchy','lyrical','minimalist','descriptive'],
     zodiac:         ['aries','taurus','gemini','cancer','leo','virgo','libra','scorpio','sagittarius','capricorn','aquarius','pisces'],
 };
-
-function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
 // ── Body map region → panel mapping ──────────────────────────────────────────
 
@@ -1200,20 +1174,3 @@ export function initCharEditor() {
     return { open: openEditor, close: closeEditor };
 }
 
-// ── Toast ─────────────────────────────────────────────────────────────────────
-
-function showToast(message, type = 'info', duration = 3500) {
-    const $c = qs('#toast-container');
-    if (!$c) return;
-    const $t = document.createElement('div');
-    $t.className = `toast toast--${type}`;
-    const icons = { info: 'check-circle', error: 'alert-circle', warn: 'alert-triangle' };
-    $t.innerHTML = `<i data-lucide="${icons[type]||'check-circle'}"></i><span>${esc(message)}</span>`;
-    $c.appendChild($t);
-    if (window.lucide) window.lucide.createIcons({ nodes: [$t] });
-    requestAnimationFrame(() => $t.classList.add('toast--visible'));
-    setTimeout(() => {
-        $t.classList.remove('toast--visible');
-        $t.addEventListener('transitionend', () => $t.remove(), { once: true });
-    }, duration);
-}

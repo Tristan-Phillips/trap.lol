@@ -1,4 +1,4 @@
-/**
+s/**
  * wallhaven.js — Wallhaven Gallery Arena
  * Self-contained module; initialises on DOMContentLoaded.
  */

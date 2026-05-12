@@ -24,17 +24,7 @@ import { addBook, removeBook, addEntry, updateEntry, removeEntry, createBook, sc
 import { parseCharacterCard, buildCard, normalizeData } from './parser-v2.js';
 import { getApiKey, setApiKey, clearApiKey, isValidKeyFormat, restoreKeyFromCookie } from '../../../../glass/script/modules/llm-auth.js';
 import { initCharEditor } from './char-editor.js';
-
-// ── Utility ───────────────────────────────────────────────────────────────────
-const qs  = (sel, ctx = document) => ctx ? ctx.querySelector(sel) : null;
-const qsa = (sel, ctx = document) => ctx ? [...ctx.querySelectorAll(sel)] : [];
-const esc = str => String(str ?? '').replace(/[&<>"']/g, c =>
-    ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
-
-function debounce(fn, ms) {
-    let t;
-    return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
-}
+import { qs, qsa, esc, debounce } from './shared-utils.js';
 
 // Light markdown renderer for profile details — bold, italic, headers, line breaks only.
 // Does NOT use marked.js to avoid dependency — covers the common character-card patterns.
@@ -1975,7 +1965,7 @@ export function initUI() {
 
         // Profile action buttons
         qs('#btn-add-to-thread').onclick = () => addCharacterToThread(id);
-        qs('#btn-sims-edit').onclick     = () => openCharEditor(id);
+        qs('#btn-char-edit').onclick     = () => openCharEditor(id);
         qs('#btn-gallery-add').onclick   = () => { switchSidebarTab('social'); openSocialFeed(id); renderSocialSidebar(); };
         qs('#btn-remove-char').onclick = () => {
             removeBotFromChat(id);
@@ -2808,6 +2798,31 @@ export function initUI() {
         }
     }
 
+    // ── Seed charOverride from card.extensions.underdark (mirrors openEditor logic) ──
+    // Called before any display path that reads override fields. Safe to call multiple
+    // times — user edits stored in _userEdits are always preferred over card defaults.
+    function _ensureOverrideSeededFromCard(charId) {
+        const card = state.loadedCharacters[charId];
+        if (!card?.extensions?.underdark) return;
+
+        const ud = card.extensions.underdark;
+        const { ext: cardExt, ...cardCore } = ud;
+        const coreKeys = new Set(Object.keys(defaultCharOverride()));
+        const coreFromCard = {};
+        const extFromCard  = { ...(cardExt || {}) };
+
+        for (const [k, v] of Object.entries(cardCore)) {
+            if (coreKeys.has(k)) coreFromCard[k] = v;
+            else extFromCard[k] = v;
+        }
+
+        const stored    = state.config?.charOverrides?.[charId] || {};
+        const userEdits = stored._userEdits || {};
+        const mergedExt  = { ...extFromCard,  ...(userEdits.ext  || {}) };
+        const mergedCore = { ...coreFromCard, ...(userEdits.core || {}) };
+        setCharOverride(charId, { ...mergedCore, ext: mergedExt });
+    }
+
     // ── Build character info strip ────────────────────────────────────────────
     async function _renderStudioCharInfo(charId) {
         const $name   = qs('#studio-char-name');
@@ -2826,11 +2841,13 @@ export function initUI() {
             return;
         }
 
-        // Ensure the character card is loaded — it may not be in memory if the
-        // session was restored from saved state without visiting the char first.
+        // Ensure card is loaded then seed override from card data — the editor
+        // does this on open, but the studio may be opened without ever opening
+        // the editor, leaving override fields blank.
         if (!state.loadedCharacters[charId]) {
             await loadCharacterCard(charId).catch(() => null);
         }
+        _ensureOverrideSeededFromCard(charId);
 
         const char     = state.loadedCharacters[charId];
         const override = getCharOverride(charId);
@@ -2841,8 +2858,9 @@ export function initUI() {
         if ($badge) { $badge.hidden = false; }
         if ($badgeName) $badgeName.textContent = charName;
 
-        // Portrait
-        const avatarSrc = meta?.avatar_path || '';
+        // Portrait — resolve IDB refs before setting src
+        const rawAv    = meta?.avatar_path || char?.avatar || '';
+        const avatarSrc = rawAv ? await getAvatarUrl(charId, rawAv) : null;
         if ($port) {
             $port.src = avatarSrc || '';
             $port.hidden = !avatarSrc;
@@ -5917,7 +5935,7 @@ export function initUI() {
         loadPersonaFields(e.target.value);
     });
 
-    // Keys the persona tab writes that live in override.ext (mirrors EXT_KEYS in sims-editor).
+    // Keys the persona tab writes that live in override.ext (mirrors EXT_KEYS in char-editor).
     // Core fields from defaultCharOverride() are intentionally excluded — they save to coreFields.
     const PERSONA_EXT_KEYS = new Set([
         'height','bodyType','skinTone','hairColor','hairStyle','eyeColor',
@@ -6402,7 +6420,7 @@ export function initUI() {
         document.dispatchEvent(new CustomEvent('char-editor:open', { detail: { charId: id } }));
     }
 
-    qs('#btn-sims-edit')?.addEventListener('click', () => {
+    qs('#btn-char-edit')?.addEventListener('click', () => {
         if (state.activeBotId) openCharEditor(state.activeBotId);
     });
 

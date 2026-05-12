@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.2.3",
+    "schema_version": "1.2.4",
     "last_updated": "2026-05-12",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -473,6 +473,28 @@
     {
       "hash": "PENDING",
       "date": "2026-05-12",
+      "message": "refactor: remove dead modules, extract shared-utils, rename sims btn",
+      "scope": "playground/characters",
+      "impact": "medium",
+      "files": [
+        "playground/characters/script/modules/char-creator.js (deleted)",
+        "playground/characters/script/modules/sims-editor.js (deleted)",
+        "playground/characters/script/modules/shared-utils.js (new)",
+        "playground/characters/script/modules/char-editor.js",
+        "playground/characters/script/modules/commands.js",
+        "playground/characters/script/modules/ui.js",
+        "playground/characters/style/creator.css (deleted)",
+        "playground/characters/style/sims.css (deleted)",
+        "playground/characters/style/image-gen.css (deleted)",
+        "playground/characters/style/style.css",
+        "playground/characters/index.html",
+        "status/logs/logs.json"
+      ],
+      "why": "char-creator.js and sims-editor.js were dead — char-editor.js merged both and no code imported them. image-gen.css, creator.css, and sims.css styled modals that no longer exist in the HTML. Extracted esc/debounce/slugify/generateId/pick/showToast (defined 3-6 times each) into a single shared-utils.js module; char-editor and commands now import from it. btn-sims-edit renamed to btn-char-edit as it routes to char-editor."
+    },
+    {
+      "hash": "PENDING",
+      "date": "2026-05-12",
       "message": "feat: ritual initiation wizard — multi-step first-run gate for Underdark",
       "scope": "playground/characters",
       "impact": "high",
@@ -890,6 +912,22 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-12",
+      "agent": "Claude Sonnet 4.6",
+      "type": "refactor",
+      "summary": "Dead code removal and utility consolidation pass on playground/characters. Deleted char-creator.js and sims-editor.js (both superseded by char-editor.js, neither imported anywhere). Deleted creator.css, sims.css, and image-gen.css (styled modals removed in a prior commit). Created shared-utils.js exporting esc, debounce, slugify, generateId, pick, showToast — previously defined 3-6 times each across modules. Updated char-editor.js and commands.js to import from it. Renamed btn-sims-edit to btn-char-edit in HTML and JS.",
+      "decisions": [
+        "wallhaven.js left as an IIFE — converting it to an ES module to use shared-utils would be a riskier refactor with no functional benefit.",
+        "ui.js showToast kept as local def (3000ms default vs 3500ms in shared-utils) — it owns the toast container and is called most frequently.",
+        "char-editor.js docstring updated to reflect it no longer merges from the now-deleted files.",
+        "CSS: 3 files deleted (~1682 lines removed), style.css manifest updated."
+      ],
+      "rules_reinforced": [
+        "Dead files accumulate silently — audit imports before assuming a module is live.",
+        "Utility functions defined in multiple places should be extracted to a shared module as soon as the third copy appears."
+      ]
+    },
     {
       "date": "2026-05-12",
       "agent": "Claude Sonnet 4.6",

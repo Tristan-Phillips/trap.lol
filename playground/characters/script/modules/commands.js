@@ -12,6 +12,7 @@
 
 import { state, setConfig, saveState, getCharOverride } from './state.js';
 export { IMAGE_MODELS, DEFAULT_MODEL, buildImagePrompt, generateImage } from './image-engine.js';
+import { esc as escHtml } from './shared-utils.js';
 
 // ── Registry ──────────────────────────────────────────────────────────────────
 // Each entry: { cmd, args, desc, detail }
@@ -310,8 +311,3 @@ export function filterCommands(partial) {
     return COMMANDS.filter(c => c.cmd.startsWith(q));
 }
 
-// ── Local HTML escaper (no DOM import needed) ─────────────────────────────────
-function escHtml(str) {
-    return String(str ?? '').replace(/[&<>"']/g, c =>
-        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-}

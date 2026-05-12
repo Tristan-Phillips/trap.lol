@@ -18,19 +18,16 @@
 
 /* ── Feature Panels ── */
 @import './social.css';
-@import './sims.css';
 @import './api-gate.css';
 
 /* ── Overlays & Modals ── */
 @import './modals.css';
 @import './oracle.css';
 @import './gallery-modal.css';
-@import './creator.css';
 
 /* ── Supplemental UI ── */
 @import './reinject.css';
 @import './config-panel.css';
-@import './image-gen.css';
 @import './lightbox.css';
 
 /* ── Wallhaven Arena ── */
