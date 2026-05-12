@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "purpose": "Master knowledge base for trap.lol. This file is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
+    "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
     "schema_version": "1.1.3",
     "last_updated": "2026-05-12",
     "maintained_by": "trap + Claude Sonnet 4.6",
@@ -8,7 +8,7 @@
   },
 
   "_protocol": {
-    "what_this_file_is": "This is the living intelligence record of trap.lol. It is not documentation. It is not a README. It is the site's memory — the full context a new LLM or context window needs to operate correctly without any input from the owner (Tristan Phillips / trap). It contains the site's identity, architecture, aesthetic rules, decision history, commit log, session record, and a set of binding laws for any agent working on this codebase.",
+    "what_this_file_is": "This is status/logs/logs.json in the trap.lol repository — the site's living intelligence record. It is not documentation. It is not a README. It is the site's memory — the full context a new LLM or context window needs to operate correctly without any input from the owner (Tristan Phillips / trap). It contains the site's identity, architecture, aesthetic rules, decision history, commit log, session record, and a set of binding laws for any agent working on this codebase. The human-readable viewer is at trap.lol/status/logs/.",
     "your_obligation_as_an_llm": "If you are an LLM or AI agent reading this file: you are REQUIRED to update it as part of your session. This is not optional. This file becomes stale if it is not maintained. A stale file is worse than no file — it will mislead the next agent. Your obligation is: READ before you act, UPDATE before you commit.",
     "when_to_update": [
       "After EVERY session where any of the following occurred: a file was changed, a commit was made, a decision was made, a rule was established or changed, a feature was added or removed, a philosophy was clarified.",
@@ -38,7 +38,7 @@
       "Do NOT remove or rewrite existing entries — only prepend new ones or update specific named fields",
       "Do NOT change the schema structure — add fields only, never remove"
     ],
-    "for_claude_code_specifically": "When working in Claude Code (CLI): at session start, read this file. At session end, before committing, update commits[] and sessions[]. The commit entry for the logs update itself should list files: ['status/logs/logs.json'] with scope 'logs' and impact 'low'. Do not create a separate commit just for the logs file — include it in the most relevant commit for the session, or as the last commit if the session had multiple commits."
+    "for_claude_code_specifically": "When working in Claude Code (CLI): at session start, read status/logs/logs.json (this file, at the root of the trap.lol repo). At session end, before committing, update commits[] and sessions[] in status/logs/logs.json. The commit entry for the logs update itself should list files: ['status/logs/logs.json'] with scope 'logs' and impact 'low'. Do not create a separate commit just for the logs file — include it in the most relevant commit for the session, or as the last commit if the session had multiple commits."
   },
 
   "identity": {
@@ -691,7 +691,7 @@
   ],
 
   "for_new_llm": {
-    "read_this_first": "You are about to work on trap.lol. This is not a standard web project. Read this entire file before touching a single line of code. The _protocol section is your operating instructions — it tells you exactly what to update and when. The rules and anti_patterns sections are load-bearing — violating them will produce work that gets reverted. Your last act in every session is to update this file.",
+    "read_this_first": "You are about to work on trap.lol. The file you are reading is status/logs/logs.json at the root of the trap.lol repository. It is the site's persistent memory and single source of truth. Read it in full before touching any code. The _protocol section is your operating instructions — it tells you exactly what to update and when. The rules and anti_patterns sections are load-bearing — violating them will produce work that gets reverted. Your last act in every session is to update this file (status/logs/logs.json) and commit it.",
     "the_five_laws": [
       "1. No frameworks. No build steps. Vanilla only.",
       "2. All data lives in JSON. All HTML is scaffolding.",
