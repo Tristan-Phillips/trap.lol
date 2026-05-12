@@ -591,3 +591,185 @@ export async function generateImage({ model, prompt, negativePrompt, size = '102
 
     throw new Error('Response contained no image data.');
 }
+
+// ── Video Generation ──────────────────────────────────────────────────────────
+// nano-gpt video API — OpenAI-compatible video generations endpoint.
+// Returns a URL to the generated video (or base64 if supported).
+// Videos may take 30–120s to generate; this function polls until complete.
+//
+// Supported models (as of 2026-05):
+//   kling-1.6-standard, kling-1.6-pro, wan-t2v-14b, minimax-video-01,
+//   luma-dream-machine
+const VIDEO_API_BASE = 'https://nano-gpt.com/v1/video/generations';
+
+export const VIDEO_MODELS = [
+    { id: 'kling-1.6-standard', label: 'Kling 1.6 Standard', desc: 'Best overall quality. Photorealistic motion.' },
+    { id: 'kling-1.6-pro',      label: 'Kling 1.6 Pro',      desc: 'Longer clips, smoother motion, higher fidelity.' },
+    { id: 'wan-t2v-14b',        label: 'Wan T2V 14B',         desc: 'Open source — fast, uncensored.' },
+    { id: 'minimax-video-01',   label: 'MiniMax Video',        desc: 'Photorealistic faces and bodies.' },
+    { id: 'luma-dream-machine', label: 'Luma Dream Machine',   desc: 'Cinematic quality, excellent consistency.' },
+];
+
+export async function generateVideo({ model, prompt, imageUrl, duration = 5, seed, onProgress } = {}) {
+    const apiKey = getApiKey();
+    if (!apiKey) throw new Error('No API key configured.');
+
+    const cleanPrompt = (prompt || '').trim();
+    if (!cleanPrompt) throw new Error('Prompt cannot be empty.');
+
+    const body = {
+        model:    model || 'kling-1.6-standard',
+        prompt:   cleanPrompt,
+        duration: Number(duration) || 5,
+    };
+    if (seed !== undefined && seed !== null && String(seed).trim()) body.seed = Number(seed);
+    if (imageUrl) body.image = imageUrl; // img2vid: pass start frame
+
+    const res = await fetch(VIDEO_API_BASE, {
+        method:  'POST',
+        headers: {
+            'Content-Type':  'application/json',
+            'Authorization': `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify(body),
+    });
+
+    if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        try { const j = await res.json(); msg = j.error?.message || (typeof j.error === 'string' ? j.error : msg); } catch (_) {}
+        throw new Error(msg);
+    }
+
+    const data = await res.json();
+
+    // Async jobs return a task_id — poll until done
+    const taskId = data.id || data.task_id || data.data?.id;
+    if (taskId) {
+        return await pollVideoTask(taskId, apiKey, onProgress);
+    }
+
+    // Synchronous response — direct URL or b64
+    const item = data.data?.[0] || data;
+    const url  = item?.url || item?.video_url || item?.b64_json;
+    if (!url) throw new Error('No video in response.');
+    if (item?.b64_json) return `data:video/mp4;base64,${item.b64_json}`;
+    return url;
+}
+
+async function pollVideoTask(taskId, apiKey, onProgress, maxWaitMs = 180000) {
+    const POLL_INTERVAL = 4000;
+    const deadline = Date.now() + maxWaitMs;
+    let elapsed = 0;
+
+    while (Date.now() < deadline) {
+        await new Promise(r => setTimeout(r, POLL_INTERVAL));
+        elapsed += POLL_INTERVAL;
+
+        const res = await fetch(`${VIDEO_API_BASE}/${taskId}`, {
+            headers: { 'Authorization': `Bearer ${apiKey}` }
+        });
+
+        if (!res.ok) {
+            const j = await res.json().catch(() => ({}));
+            throw new Error(j.error?.message || `Poll failed: HTTP ${res.status}`);
+        }
+
+        const data = await res.json();
+        const status = data.status || data.data?.status || 'processing';
+
+        // Progress callback — pass 0-1 estimate based on elapsed vs expected
+        if (onProgress) {
+            const pct = Math.min(elapsed / Math.min(maxWaitMs, 90000), 0.95);
+            onProgress(pct, status);
+        }
+
+        if (status === 'succeeded' || status === 'completed' || status === 'done') {
+            const item = data.data?.[0] || data.output?.[0] || data;
+            const url  = item?.url || item?.video_url || data.url || data.video_url;
+            if (!url) throw new Error('Task completed but no video URL in response.');
+            return url;
+        }
+
+        if (status === 'failed' || status === 'error') {
+            const msg = data.error?.message || data.message || 'Video generation failed.';
+            throw new Error(msg);
+        }
+        // else: still processing — continue polling
+    }
+
+    throw new Error('Video generation timed out (3 minutes).');
+}
+
+// ── Build video prompt from scene context (same pattern as generateImagePromptWithLLM) ──
+export async function generateVideoPromptWithLLM(opts = {}) {
+    const { charId = state.activeBotId, userHint = '', historyDepth = 6 } = opts;
+    const apiKey = getApiKey();
+    if (!apiKey) throw new Error('No API key configured.');
+
+    const char     = charId ? state.loadedCharacters[charId] : null;
+    const override = charId ? getCharOverride(charId) : {};
+    const charName = override.nickname || char?.name || 'the character';
+    const userName = state.config.userName || 'User';
+    const llmModel = override.modelOverride || state.config.model || 'deepseek-r1';
+
+    const parts = [];
+    const physFields = [];
+    const addPh = (...keys) => keys.forEach(k => { const v = override[k]; if (v && String(v).trim()) physFields.push(String(v).trim()); });
+    addPh('species','gender','age','height','bodyType','skinTone');
+    if (override.hairColor) physFields.push(`${override.hairColor}${override.hairStyle ? ` ${override.hairStyle}` : ''} hair`);
+    if (override.eyeColor)  physFields.push(`${override.eyeColor} eyes`);
+    if (physFields.length) parts.push(`Character: ${charName}\nPhysical: ${physFields.join(', ')}`);
+
+    const worldScenario = state.reality?.worldConfig?.scenario || '';
+    if (worldScenario) parts.push(`Setting: ${worldScenario.trim().slice(0, 200)}`);
+
+    const recent = state.history.slice(-historyDepth);
+    if (recent.length) {
+        const transcript = recent
+            .filter(m => m.role === 'user' || m.role === 'bot')
+            .map(m => {
+                const speaker = m.role === 'user' ? userName : charName;
+                const text = m.content.replace(/<[^>]+>/g, '').replace(/\*{1,3}([^*]+)\*{1,3}/g, '$1').replace(/_([^_]+)_/g, '$1').replace(/\s+/g, ' ').trim().slice(0, 250);
+                return `${speaker}: ${text}`;
+            }).join('\n');
+        if (transcript) parts.push(`Recent scene:\n${transcript}`);
+    }
+
+    if (userHint.trim()) parts.push(`Direction: ${userHint.trim()}`);
+
+    const systemPrompt = `You are writing a video generation prompt for an AI video model (Kling, Luma, etc.).
+Given scene context, write a single concise cinematic video prompt.
+Rules:
+- Plain text, no markdown, no explanation
+- Describe motion: what moves, how, at what pace
+- Include: character description, action, setting, camera movement, mood
+- End with cinematic quality terms (smooth motion, cinematic lighting, 4K, etc.)
+- Max 120 words`;
+
+    const LLM_API = 'https://nano-gpt.com/api/v1/chat/completions';
+    const res = await fetch(LLM_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+        body: JSON.stringify({
+            model: llmModel,
+            messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user',   content: parts.join('\n\n') + '\n\nWrite the video prompt now.' }
+            ],
+            max_tokens: 200,
+            temperature: 0.7,
+            stream: false,
+        }),
+    });
+
+    if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        try { const j = await res.json(); msg = j.error?.message || msg; } catch (_) {}
+        throw new Error(msg);
+    }
+
+    const json = await res.json();
+    const content = json.choices?.[0]?.message?.content?.trim();
+    if (!content) throw new Error('LLM returned empty video prompt.');
+    return content;
+}

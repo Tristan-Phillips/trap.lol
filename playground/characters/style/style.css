@@ -36,5 +36,8 @@
 /* ── Wallhaven Arena ── */
 @import './wallhaven.css';
 
+/* ── Scene Codex (god view) + Video Gen ── */
+@import './scene-codex.css';
+
 /* ── Responsive (must be last) ── */
 @import './responsive.css';

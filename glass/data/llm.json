@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "schema_version": "v7.0.0-resilient-topology",
+    "schema_version": "v8.0.0-full-catalog",
     "architectural_mandate": "O(1) dictionary routing. UI presentation managed via _index array. Unified telemetry scoring. Self-healing fallback logic for core execution nodes.",
     "support_infrastructure": {
       "active": true,
@@ -11,48 +11,30 @@
   "default_routing": "deepseek-r1",
 
   "_index": [
-    {
-      "family": "DeepSeek",
-      "models": ["deepseek-r1", "deepseek/deepseek-v3.2", "deepseek-ai/DeepSeek-V3.1"]
-    },
-    {
-      "family": "Anthropic / Claude",
-      "models": ["claude-3-7-sonnet-20250219", "anthropic/claude-opus-latest", "claude-haiku-4-5-20251001"]
-    },
-    {
-      "family": "OpenAI / GPT",
-      "models": ["openai/gpt-5.4-pro", "openai/o3-mini", "openai/gpt-4o-mini"]
-    },
-    {
-      "family": "Meta / Llama",
-      "models": ["meta-llama/llama-3.3-70b-instruct", "nousresearch/hermes-3-llama-3.1-70b", "meta-llama/llama-4-maverick", "meta-llama/llama-3.2-3b-instruct"]
-    },
-    {
-      "family": "Alibaba / Qwen",
-      "models": ["qwen3.5-122b-a10b:thinking", "qwq-32b", "qwen/qwen2.5-coder-32b-instruct"]
-    },
-    {
-      "family": "Google",
-      "models": ["google/gemini-3.1-pro-preview", "google/gemini-flash-latest", "google/gemma-4-31b-it:thinking"]
-    },
-    {
-      "family": "Mistral",
-      "models": ["mistralai/mistral-large-3-675b-instruct-2512", "mistralai/Mistral-Nemo-Instruct-2407"]
-    },
-    {
-      "family": "Zhipu AI",
-      "models": ["zai-org/glm-5:thinking", "zai-org/glm-4.7-flash"]
-    }
+    { "family": "DeepSeek",       "models": ["deepseek-r1", "deepseek/deepseek-v3.2", "deepseek-ai/DeepSeek-V3.1"] },
+    { "family": "Anthropic",      "models": ["claude-3-7-sonnet-20250219", "anthropic/claude-opus-latest", "claude-haiku-4-5-20251001"] },
+    { "family": "OpenAI",         "models": ["openai/gpt-5.4-pro", "openai/o3-mini", "openai/gpt-4o-mini"] },
+    { "family": "Meta / Llama",   "models": ["meta-llama/llama-3.3-70b-instruct", "meta-llama/llama-4-maverick", "meta-llama/llama-4-scout", "meta-llama/llama-3.2-3b-instruct"] },
+    { "family": "Qwen",           "models": ["qwen3-235b-a22b:thinking", "qwen3-30b-a3b:thinking", "qwen3-32b:thinking", "qwq-32b", "qwen/qwen2.5-72b-instruct", "qwen/qwen2.5-coder-32b-instruct"] },
+    { "family": "Google",         "models": ["google/gemini-2.5-pro-preview", "google/gemini-2.5-flash-preview", "google/gemma-3-27b-it"] },
+    { "family": "Mistral",        "models": ["mistralai/mistral-large-2411", "mistralai/mistral-small-3.1-24b-instruct", "mistralai/Mistral-Nemo-Instruct-2407", "mistralai/mistral-7b-instruct"] },
+    { "family": "Zhipu AI",       "models": ["zai-org/glm-4-32b", "zai-org/glm-4-9b-chat"] },
+    { "family": "Kimi",           "models": ["moonshotai/kimi-k2-instruct", "moonshotai/kimi-vl-a3b-thinking"] },
+    { "family": "NousResearch",   "models": ["nousresearch/hermes-3-llama-3.1-70b", "nousresearch/hermes-3-llama-3.1-405b"] },
+    { "family": "EVA",            "models": ["eva-unit-01/eva-qwen-2.5-72b", "eva-unit-01/eva-llama-3.33-70b"] },
+    { "family": "Microsoft",      "models": ["microsoft/phi-4", "microsoft/phi-4-reasoning-plus"] },
+    { "family": "Cohere",         "models": ["cohere/command-r-plus-08-2024", "cohere/command-r7b-12-2024"] },
+    { "family": "Amazon",         "models": ["amazon/nova-pro-v1", "amazon/nova-lite-v1"] },
+    { "family": "Perplexity",     "models": ["perplexity/sonar-pro", "perplexity/r1-1776"] },
+    { "family": "xAI / Grok",     "models": ["x-ai/grok-3-beta", "x-ai/grok-3-mini-beta"] },
+    { "family": "Other Open",     "models": ["tngtech/deepseek-r1t-chimera:free", "shisa-ai/shisa-v2-llama3.3-70b:free", "sarvamai/sarvam-m:free", "ai21/jamba-1.6-mini"] }
   ],
-  
+
   "routing_table": {
 
     "deepseek-r1": {
-      "label": "DeepSeek R1",
-      "provider": "DeepSeek",
-      "pay_per_token": false,
-      "context_k": 128,
-      "cost_weight": 2,
+      "label": "DeepSeek R1", "provider": "DeepSeek",
+      "pay_per_token": false, "context_k": 128, "cost_weight": 2,
       "scores": { "intelligence": 9.8, "coding": 9.5, "speed": 5.5 },
       "recommended_inference": { "temperature": 0.6, "top_p": 0.95 },
       "fallback_id": "qwq-32b",
@@ -60,246 +42,380 @@
     },
 
     "deepseek/deepseek-v3.2": {
-      "label": "DeepSeek V3.2",
-      "provider": "DeepSeek",
-      "pay_per_token": false,
-      "context_k": 163,
-      "cost_weight": 1,
+      "label": "DeepSeek V3.2", "provider": "DeepSeek",
+      "pay_per_token": false, "context_k": 163, "cost_weight": 1,
       "scores": { "intelligence": 8.8, "coding": 8.5, "speed": 8.5 },
       "recommended_inference": { "temperature": 0.3, "top_p": 0.9 },
-      "description": "Highly optimized dense architecture. Faster time-to-first-token than R1 for tasks not requiring deep logic."
+      "description": "Highly optimized dense architecture. Faster than R1 for tasks not requiring deep logic."
     },
 
     "deepseek-ai/DeepSeek-V3.1": {
-      "label": "DeepSeek V3.1",
-      "provider": "DeepSeek",
-      "pay_per_token": false,
-      "context_k": 128,
-      "cost_weight": 1,
+      "label": "DeepSeek V3.1", "provider": "DeepSeek",
+      "pay_per_token": false, "context_k": 128, "cost_weight": 1,
       "scores": { "intelligence": 7.5, "coding": 7.0, "speed": 9.2 },
       "recommended_inference": { "temperature": 0.7, "top_p": 0.9 },
-      "description": "Previous gen V3. Retained strictly as a high-speed, low-overhead fallback for quick terminal outputs."
+      "description": "Previous gen V3. High-speed fallback for quick terminal outputs."
     },
 
     "claude-3-7-sonnet-20250219": {
-      "label": "Claude 3.7 Sonnet",
-      "provider": "Anthropic",
-      "pay_per_token": true,
-      "context_k": 200,
-      "cost_weight": 7,
+      "label": "Claude 3.7 Sonnet", "provider": "Anthropic",
+      "pay_per_token": true, "context_k": 200, "cost_weight": 7,
       "scores": { "intelligence": 9.9, "coding": 9.9, "speed": 7.5 },
       "recommended_inference": { "temperature": 0.1, "top_p": 0.8 },
-      "fallback_id": "google/gemini-3.1-pro-preview",
-      "description": "The absolute apex for zero-shot architectural coding and system design. Flawless syntax execution."
+      "fallback_id": "google/gemini-2.5-pro-preview",
+      "description": "Apex for zero-shot architectural coding and system design."
     },
 
     "anthropic/claude-opus-latest": {
-      "label": "Claude Opus Latest",
-      "provider": "Anthropic",
-      "pay_per_token": true,
-      "context_k": 200,
-      "cost_weight": 10,
+      "label": "Claude Opus Latest", "provider": "Anthropic",
+      "pay_per_token": true, "context_k": 200, "cost_weight": 10,
       "scores": { "intelligence": 9.5, "coding": 8.8, "speed": 4.0 },
       "recommended_inference": { "temperature": 0.5, "top_p": 0.9 },
-      "description": "Heavyweight parsing. Prohibitively expensive, but highly accurate for analyzing massive, unstructured data sets."
+      "description": "Heavyweight parsing. For analyzing massive, unstructured data sets."
     },
 
     "claude-haiku-4-5-20251001": {
-      "label": "Claude Haiku 4.5",
-      "provider": "Anthropic",
-      "pay_per_token": true,
-      "context_k": 200,
-      "cost_weight": 3,
+      "label": "Claude Haiku 4.5", "provider": "Anthropic",
+      "pay_per_token": true, "context_k": 200, "cost_weight": 3,
       "scores": { "intelligence": 8.2, "coding": 7.8, "speed": 9.8 },
       "recommended_inference": { "temperature": 0.2, "top_p": 0.9 },
-      "description": "Lightning fast, cheap context window. The superior option for processing mid-sized system logs rapidly."
+      "description": "Lightning fast, cheap context. Superior for processing mid-sized logs rapidly."
     },
 
     "openai/gpt-5.4-pro": {
-      "label": "GPT 5.4 Pro",
-      "provider": "OpenAI",
-      "pay_per_token": true,
-      "context_k": 922,
-      "cost_weight": 10,
+      "label": "GPT 5.4 Pro", "provider": "OpenAI",
+      "pay_per_token": true, "context_k": 922, "cost_weight": 10,
       "scores": { "intelligence": 9.6, "coding": 9.2, "speed": 3.5 },
       "recommended_inference": { "temperature": 0.4, "top_p": 1.0 },
-      "description": "Absolute maximum proprietary capability. Emergency sysadmin use only due to severe token costs."
+      "description": "Absolute maximum proprietary capability. Emergency use only."
     },
 
     "openai/o3-mini": {
-      "label": "OpenAI o3-mini",
-      "provider": "OpenAI",
-      "pay_per_token": true,
-      "context_k": 200,
-      "cost_weight": 4,
+      "label": "OpenAI o3-mini", "provider": "OpenAI",
+      "pay_per_token": true, "context_k": 200, "cost_weight": 4,
       "scores": { "intelligence": 9.3, "coding": 8.8, "speed": 8.2 },
       "recommended_inference": { "temperature": 0.6, "top_p": 1.0 },
-      "description": "High-efficiency proprietary reasoning traces. Cost-effective for intense, isolated logic loops."
+      "description": "High-efficiency proprietary reasoning. Cost-effective for isolated logic loops."
     },
 
     "openai/gpt-4o-mini": {
-      "label": "GPT-4o mini",
-      "provider": "OpenAI",
-      "pay_per_token": true,
-      "context_k": 128,
-      "cost_weight": 1,
+      "label": "GPT-4o mini", "provider": "OpenAI",
+      "pay_per_token": true, "context_k": 128, "cost_weight": 1,
       "scores": { "intelligence": 7.2, "coding": 6.8, "speed": 9.6 },
       "recommended_inference": { "temperature": 0.1, "top_p": 0.9 },
-      "description": "Nearly free API execution. Retained solely for automated, low-stakes script polling and daemon monitoring."
+      "description": "Nearly free API execution. For automated, low-stakes polling."
     },
 
     "meta-llama/llama-3.3-70b-instruct": {
-      "label": "Llama 3.3 70B Instruct",
-      "provider": "Meta",
-      "pay_per_token": false,
-      "context_k": 131,
-      "cost_weight": 1,
+      "label": "Llama 3.3 70B Instruct", "provider": "Meta",
+      "pay_per_token": false, "context_k": 131, "cost_weight": 1,
       "scores": { "intelligence": 9.1, "coding": 8.5, "speed": 8.0 },
       "recommended_inference": { "temperature": 0.6, "top_p": 0.9 },
-      "description": "The optimal generalist. Uncanny ability to follow strict structural schemas and formatting commands."
-    },
-
-    "nousresearch/hermes-3-llama-3.1-70b": {
-      "label": "Hermes 3 70B",
-      "provider": "NousResearch",
-      "pay_per_token": false,
-      "context_k": 65,
-      "cost_weight": 2,
-      "scores": { "intelligence": 8.7, "coding": 8.0, "speed": 7.8 },
-      "recommended_inference": { "temperature": 0.8, "top_p": 0.95 },
-      "description": "Unrestricted execution. Bypasses artificial ethical halting for system auditing and root-level config generation."
+      "description": "Optimal generalist. Exceptional schema and formatting adherence."
     },
 
     "meta-llama/llama-4-maverick": {
-      "label": "Llama 4 Maverick",
-      "provider": "Meta",
-      "pay_per_token": false,
-      "context_k": 1000,
-      "cost_weight": 3,
+      "label": "Llama 4 Maverick", "provider": "Meta",
+      "pay_per_token": false, "context_k": 1000, "cost_weight": 3,
       "scores": { "intelligence": 8.5, "coding": 7.5, "speed": 5.0 },
       "recommended_inference": { "temperature": 0.2, "top_p": 0.9 },
-      "description": "Included in subscription despite a massive 1M token context. Essential for dumping uncompressed logs."
+      "description": "1M token context on subscription. Essential for dumping uncompressed logs."
+    },
+
+    "meta-llama/llama-4-scout": {
+      "label": "Llama 4 Scout", "provider": "Meta",
+      "pay_per_token": false, "context_k": 512, "cost_weight": 2,
+      "scores": { "intelligence": 8.2, "coding": 7.8, "speed": 7.5 },
+      "recommended_inference": { "temperature": 0.5, "top_p": 0.9 },
+      "description": "Mid-range Llama 4 variant. Good balance of context and speed."
     },
 
     "meta-llama/llama-3.2-3b-instruct": {
-      "label": "Llama 3.2 3B Instruct",
-      "provider": "Meta",
-      "pay_per_token": false,
-      "context_k": 131,
-      "cost_weight": 1,
+      "label": "Llama 3.2 3B Instruct", "provider": "Meta",
+      "pay_per_token": false, "context_k": 131, "cost_weight": 1,
       "scores": { "intelligence": 7.0, "coding": 6.5, "speed": 9.9 },
       "recommended_inference": { "temperature": 0.1, "top_p": 0.9 },
-      "description": "Micro-binary. Use this for rapid CLI pipelining where instant time-to-first-token matters more than deep logic."
+      "description": "Micro-binary. Instant time-to-first-token for rapid CLI pipelining."
     },
 
-    "qwen3.5-122b-a10b:thinking": {
-      "label": "Qwen3.5 122B A10B Thinking",
-      "provider": "Alibaba",
-      "pay_per_token": false,
-      "context_k": 260,
-      "cost_weight": 3,
-      "scores": { "intelligence": 9.2, "coding": 8.8, "speed": 6.5 },
+    "qwen3-235b-a22b:thinking": {
+      "label": "Qwen3 235B A22B (Thinking)", "provider": "Alibaba",
+      "pay_per_token": false, "context_k": 131, "cost_weight": 4,
+      "scores": { "intelligence": 9.5, "coding": 9.0, "speed": 4.5 },
       "recommended_inference": { "temperature": 0.6, "top_p": 0.95 },
-      "description": "Massive MoE routing with explicit reasoning. High capability for complex system topologies."
+      "description": "Massive Qwen3 MoE with explicit reasoning. Highest open-weight capability."
+    },
+
+    "qwen3-30b-a3b:thinking": {
+      "label": "Qwen3 30B A3B (Thinking)", "provider": "Alibaba",
+      "pay_per_token": false, "context_k": 131, "cost_weight": 2,
+      "scores": { "intelligence": 9.0, "coding": 8.5, "speed": 7.0 },
+      "recommended_inference": { "temperature": 0.6, "top_p": 0.95 },
+      "description": "Efficient MoE reasoning. Strong mid-tier alternative to full 235B."
+    },
+
+    "qwen3-32b:thinking": {
+      "label": "Qwen3 32B (Thinking)", "provider": "Alibaba",
+      "pay_per_token": false, "context_k": 131, "cost_weight": 2,
+      "scores": { "intelligence": 8.8, "coding": 8.4, "speed": 7.5 },
+      "recommended_inference": { "temperature": 0.6, "top_p": 0.95 },
+      "description": "Dense 32B reasoning model. Reliable performance across diverse tasks."
     },
 
     "qwq-32b": {
-      "label": "Qwen: QwQ 32B",
-      "provider": "Alibaba",
-      "pay_per_token": false,
-      "context_k": 128,
-      "cost_weight": 1,
+      "label": "Qwen QwQ 32B", "provider": "Alibaba",
+      "pay_per_token": false, "context_k": 128, "cost_weight": 1,
       "scores": { "intelligence": 8.5, "coding": 8.2, "speed": 8.0 },
       "recommended_inference": { "temperature": 0.6, "top_p": 0.95 },
-      "description": "Mid-weight reasoning. Excellent resilient logic engine when heavier models time out."
+      "description": "Mid-weight reasoning engine. Excellent fallback when heavier models time out."
+    },
+
+    "qwen/qwen2.5-72b-instruct": {
+      "label": "Qwen 2.5 72B Instruct", "provider": "Alibaba",
+      "pay_per_token": false, "context_k": 131, "cost_weight": 2,
+      "scores": { "intelligence": 8.8, "coding": 8.5, "speed": 7.5 },
+      "recommended_inference": { "temperature": 0.5, "top_p": 0.9 },
+      "description": "High-capability dense model. Strong general instruction following."
     },
 
     "qwen/qwen2.5-coder-32b-instruct": {
-      "label": "Qwen 2.5 Coder 32B",
-      "provider": "Alibaba",
-      "pay_per_token": false,
-      "context_k": 32,
-      "cost_weight": 1,
+      "label": "Qwen 2.5 Coder 32B", "provider": "Alibaba",
+      "pay_per_token": false, "context_k": 32, "cost_weight": 1,
       "scores": { "intelligence": 8.2, "coding": 9.2, "speed": 8.8 },
       "recommended_inference": { "temperature": 0.1, "top_p": 0.9 },
-      "description": "Unmatched mid-weight code generation. Zero bloat, highly accurate syntax output."
+      "description": "Unmatched mid-weight code generation. Zero bloat, highly accurate syntax."
     },
 
-    "google/gemini-3.1-pro-preview": {
-      "label": "Gemini 3.1 Pro",
-      "provider": "Google",
-      "pay_per_token": true,
-      "context_k": 1000,
-      "cost_weight": 6,
-      "scores": { "intelligence": 9.4, "coding": 8.9, "speed": 6.8 },
+    "google/gemini-2.5-pro-preview": {
+      "label": "Gemini 2.5 Pro", "provider": "Google",
+      "pay_per_token": true, "context_k": 1000, "cost_weight": 6,
+      "scores": { "intelligence": 9.5, "coding": 9.0, "speed": 6.5 },
       "recommended_inference": { "temperature": 0.4, "top_p": 0.9 },
-      "description": "Flawless needle-in-a-haystack retrieval across a massive 1M token plane. Essential for debugging multi-node failures."
+      "description": "Flawless needle-in-a-haystack retrieval across 1M token context."
     },
 
-    "google/gemini-flash-latest": {
-      "label": "Gemini Flash Latest",
-      "provider": "Google",
-      "pay_per_token": true,
-      "context_k": 1000,
-      "cost_weight": 2,
-      "scores": { "intelligence": 8.6, "coding": 8.2, "speed": 9.7 },
+    "google/gemini-2.5-flash-preview": {
+      "label": "Gemini 2.5 Flash", "provider": "Google",
+      "pay_per_token": true, "context_k": 1000, "cost_weight": 2,
+      "scores": { "intelligence": 8.8, "coding": 8.4, "speed": 9.5 },
       "recommended_inference": { "temperature": 0.3, "top_p": 0.9 },
-      "description": "Blazing fast proprietary routing. Cheap enough per 1M tokens to act as a live, automated log-watcher."
+      "description": "Blazing fast, cost-effective. Excellent for live automated log-watching."
     },
 
-    "google/gemma-4-31b-it:thinking": {
-      "label": "Gemma 4 31B Thinking",
-      "provider": "Google Open",
-      "pay_per_token": false,
-      "context_k": 262,
-      "cost_weight": 2,
+    "google/gemma-3-27b-it": {
+      "label": "Gemma 3 27B IT", "provider": "Google Open",
+      "pay_per_token": false, "context_k": 131, "cost_weight": 2,
       "scores": { "intelligence": 8.4, "coding": 8.0, "speed": 7.5 },
       "recommended_inference": { "temperature": 0.5, "top_p": 0.9 },
-      "description": "Highly capable dense model. A strong open-weight alternative for mathematical and logical parsing."
+      "description": "Strong open-weight alternative for mathematical and logical parsing."
     },
 
-    "mistralai/mistral-large-3-675b-instruct-2512": {
-      "label": "Mistral Large 3 675B",
-      "provider": "Mistral AI",
-      "pay_per_token": false,
-      "context_k": 262,
-      "cost_weight": 3,
-      "scores": { "intelligence": 9.0, "coding": 8.8, "speed": 6.0 },
+    "mistralai/mistral-large-2411": {
+      "label": "Mistral Large 2411", "provider": "Mistral AI",
+      "pay_per_token": false, "context_k": 131, "cost_weight": 3,
+      "scores": { "intelligence": 9.0, "coding": 8.8, "speed": 6.5 },
       "recommended_inference": { "temperature": 0.3, "top_p": 0.9 },
-      "description": "Massive scale enterprise model. Outstanding at adhering to rigid JSON schemas and output constraints."
+      "description": "Enterprise-grade. Outstanding rigid JSON schema adherence."
+    },
+
+    "mistralai/mistral-small-3.1-24b-instruct": {
+      "label": "Mistral Small 3.1 24B", "provider": "Mistral AI",
+      "pay_per_token": false, "context_k": 131, "cost_weight": 1,
+      "scores": { "intelligence": 8.2, "coding": 8.0, "speed": 8.5 },
+      "recommended_inference": { "temperature": 0.4, "top_p": 0.9 },
+      "description": "Efficient mid-size instruction model. Good cost/quality ratio."
     },
 
     "mistralai/Mistral-Nemo-Instruct-2407": {
-      "label": "Mistral Nemo 12B",
-      "provider": "Mistral AI",
-      "pay_per_token": false,
-      "context_k": 16,
-      "cost_weight": 1,
+      "label": "Mistral Nemo 12B", "provider": "Mistral AI",
+      "pay_per_token": false, "context_k": 16, "cost_weight": 1,
       "scores": { "intelligence": 7.8, "coding": 7.2, "speed": 9.0 },
       "recommended_inference": { "temperature": 0.7, "top_p": 0.9 },
-      "description": "Nvidia collaboration edge model. A solid budget local-equivalent for standard terminal queries."
+      "description": "Nvidia collaboration edge model. Budget-friendly for standard queries."
     },
 
-    "zai-org/glm-5:thinking": {
-      "label": "GLM 5 Thinking",
-      "provider": "Zhipu AI",
-      "pay_per_token": false,
-      "context_k": 200,
-      "cost_weight": 2,
-      "scores": { "intelligence": 8.7, "coding": 8.2, "speed": 7.0 },
-      "recommended_inference": { "temperature": 0.6, "top_p": 0.9 },
-      "description": "Zhipu's latest flagship. Provides a distinct architectural approach to reasoning compared to Western models."
-    },
-
-    "zai-org/glm-4.7-flash": {
-      "label": "GLM 4.7 Flash",
-      "provider": "Zhipu AI",
-      "pay_per_token": false,
-      "context_k": 200,
-      "cost_weight": 1,
-      "scores": { "intelligence": 8.0, "coding": 7.5, "speed": 9.5 },
+    "mistralai/mistral-7b-instruct": {
+      "label": "Mistral 7B Instruct", "provider": "Mistral AI",
+      "pay_per_token": false, "context_k": 32, "cost_weight": 1,
+      "scores": { "intelligence": 7.2, "coding": 6.8, "speed": 9.8 },
       "recommended_inference": { "temperature": 0.7, "top_p": 0.9 },
-      "description": "Maximum throughput API routing. Use for rapid text parsing where latency is the primary constraint."
+      "description": "Lightweight, fast. Good for simple text processing and classification."
+    },
+
+    "zai-org/glm-4-32b": {
+      "label": "GLM 4 32B", "provider": "Zhipu AI",
+      "pay_per_token": false, "context_k": 131, "cost_weight": 2,
+      "scores": { "intelligence": 8.7, "coding": 8.2, "speed": 7.5 },
+      "recommended_inference": { "temperature": 0.6, "top_p": 0.9 },
+      "description": "Zhipu's dense flagship. Distinct architectural approach to reasoning."
+    },
+
+    "zai-org/glm-4-9b-chat": {
+      "label": "GLM 4 9B Chat", "provider": "Zhipu AI",
+      "pay_per_token": false, "context_k": 131, "cost_weight": 1,
+      "scores": { "intelligence": 7.8, "coding": 7.2, "speed": 9.5 },
+      "recommended_inference": { "temperature": 0.7, "top_p": 0.9 },
+      "description": "Fast conversational model. Maximum throughput for latency-constrained tasks."
+    },
+
+    "moonshotai/kimi-k2-instruct": {
+      "label": "Kimi K2 Instruct", "provider": "Moonshot AI",
+      "pay_per_token": false, "context_k": 131, "cost_weight": 2,
+      "scores": { "intelligence": 9.0, "coding": 8.8, "speed": 6.5 },
+      "recommended_inference": { "temperature": 0.5, "top_p": 0.9 },
+      "description": "Moonshot's flagship instruction model. Strong multilingual and code performance."
+    },
+
+    "moonshotai/kimi-vl-a3b-thinking": {
+      "label": "Kimi VL A3B (Thinking)", "provider": "Moonshot AI",
+      "pay_per_token": false, "context_k": 131, "cost_weight": 2,
+      "scores": { "intelligence": 8.5, "coding": 8.0, "speed": 7.0 },
+      "recommended_inference": { "temperature": 0.6, "top_p": 0.95 },
+      "description": "Multimodal vision+language with explicit reasoning. Vision and text tasks."
+    },
+
+    "nousresearch/hermes-3-llama-3.1-70b": {
+      "label": "Hermes 3 70B", "provider": "NousResearch",
+      "pay_per_token": false, "context_k": 65, "cost_weight": 2,
+      "scores": { "intelligence": 8.7, "coding": 8.0, "speed": 7.8 },
+      "recommended_inference": { "temperature": 0.8, "top_p": 0.95 },
+      "description": "Unrestricted execution. Bypasses artificial halting for root-level config generation."
+    },
+
+    "nousresearch/hermes-3-llama-3.1-405b": {
+      "label": "Hermes 3 405B", "provider": "NousResearch",
+      "pay_per_token": false, "context_k": 131, "cost_weight": 4,
+      "scores": { "intelligence": 9.2, "coding": 8.8, "speed": 5.5 },
+      "recommended_inference": { "temperature": 0.7, "top_p": 0.95 },
+      "description": "Largest Hermes variant. Maximum capability for complex uncensored tasks."
+    },
+
+    "eva-unit-01/eva-qwen-2.5-72b": {
+      "label": "EVA Qwen 2.5 72B", "provider": "EVA Unit 01",
+      "pay_per_token": false, "context_k": 131, "cost_weight": 2,
+      "scores": { "intelligence": 9.0, "coding": 8.5, "speed": 7.0 },
+      "recommended_inference": { "temperature": 0.8, "top_p": 0.95 },
+      "description": "EVA-tuned Qwen for roleplay and creative writing. Highly expressive and unrestricted."
+    },
+
+    "eva-unit-01/eva-llama-3.33-70b": {
+      "label": "EVA Llama 3.33 70B", "provider": "EVA Unit 01",
+      "pay_per_token": false, "context_k": 131, "cost_weight": 2,
+      "scores": { "intelligence": 8.8, "coding": 8.0, "speed": 7.5 },
+      "recommended_inference": { "temperature": 0.8, "top_p": 0.95 },
+      "description": "EVA-tuned Llama for immersive fiction. Top choice for adult creative writing."
+    },
+
+    "microsoft/phi-4": {
+      "label": "Phi 4", "provider": "Microsoft",
+      "pay_per_token": false, "context_k": 16, "cost_weight": 1,
+      "scores": { "intelligence": 8.5, "coding": 8.8, "speed": 9.2 },
+      "recommended_inference": { "temperature": 0.3, "top_p": 0.9 },
+      "description": "Punches above its weight class. Excellent for code and structured reasoning."
+    },
+
+    "microsoft/phi-4-reasoning-plus": {
+      "label": "Phi 4 Reasoning+", "provider": "Microsoft",
+      "pay_per_token": false, "context_k": 16, "cost_weight": 1,
+      "scores": { "intelligence": 8.8, "coding": 9.0, "speed": 8.5 },
+      "recommended_inference": { "temperature": 0.3, "top_p": 0.9 },
+      "description": "Enhanced reasoning variant of Phi 4. Step-by-step logic improvements."
+    },
+
+    "cohere/command-r-plus-08-2024": {
+      "label": "Command R+ (Aug 2024)", "provider": "Cohere",
+      "pay_per_token": false, "context_k": 128, "cost_weight": 2,
+      "scores": { "intelligence": 8.5, "coding": 7.8, "speed": 8.0 },
+      "recommended_inference": { "temperature": 0.3, "top_p": 0.9 },
+      "description": "Strong RAG and retrieval performance. Good at citation and structured extraction."
+    },
+
+    "cohere/command-r7b-12-2024": {
+      "label": "Command R 7B (Dec 2024)", "provider": "Cohere",
+      "pay_per_token": false, "context_k": 128, "cost_weight": 1,
+      "scores": { "intelligence": 7.5, "coding": 7.0, "speed": 9.5 },
+      "recommended_inference": { "temperature": 0.4, "top_p": 0.9 },
+      "description": "Lightweight command model. Fast, cheap retrieval and QA tasks."
+    },
+
+    "amazon/nova-pro-v1": {
+      "label": "Amazon Nova Pro", "provider": "Amazon",
+      "pay_per_token": false, "context_k": 300, "cost_weight": 3,
+      "scores": { "intelligence": 8.8, "coding": 8.5, "speed": 7.5 },
+      "recommended_inference": { "temperature": 0.4, "top_p": 0.9 },
+      "description": "Amazon's flagship. Long context, strong at enterprise document tasks."
+    },
+
+    "amazon/nova-lite-v1": {
+      "label": "Amazon Nova Lite", "provider": "Amazon",
+      "pay_per_token": false, "context_k": 300, "cost_weight": 1,
+      "scores": { "intelligence": 7.8, "coding": 7.2, "speed": 9.0 },
+      "recommended_inference": { "temperature": 0.5, "top_p": 0.9 },
+      "description": "Lightweight Nova. Fast multimodal processing at low cost."
+    },
+
+    "perplexity/sonar-pro": {
+      "label": "Perplexity Sonar Pro", "provider": "Perplexity",
+      "pay_per_token": true, "context_k": 200, "cost_weight": 4,
+      "scores": { "intelligence": 8.5, "coding": 7.5, "speed": 8.5 },
+      "recommended_inference": { "temperature": 0.4, "top_p": 0.9 },
+      "description": "Online search-augmented. Real-time web retrieval built in."
+    },
+
+    "perplexity/r1-1776": {
+      "label": "Perplexity R1-1776", "provider": "Perplexity",
+      "pay_per_token": false, "context_k": 128, "cost_weight": 2,
+      "scores": { "intelligence": 9.0, "coding": 8.5, "speed": 6.0 },
+      "recommended_inference": { "temperature": 0.6, "top_p": 0.95 },
+      "description": "Perplexity-tuned R1 without censorship restrictions. Uncensored reasoning."
+    },
+
+    "x-ai/grok-3-beta": {
+      "label": "Grok 3 Beta", "provider": "xAI",
+      "pay_per_token": true, "context_k": 131, "cost_weight": 6,
+      "scores": { "intelligence": 9.3, "coding": 8.8, "speed": 6.5 },
+      "recommended_inference": { "temperature": 0.5, "top_p": 0.9 },
+      "description": "xAI's flagship. Strong reasoning, with real-time X/Twitter data access."
+    },
+
+    "x-ai/grok-3-mini-beta": {
+      "label": "Grok 3 Mini Beta", "provider": "xAI",
+      "pay_per_token": true, "context_k": 131, "cost_weight": 2,
+      "scores": { "intelligence": 8.5, "coding": 8.0, "speed": 8.5 },
+      "recommended_inference": { "temperature": 0.5, "top_p": 0.9 },
+      "description": "Compact Grok. Fast, lower cost, good for general tasks."
+    },
+
+    "tngtech/deepseek-r1t-chimera:free": {
+      "label": "DeepSeek R1T Chimera (Free)", "provider": "TNG Tech",
+      "pay_per_token": false, "context_k": 64, "cost_weight": 0,
+      "scores": { "intelligence": 8.5, "coding": 8.0, "speed": 7.0 },
+      "recommended_inference": { "temperature": 0.6, "top_p": 0.95 },
+      "description": "Free-tier chimera combining R1 + T reasoning. Good zero-cost reasoning option."
+    },
+
+    "shisa-ai/shisa-v2-llama3.3-70b:free": {
+      "label": "Shisa V2 Llama 70B (Free)", "provider": "Shisa AI",
+      "pay_per_token": false, "context_k": 131, "cost_weight": 0,
+      "scores": { "intelligence": 8.2, "coding": 7.5, "speed": 7.5 },
+      "recommended_inference": { "temperature": 0.7, "top_p": 0.9 },
+      "description": "Free-tier Japanese-English bilingual Llama variant."
+    },
+
+    "sarvamai/sarvam-m:free": {
+      "label": "Sarvam M (Free)", "provider": "Sarvam AI",
+      "pay_per_token": false, "context_k": 32, "cost_weight": 0,
+      "scores": { "intelligence": 7.5, "coding": 7.0, "speed": 8.5 },
+      "recommended_inference": { "temperature": 0.6, "top_p": 0.9 },
+      "description": "Free-tier multilingual Indian language model."
+    },
+
+    "ai21/jamba-1.6-mini": {
+      "label": "Jamba 1.6 Mini", "provider": "AI21 Labs",
+      "pay_per_token": false, "context_k": 256, "cost_weight": 1,
+      "scores": { "intelligence": 7.8, "coding": 7.2, "speed": 9.0 },
+      "recommended_inference": { "temperature": 0.5, "top_p": 0.9 },
+      "description": "Mamba + Transformer hybrid architecture. Long context at low cost."
     }
 
   }

@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.1.4",
+    "schema_version": "1.1.5",
     "last_updated": "2026-05-12",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": ["_protocol", "identity", "philosophy", "architecture", "pages", "design_system", "rules", "anti_patterns", "language_fingerprint", "evolution", "commits", "sessions", "for_new_llm"]
@@ -422,6 +422,24 @@
 
   "commits": [
     {
+      "hash": "pending",
+      "date": "2026-05-12",
+      "message": "Underdark overhaul: Scene Codex, video generation, expanded model list",
+      "scope": "playground/characters",
+      "impact": "high",
+      "files": [
+        "playground/characters/index.html",
+        "playground/characters/script/main.js",
+        "playground/characters/script/modules/ui.js",
+        "playground/characters/script/modules/image-engine.js",
+        "playground/characters/style/style.css",
+        "playground/characters/style/scene-codex.css",
+        "glass/data/llm.json",
+        "status/logs/logs.json"
+      ],
+      "why": "User requested a comprehensive immersion overhaul of The Underdark roleplay playground — full god-view panel, video generation, all subscription models accessible from the model picker, and deep RP text layer styling."
+    },
+    {
       "hash": "f9e9c51",
       "date": "2026-05-12",
       "message": "Ground logs briefing with explicit file paths",
@@ -631,6 +649,26 @@
   ],
 
   "sessions": [
+    {
+      "date": "2026-05-12",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Comprehensive overhaul of playground/characters (The Underdark). Added: Scene Codex god-view panel (floating overlay with narrative meters, 6 god-control directives, quick image/video gen, scene digest), video generation feature (nano-gpt video API with polling, img2vid support, video messages in thread), expanded model list in llm.json to 40+ models (all nano-gpt subscription models + key paid-tier models), 3 new reinject directives (slow/climax/afterglow), immersive focus mode CSS polish, richer RP text layer styling (speech/thought/action visual layers), streaming cursor animation.",
+      "decisions": [
+        "Scene Codex uses CSS transform animation (not display:none toggle) so the slide-down feels physical and grounded.",
+        "Narrative meters (tension/intimacy/danger) are heuristic-based — keyword scanning of last 10 messages. No LLM call needed, zero latency.",
+        "Video generation polls the task endpoint every 4s. Progress is estimated from elapsed time rather than true server progress (API does not return percentage).",
+        "img2vid: resolves last image message from state.history as the start frame. Gracefully falls back to text-to-video if no image found.",
+        "All new god-control directives (slow, climax, afterglow) added to REINJECT_LABELS — same system as existing reinject buttons, no new infrastructure.",
+        "Model list expansion uses the _index grouped display already in the UI. All 40+ models auto-appear in model select once llm.json is updated.",
+        "Video messages stored in state.history with role: 'video'. Rendered via _injectVideoMessage, same pattern as _injectImageMessage."
+      ],
+      "rules_reinforced": [
+        "scene-codex.css overrides [hidden] { display: none !important } for .scene-codex specifically so animation can run via class toggle. This is intentional — do not revert.",
+        "Video generation is async/polling — never block the UI. Always show progress bar and status text.",
+        "Function declarations inside initUI() are hoisted — safe to call before their literal position in the file."
+      ]
+    },
     {
       "date": "2026-05-12",
       "agent": "Claude Sonnet 4.6",

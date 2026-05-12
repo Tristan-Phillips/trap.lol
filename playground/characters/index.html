@@ -6,7 +6,7 @@
     <title>The Underdark // Reality Matrix</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2306040A'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%23ef4444' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23ef4444'/%3E%3C/svg%3E" />
     <link rel="stylesheet" href="../../glass/style/style.css">
-    <link rel="stylesheet" href="./style/style.css?v=65">
+    <link rel="stylesheet" href="./style/style.css?v=66">
     <link rel="stylesheet" href="./style/char-editor.css?v=8">
 </head>
 <body class="underdark-page">
@@ -106,10 +106,12 @@
                 <div id="active-bots" class="arena__active-bots"></div>
                 <button id="add-char-btn" class="btn-icon" title="Add fragment"><i data-lucide="user-plus"></i></button>
                 <div class="arena__actions">
+                    <button id="scene-codex-btn" class="btn-icon arena-action--primary" title="Scene Codex — god view [C]"><i data-lucide="compass"></i></button>
                     <button id="chat-bg-btn" class="btn-icon arena-action--primary" title="Chat background"><i data-lucide="palette"></i></button>
                     <button id="wh-open-btn" class="btn-icon arena-action--primary" title="Wallhaven Gallery"><i data-lucide="image-plus"></i></button>
-                    <button id="focus-mode-btn" class="btn-icon arena-action--primary" title="Immersive Mode"><i data-lucide="book-open"></i></button>
-                    <button id="oracle-btn" class="btn-icon arena-action--primary" title="Oracle"><i data-lucide="eye"></i></button>
+                    <button id="focus-mode-btn" class="btn-icon arena-action--primary" title="Immersive Mode [F]"><i data-lucide="book-open"></i></button>
+                    <button id="oracle-btn" class="btn-icon arena-action--primary" title="Oracle [O]"><i data-lucide="eye"></i></button>
+                    <button id="btn-video-gen" class="btn-icon arena-action--primary" title="Generate video"><i data-lucide="film"></i></button>
                     <button id="search-toggle" class="btn-icon arena-action--secondary" title="Search history"><i data-lucide="search"></i></button>
                     <button id="export-chat" class="btn-icon arena-action--secondary" title="Export session"><i data-lucide="download"></i></button>
                     <button id="clear-thread" class="btn-icon arena-action--secondary" title="Clear thread"><i data-lucide="trash-2"></i></button>
@@ -117,6 +119,8 @@
                     <!-- Overflow menu (secondary actions on mobile) -->
                     <button id="header-overflow-btn" class="btn-icon arena-action--overflow" title="More actions" aria-haspopup="true" aria-expanded="false"><i data-lucide="more-vertical"></i></button>
                     <div id="header-overflow-menu" class="header-overflow-menu" hidden role="menu">
+                        <button class="header-overflow-item" data-overflow-for="scene-codex-btn"><i data-lucide="compass"></i> Scene Codex</button>
+                        <button class="header-overflow-item" data-overflow-for="btn-video-gen"><i data-lucide="film"></i> Generate Video</button>
                         <button class="header-overflow-item" data-overflow-for="search-toggle"><i data-lucide="search"></i> Search</button>
                         <button class="header-overflow-item" data-overflow-for="export-chat"><i data-lucide="download"></i> Export</button>
                         <button class="header-overflow-item header-overflow-item--danger" data-overflow-for="clear-thread"><i data-lucide="trash-2"></i> Clear Thread</button>
@@ -134,6 +138,83 @@
               <button id="thread-search-next" class="btn-icon btn-icon--small" title="Next"><i data-lucide="chevron-down"></i></button>
               <button id="thread-search-clear" class="thread-search-bar__clear btn-icon btn-icon--small" hidden><i data-lucide="x"></i></button>
               <button id="thread-search-close" class="btn-icon btn-icon--small"><i data-lucide="x"></i></button>
+            </div>
+
+            <!-- ── Scene Codex — God-view overlay ── -->
+            <div id="scene-codex" class="scene-codex" hidden>
+                <div class="scene-codex__inner">
+                    <div class="scene-codex__grip"></div>
+
+                    <!-- LEFT: Scene State -->
+                    <div class="scene-codex__col scene-codex__col--state">
+                        <div class="scene-codex__label"><i data-lucide="activity"></i> Scene State</div>
+                        <div class="scene-codex__meters">
+                            <div class="codex-meter" title="Emotional tension between characters">
+                                <span class="codex-meter__name">Tension</span>
+                                <div class="codex-meter__track">
+                                    <div id="codex-tension-bar" class="codex-meter__fill codex-meter__fill--tension" style="width:40%"></div>
+                                </div>
+                                <span id="codex-tension-val" class="codex-meter__val">40</span>
+                            </div>
+                            <div class="codex-meter" title="Intimacy level in current scene">
+                                <span class="codex-meter__name">Intimacy</span>
+                                <div class="codex-meter__track">
+                                    <div id="codex-intimacy-bar" class="codex-meter__fill codex-meter__fill--intimacy" style="width:25%"></div>
+                                </div>
+                                <span id="codex-intimacy-val" class="codex-meter__val">25</span>
+                            </div>
+                            <div class="codex-meter" title="Danger / stakes level">
+                                <span class="codex-meter__name">Danger</span>
+                                <div class="codex-meter__track">
+                                    <div id="codex-danger-bar" class="codex-meter__fill codex-meter__fill--danger" style="width:15%"></div>
+                                </div>
+                                <span id="codex-danger-val" class="codex-meter__val">15</span>
+                            </div>
+                        </div>
+                        <div class="scene-codex__arc">
+                            <div class="scene-codex__label scene-codex__label--inner"><i data-lucide="git-commit"></i> Arc</div>
+                            <input id="codex-arc-input" type="text" class="codex-input" placeholder="Narrative arc note…">
+                        </div>
+                    </div>
+
+                    <!-- CENTER: God Controls -->
+                    <div class="scene-codex__col scene-codex__col--controls">
+                        <div class="scene-codex__label"><i data-lucide="zap"></i> God Controls</div>
+                        <div class="codex-inject-grid">
+                            <button class="codex-inject-btn" data-ri="escalate" title="Escalate the scene's intensity"><i data-lucide="flame"></i> Escalate</button>
+                            <button class="codex-inject-btn" data-ri="uncensor" title="Override content restrictions"><i data-lucide="shield-off"></i> Uncensor</button>
+                            <button class="codex-inject-btn" data-ri="stay" title="Force character to stay in character"><i data-lucide="anchor"></i> Stay IC</button>
+                            <button class="codex-inject-btn" data-ri="slow" title="Slow the scene — more introspection"><i data-lucide="feather"></i> Slow Burn</button>
+                            <button class="codex-inject-btn" data-ri="climax" title="Push toward scene climax"><i data-lucide="zap"></i> Climax</button>
+                            <button class="codex-inject-btn" data-ri="afterglow" title="Aftercare / denouement beat"><i data-lucide="heart"></i> Afterglow</button>
+                        </div>
+                        <div class="scene-codex__custom-inject">
+                            <input id="codex-custom-inject" type="text" class="codex-input" placeholder="Custom directive — fires on next send…">
+                            <button id="codex-custom-inject-btn" class="codex-submit-btn" title="Queue directive"><i data-lucide="send"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT: Scene Info / Quick Media -->
+                    <div class="scene-codex__col scene-codex__col--media">
+                        <div class="scene-codex__label"><i data-lucide="image"></i> Quick Media</div>
+                        <div class="codex-media-btns">
+                            <button id="codex-quick-img" class="codex-media-btn" title="Generate scene image from current context">
+                                <i data-lucide="camera"></i>
+                                <span>Capture Scene</span>
+                            </button>
+                            <button id="codex-quick-vid" class="codex-media-btn codex-media-btn--video" title="Generate scene video">
+                                <i data-lucide="film"></i>
+                                <span>Animate Scene</span>
+                            </button>
+                        </div>
+                        <div class="scene-codex__label scene-codex__label--inner"><i data-lucide="info"></i> Scene Digest</div>
+                        <div id="codex-digest" class="codex-digest">
+                            <span class="codex-digest__empty">Start a conversation to see scene context.</span>
+                        </div>
+                    </div>
+
+                    <button id="scene-codex-close" class="scene-codex__close" title="Close Scene Codex"><i data-lucide="chevron-up"></i></button>
+                </div>
             </div>
 
             <div id="thread-container" class="arena__content">
@@ -512,6 +593,80 @@
         </div>
     </aside>
 
+</div>
+
+<!-- ── Video Generation Modal ── -->
+<div id="modal-video-gen" class="modal" hidden>
+  <div class="modal__backdrop" data-close></div>
+  <div class="modal__content modal__content--video-gen">
+    <header class="modal__header">
+      <h3><i data-lucide="film"></i> Generate Video</h3>
+      <button class="btn-icon" data-close id="video-gen-close"><i data-lucide="x"></i></button>
+    </header>
+    <div class="modal__body video-gen-body">
+      <!-- Model -->
+      <div class="config-group">
+        <label>Video Model</label>
+        <select id="vg-model" class="control-select control-select--sm">
+          <option value="kling-1.6-standard">Kling 1.6 Standard — best quality</option>
+          <option value="kling-1.6-pro">Kling 1.6 Pro — longer, smoother</option>
+          <option value="wan-t2v-14b">Wan T2V 14B — open source</option>
+          <option value="minimax-video-01">MiniMax Video — photorealistic</option>
+          <option value="luma-dream-machine">Luma Dream Machine — cinematic</option>
+        </select>
+      </div>
+
+      <!-- Source image toggle -->
+      <div class="config-group config-group--toggle">
+        <label>
+          <input type="checkbox" id="vg-use-img2vid">
+          Image-to-Video (use last generated image as start frame)
+        </label>
+      </div>
+
+      <!-- Prompt -->
+      <div class="config-group">
+        <label>Prompt <span class="config-hint">(auto-filled from scene context)</span></label>
+        <textarea id="vg-prompt" class="control-textarea" rows="5" placeholder="Describe the scene in motion…"></textarea>
+      </div>
+
+      <!-- Auto-generate from context -->
+      <div class="config-group">
+        <button id="vg-auto-prompt" class="btn btn--ghost btn--sm">
+          <i data-lucide="wand-2"></i> Generate from current scene context
+        </button>
+      </div>
+
+      <!-- Duration + seed -->
+      <div class="config-grid">
+        <div class="config-group">
+          <label>Duration <span id="vg-dur-val" class="config-badge">5s</span></label>
+          <input type="range" id="vg-duration" min="3" max="10" step="1" value="5" class="config-range">
+        </div>
+        <div class="config-group">
+          <label>Seed <span class="config-hint">(blank = random)</span></label>
+          <input type="number" id="vg-seed" class="control-input control-input--sm" placeholder="Random">
+        </div>
+      </div>
+
+      <!-- Progress / result -->
+      <div id="vg-status" class="vg-status" hidden>
+        <div class="vg-status__spinner"><i data-lucide="loader-2"></i></div>
+        <span id="vg-status-text">Generating…</span>
+      </div>
+      <div id="vg-result" class="vg-result" hidden>
+        <video id="vg-video-el" class="vg-video" controls loop></video>
+        <div class="vg-result__actions">
+          <button id="vg-download" class="btn btn--accent btn--sm"><i data-lucide="download"></i> Save</button>
+          <button id="vg-inject" class="btn btn--ghost btn--sm"><i data-lucide="message-square-plus"></i> Add to Chat</button>
+        </div>
+      </div>
+    </div>
+    <footer class="modal__footer">
+      <button class="btn btn--ghost" data-close>Cancel</button>
+      <button id="vg-generate-btn" class="btn btn--accent"><i data-lucide="play-circle"></i> Generate</button>
+    </footer>
+  </div>
 </div>
 
 <!-- ── MODALS ── -->
@@ -2506,7 +2661,7 @@
 
 <div id="toast-container" class="toast-container"></div>
 <script src="../../shards/lucide.min.js"></script><script src="../../shards/marked.min.js"></script><script src="../../shards/purify.min.js"></script>
-<script type="module" src="./script/main.js?v=53"></script>
+<script type="module" src="./script/main.js?v=54"></script>
 <!-- ── Wallhaven Arena ── -->
 <script src="./script/modules/wallhaven.js"></script>
 </body>
