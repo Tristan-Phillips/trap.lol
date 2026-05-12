@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.3.0",
+    "schema_version": "1.3.1",
     "last_updated": "2026-05-12",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -470,6 +470,19 @@
     ]
   },
   "commits": [
+    {
+      "hash": "99ab9ee",
+      "date": "2026-05-12",
+      "message": "refine: thread wizard UX — panel visibility fix, mode-reactive icon/label/button, radio card layout, rel avatar CSS, group section spacing",
+      "scope": "playground/characters",
+      "impact": "medium",
+      "files": [
+        "playground/characters/index.html",
+        "playground/characters/script/modules/ui.js",
+        "playground/characters/style/char-editor.css"
+      ],
+      "why": "Post-implementation audit found ts-panel[hidden] blocked opacity-based panel transitions; radio cards had height mismatch (label needed display:flex); ts-rel-avatar had object-fit on a div; header icon was bare <i> incompatible with Lucide SVG swap — moved to wrapper div; group section had double spacing; Begin Thread label and char desc were not mode-reactive."
+    },
     {
       "hash": "0c48689",
       "date": "2026-05-12",
