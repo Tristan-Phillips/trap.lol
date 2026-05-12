@@ -8,25 +8,88 @@
   "scenes": {
     "label": "Scene Presets",
     "note": "Apply a full multi-field scene state in one click",
-    "entries": [
-      { "id": "portrait",        "label": "Portrait",         "icon": "user",           "fields": { "cam": "close-up portrait, face", "expr": "seductive, lidded eyes, bedroom eyes", "mood": "soft diffused natural light", "style": "photorealistic photography, 8k", "vibe": "sensual, erotic atmosphere" } },
-      { "id": "boudoir",         "label": "Boudoir",          "icon": "bed",            "fields": { "clothingState": "partially undressed", "clothing": "sexy lingerie set", "pose": "lying on side, seductive", "env": "bedroom, intimate setting", "mood": "candlelight, warm flickering", "cam": "full body shot", "vibe": "sensual, erotic atmosphere" } },
-      { "id": "pinup",           "label": "Pin-Up",           "icon": "star",           "fields": { "pose": "standing, confident pose", "style": "pin-up art style, vintage", "cam": "full body shot", "mood": "studio lighting, professional", "vibe": "playful, fun, teasing" } },
-      { "id": "action",          "label": "Action",           "icon": "zap",            "fields": { "pose": "action pose, fighting stance", "composition": "dynamic diagonal composition", "mood": "dramatic cinematic lighting", "vibe": "aggressive, dominant, intense" } },
-      { "id": "fantasy",         "label": "Fantasy",          "icon": "wand-2",         "fields": { "env": "fantasy castle throne room", "mood": "volumetric god rays through window", "style": "dark fantasy art, gothic", "vibe": "mysterious, ethereal" } },
-      { "id": "intimate",        "label": "Intimate",         "icon": "heart",          "fields": { "env": "bedroom, intimate setting", "cam": "tight intimate framing", "mood": "candlelight, warm flickering", "expr": "seductive, lidded eyes, bedroom eyes", "vibe": "romantic, intimate, loving" } },
-      { "id": "poolside",        "label": "Poolside",         "icon": "droplets",       "fields": { "env": "poolside, swimming pool", "clothing": "bikini swimwear", "mood": "warm golden hour light", "timeOfDay": "golden hour sunset, warm tones", "vibe": "playful, fun, teasing" } },
-      { "id": "dungeon",         "label": "Dungeon",          "icon": "lock",           "fields": { "env": "dungeon stone walls chains", "mood": "candlelight, warm flickering", "style": "dark fantasy art, gothic", "vibe": "dark, ominous, dangerous" } },
-      { "id": "school",          "label": "School",           "icon": "book-open",      "fields": { "clothing": "school uniform", "env": "classroom school", "timeOfDay": "morning, bright daylight", "vibe": "playful, fun, teasing" } },
-      { "id": "office",          "label": "Office",           "icon": "briefcase",      "fields": { "clothing": "business office attire", "env": "office desk", "timeOfDay": "afternoon, midday sun", "pose": "sitting elegantly", "vibe": "sensual, erotic atmosphere" } },
-      { "id": "beach",           "label": "Beach",            "icon": "sun",            "fields": { "clothing": "bikini swimwear", "env": "beach, ocean shore", "timeOfDay": "golden hour sunset, warm tones", "mood": "warm golden hour light", "weather": "clear sky, sunny", "vibe": "playful, fun, teasing" } },
-      { "id": "shower",          "label": "Shower",           "icon": "cloud-rain",     "fields": { "clothingState": "completely nude", "env": "bathroom, shower", "skinEffects_add": ["wet skin, dripping water"], "mood": "soft diffused natural light", "vibe": "sensual, erotic atmosphere" } },
-      { "id": "midnight_glow",   "label": "Midnight Glow",    "icon": "moon",           "fields": { "timeOfDay": "late night, moonlight", "mood": "neon lights, cyberpunk glow", "colorTone": "neon cyberpunk color palette", "vibe": "mysterious, ethereal" } },
-      { "id": "domination",      "label": "Domination",       "icon": "flame",          "fields": { "activity": "dominant, on top", "expr": "dominant smirk, confident", "mood": "dramatic cinematic lighting", "vibe": "aggressive, dominant, intense", "skinEffects_add": ["sweaty glistening skin"] } },
-      { "id": "submission",      "label": "Submission",       "icon": "link",           "fields": { "activity": "submissive, being held down", "expr": "submissive, pleading eyes", "accessories_add": ["collar with leash", "handcuffs"], "vibe": "dark, ominous, dangerous" } },
-      { "id": "onsen",           "label": "Onsen",            "icon": "thermometer",    "fields": { "env": "onsen hot spring, steam", "clothingState": "completely nude", "skinEffects_add": ["wet skin, dripping water", "sweaty glistening skin"], "mood": "soft diffused natural light", "weather": "fog, misty atmosphere", "vibe": "romantic, intimate, loving" } },
-      { "id": "witching_hour",   "label": "Witching Hour",    "icon": "sparkles",       "fields": { "timeOfDay": "night, stars", "env": "mystical forest, magic glowing", "fantasyFx_add": ["magic particles, glowing spells", "ethereal ghost transparency"], "mood": "moonlight, cool blue night", "vibe": "mysterious, ethereal" } },
-      { "id": "aftercare",       "label": "Aftercare",        "icon": "hand-heart",     "fields": { "pose": "lying on side, seductive", "env": "bedroom, intimate setting", "mood": "candlelight, warm flickering", "expr": "warm natural smile", "vibe": "tender, gentle, caring" } }
+    "groups": [
+      {
+        "id": "portrait_editorial",
+        "label": "Portrait & Editorial",
+        "entries": [
+          { "id": "portrait",         "label": "Portrait",          "icon": "user",           "fields": { "cam": "close-up portrait, face", "expr": "seductive, lidded eyes, bedroom eyes", "mood": "soft diffused natural light", "style": "photorealistic photography, 8k", "vibe": "sensual, erotic atmosphere" } },
+          { "id": "pinup",            "label": "Pin-Up",            "icon": "star",           "fields": { "pose": "standing, confident pose", "style": "pin-up art style, vintage", "cam": "full body shot", "mood": "studio lighting, professional, even light", "vibe": "playful, fun, teasing" } },
+          { "id": "editorial",        "label": "Editorial",         "icon": "camera",         "fields": { "cam": "full body shot", "pose": "standing, confident pose", "mood": "studio lighting, professional, even light", "style": "cinematic film still, movie quality", "vibe": "luxurious, opulent, high class", "colorTone": "moody dark desaturated" } },
+          { "id": "glamour",          "label": "Glamour",           "icon": "sparkles",       "fields": { "cam": "half body shot, waist up", "pose": "looking over shoulder seductively", "mood": "colored gels, pink and purple light", "style": "photorealistic photography, 8k", "vibe": "sensual, erotic atmosphere", "colorTone": "warm color palette, golden tones", "quality_add": ["masterpiece", "sharp focus, in focus"] } },
+          { "id": "boudoir",          "label": "Boudoir",           "icon": "bed",            "fields": { "clothingState": "partially undressed", "clothing": "sexy lingerie set", "pose": "lying on side, seductive", "env": "bedroom, intimate setting", "mood": "candlelight, warm flickering", "cam": "full body shot", "vibe": "sensual, erotic atmosphere" } },
+          { "id": "classic_nude",     "label": "Classic Nude",      "icon": "image",          "fields": { "clothingState": "completely nude", "cam": "full body shot", "pose": "standing, confident pose", "mood": "soft diffused natural light", "style": "fine art photography", "composition": "centered symmetrical composition", "vibe": "mysterious, ethereal" } },
+          { "id": "wet_look",         "label": "Wet Look",          "icon": "droplets",       "fields": { "skinEffects_add": ["wet skin, dripping water"], "hair": "wet hair, soaked, clinging to skin", "mood": "backlit, rim light silhouette, halo edge", "vibe": "sensual, erotic atmosphere", "quality_add": ["sharp focus, in focus"] } }
+        ]
+      },
+      {
+        "id": "lifestyle",
+        "label": "Lifestyle & Setting",
+        "entries": [
+          { "id": "beach",            "label": "Beach",             "icon": "sun",            "fields": { "clothing": "bikini swimwear", "env": "beach, ocean shore, sand", "timeOfDay": "golden hour sunset, warm tones", "mood": "warm golden hour light, haze", "weather": "clear sky, sunny", "vibe": "playful, fun, teasing" } },
+          { "id": "poolside",         "label": "Poolside",          "icon": "waves",          "fields": { "env": "poolside, swimming pool", "clothing": "bikini swimwear", "mood": "warm golden hour light, haze", "timeOfDay": "afternoon, midday sun", "vibe": "playful, fun, teasing" } },
+          { "id": "gym",              "label": "Gym",               "icon": "dumbbell",       "fields": { "clothing": "sports activewear, yoga pants", "env": "gym, fitness equipment, mirrors", "pose": "action pose, fighting stance", "skinEffects_add": ["sweaty glistening skin"], "mood": "studio lighting, professional, even light", "vibe": "aggressive, dominant, intense" } },
+          { "id": "rooftop_night",    "label": "Rooftop Night",     "icon": "building-2",     "fields": { "env": "rooftop night view, city skyline", "timeOfDay": "night, stars", "mood": "neon lights, cyberpunk glow, colored light", "colorTone": "neon cyberpunk color palette", "vibe": "mysterious, ethereal" } },
+          { "id": "cafe",             "label": "Café",              "icon": "coffee",         "fields": { "clothing": "casual everyday outfit", "env": "cozy café, warm lighting, wooden tables", "timeOfDay": "morning, bright daylight", "mood": "soft diffused natural light", "vibe": "tender, gentle, caring", "expr": "warm natural smile" } },
+          { "id": "school",           "label": "School",            "icon": "book-open",      "fields": { "clothing": "school uniform, short skirt, white shirt", "env": "classroom school, desks", "timeOfDay": "morning, bright daylight", "vibe": "playful, fun, teasing" } },
+          { "id": "office",           "label": "Office",            "icon": "briefcase",      "fields": { "clothing": "business office attire, blazer, pencil skirt", "env": "office desk, corporate setting", "timeOfDay": "afternoon, midday sun", "pose": "sitting elegantly", "vibe": "sensual, erotic atmosphere" } },
+          { "id": "nightclub",        "label": "Night Club",        "icon": "music-2",        "fields": { "clothing": "bodysuit and heels, night out outfit", "env": "nightclub, neon lights, dance floor", "timeOfDay": "late night, moonlight", "mood": "neon lights, cyberpunk glow, colored light", "pose": "dancing, fluid movement", "vibe": "playful, fun, teasing" } },
+          { "id": "wedding",          "label": "Wedding",           "icon": "gem",           "fields": { "clothing": "wedding dress, white lace", "env": "garden flowers, bloom", "timeOfDay": "golden hour sunset, warm tones", "mood": "soft diffused natural light", "expr": "warm natural smile", "vibe": "romantic, intimate, loving" } }
+        ]
+      },
+      {
+        "id": "intimate_sensual",
+        "label": "Intimate & Sensual",
+        "entries": [
+          { "id": "intimate",         "label": "Intimate",          "icon": "heart",          "fields": { "env": "bedroom, intimate setting, soft sheets", "cam": "tight intimate framing", "mood": "candlelight, warm flickering", "expr": "seductive, lidded eyes, bedroom eyes", "vibe": "romantic, intimate, loving" } },
+          { "id": "shower",           "label": "Shower",            "icon": "cloud-rain",     "fields": { "clothingState": "completely nude", "env": "bathroom, shower, tiles", "skinEffects_add": ["wet skin, dripping water"], "hair": "wet hair, soaked, clinging to skin", "mood": "soft diffused natural light", "vibe": "sensual, erotic atmosphere" } },
+          { "id": "onsen",            "label": "Onsen",             "icon": "thermometer",    "fields": { "env": "onsen hot spring, steam, bamboo", "clothingState": "completely nude", "skinEffects_add": ["wet skin, dripping water", "sweaty glistening skin"], "mood": "soft diffused natural light", "weather": "fog, misty atmosphere", "vibe": "romantic, intimate, loving" } },
+          { "id": "aftercare",        "label": "Aftercare",         "icon": "hand-heart",     "fields": { "pose": "lying on side, seductive", "env": "bedroom, intimate setting, soft sheets", "mood": "candlelight, warm flickering", "expr": "warm natural smile", "vibe": "tender, gentle, caring" } },
+          { "id": "silk_sheets",      "label": "Silk Sheets",       "icon": "layers",         "fields": { "env": "luxury hotel room, opulent", "clothingState": "partially undressed", "pose": "lying on back", "mood": "candlelight, warm flickering", "colorTone": "warm color palette, golden tones", "vibe": "romantic, intimate, loving" } },
+          { "id": "morning_light",    "label": "Morning Light",     "icon": "sunrise",        "fields": { "env": "bedroom, intimate setting, soft sheets", "timeOfDay": "dawn, early morning, soft pink sky", "mood": "soft diffused natural light", "expr": "warm natural smile", "clothingState": "partially undressed", "vibe": "tender, gentle, caring" } },
+          { "id": "bath_time",        "label": "Bath Time",         "icon": "bath",           "fields": { "env": "bathroom, luxury bathtub, candles", "clothingState": "completely nude", "skinEffects_add": ["wet skin, dripping water"], "mood": "candlelight, warm flickering", "pose": "lying on back", "vibe": "romantic, intimate, loving" } }
+        ]
+      },
+      {
+        "id": "power_dark",
+        "label": "Power & Dark",
+        "entries": [
+          { "id": "domination",       "label": "Domination",        "icon": "flame",          "fields": { "activity": "dominant, on top, in control", "expr": "dominant smirk, confident, predatory", "mood": "dramatic cinematic lighting, deep shadows", "vibe": "aggressive, dominant, intense", "skinEffects_add": ["sweaty glistening skin"] } },
+          { "id": "submission",       "label": "Submission",        "icon": "link",           "fields": { "activity": "submissive, being held down, restrained", "expr": "submissive, pleading eyes, vulnerable", "accessories_add": ["collar with leash", "handcuffs"], "mood": "dark, low-key lighting, shadows", "vibe": "dark, ominous, dangerous" } },
+          { "id": "dungeon",          "label": "Dungeon",           "icon": "lock",           "fields": { "env": "dungeon stone walls chains", "mood": "candlelight, warm flickering", "style": "dark fantasy art, gothic, moody", "vibe": "dark, ominous, dangerous" } },
+          { "id": "interrogation",    "label": "Interrogation",     "icon": "search",         "fields": { "env": "dark concrete room, single hanging light", "pose": "sitting, legs spread", "expr": "intense piercing gaze", "mood": "dramatic cinematic lighting, deep shadows", "vibe": "aggressive, dominant, intense" } },
+          { "id": "tied_up",          "label": "Bound",             "icon": "git-branch",     "fields": { "activity": "tied up, bound, rope bondage, shibari", "accessories_add": ["rope bondage, shibari"], "expr": "submissive, pleading eyes, vulnerable", "mood": "dark, low-key lighting, shadows", "vibe": "dark, ominous, dangerous" } },
+          { "id": "midnight_glow",    "label": "Midnight Glow",     "icon": "moon",           "fields": { "timeOfDay": "late night, moonlight", "mood": "neon lights, cyberpunk glow, colored light", "colorTone": "neon cyberpunk color palette", "vibe": "mysterious, ethereal" } },
+          { "id": "shadow_queen",     "label": "Shadow Queen",      "icon": "crown",          "fields": { "env": "fantasy castle throne room", "clothing": "dark revealing dress, gothic queen", "mood": "dramatic cinematic lighting, deep shadows", "colorTone": "red and black dramatic", "expr": "dominant smirk, confident, predatory", "vibe": "power, dominance, control" } }
+        ]
+      },
+      {
+        "id": "fantasy_scifi",
+        "label": "Fantasy & Sci-Fi",
+        "entries": [
+          { "id": "fantasy_hero",     "label": "Fantasy Hero",      "icon": "shield",         "fields": { "clothing": "fantasy armor", "env": "fantasy castle throne room", "mood": "volumetric god rays through window", "style": "dark fantasy art, gothic, moody", "vibe": "aggressive, dominant, intense" } },
+          { "id": "witch",            "label": "Witch",             "icon": "wand-2",         "fields": { "clothing": "fantasy robe and cloak", "env": "mystical forest, magic glowing, ethereal", "fantasyFx_add": ["magic particles, glowing spells"], "mood": "moonlight, cool blue night", "vibe": "mysterious, ethereal" } },
+          { "id": "succubus_lair",    "label": "Succubus",          "icon": "heart-crack",    "fields": { "env": "infernal realm, hellfire, brimstone", "fantasyFx_add": ["succubus tail and wings, horns", "demonic aura, hellfire, dark energy"], "mood": "firelight, campfire, orange glow", "vibe": "aggressive, dominant, intense", "expr": "dominant smirk, confident, predatory" } },
+          { "id": "angel",            "label": "Angel",             "icon": "feather",        "fields": { "env": "floating on clouds, heavenly realm, divine light", "fantasyFx_add": ["angelic halo, divine light, feathers"], "mood": "soft diffused natural light", "colorTone": "pastel soft colors", "vibe": "mysterious, ethereal", "expr": "warm natural smile" } },
+          { "id": "witching_hour",    "label": "Witching Hour",     "icon": "sparkles",       "fields": { "timeOfDay": "night, stars", "env": "mystical forest, magic glowing, ethereal", "fantasyFx_add": ["magic particles, glowing spells", "ethereal ghost transparency"], "mood": "moonlight, cool blue night", "vibe": "mysterious, ethereal" } },
+          { "id": "cyberpunk",        "label": "Cyberpunk",         "icon": "cpu",            "fields": { "env": "city street, urban, alley, cyberpunk", "fantasyFx_add": ["sci-fi cybernetic implants, glowing circuits"], "mood": "neon lights, cyberpunk glow, colored light", "colorTone": "neon cyberpunk color palette", "timeOfDay": "night, stars", "vibe": "raw, gritty, realistic" } },
+          { "id": "neko",             "label": "Neko",              "icon": "cat",            "fields": { "fantasyFx_add": ["neko cat girl features, cat ears and tail"], "accessories_add": ["cat ears headband", "tail"], "pose": "sitting in lotus position, meditative", "expr": "blushing, embarrassed, red cheeks", "vibe": "playful, fun, teasing" } },
+          { "id": "mermaid",          "label": "Mermaid",           "icon": "fish",           "fields": { "env": "underwater, coral reef, ocean floor", "fantasyFx_add": ["mermaid tail, scales, underwater"], "mood": "soft diffused natural light", "colorTone": "cool color palette, blue tones", "vibe": "mysterious, ethereal" } },
+          { "id": "vampire_night",    "label": "Vampire",           "icon": "moon",           "fields": { "env": "gothic castle interior, moonlight through stained glass", "fantasyFx_add": ["vampire pale skin, fangs"], "mood": "moonlight, cool blue night", "colorTone": "moody dark desaturated", "vibe": "dark, ominous, dangerous", "expr": "intense piercing gaze" } }
+        ]
+      },
+      {
+        "id": "action_adventure",
+        "label": "Action & Drama",
+        "entries": [
+          { "id": "action",           "label": "Action",            "icon": "zap",            "fields": { "pose": "action pose, fighting stance", "composition": "dynamic diagonal composition", "mood": "dramatic cinematic lighting, deep shadows", "vibe": "aggressive, dominant, intense" } },
+          { "id": "battlefield",      "label": "Battlefield",       "icon": "swords",         "fields": { "clothing": "military uniform", "env": "ruined battlefield, smoke and dust", "pose": "action pose, fighting stance", "mood": "dramatic cinematic lighting, deep shadows", "weather": "overcast, cloudy", "vibe": "raw, gritty, realistic" } },
+          { "id": "rain_dramatic",    "label": "Storm",             "icon": "cloud-lightning", "fields": { "env": "city street, urban, alley", "weather": "thunder and lightning", "timeOfDay": "night, stars", "mood": "dramatic cinematic lighting, deep shadows", "skinEffects_add": ["wet skin, dripping water"], "vibe": "raw, gritty, realistic" } },
+          { "id": "dance_stage",      "label": "Dance Stage",       "icon": "music",          "fields": { "pose": "dancing, fluid movement", "env": "stage, spotlight, theater", "mood": "colored gels, pink and purple light", "vibe": "aggressive, dominant, intense" } },
+          { "id": "throne",           "label": "Throne",            "icon": "crown",          "fields": { "env": "fantasy castle throne room", "pose": "sitting elegantly", "clothing": "elegant formal dress", "mood": "volumetric god rays through window", "expr": "intense piercing gaze", "vibe": "power, dominance, control" } },
+          { "id": "ruins",            "label": "Ruins",             "icon": "landmark",       "fields": { "env": "ancient stone temple, mystical ruins", "clothing": "fantasy armor", "mood": "volumetric god rays through window", "weather": "fog, misty atmosphere", "style": "concept art, detailed render", "vibe": "mysterious, ethereal" } }
+        ]
+      }
     ]
   },
 
@@ -34,16 +97,105 @@
     "label": "Relationship Dynamic",
     "note": "Sets tone, dynamics, and partner context",
     "entries": [
-      { "id": "lover",        "label": "Lover",           "partners": "", "vibe": "romantic, intimate, loving",      "expr": "warm natural smile" },
-      { "id": "girlfriend",   "label": "Girlfriend",      "partners": "", "vibe": "tender, gentle, caring",          "expr": "warm natural smile" },
-      { "id": "mistress",     "label": "Mistress",        "partners": "", "vibe": "sensual, erotic atmosphere",       "expr": "dominant smirk, confident" },
-      { "id": "slave",        "label": "Slave",           "partners": "", "vibe": "dark, ominous, dangerous",         "expr": "submissive, pleading eyes", "accessories": "collar with leash" },
-      { "id": "fwb",          "label": "Friends w/ Benefits", "partners": "", "vibe": "playful, fun, teasing",       "expr": "laughing, joyful" },
-      { "id": "stranger",     "label": "Stranger",        "partners": "", "vibe": "raw, gritty, realistic",          "expr": "neutral expression" },
-      { "id": "dom",          "label": "Dominant",        "partners": "", "vibe": "aggressive, dominant, intense",   "expr": "dominant smirk, confident" },
-      { "id": "sub",          "label": "Submissive",      "partners": "", "vibe": "dark, ominous, dangerous",        "expr": "submissive, pleading eyes" },
-      { "id": "idol",         "label": "Idol / Fan",      "partners": "", "vibe": "playful, fun, teasing",           "expr": "blushing, embarrassed, red cheeks" },
-      { "id": "enemies",      "label": "Enemies",         "partners": "", "vibe": "aggressive, dominant, intense",   "expr": "intense piercing gaze" }
+      { "id": "lover",        "label": "Lover",              "partners": "", "vibe": "romantic, intimate, loving",      "expr": "warm natural smile" },
+      { "id": "girlfriend",   "label": "Girlfriend",         "partners": "", "vibe": "tender, gentle, caring",          "expr": "warm natural smile" },
+      { "id": "wife",         "label": "Wife",               "partners": "", "vibe": "romantic, intimate, loving",      "expr": "warm natural smile" },
+      { "id": "crush",        "label": "Crush",              "partners": "", "vibe": "tender, gentle, caring",          "expr": "blushing, embarrassed, red cheeks" },
+      { "id": "mistress",     "label": "Mistress",           "partners": "", "vibe": "sensual, erotic atmosphere",      "expr": "dominant smirk, confident, predatory" },
+      { "id": "fwb",          "label": "Friends w/ Benefits","partners": "", "vibe": "playful, fun, teasing",           "expr": "laughing, joyful" },
+      { "id": "stepsis",      "label": "Stepsister",         "partners": "", "vibe": "playful, fun, teasing",           "expr": "blushing, embarrassed, red cheeks" },
+      { "id": "sensei",       "label": "Sensei / Student",   "partners": "", "vibe": "sensual, erotic atmosphere",      "expr": "intense piercing gaze" },
+      { "id": "rival",        "label": "Rival",              "partners": "", "vibe": "aggressive, dominant, intense",   "expr": "angry expression, furrowed brow" },
+      { "id": "strangers",    "label": "Strangers",          "partners": "", "vibe": "raw, gritty, realistic",          "expr": "neutral expression" },
+      { "id": "dom",          "label": "Dominant",           "partners": "", "vibe": "aggressive, dominant, intense",   "expr": "dominant smirk, confident, predatory" },
+      { "id": "sub",          "label": "Submissive",         "partners": "", "vibe": "dark, ominous, dangerous",        "expr": "submissive, pleading eyes, vulnerable" },
+      { "id": "slave",        "label": "Slave",              "partners": "", "vibe": "dark, ominous, dangerous",        "expr": "submissive, pleading eyes, vulnerable", "accessories": "collar with leash" },
+      { "id": "idol",         "label": "Idol / Fan",         "partners": "", "vibe": "playful, fun, teasing",           "expr": "blushing, embarrassed, red cheeks" },
+      { "id": "enemies",      "label": "Enemies",            "partners": "", "vibe": "aggressive, dominant, intense",   "expr": "intense piercing gaze" },
+      { "id": "captor",       "label": "Captor / Captive",   "partners": "", "vibe": "dark, ominous, dangerous",        "expr": "submissive, pleading eyes, vulnerable", "accessories": "handcuffs" },
+      { "id": "prey",         "label": "Hunter / Prey",      "partners": "", "vibe": "primal, animalistic, instinctive","expr": "surprised, mouth open, shocked" },
+      { "id": "royalty",      "label": "Royalty / Subject",  "partners": "", "vibe": "power, dominance, control",       "expr": "intense piercing gaze" },
+      { "id": "fated",        "label": "Fated / Soulmate",   "partners": "", "vibe": "mysterious, ethereal",            "expr": "warm natural smile" },
+      { "id": "forbidden",    "label": "Forbidden Love",     "partners": "", "vibe": "romantic, intimate, loving",      "expr": "blushing, embarrassed, red cheeks" }
+    ]
+  },
+
+  "mood_presets": {
+    "label": "Mood Presets",
+    "note": "Atmosphere only — sets mood, vibe, color, weather, time, FX without touching outfit or pose",
+    "entries": [
+      { "id": "mp_golden_hour",    "label": "Golden Hour",       "icon": "sun",            "fields": { "timeOfDay": "golden hour sunset, warm tones", "mood": "warm golden hour light, haze", "colorTone": "warm color palette, golden tones", "weather": "clear sky, sunny", "vibe": "romantic, intimate, loving" } },
+      { "id": "mp_midnight_neon",  "label": "Midnight Neon",     "icon": "zap",            "fields": { "timeOfDay": "late night, moonlight", "mood": "neon lights, cyberpunk glow, colored light", "colorTone": "neon cyberpunk color palette", "vibe": "mysterious, ethereal" } },
+      { "id": "mp_candlelit",      "label": "Candlelit",         "icon": "flame",          "fields": { "mood": "candlelight, warm flickering", "colorTone": "warm color palette, golden tones", "timeOfDay": "night, stars", "vibe": "romantic, intimate, loving" } },
+      { "id": "mp_moonlit",        "label": "Moonlit",           "icon": "moon",           "fields": { "timeOfDay": "late night, moonlight", "mood": "moonlight, cool blue night", "colorTone": "cool color palette, blue tones", "vibe": "mysterious, ethereal" } },
+      { "id": "mp_stormy",         "label": "Stormy",            "icon": "cloud-lightning", "fields": { "weather": "thunder and lightning", "timeOfDay": "dusk, blue hour, twilight", "mood": "dramatic cinematic lighting, deep shadows", "colorTone": "moody dark desaturated", "vibe": "dark, ominous, dangerous" } },
+      { "id": "mp_foggy",          "label": "Foggy",             "icon": "wind",           "fields": { "weather": "fog, misty atmosphere", "timeOfDay": "dawn, early morning, soft pink sky", "mood": "soft diffused natural light", "colorTone": "moody dark desaturated", "vibe": "mysterious, ethereal" } },
+      { "id": "mp_cherry_blossom", "label": "Cherry Blossom",    "icon": "flower-2",       "fields": { "weather": "cherry blossoms falling, sakura", "timeOfDay": "morning, bright daylight", "mood": "soft diffused natural light", "colorTone": "pastel soft colors", "vibe": "dreamy, surreal, soft focus" } },
+      { "id": "mp_dreamy",         "label": "Dreamy",            "icon": "cloud",          "fields": { "mood": "soft glow, bloom, ethereal light", "colorTone": "pastel soft colors", "vibe": "dreamy, surreal, soft focus", "fantasyFx_add": ["ethereal ghost transparency"] } },
+      { "id": "mp_hellfire",       "label": "Hellfire",          "icon": "flame",        "fields": { "mood": "firelight, campfire, orange glow", "colorTone": "red and black dramatic", "vibe": "dark, ominous, dangerous", "fantasyFx_add": ["demonic aura, hellfire, dark energy"] } },
+      { "id": "mp_winter",         "label": "Winter",            "icon": "snowflake",      "fields": { "weather": "snow, winter cold", "timeOfDay": "afternoon, midday sun", "mood": "soft diffused natural light", "colorTone": "cool color palette, blue tones", "vibe": "tender, gentle, caring" } },
+      { "id": "mp_autumn",         "label": "Autumn",            "icon": "leaf",           "fields": { "weather": "autumn leaves, fall", "timeOfDay": "golden hour sunset, warm tones", "mood": "warm golden hour light, haze", "colorTone": "warm color palette, golden tones", "vibe": "romantic, intimate, loving" } },
+      { "id": "mp_noir",           "label": "Noir",              "icon": "minus-circle",   "fields": { "mood": "dark, low-key lighting, shadows", "colorTone": "black and white monochrome", "timeOfDay": "night, stars", "vibe": "raw, gritty, realistic" } },
+      { "id": "mp_ethereal",       "label": "Ethereal",          "icon": "star",           "fields": { "mood": "soft glow, bloom, ethereal light", "colorTone": "cool color palette, blue tones", "fantasyFx_add": ["ethereal ghost transparency", "magic particles, glowing spells"], "vibe": "mysterious, ethereal" } },
+      { "id": "mp_boudoir_glow",   "label": "Boudoir Glow",      "icon": "lamp",           "fields": { "mood": "colored gels, pink and purple light", "colorTone": "warm color palette, golden tones", "vibe": "sensual, erotic atmosphere", "quality_add": ["bokeh depth of field, blurred background"] } },
+      { "id": "mp_cinematic",      "label": "Cinematic",         "icon": "film",           "fields": { "mood": "dramatic cinematic lighting, deep shadows", "style": "cinematic film still, movie quality", "colorTone": "moody dark desaturated", "quality_add": ["film grain, analog photography"], "vibe": "raw, gritty, realistic" } },
+      { "id": "mp_uv",             "label": "UV / Black Light",  "icon": "sun-dim",        "fields": { "mood": "black light, UV glow, neon body paint", "colorTone": "neon cyberpunk color palette", "vibe": "playful, fun, teasing" } },
+      { "id": "mp_divine",         "label": "Divine Light",      "icon": "sun-medium",     "fields": { "mood": "volumetric god rays through window", "colorTone": "warm color palette, golden tones", "fantasyFx_add": ["angelic halo, divine light, feathers"], "vibe": "mysterious, ethereal" } },
+      { "id": "mp_magic_hour",     "label": "Magic Hour",        "icon": "clock",          "fields": { "timeOfDay": "dusk, blue hour, twilight", "mood": "warm golden hour light, haze", "colorTone": "duotone, two-color graphic treatment", "vibe": "dreamy, surreal, soft focus" } }
+    ]
+  },
+
+  "outfit_presets": {
+    "label": "Outfit Presets",
+    "note": "Clothing fields only — applies outfit combos without touching scene or pose",
+    "entries": [
+      { "id": "op_lingerie",      "label": "Lingerie",          "icon": "heart",          "fields": { "clothingState": "partially undressed", "clothing": "sexy lingerie set", "clothingFootwear": "high heels, stiletto", "accessories_add": ["choker necklace", "thigh-high stockings"] } },
+      { "id": "op_schoolgirl",    "label": "Schoolgirl",        "icon": "book",           "fields": { "clothingState": "fully clothed", "clothing": "school uniform, short skirt, white shirt", "clothingFootwear": "knee-high boots", "accessories_add": ["glasses"] } },
+      { "id": "op_maid",          "label": "Maid",              "icon": "home",           "fields": { "clothingState": "fully clothed", "clothing": "maid outfit, frilly apron, thigh highs", "clothingFootwear": "high heels, stiletto", "accessories_add": ["cat ears headband"] } },
+      { "id": "op_nurse",         "label": "Nurse",             "icon": "cross",          "fields": { "clothingState": "fully clothed", "clothing": "nurse uniform, short skirt, white coat", "clothingFootwear": "high heels, stiletto" } },
+      { "id": "op_bikini",        "label": "Bikini",            "icon": "sun",            "fields": { "clothingState": "fully clothed", "clothing": "bikini swimwear", "clothingFootwear": "barefoot, bare feet" } },
+      { "id": "op_micro_bikini",  "label": "Micro Bikini",      "icon": "minimize",       "fields": { "clothingState": "fully clothed", "clothing": "micro bikini, barely covering", "clothingFootwear": "barefoot, bare feet" } },
+      { "id": "op_latex",         "label": "Latex",             "icon": "circle",         "fields": { "clothingState": "fully clothed", "clothing": "latex catsuit, shiny", "clothingFootwear": "thigh-high boots", "accessories_add": ["choker necklace"] } },
+      { "id": "op_bunny",         "label": "Bunny Suit",        "icon": "rabbit",         "fields": { "clothingState": "fully clothed", "clothing": "playboy bunny suit, bow tie, bunny ears, fishnet stockings", "clothingFootwear": "high heels, stiletto", "accessories_add": ["bunny ears"] } },
+      { "id": "op_office_lady",   "label": "Office Lady",       "icon": "briefcase",      "fields": { "clothingState": "fully clothed", "clothing": "business office attire, blazer, pencil skirt", "clothingFootwear": "high heels, stiletto", "accessories_add": ["glasses"] } },
+      { "id": "op_athletic",      "label": "Athletic",          "icon": "activity",       "fields": { "clothingState": "fully clothed", "clothing": "sports activewear, yoga pants", "clothingTop": "sports bra, athletic", "clothingBottom": "tight yoga pants, form-fitting", "clothingFootwear": "sneakers" } },
+      { "id": "op_corset",        "label": "Corset",            "icon": "align-center",   "fields": { "clothingState": "partially undressed", "clothingTop": "tube top, strapless", "clothing": "corset and stockings, garter belt", "clothingFootwear": "thigh-high stockings, lace top", "accessories_add": ["choker necklace", "gloves"] } },
+      { "id": "op_kimono",        "label": "Kimono",            "icon": "star",           "fields": { "clothingState": "fully clothed", "clothing": "kimono, traditional Japanese", "clothingFootwear": "barefoot, bare feet", "accessories_add": ["flowers in hair"] } },
+      { "id": "op_yukata",        "label": "Yukata",            "icon": "wind",           "fields": { "clothingState": "partially undressed", "clothing": "yukata, loosely worn, partially open", "clothingFootwear": "barefoot, bare feet" } },
+      { "id": "op_bikini_armor",  "label": "Bikini Armor",      "icon": "shield",         "fields": { "clothingState": "fully clothed", "clothing": "fantasy bikini armor, revealing, sexy", "clothingFootwear": "thigh-high boots", "accessories_add": ["sword and scabbard"] } },
+      { "id": "op_see_through",   "label": "See-Through",       "icon": "eye",            "fields": { "clothingState": "partially undressed", "clothingTop": "mesh top, see-through, sheer", "clothingBottom": "panties only", "clothingFootwear": "high heels, stiletto" } },
+      { "id": "op_sundress",      "label": "Sundress",          "icon": "flower",         "fields": { "clothingState": "fully clothed", "clothing": "sundress, flowy", "clothingFootwear": "barefoot, bare feet" } },
+      { "id": "op_bdsm",          "label": "BDSM Gear",         "icon": "lock",           "fields": { "clothingState": "partially undressed", "clothing": "revealing bodysuit, high cut legs", "accessories_add": ["collar with leash", "handcuffs", "rope bondage, shibari"] } },
+      { "id": "op_nude",          "label": "Nude",              "icon": "minus-square",   "fields": { "clothingState": "completely nude", "clothing": "", "clothingTop": "", "clothingBottom": "", "clothingFootwear": "barefoot, bare feet" } },
+      { "id": "op_wedding",       "label": "Bridal",            "icon": "gem",            "fields": { "clothingState": "fully clothed", "clothing": "wedding dress, white lace", "clothingFootwear": "high heels, stiletto", "accessories_add": ["body chain jewelry"] } },
+      { "id": "op_cheerleader",   "label": "Cheerleader",       "icon": "flag",           "fields": { "clothingState": "fully clothed", "clothing": "cheerleader outfit, short pleated skirt, pompoms", "clothingFootwear": "sneakers", "accessories_add": ["thigh-high stockings"] } }
+    ]
+  },
+
+  "activity_presets": {
+    "label": "Activity Presets",
+    "note": "Pose + activity + camera + focus combos — scene and outfit untouched",
+    "entries": [
+      { "id": "ap_portrait_gaze",  "label": "Portrait Gaze",     "icon": "user",           "fields": { "cam": "close-up portrait, face", "pose": "standing, confident pose", "expr": "seductive, lidded eyes, bedroom eyes", "bodyFocus": "face and eyes focus" } },
+      { "id": "ap_full_body",      "label": "Full Body",         "icon": "person-standing", "fields": { "cam": "full body shot", "pose": "standing, confident pose", "composition": "centered symmetrical composition" } },
+      { "id": "ap_rear_view",      "label": "Rear View",         "icon": "arrow-left",     "fields": { "cam": "rear view, butt focus, from behind", "pose": "standing, confident pose", "bodyFocus": "buttocks, rear, ass cheeks" } },
+      { "id": "ap_lying_seductive","label": "Lying Seductive",   "icon": "minus",          "fields": { "cam": "full body shot", "pose": "lying on side, seductive", "expr": "seductive, lidded eyes, bedroom eyes", "bodyFocus": "full figure, hourglass, entire body" } },
+      { "id": "ap_bent_over",      "label": "Bent Over",         "icon": "corner-down-left","fields": { "cam": "rear view, butt focus, from behind", "pose": "bent over, presenting", "bodyFocus": "ass and pussy, rear spread, presenting" } },
+      { "id": "ap_all_fours",      "label": "All Fours",         "icon": "git-branch",     "fields": { "cam": "full body shot", "pose": "on all fours, doggy position", "bodyFocus": "full figure, hourglass, entire body" } },
+      { "id": "ap_straddling",     "label": "Straddling",        "icon": "layers",         "fields": { "cam": "full body shot", "pose": "straddling", "bodyFocus": "hips and waist" } },
+      { "id": "ap_kneeling_pov",   "label": "Kneeling POV",      "icon": "eye",            "fields": { "cam": "POV shot, first person perspective", "pose": "on knees, looking up", "expr": "seductive, lidded eyes, bedroom eyes" } },
+      { "id": "ap_arched_back",    "label": "Arched Back",       "icon": "trending-up",    "fields": { "cam": "full body shot", "pose": "stretching, arched back, spine curved", "bodyFocus": "stomach and midriff" } },
+      { "id": "ap_spread_eagle",   "label": "Spread Eagle",      "icon": "maximize",       "fields": { "cam": "full body shot", "pose": "spread eagle, arms and legs spread wide", "bodyFocus": "full figure, hourglass, entire body" } },
+      { "id": "ap_legs_up",        "label": "Legs Up",           "icon": "arrow-up",       "fields": { "cam": "full body shot", "pose": "lying back, legs raised in the air", "bodyFocus": "legs and thighs" } },
+      { "id": "ap_dancing",        "label": "Dancing",           "icon": "music",          "fields": { "cam": "full body shot", "pose": "dancing, fluid movement", "composition": "dynamic diagonal composition", "expr": "laughing, joyful" } },
+      { "id": "ap_action_shot",    "label": "Action Shot",       "icon": "zap",            "fields": { "cam": "full body shot", "pose": "action pose, fighting stance", "composition": "dynamic diagonal composition" } },
+      { "id": "ap_mirror_shot",    "label": "Mirror Shot",       "icon": "copy",           "fields": { "cam": "mirror reflection shot, character facing mirror", "composition": "mirror reflection", "pose": "looking over shoulder seductively" } },
+      { "id": "ap_low_angle",      "label": "Low Angle",         "icon": "arrow-down-from-line", "fields": { "cam": "low angle shot, looking up", "pose": "standing, confident pose", "expr": "dominant smirk, confident, predatory" } },
+      { "id": "ap_birds_eye",      "label": "Bird's Eye",        "icon": "arrow-down-to-line", "fields": { "cam": "bird's eye view, top down", "pose": "lying on back", "bodyFocus": "full figure, hourglass, entire body" } },
+      { "id": "ap_pov_intimate",   "label": "POV Intimate",      "icon": "heart",          "fields": { "cam": "POV shot, first person perspective", "pose": "lying on back", "expr": "seductive, lidded eyes, bedroom eyes", "bodyFocus": "face and eyes focus" } },
+      { "id": "ap_chest_focus",    "label": "Chest Focus",       "icon": "move-horizontal","fields": { "cam": "chest close-up, bust shot", "pose": "arching toward camera", "bodyFocus": "breasts, cleavage emphasis" } },
+      { "id": "ap_teasing",        "label": "Teasing",           "icon": "smile",          "fields": { "activity": "teasing, seductive look at camera", "cam": "half body shot, waist up", "expr": "seductive, lidded eyes, bedroom eyes" } },
+      { "id": "ap_undressing",     "label": "Undressing",        "icon": "minus-circle",   "fields": { "activity": "undressing, removing clothes seductively", "cam": "full body shot", "expr": "seductive, lidded eyes, bedroom eyes" } }
     ]
   },
 

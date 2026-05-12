@@ -153,16 +153,24 @@ function isEmoji(str) {
 const _avatarCache = {};
 async function getAvatarUrl(charId, stored) {
     if (!stored) return null;
-    if (!stored.startsWith('idb:')) return stored; 
-    if (_avatarCache[charId]) return _avatarCache[charId];
+    if (!stored.startsWith('idb:')) return stored;
+    if (_avatarCache[charId] === stored) return _avatarCache[`${charId}:url`] || null;
+    // idb:img:<blobId> refs (gallery images promoted to avatar)
+    if (isIdbImageRef(stored)) {
+        const url = await resolveImageUrl(stored).catch(() => null);
+        if (url) { _avatarCache[charId] = stored; _avatarCache[`${charId}:url`] = url; }
+        return url;
+    }
+    // Legacy idb:<charId> avatar slot
     const url = await resolveCharAvatar(charId, stored).catch(() => null);
-    if (url) _avatarCache[charId] = url;
+    if (url) { _avatarCache[charId] = stored; _avatarCache[`${charId}:url`] = url; }
     return url;
 }
 function getAvatarUrlSync(charId, stored) {
     if (!stored) return null;
     if (!stored.startsWith('idb:')) return stored;
-    return _avatarCache[charId] || null;
+    if (_avatarCache[charId] === stored) return _avatarCache[`${charId}:url`] || null;
+    return null;
 }
 
 function buildAvatarHtml(av, className = '', extraAttr = '') {
@@ -1827,13 +1835,29 @@ export function initUI() {
             });
         });
 
-        // Update send label
+        // Update send label + input placeholder
         const activeChar = state.loadedCharacters[state.activeBotId];
-        if ($label && activeChar) {
-            $label.textContent = `→ ${getCharOverride(state.activeBotId).nickname || activeChar.name}`;
+        const displayName = activeChar
+            ? (getCharOverride(state.activeBotId).nickname || activeChar.name)
+            : null;
+        if ($label && displayName) {
+            $label.textContent = `→ ${displayName}`;
+        } else if ($label) {
+            $label.textContent = '';
         }
+        _updateInputPlaceholder(displayName);
 
         lucideRefresh($container);
+    }
+
+    function _updateInputPlaceholder(charName) {
+        const $ta = qs('#rp-input');
+        if (!$ta) return;
+        if (charName) {
+            $ta.placeholder = `Message ${charName}…`;
+        } else {
+            $ta.placeholder = 'Select a character to begin…';
+        }
     }
 
     // ── Profile Panel ─────────────────────────────────────────────────────────
@@ -2269,6 +2293,44 @@ export function initUI() {
         return [meta?.avatar_path, ...extra].filter(Boolean);
     }
 
+    // Unified post list for a character — merges:
+    //   1. Gallery images (type:'image', local idb refs allowed)
+    //   2. Permanent posts from data/feed.json (type:'image'|'text', public URLs only)
+    //   3. Local composed posts from state.socialData.localPosts[charId] (type:'image'|'text')
+    // Each returned object: { id, type, src?, caption, timestamp, permanent, postIdx }
+    function getAllFeedPosts(charId) {
+        const seen = new Set();
+        const result = [];
+
+        // Gallery images → type:'image'
+        const galleryRefs = getAllGalleryImages(charId);
+        galleryRefs.forEach((src, i) => {
+            const id = `gallery-${charId}-${i}`;
+            if (seen.has(id)) return;
+            seen.add(id);
+            result.push({ id, type: 'image', src, caption: null, timestamp: 0, permanent: false, postIdx: i });
+        });
+
+        // Permanent feed.json posts
+        _permanentFeedPosts.filter(p => p.charId === charId).forEach((p, i) => {
+            const id = p.id || `perm-${charId}-${i}`;
+            if (seen.has(id)) return;
+            seen.add(id);
+            result.push({ ...p, id, permanent: true, postIdx: result.length });
+        });
+
+        // Local composed posts
+        const localPosts = state.socialData?.localPosts?.[charId] || [];
+        localPosts.forEach((p, i) => {
+            const id = p.id || `local-${charId}-${i}`;
+            if (seen.has(id)) return;
+            seen.add(id);
+            result.push({ ...p, id, permanent: false, postIdx: result.length });
+        });
+
+        return result;
+    }
+
     function ensureGalleryStore(id) {
         const char = state.loadedCharacters[id];
         if (!char) return null;
@@ -2408,6 +2470,9 @@ export function initUI() {
                 if (meta.avatar_path) gallery.unshift(meta.avatar_path);
                 gallery.splice(gallery.indexOf(ref), 1);
                 meta.avatar_path = ref;
+                // Bust cache so next getAvatarUrl resolves the new ref
+                delete _avatarCache[id];
+                delete _avatarCache[`${id}:url`];
                 saveState();
                 renderRoster();
                 renderGalleryStrip(id);
@@ -2493,6 +2558,10 @@ export function initUI() {
         if (charId) {
             await addToGallery(charId, dataUrl);
             renderGalleryStrip(charId);
+            if ($feedArena && !$feedArena.hidden) {
+                if (_feedMode === 'hot') renderHotFeed();
+                else if (_feedMode === charId) renderSocialFeed(charId);
+            }
         }
         showToast('Scene captured', 'info', 2000);
     }
@@ -2682,36 +2751,74 @@ export function initUI() {
     }
 
     // ── Render scene preset cards from JSON ───────────────────────────────────
+    function _makePresetCard(p, $grid, { noReset = false } = {}) {
+        const $c = document.createElement('button');
+        $c.className = 'studio-preset-card';
+        $c.dataset.presetId = p.id;
+        $c.type = 'button';
+        $c.innerHTML = `<i data-lucide="${p.icon || 'star'}"></i><span>${esc(p.label)}</span>`;
+        $c.addEventListener('click', () => {
+            const was = $c.classList.contains('active');
+            $grid.querySelectorAll('.studio-preset-card').forEach(x => x.classList.remove('active'));
+            if (!was) {
+                _applyStudioScenePreset(p, noReset);
+                $c.classList.add('active');
+            }
+            _studioRebuildPrompt();
+            _studioUpdateBadges();
+            lucideRefresh($c);
+        });
+        return $c;
+    }
+
     function _renderScenePresetCards() {
         const $grid = qs('#studio-scene-preset-grid');
-        if (!$grid || !_studioPresets?.scenes?.entries) return;
+        if (!$grid || !_studioPresets?.scenes) return;
         $grid.innerHTML = '';
-        _studioPresets.scenes.entries.forEach(p => {
-            const $c = document.createElement('button');
-            $c.className = 'studio-preset-card';
-            $c.dataset.presetId = p.id;
-            $c.type = 'button';
-            $c.title = _studioPresets.scenes.note || '';
-            $c.innerHTML = `<i data-lucide="${p.icon || 'star'}"></i><span>${esc(p.label)}</span>`;
-            $c.addEventListener('click', () => {
-                const was = $c.classList.contains('active');
-                qs('#studio-scene-preset-grid').querySelectorAll('.studio-preset-card').forEach(x => x.classList.remove('active'));
-                if (!was) {
-                    _applyStudioScenePreset(p);
-                    $c.classList.add('active');
-                }
-                _studioRebuildPrompt();
-                _studioUpdateBadges();
-                lucideRefresh($c);
+        const scenes = _studioPresets.scenes;
+        if (scenes.groups) {
+            scenes.groups.forEach(grp => {
+                const $lbl = document.createElement('div');
+                $lbl.className = 'studio-preset-group-label';
+                $lbl.textContent = grp.label;
+                $grid.appendChild($lbl);
+                const $row = document.createElement('div');
+                $row.className = 'studio-preset-group-row';
+                grp.entries.forEach(p => $row.appendChild(_makePresetCard(p, $grid)));
+                $grid.appendChild($row);
             });
-            $grid.appendChild($c);
-        });
+        } else {
+            (scenes.entries || []).forEach(p => $grid.appendChild(_makePresetCard(p, $grid)));
+        }
         lucideRefresh($grid);
     }
 
-    function _applyStudioScenePreset(preset) {
-        // Clear scene first so preset fields don't layer on top of a different preset
-        _resetStudioScene(true);   // skipNsfw — don't touch the NSFW level
+    function _renderMoodPresets() {
+        const $grid = qs('#studio-mood-preset-grid');
+        if (!$grid || !_studioPresets?.mood_presets?.entries) return;
+        $grid.innerHTML = '';
+        _studioPresets.mood_presets.entries.forEach(p => $grid.appendChild(_makePresetCard(p, $grid, { noReset: true })));
+        lucideRefresh($grid);
+    }
+
+    function _renderOutfitPresets() {
+        const $grid = qs('#studio-outfit-preset-grid');
+        if (!$grid || !_studioPresets?.outfit_presets?.entries) return;
+        $grid.innerHTML = '';
+        _studioPresets.outfit_presets.entries.forEach(p => $grid.appendChild(_makePresetCard(p, $grid, { noReset: true })));
+        lucideRefresh($grid);
+    }
+
+    function _renderActivityPresets() {
+        const $grid = qs('#studio-activity-preset-grid');
+        if (!$grid || !_studioPresets?.activity_presets?.entries) return;
+        $grid.innerHTML = '';
+        _studioPresets.activity_presets.entries.forEach(p => $grid.appendChild(_makePresetCard(p, $grid, { noReset: true })));
+        lucideRefresh($grid);
+    }
+
+    function _applyStudioScenePreset(preset, noReset = false) {
+        if (!noReset) _resetStudioScene(true);   // skipNsfw — don't touch the NSFW level
 
         const f = preset.fields || {};
         Object.keys(f).forEach(k => {
@@ -3037,6 +3144,9 @@ export function initUI() {
         // Quick tab
         _renderScenePresetCards();
         _renderRelPills();
+        _renderMoodPresets();
+        _renderOutfitPresets();
+        _renderActivityPresets();
 
         // Char tab
         _renderChips(qs('#studio-hair-chips'),         p.hair?.entries      || [], 'hair');
@@ -3234,6 +3344,11 @@ export function initUI() {
                 await addToGallery(charId, dataUrl);
                 renderGalleryStrip(charId);
                 _renderStudioGalleryStrip(charId);
+                // Refresh social/hot feed if currently visible
+                if ($feedArena && !$feedArena.hidden) {
+                    if (_feedMode === 'hot') renderHotFeed();
+                    else if (_feedMode === charId) renderSocialFeed(charId);
+                }
                 showToast('Image saved to gallery', 'info', 2000);
             }
 
@@ -3393,6 +3508,9 @@ export function initUI() {
             : _studioDataUrl;
         meta.avatar_path = stored;
         if (!gallery.includes(stored)) gallery.push(stored);
+        // Bust cache so next getAvatarUrl resolves the new ref
+        delete _avatarCache[cid];
+        delete _avatarCache[`${cid}:url`];
         saveState();
         renderRoster();
         renderGalleryStrip(cid);
@@ -3408,6 +3526,10 @@ export function initUI() {
         await addToGallery(cid, _studioDataUrl);
         renderGalleryStrip(cid);
         _renderStudioGalleryStrip(cid);
+        if ($feedArena && !$feedArena.hidden) {
+            if (_feedMode === 'hot') renderHotFeed();
+            else if (_feedMode === cid) renderSocialFeed(cid);
+        }
         showToast('Saved to gallery', 'info', 1800);
     });
 
@@ -3435,13 +3557,16 @@ export function initUI() {
     const $feedList  = qs('#social-feed-container');
     let _feedMode = 'hot'; // 'hot' | charId
 
+    // Permanent posts loaded from data/feed.json (git-committed, universal)
+    let _permanentFeedPosts = [];
+
     qs('#feed-back-btn')?.addEventListener('click', () => {
         switchSidebarTab('chats');
     });
 
     qs('#feed-add-post-btn')?.addEventListener('click', () => {
-        if (galleryCharId && _feedMode !== 'hot') openGalleryModal(galleryCharId);
-        else if (state.characters.length) openGalleryModal(state.characters[0].id);
+        const charId = (_feedMode !== 'hot') ? _feedMode : (galleryCharId || state.characters[0]?.id || null);
+        openComposeModal(charId);
     });
 
     // Render the social character list in the left sidebar
@@ -3457,7 +3582,7 @@ export function initUI() {
         $list.innerHTML = state.characters.map(c => {
             const rawAv = c.avatar_path || state.loadedCharacters[c.id]?.avatar;
             const av = getAvatarUrlSync(c.id, rawAv) || rawAv;
-            const postCount = getAllGalleryImages(c.id).length;
+            const postCount = getAllFeedPosts(c.id).length;
             const isActive = _feedMode === c.id;
             const avHtml = av && !isEmoji(av)
                 ? `<div class="social-char-item__avatar" style="background-image:url('${esc(av)}')"></div>`
@@ -3515,43 +3640,38 @@ export function initUI() {
 
     async function renderHotFeed() {
         if (!$feedList) return;
-        // Collect all posts from all characters, interleaved
         const allPosts = [];
         for (const c of state.characters) {
-            const images = getAllGalleryImages(c.id);
-            const meta   = c;
-            const char   = state.loadedCharacters[c.id];
-            images.forEach((src, i) => allPosts.push({ charId: c.id, meta, char, src, postIdx: i }));
+            const posts = getAllFeedPosts(c.id);
+            const meta  = c;
+            const char  = state.loadedCharacters[c.id];
+            posts.forEach((p, i) => allPosts.push({ ...p, charId: c.id, meta, char, postIdx: p.postIdx ?? i }));
         }
         if (!allPosts.length) {
             $feedList.innerHTML = `
                 <div class="feed-empty">
                     <i data-lucide="image-off"></i>
                     <h3>No Posts Yet</h3>
-                    <p>Add images to your characters' galleries to see their feed here.</p>
+                    <p>Add images to your characters' galleries, or compose a post.</p>
                 </div>`;
             lucideRefresh($feedList);
             return;
         }
-        // Shuffle for hot-feed feel (stable shuffle seeded by char+idx)
-        allPosts.sort((a, b) => {
-            const ha = (a.charId.charCodeAt(0) * 17 + a.postIdx * 31) % 97;
-            const hb = (b.charId.charCodeAt(0) * 17 + b.postIdx * 31) % 97;
-            return hb - ha;
-        });
+        // Sort: permanent posts first by timestamp desc, then local newest-first
+        allPosts.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
         await _renderPostList(allPosts);
     }
 
-    // Persistent like state per (charId, postIdx)
+    // Persistent like state per (charId, postId)
     function getFeedLikes(charId) {
         if (!state.socialData[charId]) state.socialData[charId] = {};
         return state.socialData[charId]._likes || {};
     }
-    function toggleFeedLike(charId, postIdx) {
+    function toggleFeedLike(charId, postId) {
         if (!state.socialData[charId]) state.socialData[charId] = {};
         if (!state.socialData[charId]._likes) state.socialData[charId]._likes = {};
-        const liked = !!state.socialData[charId]._likes[postIdx];
-        state.socialData[charId]._likes[postIdx] = !liked;
+        const liked = !!state.socialData[charId]._likes[postId];
+        state.socialData[charId]._likes[postId] = !liked;
         saveState();
         return !liked;
     }
@@ -3597,32 +3717,48 @@ export function initUI() {
         if (!$feedList) return;
         const char = state.loadedCharacters[id];
         const meta = state.characters.find(c => c.id === id);
-        const images = getAllGalleryImages(id);
         const charName = char?.name || meta?.name || 'Unknown';
-        const rawAv = meta?.avatar_path || char?.avatar;
-        const av = getAvatarUrlSync(id, rawAv) || rawAv;
+        const allPosts = getAllFeedPosts(id);
 
-        if (!images.length) {
+        if (!allPosts.length) {
             $feedList.innerHTML = `
                 <div class="feed-empty">
                     <i data-lucide="image-off"></i>
                     <h3>No Posts Yet</h3>
-                    <p>Add images via the gallery to populate ${esc(charName)}'s feed.</p>
-                    <button class="btn btn--accent btn--sm" id="feed-empty-add">Add Images</button>
+                    <p>Compose a post as ${esc(charName)}, or add images via the gallery.</p>
+                    <button class="btn btn--accent btn--sm" id="feed-empty-compose">Compose Post</button>
                 </div>`;
-            qs('#feed-empty-add', $feedList)?.addEventListener('click', () => openGalleryModal(id));
+            qs('#feed-empty-compose', $feedList)?.addEventListener('click', () => openComposeModal(id));
             lucideRefresh($feedList);
             return;
         }
 
-        const posts = images.map((src, i) => ({ charId: id, meta, char, src, postIdx: i }));
+        const posts = allPosts.map((p, i) => ({ ...p, charId: id, meta, char, postIdx: p.postIdx ?? i }));
+        // Newest first
+        posts.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
         await _renderPostList(posts);
     }
 
     // Shared post renderer — works for single-char and hot feeds
+    // Each post in `posts` is a unified feed post object from getAllFeedPosts()
     async function _renderPostList(posts) {
         if (!$feedList) return;
-        const CAPTIONS = [
+
+        // Resolve idb: src refs for image posts; text posts have no src to resolve
+        const resolved = await Promise.all(posts.map(async p => {
+            if (p.type === 'text' || !p.src) return p;
+            const src = await resolveImageUrl(p.src).catch(() => null);
+            return src ? { ...p, src } : null;
+        }));
+        // Drop image posts that failed IDB resolution; keep text posts always
+        const posts_ = resolved.filter(p => p && (p.type === 'text' || p.src));
+        if (!posts_.length) {
+            $feedList.innerHTML = `<div class="feed-empty"><i data-lucide="image-off"></i><h3>No Posts Yet</h3><p>Images saved to a character's gallery will appear here.</p></div>`;
+            lucideRefresh($feedList);
+            return;
+        }
+
+        const FALLBACK_CAPTIONS = [
             'Signal caught. Feeling something tonight. 💠',
             'Static and signal. #TheUnderdark',
             'The city never sleeps. Neither do I.',
@@ -3635,35 +3771,46 @@ export function initUI() {
             'Between the static — clarity. ✦',
         ];
 
-        const seedLike = (charId, i) => 47 + ((charId.charCodeAt(0) * 13 + i * 37) % 400);
+        const seedLike = (charId, postId) => {
+            let h = 0;
+            for (let k = 0; k < postId.length; k++) h = (h * 31 + postId.charCodeAt(k)) & 0xffffffff;
+            return 47 + (Math.abs(h) % 400);
+        };
 
-        $feedList.innerHTML = posts.map(({ charId, meta, char, src, postIdx: i }) => {
+        $feedList.innerHTML = posts_.map(p => {
+            const { charId, meta, char, src, type, postIdx: i, id: postId, caption: postCaption, permanent, timestamp } = p;
             const charName = char?.name || meta?.name || 'Unknown';
             const rawAv    = meta?.avatar_path || char?.avatar;
             const av       = getAvatarUrlSync(charId, rawAv) || rawAv;
             const likes    = getFeedLikes(charId);
-            const isLiked  = !!likes[i];
-            const likeCount = seedLike(charId, i) + (isLiked ? 1 : 0);
-            const caption  = CAPTIONS[(charId.charCodeAt(0) + i) % CAPTIONS.length];
-            const comments = (state.socialData[charId]?.[i] || []).filter(c => c.role !== undefined);
+            const isLiked  = !!likes[postId];
+            const base     = seedLike(charId, postId);
+            const likeCount = base + (isLiked ? 1 : 0);
+            const caption  = postCaption || FALLBACK_CAPTIONS[(charId.charCodeAt(0) + i) % FALLBACK_CAPTIONS.length];
+            // Comments keyed by postId (stable regardless of index changes)
+            const commentKey = postId;
+            const comments = (state.socialData[charId]?.[commentKey] || []).filter(c => c.role !== undefined);
 
-            let mediaHtml;
-            if (!src) {
-                mediaHtml = `<div class="feed-post__media-empty"><i data-lucide="image-off"></i></div>`;
+            let mediaHtml = '';
+            if (type === 'text') {
+                // Text-only post — no media area
+                mediaHtml = '';
+            } else if (!src) {
+                mediaHtml = `<div class="feed-post__media"><div class="feed-post__media-empty"><i data-lucide="image-off"></i></div></div>`;
             } else if (isEmoji(src)) {
-                mediaHtml = `<div class="feed-post__media-emoji">${src}</div>`;
+                mediaHtml = `<div class="feed-post__media"><div class="feed-post__media-emoji">${src}</div></div>`;
             } else {
-                mediaHtml = `<img src="${esc(src)}" class="feed-post__media-img" loading="lazy" alt="Post by ${esc(charName)}">`;
+                mediaHtml = `<div class="feed-post__media"><img src="${esc(src)}" class="feed-post__media-img" loading="lazy" alt="Post by ${esc(charName)}"></div>`;
             }
 
-            const avHtml = av && !isEmoji(av)
-                ? `style="background-image:url('${esc(av)}')"` : '';
+            const avHtml    = av && !isEmoji(av) ? `style="background-image:url('${esc(av)}')"` : '';
             const avContent = av && !isEmoji(av) ? '' : (av || '👤');
+            const draftBadge = !permanent ? `<span class="feed-post__draft-badge" title="Local only — not yet pushed">draft</span>` : '';
 
             const visibleComments = comments.slice(-4);
             const hiddenCount = comments.length - visibleComments.length;
             const commentsHtml = `
-                ${hiddenCount > 0 ? `<button class="feed-comments__view-more" data-char-id="${esc(charId)}" data-post-idx="${i}">View ${hiddenCount} earlier…</button>` : ''}
+                ${hiddenCount > 0 ? `<button class="feed-comments__view-more" data-char-id="${esc(charId)}" data-post-id="${esc(commentKey)}">View ${hiddenCount} earlier…</button>` : ''}
                 ${visibleComments.map(c => {
                     if (c.role === 'system') return `<div class="feed-comment feed-comment--system"><span class="feed-comment__text">${esc(c.content)}</span></div>`;
                     const isBot  = c.role === 'bot';
@@ -3682,46 +3829,49 @@ export function initUI() {
                 }).join('')}`;
 
             return `
-            <article class="feed-post" data-post-idx="${i}" data-char-id="${esc(charId)}">
+            <article class="feed-post${type === 'text' ? ' feed-post--text' : ''}" data-post-id="${esc(postId)}" data-post-idx="${i}" data-char-id="${esc(charId)}">
                 <header class="feed-post__header">
                     <div class="feed-post__header-avatar" ${avHtml}>${avContent}</div>
                     <div class="feed-post__header-info">
                         <span class="feed-post__header-name">${esc(charName)}</span>
-                        <span class="feed-post__header-sub">Night City / The Underdark</span>
+                        <span class="feed-post__header-sub">Night City / The Underdark ${draftBadge}</span>
                     </div>
                     <button class="feed-post__header-dm btn-icon btn-icon--small" data-dm-char="${esc(charId)}" title="Open DM with ${esc(charName)}"><i data-lucide="message-circle"></i></button>
                 </header>
-                <div class="feed-post__media">${mediaHtml}</div>
+                ${mediaHtml}
                 <div class="feed-post__toolbar">
-                    <button class="feed-post__act-btn feed-post__act-btn--like ${isLiked ? 'liked' : ''}" data-like-char="${esc(charId)}" data-like-idx="${i}">
+                    <button class="feed-post__act-btn feed-post__act-btn--like ${isLiked ? 'liked' : ''}" data-like-char="${esc(charId)}" data-like-id="${esc(postId)}">
                         <i data-lucide="heart"></i>
                     </button>
                     <span class="feed-post__act-count">${likeCount.toLocaleString()}</span>
                     <button class="feed-post__act-btn" style="margin-left:4px"><i data-lucide="message-circle"></i></button>
                     <span class="feed-post__spacer"></span>
-                    <span class="feed-post__time">${relativeTime(comments.at(-1)?.timestamp || (Date.now() - 1000 * 60 * (60 + i * 47)))}</span>
+                    <span class="feed-post__time">${relativeTime(timestamp || (Date.now() - 1000 * 60 * (60 + i * 47)))}</span>
                 </div>
                 <div class="feed-post__body">
                     <div class="feed-post__caption"><strong>${esc(charName)}</strong> ${esc(caption)}</div>
-                    ${comments.length > 0 ? `<div class="feed-comments" data-comments-for="${esc(charId)}-${i}">${commentsHtml}</div>` : `<div class="feed-comments" data-comments-for="${esc(charId)}-${i}"></div>`}
+                    <div class="feed-comments" data-comments-for="${esc(charId)}-${esc(commentKey)}">${commentsHtml}</div>
                 </div>
                 <div class="feed-post__comment-row">
                     <div class="feed-comment-user-avatar">👤</div>
-                    <input type="text" class="feed-post__comment-input" placeholder="Add a comment…" data-char-id="${esc(charId)}" data-post-idx="${i}">
-                    <button class="feed-post__comment-submit" data-char-id="${esc(charId)}" data-post-idx="${i}" disabled>Post</button>
+                    <input type="text" class="feed-post__comment-input" placeholder="Add a comment…" data-char-id="${esc(charId)}" data-post-id="${esc(commentKey)}">
+                    <button class="feed-post__comment-submit" data-char-id="${esc(charId)}" data-post-id="${esc(commentKey)}" disabled>Post</button>
                 </div>
             </article>`;
         }).join('');
 
-        // Wire likes
+        // Wire likes (keyed by postId now, not array index)
         qsa('.feed-post__act-btn--like', $feedList).forEach($btn => {
             $btn.addEventListener('click', () => {
-                const cId = $btn.dataset.likeChar;
-                const idx = parseInt($btn.dataset.likeIdx, 10);
-                const nowLiked = toggleFeedLike(cId, idx);
+                const cId    = $btn.dataset.likeChar;
+                const postId = $btn.dataset.likeId;
+                const nowLiked = toggleFeedLike(cId, postId);
                 $btn.classList.toggle('liked', nowLiked);
                 const $cnt = $btn.nextElementSibling;
-                if ($cnt) $cnt.textContent = (seedLike(cId, idx) + (nowLiked ? 1 : 0)).toLocaleString();
+                if ($cnt) {
+                    const base = seedLike(cId, postId);
+                    $cnt.textContent = (base + (nowLiked ? 1 : 0)).toLocaleString();
+                }
             });
         });
 
@@ -3731,14 +3881,8 @@ export function initUI() {
                 e.stopPropagation();
                 const cId = $btn.dataset.dmChar;
                 await loadCharacterCard(cId).catch(() => {});
-                // Find or create DM
                 const existing = state.reality?.chats.find(c => c.type === 'dm' && c.botIds.length === 1 && c.botIds[0] === cId);
-                if (existing) {
-                    switchChat(existing.id);
-                } else {
-                    newChat('dm', [cId]);
-                }
-                // Switch to chats tab
+                if (existing) switchChat(existing.id); else newChat('dm', [cId]);
                 switchSidebarTab('chats');
                 renderChats();
                 renderAll();
@@ -3747,7 +3891,7 @@ export function initUI() {
 
         // Wire comment inputs
         qsa('.feed-post__comment-input', $feedList).forEach($input => {
-            const $btn = qs(`.feed-post__comment-submit[data-char-id="${$input.dataset.charId}"][data-post-idx="${$input.dataset.postIdx}"]`, $feedList);
+            const $btn = qs(`.feed-post__comment-submit[data-char-id="${$input.dataset.charId}"][data-post-id="${$input.dataset.postId}"]`, $feedList);
             $input.oninput   = () => { if ($btn) $btn.disabled = !$input.value.trim(); };
             $input.onkeydown = e  => { if (e.key === 'Enter' && $btn && !$btn.disabled) $btn.click(); };
         });
@@ -3755,8 +3899,8 @@ export function initUI() {
         qsa('.feed-post__comment-submit', $feedList).forEach($btn => {
             $btn.onclick = async () => {
                 const charId  = $btn.dataset.charId;
-                const postIdx = parseInt($btn.dataset.postIdx, 10);
-                const $input  = qs(`.feed-post__comment-input[data-char-id="${charId}"][data-post-idx="${postIdx}"]`, $feedList);
+                const postId  = $btn.dataset.postId;
+                const $input  = qs(`.feed-post__comment-input[data-char-id="${charId}"][data-post-id="${postId}"]`, $feedList);
                 const text = $input?.value.trim();
                 if (!text) return;
                 $btn.disabled = true;
@@ -3766,10 +3910,10 @@ export function initUI() {
                 const cName = cChar?.name || cMeta?.name || 'Unknown';
                 const cRawAv = cMeta?.avatar_path || cChar?.avatar;
                 const cAv = getAvatarUrlSync(charId, cRawAv) || cRawAv;
-                const $commentsEl = qs(`[data-comments-for="${charId}-${postIdx}"]`, $feedList);
+                const $commentsEl = qs(`[data-comments-for="${charId}-${postId}"]`, $feedList);
                 if ($commentsEl) {
                     $commentsEl.insertAdjacentHTML('beforeend', `
-                        <div class="feed-comment feed-comment--typing" id="typing-${charId}-${postIdx}">
+                        <div class="feed-comment feed-comment--typing" id="typing-${charId}-${postId}">
                             <div class="feed-comment__avatar" ${cAv && !isEmoji(cAv) ? `style="background-image:url('${esc(cAv)}')"` : ''}>${cAv && !isEmoji(cAv) ? '' : (cAv || '👤')}</div>
                             <div class="feed-comment__body">
                                 <span class="feed-comment__author">${esc(cName)}</span>
@@ -3777,7 +3921,7 @@ export function initUI() {
                             </div>
                         </div>`);
                 }
-                await submitSocialComment(charId, postIdx, text);
+                await submitSocialComment(charId, postId, text);
             };
         });
 
@@ -3893,12 +4037,12 @@ export function initUI() {
         lucideRefresh($pc);
     }
 
-    async function submitSocialComment(charId, postIdx, text) {
+    async function submitSocialComment(charId, postId, text) {
         if (!state.socialData[charId]) state.socialData[charId] = {};
-        if (!state.socialData[charId][postIdx]) state.socialData[charId][postIdx] = [];
+        if (!state.socialData[charId][postId]) state.socialData[charId][postId] = [];
 
         // 1. User comment
-        state.socialData[charId][postIdx].push({
+        state.socialData[charId][postId].push({
             role: 'user',
             content: text,
             timestamp: Date.now()
@@ -3908,8 +4052,7 @@ export function initUI() {
         // 2. Configurable responsiveness gate (0–100, default 70)
         const responsiveness = state.config?.charOverrides?.[charId]?.ext?.responsiveness ?? 70;
         if (Math.random() * 100 > responsiveness) {
-            // Character didn't respond — show subtle indicator
-            state.socialData[charId][postIdx].push({
+            state.socialData[charId][postId].push({
                 role: 'system',
                 content: '— no reply —',
                 timestamp: Date.now()
@@ -3929,21 +4072,21 @@ export function initUI() {
             const _worldScenario = state.reality?.worldConfig?.scenario || '';
             const payload = buildPayload({
                 character:  { ...char, id: charId },
-                history:    [{ role: 'user', content: `[SOCIAL MEDIA COMMENT ON YOUR POST #${postIdx+1}]\nUser commented: "${text}"\n\nReply briefly as a social media comment. Keep it in character but short (1-3 sentences max).` }],
+                history:    [{ role: 'user', content: `[SOCIAL MEDIA COMMENT ON YOUR POST]\nUser commented: "${text}"\n\nReply briefly as a social media comment. Keep it in character but short (1-3 sentences max).` }],
                 lore:       state.lorebooks,
                 config:     { ...state.config, stream: true, ...(_worldScenario ? { _worldScenario } : {}) },
                 isGroup:    false,
-                sessionId:  `social-${charId}-${postIdx}`
+                sessionId:  `social-${charId}-${postId}`
             });
 
-            await new Promise((resolve, reject) => {
+            await new Promise((resolve) => {
                 streamCompletion(
                     payload,
                     (_delta, _full) => {},
                     (finalText) => {
                         const clean = finalText.trim().replace(/^["']|["']$/g, '');
                         if (clean) {
-                            state.socialData[charId][postIdx].push({
+                            state.socialData[charId][postId].push({
                                 role: 'bot',
                                 content: clean,
                                 timestamp: Date.now()
@@ -3961,6 +4104,166 @@ export function initUI() {
             console.error('[social] Reply failed:', err);
         }
     }
+
+    // ── Compose Post Modal ────────────────────────────────────────────────────
+    let _composeType = 'text'; // 'text' | 'image'
+
+    function openComposeModal(charId) {
+        const modal = qs('#modal-compose-post');
+        if (!modal) return;
+
+        // Populate character selector
+        const $sel = qs('#compose-modal-char-select', modal);
+        if ($sel) {
+            $sel.innerHTML = state.characters.map(c => {
+                const n = state.loadedCharacters[c.id]?.name || c.name;
+                return `<option value="${esc(c.id)}" ${c.id === charId ? 'selected' : ''}>${esc(n)}</option>`;
+            }).join('');
+        }
+
+        const updateCharDisplay = (id) => {
+            const meta = state.characters.find(c => c.id === id);
+            const char = state.loadedCharacters[id];
+            const name = char?.name || meta?.name || '—';
+            const rawAv = meta?.avatar_path || char?.avatar;
+            const av = getAvatarUrlSync(id, rawAv) || rawAv;
+            const $av = qs('#compose-modal-avatar', modal);
+            const $nm = qs('#compose-modal-char-name', modal);
+            if ($av) {
+                if (av && !isEmoji(av)) { $av.style.backgroundImage = `url(${av})`; $av.textContent = ''; }
+                else { $av.style.backgroundImage = ''; $av.textContent = av || '👤'; }
+            }
+            if ($nm) $nm.textContent = name;
+        };
+        updateCharDisplay(charId || state.characters[0]?.id);
+
+        if ($sel) $sel.addEventListener('change', () => updateCharDisplay($sel.value));
+
+        // Type tabs
+        _composeType = 'text';
+        qsa('.compose-modal__type-tab', modal).forEach(tab => {
+            tab.classList.toggle('active', tab.dataset.composeType === 'text');
+            tab.onclick = () => {
+                _composeType = tab.dataset.composeType;
+                qsa('.compose-modal__type-tab', modal).forEach(t => t.classList.toggle('active', t === tab));
+                const $imgRow = qs('#compose-modal-image-row', modal);
+                if ($imgRow) $imgRow.hidden = _composeType !== 'image';
+            };
+        });
+
+        // Image URL preview
+        const $urlInput = qs('#compose-modal-image-url', modal);
+        const $preview  = qs('#compose-modal-image-preview', modal);
+        const $prevImg  = qs('#compose-modal-preview-img', modal);
+        if ($urlInput) {
+            $urlInput.oninput = debounce(() => {
+                const url = $urlInput.value.trim();
+                if ($prevImg) $prevImg.src = url;
+                if ($preview) $preview.hidden = !url;
+            }, 400);
+        }
+
+        // Reset fields
+        const $caption = qs('#compose-modal-caption', modal);
+        if ($caption) $caption.value = '';
+        if ($urlInput) $urlInput.value = '';
+        if ($preview) $preview.hidden = true;
+        const $imgRow = qs('#compose-modal-image-row', modal);
+        if ($imgRow) $imgRow.hidden = true;
+
+        modal.hidden = false;
+        lucideRefresh(modal);
+        $caption?.focus();
+
+        // Submit
+        const $submit = qs('#compose-modal-submit', modal);
+        const $cancel = qs('#compose-modal-cancel', modal);
+        const $close  = qs('#compose-modal-close', modal);
+        const $bd     = qs('.modal__backdrop', modal);
+
+        const cleanup = () => { modal.hidden = true; };
+        const doSubmit = () => {
+            const selCharId = $sel?.value || charId;
+            const caption = ($caption?.value || '').trim();
+            const imgUrl  = _composeType === 'image' ? ($urlInput?.value || '').trim() : null;
+            if (!caption && !imgUrl) { showToast('Write something first.', 'warn'); return; }
+
+            _saveLocalPost(selCharId, {
+                type: _composeType === 'image' && imgUrl ? 'image' : 'text',
+                src: imgUrl || null,
+                caption: caption || null,
+            });
+
+            cleanup();
+            // Refresh feed
+            if (_feedMode === selCharId) renderSocialFeed(selCharId);
+            else if (_feedMode === 'hot') renderHotFeed();
+            renderSocialSidebar();
+            showToast('Post saved locally.');
+        };
+
+        $submit?.addEventListener('click', doSubmit, { once: true });
+        $cancel?.addEventListener('click', cleanup, { once: true });
+        $close?.addEventListener('click', cleanup, { once: true });
+        $bd?.addEventListener('click', cleanup, { once: true });
+    }
+
+    function _saveLocalPost(charId, { type, src, caption }) {
+        if (!state.socialData.localPosts) state.socialData.localPosts = {};
+        if (!state.socialData.localPosts[charId]) state.socialData.localPosts[charId] = [];
+        const id = `local-${charId}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+        state.socialData.localPosts[charId].push({
+            id,
+            charId,
+            type,
+            src: src || null,
+            caption: caption || null,
+            timestamp: Date.now(),
+            permanent: false,
+        });
+        saveState();
+        return id;
+    }
+
+    // ── Feed Export ───────────────────────────────────────────────────────────
+    qs('#feed-export-btn')?.addEventListener('click', () => {
+        const localPosts = state.socialData?.localPosts || {};
+        const posts = [];
+        for (const [charId, arr] of Object.entries(localPosts)) {
+            arr.forEach(p => {
+                // Exclude idb: refs — those are device-local blobs and can't be exported
+                if (p.src && p.src.startsWith('idb:')) return;
+                posts.push({
+                    id: p.id,
+                    charId,
+                    type: p.type || 'text',
+                    src: p.src || null,
+                    caption: p.caption || null,
+                    timestamp: p.timestamp || Date.now(),
+                    permanent: true, // user intent: will push to git
+                });
+            });
+        }
+        if (!posts.length) {
+            showToast('No local posts to export.', 'warn');
+            return;
+        }
+        const out = {
+            _meta: {
+                exported_at: new Date().toISOString(),
+                note: 'Merge these into data/feed.json posts[] and push to git for permanent visibility.',
+            },
+            posts,
+        };
+        const blob = new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `feed-export-${new Date().toISOString().slice(0, 10)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast(`Exported ${posts.length} post${posts.length !== 1 ? 's' : ''}.`);
+    });
 
     // ── Lightbox ──────────────────────────────────────────────────────────────
     async function openLightbox(charId, startIndex) {
@@ -4977,39 +5280,87 @@ export function initUI() {
     });
 
     // ── Quick Reply Bar ───────────────────────────────────────────────────────
-    const QR_PROMPTS = {
-        continue:    '(Continue the scene from where we left off.)',
-        describe:    '(Describe the current scene and setting in vivid detail.)',
-        narrate:     '(Narrate what happens next without dialogue.)',
-        introspect:  '(Share your inner thoughts and feelings right now.)',
-        ooc:         '[OOC: Let\'s pause the scene for a moment. ]',
-        shorter:     '(Please write a shorter response this time.)',
-        longer:      '(Please write a longer, more detailed response.)',
-    };
+    // Groups: Pacing | Tone | Introspection | Format | Meta
+    const QR_GROUPS = [
+        {
+            label: 'Pacing',
+            entries: [
+                { key: 'continue',   label: '▶ Continue',     text: '(Continue the scene from where we left off.)' },
+                { key: 'narrate',    label: '✦ Narrate',       text: '(Narrate what happens next — no dialogue, pure action and atmosphere.)' },
+                { key: 'slow',       label: '◌ Slow burn',     text: '(Slow the pace. Linger on the moment — the senses, the silence, the feeling.)' },
+                { key: 'timeskip',   label: '⟳ Time skip',     text: '(Move the story forward in time to the next meaningful moment.)' },
+            ],
+        },
+        {
+            label: 'Mood',
+            entries: [
+                { key: 'escalate',   label: '↑ Escalate',      text: '(Raise the tension. Push this scene toward its breaking point.)' },
+                { key: 'tender',     label: '♡ Tender',         text: '(Let this be a soft, tender moment between us.)' },
+                { key: 'darkside',   label: '☽ Dark side',      text: '(Lean into the darker, more dangerous side of your character right now.)' },
+                { key: 'playful',    label: '✧ Playful',        text: '(Be playful and a little teasing — let some levity into this scene.)' },
+            ],
+        },
+        {
+            label: 'Voice',
+            entries: [
+                { key: 'introspect', label: '⦿ Inner world',    text: '(Open up. Share your inner thoughts, fears, or desires in this moment.)' },
+                { key: 'describe',   label: '◈ Describe scene', text: '(Paint the scene — what do you see, hear, feel, smell right now?)' },
+                { key: 'react',      label: '⊞ React to me',    text: '(React honestly to what I just said or did. How does it land for you?)' },
+                { key: 'whisper',    label: '⌁ Whisper',        text: '(Lean in and whisper something — something you wouldn\'t say out loud.)' },
+            ],
+        },
+        {
+            label: 'Format',
+            entries: [
+                { key: 'shorter',    label: '← Shorter',        text: '(Keep your response brief and punchy this time.)' },
+                { key: 'longer',     label: '→ Longer',          text: '(Give me a longer, more detailed response this time — paint it fully.)' },
+                { key: 'poetry',     label: '~ Prose',           text: '(Write this next beat as lyrical prose — slow, sensory, literary.)' },
+                { key: 'ooc',        label: '[ OOC ]',           text: '[OOC: ]' },
+            ],
+        },
+    ];
 
     qs('#btn-quick-reply')?.addEventListener('click', () => {
         const $bar = qs('#quick-reply-bar');
         if (!$bar) return;
         const open = $bar.hidden;
         if (open && !$bar.dataset.built) {
-            $bar.innerHTML = Object.entries(QR_PROMPTS).map(([key, text]) => {
-                const label = key.charAt(0).toUpperCase() + key.slice(1);
-                return `<button class="qr-btn" data-qr="${esc(key)}" title="${esc(text)}">${esc(label)}</button>`;
-            }).join('');
+            $bar.innerHTML = QR_GROUPS.map(grp =>
+                `<div class="qr-group">
+                    <span class="qr-group__label">${esc(grp.label)}</span>
+                    ${grp.entries.map(e =>
+                        `<button class="qr-btn" data-qr="${esc(e.key)}" title="${esc(e.text)}">${esc(e.label)}</button>`
+                    ).join('')}
+                </div>`
+            ).join('');
             $bar.dataset.built = '1';
         }
         $bar.hidden = !open;
     });
 
+    // Flat lookup map for click handler
+    const _qrLookup = {};
+    QR_GROUPS.forEach(g => g.entries.forEach(e => { _qrLookup[e.key] = e; }));
+
     document.addEventListener('click', e => {
         const btn = e.target.closest('.qr-btn');
         if (!btn) return;
-        const text = QR_PROMPTS[btn.dataset.qr] || '';
-        if (!text) return;
+        const entry = _qrLookup[btn.dataset.qr];
+        if (!entry) return;
         const $ta = qs('#rp-input');
         if (!$ta) return;
         const cur = $ta.value;
-        $ta.value = cur ? `${cur}\n${text}` : text;
+        // OOC puts cursor inside the brackets
+        if (entry.key === 'ooc') {
+            const before = '[OOC: ';
+            const after  = ']';
+            const full = cur ? `${cur}\n${before}${after}` : `${before}${after}`;
+            $ta.value = full;
+            const pos = full.length - after.length;
+            $ta.setSelectionRange(pos, pos);
+        } else {
+            $ta.value = cur ? `${cur}\n${entry.text}` : entry.text;
+        }
         $ta.dispatchEvent(new Event('input'));
         $ta.focus();
         const $bar = qs('#quick-reply-bar');
@@ -5326,8 +5677,9 @@ export function initUI() {
                     state.isStreaming = false;
                     setSendState(false);
                     updateTelemetry();
-                    // Update scene codex if it's open
-                    if (qs('#scene-codex')?.classList.contains('scene-codex--open')) updateCodexDigest();
+                    // Always update codex meters/digest after each bot message — keeps the
+                    // ambient status live even when the codex panel is closed.
+                    updateCodexDigest();
                 },
                 (err) => {
                     $thinkingAside?.remove();
@@ -5345,18 +5697,29 @@ export function initUI() {
     }
 
     function setSendState(streaming, botName = null) {
-        const $btn = qs('#send-btn');
-        const $est = qs('#token-estimate');
+        const $btn   = qs('#send-btn');
+        const $est   = qs('#token-estimate');
+        const $label = qs('#active-bot-label');
         if (streaming) {
             $btn.innerHTML = '<i data-lucide="square"></i>';
             $btn.title = 'Stop generation (also cancels queued group bots)';
             $btn.classList.add('input-container__send--stop');
             if ($est && botName) $est.textContent = `${botName} is writing…`;
+            if ($label && botName) {
+                $label.innerHTML = `<span class="bot-label--streaming">${esc(botName)}</span> <span class="bot-label-dots"><span></span><span></span><span></span></span>`;
+            }
         } else {
             $btn.innerHTML = '<i data-lucide="send"></i>';
             $btn.title = 'Send';
             $btn.classList.remove('input-container__send--stop');
             if ($est) $est.textContent = '';
+            // Restore normal label
+            const activeChar = state.loadedCharacters[state.activeBotId];
+            const displayName = activeChar
+                ? (getCharOverride(state.activeBotId).nickname || activeChar.name)
+                : null;
+            if ($label && displayName) $label.textContent = `→ ${displayName}`;
+            else if ($label) $label.textContent = '';
         }
         lucideRefresh($btn);
     }
@@ -6686,7 +7049,9 @@ export function initUI() {
     // Kick off persona + scenario fetches immediately (parallel with manifest)
     _ensurePersonasLoaded();
     _loadScenarioCache();
-    loadManifest().then(() => {
+    Promise.all([loadManifest(), loadFeedJson()]).then(() => {
+        // Bring permanent feed posts into the closure scope
+        _permanentFeedPosts = _feedJsonCache;
         renderAll();
         initChatBackground();
         loadModels();
@@ -6713,3 +7078,20 @@ async function loadManifest() {
         // Silently ignore — user may have no manifest chars
     }
 }
+
+// ── Feed.json Loader ──────────────────────────────────────────────────────────
+// Loads permanent posts from data/feed.json into the module-level cache.
+// Called in parallel with loadManifest at startup.
+async function loadFeedJson() {
+    try {
+        const res  = await fetch('./data/feed.json');
+        const data = await res.json();
+        // Exposed via the closure variable _permanentFeedPosts inside initUI
+        // We store on the module level and initUI reads it before first render
+        _feedJsonCache = data.posts || [];
+    } catch (_) {
+        _feedJsonCache = [];
+    }
+}
+// Module-level cache; initUI reads this after both promises resolve
+let _feedJsonCache = [];

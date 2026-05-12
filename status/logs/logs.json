@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.2.4",
+    "schema_version": "1.2.7",
     "last_updated": "2026-05-12",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -473,6 +473,74 @@
     {
       "hash": "PENDING",
       "date": "2026-05-12",
+      "message": "feat: persistent social feed — feed.json, compose modal, local/permanent post merge, export",
+      "scope": "playground/characters",
+      "impact": "high",
+      "files": [
+        "playground/characters/data/feed.json",
+        "playground/characters/index.html",
+        "playground/characters/script/modules/ui.js",
+        "playground/characters/style/social.css",
+        "status/logs/logs.json"
+      ],
+      "why": "Social feed was purely ephemeral — all posts (gallery images, generated art) lived only in localStorage with no path to permanent visibility across instances. Added data/feed.json as the git-committed post store (git push = visible everywhere), compose modal for in-app post creation as any character (text or image URL), getAllFeedPosts() merging gallery IDB images + permanent feed.json + local composed posts, loadFeedJson() parallel-fetched at startup, export-session-feed download button to extract local posts as a ready-to-merge JSON fragment. Post IDs replace index-based keys throughout for stable comment and like state."
+    },
+    {
+      "hash": "PENDING",
+      "date": "2026-05-12",
+      "message": "feat: immersive RP UX pass — animated streaming indicator, rich QR groups, speech/thought CSS, directional message animations",
+      "scope": "playground/characters",
+      "impact": "high",
+      "files": [
+        "playground/characters/script/modules/ui.js",
+        "playground/characters/style/responsive.css",
+        "playground/characters/style/arena.css",
+        "status/logs/logs.json"
+      ],
+      "why": "The roleplay UI lacked visual feedback during streaming, quick-reply prompts were generic and flat, text rendering made no visual distinction between dialogue/thought/action, and message entrance animations were identical for user vs bot. Comprehensive UX pass: dynamic input placeholder reflecting active character, expanded QR bar with 4 themed groups × 4 evocative entries, animated streaming dots + character name pulse in bot-label, `.rp-speech` amber glow + `.rp-thought` violet shimmer + `em` muted silver layer in CSS, and differentiated spring-eased slide-in animations per message origin."
+    },
+    {
+      "hash": "PENDING",
+      "date": "2026-05-12",
+      "message": "fix: avatar resolution for gallery-promoted images; cache invalidation on avatar change",
+      "scope": "playground/characters",
+      "impact": "high",
+      "files": [
+        "playground/characters/script/modules/ui.js",
+        "status/logs/logs.json"
+      ],
+      "why": "When a gallery image (stored as idb:img: ref) was set as a character's avatar, getAvatarUrl would call resolveCharAvatar which looked in the wrong IDB store (avatar:<charId> vs img:<blobId>), returning null and showing a broken avatar. Also, the avatar cache was keyed only by charId and never invalidated on change, so newly set avatars continued showing the old image until page reload. Fixed getAvatarUrl to detect idb:img: refs and route to resolveImageUrl; changed cache structure to key on the ref value; added cache busting in both avatar-set paths."
+    },
+    {
+      "hash": "PENDING",
+      "date": "2026-05-12",
+      "message": "fix: resolve idb refs in social/hot feed; auto-refresh feed on image generation",
+      "scope": "playground/characters",
+      "impact": "high",
+      "files": [
+        "playground/characters/script/modules/ui.js",
+        "status/logs/logs.json"
+      ],
+      "why": "_renderPostList passed raw idb:img: refs directly into innerHTML as <img src> without resolving them via IndexedDB — generated images appeared broken in the social feed and hot feed. Added async resolution pass before rendering. Also wired social/hot feed live refresh after every image generation path so new images appear immediately without requiring the user to navigate away and back."
+    },
+    {
+      "hash": "PENDING",
+      "date": "2026-05-12",
+      "message": "feat: expand Image Studio Quick tab — scene groups, mood/outfit/activity presets, 20 rel dynamics",
+      "scope": "playground/characters",
+      "impact": "medium",
+      "files": [
+        "playground/characters/data/rp-gen-presets.json",
+        "playground/characters/index.html",
+        "playground/characters/script/modules/ui.js",
+        "playground/characters/style/img-studio.css",
+        "status/logs/logs.json"
+      ],
+      "why": "The Quick tab had only 18 undifferentiated scene presets and 10 relationship pills — insufficient variety for a character image generation tool. Expanded to ~60 grouped scene presets across 6 themed categories, plus three new preset sections (Mood, Outfit, Activity) that apply additively without resetting unrelated fields; relationships expanded from 10 to 20 entries."
+    },
+    {
+      "hash": "PENDING",
+      "date": "2026-05-12",
       "message": "refactor: remove dead modules, extract shared-utils, rename sims btn",
       "scope": "playground/characters",
       "impact": "medium",
@@ -912,6 +980,96 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-12",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Persistent social feed system added to The Underdark. New data/feed.json stores permanent posts (public image URLs or text) committed to git — visible on all instances on push. getAllFeedPosts() unifies three sources: gallery IDB images, permanent feed.json posts, and local composed posts (state.socialData.localPosts). loadFeedJson() is parallel-fetched at startup alongside loadManifest(). Compose modal added (#modal-compose-post) — character selector with avatar display, text/image-URL type tabs, caption textarea, image preview, and draft hint. #feed-add-post-btn now opens compose instead of the gallery modal. Export Feed button (#feed-export-btn) downloads all local posts (excluding IDB refs) as a dated JSON fragment ready to merge into feed.json and push. Post IDs (stable strings) replace array indices throughout comment and like state so reactions survive feed reorders.",
+      "decisions": [
+        "feed.json posts[] use permanent:true — the flag is set to false on local composed posts and stripped/set true on export so the user's intent is captured at export time.",
+        "getAllFeedPosts() deduplicated by a Set of ids — safe to call multiple times without duplicating.",
+        "Gallery image posts keep postIdx:i from the gallery array for lightbox navigation; permanent and local posts use result.length as postIdx — both render correctly.",
+        "IDB refs (idb:img:*) are excluded from feed export — they are device-local blobs with no public URL and would be meaningless in git.",
+        "seedLike() now hashes the full postId string rather than (charId+index) — likes survive any reshuffling of posts.",
+        "submitSocialComment and all socialData keying migrated from postIdx (integer, unstable) to postId (string, stable).",
+        "_feedJsonCache is module-level; _permanentFeedPosts is closure-level inside initUI — bridged by assigning after both startup promises resolve.",
+        "Compose modal event listeners use {once:true} to avoid listener accumulation on repeated opens."
+      ],
+      "rules_reinforced": [
+        "Any post content that lives in IDB must never be exported to a git-committed file — IDB is device-local.",
+        "Post identity must be a stable string ID, not an array index — indexes shift when posts are added/removed.",
+        "data/ JSON files are the canonical source for permanent, multi-instance-visible content."
+      ]
+    },
+    {
+      "date": "2026-05-12",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Comprehensive immersive RP UX pass on The Underdark. Six targeted improvements across ui.js and CSS: (1) dynamic input placeholder updates to 'Message {charName}…' when a character is active; (2) Quick Reply bar redesigned from 8 flat prompts to 4 themed groups (Pacing / Mood / Voice / Format) × 4 entries each, with OOC cursor-placement behaviour; (3) Scene Codex meters and digest now update unconditionally after every bot message, not just when the codex panel is open; (4) Streaming state shows animated dot-pulse + pulsing character name in the bot-label area; (5) RP text layer receives distinct visual treatment — spoken dialogue in warm amber glow (.rp-speech), inner thought in violet shimmer (.rp-thought), action/narration in muted silver (em), bold in accent-tinted white; (6) Message entrance animations differentiated — bot messages slide from left, user messages from right, both with spring-eased cubic-bezier.",
+      "decisions": [
+        "_updateInputPlaceholder() added as a private helper in ui.js — called from both renderActiveBots() and setSendState() to keep placeholder in sync during idle and streaming states.",
+        "QR_GROUPS replaces flat QR_PROMPTS — grouped array with {label, entries[]} shape; _qrLookup flat map rebuilt from it for the click handler.",
+        "OOC entry appends '[OOC: ]' and places cursor inside the brackets via setSelectionRange() — not a full injected text.",
+        "Codex always-update: removed the `scene-codex--open` guard from the triggerBotResponse completion callback.",
+        "setSendState() now injects raw HTML for the bot-label during streaming (bot-label--streaming + bot-label-dots spans) — restored to plain textContent on stream end.",
+        "Message animations: msgSlideIn (bot: +translateX(-4px)) vs msgSlideInUser (user: +translateX(4px)) with identical Y offset and spring easing.",
+        "rp-speech and rp-thought hover states add extra glow — subtle but rewards mouse users without affecting mobile.",
+        "Paragraph margin added to .message--bot .message__content p for readability in longer bot responses."
+      ],
+      "rules_reinforced": [
+        "Visual distinction between dialogue, thought, and action is core to immersive RP — never flatten them to the same colour/weight.",
+        "Streaming feedback must be present in the input zone, not just the message thread — the user needs to know who is writing.",
+        "QR prompts should be evocative and specific to RP context, not generic 'continue' / 'summarise' labels."
+      ]
+    },
+    {
+      "date": "2026-05-12",
+      "agent": "Claude Sonnet 4.6",
+      "type": "bug_fix",
+      "summary": "Two-part gallery+avatar bug fix. (1) Social/hot feed showed broken images because _renderPostList used raw idb:img: refs directly in innerHTML — fixed by adding async resolveImageUrl pass before building HTML. (2) Avatar cache never invalidated on change and getAvatarUrl couldn't resolve idb:img: refs (only the avatar-slot format) — fixed by updating the cache key strategy and routing idb:img: refs through resolveImageUrl. Also added live feed refresh after all image generation paths and cache busting in both set-avatar paths.",
+      "decisions": [
+        "Avatar cache now keyed as charId → ref (for staleness check) + charId:url → resolved URL (for return value), allowing invalidation without losing the ability to detect unchanged refs.",
+        "idb:img: and legacy idb: avatar refs handled in one function — no separate code paths needed by callers.",
+        "Feed refresh after generation gated on $feedArena.hidden — avoids unnecessary re-renders."
+      ],
+      "rules_reinforced": [
+        "idb:img: (gallery images) and idb: (avatar slot) are distinct IDB stores with different lookup keys — never mix them.",
+        "Any cache keyed by charId must be invalidated whenever that character's avatar changes."
+      ]
+    },
+    {
+      "date": "2026-05-12",
+      "agent": "Claude Sonnet 4.6",
+      "type": "bug_fix",
+      "summary": "Fixed generated images not appearing in the social feed, hot feed, or character gallery view. Root cause: _renderPostList built innerHTML synchronously from raw gallery refs which can be idb:img: IndexedDB references — passing those literally as <img src> produced broken images. Fixed by adding an async resolve pass (Promise.all over resolveImageUrl) before building the HTML, with filtering of any refs that fail to resolve. Also added live feed refresh after every image generation path so new images appear in the social/hot feed immediately without navigation.",
+      "decisions": [
+        "Resolution happens inside _renderPostList so both renderSocialFeed and renderHotFeed benefit from a single fix.",
+        "Posts that fail IDB resolution are filtered out rather than shown as broken images.",
+        "Feed refresh after generation is gated on $feedArena visibility — no pointless re-renders when social panel isn't open.",
+        "Gallery modal upload paths (file + URL) do not need live feed refresh — the modal overlays the feed anyway."
+      ],
+      "rules_reinforced": [
+        "idb:img: refs must always be passed through resolveImageUrl before use in DOM — never assume a gallery ref is a valid URL.",
+        "Any code path that mutates a character's gallery array should call renderGalleryStrip + optionally refresh the social feed if visible."
+      ]
+    },
+    {
+      "date": "2026-05-12",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Massively expanded the Image Studio Quick tab preset library. Scene presets restructured from 18 flat entries into 6 themed groups (~60 presets total: Portrait & Editorial, Lifestyle & Setting, Intimate & Sensual, Power & Dark, Fantasy & Sci-Fi, Action & Drama). Three new preset sections added: Mood Presets (18 atmosphere-only entries), Outfit Presets (20 clothing-combo entries), Activity Presets (20 pose+cam+focus entries). Relationship Dynamic expanded from 10 to 20 entries. Mood/Outfit/Activity presets apply additively (noReset) so they layer on top of existing scene state without wiping it.",
+      "decisions": [
+        "Scene presets use a grouped structure (scenes.groups[]) — _renderScenePresetCards updated to handle both grouped and flat formats for forward compatibility.",
+        "Mood/Outfit/Activity presets pass noReset:true to _applyStudioScenePreset, keeping them additive — a user can set a scene preset then layer a mood on top without losing the scene.",
+        "Factored _makePresetCard() out of _renderScenePresetCards to eliminate code duplication across 4 render functions.",
+        "Group label (.studio-preset-group-label) and group row (.studio-preset-group-row) CSS classes added to img-studio.css to preserve grid layout within groups.",
+        "rp-gen-presets.json version kept at 1.0.0 — no consumer breaks, purely additive new top-level keys."
+      ],
+      "rules_reinforced": [
+        "Preset data is pure JSON — all rendering code lives in ui.js and reads from rp-gen-presets.json. No preset logic hardcoded in HTML.",
+        "Additive vs reset behaviour is a caller decision at the render level, not baked into the apply function."
+      ]
+    },
     {
       "date": "2026-05-12",
       "agent": "Claude Sonnet 4.6",

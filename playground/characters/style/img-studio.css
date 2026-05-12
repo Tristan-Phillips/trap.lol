@@ -491,6 +491,25 @@
 .studio-preset-card.active svg,
 .studio-preset-card.active [data-lucide] { opacity: 1; }
 
+/* ── Preset group label + row inside scene/mood/outfit/activity grids ── */
+.studio-preset-group-label {
+    grid-column: 1 / -1;
+    padding: 6px 2px 2px;
+    font-size: 0.58rem;
+    font-family: var(--font-mono);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(190, 41, 236, 0.5);
+}
+
+.studio-preset-group-row {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+    gap: 5px;
+    margin-bottom: 4px;
+}
+
 /* ── Sub-group label inside a section ── */
 .studio-subgroup {
     padding: 4px 14px 2px;

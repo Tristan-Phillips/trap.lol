@@ -433,7 +433,7 @@ export async function generateImagePromptWithLLM(opts = {}) {
     const userName = state.config.userName || 'User';
 
     // Pick which model to call — character override first, then global config
-    const llmModel = override.modelOverride || state.config.selectedModel || 'gemini-2.0-flash';
+    const llmModel = override.modelOverride || state.config.model || 'deepseek-r1';
 
     // Build a rich context document for the LLM
     const contextParts = [];
@@ -549,7 +549,7 @@ Rules:
 
     const userMessage = `${contextParts.join('\n\n')}\n\nWrite the image generation prompt now.`;
 
-    const LLM_API = 'https://nano-gpt.com/v1/chat/completions';
+    const LLM_API = 'https://nano-gpt.com/api/v1/chat/completions';
     const res = await fetch(LLM_API, {
         method: 'POST',
         headers: {

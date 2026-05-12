@@ -1183,3 +1183,172 @@
     opacity: 0.8;
     min-height: 1em;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   FEED HEADER ACTIONS
+   ═══════════════════════════════════════════════════════════════════════════ */
+.feed-header__actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+/* ── Draft badge on local-only posts ── */
+.feed-post__draft-badge {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 0.52rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent-warm, #F4A830);
+    border: 1px solid rgba(244, 168, 48, 0.35);
+    border-radius: 3px;
+    padding: 0 4px;
+    line-height: 1.6;
+    margin-left: 5px;
+    opacity: 0.75;
+    vertical-align: middle;
+}
+
+/* ── Text-only post (no media block) ── */
+.feed-post--text .feed-post__body {
+    padding-top: 14px;
+}
+.feed-post--text .feed-post__caption {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--text-main);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   COMPOSE POST MODAL
+   ═══════════════════════════════════════════════════════════════════════════ */
+.compose-modal .modal__content { max-width: 480px; }
+
+.compose-modal__body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: var(--space-md);
+}
+
+/* Character row */
+.compose-modal__char-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.compose-modal__avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+    background-color: var(--glass-bg);
+    border: 1px solid var(--glass-border-mute);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+.compose-modal__char-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    flex: 1;
+    min-width: 0;
+}
+.compose-modal__char-name {
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--text-main);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.compose-modal__char-select {
+    font-size: 0.72rem;
+    padding: 2px 6px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border-mute);
+    color: var(--text-muted);
+    border-radius: 4px;
+    max-width: 100%;
+}
+
+/* Post type tabs */
+.compose-modal__type-tabs {
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid var(--glass-border-mute);
+    padding-bottom: 8px;
+}
+.compose-modal__type-tab {
+    background: transparent;
+    border: 1px solid var(--glass-border-mute);
+    color: var(--text-muted);
+    border-radius: 5px;
+    padding: 5px 12px;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: var(--transition);
+}
+.compose-modal__type-tab svg { width: 12px; height: 12px; }
+.compose-modal__type-tab:hover { border-color: var(--glass-border); color: var(--text-main); }
+.compose-modal__type-tab.active {
+    background: rgba(var(--accent-rgb), 0.12);
+    border-color: rgba(var(--accent-rgb), 0.4);
+    color: var(--theme-accent);
+}
+
+/* Caption textarea */
+.compose-modal__caption {
+    min-height: 90px;
+    resize: vertical;
+}
+
+/* Image row */
+.compose-modal__image-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.compose-modal__image-preview {
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--glass-border-mute);
+    max-height: 160px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.compose-modal__image-preview img {
+    width: 100%;
+    max-height: 160px;
+    object-fit: contain;
+}
+
+/* Hint text */
+.compose-modal__hint {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    opacity: 0.7;
+    line-height: 1.5;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--glass-border-mute);
+    border-radius: 5px;
+    padding: 8px 10px;
+}
+.compose-modal__hint code {
+    font-family: var(--font-mono);
+    color: var(--theme-accent);
+    font-size: 0.9em;
+}

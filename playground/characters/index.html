@@ -424,7 +424,10 @@
                         <span id="feed-char-tagline" class="feed-char-tagline"></span>
                     </div>
                 </div>
-                <button id="feed-add-post-btn" class="btn btn--accent btn--sm"><i data-lucide="plus-square"></i> Post</button>
+                <div class="feed-header__actions">
+                    <button id="feed-export-btn" class="btn btn--ghost btn--sm" title="Export local posts as feed.json fragment"><i data-lucide="download"></i> Export</button>
+                    <button id="feed-add-post-btn" class="btn btn--accent btn--sm"><i data-lucide="plus-square"></i> Post</button>
+                </div>
             </header>
             <div class="feed-arena__body">
                 <div id="social-feed-container" class="feed-scroll-area feed-scroll-area--main"></div>
@@ -1291,6 +1294,27 @@
         <div class="studio-section">
           <div class="studio-section__label"><i data-lucide="heart"></i> Relationship Dynamic</div>
           <div class="studio-relationship-pills" id="studio-rel-pills">
+            <!-- Populated from rp-gen-presets.json by ui.js -->
+          </div>
+        </div>
+
+        <div class="studio-section">
+          <div class="studio-section__label"><i data-lucide="cloud"></i> Mood Presets</div>
+          <div class="studio-scene-grid" id="studio-mood-preset-grid">
+            <!-- Populated from rp-gen-presets.json by ui.js -->
+          </div>
+        </div>
+
+        <div class="studio-section">
+          <div class="studio-section__label"><i data-lucide="shirt"></i> Outfit Presets</div>
+          <div class="studio-scene-grid" id="studio-outfit-preset-grid">
+            <!-- Populated from rp-gen-presets.json by ui.js -->
+          </div>
+        </div>
+
+        <div class="studio-section">
+          <div class="studio-section__label"><i data-lucide="move"></i> Activity Presets</div>
+          <div class="studio-scene-grid" id="studio-activity-preset-grid">
             <!-- Populated from rp-gen-presets.json by ui.js -->
           </div>
         </div>
@@ -2587,6 +2611,46 @@
     <footer class="modal__footer">
       <button id="text-input-modal-cancel" class="btn btn--ghost" data-close>Cancel</button>
       <button id="text-input-modal-ok" class="btn btn--accent">OK</button>
+    </footer>
+  </div>
+</div>
+
+<!-- ── Compose Post Modal ──────────────────────────────────────────────────── -->
+<div id="modal-compose-post" class="modal" hidden>
+  <div class="modal__backdrop" data-close></div>
+  <div class="modal__content modal__content--sm compose-modal">
+    <header class="modal__header">
+      <h3 class="modal__title">Compose Post</h3>
+      <button class="btn-icon" id="compose-modal-close"><i data-lucide="x"></i></button>
+    </header>
+    <div class="modal__body compose-modal__body">
+      <!-- Character selector -->
+      <div class="compose-modal__char-row">
+        <div id="compose-modal-avatar" class="compose-modal__avatar">👤</div>
+        <div class="compose-modal__char-info">
+          <span id="compose-modal-char-name" class="compose-modal__char-name">—</span>
+          <select id="compose-modal-char-select" class="control-select compose-modal__char-select"></select>
+        </div>
+      </div>
+      <!-- Post type tabs -->
+      <div class="compose-modal__type-tabs">
+        <button class="compose-modal__type-tab active" data-compose-type="text"><i data-lucide="type"></i> Text</button>
+        <button class="compose-modal__type-tab" data-compose-type="image"><i data-lucide="image"></i> Image URL</button>
+      </div>
+      <!-- Caption / body -->
+      <textarea id="compose-modal-caption" class="ce-textarea compose-modal__caption" rows="4" placeholder="What's happening in The Underdark…"></textarea>
+      <!-- Image URL row (shown only for image type) -->
+      <div id="compose-modal-image-row" class="compose-modal__image-row" hidden>
+        <input type="url" id="compose-modal-image-url" class="control-input" placeholder="https://… (public image URL)">
+        <div id="compose-modal-image-preview" class="compose-modal__image-preview" hidden>
+          <img id="compose-modal-preview-img" src="" alt="preview">
+        </div>
+      </div>
+      <div class="compose-modal__hint">This post is saved locally. Use <strong>Export Feed</strong> in the feed toolbar to download and merge it into <code>feed.json</code> for permanent visibility.</div>
+    </div>
+    <footer class="modal__footer">
+      <button id="compose-modal-cancel" class="btn btn--ghost" data-close>Cancel</button>
+      <button id="compose-modal-submit" class="btn btn--accent"><i data-lucide="send"></i> Post</button>
     </footer>
   </div>
 </div>

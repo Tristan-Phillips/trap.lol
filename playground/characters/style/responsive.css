@@ -280,49 +280,58 @@
 
 /* ── RP text layers ────────────────────────────────────────────────────────── */
 
-/* Action / narration text: *like this* */
+/* Action / narration text: *like this* — muted silver-lilac italic */
 .message__content em {
-    color: #928b9e;
-    color: var(--text-muted, #928b9e);
+    color: rgba(180, 172, 200, 0.82);
     font-style: italic;
-    opacity: 0.85;
-    letter-spacing: 0.015em;
-    line-height: 1.6;
+    letter-spacing: 0.018em;
+    line-height: 1.7;
+    font-size: 0.97em;
 }
 
-/* Spoken dialogue: "like this" */
+/* Spoken dialogue: "like this" — warm amber with subtle glow */
 .message__content .rp-speech {
-    color: #e5c07b;
-    color: var(--text-warm, #e5c07b);
+    color: #f0c87a;
     font-style: normal;
     font-weight: 500;
-    text-shadow: 0 0 12px rgba(229, 192, 123, 0.4), 0 0 24px rgba(229, 192, 123, 0.1);
-    letter-spacing: 0.01em;
-    line-height: 1.6;
-    transition: text-shadow 0.3s ease, color 0.3s ease;
+    text-shadow: 0 0 18px rgba(240, 200, 122, 0.5), 0 0 36px rgba(240, 200, 122, 0.12);
+    letter-spacing: 0.012em;
+    transition: text-shadow 0.35s ease, color 0.25s ease;
 }
-
 .message__content .rp-speech:hover {
-    color: #fff2c8;
-    text-shadow: 0 0 16px rgba(255, 242, 200, 0.6), 0 0 32px rgba(255, 242, 200, 0.2);
+    color: #ffe8a0;
+    text-shadow: 0 0 22px rgba(255, 232, 160, 0.7), 0 0 44px rgba(255, 232, 160, 0.25);
 }
 
-/* Inner thought: _like this_ */
+/* Inner thought: _like this_ — violet shimmer italic */
 .message__content .rp-thought {
-    color: #a78bfa;
-    color: rgba(var(--violet-rgb, 167, 139, 250), 0.95);
+    color: rgba(185, 155, 255, 0.9);
     font-style: italic;
     font-weight: 400;
-    letter-spacing: 0.025em;
-    text-shadow: 0 0 10px rgba(167, 139, 250, 0.3);
+    letter-spacing: 0.028em;
+    text-shadow: 0 0 14px rgba(167, 139, 250, 0.4), 0 0 28px rgba(167, 139, 250, 0.12);
+    opacity: 0.88;
+    transition: opacity 0.2s, text-shadow 0.35s;
+}
+.message__content .rp-thought:hover {
+    opacity: 1;
+    text-shadow: 0 0 20px rgba(185, 155, 255, 0.6), 0 0 40px rgba(167, 139, 250, 0.2);
 }
 
-/* Bold emphasis: **like this** */
+/* Bold emphasis: **like this** — bright with subtle accent glow */
 .message__content strong {
-    color: #EDE8F5;
-    color: var(--text-main, #EDE8F5);
-    font-weight: 650;
-    text-shadow: 0 0 12px rgba(190, 41, 236, 0.2);
+    color: #ede8f5;
+    font-weight: 680;
+    letter-spacing: 0.01em;
+    text-shadow: 0 0 14px rgba(190, 41, 236, 0.22);
+}
+
+/* Paragraph rhythm inside bubbles */
+.message--bot .message__content p {
+    margin: 0 0 0.9em;
+}
+.message--bot .message__content p:last-child {
+    margin-bottom: 0;
 }
 
 /* ── modal footer hint (kbd) ── */

@@ -1,0 +1,15 @@
+{
+  "_meta": {
+    "purpose": "Permanent social feed posts for The Underdark. Loaded at startup and merged with locally-generated gallery posts. Posts here are git-committed and visible on all instances. Local (session) posts live in state.socialData.localPosts and can be exported via the feed export button.",
+    "schema_version": "1.0.0",
+    "how_to_add_a_post": [
+      "Add an entry to 'posts[]' below.",
+      "type 'image' requires a 'src' (public URL — not an idb: ref).",
+      "type 'text' shows caption only, no media.",
+      "charId must match a character id in data/index.json.",
+      "Set permanent:true on all hand-authored posts.",
+      "Commit and push — the post will appear on all instances immediately."
+    ]
+  },
+  "posts": []
+}
