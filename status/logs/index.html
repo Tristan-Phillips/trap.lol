@@ -1076,20 +1076,7 @@
          GPL-3.0 — trap.lol
          ══════════════════════════════════════════════════ */
 
-      const DATA_PATH  = './logs.json';
-      const SHARD_MARKED = 'https://cdn.trap.lol/shards/marked.min.js';
-      const SHARD_PURIFY = 'https://cdn.trap.lol/shards/purify.min.js';
-
-      /* ── Shard loader ── */
-      function loadShard(src) {
-        return new Promise((res, rej) => {
-          const s = document.createElement('script');
-          s.src = src;
-          s.onload = res;
-          s.onerror = rej;
-          document.head.appendChild(s);
-        });
-      }
+      const DATA_PATH = './logs.json';
 
       /* ── Utils ── */
       function esc(s) {
@@ -1105,12 +1092,84 @@
         return e;
       }
 
-      /* ── Markdown renderer (used for chat responses) ── */
-      function renderMd(text) {
-        if (typeof marked === 'undefined' || typeof DOMPurify === 'undefined') {
-          return `<span style="white-space:pre-wrap">${esc(text)}</span>`;
+      /* ── Inline markdown renderer — no external deps ── */
+      function renderMd(raw) {
+        const lines = raw.split('\n');
+        const out = [];
+        let inPre = false, preLines = [], inUl = false, inOl = false;
+
+        function flushList() {
+          if (inUl) { out.push('</ul>'); inUl = false; }
+          if (inOl) { out.push('</ol>'); inOl = false; }
         }
-        return DOMPurify.sanitize(marked.parse(text));
+
+        function inlineEsc(s) {
+          return s
+            .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+            .replace(/`([^`]+)`/g, '<code>$1</code>')
+            .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
+            .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.+?)\*/g, '<em>$1</em>')
+            .replace(/~~(.+?)~~/g, '<del>$1</del>')
+            .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+        }
+
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
+
+          /* fenced code blocks */
+          if (line.startsWith('```')) {
+            if (inPre) {
+              out.push('<pre><code>' + preLines.map(l => esc(l)).join('\n') + '</code></pre>');
+              preLines = []; inPre = false;
+            } else {
+              flushList(); inPre = true;
+            }
+            continue;
+          }
+          if (inPre) { preLines.push(line); continue; }
+
+          /* headings */
+          const h = line.match(/^(#{1,6})\s+(.+)/);
+          if (h) { flushList(); out.push(`<h${h[1].length}>${inlineEsc(h[2])}</h${h[1].length}>`); continue; }
+
+          /* hr */
+          if (/^[-*_]{3,}$/.test(line.trim())) { flushList(); out.push('<hr>'); continue; }
+
+          /* blockquote */
+          if (line.startsWith('> ')) { flushList(); out.push(`<blockquote>${inlineEsc(line.slice(2))}</blockquote>`); continue; }
+
+          /* unordered list */
+          const ul = line.match(/^[\s]*[-*+]\s+(.*)/);
+          if (ul) {
+            if (inOl) { out.push('</ol>'); inOl = false; }
+            if (!inUl) { out.push('<ul>'); inUl = true; }
+            out.push(`<li>${inlineEsc(ul[1])}</li>`);
+            continue;
+          }
+
+          /* ordered list */
+          const ol = line.match(/^\d+\.\s+(.*)/);
+          if (ol) {
+            if (inUl) { out.push('</ul>'); inUl = false; }
+            if (!inOl) { out.push('<ol>'); inOl = true; }
+            out.push(`<li>${inlineEsc(ol[1])}</li>`);
+            continue;
+          }
+
+          /* blank line */
+          if (line.trim() === '') { flushList(); out.push('<br>'); continue; }
+
+          /* paragraph */
+          flushList();
+          out.push(`<p>${inlineEsc(line)}</p>`);
+        }
+
+        if (inPre) out.push('<pre><code>' + preLines.map(l => esc(l)).join('\n') + '</code></pre>');
+        flushList();
+
+        /* collapse consecutive <br> to one */
+        return out.join('').replace(/(<br>){2,}/g, '<br>');
       }
 
       /* ── Tab system ── */
@@ -1744,11 +1803,7 @@
          ───────────────────────────────────────────────── */
       async function boot() {
         try {
-          const [res] = await Promise.all([
-            fetch(DATA_PATH),
-            loadShard(SHARD_PURIFY).catch(() => {}),
-            loadShard(SHARD_MARKED).catch(() => {}),
-          ]);
+          const res = await fetch(DATA_PATH);
           if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
           const data = await res.json();
           chatData = data;
