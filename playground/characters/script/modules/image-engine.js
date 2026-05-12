@@ -421,6 +421,7 @@ export async function generateImagePromptWithLLM(opts = {}) {
         scene        = {},
         historyDepth = 8,
         includeNsfw  = true,
+        withNegative = false,
     } = opts;
 
     const apiKey = getApiKey();
@@ -533,7 +534,29 @@ export async function generateImagePromptWithLLM(opts = {}) {
     // User's additional direction
     if (userHint.trim()) contextParts.push(`User direction: ${userHint.trim()}`);
 
-    const systemPrompt = `You are an expert image prompt engineer for AI art generators (Stable Diffusion, FLUX, HiDream, etc).
+    const systemPrompt = withNegative
+        ? `You are an expert image prompt engineer for AI art generators (Stable Diffusion, FLUX, HiDream, etc).
+
+Given detailed context about a character and the current scene, respond with a JSON object containing exactly two keys:
+- "positive": the main image generation prompt
+- "negative": a negative prompt listing what to exclude for the best result
+
+Rules for "positive":
+- Write comma-separated descriptive phrases in natural English
+- Anchor to the character's exact physical traits (do not invent new ones)
+- Describe what is visually present: appearance, pose, expression, clothing, lighting, environment, mood
+- Reflect the emotional tone from the recent conversation
+- Include explicit anatomy naturally if it is in the context
+- End with quality keywords: masterpiece, best quality, highly detailed, sharp focus, cinematic lighting
+- Maximum 250 words
+
+Rules for "negative":
+- List visual failure modes to avoid: bad anatomy, extra limbs, deformed faces, watermarks, text, blurry, low quality
+- If the scene is SFW, include: nsfw, nudity, explicit
+- Maximum 80 words
+
+Respond ONLY with the JSON object — no markdown fences, no explanation.`
+        : `You are an expert image prompt engineer for AI art generators (Stable Diffusion, FLUX, HiDream, etc).
 
 Given detailed context about a character and the current scene, write a single, highly-specific image generation prompt.
 
@@ -547,7 +570,9 @@ Rules:
 - End with quality keywords: masterpiece, best quality, highly detailed, sharp focus, cinematic lighting
 - Maximum 250 words`;
 
-    const userMessage = `${contextParts.join('\n\n')}\n\nWrite the image generation prompt now.`;
+    const userMessage = withNegative
+        ? `${contextParts.join('\n\n')}\n\nWrite the positive and negative prompts as a JSON object now.`
+        : `${contextParts.join('\n\n')}\n\nWrite the image generation prompt now.`;
 
     const LLM_API = 'https://nano-gpt.com/api/v1/chat/completions';
     const res = await fetch(LLM_API, {
@@ -577,6 +602,18 @@ Rules:
     const data = await res.json();
     const content = data.choices?.[0]?.message?.content?.trim();
     if (!content) throw new Error('LLM returned empty prompt.');
+
+    if (withNegative) {
+        try {
+            // Strip any accidental markdown fences before parsing
+            const clean = content.replace(/^```[a-z]*\n?/i, '').replace(/\n?```$/,'').trim();
+            const parsed = JSON.parse(clean);
+            if (parsed.positive) return { positive: parsed.positive, negative: parsed.negative || '' };
+        } catch (_) {}
+        // Fallback: treat the whole response as positive
+        return { positive: content, negative: '' };
+    }
+
     return content;
 }
 

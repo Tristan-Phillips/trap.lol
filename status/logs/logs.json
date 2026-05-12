@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.2.7",
+    "schema_version": "1.3.0",
     "last_updated": "2026-05-12",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -470,6 +470,49 @@
     ]
   },
   "commits": [
+    {
+      "hash": "PENDING",
+      "date": "2026-05-12",
+      "message": "feat: unified DM/Group wizard — mode toggle, Group tab, isekai world questions, relationship web, memory framing, group immersion context in LLM; finalization pass",
+      "scope": "playground/characters",
+      "impact": "high",
+      "files": [
+        "playground/characters/script/modules/state.js",
+        "playground/characters/script/modules/ui.js",
+        "playground/characters/script/modules/llm-engine.js",
+        "playground/characters/index.html",
+        "playground/characters/style/char-editor.css",
+        "status/logs/logs.json"
+      ],
+      "why": "Group creation was a separate, underpowered modal that lacked any immersion configuration. Merged DM/Group into a single wizard with a toggle pill; added a Group tab with memory framing choices (past/faint presience/none), group awareness, turn order, voice mode, isekai world-binding questions, relationship web between characters, and an opening scene. LLM engine injects all group context (isekai answers, relationship web, awareness/voice directives) per-character; memory framing shapes HOW characters remember prior 1-on-1 DMs."
+    },
+    {
+      "hash": "PENDING",
+      "date": "2026-05-12",
+      "message": "fix: implement _injectImageMessage, _injectVideoMessage; add withNegative to image prompt LLM; inline image lightbox + CSS",
+      "scope": "playground/characters",
+      "impact": "high",
+      "files": [
+        "playground/characters/script/modules/ui.js",
+        "playground/characters/script/modules/image-engine.js",
+        "playground/characters/index.html",
+        "playground/characters/style/chat.css",
+        "status/logs/logs.json"
+      ],
+      "why": "_injectImageMessage and _injectVideoMessage were called in 6+ places in ui.js but never defined — any image generation action threw a ReferenceError. Functions were implemented inside the initUI closure with full overlay controls (expand/download/save-to-gallery/delete), reusing a new #img-msg-lightbox overlay. generateImagePromptWithLLM gained withNegative:true support to return JSON {positive, negative} so the HiDream negative field is also AI-filled in the studio."
+    },
+    {
+      "hash": "PENDING",
+      "date": "2026-05-12",
+      "message": "refactor: feed.json as sole feed source — decouple gallery array from feed rendering",
+      "scope": "playground/characters",
+      "impact": "high",
+      "files": [
+        "playground/characters/script/modules/ui.js",
+        "status/logs/logs.json"
+      ],
+      "why": "gallery array (extensions.underdark.gallery) was dual-purpose: lightbox/strip AND feed source. Now feed reads only from feed.json (permanent) and state.socialData.localPosts (local). addToGallery auto-creates a localPost mirror so every generated/uploaded image still appears in the feed. Gallery delete removes the matching localPost. All post-count displays updated to getAllFeedPosts. Gallery array is now solely for lightbox/strip."
+    },
     {
       "hash": "PENDING",
       "date": "2026-05-12",
@@ -980,6 +1023,61 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-12",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Merged the separate 'Group' button and 'New DM' button into a single thread wizard with a DM/Group toggle pill in the header. Added a fifth 'Group' tab (only visible in group mode) covering: group name/icon, memory framing (past/faint/presience/none — shapes how chars remember prior 1-on-1 DMs with you), group awareness (aware/selective/unaware — controls whether chars know others are present), turn order (auto/round-robin/player-driven), voice mode (distinct/harmonised), eight isekai world-binding questions (dynamically populated when chars are selected), character relationship web (pair-by-pair bond descriptions), and an opening scene textarea that injects a narrator system message before first_mes. All group config stored as chat.groupConfig (defaultGroupConfig() in state.js). llm-engine.js updated to inject group context (isekai answers, relationship web, awareness/voice directives) as a system message per-character and to honour the three memory framing modes with distinct narrative instructions.",
+      "decisions": [
+        "defaultGroupConfig() lives in state.js — exported and imported in ui.js. createChat() auto-attaches it for group type.",
+        "TS_TABS is now dynamic (TS_TABS_DM / TS_TABS_GROUP) — _tsSwitchTab uses TS_PANEL_IDS map to find panels by ID rather than DOM order, so the group panel (id='ts-panel-group') is always correctly targeted regardless of DOM position.",
+        "_tsSetMode() swaps the tab list and re-renders the char grid (single-select vs multi-select) when the toggle is clicked.",
+        "Isekai questions and relationship web are lazily rendered when the Group tab is activated, and re-rendered whenever the character selection changes.",
+        "Memory framing 'none' skips the synapse injection entirely — clean slate, no leakage.",
+        "Group opening scene is injected as a message--system message--scene-intro element after chat creation, before first_mes.",
+        "groupConfig is passed to buildPayload via state.chat.groupConfig; llm-engine.js 2b block builds the immersion context per-character considering their specific relationship pairs and awareness mode.",
+        "Standalone #chat-new-group button removed from sidebar; New DM button relabeled 'New Thread'.",
+        "Finalization pass: threadConfig.groupTurnMode takes precedence over reality config in the group auto-responder. 'player-driven' value aliased alongside 'manual' in the responder. Group icon from groupConfig shown in chat-list avatar slot. Radio defaults reset on every modal open. Group panel rendered using TS_PANEL_IDS map (ID-based, not DOM index)."
+      ],
+      "rules_reinforced": [
+        "Tab switching in the wizard must use panel IDs not DOM indices — panels added out of order or conditionally hidden break index-based toggling.",
+        "Group config must live on chat.groupConfig, not threadConfig — they serve different purposes (immersion vs generation settings).",
+        "Thread-scoped config values that affect runtime behaviour (turn mode) must be read from threadConfig first, then fall back to reality config — never only from reality config."
+      ]
+    },
+    {
+      "date": "2026-05-12",
+      "agent": "Claude Sonnet 4.6",
+      "type": "bug_fix",
+      "summary": "Fixed critical runtime error where _injectImageMessage and _injectVideoMessage were called in 6+ places in ui.js but never defined, causing every image-generation action to throw a ReferenceError. Both functions were implemented inside the initUI closure with full thread card layout (img frame, overlay controls: expand/fullscreen, download, save-to-gallery, delete), feeding into a new #img-msg-lightbox overlay element in index.html. addToGallery integration means every generated image auto-saves to gallery with a localPost mirror. generateImagePromptWithLLM in image-engine.js gained a withNegative:true mode that requests JSON {positive, negative} from the LLM — the image studio AI Prompt button now fills both the positive and negative fields for HiDream and other models. Image message CSS and lightbox CSS added to chat.css.",
+      "decisions": [
+        "_injectImageMessage placed inside initUI closure after appendMessage so it shares $thread, addToGallery, lucideRefresh, and deleteImageMessage references without prop-drilling.",
+        "_injectVideoMessage implemented as a stub alongside _injectImageMessage — <video> element with download and delete controls.",
+        "Inline image lightbox (#img-msg-lightbox) is a singleton — src set on open, cleared on close — to avoid stacking multiple iframes.",
+        "withNegative:true returns {positive, negative} object; system prompt explicitly requests JSON; markdown fence stripping + try/catch fallback treats raw response as positive prompt so the function never throws.",
+        "Studio AI Prompt handler branches on typeof result === 'object' to handle both old string return and new {positive, negative} return without breaking existing callers."
+      ],
+      "rules_reinforced": [
+        "Any function called inside initUI closure must be defined inside that same closure — no module-level declarations of UI helpers.",
+        "LLM JSON parsing must always have a try/catch fallback that degrades gracefully to string treatment."
+      ]
+    },
+    {
+      "date": "2026-05-12",
+      "agent": "Claude Sonnet 4.6",
+      "type": "refactor",
+      "summary": "Decoupled the social feed from the gallery array. extensions.underdark.gallery now exclusively serves the lightbox and gallery strip. getAllFeedPosts() reads only from _permanentFeedPosts (feed.json) and state.socialData.localPosts. addToGallery() automatically creates a localPost entry for every image added so generated/uploaded images still appear in the feed without duplication. Gallery delete (data-del) now also calls _removeLocalPostBySrc() to keep the feed in sync. All post-count displays (sidebar, profile card, suggested list, roster profile view) updated from getAllGalleryImages to getAllFeedPosts.",
+      "decisions": [
+        "Gallery array stays — it's still needed for lightbox index navigation and the gallery strip grid.",
+        "addToGallery creates the localPost *after* saving to IDB so the stored ref (not the raw dataUrl) is the src in the post.",
+        "_removeLocalPostBySrc does a src-equality lookup — works for both idb: refs and plain URLs.",
+        "Post counts in suggested lists and the feed sidebar now reflect feed.json + localPosts, not gallery size."
+      ],
+      "rules_reinforced": [
+        "gallery array = lightbox/strip source only. Feed = feed.json + localPosts only. Never merge these two sources again.",
+        "Any code path that adds to the gallery must also add a localPost. Any code path that removes from gallery must also remove the localPost."
+      ]
+    },
     {
       "date": "2026-05-12",
       "agent": "Claude Sonnet 4.6",

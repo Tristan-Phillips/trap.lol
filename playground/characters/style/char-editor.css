@@ -1337,3 +1337,207 @@
     .ts-tabs { padding: 0 6px; }
     .ts-tab, .re-tab { padding: 10px 10px; font-size: 0.72rem; }
 }
+
+/* ── DM / Group mode toggle pill ── */
+.ts-mode-toggle {
+    display: flex;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid rgba(168,85,247,0.2);
+    border-radius: 20px;
+    overflow: hidden;
+    gap: 0;
+}
+.ts-mode-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: none;
+    border: none;
+    color: rgba(200,180,230,0.5);
+    font-size: 0.72rem;
+    font-family: var(--font-mono, monospace);
+    letter-spacing: 0.05em;
+    padding: 5px 13px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    border-radius: 0;
+}
+.ts-mode-btn svg, .ts-mode-btn i { width: 11px; height: 11px; }
+.ts-mode-btn:hover { color: rgba(200,180,230,0.8); background: rgba(168,85,247,0.1); }
+.ts-mode-btn.active {
+    background: rgba(168,85,247,0.22);
+    color: #c084fc;
+    box-shadow: inset 0 0 8px rgba(168,85,247,0.15);
+}
+
+/* ── Group tab highlight ── */
+.ts-tab--group-only { color: #a78bfa; }
+.ts-tab--group-only.active { color: #c084fc; }
+.ts-tab--group-only.active::after { background: #c084fc; }
+
+/* ── Group panel sections ── */
+.ts-group-section {
+    margin-bottom: 26px;
+}
+.ts-group-section__label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.73rem;
+    font-family: var(--font-mono, monospace);
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: #a78bfa;
+    margin-bottom: 10px;
+    padding-bottom: 7px;
+    border-bottom: 1px solid rgba(168,85,247,0.15);
+}
+.ts-group-section__label svg,
+.ts-group-section__label i { width: 12px; height: 12px; }
+
+.ts-group-desc {
+    font-size: 0.78rem;
+    color: rgba(200,180,230,0.55);
+    margin: 0 0 12px;
+    line-height: 1.5;
+}
+
+/* ── Radio card grid ── */
+.ts-radio-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+.ts-radio-grid--3 { grid-template-columns: repeat(3, 1fr); }
+.ts-radio-grid--2 { grid-template-columns: 1fr 1fr; }
+
+.ts-radio-card {
+    position: relative;
+    cursor: pointer;
+    display: block;
+}
+.ts-radio-card input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0; height: 0;
+    pointer-events: none;
+}
+.ts-radio-card__body {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 11px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(168,85,247,0.15);
+    background: rgba(0,0,0,0.25);
+    transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+    height: 100%;
+}
+.ts-radio-card:hover .ts-radio-card__body {
+    border-color: rgba(168,85,247,0.35);
+    background: rgba(168,85,247,0.07);
+}
+.ts-radio-card input:checked ~ .ts-radio-card__body {
+    border-color: #a78bfa;
+    background: rgba(168,85,247,0.15);
+    box-shadow: 0 0 12px rgba(168,85,247,0.18);
+}
+.ts-radio-card__icon {
+    font-size: 1.2rem;
+    line-height: 1;
+    margin-bottom: 3px;
+}
+.ts-radio-card__title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: rgba(220,200,255,0.9);
+    letter-spacing: 0.02em;
+}
+.ts-radio-card__desc {
+    font-size: 0.69rem;
+    color: rgba(190,170,220,0.5);
+    line-height: 1.45;
+}
+.ts-radio-card input:checked ~ .ts-radio-card__body .ts-radio-card__title { color: #e9d5ff; }
+.ts-radio-card input:checked ~ .ts-radio-card__body .ts-radio-card__desc  { color: rgba(190,170,220,0.75); }
+
+/* ── Isekai questions ── */
+.ts-isekai-questions { display: flex; flex-direction: column; gap: 10px; }
+.ts-isekai-placeholder {
+    font-size: 0.76rem;
+    color: rgba(180,160,210,0.35);
+    font-style: italic;
+    padding: 12px 0;
+}
+
+/* ── Relationship grid ── */
+.ts-rel-grid { display: flex; flex-direction: column; gap: 10px; }
+.ts-rel-row {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: rgba(0,0,0,0.2);
+    border: 1px solid rgba(168,85,247,0.1);
+}
+.ts-rel-row__pair {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+.ts-rel-avatar {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid rgba(168,85,247,0.25);
+    flex-shrink: 0;
+}
+.ts-rel-row__name {
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: rgba(220,200,255,0.8);
+}
+.ts-rel-row__x {
+    font-size: 0.8rem;
+    color: rgba(168,85,247,0.5);
+    margin: 0 2px;
+}
+
+/* ── Group icon input ── */
+.ts-group-icon-input {
+    max-width: 90px;
+    font-size: 1.3rem;
+    text-align: center;
+    letter-spacing: 0.05em;
+}
+
+/* ── Scene intro message ── */
+.message--scene-intro {
+    display: flex;
+    justify-content: center;
+    padding: 10px 0;
+}
+.message--scene-intro .message__main {
+    max-width: 520px;
+}
+.scene-intro-text {
+    padding: 14px 18px;
+    border-radius: 10px;
+    background: rgba(168,85,247,0.07);
+    border: 1px solid rgba(168,85,247,0.2);
+    font-size: 0.83rem;
+    color: rgba(220,200,255,0.7);
+    line-height: 1.6;
+    text-align: center;
+    font-style: italic;
+    box-shadow: 0 0 20px rgba(168,85,247,0.08);
+}
+
+/* ── Responsive adjustments ── */
+@media (max-width: 640px) {
+    .ts-radio-grid { grid-template-columns: 1fr; }
+    .ts-radio-grid--3 { grid-template-columns: 1fr 1fr; }
+    .ts-mode-toggle { gap: 0; }
+    .ts-mode-btn { padding: 4px 10px; font-size: 0.68rem; }
+}

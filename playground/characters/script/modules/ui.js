@@ -13,7 +13,7 @@ import {
     setActiveBot, removeBotFromChat,
     getCharOverride, setCharOverride,
     setConfig, saveCharacter, deleteCharacter,
-    defaultCharOverride, defaultThreadConfig, resolveCharAvatar,
+    defaultCharOverride, defaultThreadConfig, defaultGroupConfig, resolveCharAvatar,
     addReaction, getReactions, exportSessionJson, importSessionJson
 } from './state.js';
 import { resolveImageUrl, saveImageBlob, deleteImageBlob, isIdbImageRef, idbImageRefId, isDataUrl } from './storage.js';
@@ -977,7 +977,10 @@ export function initUI() {
             }
 
             let avHtml = '';
-            if (bots.length === 0) {
+            const groupIcon = c.groupConfig?.groupIcon;
+            if (groupIcon && c.type === 'group') {
+                avHtml = `<div class="chat-item__avatars chat-item__avatars--single">${buildAvatarHtml(groupIcon, 'chat-item__avatar chat-item__avatar--group-icon')}</div>`;
+            } else if (bots.length === 0) {
                 avHtml = `<div class="chat-item__avatars chat-item__avatars--single">${buildAvatarHtml('💬', 'chat-item__avatar')}</div>`;
             } else if (bots.length === 1) {
                 const raw = bots[0].avatar_path || state.loadedCharacters[bots[0].id]?.avatar;
@@ -1060,26 +1063,46 @@ export function initUI() {
         renderChats(e.target.value);
     });
 
-    qs('#chat-new-group')?.addEventListener('click', () => openThreadSetup('group'));
-
     // ── Thread Setup Wizard ───────────────────────────────────────────────────
-    // Launched for both New DM and New Group — replaces the old pickers.
+    // Single modal for both DM and Group — toggled via the DM/Group pill in the header.
 
     let _tsMode = 'dm'; // 'dm' | 'group'
     let _tsSelectedIds = new Set();
     let _tsCurrentTab  = 0;
-    const TS_TABS = ['characters', 'world', 'persona', 'generation'];
+    // Group tab is index 4 (appended after generation)
+    const TS_TABS_DM    = ['characters', 'world', 'persona', 'generation'];
+    const TS_TABS_GROUP = ['characters', 'world', 'persona', 'generation', 'group'];
+    let TS_TABS = TS_TABS_DM;
+
+    // Isekai world-binding questions — drawn from these archetypes based on selected chars
+    const _ISEKAI_QUESTIONS = [
+        { key: 'how_gathered',   label: 'How did this group come together?',      placeholder: 'A rift tore them from their worlds simultaneously…' },
+        { key: 'shared_goal',    label: 'What shared goal binds them here?',       placeholder: 'Find the shattered sigil before the Void claims it…' },
+        { key: 'your_role',      label: 'What is your role among them?',           placeholder: 'The Anchor — the one who holds the rift open…' },
+        { key: 'location',       label: 'Where are they right now?',               placeholder: 'A floating citadel above the Shattered Sea…' },
+        { key: 'threat',         label: 'What looms over this gathering?',         placeholder: 'The Silence — a force that erases memory…' },
+        { key: 'tension',        label: 'What unspoken tension exists in the group?', placeholder: 'Two of them loved the same person who died…' },
+        { key: 'power_dynamic',  label: 'Who holds power here, and why?',         placeholder: 'The eldest wields it by tradition, but earns it daily…' },
+        { key: 'secret',         label: 'What secret does at least one of them carry?', placeholder: 'One of them is the reason the others were summoned…' },
+    ];
 
     function openThreadSetup(mode = 'dm') {
         _tsMode = mode;
         _tsSelectedIds.clear();
         _tsCurrentTab = 0;
+        TS_TABS = mode === 'group' ? TS_TABS_GROUP : TS_TABS_DM;
 
         const $modal  = qs('#modal-thread-setup');
-        const $badge  = qs('#ts-type-badge');
         const $title  = qs('#ts-title');
-        if ($badge) $badge.textContent = mode === 'group' ? 'Group' : 'DM';
         if ($title) $title.textContent = mode === 'group' ? 'New Group Thread' : 'New DM Thread';
+
+        // Sync mode toggle buttons
+        qs('#ts-mode-dm')?.classList.toggle('active', mode === 'dm');
+        qs('#ts-mode-group')?.classList.toggle('active', mode === 'group');
+
+        // Show/hide group tab
+        const $groupTab = qs('#ts-tab-group');
+        if ($groupTab) $groupTab.hidden = mode !== 'group';
 
         // Reset fields — show current reality values as context for "inherit" fields
         const rc = state.config;
@@ -1139,6 +1162,19 @@ export function initUI() {
             $tmsel.value = '';
         }
 
+        // Reset group tab fields to defaults
+        const $gName  = qs('#ts-group-name');
+        const $gIcon  = qs('#ts-group-icon');
+        const $gIntro = qs('#ts-group-intro');
+        if ($gName)  $gName.value  = '';
+        if ($gIcon)  $gIcon.value  = '';
+        if ($gIntro) $gIntro.value = '';
+        const radiosDefault = { 'ts-mem-frame': 'past', 'ts-grp-awareness': 'aware', 'ts-turn': 'auto', 'ts-voice': 'distinct' };
+        Object.entries(radiosDefault).forEach(([name, val]) => {
+            const $r = qs(`input[name="${name}"][value="${val}"]`);
+            if ($r) $r.checked = true;
+        });
+
         _tsPopulatePersonaSelect();
         _tsRenderCharGrid('');
         _tsSwitchTab(0);
@@ -1196,6 +1232,11 @@ export function initUI() {
                 }
                 _tsUpdateSelectedStrip();
                 _tsUpdateFooter();
+                // Refresh group dynamic content if group tab is active
+                if (_tsMode === 'group' && TS_TABS[_tsCurrentTab] === 'group') {
+                    _tsRenderIsekaiQuestions();
+                    _tsRenderRelGrid();
+                }
             });
         });
 
@@ -1218,31 +1259,65 @@ export function initUI() {
         }).join('');
     }
 
+    // Maps tab key → panel element ID
+    const TS_PANEL_IDS = {
+        characters: 'ts-panel-characters',
+        world:      'ts-panel-world',
+        persona:    'ts-panel-persona',
+        generation: 'ts-panel-generation',
+        group:      'ts-panel-group',
+    };
+
     function _tsSwitchTab(idx) {
         _tsCurrentTab = idx;
-        qsa('.ts-tab').forEach((t, i) => {
+        const visibleTabs = qsa('.ts-tab:not([hidden])');
+        visibleTabs.forEach((t, i) => {
             t.classList.toggle('active', i === idx);
             t.setAttribute('aria-selected', i === idx ? 'true' : 'false');
         });
-        qsa('.ts-panel').forEach((p, i) => {
-            p.classList.toggle('active', i === idx);
-            p.hidden = i !== idx;
+        const activeTabKey = TS_TABS[idx];
+        qsa('.ts-panel').forEach(p => {
+            const isActive = p.id === TS_PANEL_IDS[activeTabKey];
+            p.classList.toggle('active', isActive);
+            p.hidden = !isActive;
         });
-        // Re-init Lucide icons in the newly revealed panel (icons hidden by default are not processed)
-        const $activePanel = qsa('.ts-panel')[idx];
+        const $activePanel = qs(`#${TS_PANEL_IDS[activeTabKey]}`);
         if ($activePanel) lucideRefresh($activePanel);
+        // When entering the Group tab, refresh dynamic content
+        if (activeTabKey === 'group') {
+            _tsRenderIsekaiQuestions();
+            _tsRenderRelGrid();
+        }
         _tsUpdateFooter();
+    }
+
+    function _tsSetMode(mode) {
+        _tsMode = mode;
+        TS_TABS = mode === 'group' ? TS_TABS_GROUP : TS_TABS_DM;
+        const $title = qs('#ts-title');
+        if ($title) $title.textContent = mode === 'group' ? 'New Group Thread' : 'New DM Thread';
+        qs('#ts-mode-dm')?.classList.toggle('active', mode === 'dm');
+        qs('#ts-mode-group')?.classList.toggle('active', mode === 'group');
+        const $groupTab = qs('#ts-tab-group');
+        if ($groupTab) $groupTab.hidden = mode !== 'group';
+        // DM mode: single-select char grid; group: multi
+        _tsRenderCharGrid(qs('#ts-char-search')?.value || '');
+        // If currently on group tab but switched to DM, revert to characters tab
+        if (mode === 'dm' && _tsCurrentTab >= TS_TABS_DM.length) {
+            _tsSwitchTab(0);
+        } else {
+            _tsUpdateFooter();
+        }
     }
 
     function _tsUpdateFooter() {
         const $prev   = qs('#ts-prev');
         const $next   = qs('#ts-next');
         const $create = qs('#ts-create');
-        const last = TS_TABS.length - 1;
+        const last    = TS_TABS.length - 1;
         const hasChar = _tsSelectedIds.size > 0;
         if ($prev)   $prev.disabled = _tsCurrentTab === 0;
         const isLast = _tsCurrentTab === last;
-        // Show "Begin Thread" once a character is selected — on any tab
         if ($next)   $next.hidden   = isLast;
         if ($create) {
             $create.hidden   = !hasChar;
@@ -1250,15 +1325,82 @@ export function initUI() {
         }
     }
 
+    // ── Isekai world-binding questions (populated on group tab entry) ──────────
+    function _tsRenderIsekaiQuestions() {
+        const $container = qs('#ts-isekai-questions');
+        if (!$container) return;
+        if (_tsSelectedIds.size === 0) {
+            $container.innerHTML = '<div class="ts-isekai-placeholder">Select characters first — world questions appear here based on who you\'ve invited.</div>';
+            return;
+        }
+        // Determine which question set to show based on chars selected
+        // Show all by default; in future can filter by character tags/genres
+        const existing = {};
+        qsa('.ts-isekai-field', $container).forEach(f => {
+            existing[f.dataset.key] = f.value;
+        });
+        $container.innerHTML = _ISEKAI_QUESTIONS.map(q => `
+            <div class="ts-field-group">
+                <label class="ts-label">${esc(q.label)}</label>
+                <textarea class="control-textarea ts-textarea ts-isekai-field" data-key="${esc(q.key)}" rows="2"
+                    placeholder="${esc(q.placeholder)}">${esc(existing[q.key] || '')}</textarea>
+            </div>`).join('');
+    }
+
+    // ── Relationship web (char-pair rows with relationship label) ─────────────
+    function _tsRenderRelGrid() {
+        const $grid = qs('#ts-rel-grid');
+        if (!$grid) return;
+        const ids = Array.from(_tsSelectedIds);
+        if (ids.length < 2) {
+            $grid.innerHTML = '<div class="ts-isekai-placeholder">Select 2+ characters to define their relationships.</div>';
+            return;
+        }
+        // Build pairs (A→B only, not bidirectional UI — user describes the bond)
+        const pairs = [];
+        for (let i = 0; i < ids.length; i++) {
+            for (let j = i + 1; j < ids.length; j++) {
+                pairs.push([ids[i], ids[j]]);
+            }
+        }
+        const existing = {};
+        qsa('.ts-rel-field', $grid).forEach(f => {
+            existing[f.dataset.pair] = f.value;
+        });
+        $grid.innerHTML = pairs.map(([a, b]) => {
+            const nameA = esc(state.characters.find(c => c.id === a)?.name || a);
+            const nameB = esc(state.characters.find(c => c.id === b)?.name || b);
+            const pairKey = `${a}__${b}`;
+            const rawAvA = state.characters.find(c => c.id === a);
+            const rawAvB = state.characters.find(c => c.id === b);
+            const avA = getAvatarUrlSync(a, rawAvA?.avatar_path) || rawAvA?.avatar_path;
+            const avB = getAvatarUrlSync(b, rawAvB?.avatar_path) || rawAvB?.avatar_path;
+            return `
+            <div class="ts-rel-row">
+                <div class="ts-rel-row__pair">
+                    ${buildAvatarHtml(avA, 'ts-rel-avatar')}
+                    <span class="ts-rel-row__name">${nameA}</span>
+                    <span class="ts-rel-row__x">↔</span>
+                    ${buildAvatarHtml(avB, 'ts-rel-avatar')}
+                    <span class="ts-rel-row__name">${nameB}</span>
+                </div>
+                <input type="text" class="ce-input ts-rel-field" data-pair="${esc(pairKey)}"
+                    value="${esc(existing[pairKey] || '')}"
+                    placeholder="e.g. Rivals with unspoken respect, former lovers, sworn enemies…">
+            </div>`;
+        }).join('');
+    }
+
     async function _tsCommit() {
         if (!_tsSelectedIds.size) return;
 
         const botIds = Array.from(_tsSelectedIds);
 
-        // Thread name
-        const manualName = qs('#ts-thread-name')?.value.trim();
-        const autoName   = botIds.map(id => state.characters.find(c => c.id === id)?.name || id).join(', ');
-        const name       = manualName || autoName;
+        // Thread name — group name field takes priority for groups
+        const groupNameField = qs('#ts-group-name')?.value.trim();
+        const manualName     = qs('#ts-thread-name')?.value.trim();
+        const autoName       = botIds.map(id => state.characters.find(c => c.id === id)?.name || id).join(', ');
+        const name           = (_tsMode === 'group' && groupNameField) ? groupNameField : (manualName || autoName);
 
         // Build threadConfig overrides
         const tc = defaultThreadConfig();
@@ -1284,6 +1426,51 @@ export function initUI() {
             tc.temperature = parseFloat(qs('#ts-temp-input')?.value || '0.8');
         }
 
+        // Build groupConfig for group threads
+        let gc = null;
+        if (_tsMode === 'group') {
+            gc = defaultGroupConfig();
+
+            const groupIcon = qs('#ts-group-icon')?.value.trim();
+            if (groupIcon) gc.groupIcon = groupIcon;
+
+            const memFrame = qs('input[name="ts-mem-frame"]:checked')?.value;
+            if (memFrame) gc.memoryFraming = memFrame;
+
+            const grpAwareness = qs('input[name="ts-grp-awareness"]:checked')?.value;
+            if (grpAwareness) gc.groupAwareness = grpAwareness;
+
+            const turnOrder = qs('input[name="ts-turn"]:checked')?.value;
+            if (turnOrder) gc.turnOrder = turnOrder;
+
+            // Map turnOrder to the config key the group auto-responder uses
+            tc.groupTurnMode = turnOrder || 'auto';
+
+            const voiceMode = qs('input[name="ts-voice"]:checked')?.value;
+            if (voiceMode) gc.voiceMode = voiceMode;
+
+            const groupIntro = qs('#ts-group-intro')?.value.trim();
+            if (groupIntro) gc.groupIntro = groupIntro;
+
+            // Collect isekai answers
+            qsa('.ts-isekai-field').forEach(f => {
+                const val = f.value.trim();
+                if (val) gc.isekaiAnswers[f.dataset.key] = val;
+            });
+
+            // Collect relationship web
+            qsa('.ts-rel-field').forEach(f => {
+                const val = f.value.trim();
+                if (val) {
+                    const [idA, idB] = f.dataset.pair.split('__');
+                    if (!gc.relationships[idA]) gc.relationships[idA] = {};
+                    gc.relationships[idA][idB] = val;
+                }
+            });
+
+            gc.memoryDepth = 10;
+        }
+
         hideModal('modal-thread-setup');
 
         // Pre-load all participant cards
@@ -1291,6 +1478,7 @@ export function initUI() {
 
         const chat = newChat(_tsMode, botIds, name);
         chat.threadConfig = tc;
+        if (gc) chat.groupConfig = gc;
         saveState();
 
         renderChats();
@@ -1319,8 +1507,20 @@ export function initUI() {
             }
         }
 
+        // Group opening scene injection
+        if (_tsMode === 'group' && gc?.groupIntro) {
+            const introMsg = addMessage('system', gc.groupIntro, null);
+            if (introMsg) {
+                const $el = document.createElement('div');
+                $el.className = 'message message--system message--scene-intro';
+                $el.innerHTML = `<div class="message__main"><div class="scene-intro-text">${renderMarkdownSafe(gc.groupIntro)}</div></div>`;
+                $thread?.appendChild($el);
+                $thread && ($thread.scrollTop = $thread.scrollHeight);
+            }
+        }
+
         // First messages
-        if (!state.history.length) {
+        if (!state.history.length || (_tsMode === 'group' && gc?.groupIntro)) {
             for (const botId of botIds) {
                 const char = state.loadedCharacters[botId];
                 const meta = state.characters.find(c => c.id === botId);
@@ -1339,6 +1539,11 @@ export function initUI() {
     qs('#ts-cancel')?.addEventListener('click',  () => hideModal('modal-thread-setup'));
     qs('#modal-thread-setup .modal__backdrop')?.addEventListener('click', () => hideModal('modal-thread-setup'));
 
+    // Mode toggle (DM / Group pill)
+    qsa('.ts-mode-btn').forEach(btn => {
+        btn.addEventListener('click', () => _tsSetMode(btn.dataset.mode));
+    });
+
     qs('#ts-prev')?.addEventListener('click', () => {
         if (_tsCurrentTab > 0) _tsSwitchTab(_tsCurrentTab - 1);
     });
@@ -1348,7 +1553,12 @@ export function initUI() {
     qs('#ts-create')?.addEventListener('click', _tsCommit);
 
     qsa('.ts-tab').forEach((tab, i) => {
-        tab.addEventListener('click', () => _tsSwitchTab(i));
+        tab.addEventListener('click', () => {
+            // Map to visible-tab index
+            const visibleTabs = qsa('.ts-tab:not([hidden])');
+            const visIdx = Array.from(visibleTabs).indexOf(tab);
+            if (visIdx >= 0) _tsSwitchTab(visIdx);
+        });
     });
 
     qs('#ts-char-search')?.addEventListener('input', e => {
@@ -1874,7 +2084,7 @@ export function initUI() {
                     <div class="profile-view__info">
                         <h3 class="profile-view__name">${esc(char.name)}</h3>
                         <div class="profile-view__stats">
-                            <span><strong>${getAllGalleryImages(id).length}</strong> posts</span>
+                            <span><strong>${getAllFeedPosts(id).length}</strong> posts</span>
                             <span><strong>${(((id.charCodeAt(0) * 137 + id.charCodeAt(1 % id.length) * 31) % 491) / 10).toFixed(1)}k</strong> followers</span>
                             <span><strong>${((id.charCodeAt(0) * 53 + id.length * 17) % 900) + 100}</strong> following</span>
                         </div>
@@ -2294,24 +2504,18 @@ export function initUI() {
     }
 
     // Unified post list for a character — merges:
-    //   1. Gallery images (type:'image', local idb refs allowed)
-    //   2. Permanent posts from data/feed.json (type:'image'|'text', public URLs only)
-    //   3. Local composed posts from state.socialData.localPosts[charId] (type:'image'|'text')
+    //   1. Permanent posts from data/feed.json (git-committed, all instances)
+    //   2. Local composed/generated posts from state.socialData.localPosts[charId]
+    // Gallery images (extensions.underdark.gallery) are NOT included here —
+    // they serve the lightbox/gallery-strip only. Every image that should appear
+    // in the feed must be a localPost (created automatically by addToGallery) or
+    // a permanent post in feed.json.
     // Each returned object: { id, type, src?, caption, timestamp, permanent, postIdx }
     function getAllFeedPosts(charId) {
         const seen = new Set();
         const result = [];
 
-        // Gallery images → type:'image'
-        const galleryRefs = getAllGalleryImages(charId);
-        galleryRefs.forEach((src, i) => {
-            const id = `gallery-${charId}-${i}`;
-            if (seen.has(id)) return;
-            seen.add(id);
-            result.push({ id, type: 'image', src, caption: null, timestamp: 0, permanent: false, postIdx: i });
-        });
-
-        // Permanent feed.json posts
+        // Permanent feed.json posts (newest-first within this source)
         _permanentFeedPosts.filter(p => p.charId === charId).forEach((p, i) => {
             const id = p.id || `perm-${charId}-${i}`;
             if (seen.has(id)) return;
@@ -2319,7 +2523,7 @@ export function initUI() {
             result.push({ ...p, id, permanent: true, postIdx: result.length });
         });
 
-        // Local composed posts
+        // Local composed/generated posts
         const localPosts = state.socialData?.localPosts?.[charId] || [];
         localPosts.forEach((p, i) => {
             const id = p.id || `local-${charId}-${i}`;
@@ -2342,22 +2546,30 @@ export function initUI() {
 
     // Push a data URL (or URL string) to a character's gallery, offloading
     // data URLs to IndexedDB so they don't fill localStorage.
-    async function addToGallery(charId, dataUrl) {
+    // Also creates a localPost entry so the image appears in the feed.
+    async function addToGallery(charId, dataUrl, { caption = null } = {}) {
         const charObj = ensureGalleryStore(charId);
         if (!charObj) return null;
         const gallery = charObj.extensions.underdark.gallery;
         if (gallery.includes(dataUrl)) return dataUrl;
+
+        let stored;
         if (isDataUrl(dataUrl)) {
             const blobId = `gallery-${charId}-${Date.now()}-${Math.random().toString(36).slice(2,6)}`;
             const ref = await saveImageBlob(blobId, dataUrl).catch(() => null);
-            const stored = ref || dataUrl;
-            gallery.push(stored);
-            saveState();
-            return stored;
+            stored = ref || dataUrl;
+        } else {
+            stored = dataUrl;
         }
-        gallery.push(dataUrl);
+
+        gallery.push(stored);
+
+        // Mirror into localPosts so the image appears in the feed — skip if already there
+        const existingPost = (state.socialData?.localPosts?.[charId] || []).find(p => p.src === stored);
+        if (!existingPost) _saveLocalPost(charId, { type: 'image', src: stored, caption });
+
         saveState();
-        return dataUrl;
+        return stored;
     }
 
     // Resolve all gallery image refs to display URLs (for rendering)
@@ -2486,6 +2698,8 @@ export function initUI() {
             const ref = charObj.extensions.underdark.gallery[idx];
             if (isIdbImageRef(ref)) await deleteImageBlob(idbImageRefId(ref)).catch(() => {});
             charObj.extensions.underdark.gallery.splice(idx, 1);
+            // Mirror removal into localPosts so feed stays in sync
+            _removeLocalPostBySrc(id, ref);
             saveState();
             renderGalleryStrip(id);
             renderGalleryModal(id);
@@ -3474,6 +3688,7 @@ export function initUI() {
     qs('#studio-ai-prompt')?.addEventListener('click', async () => {
         const $btn = qs('#studio-ai-prompt');
         const $ta  = qs('#studio-prompt-ta');
+        const $neg = qs('#studio-negative');
         if (!$btn || !$ta) return;
         const origHtml = $btn.innerHTML;
         $btn.disabled = true;
@@ -3483,8 +3698,18 @@ export function initUI() {
             const charId = state.activeBotId;
             const nsfw   = _studioScene.nsfw !== 'sfw';
             const hint   = $ta.value.trim();
-            const prompt = await generateImagePromptWithLLM({ charId, userHint: hint, scene: _studioScene, includeNsfw: nsfw, historyDepth: 8 });
-            $ta.value = prompt;
+            const result = await generateImagePromptWithLLM({
+                charId, userHint: hint, scene: _studioScene, includeNsfw: nsfw, historyDepth: 8, withNegative: true
+            });
+            if (typeof result === 'object' && result.positive) {
+                $ta.value = result.positive;
+                if ($neg && result.negative) {
+                    $neg.value = result.negative;
+                    _studioScene.negative = result.negative;
+                }
+            } else {
+                $ta.value = typeof result === 'string' ? result : result.positive || '';
+            }
         } catch (err) {
             showToast(`AI prompt failed: ${err.message}`, 'error', 4000);
         } finally {
@@ -3940,7 +4165,7 @@ export function initUI() {
                 ${state.characters.map(c => {
                     const rawAv = c.avatar_path || state.loadedCharacters[c.id]?.avatar;
                     const av = getAvatarUrlSync(c.id, rawAv) || rawAv;
-                    const postCount = getAllGalleryImages(c.id).length;
+                    const postCount = getAllFeedPosts(c.id).length;
                     const avHtml = av && !isEmoji(av)
                         ? `<div class="feed-suggested-item__avatar" style="background-image:url('${esc(av)}')"></div>`
                         : `<div class="feed-suggested-item__avatar">${av || '👤'}</div>`;
@@ -3966,7 +4191,7 @@ export function initUI() {
         const charName = char?.name || meta?.name || 'Unknown';
         const rawAv = meta?.avatar_path || char?.avatar;
         const av = getAvatarUrlSync(charId, rawAv) || rawAv;
-        const postCount = getAllGalleryImages(charId).length;
+        const postCount = getAllFeedPosts(charId).length;
         const likeCount = Object.values(getFeedLikes(charId)).filter(Boolean).length;
         const bio = char?.description?.slice(0, 120) || meta?.tagline || '';
 
@@ -4017,7 +4242,7 @@ export function initUI() {
             ${others.map(c => {
                 const rAv = c.avatar_path || state.loadedCharacters[c.id]?.avatar;
                 const a = getAvatarUrlSync(c.id, rAv) || rAv;
-                const posts = getAllGalleryImages(c.id).length;
+                const posts = getAllFeedPosts(c.id).length;
                 const aHtml = a && !isEmoji(a)
                     ? `<div class="feed-suggested-item__avatar" style="background-image:url('${esc(a)}')"></div>`
                     : `<div class="feed-suggested-item__avatar">${a || '👤'}</div>`;
@@ -4223,6 +4448,16 @@ export function initUI() {
         });
         saveState();
         return id;
+    }
+
+    function _removeLocalPostBySrc(charId, src) {
+        const posts = state.socialData?.localPosts?.[charId];
+        if (!posts) return;
+        const idx = posts.findIndex(p => p.src === src);
+        if (idx !== -1) {
+            posts.splice(idx, 1);
+            saveState();
+        }
     }
 
     // ── Feed Export ───────────────────────────────────────────────────────────
@@ -4719,6 +4954,23 @@ export function initUI() {
     // ── Message Thread & Rendering ────────────────────────────────────────────
     const $thread = qs('#message-thread');
 
+    // ── Image message lightbox (inline, not the gallery one) ─────────────────
+    (function initImgMsgLightbox() {
+        const $lb  = qs('#img-msg-lightbox');
+        if (!$lb) return;
+        const $img = qs('#img-msg-lb-img', $lb);
+        const $dl  = qs('#img-msg-lb-dl',  $lb);
+        const close = () => { $lb.hidden = true; if ($img) $img.src = ''; };
+
+        qs('#img-msg-lb-close',        $lb)?.addEventListener('click', close);
+        qs('.img-msg-lightbox__backdrop', $lb)?.addEventListener('click', close);
+        document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$lb.hidden) close(); });
+
+        // Keep the download link href in sync with the image src
+        const obs = new MutationObserver(() => { if ($dl && $img) $dl.href = $img.src; });
+        if ($img) obs.observe($img, { attributes: true, attributeFilter: ['src'] });
+    })();
+
     function appendMessage(msgObj, nameOverride, avatarUrl, thoughts = null) {
         const { id, role, content, botId } = msgObj;
         const char = botId ? state.loadedCharacters[botId] : null;
@@ -4929,6 +5181,130 @@ export function initUI() {
         $thread.scrollTop = $thread.scrollHeight;
         lucideRefresh($msg);
         return $msg;
+    }
+
+    // ── Image message in thread ───────────────────────────────────────────────
+    // Renders a generated image as a thread card with lightbox, download,
+    // add-to-gallery, and delete controls.
+    function _injectImageMessage(dataUrl, prompt, model, existingMsgId) {
+        if (!$thread || !dataUrl) return;
+
+        // If this msgId is already in the thread, skip (avoid double-render on reload)
+        if (existingMsgId && $thread.querySelector(`[data-msg-id="${existingMsgId}"]`)) return;
+
+        // Determine the message id — use the existing one if re-rendering from history
+        const msgId = existingMsgId || null;
+
+        const modelLabel = model ? `<span class="img-msg__model">${esc(model)}</span>` : '';
+        const promptSnippet = prompt ? esc(prompt.slice(0, 120)) + (prompt.length > 120 ? '…' : '') : '';
+
+        const $el = document.createElement('div');
+        $el.className = 'message message--image';
+        if (msgId) $el.dataset.msgId = msgId;
+        $el.innerHTML = `
+            <div class="message__main">
+                <div class="img-msg">
+                    <div class="img-msg__frame">
+                        <img src="${esc(dataUrl)}" class="img-msg__img" loading="lazy" alt="Generated image">
+                        <div class="img-msg__overlay">
+                            <button class="img-msg__btn" data-action="expand" title="View full size"><i data-lucide="expand"></i></button>
+                            <button class="img-msg__btn" data-action="download" title="Download"><i data-lucide="download"></i></button>
+                            <button class="img-msg__btn" data-action="gallery" title="Save to gallery"><i data-lucide="image-plus"></i></button>
+                            <button class="img-msg__btn img-msg__btn--danger" data-action="delete" title="Delete"><i data-lucide="trash-2"></i></button>
+                        </div>
+                    </div>
+                    <div class="img-msg__footer">
+                        ${modelLabel}
+                        ${promptSnippet ? `<span class="img-msg__prompt" title="${esc(prompt)}">${promptSnippet}</span>` : ''}
+                    </div>
+                </div>
+            </div>`;
+
+        // Expand — open in lightbox overlay (reuse inline lightbox)
+        qs('[data-action="expand"]', $el).addEventListener('click', () => {
+            const $lb = qs('#img-msg-lightbox');
+            if (!$lb) {
+                window.open(dataUrl, '_blank');
+                return;
+            }
+            qs('#img-msg-lb-img', $lb).src = dataUrl;
+            $lb.hidden = false;
+            lucideRefresh($lb);
+        });
+
+        // Download
+        qs('[data-action="download"]', $el).addEventListener('click', () => {
+            const a = document.createElement('a');
+            a.href = dataUrl;
+            a.download = `underdark-${Date.now()}.png`;
+            a.click();
+        });
+
+        // Save to gallery
+        qs('[data-action="gallery"]', $el).addEventListener('click', async () => {
+            const charId = state.activeBotId;
+            if (!charId) { showToast('No active character', 'warn'); return; }
+            const btn = qs('[data-action="gallery"]', $el);
+            btn.disabled = true;
+            await addToGallery(charId, dataUrl);
+            renderGalleryStrip(charId);
+            btn.innerHTML = '<i data-lucide="check"></i>';
+            lucideRefresh(btn);
+            setTimeout(() => {
+                btn.innerHTML = '<i data-lucide="image-plus"></i>';
+                btn.disabled = false;
+                lucideRefresh(btn);
+            }, 1800);
+            showToast('Saved to gallery');
+        });
+
+        // Delete
+        qs('[data-action="delete"]', $el).addEventListener('click', async () => {
+            const ok = await confirm('Delete Image', 'Remove this image from the thread?');
+            if (!ok) return;
+            if (msgId) {
+                await deleteImageMessage(msgId);
+            }
+            $el.remove();
+        });
+
+        $thread.appendChild($el);
+        $thread.scrollTop = $thread.scrollHeight;
+        lucideRefresh($el);
+        return $el;
+    }
+
+    // ── Video message in thread ───────────────────────────────────────────────
+    function _injectVideoMessage(videoUrl, existingMsgId) {
+        if (!$thread || !videoUrl) return;
+        if (existingMsgId && $thread.querySelector(`[data-msg-id="${existingMsgId}"]`)) return;
+
+        const $el = document.createElement('div');
+        $el.className = 'message message--image';
+        if (existingMsgId) $el.dataset.msgId = existingMsgId;
+        $el.innerHTML = `
+            <div class="message__main">
+                <div class="img-msg">
+                    <div class="img-msg__frame img-msg__frame--video">
+                        <video src="${esc(videoUrl)}" class="img-msg__img" controls loop playsinline></video>
+                        <div class="img-msg__overlay img-msg__overlay--tl">
+                            <a class="img-msg__btn" href="${esc(videoUrl)}" download="underdark-video-${Date.now()}.mp4" title="Download"><i data-lucide="download"></i></a>
+                            <button class="img-msg__btn img-msg__btn--danger" data-action="delete" title="Delete"><i data-lucide="trash-2"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+
+        qs('[data-action="delete"]', $el)?.addEventListener('click', async () => {
+            const ok = await confirm('Delete Video', 'Remove this video from the thread?');
+            if (!ok) return;
+            $el.remove();
+        });
+
+        $thread.appendChild($el);
+        $thread.scrollTop = $thread.scrollHeight;
+        lucideRefresh($el);
+        return $el;
     }
 
     // ── Message edit modal ────────────────────────────────────────────────────
@@ -5585,6 +5961,7 @@ export function initUI() {
                 allChars:        state.chat.botIds.map(id => ({ ...state.loadedCharacters[id], id })),
                 sessionId:       state.chat.id,
                 shareMemory:     state.chat.shareMemory,
+                groupConfig:     state.chat.groupConfig || null,
                 pendingReinject: pendingReinject || ''
             });
 
@@ -5867,11 +6244,12 @@ export function initUI() {
         _groupAbort = false;
 
         // Determine which bots respond this turn based on turn mode
-        const mode = state.config.groupTurnMode || 'auto';
+        // threadConfig.groupTurnMode (set by wizard) takes precedence over reality-wide setting
+        const mode = state.chat?.threadConfig?.groupTurnMode || state.config.groupTurnMode || 'auto';
         const bots = state.activeBotIds;
         let respondingBots;
-        if (bots.length <= 1 || mode === 'manual') {
-            // manual: only the active (user-selected) bot speaks
+        if (bots.length <= 1 || mode === 'manual' || mode === 'player-driven') {
+            // manual / player-driven: only the active (user-selected) bot speaks
             respondingBots = [state.activeBotId];
         } else if (mode === 'round-robin') {
             // One bot per turn, cycling through the roster in order

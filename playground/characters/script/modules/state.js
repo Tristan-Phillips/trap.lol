@@ -109,6 +109,49 @@ export function defaultThreadConfig() {
     };
 }
 
+// ── Group chat immersion config ──────────────────────────────────────────────
+export function defaultGroupConfig() {
+    return {
+        // What characters see when they recall 1-on-1 DM history
+        // 'past'      — explicit past memories (default, existing behaviour)
+        // 'faint'     — hazy impressions, déjà vu ("I sense I know you from somewhere…")
+        // 'presience' — prophetic flashes, as though they glimpsed the future
+        memoryFraming: 'past',
+
+        // Isekai / world-binding answers (set during group creation wizard)
+        // Free-form answers to prompted world questions displayed during creation
+        isekaiAnswers: {},  // { questionKey: answer }
+
+        // Group intro message override (injected as the *first* system message for the group)
+        groupIntro: '',
+
+        // Turn order: 'auto' | 'round-robin' | 'player-driven'
+        turnOrder: 'auto',
+
+        // Whether all members acknowledge the same shared world scenario or each interprets it individually
+        sharedWorldAwareness: true,
+
+        // Relationship web: sparse map of charId → { knows: [charId], relationType: string }
+        // Used to inject inter-character relationship context into prompts
+        relationships: {},
+
+        // Optional banner/icon for the group chat (emoji or char initials fallback)
+        groupIcon: '',
+
+        // How many DM history messages each character draws as memory
+        memoryDepth: 10,
+
+        // Whether characters in this group are aware they are in a group vs 1-on-1
+        // 'aware'   — they know there are other people present
+        // 'unaware' — they each think they're alone with the user (unreliable narrator mode)
+        // 'selective' — each char knows only about the chars listed in their 'knows' relationship
+        groupAwareness: 'aware',
+
+        // Voice/tone uniformity: 'distinct' (each char fully their own) | 'harmonised' (slight blending for cohesion)
+        voiceMode: 'distinct',
+    };
+}
+
 // ── Chat & Reality shapes ────────────────────────────────────────────────────
 
 export function createChat(type = 'dm', botIds = [], name = '') {
@@ -124,7 +167,8 @@ export function createChat(type = 'dm', botIds = [], name = '') {
         shareMemory: true,
         activeBotId: botIds[0] || null,
         config: {},
-        threadConfig: defaultThreadConfig()
+        threadConfig: defaultThreadConfig(),
+        groupConfig: type === 'group' ? defaultGroupConfig() : null,
     };
 }
 

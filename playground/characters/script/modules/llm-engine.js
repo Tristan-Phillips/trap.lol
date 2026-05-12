@@ -667,7 +667,7 @@ function applyContextStrategy(history, config, systemTokens) {
 
 // ── Main payload builder ──────────────────────────────────────────────────────
 export function buildPayload(ctx) {
-    const { character, history, lore, config, isGroup = false, allChars = [], sessionId } = ctx;
+    const { character, history, lore, config, isGroup = false, allChars = [], sessionId, groupConfig = null } = ctx;
     // Stamp sessionId so applyContextStrategy can scope its summary cache correctly
     const configWithSession = sessionId ? { ...config, _sessionId: sessionId } : config;
     const override  = getCharOverride(character.id || character.name);
@@ -682,16 +682,97 @@ export function buildPayload(ctx) {
 
     // 2. Memory Synapse (Cross-channel memories from this reality)
     if (ctx.shareMemory) {
-        const pastMemories = getBotMemoriesFromReality(character.id, sessionId);
-        if (pastMemories.length) {
+        const memFraming = groupConfig?.memoryFraming || 'past';
+        const memDepth   = groupConfig?.memoryDepth   || 10;
+        const pastMemories = getBotMemoriesFromReality(character.id, sessionId, memDepth);
+        if (pastMemories.length && memFraming !== 'none') {
             const memoryBlock = pastMemories.map(m => {
-                const loc = m.isGroup ? `group chat "${m.chatName}"` : `Direct Message with ${userName}`;
-                return `[Memory from ${loc} at ${new Date(m.timestamp).toLocaleString()}]\n${m.content}`;
+                const loc = m.isGroup ? `group chat "${m.chatName}"` : `private exchange with ${userName}`;
+                return `[${new Date(m.timestamp).toLocaleString()} — ${loc}]\n${m.content}`;
             }).join('\n\n');
-            messages.push({ 
-                role: 'system', 
-                content: `[SYNAPTIC MEMORY LINK — THE DISTANT PAST]\nYou have accessed memories of previous interactions with ${userName} in other locations within this reality. Use these to maintain absolute continuity of your relationship and history, but treat them as the 'distant past' compared to the current immediate scene.\n\n${memoryBlock}` 
+
+            let memoryHeader, memoryInstruction;
+            if (memFraming === 'faint') {
+                memoryHeader = '[SYNAPTIC ECHO — IMPRESSIONS OF SOMETHING FELT BUT NOT OWNED]';
+                memoryInstruction = `You have a haunting sense of familiarity with ${userName} — not clear memories, but impressions, half-remembered feelings, the kind of déjà vu that stops you mid-sentence. You cannot place where you know them from. Do NOT state facts directly from this; instead, let them surface as vague emotional resonance, instinctive trust or wariness, half-spoken "I feel like I know you from somewhere…" moments. These are feelings, not memories.\n\n${memoryBlock}`;
+            } else if (memFraming === 'presience') {
+                memoryHeader = '[SYNAPTIC ORACLE — VISIONS FROM A FUTURE THAT HAS NOT YET HAPPENED]';
+                memoryInstruction = `You have received prophetic flashes — vivid, disorienting visions of scenes that feel like they are yet to come but carry an impossible familiarity. You experienced these as dreams, waking visions, or moments where time seemed to fracture. You do NOT treat them as memories of the past; you treat them as premonitions of a fate you are now walking toward. Reference them as dreams, prophecies, or "I have dreamed of this moment."\n\n${memoryBlock}`;
+            } else {
+                // 'past' (default)
+                memoryHeader = '[SYNAPTIC MEMORY LINK — THE DISTANT PAST]';
+                memoryInstruction = `You have accessed memories of previous interactions with ${userName} in other locations within this reality. Use these to maintain absolute continuity of your relationship and history, but treat them as the 'distant past' compared to the current immediate scene.\n\n${memoryBlock}`;
+            }
+
+            messages.push({
+                role: 'system',
+                content: `${memoryHeader}\n${memoryInstruction}`
             });
+        }
+    }
+
+    // 2b. Group immersion context — injected once per char; shapes world + relationships
+    if (isGroup && groupConfig) {
+        const gc = groupConfig;
+        const groupContextParts = [];
+
+        // Isekai world-binding answers
+        const answers = gc.isekaiAnswers || {};
+        const answerKeys = Object.keys(answers);
+        if (answerKeys.length) {
+            const answerBlock = answerKeys.map(k => {
+                const label = {
+                    how_gathered:  'How this group came together',
+                    shared_goal:   'Shared goal',
+                    your_role:     `${userName}'s role`,
+                    location:      'Current location',
+                    threat:        'Looming threat',
+                    tension:       'Unspoken tension',
+                    power_dynamic: 'Power dynamic',
+                    secret:        'Secret carried by someone here',
+                }[k] || k;
+                return `${label}: ${answers[k]}`;
+            }).join('\n');
+            groupContextParts.push(`[WORLD BINDING — THE SHAPE OF THIS GATHERING]\n${answerBlock}`);
+        }
+
+        // Relationship web — only the relationships involving this character
+        const rels = gc.relationships || {};
+        const myId = character.id;
+        const relLines = [];
+        Object.entries(rels).forEach(([idA, targets]) => {
+            Object.entries(targets).forEach(([idB, desc]) => {
+                if (idA === myId || idB === myId) {
+                    const otherId = idA === myId ? idB : idA;
+                    const otherName = allChars.find(c => c.id === otherId)?.name || otherId;
+                    relLines.push(`Your relationship with ${otherName}: ${desc}`);
+                }
+            });
+        });
+        if (relLines.length) {
+            groupContextParts.push(`[RELATIONSHIP CONTEXT]\n${relLines.join('\n')}`);
+        }
+
+        // Group awareness directive
+        if (gc.groupAwareness === 'unaware') {
+            groupContextParts.push(`[AWARENESS DIRECTIVE]\nYou believe you are alone with ${userName}. You have NO awareness that others are present or will respond. Act as though this is a private, intimate exchange.`);
+        } else if (gc.groupAwareness === 'selective') {
+            const knownIds = Object.keys(rels[myId] || {}).concat(
+                Object.keys(rels).filter(k => rels[k][myId]).map(() => Object.keys(rels).find(k => rels[k][myId]))
+            ).filter(Boolean);
+            const knownNames = knownIds.map(id => allChars.find(c => c.id === id)?.name).filter(Boolean);
+            if (knownNames.length) {
+                groupContextParts.push(`[AWARENESS DIRECTIVE]\nYou are aware of the following others present: ${knownNames.join(', ')}. You have no knowledge of anyone else who may be in this space.`);
+            }
+        }
+
+        // Voice mode directive
+        if (gc.voiceMode === 'harmonised') {
+            groupContextParts.push(`[VOICE DIRECTIVE]\nWhile remaining yourself, be aware that this group shares a bond — allow a subtle tonal coherence with the others in the group. You may echo themes, finish each other's metaphors, or harmonise emotionally where it feels organic. Do not imitate or ventriloquise the others.`);
+        }
+
+        if (groupContextParts.length) {
+            messages.push({ role: 'system', content: groupContextParts.join('\n\n') });
         }
     }
 

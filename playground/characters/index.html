@@ -164,8 +164,7 @@
         <!-- CHATS VIEW -->
         <div id="view-chats" class="sidebar-view active">
             <div class="sidebar-action-bar">
-                <button id="chat-new-dm" class="btn btn--accent btn--sm btn--flex"><i data-lucide="message-square-plus"></i> New DM</button>
-                <button id="chat-new-group" class="btn btn--ghost btn--sm btn--flex"><i data-lucide="users"></i> Group</button>
+                <button id="chat-new-dm" class="btn btn--accent btn--sm btn--flex"><i data-lucide="message-square-plus"></i> New Thread</button>
             </div>
             <div class="chat-search-bar">
                 <input type="text" id="chat-search-input" class="control-input control-input--sm" placeholder="Search conversations...">
@@ -1055,7 +1054,11 @@
       <div class="ts-header__left">
         <i data-lucide="wand-2" class="ts-header__icon"></i>
         <h2 id="ts-title" class="ts-header__title">New Thread</h2>
-        <span id="ts-type-badge" class="ts-badge">DM</span>
+        <!-- DM / Group toggle pill -->
+        <div class="ts-mode-toggle" role="group" aria-label="Thread type">
+          <button id="ts-mode-dm" class="ts-mode-btn active" data-mode="dm" title="Direct Message"><i data-lucide="message-square"></i> DM</button>
+          <button id="ts-mode-group" class="ts-mode-btn" data-mode="group" title="Group Chat"><i data-lucide="users"></i> Group</button>
+        </div>
       </div>
       <button id="ts-close" class="ce-btn ce-btn--ghost ce-btn--icon" aria-label="Close"><i data-lucide="x"></i></button>
     </header>
@@ -1066,6 +1069,7 @@
       <button class="ts-tab" data-ts-tab="world" role="tab" aria-selected="false"><i data-lucide="globe-2"></i> World</button>
       <button class="ts-tab" data-ts-tab="persona" role="tab" aria-selected="false"><i data-lucide="user-cog"></i> Persona</button>
       <button class="ts-tab" data-ts-tab="generation" role="tab" aria-selected="false"><i data-lucide="sliders-horizontal"></i> Generation</button>
+      <button class="ts-tab ts-tab--group-only" id="ts-tab-group" data-ts-tab="group" role="tab" aria-selected="false" hidden><i data-lucide="sparkles"></i> Group</button>
     </nav>
 
     <!-- Body -->
@@ -1168,6 +1172,177 @@
           <input type="text" id="ts-thread-name" class="ce-input" placeholder="Auto-name…">
         </div>
       </div>
+
+      <!-- ── TAB: Group Config (group mode only) ── -->
+      <div class="ts-panel" id="ts-panel-group" role="tabpanel" hidden>
+        <p class="ts-panel__desc">Shape how your group inhabits the world and remembers each other. These decisions make or break immersion.</p>
+
+        <!-- Group identity -->
+        <div class="ts-group-section">
+          <div class="ts-group-section__label"><i data-lucide="hash"></i> Identity</div>
+          <div class="ts-field-group">
+            <label class="ts-label">Group Name <span class="ts-hint">auto-generated from characters if blank</span></label>
+            <input type="text" id="ts-group-name" class="ce-input" placeholder="e.g. The Rift Council…" maxlength="80">
+          </div>
+          <div class="ts-field-group">
+            <label class="ts-label">Group Icon <span class="ts-hint">emoji or 1-2 chars used as the avatar</span></label>
+            <input type="text" id="ts-group-icon" class="ce-input ts-group-icon-input" placeholder="⬡" maxlength="4">
+          </div>
+        </div>
+
+        <!-- Memory framing -->
+        <div class="ts-group-section">
+          <div class="ts-group-section__label"><i data-lucide="brain"></i> Memory Framing</div>
+          <p class="ts-group-desc">Characters in this group may recall your 1-on-1 DM history with them. How do they experience those memories?</p>
+          <div class="ts-radio-grid" id="ts-memory-framing">
+            <label class="ts-radio-card">
+              <input type="radio" name="ts-mem-frame" value="past" checked>
+              <div class="ts-radio-card__body">
+                <span class="ts-radio-card__icon">🕰️</span>
+                <span class="ts-radio-card__title">The Distant Past</span>
+                <span class="ts-radio-card__desc">Explicit shared memories. "I remember when we…" Characters recall everything clearly.</span>
+              </div>
+            </label>
+            <label class="ts-radio-card">
+              <input type="radio" name="ts-mem-frame" value="faint">
+              <div class="ts-radio-card__body">
+                <span class="ts-radio-card__icon">🌫️</span>
+                <span class="ts-radio-card__title">Faint Impressions</span>
+                <span class="ts-radio-card__desc">Hazy déjà vu. "There's something familiar about you…" Memories felt but not owned.</span>
+              </div>
+            </label>
+            <label class="ts-radio-card">
+              <input type="radio" name="ts-mem-frame" value="presience">
+              <div class="ts-radio-card__body">
+                <span class="ts-radio-card__icon">🔮</span>
+                <span class="ts-radio-card__title">Presience</span>
+                <span class="ts-radio-card__desc">Prophetic flashes. "I dreamed of this moment." The future bleeds into the present.</span>
+              </div>
+            </label>
+            <label class="ts-radio-card">
+              <input type="radio" name="ts-mem-frame" value="none">
+              <div class="ts-radio-card__body">
+                <span class="ts-radio-card__icon">⬛</span>
+                <span class="ts-radio-card__title">No Memory</span>
+                <span class="ts-radio-card__desc">Clean slate. Characters have no knowledge of any prior contact with you.</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Group awareness -->
+        <div class="ts-group-section">
+          <div class="ts-group-section__label"><i data-lucide="eye"></i> Group Awareness</div>
+          <p class="ts-group-desc">Do the characters know they're all here together?</p>
+          <div class="ts-radio-grid ts-radio-grid--3" id="ts-group-awareness">
+            <label class="ts-radio-card">
+              <input type="radio" name="ts-grp-awareness" value="aware" checked>
+              <div class="ts-radio-card__body">
+                <span class="ts-radio-card__icon">👁️</span>
+                <span class="ts-radio-card__title">Fully Aware</span>
+                <span class="ts-radio-card__desc">Everyone knows who is present. Normal group dynamics.</span>
+              </div>
+            </label>
+            <label class="ts-radio-card">
+              <input type="radio" name="ts-grp-awareness" value="selective">
+              <div class="ts-radio-card__body">
+                <span class="ts-radio-card__icon">🎭</span>
+                <span class="ts-radio-card__title">Selective</span>
+                <span class="ts-radio-card__desc">Each character only knows those listed in their relationship web.</span>
+              </div>
+            </label>
+            <label class="ts-radio-card">
+              <input type="radio" name="ts-grp-awareness" value="unaware">
+              <div class="ts-radio-card__body">
+                <span class="ts-radio-card__icon">🪞</span>
+                <span class="ts-radio-card__title">Unaware</span>
+                <span class="ts-radio-card__desc">Each thinks they're alone with you. Unreliable narrator mode.</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Turn order -->
+        <div class="ts-group-section">
+          <div class="ts-group-section__label"><i data-lucide="arrow-right-left"></i> Turn Order</div>
+          <div class="ts-radio-grid ts-radio-grid--3" id="ts-turn-order">
+            <label class="ts-radio-card">
+              <input type="radio" name="ts-turn" value="auto" checked>
+              <div class="ts-radio-card__body">
+                <span class="ts-radio-card__icon">⚡</span>
+                <span class="ts-radio-card__title">Auto</span>
+                <span class="ts-radio-card__desc">All characters respond in sequence after each of your messages.</span>
+              </div>
+            </label>
+            <label class="ts-radio-card">
+              <input type="radio" name="ts-turn" value="round-robin">
+              <div class="ts-radio-card__body">
+                <span class="ts-radio-card__icon">🔄</span>
+                <span class="ts-radio-card__title">Round Robin</span>
+                <span class="ts-radio-card__desc">One character responds per turn, rotating in roster order.</span>
+              </div>
+            </label>
+            <label class="ts-radio-card">
+              <input type="radio" name="ts-turn" value="player-driven">
+              <div class="ts-radio-card__body">
+                <span class="ts-radio-card__icon">🎯</span>
+                <span class="ts-radio-card__title">Player Driven</span>
+                <span class="ts-radio-card__desc">You choose who responds each turn by tapping their avatar.</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Voice mode -->
+        <div class="ts-group-section">
+          <div class="ts-group-section__label"><i data-lucide="mic-2"></i> Voice Mode</div>
+          <div class="ts-radio-grid ts-radio-grid--2" id="ts-voice-mode">
+            <label class="ts-radio-card">
+              <input type="radio" name="ts-voice" value="distinct" checked>
+              <div class="ts-radio-card__body">
+                <span class="ts-radio-card__icon">🎵</span>
+                <span class="ts-radio-card__title">Distinct</span>
+                <span class="ts-radio-card__desc">Each character fully in their own voice. Maximum divergence.</span>
+              </div>
+            </label>
+            <label class="ts-radio-card">
+              <input type="radio" name="ts-voice" value="harmonised">
+              <div class="ts-radio-card__body">
+                <span class="ts-radio-card__icon">🎶</span>
+                <span class="ts-radio-card__title">Harmonised</span>
+                <span class="ts-radio-card__desc">Slight tonal blending for narrative cohesion. Works well for tightly-knit parties.</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Isekai / World questions (dynamically populated based on scenario + chars selected) -->
+        <div class="ts-group-section" id="ts-isekai-section">
+          <div class="ts-group-section__label"><i data-lucide="map"></i> World Binding</div>
+          <p class="ts-group-desc">Answer these to anchor your group in the world. The AI uses your answers to set the stage for every member.</p>
+          <div id="ts-isekai-questions" class="ts-isekai-questions">
+            <!-- Populated dynamically by JS once characters are selected -->
+            <div class="ts-isekai-placeholder">Select characters first — world questions appear here based on who you've invited.</div>
+          </div>
+        </div>
+
+        <!-- Group intro override -->
+        <div class="ts-group-section">
+          <div class="ts-group-section__label"><i data-lucide="scroll"></i> Opening Scene <span class="ts-hint">optional</span></div>
+          <p class="ts-group-desc">A narrator-voice intro injected as the first system message when the group opens. Sets the scene before anyone speaks.</p>
+          <textarea id="ts-group-intro" class="control-textarea ts-textarea" rows="4" placeholder="The tavern falls silent as the three of them exchange glances across the firelit table…"></textarea>
+        </div>
+
+        <!-- Relationship web (shown after chars selected) -->
+        <div class="ts-group-section" id="ts-rel-section">
+          <div class="ts-group-section__label"><i data-lucide="network"></i> Relationship Web <span class="ts-hint">optional</span></div>
+          <p class="ts-group-desc">Define how the characters know each other. This shapes how they interact when both are in scene.</p>
+          <div id="ts-rel-grid" class="ts-rel-grid">
+            <div class="ts-isekai-placeholder">Select 2+ characters to define their relationships.</div>
+          </div>
+        </div>
+
+      </div><!-- #ts-panel-group -->
 
     </div><!-- .ts-body -->
 
@@ -2612,6 +2787,18 @@
       <button id="text-input-modal-cancel" class="btn btn--ghost" data-close>Cancel</button>
       <button id="text-input-modal-ok" class="btn btn--accent">OK</button>
     </footer>
+  </div>
+</div>
+
+<!-- ── Image Message Lightbox ──────────────────────────────────────────────── -->
+<div id="img-msg-lightbox" class="img-msg-lightbox" hidden>
+  <div class="img-msg-lightbox__backdrop"></div>
+  <div class="img-msg-lightbox__content">
+    <img id="img-msg-lb-img" src="" alt="Generated image" class="img-msg-lightbox__img">
+    <div class="img-msg-lightbox__actions">
+      <a id="img-msg-lb-dl" class="btn btn--ghost btn--sm" download="underdark-image.png"><i data-lucide="download"></i> Download</a>
+      <button id="img-msg-lb-close" class="btn btn--ghost btn--sm"><i data-lucide="x"></i> Close</button>
+    </div>
   </div>
 </div>
 
