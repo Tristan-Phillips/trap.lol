@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.1.6",
+    "schema_version": "1.1.7",
     "last_updated": "2026-05-12",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": ["_protocol", "identity", "philosophy", "architecture", "pages", "design_system", "rules", "anti_patterns", "language_fingerprint", "evolution", "commits", "sessions", "for_new_llm"]
@@ -422,6 +422,18 @@
 
   "commits": [
     {
+      "hash": "pending",
+      "date": "2026-05-12",
+      "message": "image-engine: rewrite buildImagePrompt for correct token ordering and additive clothing",
+      "scope": "playground/characters",
+      "impact": "medium",
+      "files": [
+        "playground/characters/script/modules/image-engine.js",
+        "status/logs/logs.json"
+      ],
+      "why": "Adult anatomy was injected after art style tags (wrong token position — models weight early tokens most heavily); per-part clothing fields (clothingTop/Bottom/Footwear) were silently dropped when an outfit type was also selected; historyDepth:0 guard was missing so quick-captures included chat context; negative prompt lacked the most common failure modes (bad hands, extra fingers)."
+    },
+    {
       "hash": "57fd584",
       "date": "2026-05-12",
       "message": "Underdark Image Studio: full-screen generation wizard + rp-gen-presets.json",
@@ -666,6 +678,27 @@
   ],
 
   "sessions": [
+    {
+      "date": "2026-05-12",
+      "agent": "Claude Sonnet 4.6",
+      "type": "refactor",
+      "summary": "Rewrote buildImagePrompt() in image-engine.js to correctly order prompt tokens for image diffusion models. Adult anatomy is now inline with the subject block (position 1), per-part clothing fields (clothingTop/Bottom/Footwear) are natively additive and never dropped, historyDepth:0 is properly respected for quick-capture modes, and the negative prompt was significantly expanded with the most common image generation failure modes.",
+      "decisions": [
+        "Adult anatomy fields moved to position 1 (inline with subject physical block) — image diffusion models (FLUX, HiDream, SD) weight early tokens most heavily; placing anatomy after style tags caused models to anchor to style first.",
+        "clothingTop/clothingBottom/clothingFootwear are now native separate fields in buildImagePrompt — they combine additively; selecting multiple per-part fields alongside an outfit type all appear together in the prompt.",
+        "if (historyDepth > 0) guard added — quick-capture calls with historyDepth:0 now correctly exclude chat context from the prompt.",
+        "Negative prompt expanded to 5 multi-line segments covering quality, anatomy, hands/fingers (the most common artifact), duplicate bodies, watermarks/text.",
+        "Quality baseline for unrestricted mode set to: 'masterpiece, best quality, highly detailed, sharp focus, anatomically correct, perfect anatomy, 8k uhd'.",
+        "New ov() helper replaces repeated inline ternary — trims value and treats 'n/a' as empty string.",
+        "bodyFocus moved to after camera (position 9) — it is a composition/framing modifier, not a subject property.",
+        "NSFW tag placed after art style (position 18) — content modality follows style establishment."
+      ],
+      "rules_reinforced": [
+        "Token ordering in image prompts follows subject → physical → clothing → action → camera → environment → style → NSFW tag. Adult anatomy is part of physical — never append it after style.",
+        "Per-part clothing fields are always additive. Never short-circuit them with || against the outfit-type field.",
+        "historyDepth is a contract — if the caller passes 0 it must be respected. Quick-capture modes depend on this."
+      ]
+    },
     {
       "date": "2026-05-12",
       "agent": "Claude Sonnet 4.6",

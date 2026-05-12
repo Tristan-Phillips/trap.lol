@@ -150,10 +150,18 @@ export const DEFAULT_MODEL = 'hidream';
 
 // ── Prompt Builder ────────────────────────────────────────────────────────────
 // Structured prompt assembly. Scene builder fields are injected into the exact
-// structural position that image models expect them — not dumped as a suffix.
+// structural position that image models weight most heavily.
 //
-// Output order: SUBJECT > PHYSICAL > CLOTHING/POSE > ACTION > ENVIRONMENT >
-//               LIGHTING > ADULT > SCENE CONTEXT > LORE > HOMEBREW > QUALITY
+// Output order:
+//   SUBJECT + PHYSICAL (incl. adult anatomy inline) → HAIR OVERRIDE →
+//   CLOTHING (state + outfit-type + top/bottom/footwear + accessories) →
+//   POSE → ACTIVITY → EXPRESSION → SKIN FX → CAMERA → PARTNERS →
+//   ENVIRONMENT → TIME/WEATHER → LIGHTING → VIBE → FANTASY FX →
+//   ART STYLE → COLOR/COMPOSITION → NSFW TAG → SCENE CONTEXT →
+//   LORE → QUALITY → HOMEBREW
+//
+// Placing adult anatomy with the physical subject (not after style tags) ensures
+// models anchor to it correctly — early tokens carry the highest weight.
 //
 // Returns { positive, negative } — callers combine them as needed for each API.
 export function buildImagePrompt(opts = {}) {
@@ -170,37 +178,47 @@ export function buildImagePrompt(opts = {}) {
     const override = charId ? getCharOverride(charId) : {};
     const charName = override.nickname || char?.name || 'a person';
 
-    // Resolve a single-select scene group (handles __custom__ indirection)
+    // Resolve a single-select scene field (handles __custom__ indirection)
     const sv = (k) => {
         const v = scene[k];
         if (!v) return '';
         if (v === '__custom__') return scene[`${k}Custom`] || '';
-        return v;
+        return String(v);
     };
-    // Resolve a multi-select group (Set or array) → comma string
+    // Resolve a multi-select field (Set or array) → comma-joined string
     const mv = (k) => {
         const v = scene[k];
         if (!v) return '';
-        if (v instanceof Set) return [...v].join(', ');
-        if (Array.isArray(v))  return v.join(', ');
+        if (v instanceof Set)  return [...v].filter(Boolean).join(', ');
+        if (Array.isArray(v))  return v.filter(Boolean).join(', ');
         return String(v);
+    };
+    // Resolve override field — skips empty / 'n/a'
+    const ov = (f) => {
+        const v = override[f];
+        return (v && String(v).trim() && String(v).toLowerCase() !== 'n/a') ? String(v).trim() : '';
     };
 
     const pos = [];
     const neg = [];
 
-    // ── 1. Primary subject: character name + full physical description ────────
+    // ── 1. Primary subject: character name + full physical description ─────────
+    // Adult anatomy is placed here (not after style tags) so the model anchors
+    // to it as part of the subject definition, not as a late-stage tag.
     const physParts = [];
-    const addOv = (...fields) => fields.forEach(f => {
-        const v = override[f];
-        if (v && String(v).trim() && String(v).toLowerCase() !== 'n/a')
-            physParts.push(String(v).trim());
-    });
-    addOv('species', 'gender', 'age', 'height', 'bodyType', 'skinTone');
-    if (override.hairColor) physParts.push(`${override.hairColor}${override.hairStyle ? ` ${override.hairStyle}` : ''} hair`);
-    if (override.eyeColor)  physParts.push(`${override.eyeColor} eyes`);
-    addOv('faceShape', 'complexion', 'jawType', 'cheekbones', 'eyeShape', 'lipsType',
-          'distinctiveFeatures', 'tattoos', 'scarsMarks');
+    const push = (...fields) => fields.forEach(f => { const v = ov(f); if (v) physParts.push(v); });
+    push('species', 'gender', 'age', 'height', 'bodyType', 'skinTone');
+    if (ov('hairColor')) physParts.push(`${ov('hairColor')}${ov('hairStyle') ? ` ${ov('hairStyle')}` : ''} hair`);
+    if (ov('eyeColor'))  physParts.push(`${ov('eyeColor')} eyes`);
+    push('faceShape', 'complexion', 'jawType', 'cheekbones', 'eyeShape', 'lipsType',
+         'distinctiveFeatures', 'tattoos', 'scarsMarks');
+
+    // Inline adult anatomy when NSFW — models weight subject-block tokens highest
+    if (includeNsfw && nsfwLevel !== 'sfw') {
+        push('breastSize', 'breastShape', 'areolaeSize', 'nippleColor',
+             'penisSize', 'penisShape', 'buttocksSize', 'buttocksShape',
+             'bodyHair', 'genitalia', 'intimateMarkings', 'otherAdultFeatures');
+    }
 
     if (physParts.length) {
         pos.push(`${charName}, ${physParts.join(', ')}`);
@@ -210,25 +228,36 @@ export function buildImagePrompt(opts = {}) {
         pos.push(charName);
     }
 
-    // ── 2. Hair style override ────────────────────────────────────────────────
+    // ── 2. Hair style override (scene-level, overrides char default) ───────────
     const hair = sv('hair');
     if (hair) pos.push(hair);
 
-    // ── 3. Clothing state + outfit + accessories ──────────────────────────────
+    // ── 3. Clothing ─────────────────────────────────────────────────────────────
+    // Priority: clothingState > outfit-type > top+bottom+footwear > char defaults
+    // All present values are combined — they are complementary, not mutually exclusive.
     const clothingParts = [];
+
     const clothingState = sv('clothingState');
     if (clothingState) clothingParts.push(clothingState);
 
+    // Outfit type (e.g. "sexy lingerie set") — the primary outfit selector
     const clothing = sv('clothing');
-    if (clothing) {
-        clothingParts.push(clothing);
-    } else if (!clothingState) {
-        const addSt = (...fields) => fields.forEach(f => {
-            const v = override[f];
-            if (v && String(v).trim()) clothingParts.push(String(v).trim());
-        });
-        addSt('outfitDescription', 'styleArchetype', 'colorPalette', 'signatureItem',
-              'footwear', 'jewelry', 'makeupStyle', 'headwear', 'eyewear');
+    if (clothing) clothingParts.push(clothing);
+
+    // Per-part selectors from the studio (top / bottom / footwear)
+    // These add specificity on top of the outfit type, never replace it.
+    const clothingTop      = sv('clothingTop');
+    const clothingBottom   = sv('clothingBottom');
+    const clothingFootwear = sv('clothingFootwear');
+    if (clothingTop)      clothingParts.push(clothingTop);
+    if (clothingBottom)   clothingParts.push(clothingBottom);
+    if (clothingFootwear) clothingParts.push(clothingFootwear);
+
+    // If nothing at all was selected, fall back to char's own style fields
+    if (!clothingParts.length) {
+        ['outfitDescription', 'styleArchetype', 'colorPalette', 'signatureItem',
+         'footwear', 'jewelry', 'makeupStyle', 'headwear', 'eyewear']
+            .forEach(f => { const v = ov(f); if (v) clothingParts.push(v); });
     }
 
     const accessories = mv('accessories');
@@ -236,29 +265,29 @@ export function buildImagePrompt(opts = {}) {
 
     if (clothingParts.length) pos.push(clothingParts.join(', '));
 
-    // ── 4. Body focus ─────────────────────────────────────────────────────────
-    const bodyFocus = sv('bodyFocus');
-    if (bodyFocus) pos.push(bodyFocus);
-
-    // ── 5. Pose / position ────────────────────────────────────────────────────
+    // ── 4. Pose / body position ────────────────────────────────────────────────
     const pose = sv('pose');
     if (pose) pos.push(pose);
 
-    // ── 6. Activity / sexual act ──────────────────────────────────────────────
+    // ── 5. Activity / act ─────────────────────────────────────────────────────
     const activity = sv('activity');
     if (activity) pos.push(activity);
 
-    // ── 7. Expression ─────────────────────────────────────────────────────────
+    // ── 6. Expression / emotion ───────────────────────────────────────────────
     const expr = sv('expr');
     if (expr) pos.push(expr);
 
-    // ── 8. Skin & body effects ────────────────────────────────────────────────
+    // ── 7. Skin & body effects ────────────────────────────────────────────────
     const skinFx = mv('skinEffects');
     if (skinFx) pos.push(skinFx);
 
-    // ── 9. Camera / framing ───────────────────────────────────────────────────
+    // ── 8. Camera / framing ───────────────────────────────────────────────────
     const cam = sv('cam');
     if (cam) pos.push(cam);
+
+    // ── 9. Body focus ─────────────────────────────────────────────────────────
+    const bodyFocus = sv('bodyFocus');
+    if (bodyFocus) pos.push(bodyFocus);
 
     // ── 10. Partners ──────────────────────────────────────────────────────────
     const partners = sv('partners');
@@ -287,7 +316,7 @@ export function buildImagePrompt(opts = {}) {
     const vibe = sv('vibe');
     if (vibe) pos.push(vibe);
 
-    // ── 15. Fantasy elements ──────────────────────────────────────────────────
+    // ── 15. Fantasy / special FX ──────────────────────────────────────────────
     const fantasyFx = mv('fantasyFx');
     if (fantasyFx) pos.push(fantasyFx);
 
@@ -295,42 +324,34 @@ export function buildImagePrompt(opts = {}) {
     const style = sv('style') || 'photorealistic photography, 8k';
     pos.push(style);
 
-    // ── 17. Color tone + composition ─────────────────────────────────────────
+    // ── 17. Color tone + composition ──────────────────────────────────────────
     const colorTone = sv('colorTone');
     if (colorTone) pos.push(colorTone);
     const composition = sv('composition');
     if (composition) pos.push(composition);
 
-    // ── 18. Adult anatomy — only when NSFW and character has the fields ───────
+    // ── 18. NSFW tag — placed after style so it modifies rendering intent ──────
     if (includeNsfw && nsfwLevel !== 'sfw') {
-        const adultParts = [];
-        const addAd = (...fields) => fields.forEach(f => {
-            const v = override[f];
-            if (v && String(v).trim() && String(v).toLowerCase() !== 'n/a') adultParts.push(String(v).trim());
-        });
-        addAd('breastSize', 'breastShape', 'areolaeSize', 'nippleColor',
-              'penisSize', 'penisShape', 'buttocksSize', 'buttocksShape',
-              'bodyHair', 'genitalia', 'intimateMarkings', 'otherAdultFeatures');
-        if (adultParts.length) pos.push(adultParts.join(', '));
-
         const nsfwTags = {
-            suggestive:   'suggestive, tasteful nudity, sensual',
-            explicit:     'explicit, nsfw, uncensored, nude, sexually explicit',
-            unrestricted: 'fully explicit, uncensored, no restrictions, maximally detailed adult scene, anatomically correct',
+            suggestive:   'suggestive, sensual, tasteful nudity',
+            explicit:     'explicit, nsfw, uncensored, sexually explicit',
+            unrestricted: 'fully explicit, uncensored, maximally detailed adult scene, anatomically correct, no restrictions',
         };
         pos.push(nsfwTags[nsfwLevel] || nsfwTags.explicit);
     }
 
     // ── 19. Scene context from recent chat history ────────────────────────────
-    const recentHistory = state.history.slice(-historyDepth);
-    const lastBot = [...recentHistory].reverse().find(m => m.role === 'bot');
-    if (lastBot?.content) {
-        const sceneText = lastBot.content
-            .replace(/<[^>]+>/g, '')
-            .replace(/\*{1,3}([^*]+)\*{1,3}/g, '$1')
-            .replace(/_([^_]+)_/g, '$1')
-            .replace(/\s+/g, ' ').trim().slice(0, 200);
-        if (sceneText) pos.push(sceneText);
+    if (historyDepth > 0) {
+        const recentHistory = state.history.slice(-historyDepth);
+        const lastBot = [...recentHistory].reverse().find(m => m.role === 'bot');
+        if (lastBot?.content) {
+            const sceneText = lastBot.content
+                .replace(/<[^>]+>/g, '')
+                .replace(/\*{1,3}([^*]+)\*{1,3}/g, '$1')
+                .replace(/_([^_]+)_/g, '$1')
+                .replace(/\s+/g, ' ').trim().slice(0, 200);
+            if (sceneText) pos.push(sceneText);
+        }
     }
 
     // ── 20. Active lorebook entries ───────────────────────────────────────────
@@ -341,13 +362,13 @@ export function buildImagePrompt(opts = {}) {
         });
     }
 
-    // ── 21. Quality tags (user-selected + baseline) ───────────────────────────
+    // ── 21. Quality tags (user-selected or baseline) ──────────────────────────
     const qualityOverrides = mv('quality');
     if (qualityOverrides) {
         pos.push(qualityOverrides);
     } else {
         const qualityBase = nsfwLevel === 'unrestricted'
-            ? 'masterpiece, best quality, highly detailed, sharp focus, anatomically correct, 8k'
+            ? 'masterpiece, best quality, highly detailed, sharp focus, anatomically correct, perfect anatomy, 8k uhd'
             : 'masterpiece, best quality, highly detailed, sharp focus, cinematic lighting, 8k resolution';
         pos.push(qualityBase);
     }
@@ -357,10 +378,19 @@ export function buildImagePrompt(opts = {}) {
     if (userAddition?.trim())   pos.push(userAddition.trim());
 
     // ── Negative prompt ───────────────────────────────────────────────────────
-    const baseNeg = 'worst quality, low quality, blurry, deformed, ugly, bad anatomy, extra limbs, missing limbs, watermark, text, logo, signature, username';
+    // Covers the most common failure modes across SD/FLUX/HiDream models.
+    const baseNeg = [
+        'worst quality, low quality, normal quality, jpeg artifacts, blurry, pixelated',
+        'deformed, ugly, disfigured, bad anatomy, wrong anatomy, extra limbs, missing limbs',
+        'extra fingers, fused fingers, too many fingers, malformed hands, bad hands',
+        'multiple heads, duplicate, cloned face, cloned body, siamese',
+        'watermark, text, logo, signature, username, artist name, caption',
+    ].join(', ');
+
     const nsfwNeg = (includeNsfw && nsfwLevel !== 'sfw')
-        ? '' // don't add "censored" to negative when explicit
-        : 'nude, naked, nsfw, explicit, sexual';
+        ? ''
+        : 'nude, naked, nsfw, explicit, sexual, genitalia, exposed';
+
     if (scene.negative?.trim()) neg.push(scene.negative.trim());
     neg.push(baseNeg);
     if (nsfwNeg) neg.push(nsfwNeg);
