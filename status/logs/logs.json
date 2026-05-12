@@ -471,6 +471,22 @@
   },
   "commits": [
     {
+      "hash": "0000000",
+      "date": "2026-05-12",
+      "message": "feat: merge Oracle into Scene Codex col 3; simplify arena header; snapshot one-click image gen",
+      "scope": "playground/characters",
+      "impact": "high",
+      "files": [
+        "playground/characters/index.html",
+        "playground/characters/script/main.js",
+        "playground/characters/script/modules/ui.js",
+        "playground/characters/style/scene-codex.css",
+        "playground/characters/style/oracle.css",
+        "status/logs/logs.json"
+      ],
+      "why": "Oracle was an isolated modal that duplicated UI chrome (header, backdrop, close button); merging it as a third column of the Scene Codex keeps the oracle workflow accessible while in-context with scene controls and eliminates the modal entirely; arena header was cluttered with 10 near-identical icon buttons — collapsed to 4 primary + overflow; image gen modal replaced with a single-click snapshot that LLM-builds the best prompt from current context."
+    },
+    {
       "hash": "e355d69",
       "date": "2026-05-12",
       "message": "fix: studio char load, clothing field pass-through, rel accessories guard",
@@ -796,6 +812,25 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-12",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Four significant changes to the Underdark playground: (1) surgical audit and correction of image prompt building — character isolation, preset replace-not-stack, history injection guard, (2) removed the image-gen modal entirely and replaced with a one-click LLM snapshot, (3) simplified the arena header from 10 buttons to 4 primary + overflow menu, (4) merged the Oracle modal into the Scene Codex as an inline col-3 panel — the Oracle's thread, input, and preset pills now live inside the codex strip; the #oracle-btn [O] now toggles the codex open and focuses the oracle input.",
+      "decisions": [
+        "Scene resets on character switch (skipNsfw=true so NSFW level is set fresh from reality config, not reset to sfw).",
+        "History injection in prompt is guarded by hasManualScene — if user set cam/pose/env/activity chips, no history prose is added (it would contradict explicit settings).",
+        "Presets call _resetStudioScene(true) before applying — replace semantics not additive.",
+        "Oracle merged into Scene Codex as col 3 (fixed 300px width) — no modal, no backdrop; #oracle-btn and #scene-codex-btn both toggle the same codex panel and both get .active state.",
+        "On small screens (<640px) the oracle column is hidden; between 640-900px the codex inner is overflow-x scrollable so oracle can be reached.",
+        "Removed all #modal-oracle HTML, all oracle-close/backdrop bindings, and old oracle modal CSS wrapper; kept all oracle thread/msg/input/footer component styles."
+      ],
+      "rules_reinforced": [
+        "Zero modals for features that can live inline — merge context instead of layering overlays.",
+        "One-click flows beat modal wizards when the context is already known (snapshot image gen).",
+        "Overflow menus are the correct pattern for demoted actions — IDs stay in DOM as hidden buttons, overflow items delegate via click()."
+      ]
+    },
     {
       "date": "2026-05-12",
       "agent": "Gemini CLI",

@@ -6077,12 +6077,15 @@ export function initUI() {
     const $codexBtn  = qs('#scene-codex-btn');
     const $codexClose = qs('#scene-codex-close');
 
+    const $oracleBtn = qs('#oracle-btn');
+
     function openCodex() {
         if (!$codex) return;
         $codex.hidden = false;
         // Defer so the browser sees display:block before animating
         requestAnimationFrame(() => $codex.classList.add('scene-codex--open'));
         $codexBtn?.classList.add('active');
+        $oracleBtn?.classList.add('active');
         updateCodexDigest();
         lucideRefresh($codex);
     }
@@ -6090,6 +6093,7 @@ export function initUI() {
         if (!$codex) return;
         $codex.classList.remove('scene-codex--open');
         $codexBtn?.classList.remove('active');
+        $oracleBtn?.classList.remove('active');
         // Wait for animation to finish before setting hidden
         $codex.addEventListener('transitionend', () => {
             if (!$codex.classList.contains('scene-codex--open')) $codex.hidden = true;
@@ -6496,7 +6500,7 @@ export function initUI() {
             showToast('Add a character to the thread before using Oracle', 'warn', 2800);
             return;
         }
-        // Populate character select
+        // Populate inline character select
         const $sel = qs('#oracle-char-select');
         if ($sel) {
             $sel.innerHTML = state.activeBotIds.map(id => {
@@ -6506,8 +6510,13 @@ export function initUI() {
             }).join('');
             if (!$sel.value && state.activeBotId) $sel.value = state.activeBotId;
         }
-        showModal('modal-oracle');
-        setTimeout(() => qs('#oracle-input')?.focus(), 80);
+        // Open the Scene Codex panel (oracle lives in col 3)
+        openCodex();
+        // Scroll oracle col into view on small screens and focus input
+        setTimeout(() => {
+            qs('#oracle-input')?.focus();
+            qs('.scene-codex__col--oracle')?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'end' });
+        }, 80);
     }
 
     async function sendOracleQuery(text) {
@@ -6587,9 +6596,6 @@ export function initUI() {
             }
         );
     }
-
-    qs('#oracle-close')?.addEventListener('click', () => hideModal('modal-oracle'));
-    qs('.modal__backdrop', qs('#modal-oracle'))?.addEventListener('click', () => hideModal('modal-oracle'));
 
     qs('#oracle-send-btn')?.addEventListener('click', () => {
         const $in = qs('#oracle-input');

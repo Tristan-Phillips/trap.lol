@@ -109,7 +109,7 @@
                     <!-- Primary: always visible -->
                     <button id="scene-codex-btn" class="btn-icon arena-action--primary" title="Scene Codex [C]"><i data-lucide="compass"></i></button>
                     <button id="focus-mode-btn" class="btn-icon arena-action--primary" title="Immersive Mode [F]"><i data-lucide="book-open"></i></button>
-                    <button id="oracle-btn" class="btn-icon arena-action--primary" title="Oracle [O]"><i data-lucide="eye"></i></button>
+                    <button id="oracle-btn" class="btn-icon arena-action--primary" title="Oracle — opens Scene Codex [O]"><i data-lucide="eye"></i></button>
                     <button id="search-toggle" class="btn-icon arena-action--primary" title="Search history"><i data-lucide="search"></i></button>
                     <!-- Hidden — IDs kept for JS wiring, accessed via overflow -->
                     <button id="chat-bg-btn" hidden></button>
@@ -143,12 +143,12 @@
               <button id="thread-search-close" class="btn-icon btn-icon--small"><i data-lucide="x"></i></button>
             </div>
 
-            <!-- ── Scene Codex — God-view overlay ── -->
+            <!-- ── Scene Codex — God-view overlay (includes Oracle) ── -->
             <div id="scene-codex" class="scene-codex" hidden>
                 <div class="scene-codex__inner">
                     <div class="scene-codex__grip"></div>
 
-                    <!-- LEFT: Scene State -->
+                    <!-- COL 1: Scene State -->
                     <div class="scene-codex__col scene-codex__col--state">
                         <div class="scene-codex__label"><i data-lucide="activity"></i> Scene State</div>
                         <div class="scene-codex__meters">
@@ -178,9 +178,20 @@
                             <div class="scene-codex__label scene-codex__label--inner"><i data-lucide="git-commit"></i> Arc</div>
                             <input id="codex-arc-input" type="text" class="codex-input" placeholder="Narrative arc note…">
                         </div>
+                        <div class="scene-codex__label scene-codex__label--inner"><i data-lucide="image"></i> Quick Media</div>
+                        <div class="codex-media-btns">
+                            <button id="codex-quick-img" class="codex-media-btn" title="Snapshot — generate scene image">
+                                <i data-lucide="camera"></i>
+                                <span>Capture</span>
+                            </button>
+                            <button id="codex-quick-vid" class="codex-media-btn codex-media-btn--video" title="Animate scene">
+                                <i data-lucide="film"></i>
+                                <span>Animate</span>
+                            </button>
+                        </div>
                     </div>
 
-                    <!-- CENTER: God Controls -->
+                    <!-- COL 2: God Controls -->
                     <div class="scene-codex__col scene-codex__col--controls">
                         <div class="scene-codex__label"><i data-lucide="zap"></i> God Controls</div>
                         <div class="codex-inject-grid">
@@ -195,28 +206,45 @@
                             <input id="codex-custom-inject" type="text" class="codex-input" placeholder="Custom directive — fires on next send…">
                             <button id="codex-custom-inject-btn" class="codex-submit-btn" title="Queue directive"><i data-lucide="send"></i></button>
                         </div>
-                    </div>
-
-                    <!-- RIGHT: Scene Info / Quick Media -->
-                    <div class="scene-codex__col scene-codex__col--media">
-                        <div class="scene-codex__label"><i data-lucide="image"></i> Quick Media</div>
-                        <div class="codex-media-btns">
-                            <button id="codex-quick-img" class="codex-media-btn" title="Generate scene image from current context">
-                                <i data-lucide="camera"></i>
-                                <span>Capture Scene</span>
-                            </button>
-                            <button id="codex-quick-vid" class="codex-media-btn codex-media-btn--video" title="Generate scene video">
-                                <i data-lucide="film"></i>
-                                <span>Animate Scene</span>
-                            </button>
-                        </div>
                         <div class="scene-codex__label scene-codex__label--inner"><i data-lucide="info"></i> Scene Digest</div>
                         <div id="codex-digest" class="codex-digest">
                             <span class="codex-digest__empty">Start a conversation to see scene context.</span>
                         </div>
                     </div>
 
-                    <button id="scene-codex-close" class="scene-codex__close" title="Close Scene Codex"><i data-lucide="chevron-up"></i></button>
+                    <!-- COL 3: Oracle — isolated counsel -->
+                    <div class="scene-codex__col scene-codex__col--oracle">
+                        <div class="scene-codex__label scene-codex__label--oracle">
+                            <i data-lucide="eye"></i> Oracle
+                            <span class="oracle-label-sub">isolated — never touches your story</span>
+                            <select id="oracle-char-select" class="oracle-char-select-inline"></select>
+                        </div>
+                        <div class="oracle-preset-row">
+                            <button class="oracle-inject-btn" data-inject="recontextualize"><i data-lucide="map"></i> Recontextualize</button>
+                            <button class="oracle-inject-btn" data-inject="continuity"><i data-lucide="scroll-text"></i> Continuity</button>
+                            <button class="oracle-inject-btn" data-inject="reset"><i data-lucide="refresh-cw"></i> Reset Voice</button>
+                            <button class="oracle-inject-btn" data-inject="escalate"><i data-lucide="flame"></i> Escalate</button>
+                            <button class="oracle-inject-btn" data-inject="uncensor"><i data-lucide="shield-off"></i> Uncensor</button>
+                        </div>
+                        <div id="oracle-thread" class="oracle-thread oracle-thread--inline">
+                            <div class="oracle-thread__empty">
+                                <i data-lucide="eye"></i>
+                                <p>Ask the Oracle anything.</p>
+                            </div>
+                        </div>
+                        <div class="oracle-footer oracle-footer--inline">
+                            <div class="oracle-input-row">
+                                <textarea id="oracle-input" class="oracle-textarea oracle-textarea--inline" rows="2" placeholder="Ask the Oracle… {{char}} {{user}}"></textarea>
+                                <button id="oracle-send-btn" class="oracle-send-btn" title="Send (Enter)"><i data-lucide="send"></i></button>
+                            </div>
+                            <div class="oracle-footer__actions oracle-footer__actions--inline">
+                                <button id="oracle-inject-to-chat" class="oracle-footer__btn oracle-footer__btn--inject" title="Inject last Oracle response as Author's Note"><i data-lucide="arrow-down-to-line"></i> Inject</button>
+                                <button id="oracle-clear" class="oracle-footer__btn" title="Clear Oracle thread"><i data-lucide="eraser"></i> Clear</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button id="scene-codex-close" class="scene-codex__close" title="Close"><i data-lucide="chevron-up"></i></button>
                 </div>
             </div>
 
@@ -2158,74 +2186,6 @@
   </div>
 </div>
 
-<div id="modal-oracle" class="modal" hidden>
-  <div class="modal__backdrop"></div>
-  <div class="modal__content modal__content--oracle">
-
-    <!-- Header -->
-    <header class="oracle-modal-header">
-      <div class="oracle-modal-header__identity">
-        <div class="oracle-modal-header__icon"><i data-lucide="eye"></i></div>
-        <div>
-          <h3 class="oracle-modal-header__title">Oracle</h3>
-          <p class="oracle-modal-header__sub">Isolated counsel — never touches your story</p>
-        </div>
-      </div>
-      <div class="oracle-modal-header__controls">
-        <select id="oracle-char-select" class="control-select control-select--sm oracle-char-select"></select>
-        <button id="oracle-close" class="btn-icon" title="Close Oracle"><i data-lucide="x"></i></button>
-      </div>
-    </header>
-
-    <!-- Preset quick-inject strip -->
-    <div class="oracle-preset-strip">
-      <span class="oracle-preset-strip__label">Presets</span>
-      <button class="oracle-inject-btn" data-inject="recontextualize" title="Recontextualize the current scene">
-        <i data-lucide="map"></i> Recontextualize
-      </button>
-      <button class="oracle-inject-btn" data-inject="continuity" title="Summarise continuity so far">
-        <i data-lucide="scroll-text"></i> Continuity
-      </button>
-      <button class="oracle-inject-btn" data-inject="reset" title="Reset character voice">
-        <i data-lucide="refresh-cw"></i> Reset Voice
-      </button>
-      <button class="oracle-inject-btn" data-inject="escalate" title="Escalate intensity">
-        <i data-lucide="flame"></i> Escalate
-      </button>
-      <button class="oracle-inject-btn" data-inject="uncensor" title="NSFW override">
-        <i data-lucide="shield-off"></i> Uncensor
-      </button>
-    </div>
-
-    <!-- Message thread -->
-    <div id="oracle-thread" class="oracle-thread">
-      <div class="oracle-thread__empty">
-        <i data-lucide="eye"></i>
-        <p>Ask the Oracle anything about your characters, scene, or continuity.</p>
-        <p class="oracle-thread__empty-hint">This thread is fully isolated — it never affects your story.</p>
-      </div>
-    </div>
-
-    <!-- Footer: action bar + input -->
-    <div class="oracle-footer">
-      <div class="oracle-footer__actions">
-        <button id="oracle-inject-to-chat" class="oracle-footer__btn oracle-footer__btn--inject" title="Inject last Oracle response as Author's Note">
-          <i data-lucide="arrow-down-to-line"></i> Inject to chat
-        </button>
-        <button id="oracle-clear" class="oracle-footer__btn" title="Clear Oracle thread">
-          <i data-lucide="eraser"></i> Clear
-        </button>
-      </div>
-      <div class="oracle-input-row">
-        <textarea id="oracle-input" class="oracle-textarea" rows="2" placeholder="Ask the Oracle… use {{char}} and {{user}} tokens"></textarea>
-        <button id="oracle-send-btn" class="oracle-send-btn" title="Send (Enter)">
-          <i data-lucide="send"></i>
-        </button>
-      </div>
-    </div>
-
-  </div>
-</div>
 
 <div id="modal-new-reality" class="modal" hidden>
   <div class="modal__backdrop" data-close></div>
