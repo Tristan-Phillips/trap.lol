@@ -471,7 +471,7 @@
   },
   "commits": [
     {
-      "hash": "0000000",
+      "hash": "f46ec02",
       "date": "2026-05-12",
       "message": "feat: merge Oracle into Scene Codex col 3; simplify arena header; snapshot one-click image gen",
       "scope": "playground/characters",
