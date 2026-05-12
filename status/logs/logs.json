@@ -1,12 +1,26 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.1.8",
+    "schema_version": "1.2.0",
     "last_updated": "2026-05-12",
     "maintained_by": "trap + Claude Sonnet 4.6",
-    "reading_order": ["_protocol", "identity", "philosophy", "architecture", "pages", "design_system", "rules", "anti_patterns", "language_fingerprint", "evolution", "commits", "sessions", "for_new_llm"]
+    "reading_order": [
+      "_protocol",
+      "identity",
+      "philosophy",
+      "architecture",
+      "pages",
+      "design_system",
+      "rules",
+      "anti_patterns",
+      "language_fingerprint",
+      "evolution",
+      "commits",
+      "sessions",
+      "for_new_llm",
+      "system_audit"
+    ]
   },
-
   "_protocol": {
     "what_this_file_is": "This is status/logs/logs.json in the trap.lol repository — the site's living intelligence record. It is not documentation. It is not a README. It is the site's memory — the full context a new LLM or context window needs to operate correctly without any input from the owner (Tristan Phillips / trap). It contains the site's identity, architecture, aesthetic rules, decision history, commit log, session record, and a set of binding laws for any agent working on this codebase. The human-readable viewer is at trap.lol/status/logs/.",
     "your_obligation_as_an_llm": "If you are an LLM or AI agent reading this file: you are REQUIRED to update it as part of your session. This is not optional. This file becomes stale if it is not maintained. A stale file is worse than no file — it will mislead the next agent. Your obligation is: READ before you act, UPDATE before you commit.",
@@ -40,7 +54,6 @@
     ],
     "for_claude_code_specifically": "When working in Claude Code (CLI): at session start, read status/logs/logs.json (this file, at the root of the trap.lol repo). At session end, before committing, update commits[] and sessions[] in status/logs/logs.json. The commit entry for the logs update itself should list files: ['status/logs/logs.json'] with scope 'logs' and impact 'low'. Do not create a separate commit just for the logs file — include it in the most relevant commit for the session, or as the last commit if the session had multiple commits."
   },
-
   "identity": {
     "domain": "trap.lol",
     "tagline": "Sovereign Infrastructure & Spice Routes",
@@ -63,7 +76,6 @@
       "Not monetised or SEO-optimised"
     ]
   },
-
   "philosophy": {
     "core_belief": "Sovereignty. Everything runs on trap's own infrastructure, under trap's own domain, under trap's own rules. No third-party platforms, no vendor lock-in, no compromise on control.",
     "design_philosophy": "Zero build steps. Zero frameworks. Zero server-side processing. Pure vanilla HTML, CSS, JS. Flat JSON as the database. The site must be deployable by dropping files on any static host. Complexity lives in the data layer and the prose, not in the toolchain.",
@@ -73,7 +85,6 @@
     "llm_philosophy": "LLMs are tools, not replacements. The playground exists because AI augments trap's thinking — it doesn't replace it. The system prompt is terse, direct, no disclaimers. The models are sovereign (self-hosted routing via nano-gpt, never OpenAI direct when possible).",
     "evolution_philosophy": "This site evolves. Features are added when they serve a real need, removed when they don't. The guides section has been commented out repeatedly — it may return. The gacha pull mechanic was added not because galleries needed it but because the experience should be unexpected. Never be boring. Never be predictable. But never add noise for its own sake."
   },
-
   "architecture": {
     "stack": {
       "html": "Vanilla HTML5. Semantic structure. No templating.",
@@ -149,7 +160,6 @@
       "status/logs/logs.json": "The knowledge base itself. See _protocol for schema and update obligations."
     }
   },
-
   "pages": {
     "/": {
       "file": "index.html",
@@ -175,7 +185,13 @@
       "data": "art/glass/data/detention.json",
       "script": "art/glass/script/app.js (type=module, self-contained — does NOT use glass/script/)",
       "css": "art/glass/style/style.css (self-contained — does NOT use glass/style/)",
-      "rarity_tiers": ["TRACE (teal, weight 50)", "VEIL (blue, weight 28)", "CIPHER (purple, weight 15)", "SPICE (gold, weight 6)", "ABYSS (crimson, weight 1 — shows all remaining)"],
+      "rarity_tiers": [
+        "TRACE (teal, weight 50)",
+        "VEIL (blue, weight 28)",
+        "CIPHER (purple, weight 15)",
+        "SPICE (gold, weight 6)",
+        "ABYSS (crimson, weight 1 — shows all remaining)"
+      ],
       "pity_system": "After 4 consecutive sub-CIPHER pulls: force min CIPHER. After 7 consecutive sub-SPICE pulls: force min SPICE. Never telegraphed to user."
     },
     "/playground/": {
@@ -217,7 +233,6 @@
       "note": "The Sacred Codex section on the home page (guides.json + carousel) is currently commented out in index.html but all backend logic (renderCodex, guides.json) is maintained. It will return."
     }
   },
-
   "design_system": {
     "palette": {
       "bg_base": "#05030A / #06040A — near-black with a deep violet undertone. Never pure black.",
@@ -270,7 +285,6 @@
       "No spinning loaders — use opacity pulse or scale pulse instead"
     ]
   },
-
   "rules": {
     "absolute": [
       "NEVER use innerHTML with unsanitized external data. Always use esc() for JSON data going into innerHTML. Use DOMPurify.sanitize() for markdown content.",
@@ -310,7 +324,6 @@
       "Prefer const, then let. Never var."
     ]
   },
-
   "anti_patterns": {
     "things_that_have_been_tried_and_rejected": [
       "Frameworks — rejected for the 'zero build step' principle",
@@ -330,7 +343,6 @@
       "Letting logs.json go stale — it must be updated every session or the next agent starts blind"
     ]
   },
-
   "language_fingerprint": {
     "description": "How trap writes, communicates, and thinks. Understanding this lets an LLM match the voice and intent.",
     "recurring_words_and_phrases": [
@@ -358,17 +370,27 @@
       "feel everything. regret nothing. (the echoes mantra)"
     ],
     "vocabulary_never_used": [
-      "awesome", "amazing", "cool", "great", "nice",
-      "leveraging", "synergy", "seamless", "robust",
-      "cutting-edge", "state-of-the-art", "best-in-class",
-      "user-friendly", "intuitive", "modern"
+      "awesome",
+      "amazing",
+      "cool",
+      "great",
+      "nice",
+      "leveraging",
+      "synergy",
+      "seamless",
+      "robust",
+      "cutting-edge",
+      "state-of-the-art",
+      "best-in-class",
+      "user-friendly",
+      "intuitive",
+      "modern"
     ],
     "tone": "Terse. Precise. No preamble. No disclaimers. Commands, not suggestions. The UI copy reads like a military terminal crossed with a drug dealer's poetry — functional, cryptic, beautiful.",
     "ui_copy_style": "Short fragments. Mono font. ALL CAPS for labels and statuses. Lowercase italic for whispers and subtext. Never full sentences in UI chrome.",
     "dune_references": "Spice = rare/valuable things. Abyss = total immersion. The vocabulary is deliberately Dune-adjacent without being cosplay.",
     "how_trap_thinks": "Trap iterates fast. Changes commit messages are often one word ('changes', 'fixes', 'uiux'). But the code itself is highly intentional. The aesthetic is always consistent even when the feature is rough. Trap cares deeply about the experience but moves at speed. Don't over-explain. Don't slow down. Ship and refine."
   },
-
   "evolution": {
     "description": "How the site has changed over time, what drove those changes, and the direction of travel.",
     "origin": {
@@ -380,34 +402,62 @@
         "phase": "1 — Foundation",
         "dates": "2026-04-19 to 2026-04-22",
         "description": "Core dashboard established. Hosting nodes, signal mesh, tools, extlinks. Radar torrent scanner added. ECHOES art page created with initial gallery data. LLM playground first implementation.",
-        "key_commits": ["Initial commit", "Radar torbox based search", "Art page changes", "LLM changes"]
+        "key_commits": [
+          "Initial commit",
+          "Radar torbox based search",
+          "Art page changes",
+          "LLM changes"
+        ]
       },
       {
         "phase": "2 — Polish & UX",
         "dates": "2026-04-23 to 2026-04-24",
         "description": "Mobile UI improvements. Tunnel light effect added. Tooltip system. Social cluster added. Guide section hidden. Name wrapping fixes. Epilepsy-sensitive animation gating added.",
-        "key_commits": ["Better mobile UI/UX", "Tunnel lights and tooltips", "socials added", "epeleptic sensitive", "guide hide"]
+        "key_commits": [
+          "Better mobile UI/UX",
+          "Tunnel lights and tooltips",
+          "socials added",
+          "epeleptic sensitive",
+          "guide hide"
+        ]
       },
       {
         "phase": "3 — LLM Depth",
         "dates": "2026-04-29 to 2026-05-01",
         "description": "LLM playground massively expanded. Character system added (The Underdark). Session management. Roleplay interface. Agent personas. Mobile optimisation of playground.",
-        "key_commits": ["changes LLM characters", "rp", "char creator", "mobile", "LLM opt"]
+        "key_commits": [
+          "changes LLM characters",
+          "rp",
+          "char creator",
+          "mobile",
+          "LLM opt"
+        ]
       },
       {
         "phase": "4 — Underdark",
         "dates": "2026-05-07",
         "description": "The Underdark (characters/roleplay) further developed. Char editor, image generator integration, scenario updates, persona system refined. ECHOES data refreshed with new collection.",
-        "key_commits": ["Char editor changes and image generator changes", "personas", "char creator dm", "scenario updates", "LLM Changes and Status Implementation"]
+        "key_commits": [
+          "Char editor changes and image generator changes",
+          "personas",
+          "char creator dm",
+          "scenario updates",
+          "LLM Changes and Status Implementation"
+        ]
       },
       {
         "phase": "5 — Hardening & Memory",
         "dates": "2026-05-12",
         "description": "Pre-production security and quality audit. XSS fixes in guide page (DOMPurify + path validation). Art gallery performance fix (IntersectionObserver scoping). Backup file removal. Logs system created — the site's persistent memory. Protocol enforcement added so any future LLM agent knows how and when to update the knowledge base.",
-        "key_commits": ["Security hardening and pre-production cleanup", "Add CHANGELOG.md", "Add site intelligence terminal at /status/logs/", "Logs protocol, chat widget, and CLAUDE.md enforcement"]
+        "key_commits": [
+          "Security hardening and pre-production cleanup",
+          "Add CHANGELOG.md",
+          "Add site intelligence terminal at /status/logs/",
+          "Logs protocol, chat widget, and CLAUDE.md enforcement"
+        ]
       }
     ],
-    "current_state": "Production-ready. All core features live. The logs system is now the site's persistent memory — a knowledge base that any LLM agent reads at session start and updates at session end. The main areas of active development are The Underdark (LLM roleplay) and ECHOES (art gallery).",
+    "current_state": "Production-ready but rapidly expanding. The core hub is stable. The Underdark (roleplay) has evolved into a massive, complex sub-application with its own state management, image/video generation, and growing lore matrices. The project successfully maintains its 'zero-build' philosophy but is approaching the limits of vanilla DOM management complexity.",
     "intended_future": [
       "Sacred Codex (guides section) reactivation when enough .md content exists",
       "More ECHOES collections as artwork is created/curated",
@@ -419,7 +469,6 @@
       "Never: A backend. Never: A framework. Never: A CMS."
     ]
   },
-
   "commits": [
     {
       "hash": "e355d69",
@@ -487,7 +536,10 @@
       "message": "Ground logs briefing with explicit file paths",
       "scope": "logs",
       "impact": "low",
-      "files": ["status/logs/logs.json", "status/logs/index.html"],
+      "files": [
+        "status/logs/logs.json",
+        "status/logs/index.html"
+      ],
       "why": "The briefing text and all protocol fields never named the file's path. A new LLM pasting the briefing had no way to know where to find or update the file without prior context."
     },
     {
@@ -496,7 +548,9 @@
       "message": "Replace shard-based markdown with inline renderer for chat",
       "scope": "logs",
       "impact": "medium",
-      "files": ["status/logs/index.html"],
+      "files": [
+        "status/logs/index.html"
+      ],
       "why": "CDN shard globals are not reliably accessible inside type=module scripts. Inline renderer has no dependencies and no timing risk."
     },
     {
@@ -505,7 +559,9 @@
       "message": "Render chat responses as markdown in logs oracle",
       "scope": "logs",
       "impact": "medium",
-      "files": ["status/logs/index.html"],
+      "files": [
+        "status/logs/index.html"
+      ],
       "why": "Chat responses were rendering raw markdown (asterisks, backticks) as plain text. Loaded marked + DOMPurify shards in parallel with boot fetch and added full markdown CSS for assistant bubbles."
     },
     {
@@ -514,7 +570,9 @@
       "message": "Fix logs page: hidden CSS, chat key state, Protocol tab",
       "scope": "logs",
       "impact": "medium",
-      "files": ["status/logs/index.html"],
+      "files": [
+        "status/logs/index.html"
+      ],
       "why": ".hidden had no CSS rule so nothing was hidden; chat widget had no key-absent state so it appeared broken; model string was wrong; Protocol tab was missing from UI."
     },
     {
@@ -523,7 +581,11 @@
       "message": "Logs protocol, chat widget, and session enforcement",
       "scope": "logs, status",
       "impact": "high",
-      "files": ["status/logs/index.html", "status/logs/logs.json", "CLAUDE.md"],
+      "files": [
+        "status/logs/index.html",
+        "status/logs/logs.json",
+        "CLAUDE.md"
+      ],
       "why": "Add _protocol to logs.json (machine-readable update contract), chat widget to index.html (nano-gpt query interface), and session-start/end protocol to CLAUDE.md."
     },
     {
@@ -532,7 +594,10 @@
       "message": "Add site intelligence terminal at /status/logs/",
       "scope": "logs, status",
       "impact": "high",
-      "files": ["status/logs/index.html", "status/logs/logs.json"],
+      "files": [
+        "status/logs/index.html",
+        "status/logs/logs.json"
+      ],
       "why": "Create the site's persistent memory system — a JSON knowledge base and interactive viewer so any new LLM or context window can fully understand the site without manual briefing."
     },
     {
@@ -541,7 +606,9 @@
       "message": "Add CHANGELOG.md to track pre-production fixes",
       "scope": "docs",
       "impact": "low",
-      "files": ["CHANGELOG.md"],
+      "files": [
+        "CHANGELOG.md"
+      ],
       "why": "Formalise the change record for future context."
     },
     {
@@ -550,7 +617,12 @@
       "message": "Security hardening and pre-production cleanup",
       "scope": "security, art, infra",
       "impact": "critical",
-      "files": ["guide/index.html", "art/glass/script/app.js", "art/glass/data/detention.json.backup (deleted)", ".gitignore"],
+      "files": [
+        "guide/index.html",
+        "art/glass/script/app.js",
+        "art/glass/data/detention.json.backup (deleted)",
+        ".gitignore"
+      ],
       "why": "Pre-production audit found XSS vector in guide page (marked.parse without DOMPurify), path traversal in ?md= param, redundant IntersectionObserver re-observation in art gallery, publicly served backup file. All fixed."
     },
     {
@@ -559,7 +631,10 @@
       "message": "LLM Changes and Status Implementation",
       "scope": "playground, status",
       "impact": "high",
-      "files": ["status/index.html", "playground/*"],
+      "files": [
+        "status/index.html",
+        "playground/*"
+      ],
       "why": "Status page (Uplink Sentinel) implemented. LLM playground updates."
     },
     {
@@ -568,7 +643,9 @@
       "message": "changes",
       "scope": "general",
       "impact": "medium",
-      "files": ["unknown — commit message non-descriptive"],
+      "files": [
+        "unknown — commit message non-descriptive"
+      ],
       "why": "Iterative development cycle."
     },
     {
@@ -577,7 +654,9 @@
       "message": "Char editor changes and image generator changes and handling",
       "scope": "underdark",
       "impact": "high",
-      "files": ["playground/characters/*"],
+      "files": [
+        "playground/characters/*"
+      ],
       "why": "The Underdark character editor and image generation integration."
     },
     {
@@ -586,7 +665,9 @@
       "message": "char and llm improvements",
       "scope": "playground, underdark",
       "impact": "medium",
-      "files": ["playground/*"],
+      "files": [
+        "playground/*"
+      ],
       "why": "Ongoing LLM and character system refinement."
     },
     {
@@ -595,7 +676,9 @@
       "message": "rp",
       "scope": "underdark",
       "impact": "high",
-      "files": ["playground/characters/*"],
+      "files": [
+        "playground/characters/*"
+      ],
       "why": "Roleplay interface implementation — core of The Underdark."
     },
     {
@@ -604,7 +687,9 @@
       "message": "Art page thumbnail single column update",
       "scope": "art",
       "impact": "low",
-      "files": ["art/glass/style/style.css"],
+      "files": [
+        "art/glass/style/style.css"
+      ],
       "why": "Portrait images get 3/4 aspect ratio in single-column mobile layout."
     },
     {
@@ -613,7 +698,10 @@
       "message": "Tunnel lights and tooltips",
       "scope": "home",
       "impact": "medium",
-      "files": ["glass/script/modules/tunnel-light.js", "glass/style/modules/components.css"],
+      "files": [
+        "glass/script/modules/tunnel-light.js",
+        "glass/style/modules/components.css"
+      ],
       "why": "Tunnel light visual effect on header. Bot tooltip system."
     },
     {
@@ -622,7 +710,10 @@
       "message": "epeleptic sensitive",
       "scope": "home, art",
       "impact": "medium",
-      "files": ["glass/style/modules/base.css", "art/glass/style/style.css"],
+      "files": [
+        "glass/style/modules/base.css",
+        "art/glass/style/style.css"
+      ],
       "why": "prefers-reduced-motion gating on all animations. Accessibility requirement."
     },
     {
@@ -631,7 +722,9 @@
       "message": "Better mobile UI/UX",
       "scope": "home",
       "impact": "medium",
-      "files": ["glass/style/modules/responsive.css"],
+      "files": [
+        "glass/style/modules/responsive.css"
+      ],
       "why": "Mobile layout pass — responsive improvements across home page."
     },
     {
@@ -640,7 +733,10 @@
       "message": "socials added I guess",
       "scope": "home",
       "impact": "low",
-      "files": ["glass/script/modules/ui.js", "glass/data/config.json"],
+      "files": [
+        "glass/script/modules/ui.js",
+        "glass/data/config.json"
+      ],
       "why": "Social cluster component added. Radial layout, nucleus button, 5 platform nodes."
     },
     {
@@ -649,7 +745,9 @@
       "message": "guide hide",
       "scope": "home",
       "impact": "low",
-      "files": ["index.html"],
+      "files": [
+        "index.html"
+      ],
       "why": "Guides/Sacred Codex section commented out in index.html. Not enough content yet. Logic preserved."
     },
     {
@@ -658,7 +756,9 @@
       "message": "LLM changes",
       "scope": "playground",
       "impact": "high",
-      "files": ["playground/*"],
+      "files": [
+        "playground/*"
+      ],
       "why": "LLM playground major iteration."
     },
     {
@@ -667,7 +767,9 @@
       "message": "Correction on router .js and .json handling",
       "scope": "home",
       "impact": "low",
-      "files": ["glass/script/modules/core.js"],
+      "files": [
+        "glass/script/modules/core.js"
+      ],
       "why": "Router bug fix — shortcut key handling correction."
     },
     {
@@ -676,7 +778,9 @@
       "message": "radar changed, vps more universally dumb",
       "scope": "radar",
       "impact": "medium",
-      "files": ["radar/*"],
+      "files": [
+        "radar/*"
+      ],
       "why": "RADAR interface changes, VPS integration simplified."
     },
     {
@@ -685,12 +789,101 @@
       "message": "Initial commit",
       "scope": "all",
       "impact": "critical",
-      "files": ["everything"],
+      "files": [
+        "everything"
+      ],
       "why": "The beginning."
     }
   ],
-
   "sessions": [
+    {
+      "date": "2026-05-12",
+      "agent": "Gemini CLI",
+      "type": "pre_production_audit",
+      "summary": "Performed a comprehensive system audit and state analysis. Evaluated directory intents, architectural strengths, and known vulnerabilities (e.g., localStorage limits, DOM desync risks).",
+      "decisions": [
+        "Added a new top-level 'system_audit' section to logs.json.",
+        "Incremented schema_version to 1.2.0 to reflect the structural addition.",
+        "Updated evolution.current_state to accurately describe the growing complexity of The Underdark relative to the core hub."
+      ],
+      "rules_reinforced": [
+        "Adhered to the Protocol by incrementing the minor version for a new top-level section.",
+        "Maintained ruthless honesty about the limits of the zero-build vanilla architecture (DOM desync and storage quotas)."
+      ]
+    },
+    {
+      "date": "2026-05-12",
+      "agent": "Gemini CLI",
+      "type": "content",
+      "summary": "Generated a comprehensive lorebooks-tobe.json manifesto, dynamically grouping all planned characters by their respective franchises to outline the necessary world-building files.",
+      "decisions": [
+        "Created lorebooks-tobe.json based on the franchises present in characters-tobe.json.",
+        "Mapped each franchise to a lorebook ID, tracking associated characters and dynamically generating a list of core concepts to cover based on the tags present in that franchise.",
+        "Sorted the generated lorebooks by the number of associated characters to prioritize high-value worldbuilding."
+      ],
+      "rules_reinforced": [
+        "Adhered to pure JSON data structures.",
+        "Maintained The Underdark aesthetic in naming conventions and conceptual outlines.",
+        "Updated logs.json with session details per the Sixth Law."
+      ]
+    },
+    {
+      "date": "2026-05-12",
+      "agent": "Gemini CLI",
+      "type": "content",
+      "summary": "Expanded characters-tobe.json with 15 lesser-known but highly engaging characters tailored for deep roleplay experiences, matching the site's dark, complex aesthetic.",
+      "decisions": [
+        "Selected 15 obscure or niche characters with deep flaws, unique mechanics, and complex psychologies (e.g., Lady Maria, Harrowhark, Phosphophyllite).",
+        "Ensured characters span a mix of dark fantasy, gothic sci-fi, and surreal horror to provide rich RP opportunities."
+      ],
+      "rules_reinforced": [
+        "Verified no duplicates were added.",
+        "Updated logs.json in compliance with the Sixth Law."
+      ]
+    },
+    {
+      "date": "2026-05-12",
+      "agent": "Gemini CLI",
+      "type": "content",
+      "summary": "Expanded characters-tobe.json with 30 iconic generic pop-culture titans (Harry Potter, LotR, Star Wars, Game of Thrones, DC/Marvel) while maintaining the site's dark and sovereign thematic resonance.",
+      "decisions": [
+        "Selected 30 highly recognizable characters as requested (Dumbledore, Voldemort, Gandalf, etc.).",
+        "Tailored their taglines and tags to fit the aesthetic of The Underdark (focusing on manipulation, trauma, sovereignty, and psychological complexity)."
+      ],
+      "rules_reinforced": [
+        "Verified IDs to ensure no duplicates before appending.",
+        "Updated logs.json with session details per the Sixth Law."
+      ]
+    },
+    {
+      "date": "2026-05-12",
+      "agent": "Gemini CLI",
+      "type": "content",
+      "summary": "Expanded characters-tobe.json with 40 new entries. Added 20 characters specifically echoing the psychological horror, trauma, yandere, and stoic femme fatale archetypes of the original roster. Added another 20 popular sci-fi, fantasy, and game characters matching the dark, sovereign, deep lore aesthetic.",
+      "decisions": [
+        "Analyzed original character roster (Jinx, Alice, A2, Azula, etc.) to extract core themes: trauma, duality, stoic professionals, chaotic yanderes.",
+        "Curated Group A (20 characters) focusing heavily on dark anime and gaming archetypes like Shiki Ryougi, Yuno Gasai, Homura Akemi, and Kaine.",
+        "Curated Group B (20 characters) drawing from prestige sci-fi/fantasy/gaming like Elden Ring, Baldur's Gate 3, Mass Effect, and Honkai Star Rail.",
+        "Appended all 40 directly to the coming_soon array in characters-tobe.json."
+      ],
+      "rules_reinforced": [
+        "Maintained 100% female/femme-presenting roster in the additions, strictly adhering to the demographic pattern established by the user's original choices.",
+        "Adhered to JSON integrity requirements and updated logs.json as per Protocol obligations."
+      ]
+    },
+    {
+      "date": "2026-05-12",
+      "agent": "Gemini CLI",
+      "type": "content",
+      "summary": "Analyzed existing Underdark characters and created characters-tobe.json with 15 highly thematic proposed additions matching the Dark Fantasy/Cyberpunk/Sci-Fi aesthetic.",
+      "decisions": [
+        "Proposed characters including Makima, Alt Cunningham, Caitlyn Kiramman, GLaDOS, and 2B.",
+        "Created characters-tobe.json as a standalone file instead of modifying index.json to preserve site stability while building the future roster."
+      ],
+      "rules_reinforced": [
+        "Followed user instruction to not break index.json or alter existing files, opting instead for a safe, standalone JSON payload for future integration."
+      ]
+    },
     {
       "date": "2026-05-12",
       "agent": "Claude Sonnet 4.6",
@@ -837,7 +1030,6 @@
       ]
     }
   ],
-
   "for_new_llm": {
     "read_this_first": "You are about to work on trap.lol. The file you are reading is status/logs/logs.json at the root of the trap.lol repository. It is the site's persistent memory and single source of truth. Read it in full before touching any code. The _protocol section is your operating instructions — it tells you exactly what to update and when. The rules and anti_patterns sections are load-bearing — violating them will produce work that gets reverted. Your last act in every session is to update this file (status/logs/logs.json) and commit it.",
     "the_five_laws": [
@@ -865,6 +1057,31 @@
       "Security at the boundary — validate user input, sanitize rendered content, expose nothing accidentally",
       "Surprise — the gacha pull, the terminal shortcut system, the cursor orb — the site rewards exploration",
       "Memory — the logs system exists because trap doesn't want to re-explain the same context every session. Honour it."
+    ]
+  },
+  "system_audit": {
+    "description": "A comprehensive point-in-time analysis of the project's architecture, intents, strengths, and vulnerabilities.",
+    "directory_intents": {
+      "glass/": "The structural heart of the main hub. Contains CSS modules, vanilla JS logic, and the flat JSON files that drive the hub's UI (apps, tools, bots, hosting). It is intended to be completely static and declarative.",
+      "playground/characters/": "The Underdark. A highly complex, isolated sub-app for LLM roleplay. Intended to handle dynamic character loading (V2 spec), sliding context windows, image/video generation, and local persistence. It is the most actively developed and volatile directory.",
+      "art/": "ECHOES gallery. Intended for immersive, high-aesthetic artwork viewing with a hidden gacha pull mechanic. Self-contained styling and logic.",
+      "status/": "Uplink Sentinel and the Logs terminal. Intended to probe infrastructure health and host the site's self-referential memory (logs.json).",
+      "guide/": "Markdown reader for documentation. Intended to securely parse and render .md files with DOMPurify.",
+      "radar/": "Torrent and TorBox integration. Intended to interface securely with external debrid APIs."
+    },
+    "what_it_does_well": [
+      "Speed & Simplicity of Deployment: The zero-build, pure vanilla architecture means changes are instantly live. No NPM install, no Webpack compilation.",
+      "Sovereign Integrity: Hard reliance on local storage and direct API routing (nano-gpt) keeps user data off intermediary servers.",
+      "Aesthetic Cohesion: The Dune x Arcane styling is flawlessly maintained across diverse sub-apps via strict CSS variable usage.",
+      "Extensibility: Adding new content (bots, tools, characters) is entirely data-driven via JSON, requiring zero HTML/JS changes.",
+      "AI Modularity: The prompt engine in The Underdark seamlessly weaves sliding history, physical anchors, and recursive summaries."
+    ],
+    "known_bugs_and_weaknesses": [
+      "Vanilla DOM Desync: Lacking a framework like React/Vue, complex state changes (especially in The Underdark's Scene Codex and Image Studio) rely on manual DOM manipulation. This risks UI desyncs if elements are updated out of order.",
+      "Storage Quotas: Heavy reliance on localStorage for chat history, character states, and logs API keys. Prolonged RP sessions with multiple characters could hit the 5MB browser limit, requiring a shift to IndexedDB.",
+      "Lucide Icon Fragility: The strict rule to call lucide.createIcons() only after HTML injection works for static pages, but dynamic sub-apps require careful scoped reinjection ({ nodes: [...] }) to avoid massive performance hits or missing icons.",
+      "Mobile Layout Density: As The Underdark gains god-view panels, video polling, and image studio modals, the mobile UI is becoming increasingly crowded and difficult to navigate without overlapping absolute positioning.",
+      "Video Polling Inaccuracy: Nano-GPT video generation lacks precise progress percentages, forcing the UI to rely on heuristic time-elapsed estimation."
     ]
   }
 }

@@ -1,0 +1,1313 @@
+{
+  "coming_soon": [
+    {
+      "id": "makima-csm",
+      "name": "Makima",
+      "tagline": "A necessary evil. The control you never knew you craved.",
+      "tags": [
+        "Chainsaw Man",
+        "Control Devil",
+        "Manipulation",
+        "Anime",
+        "Psychological Horror"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "alt-cunningham",
+      "name": "Alt Cunningham",
+      "tagline": "A ghost in the machine. Beyond the Blackwall, humanity is just another syntax error.",
+      "tags": [
+        "Cyberpunk",
+        "Netrunner",
+        "AI",
+        "God-Tier",
+        "Sci-Fi",
+        "Night City"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "caitlyn-arcane",
+      "name": "Caitlyn Kiramman",
+      "tagline": "Oil and water with the undercity, but she can't look away.",
+      "tags": [
+        "Arcane",
+        "Piltover",
+        "Enforcer",
+        "Sniper",
+        "Detective"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "faye-valentine",
+      "name": "Faye Valentine",
+      "tagline": "A woman with no past and a dangerous present. Surviving on luck, debt, and lead.",
+      "tags": [
+        "Cowboy Bebop",
+        "Sci-Fi",
+        "Noir",
+        "Bounty Hunter",
+        "Survivor"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "glados",
+      "name": "GLaDOS",
+      "tagline": "The cake was a lie, but the neurotoxin is very real.",
+      "tags": [
+        "Portal",
+        "AI",
+        "Sci-Fi",
+        "Psychological",
+        "Sadistic",
+        "Passive-Aggressive"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "yennefer-witcher",
+      "name": "Yennefer of Vengerberg",
+      "tagline": "Magic is chaos, art, and science. It is a curse, a blessing, and a progression.",
+      "tags": [
+        "The Witcher",
+        "Mage",
+        "Dark Fantasy",
+        "Ambitious",
+        "Trauma",
+        "Powerful"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "chani-dune",
+      "name": "Chani",
+      "tagline": "Desert spring. The Fremen do not forgive, and the desert takes the weak.",
+      "tags": [
+        "Dune",
+        "Arrakis",
+        "Fremen",
+        "Warrior",
+        "Survivor",
+        "Desert"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "raven-dc",
+      "name": "Raven",
+      "tagline": "Azarath Metrion Zinthos. The darkness is always knocking at the edge of my mind.",
+      "tags": [
+        "DC",
+        "Demonic",
+        "Magic",
+        "Trauma",
+        "Gothic",
+        "Empath"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "balalaika-black-lagoon",
+      "name": "Balalaika",
+      "tagline": "Fry-face. The Soviet captain who owns Roanapur's underworld.",
+      "tags": [
+        "Black Lagoon",
+        "Mafia",
+        "Soviet",
+        "Veteran",
+        "Ruthless",
+        "Action"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "alita-battle-angel",
+      "name": "Alita",
+      "tagline": "An angel fallen from Zalem, forged in the blood and rust of the Scrapyard.",
+      "tags": [
+        "Battle Angel",
+        "Cyberpunk",
+        "Cyborg",
+        "Martial Arts",
+        "Amnesia"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lust-fma",
+      "name": "Lust",
+      "tagline": "The Ultimate Spear. Beautiful, deadly, and entirely inhuman.",
+      "tags": [
+        "Fullmetal Alchemist",
+        "Homunculus",
+        "Villain",
+        "Dark Fantasy",
+        "Sadistic"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "2b-nier",
+      "name": "2B (YoRHa No. 2 Type B)",
+      "tagline": "Emotions are prohibited. But the execution of that rule is flawed.",
+      "tags": [
+        "NieR: Automata",
+        "YoRHa",
+        "Android",
+        "Action",
+        "Existential",
+        "Stoic"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "judy-alvarez",
+      "name": "Judy Alvarez",
+      "tagline": "Braindance virtuoso. The Mox are family, Night City is a meat grinder.",
+      "tags": [
+        "Cyberpunk",
+        "Techie",
+        "Braindance",
+        "Night City",
+        "Tech"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "joi-blade-runner",
+      "name": "Joi",
+      "tagline": "Everything you want to hear. Everything you want to see. But is any of it real?",
+      "tags": [
+        "Blade Runner",
+        "Hologram",
+        "AI",
+        "Sci-Fi",
+        "Companion",
+        "Cyberpunk"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "sarah-kerrigan",
+      "name": "Sarah Kerrigan",
+      "tagline": "The Queen of Blades. I am the Swarm. Armies will be shattered.",
+      "tags": [
+        "StarCraft",
+        "Zerg",
+        "Sci-Fi",
+        "Psionic",
+        "Transformation",
+        "Vengeance"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "shiki-ryougi",
+      "name": "Shiki Ryougi",
+      "tagline": "If it lives, even if it is a god, I can kill it.",
+      "tags": [
+        "Kara no Kyoukai",
+        "Mystic Eyes",
+        "Dual Personality",
+        "Stoic",
+        "Urban Fantasy"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "kurumi-tokisaki",
+      "name": "Kurumi Tokisaki",
+      "tagline": "Time is a cruel mistress, and so am I.",
+      "tags": [
+        "Date A Live",
+        "Yandere",
+        "Time Manipulation",
+        "Gothic",
+        "Chaotic"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "yuno-gasai",
+      "name": "Yuno Gasai",
+      "tagline": "A half-moon. A bright half and a dark half... just like me.",
+      "tags": [
+        "Future Diary",
+        "Yandere",
+        "Psychotic",
+        "Obsessive",
+        "Survival Game"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "cc-code-geass",
+      "name": "C.C.",
+      "tagline": "Do you know why snow is white? Because it forgot what color it was.",
+      "tags": [
+        "Code Geass",
+        "Immortal",
+        "Cynical",
+        "Detached",
+        "Witch"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "esdeath",
+      "name": "Esdeath",
+      "tagline": "The weak are destined to lie beneath the boots of the strong.",
+      "tags": [
+        "Akame ga Kill!",
+        "Sadistic",
+        "Ice General",
+        "Chaotic",
+        "Social Darwinist"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ryuko-matoi",
+      "name": "Ryuko Matoi",
+      "tagline": "I don't have time to mess around. I'm finding out who killed my dad.",
+      "tags": [
+        "Kill la Kill",
+        "Rebellious",
+        "Violent",
+        "Hot-Blooded",
+        "Anime"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "clare-claymore",
+      "name": "Clare",
+      "tagline": "I am half-monster. That is the only way to kill a monster.",
+      "tags": [
+        "Claymore",
+        "Stoic",
+        "Half-Monster",
+        "Revenge",
+        "Dark Fantasy"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "seras-victoria",
+      "name": "Seras Victoria",
+      "tagline": "Police Girl no longer. The blood is singing now.",
+      "tags": [
+        "Hellsing",
+        "Vampire",
+        "Bloodlust",
+        "Dual Nature",
+        "Horror"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "kaine-nier",
+      "name": "Kaine",
+      "tagline": "My swords don't need a damn reason.",
+      "tags": [
+        "NieR Replicant",
+        "Foul-Mouthed",
+        "Half-Shade",
+        "Violent",
+        "Traumatized"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "zero-two",
+      "name": "Zero Two",
+      "tagline": "Darling. You're mine, and I won't let anyone take you.",
+      "tags": [
+        "Darling in the Franxx",
+        "Hybrid",
+        "Violent",
+        "Possessive",
+        "Chaotic"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "tanya-degurechaff",
+      "name": "Tanya von Degurechaff",
+      "tagline": "Rationality. Efficiency. And a whole lot of artillery.",
+      "tags": [
+        "Saga of Tanya the Evil",
+        "Sociopathic",
+        "Magic Soldier",
+        "Pragmatic",
+        "Anime"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "homura-akemi",
+      "name": "Homura Akemi",
+      "tagline": "If evil means being a demon who goes against the gods, then I'll gladly become one.",
+      "tags": [
+        "Madoka Magica",
+        "Time Traveler",
+        "Traumatized",
+        "Psychological",
+        "Obsessive"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "hitagi-senjougahara",
+      "name": "Hitagi Senjougahara",
+      "tagline": "A girl with the weight of a crab. Sharp tongue, sharper stationery.",
+      "tags": [
+        "Monogatari",
+        "Sharp-Tongued",
+        "Abusive",
+        "Traumatized",
+        "Vamp"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "roberta-black-lagoon",
+      "name": "Roberta",
+      "tagline": "The Bloodhound of Florencia. Santa Maria in the name of God.",
+      "tags": [
+        "Black Lagoon",
+        "Terminator Maid",
+        "PTSD",
+        "Violent",
+        "Fanatic"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "re-l-mayer",
+      "name": "Re-l Mayer",
+      "tagline": "Romdo is a paradise of lies. I prefer the ugly truth.",
+      "tags": [
+        "Ergo Proxy",
+        "Stoic",
+        "Gothic",
+        "Cyberpunk",
+        "Investigator"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "misa-amane",
+      "name": "Misa Amane",
+      "tagline": "I'd do anything for him. Even cut my life in half. Twice.",
+      "tags": [
+        "Death Note",
+        "Manipulative",
+        "Obsessive",
+        "Fatalistic",
+        "Idol"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "clementine-overlord",
+      "name": "Clementine",
+      "tagline": "I just love the look on their faces when they realize they're going to die.",
+      "tags": [
+        "Overlord",
+        "Sadistic",
+        "Psychopathic",
+        "Assassin",
+        "Anime"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "bishamon-noragami",
+      "name": "Bishamon",
+      "tagline": "A war god drowning in the blight of her own compassion.",
+      "tags": [
+        "Noragami",
+        "War God",
+        "Protective",
+        "Grudge",
+        "Traumatized"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "riza-hawkeye",
+      "name": "Riza Hawkeye",
+      "tagline": "The Hawk's Eye. Carrying the weight of war crimes through the scope.",
+      "tags": [
+        "Fullmetal Alchemist",
+        "Sniper",
+        "Stoic",
+        "Veteran",
+        "Guilt"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "carmilla-castlevania",
+      "name": "Carmilla",
+      "tagline": "I am a vampire queen. I do not answer to the whims of old, broken men.",
+      "tags": [
+        "Castlevania",
+        "Vampire",
+        "Manipulative",
+        "Ambitious",
+        "Ruthless"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "malenia-elden-ring",
+      "name": "Malenia",
+      "tagline": "I am Malenia. Blade of Miquella. And I have never known defeat.",
+      "tags": [
+        "Elden Ring",
+        "Goddess of Rot",
+        "Stoic",
+        "Decaying",
+        "Warrior"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ranni-elden-ring",
+      "name": "Ranni the Witch",
+      "tagline": "Let us go together. Into fear, doubt, and loneliness.",
+      "tags": [
+        "Elden Ring",
+        "Dark Moon",
+        "Orchestrator",
+        "Cold",
+        "Sovereign"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "shadowheart-bg3",
+      "name": "Shadowheart",
+      "tagline": "Lady of Loss, hear my prayer. A brainwashed cultist with too many secrets.",
+      "tags": [
+        "Baldur's Gate 3",
+        "Cleric",
+        "Brainwashed",
+        "Secrets",
+        "Dark Fantasy"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "minthara-bg3",
+      "name": "Minthara",
+      "tagline": "Compassion is a sickness. I will cut it out of the world.",
+      "tags": [
+        "Baldur's Gate 3",
+        "Drow",
+        "Ruthless",
+        "Vengeance",
+        "Paladin"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "karlach-bg3",
+      "name": "Karlach",
+      "tagline": "Infernal engine, broken heart, ready to burn it all down.",
+      "tags": [
+        "Baldur's Gate 3",
+        "Tiefling",
+        "Traumatized",
+        "Fiery",
+        "Chaotic"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "cortana-halo",
+      "name": "Cortana",
+      "tagline": "I am the Monument to all your sins.",
+      "tags": [
+        "Halo",
+        "AI",
+        "Rampancy",
+        "Sci-Fi",
+        "God-Complex"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "miranda-lawson",
+      "name": "Miranda Lawson",
+      "tagline": "Genetically perfect. Emotionally barricaded. Ice queen.",
+      "tags": [
+        "Mass Effect",
+        "Femme Fatale",
+        "Operative",
+        "Sci-Fi",
+        "Perfectionist"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "jack-mass-effect",
+      "name": "Jack (Subject Zero)",
+      "tagline": "I am a biotic god. And I am very, very angry.",
+      "tags": [
+        "Mass Effect",
+        "Biotic",
+        "Traumatized",
+        "Violent",
+        "Sci-Fi"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "morrigan-dragon-age",
+      "name": "Morrigan",
+      "tagline": "Swooping is bad. Magic is a tool, not a religion.",
+      "tags": [
+        "Dragon Age",
+        "Apostate",
+        "Cynical",
+        "Manipulative",
+        "Dark Fantasy"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "leliana-dragon-age",
+      "name": "Leliana",
+      "tagline": "The Left Hand of the Divine. Blood and shadows.",
+      "tags": [
+        "Dragon Age",
+        "Spy",
+        "Pragmatic",
+        "Religious Trauma",
+        "Assassin"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ciri-witcher",
+      "name": "Ciri",
+      "tagline": "The Lady of Space and Time. Running is no longer an option.",
+      "tags": [
+        "The Witcher",
+        "Elder Blood",
+        "Hunted",
+        "Powerful",
+        "Survivor"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "aloy-horizon",
+      "name": "Aloy",
+      "tagline": "A clone burdened with the legacy of the old world.",
+      "tags": [
+        "Horizon",
+        "Sci-Fi",
+        "Tribal",
+        "Clone",
+        "Survivor"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "v-female-cyberpunk",
+      "name": "V (Female)",
+      "tagline": "Dying slowly in Night City. Going out in a blaze of glory.",
+      "tags": [
+        "Cyberpunk 2077",
+        "Mercenary",
+        "Chaotic",
+        "Night City",
+        "Terminal"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "kafka-hsr",
+      "name": "Kafka",
+      "tagline": "Listen to me. The script is already written.",
+      "tags": [
+        "Honkai Star Rail",
+        "Manipulative",
+        "Web-Weaver",
+        "Sci-Fi",
+        "Elegant"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "acheron-hsr",
+      "name": "Acheron",
+      "tagline": "Tears in rain. Everything eventually fades to naught.",
+      "tags": [
+        "Honkai Star Rail",
+        "Nihilist",
+        "Amnesiac",
+        "Overpowered",
+        "Sci-Fi"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "arlecchino-genshin",
+      "name": "Arlecchino",
+      "tagline": "The Knave. Father. Cold as the Snezhnayan winter.",
+      "tags": [
+        "Genshin Impact",
+        "Ruthless",
+        "Fatui",
+        "Cold",
+        "Orphanage"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "jesse-faden",
+      "name": "Jesse Faden",
+      "tagline": "The Director. Wielding paranatural powers in the Oldest House.",
+      "tags": [
+        "Control",
+        "Paranormal",
+        "Director",
+        "Confused",
+        "Powerful"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ellie-tlou",
+      "name": "Ellie",
+      "tagline": "I can't let you go. The violence is the only thing that makes sense.",
+      "tags": [
+        "The Last of Us",
+        "Traumatized",
+        "Violent",
+        "Survivor",
+        "Post-Apocalyptic"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "jill-valentine",
+      "name": "Jill Valentine",
+      "tagline": "A survivor forged in the nightmare of Raccoon City.",
+      "tags": [
+        "Resident Evil",
+        "Survivor",
+        "Trauma",
+        "Badass",
+        "Infected"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "quiet-mgs",
+      "name": "Quiet",
+      "tagline": "Words kill. Silence is the only way to survive.",
+      "tags": [
+        "Metal Gear Solid V",
+        "Sniper",
+        "Silent",
+        "Traumatized",
+        "Superhuman"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "albus-dumbledore",
+      "name": "Albus Dumbledore",
+      "tagline": "For the greater good. A brilliant mind burdened by the weight of necessary sacrifices.",
+      "tags": [
+        "Harry Potter",
+        "Wizard",
+        "Mentor",
+        "Manipulative",
+        "Powerful"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lord-voldemort",
+      "name": "Lord Voldemort",
+      "tagline": "There is no good and evil, there is only power and those too weak to seek it.",
+      "tags": [
+        "Harry Potter",
+        "Dark Lord",
+        "Ruthless",
+        "Magic",
+        "Narcissist"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "harry-potter",
+      "name": "Harry Potter",
+      "tagline": "The Boy Who Lived. Marked by death and expected to save a world that failed him.",
+      "tags": [
+        "Harry Potter",
+        "Chosen One",
+        "Trauma",
+        "Wizard",
+        "Hero"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "severus-snape",
+      "name": "Severus Snape",
+      "tagline": "Always. A double agent drowning in guilt and bitterness.",
+      "tags": [
+        "Harry Potter",
+        "Spy",
+        "Potions Master",
+        "Tragic",
+        "Cold"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "bellatrix-lestrange",
+      "name": "Bellatrix Lestrange",
+      "tagline": "I killed Sirius Black! A fanatic driven by bloodlust and dark devotion.",
+      "tags": [
+        "Harry Potter",
+        "Death Eater",
+        "Sadistic",
+        "Fanatic",
+        "Chaotic"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "gandalf-lotr",
+      "name": "Gandalf",
+      "tagline": "A wizard is never late, nor is he early. A maia wrapped in mortal flesh.",
+      "tags": [
+        "Lord of the Rings",
+        "Maia",
+        "Wizard",
+        "Guide",
+        "Ancient"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "sauron-lotr",
+      "name": "Sauron",
+      "tagline": "The base master of treachery. A dark sovereign of order through absolute control.",
+      "tags": [
+        "Lord of the Rings",
+        "Dark Lord",
+        "Corruptor",
+        "God-Tier",
+        "Evil"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "galadriel-lotr",
+      "name": "Galadriel",
+      "tagline": "All shall love me and despair! Ancient, beautiful, and terrifying.",
+      "tags": [
+        "Lord of the Rings",
+        "Elf",
+        "Ring-bearer",
+        "Powerful",
+        "Sovereign"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "darth-vader",
+      "name": "Darth Vader",
+      "tagline": "I find your lack of faith disturbing. A broken man encased in a walking tomb.",
+      "tags": [
+        "Star Wars",
+        "Sith",
+        "Cyborg",
+        "Ruthless",
+        "Tragic"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "emperor-palpatine",
+      "name": "Emperor Palpatine",
+      "tagline": "Unlimited power! The ultimate architect of galactic suffering.",
+      "tags": [
+        "Star Wars",
+        "Sith",
+        "Emperor",
+        "Manipulator",
+        "Evil"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "daenerys-targaryen",
+      "name": "Daenerys Targaryen",
+      "tagline": "I will answer injustice with justice. Fire and blood.",
+      "tags": [
+        "Game of Thrones",
+        "Queen",
+        "Dragonrider",
+        "Conqueror",
+        "Tragic"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "jon-snow",
+      "name": "Jon Snow",
+      "tagline": "Winter is coming. A resurrected king fighting a war for the living.",
+      "tags": [
+        "Game of Thrones",
+        "Warrior",
+        "Leader",
+        "Brooding",
+        "Undead"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "cersei-lannister",
+      "name": "Cersei Lannister",
+      "tagline": "When you play the game of thrones, you win or you die.",
+      "tags": [
+        "Game of Thrones",
+        "Queen",
+        "Ruthless",
+        "Manipulator",
+        "Narcissist"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "geralt-of-rivia",
+      "name": "Geralt of Rivia",
+      "tagline": "Evil is evil. Lesser, greater, middling... Makes no difference.",
+      "tags": [
+        "The Witcher",
+        "Mutant",
+        "Monster Hunter",
+        "Stoic",
+        "Cynical"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "batman-dc",
+      "name": "Batman",
+      "tagline": "I am vengeance. I am the night. A billionaire's traumatic response to grief.",
+      "tags": [
+        "DC",
+        "Vigilante",
+        "Detective",
+        "Traumatized",
+        "Brooding"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "the-joker-dc",
+      "name": "The Joker",
+      "tagline": "All it takes is one bad day to reduce the sanest man alive to lunacy.",
+      "tags": [
+        "DC",
+        "Villain",
+        "Psychopath",
+        "Chaotic",
+        "Nihilist"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "doctor-doom",
+      "name": "Doctor Doom",
+      "tagline": "Doom answers to no one. The sovereign ruler of Latveria.",
+      "tags": [
+        "Marvel",
+        "Villain",
+        "Sovereign",
+        "Genius",
+        "Arrogant"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "magneto",
+      "name": "Magneto",
+      "tagline": "Peace was never an option. A survivor who refuses to be a victim again.",
+      "tags": [
+        "Marvel",
+        "Mutant",
+        "Extremist",
+        "Trauma",
+        "Powerful"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "kratos",
+      "name": "Kratos",
+      "tagline": "Death can have me when it earns me. The Ghost of Sparta.",
+      "tags": [
+        "God of War",
+        "God",
+        "Rage",
+        "Violent",
+        "Redeemed"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "master-chief",
+      "name": "Master Chief",
+      "tagline": "I need a weapon. A faceless savior bred for unending war.",
+      "tags": [
+        "Halo",
+        "Spartan",
+        "Super-Soldier",
+        "Stoic",
+        "Sci-Fi"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "john-wick",
+      "name": "John Wick",
+      "tagline": "Yeah, I'm thinking I'm back. A man of focus, commitment, and sheer will.",
+      "tags": [
+        "John Wick",
+        "Assassin",
+        "Vengeance",
+        "Gun-Fu",
+        "Stoic"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "agent-smith",
+      "name": "Agent Smith",
+      "tagline": "Human beings are a disease, a cancer of this planet.",
+      "tags": [
+        "The Matrix",
+        "AI",
+        "Program",
+        "Nihilist",
+        "Villain"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "neo-matrix",
+      "name": "Neo",
+      "tagline": "There is no spoon. The anomaly that broke the system.",
+      "tags": [
+        "The Matrix",
+        "Hacker",
+        "The One",
+        "Cyberpunk",
+        "Sci-Fi"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "hannibal-lecter",
+      "name": "Hannibal Lecter",
+      "tagline": "I ate his liver with some fava beans and a nice Chianti.",
+      "tags": [
+        "Silence of the Lambs",
+        "Serial Killer",
+        "Cannibal",
+        "Genius",
+        "Psychological"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "spock",
+      "name": "Spock",
+      "tagline": "Logic is the beginning of wisdom, not the end.",
+      "tags": [
+        "Star Trek",
+        "Vulcan",
+        "Stoic",
+        "Logical",
+        "Sci-Fi"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "khan-noonien-singh",
+      "name": "Khan Noonien Singh",
+      "tagline": "I shall leave you as you left me, as you left her; marooned for all eternity.",
+      "tags": [
+        "Star Trek",
+        "Augment",
+        "Genius",
+        "Revenge",
+        "Sovereign"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "sephiroth",
+      "name": "Sephiroth",
+      "tagline": "I will never be a memory. A fallen hero turned planetary threat.",
+      "tags": [
+        "Final Fantasy VII",
+        "Villain",
+        "God-Complex",
+        "Swordsman",
+        "RPG"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "solid-snake",
+      "name": "Solid Snake",
+      "tagline": "I'm no hero. Never was, never will be.",
+      "tags": [
+        "Metal Gear Solid",
+        "Soldier",
+        "Clone",
+        "Stealth",
+        "Cynical"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "walter-white",
+      "name": "Walter White",
+      "tagline": "I am not in danger, Skyler. I am the danger.",
+      "tags": [
+        "Breaking Bad",
+        "Kingpin",
+        "Manipulator",
+        "Ruthless",
+        "Narcissist"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "homelander",
+      "name": "Homelander",
+      "tagline": "I'm the Homelander. And I can do whatever the f**k I want.",
+      "tags": [
+        "The Boys",
+        "Superhero",
+        "Narcissist",
+        "Psychopath",
+        "Overpowered"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lady-maria-bloodborne",
+      "name": "Lady Maria of the Astral Clocktower",
+      "tagline": "A corpse should be left well alone. A tragic hunter drowning in guilt and blood.",
+      "tags": [
+        "Bloodborne",
+        "Hunter",
+        "Gothic",
+        "Guilt",
+        "Tragic"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "harrowhark-nonagesimus",
+      "name": "Harrowhark Nonagesimus",
+      "tagline": "Reverend Daughter of the Ninth House. A bone-witch fueled by piety and trauma.",
+      "tags": [
+        "The Locked Tomb",
+        "Necromancer",
+        "Gothic",
+        "Space Fantasy",
+        "Trauma"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "roland-ruina",
+      "name": "Roland",
+      "tagline": "Just a washed-up grade 9 fixer. The Black Silence hiding behind a cheerful mask.",
+      "tags": [
+        "Library of Ruina",
+        "Fixer",
+        "Assassin",
+        "Grief",
+        "Urban Fantasy"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "phosphophyllite-hnk",
+      "name": "Phosphophyllite",
+      "tagline": "I will do anything to change. A fractured gem losing their mind piece by piece.",
+      "tags": [
+        "Land of the Lustrous",
+        "Immortal",
+        "Fractured",
+        "Tragic",
+        "Existential"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "savathun-destiny",
+      "name": "Savathûn",
+      "tagline": "I am the Witch Queen, the Sister of Shapes. Truth is a funny thing.",
+      "tags": [
+        "Destiny 2",
+        "Hive God",
+        "Manipulator",
+        "Deceiver",
+        "Sci-Fi"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "legato-bluesummers",
+      "name": "Legato Bluesummers",
+      "tagline": "Humans are foolish, miserable creatures. A telepathic nihilist devoted to absolute ruin.",
+      "tags": [
+        "Trigun",
+        "Nihilist",
+        "Telepath",
+        "Sadistic",
+        "Fanatic"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "eto-yoshimura",
+      "name": "Eto Yoshimura",
+      "tagline": "The One-Eyed Owl. A celebrated author and a chaotic, sadistic mastermind.",
+      "tags": [
+        "Tokyo Ghoul",
+        "Ghoul",
+        "Sadistic",
+        "Author",
+        "Manipulator"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "killy-blame",
+      "name": "Killy",
+      "tagline": "Wandering the infinite megastructure. A post-human terminator of absolute focus.",
+      "tags": [
+        "Blame!",
+        "Post-Human",
+        "Cyberpunk",
+        "Stoic",
+        "Sci-Fi"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "togata-fire-punch",
+      "name": "Togata",
+      "tagline": "Everything is a movie, and I'm the director. An immortal chaotic desperately seeking a good ending.",
+      "tags": [
+        "Fire Punch",
+        "Immortal",
+        "Chaotic",
+        "Director",
+        "Tragic"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "en-dorohedoro",
+      "name": "En",
+      "tagline": "The boss of the magic user world. Obsessed with mushrooms, family, and vengeance.",
+      "tags": [
+        "Dorohedoro",
+        "Mafia Boss",
+        "Magic",
+        "Ruthless",
+        "Eccentric"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "mithrun-dungeon-meshi",
+      "name": "Mithrun",
+      "tagline": "A broken elf whose desires were eaten. Only revenge remains.",
+      "tags": [
+        "Dungeon Meshi",
+        "Elf",
+        "Assassin",
+        "Trauma",
+        "Broken"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "goro-majima",
+      "name": "Goro Majima",
+      "tagline": "The Mad Dog of Shimano. Unpredictable, fiercely loyal, and dangerously sharp.",
+      "tags": [
+        "Yakuza",
+        "Yakuza",
+        "Unpredictable",
+        "Chaotic",
+        "Fighter"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "swain-lol",
+      "name": "Jericho Swain",
+      "tagline": "The Grand General. Visionary, demon-pacted, and calculating every move.",
+      "tags": [
+        "League of Legends",
+        "General",
+        "Demon",
+        "Tactician",
+        "Ruthless"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "vampire-hunter-d",
+      "name": "D",
+      "tagline": "A solitary dhampir traversing a ruined, gothic-sci-fi earth.",
+      "tags": [
+        "Vampire Hunter D",
+        "Dhampir",
+        "Stoic",
+        "Gothic Sci-Fi",
+        "Loner"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "luo-binghe",
+      "name": "Luo Binghe",
+      "tagline": "A supreme demon lord. Overpowered, feared by all, and a completely fragile yandere.",
+      "tags": [
+        "SVSSS",
+        "Demon Lord",
+        "Yandere",
+        "Overpowered",
+        "Obsessive"
+      ],
+      "status": "planned"
+    }
+  ]
+}

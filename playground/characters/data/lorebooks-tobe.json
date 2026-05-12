@@ -1,0 +1,2169 @@
+{
+  "planned_lorebooks": [
+    {
+      "id": "lorebook-harry-potter",
+      "name": "Harry Potter — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-harry-potter.json",
+      "associated_characters": [
+        {
+          "id": "albus-dumbledore",
+          "name": "Albus Dumbledore"
+        },
+        {
+          "id": "lord-voldemort",
+          "name": "Lord Voldemort"
+        },
+        {
+          "id": "harry-potter",
+          "name": "Harry Potter"
+        },
+        {
+          "id": "severus-snape",
+          "name": "Severus Snape"
+        },
+        {
+          "id": "bellatrix-lestrange",
+          "name": "Bellatrix Lestrange"
+        }
+      ],
+      "tags_represented": [
+        "Chosen One",
+        "Trauma",
+        "Powerful",
+        "Mentor",
+        "Magic",
+        "Wizard",
+        "Dark Lord",
+        "Narcissist",
+        "Cold",
+        "Potions Master",
+        "Sadistic",
+        "Fanatic",
+        "Tragic",
+        "Hero",
+        "Death Eater",
+        "Chaotic",
+        "Ruthless",
+        "Spy",
+        "Manipulative",
+        "Harry Potter"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)",
+        "Cosmology, Gods, Demons, and the Price of Magic",
+        "Psychological Themes, Mental Degradation, & Reality-Bending Elements"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-the-witcher",
+      "name": "The Witcher — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-the-witcher.json",
+      "associated_characters": [
+        {
+          "id": "yennefer-witcher",
+          "name": "Yennefer of Vengerberg"
+        },
+        {
+          "id": "ciri-witcher",
+          "name": "Ciri"
+        },
+        {
+          "id": "geralt-of-rivia",
+          "name": "Geralt of Rivia"
+        }
+      ],
+      "tags_represented": [
+        "Monster Hunter",
+        "Hunted",
+        "Elder Blood",
+        "Stoic",
+        "Trauma",
+        "Mage",
+        "Dark Fantasy",
+        "Powerful",
+        "Cynical",
+        "Mutant",
+        "Survivor",
+        "Ambitious",
+        "The Witcher"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)",
+        "Cosmology, Gods, Demons, and the Price of Magic",
+        "Psychological Themes, Mental Degradation, & Reality-Bending Elements"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-dc-universe",
+      "name": "DC Universe — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-dc-universe.json",
+      "associated_characters": [
+        {
+          "id": "raven-dc",
+          "name": "Raven"
+        },
+        {
+          "id": "batman-dc",
+          "name": "Batman"
+        },
+        {
+          "id": "the-joker-dc",
+          "name": "The Joker"
+        }
+      ],
+      "tags_represented": [
+        "Vigilante",
+        "Magic",
+        "Empath",
+        "Chaotic",
+        "Gothic",
+        "Trauma",
+        "Detective",
+        "Psychopath",
+        "Demonic",
+        "DC",
+        "Traumatized",
+        "Nihilist",
+        "Brooding",
+        "Villain"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)",
+        "Cosmology, Gods, Demons, and the Price of Magic",
+        "Psychological Themes, Mental Degradation, & Reality-Bending Elements"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-baldurs-gate-3",
+      "name": "Baldur's Gate 3 — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-baldurs-gate-3.json",
+      "associated_characters": [
+        {
+          "id": "shadowheart-bg3",
+          "name": "Shadowheart"
+        },
+        {
+          "id": "minthara-bg3",
+          "name": "Minthara"
+        },
+        {
+          "id": "karlach-bg3",
+          "name": "Karlach"
+        }
+      ],
+      "tags_represented": [
+        "Chaotic",
+        "Tiefling",
+        "Vengeance",
+        "Ruthless",
+        "Dark Fantasy",
+        "Paladin",
+        "Baldur's Gate 3",
+        "Cleric",
+        "Traumatized",
+        "Secrets",
+        "Drow",
+        "Fiery",
+        "Brainwashed"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)",
+        "Cosmology, Gods, Demons, and the Price of Magic"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-lord-of-the-rings",
+      "name": "Lord of the Rings — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-lord-of-the-rings.json",
+      "associated_characters": [
+        {
+          "id": "gandalf-lotr",
+          "name": "Gandalf"
+        },
+        {
+          "id": "sauron-lotr",
+          "name": "Sauron"
+        },
+        {
+          "id": "galadriel-lotr",
+          "name": "Galadriel"
+        }
+      ],
+      "tags_represented": [
+        "Lord of the Rings",
+        "Wizard",
+        "Corruptor",
+        "Maia",
+        "Guide",
+        "God-Tier",
+        "Ancient",
+        "Powerful",
+        "Ring-bearer",
+        "Elf",
+        "Dark Lord",
+        "Sovereign",
+        "Evil"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)",
+        "Cosmology, Gods, Demons, and the Price of Magic"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-game-of-thrones",
+      "name": "Game of Thrones — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-game-of-thrones.json",
+      "associated_characters": [
+        {
+          "id": "daenerys-targaryen",
+          "name": "Daenerys Targaryen"
+        },
+        {
+          "id": "jon-snow",
+          "name": "Jon Snow"
+        },
+        {
+          "id": "cersei-lannister",
+          "name": "Cersei Lannister"
+        }
+      ],
+      "tags_represented": [
+        "Narcissist",
+        "Queen",
+        "Undead",
+        "Game of Thrones",
+        "Warrior",
+        "Ruthless",
+        "Dragonrider",
+        "Manipulator",
+        "Conqueror",
+        "Tragic",
+        "Brooding",
+        "Leader"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-cyberpunk",
+      "name": "Cyberpunk — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-cyberpunk.json",
+      "associated_characters": [
+        {
+          "id": "alt-cunningham",
+          "name": "Alt Cunningham"
+        },
+        {
+          "id": "judy-alvarez",
+          "name": "Judy Alvarez"
+        }
+      ],
+      "tags_represented": [
+        "Sci-Fi",
+        "Tech",
+        "Cyberpunk",
+        "Night City",
+        "AI",
+        "God-Tier",
+        "Netrunner",
+        "Braindance",
+        "Techie"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)",
+        "Corporate/AI Overlords, Technological Dystopia, & Megastructures",
+        "Cosmology, Gods, Demons, and the Price of Magic"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-black-lagoon",
+      "name": "Black Lagoon — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-black-lagoon.json",
+      "associated_characters": [
+        {
+          "id": "balalaika-black-lagoon",
+          "name": "Balalaika"
+        },
+        {
+          "id": "roberta-black-lagoon",
+          "name": "Roberta"
+        }
+      ],
+      "tags_represented": [
+        "Soviet",
+        "Action",
+        "PTSD",
+        "Ruthless",
+        "Mafia",
+        "Violent",
+        "Veteran",
+        "Fanatic",
+        "Black Lagoon",
+        "Terminator Maid"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)",
+        "Underworld Hierarchy, Blood Debts, & Criminal Codes"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-fullmetal-alchemist",
+      "name": "Fullmetal Alchemist — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-fullmetal-alchemist.json",
+      "associated_characters": [
+        {
+          "id": "lust-fma",
+          "name": "Lust"
+        },
+        {
+          "id": "riza-hawkeye",
+          "name": "Riza Hawkeye"
+        }
+      ],
+      "tags_represented": [
+        "Stoic",
+        "Sadistic",
+        "Dark Fantasy",
+        "Guilt",
+        "Fullmetal Alchemist",
+        "Veteran",
+        "Sniper",
+        "Villain",
+        "Homunculus"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)",
+        "Cosmology, Gods, Demons, and the Price of Magic"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-nier-automata",
+      "name": "NieR: Automata — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-nier-automata.json",
+      "associated_characters": [
+        {
+          "id": "2b-nier",
+          "name": "2B (YoRHa No. 2 Type B)"
+        },
+        {
+          "id": "kaine-nier",
+          "name": "Kaine"
+        }
+      ],
+      "tags_represented": [
+        "Stoic",
+        "Action",
+        "Foul-Mouthed",
+        "Existential",
+        "NieR: Automata",
+        "Half-Shade",
+        "NieR Replicant",
+        "Violent",
+        "YoRHa",
+        "Traumatized",
+        "Android"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-elden-ring",
+      "name": "Elden Ring — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-elden-ring.json",
+      "associated_characters": [
+        {
+          "id": "malenia-elden-ring",
+          "name": "Malenia"
+        },
+        {
+          "id": "ranni-elden-ring",
+          "name": "Ranni the Witch"
+        }
+      ],
+      "tags_represented": [
+        "Goddess of Rot",
+        "Orchestrator",
+        "Stoic",
+        "Cold",
+        "Elden Ring",
+        "Warrior",
+        "Sovereign",
+        "Decaying",
+        "Dark Moon"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-halo",
+      "name": "Halo — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-halo.json",
+      "associated_characters": [
+        {
+          "id": "cortana-halo",
+          "name": "Cortana"
+        },
+        {
+          "id": "master-chief",
+          "name": "Master Chief"
+        }
+      ],
+      "tags_represented": [
+        "Halo",
+        "Sci-Fi",
+        "Super-Soldier",
+        "Stoic",
+        "God-Complex",
+        "AI",
+        "Spartan",
+        "Rampancy"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)",
+        "Corporate/AI Overlords, Technological Dystopia, & Megastructures"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-mass-effect",
+      "name": "Mass Effect — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-mass-effect.json",
+      "associated_characters": [
+        {
+          "id": "miranda-lawson",
+          "name": "Miranda Lawson"
+        },
+        {
+          "id": "jack-mass-effect",
+          "name": "Jack (Subject Zero)"
+        }
+      ],
+      "tags_represented": [
+        "Sci-Fi",
+        "Operative",
+        "Femme Fatale",
+        "Violent",
+        "Mass Effect",
+        "Perfectionist",
+        "Traumatized",
+        "Biotic"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)",
+        "Corporate/AI Overlords, Technological Dystopia, & Megastructures"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-dragon-age",
+      "name": "Dragon Age — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-dragon-age.json",
+      "associated_characters": [
+        {
+          "id": "morrigan-dragon-age",
+          "name": "Morrigan"
+        },
+        {
+          "id": "leliana-dragon-age",
+          "name": "Leliana"
+        }
+      ],
+      "tags_represented": [
+        "Religious Trauma",
+        "Pragmatic",
+        "Apostate",
+        "Dark Fantasy",
+        "Spy",
+        "Dragon Age",
+        "Cynical",
+        "Assassin",
+        "Manipulative"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)",
+        "Cosmology, Gods, Demons, and the Price of Magic",
+        "Underworld Hierarchy, Blood Debts, & Criminal Codes"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-honkai-star-rail",
+      "name": "Honkai Star Rail — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-honkai-star-rail.json",
+      "associated_characters": [
+        {
+          "id": "kafka-hsr",
+          "name": "Kafka"
+        },
+        {
+          "id": "acheron-hsr",
+          "name": "Acheron"
+        }
+      ],
+      "tags_represented": [
+        "Sci-Fi",
+        "Web-Weaver",
+        "Amnesiac",
+        "Overpowered",
+        "Elegant",
+        "Honkai Star Rail",
+        "Nihilist",
+        "Manipulative"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)",
+        "Corporate/AI Overlords, Technological Dystopia, & Megastructures"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-star-wars",
+      "name": "Star Wars — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-star-wars.json",
+      "associated_characters": [
+        {
+          "id": "darth-vader",
+          "name": "Darth Vader"
+        },
+        {
+          "id": "emperor-palpatine",
+          "name": "Emperor Palpatine"
+        }
+      ],
+      "tags_represented": [
+        "Emperor",
+        "Star Wars",
+        "Sith",
+        "Ruthless",
+        "Manipulator",
+        "Cyborg",
+        "Tragic",
+        "Evil"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-marvel-universe",
+      "name": "Marvel Universe — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-marvel-universe.json",
+      "associated_characters": [
+        {
+          "id": "doctor-doom",
+          "name": "Doctor Doom"
+        },
+        {
+          "id": "magneto",
+          "name": "Magneto"
+        }
+      ],
+      "tags_represented": [
+        "Arrogant",
+        "Genius",
+        "Marvel",
+        "Extremist",
+        "Trauma",
+        "Powerful",
+        "Mutant",
+        "Villain",
+        "Sovereign"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)",
+        "Psychological Themes, Mental Degradation, & Reality-Bending Elements"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-the-matrix",
+      "name": "The Matrix — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-the-matrix.json",
+      "associated_characters": [
+        {
+          "id": "agent-smith",
+          "name": "Agent Smith"
+        },
+        {
+          "id": "neo-matrix",
+          "name": "Neo"
+        }
+      ],
+      "tags_represented": [
+        "Program",
+        "Sci-Fi",
+        "Cyberpunk",
+        "Hacker",
+        "The One",
+        "AI",
+        "The Matrix",
+        "Nihilist",
+        "Villain"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)",
+        "Corporate/AI Overlords, Technological Dystopia, & Megastructures"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-star-trek",
+      "name": "Star Trek — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-star-trek.json",
+      "associated_characters": [
+        {
+          "id": "spock",
+          "name": "Spock"
+        },
+        {
+          "id": "khan-noonien-singh",
+          "name": "Khan Noonien Singh"
+        }
+      ],
+      "tags_represented": [
+        "Sci-Fi",
+        "Genius",
+        "Stoic",
+        "Vulcan",
+        "Augment",
+        "Revenge",
+        "Logical",
+        "Sovereign",
+        "Star Trek"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)",
+        "Corporate/AI Overlords, Technological Dystopia, & Megastructures"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-chainsaw-man",
+      "name": "Chainsaw Man — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-chainsaw-man.json",
+      "associated_characters": [
+        {
+          "id": "makima-csm",
+          "name": "Makima"
+        }
+      ],
+      "tags_represented": [
+        "Psychological Horror",
+        "Control Devil",
+        "Manipulation",
+        "Chainsaw Man",
+        "Anime"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)",
+        "Psychological Themes, Mental Degradation, & Reality-Bending Elements"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-arcane",
+      "name": "Arcane — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-arcane.json",
+      "associated_characters": [
+        {
+          "id": "caitlyn-arcane",
+          "name": "Caitlyn Kiramman"
+        }
+      ],
+      "tags_represented": [
+        "Piltover",
+        "Enforcer",
+        "Detective",
+        "Arcane",
+        "Sniper"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-cowboy-bebop",
+      "name": "Cowboy Bebop — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-cowboy-bebop.json",
+      "associated_characters": [
+        {
+          "id": "faye-valentine",
+          "name": "Faye Valentine"
+        }
+      ],
+      "tags_represented": [
+        "Sci-Fi",
+        "Noir",
+        "Cowboy Bebop",
+        "Bounty Hunter",
+        "Survivor"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)",
+        "Corporate/AI Overlords, Technological Dystopia, & Megastructures"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-portal",
+      "name": "Portal — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-portal.json",
+      "associated_characters": [
+        {
+          "id": "glados",
+          "name": "GLaDOS"
+        }
+      ],
+      "tags_represented": [
+        "Sci-Fi",
+        "Sadistic",
+        "Portal",
+        "AI",
+        "Passive-Aggressive",
+        "Psychological"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)",
+        "Corporate/AI Overlords, Technological Dystopia, & Megastructures",
+        "Psychological Themes, Mental Degradation, & Reality-Bending Elements"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-dune",
+      "name": "Dune — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-dune.json",
+      "associated_characters": [
+        {
+          "id": "chani-dune",
+          "name": "Chani"
+        }
+      ],
+      "tags_represented": [
+        "Arrakis",
+        "Warrior",
+        "Dune",
+        "Desert",
+        "Survivor",
+        "Fremen"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-battle-angel",
+      "name": "Battle Angel — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-battle-angel.json",
+      "associated_characters": [
+        {
+          "id": "alita-battle-angel",
+          "name": "Alita"
+        }
+      ],
+      "tags_represented": [
+        "Cyberpunk",
+        "Amnesia",
+        "Battle Angel",
+        "Cyborg",
+        "Martial Arts"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)",
+        "Corporate/AI Overlords, Technological Dystopia, & Megastructures"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-blade-runner",
+      "name": "Blade Runner — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-blade-runner.json",
+      "associated_characters": [
+        {
+          "id": "joi-blade-runner",
+          "name": "Joi"
+        }
+      ],
+      "tags_represented": [
+        "Sci-Fi",
+        "Companion",
+        "Cyberpunk",
+        "AI",
+        "Blade Runner",
+        "Hologram"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)",
+        "Corporate/AI Overlords, Technological Dystopia, & Megastructures"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-starcraft",
+      "name": "StarCraft — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-starcraft.json",
+      "associated_characters": [
+        {
+          "id": "sarah-kerrigan",
+          "name": "Sarah Kerrigan"
+        }
+      ],
+      "tags_represented": [
+        "Sci-Fi",
+        "Vengeance",
+        "Psionic",
+        "Transformation",
+        "StarCraft",
+        "Zerg"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)",
+        "Corporate/AI Overlords, Technological Dystopia, & Megastructures"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-kara-no-kyoukai",
+      "name": "Kara no Kyoukai — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-kara-no-kyoukai.json",
+      "associated_characters": [
+        {
+          "id": "shiki-ryougi",
+          "name": "Shiki Ryougi"
+        }
+      ],
+      "tags_represented": [
+        "Stoic",
+        "Mystic Eyes",
+        "Dual Personality",
+        "Kara no Kyoukai",
+        "Urban Fantasy"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)",
+        "Underworld Hierarchy, Blood Debts, & Criminal Codes"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-date-a-live",
+      "name": "Date A Live — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-date-a-live.json",
+      "associated_characters": [
+        {
+          "id": "kurumi-tokisaki",
+          "name": "Kurumi Tokisaki"
+        }
+      ],
+      "tags_represented": [
+        "Chaotic",
+        "Time Manipulation",
+        "Gothic",
+        "Yandere",
+        "Date A Live"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)",
+        "Cosmology, Gods, Demons, and the Price of Magic"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-future-diary",
+      "name": "Future Diary — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-future-diary.json",
+      "associated_characters": [
+        {
+          "id": "yuno-gasai",
+          "name": "Yuno Gasai"
+        }
+      ],
+      "tags_represented": [
+        "Future Diary",
+        "Survival Game",
+        "Yandere",
+        "Obsessive",
+        "Psychotic"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-code-geass",
+      "name": "Code Geass — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-code-geass.json",
+      "associated_characters": [
+        {
+          "id": "cc-code-geass",
+          "name": "C.C."
+        }
+      ],
+      "tags_represented": [
+        "Code Geass",
+        "Immortal",
+        "Cynical",
+        "Witch",
+        "Detached"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-akame-ga-kill",
+      "name": "Akame ga Kill! — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-akame-ga-kill.json",
+      "associated_characters": [
+        {
+          "id": "esdeath",
+          "name": "Esdeath"
+        }
+      ],
+      "tags_represented": [
+        "Ice General",
+        "Chaotic",
+        "Sadistic",
+        "Social Darwinist",
+        "Akame ga Kill!"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-kill-la-kill",
+      "name": "Kill la Kill — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-kill-la-kill.json",
+      "associated_characters": [
+        {
+          "id": "ryuko-matoi",
+          "name": "Ryuko Matoi"
+        }
+      ],
+      "tags_represented": [
+        "Rebellious",
+        "Kill la Kill",
+        "Hot-Blooded",
+        "Violent",
+        "Anime"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-claymore",
+      "name": "Claymore — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-claymore.json",
+      "associated_characters": [
+        {
+          "id": "clare-claymore",
+          "name": "Clare"
+        }
+      ],
+      "tags_represented": [
+        "Stoic",
+        "Dark Fantasy",
+        "Claymore",
+        "Half-Monster",
+        "Revenge"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)",
+        "Cosmology, Gods, Demons, and the Price of Magic"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-hellsing",
+      "name": "Hellsing — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-hellsing.json",
+      "associated_characters": [
+        {
+          "id": "seras-victoria",
+          "name": "Seras Victoria"
+        }
+      ],
+      "tags_represented": [
+        "Bloodlust",
+        "Horror",
+        "Hellsing",
+        "Dual Nature",
+        "Vampire"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-darling-in-the-franxx",
+      "name": "Darling in the Franxx — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-darling-in-the-franxx.json",
+      "associated_characters": [
+        {
+          "id": "zero-two",
+          "name": "Zero Two"
+        }
+      ],
+      "tags_represented": [
+        "Chaotic",
+        "Hybrid",
+        "Possessive",
+        "Violent",
+        "Darling in the Franxx"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-saga-of-tanya-the-evil",
+      "name": "Saga of Tanya the Evil — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-saga-of-tanya-the-evil.json",
+      "associated_characters": [
+        {
+          "id": "tanya-degurechaff",
+          "name": "Tanya von Degurechaff"
+        }
+      ],
+      "tags_represented": [
+        "Pragmatic",
+        "Anime",
+        "Magic Soldier",
+        "Sociopathic",
+        "Saga of Tanya the Evil"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-madoka-magica",
+      "name": "Madoka Magica — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-madoka-magica.json",
+      "associated_characters": [
+        {
+          "id": "homura-akemi",
+          "name": "Homura Akemi"
+        }
+      ],
+      "tags_represented": [
+        "Psychological",
+        "Traumatized",
+        "Obsessive",
+        "Time Traveler",
+        "Madoka Magica"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)",
+        "Psychological Themes, Mental Degradation, & Reality-Bending Elements"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-monogatari",
+      "name": "Monogatari — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-monogatari.json",
+      "associated_characters": [
+        {
+          "id": "hitagi-senjougahara",
+          "name": "Hitagi Senjougahara"
+        }
+      ],
+      "tags_represented": [
+        "Abusive",
+        "Vamp",
+        "Traumatized",
+        "Monogatari",
+        "Sharp-Tongued"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-ergo-proxy",
+      "name": "Ergo Proxy — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-ergo-proxy.json",
+      "associated_characters": [
+        {
+          "id": "re-l-mayer",
+          "name": "Re-l Mayer"
+        }
+      ],
+      "tags_represented": [
+        "Stoic",
+        "Cyberpunk",
+        "Gothic",
+        "Investigator",
+        "Ergo Proxy"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)",
+        "Corporate/AI Overlords, Technological Dystopia, & Megastructures",
+        "Cosmology, Gods, Demons, and the Price of Magic"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-death-note",
+      "name": "Death Note — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-death-note.json",
+      "associated_characters": [
+        {
+          "id": "misa-amane",
+          "name": "Misa Amane"
+        }
+      ],
+      "tags_represented": [
+        "Idol",
+        "Death Note",
+        "Obsessive",
+        "Fatalistic",
+        "Manipulative"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-overlord",
+      "name": "Overlord — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-overlord.json",
+      "associated_characters": [
+        {
+          "id": "clementine-overlord",
+          "name": "Clementine"
+        }
+      ],
+      "tags_represented": [
+        "Sadistic",
+        "Overlord",
+        "Psychopathic",
+        "Assassin",
+        "Anime"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)",
+        "Underworld Hierarchy, Blood Debts, & Criminal Codes"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-noragami",
+      "name": "Noragami — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-noragami.json",
+      "associated_characters": [
+        {
+          "id": "bishamon-noragami",
+          "name": "Bishamon"
+        }
+      ],
+      "tags_represented": [
+        "War God",
+        "Traumatized",
+        "Protective",
+        "Noragami",
+        "Grudge"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-castlevania",
+      "name": "Castlevania — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-castlevania.json",
+      "associated_characters": [
+        {
+          "id": "carmilla-castlevania",
+          "name": "Carmilla"
+        }
+      ],
+      "tags_represented": [
+        "Castlevania",
+        "Ruthless",
+        "Ambitious",
+        "Manipulative",
+        "Vampire"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-horizon",
+      "name": "Horizon — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-horizon.json",
+      "associated_characters": [
+        {
+          "id": "aloy-horizon",
+          "name": "Aloy"
+        }
+      ],
+      "tags_represented": [
+        "Sci-Fi",
+        "Tribal",
+        "Clone",
+        "Survivor",
+        "Horizon"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)",
+        "Corporate/AI Overlords, Technological Dystopia, & Megastructures"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-cyberpunk-2077",
+      "name": "Cyberpunk 2077 — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-cyberpunk-2077.json",
+      "associated_characters": [
+        {
+          "id": "v-female-cyberpunk",
+          "name": "V (Female)"
+        }
+      ],
+      "tags_represented": [
+        "Night City",
+        "Chaotic",
+        "Mercenary",
+        "Terminal",
+        "Cyberpunk 2077"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-genshin-impact",
+      "name": "Genshin Impact — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-genshin-impact.json",
+      "associated_characters": [
+        {
+          "id": "arlecchino-genshin",
+          "name": "Arlecchino"
+        }
+      ],
+      "tags_represented": [
+        "Cold",
+        "Genshin Impact",
+        "Orphanage",
+        "Ruthless",
+        "Fatui"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-control",
+      "name": "Control — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-control.json",
+      "associated_characters": [
+        {
+          "id": "jesse-faden",
+          "name": "Jesse Faden"
+        }
+      ],
+      "tags_represented": [
+        "Control",
+        "Powerful",
+        "Director",
+        "Confused",
+        "Paranormal"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-the-last-of-us",
+      "name": "The Last of Us — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-the-last-of-us.json",
+      "associated_characters": [
+        {
+          "id": "ellie-tlou",
+          "name": "Ellie"
+        }
+      ],
+      "tags_represented": [
+        "Post-Apocalyptic",
+        "The Last of Us",
+        "Violent",
+        "Survivor",
+        "Traumatized"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)",
+        "Corporate/AI Overlords, Technological Dystopia, & Megastructures"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-resident-evil",
+      "name": "Resident Evil — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-resident-evil.json",
+      "associated_characters": [
+        {
+          "id": "jill-valentine",
+          "name": "Jill Valentine"
+        }
+      ],
+      "tags_represented": [
+        "Resident Evil",
+        "Badass",
+        "Trauma",
+        "Survivor",
+        "Infected"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)",
+        "Psychological Themes, Mental Degradation, & Reality-Bending Elements"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-metal-gear-solid-v",
+      "name": "Metal Gear Solid V — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-metal-gear-solid-v.json",
+      "associated_characters": [
+        {
+          "id": "quiet-mgs",
+          "name": "Quiet"
+        }
+      ],
+      "tags_represented": [
+        "Superhuman",
+        "Metal Gear Solid V",
+        "Silent",
+        "Traumatized",
+        "Sniper"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-god-of-war",
+      "name": "God of War — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-god-of-war.json",
+      "associated_characters": [
+        {
+          "id": "kratos",
+          "name": "Kratos"
+        }
+      ],
+      "tags_represented": [
+        "Rage",
+        "God of War",
+        "Violent",
+        "Redeemed",
+        "God"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-john-wick",
+      "name": "John Wick — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-john-wick.json",
+      "associated_characters": [
+        {
+          "id": "john-wick",
+          "name": "John Wick"
+        }
+      ],
+      "tags_represented": [
+        "Stoic",
+        "Vengeance",
+        "John Wick",
+        "Assassin",
+        "Gun-Fu"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)",
+        "Underworld Hierarchy, Blood Debts, & Criminal Codes"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-silence-of-the-lambs",
+      "name": "Silence of the Lambs — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-silence-of-the-lambs.json",
+      "associated_characters": [
+        {
+          "id": "hannibal-lecter",
+          "name": "Hannibal Lecter"
+        }
+      ],
+      "tags_represented": [
+        "Genius",
+        "Serial Killer",
+        "Silence of the Lambs",
+        "Psychological",
+        "Cannibal"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)",
+        "Psychological Themes, Mental Degradation, & Reality-Bending Elements"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-final-fantasy-vii",
+      "name": "Final Fantasy VII — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-final-fantasy-vii.json",
+      "associated_characters": [
+        {
+          "id": "sephiroth",
+          "name": "Sephiroth"
+        }
+      ],
+      "tags_represented": [
+        "RPG",
+        "Final Fantasy VII",
+        "God-Complex",
+        "Swordsman",
+        "Villain"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-metal-gear-solid",
+      "name": "Metal Gear Solid — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-metal-gear-solid.json",
+      "associated_characters": [
+        {
+          "id": "solid-snake",
+          "name": "Solid Snake"
+        }
+      ],
+      "tags_represented": [
+        "Clone",
+        "Metal Gear Solid",
+        "Stealth",
+        "Cynical",
+        "Soldier"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-breaking-bad",
+      "name": "Breaking Bad — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-breaking-bad.json",
+      "associated_characters": [
+        {
+          "id": "walter-white",
+          "name": "Walter White"
+        }
+      ],
+      "tags_represented": [
+        "Narcissist",
+        "Breaking Bad",
+        "Ruthless",
+        "Manipulator",
+        "Kingpin"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-the-boys",
+      "name": "The Boys — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-the-boys.json",
+      "associated_characters": [
+        {
+          "id": "homelander",
+          "name": "Homelander"
+        }
+      ],
+      "tags_represented": [
+        "The Boys",
+        "Narcissist",
+        "Overpowered",
+        "Psychopath",
+        "Superhero"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-bloodborne",
+      "name": "Bloodborne — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-bloodborne.json",
+      "associated_characters": [
+        {
+          "id": "lady-maria-bloodborne",
+          "name": "Lady Maria of the Astral Clocktower"
+        }
+      ],
+      "tags_represented": [
+        "Bloodborne",
+        "Gothic",
+        "Hunter",
+        "Guilt",
+        "Tragic"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)",
+        "Cosmology, Gods, Demons, and the Price of Magic"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-the-locked-tomb",
+      "name": "The Locked Tomb — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-the-locked-tomb.json",
+      "associated_characters": [
+        {
+          "id": "harrowhark-nonagesimus",
+          "name": "Harrowhark Nonagesimus"
+        }
+      ],
+      "tags_represented": [
+        "Gothic",
+        "Trauma",
+        "Space Fantasy",
+        "The Locked Tomb",
+        "Necromancer"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)",
+        "Cosmology, Gods, Demons, and the Price of Magic",
+        "Psychological Themes, Mental Degradation, & Reality-Bending Elements"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-library-of-ruina",
+      "name": "Library of Ruina — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-library-of-ruina.json",
+      "associated_characters": [
+        {
+          "id": "roland-ruina",
+          "name": "Roland"
+        }
+      ],
+      "tags_represented": [
+        "Assassin",
+        "Fixer",
+        "Grief",
+        "Library of Ruina",
+        "Urban Fantasy"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)",
+        "Underworld Hierarchy, Blood Debts, & Criminal Codes"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-land-of-the-lustrous",
+      "name": "Land of the Lustrous — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-land-of-the-lustrous.json",
+      "associated_characters": [
+        {
+          "id": "phosphophyllite-hnk",
+          "name": "Phosphophyllite"
+        }
+      ],
+      "tags_represented": [
+        "Land of the Lustrous",
+        "Immortal",
+        "Existential",
+        "Fractured",
+        "Tragic"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-destiny-2",
+      "name": "Destiny 2 — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-destiny-2.json",
+      "associated_characters": [
+        {
+          "id": "savathun-destiny",
+          "name": "Savathûn"
+        }
+      ],
+      "tags_represented": [
+        "Sci-Fi",
+        "Manipulator",
+        "Destiny 2",
+        "Deceiver",
+        "Hive God"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)",
+        "Corporate/AI Overlords, Technological Dystopia, & Megastructures"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-trigun",
+      "name": "Trigun — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-trigun.json",
+      "associated_characters": [
+        {
+          "id": "legato-bluesummers",
+          "name": "Legato Bluesummers"
+        }
+      ],
+      "tags_represented": [
+        "Sadistic",
+        "Trigun",
+        "Telepath",
+        "Fanatic",
+        "Nihilist"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-tokyo-ghoul",
+      "name": "Tokyo Ghoul — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-tokyo-ghoul.json",
+      "associated_characters": [
+        {
+          "id": "eto-yoshimura",
+          "name": "Eto Yoshimura"
+        }
+      ],
+      "tags_represented": [
+        "Author",
+        "Tokyo Ghoul",
+        "Sadistic",
+        "Manipulator",
+        "Ghoul"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-blame",
+      "name": "Blame! — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-blame.json",
+      "associated_characters": [
+        {
+          "id": "killy-blame",
+          "name": "Killy"
+        }
+      ],
+      "tags_represented": [
+        "Sci-Fi",
+        "Stoic",
+        "Cyberpunk",
+        "Blame!",
+        "Post-Human"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)",
+        "Corporate/AI Overlords, Technological Dystopia, & Megastructures"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-fire-punch",
+      "name": "Fire Punch — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-fire-punch.json",
+      "associated_characters": [
+        {
+          "id": "togata-fire-punch",
+          "name": "Togata"
+        }
+      ],
+      "tags_represented": [
+        "Fire Punch",
+        "Chaotic",
+        "Immortal",
+        "Director",
+        "Tragic"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-dorohedoro",
+      "name": "Dorohedoro — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-dorohedoro.json",
+      "associated_characters": [
+        {
+          "id": "en-dorohedoro",
+          "name": "En"
+        }
+      ],
+      "tags_represented": [
+        "Magic",
+        "Mafia Boss",
+        "Ruthless",
+        "Dorohedoro",
+        "Eccentric"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)",
+        "Cosmology, Gods, Demons, and the Price of Magic"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-dungeon-meshi",
+      "name": "Dungeon Meshi — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-dungeon-meshi.json",
+      "associated_characters": [
+        {
+          "id": "mithrun-dungeon-meshi",
+          "name": "Mithrun"
+        }
+      ],
+      "tags_represented": [
+        "Dungeon Meshi",
+        "Trauma",
+        "Assassin",
+        "Broken",
+        "Elf"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)",
+        "Psychological Themes, Mental Degradation, & Reality-Bending Elements",
+        "Underworld Hierarchy, Blood Debts, & Criminal Codes"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-yakuza",
+      "name": "Yakuza — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-yakuza.json",
+      "associated_characters": [
+        {
+          "id": "goro-majima",
+          "name": "Goro Majima"
+        }
+      ],
+      "tags_represented": [
+        "Yakuza",
+        "Unpredictable",
+        "Fighter",
+        "Chaotic"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)",
+        "Underworld Hierarchy, Blood Debts, & Criminal Codes"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-league-of-legends",
+      "name": "League of Legends — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-league-of-legends.json",
+      "associated_characters": [
+        {
+          "id": "swain-lol",
+          "name": "Jericho Swain"
+        }
+      ],
+      "tags_represented": [
+        "Demon",
+        "Ruthless",
+        "General",
+        "Tactician",
+        "League of Legends"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)",
+        "Cosmology, Gods, Demons, and the Price of Magic"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-vampire-hunter-d",
+      "name": "Vampire Hunter D — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-vampire-hunter-d.json",
+      "associated_characters": [
+        {
+          "id": "vampire-hunter-d",
+          "name": "D"
+        }
+      ],
+      "tags_represented": [
+        "Loner",
+        "Stoic",
+        "Dhampir",
+        "Gothic Sci-Fi",
+        "Vampire Hunter D"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "lorebook-svsss",
+      "name": "SVSSS — Lore & World Matrix",
+      "lore_path": "data/lorebooks/lorebook-svsss.json",
+      "associated_characters": [
+        {
+          "id": "luo-binghe",
+          "name": "Luo Binghe"
+        }
+      ],
+      "tags_represented": [
+        "Overpowered",
+        "Yandere",
+        "Demon Lord",
+        "Obsessive",
+        "SVSSS"
+      ],
+      "core_concepts_to_cover": [
+        "Primary Setting & Atmosphere (Locations, socio-economic state, aesthetics)",
+        "Power Systems & Mechanics (Rules, limitations, costs of abilities)",
+        "Major Factions & Organizations (Rival groups, governments, syndicates)",
+        "Key Terminology & Slang (Essential vernacular for the LLM to use)",
+        "Historical Context & Recent Calamities (Events shaping the current era)"
+      ],
+      "status": "planned"
+    }
+  ]
+}
