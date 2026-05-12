@@ -783,6 +783,70 @@
         color: var(--text-main);
         border-radius: 6px 6px 6px 2px;
       }
+      /* markdown-rendered assistant bubble */
+      .chat-msg__bubble--md { white-space: normal; }
+      .chat-msg__bubble--md p { margin: 0 0 0.55em; line-height: 1.65; }
+      .chat-msg__bubble--md p:last-child { margin-bottom: 0; }
+      .chat-msg__bubble--md strong { color: var(--text-main); font-weight: 700; }
+      .chat-msg__bubble--md em { font-style: italic; color: var(--text-main); opacity: 0.85; }
+      .chat-msg__bubble--md code {
+        font-family: var(--font-mono);
+        font-size: 0.76rem;
+        background: rgba(190,41,236,0.1);
+        border: 1px solid rgba(190,41,236,0.18);
+        border-radius: 3px;
+        padding: 0.1em 0.35em;
+        color: var(--accent);
+      }
+      .chat-msg__bubble--md pre {
+        background: rgba(0,0,0,0.5);
+        border: 1px solid rgba(190,41,236,0.15);
+        border-radius: 5px;
+        padding: 0.75rem 1rem;
+        overflow-x: auto;
+        margin: 0.5em 0;
+      }
+      .chat-msg__bubble--md pre code {
+        background: none;
+        border: none;
+        padding: 0;
+        font-size: 0.75rem;
+        color: var(--text-main);
+      }
+      .chat-msg__bubble--md ul,
+      .chat-msg__bubble--md ol {
+        margin: 0.35em 0 0.55em 1.25rem;
+        padding: 0;
+      }
+      .chat-msg__bubble--md li { margin-bottom: 0.2em; line-height: 1.55; }
+      .chat-msg__bubble--md h1,
+      .chat-msg__bubble--md h2,
+      .chat-msg__bubble--md h3 {
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin: 0.75em 0 0.35em;
+      }
+      .chat-msg__bubble--md blockquote {
+        border-left: 2px solid rgba(190,41,236,0.35);
+        margin: 0.5em 0;
+        padding: 0.3em 0.85em;
+        color: var(--text-muted);
+        font-style: italic;
+      }
+      .chat-msg__bubble--md a {
+        color: var(--accent);
+        text-decoration: underline;
+        text-decoration-color: rgba(190,41,236,0.35);
+      }
+      .chat-msg__bubble--md hr {
+        border: none;
+        border-top: 1px solid var(--glass-border-mute);
+        margin: 0.65em 0;
+      }
+
       .chat-msg--assistant .chat-msg__bubble code {
         font-family: var(--font-mono);
         font-size: 0.78rem;
@@ -1012,7 +1076,20 @@
          GPL-3.0 — trap.lol
          ══════════════════════════════════════════════════ */
 
-      const DATA_PATH = './logs.json';
+      const DATA_PATH  = './logs.json';
+      const SHARD_MARKED = 'https://cdn.trap.lol/shards/marked.min.js';
+      const SHARD_PURIFY = 'https://cdn.trap.lol/shards/purify.min.js';
+
+      /* ── Shard loader ── */
+      function loadShard(src) {
+        return new Promise((res, rej) => {
+          const s = document.createElement('script');
+          s.src = src;
+          s.onload = res;
+          s.onerror = rej;
+          document.head.appendChild(s);
+        });
+      }
 
       /* ── Utils ── */
       function esc(s) {
@@ -1026,6 +1103,14 @@
         if (cls) e.className = cls;
         if (html) e.innerHTML = html;
         return e;
+      }
+
+      /* ── Markdown renderer (used for chat responses) ── */
+      function renderMd(text) {
+        if (typeof marked === 'undefined' || typeof DOMPurify === 'undefined') {
+          return `<span style="white-space:pre-wrap">${esc(text)}</span>`;
+        }
+        return DOMPurify.sanitize(marked.parse(text));
       }
 
       /* ── Tab system ── */
@@ -1568,7 +1653,12 @@
         roleLabel.textContent = role === 'user' ? 'you' : 'oracle';
         const bubble = document.createElement('div');
         bubble.className = 'chat-msg__bubble';
-        bubble.textContent = text;
+        if (role === 'assistant' && !error) {
+          bubble.classList.add('chat-msg__bubble--md');
+          bubble.innerHTML = renderMd(text);
+        } else {
+          bubble.textContent = text;
+        }
         wrap.appendChild(roleLabel);
         wrap.appendChild(bubble);
         $messages.appendChild(wrap);
@@ -1654,7 +1744,11 @@
          ───────────────────────────────────────────────── */
       async function boot() {
         try {
-          const res = await fetch(DATA_PATH);
+          const [res] = await Promise.all([
+            fetch(DATA_PATH),
+            loadShard(SHARD_PURIFY).catch(() => {}),
+            loadShard(SHARD_MARKED).catch(() => {}),
+          ]);
           if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
           const data = await res.json();
           chatData = data;
