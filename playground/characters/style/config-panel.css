@@ -141,7 +141,7 @@
    ============================================================================= */
 
 /* -- Arena header overflow menu ------------------------------------------- */
-.arena-action--overflow { display: none; position: relative; }
+.arena-action--overflow { display: flex; position: relative; }
 
 .header-overflow-menu {
     position: absolute;

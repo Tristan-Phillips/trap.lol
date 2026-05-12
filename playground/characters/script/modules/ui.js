@@ -539,7 +539,8 @@ export function initUI() {
         $overflowMenu.querySelectorAll('.header-overflow-item').forEach(item => {
             item.addEventListener('click', () => {
                 const target = item.dataset.overflowFor;
-                if (target) qs(`#${target}`)?.click();
+                // chat-bg-btn has its own overflow listener that anchors to the overflow button
+                if (target && target !== 'chat-bg-btn') qs(`#${target}`)?.click();
                 closeOverflow();
             });
         });
@@ -2326,8 +2327,6 @@ export function initUI() {
     ];
 
     function initChatTintPicker() {
-        const $btn = qs('#chat-bg-btn');
-        if (!$btn) return;
         let $popup = null;
 
         const closePopup = () => {
@@ -2335,8 +2334,8 @@ export function initUI() {
             $popup = null;
         };
 
-        $btn.addEventListener('click', (e) => {
-            e.stopPropagation();
+        const openTintPicker = (anchor, e) => {
+            e?.stopPropagation();
             if ($popup) { closePopup(); return; }
 
             const currentColor = state.chat?.config?.tintColor || null;
@@ -2360,8 +2359,7 @@ export function initUI() {
                     <span id="tint-opacity-val">${currentOpacity}%</span>
                 </div>`;
 
-            // Position relative to button
-            const rect = $btn.getBoundingClientRect();
+            const rect = anchor.getBoundingClientRect();
             $popup.style.position = 'fixed';
             $popup.style.top  = (rect.bottom + 6) + 'px';
             $popup.style.right = (window.innerWidth - rect.right) + 'px';
@@ -2391,10 +2389,24 @@ export function initUI() {
                 saveState();
                 applyChatTint();
             });
-        });
+        };
+
+        // Hidden direct-click button (legacy wiring kept)
+        const $btn = qs('#chat-bg-btn');
+        if ($btn) $btn.addEventListener('click', (e) => openTintPicker($btn, e));
+
+        // Overflow menu item — position popup relative to the overflow button
+        const $overflowTintItem = qs('[data-overflow-for="chat-bg-btn"]');
+        const $overflowBtn = qs('#header-overflow-btn');
+        if ($overflowTintItem && $overflowBtn) {
+            $overflowTintItem.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openTintPicker($overflowBtn, e);
+            });
+        }
 
         document.addEventListener('click', (e) => {
-            if ($popup && !$popup.contains(e.target) && e.target !== $btn) closePopup();
+            if ($popup && !$popup.contains(e.target) && e.target !== $btn && e.target !== $overflowBtn) closePopup();
         });
     }
     initChatTintPicker();
