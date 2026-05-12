@@ -23,6 +23,10 @@ services:
       # so we never need to expose this to the public internet.
       - "127.0.0.1:8080:8080"
 
+    networks:
+      - default
+      - cloudflare-gateway
+
     # Read-only filesystem; the binary needs nothing writable
     read_only: true
 
@@ -52,3 +56,7 @@ services:
     labels:
       com.trap-lol.service: "wallhaven-proxy"
       com.trap-lol.description: "Lightweight CORS proxy for the Wallhaven API"
+
+networks:
+  cloudflare-gateway:
+    external: true

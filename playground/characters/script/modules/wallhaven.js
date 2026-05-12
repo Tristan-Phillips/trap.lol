@@ -81,8 +81,6 @@ const resultCount    = document.getElementById('wh-result-count');
 const pageControls   = document.getElementById('wh-page-controls');
 const pageNum        = document.getElementById('wh-page-num');
 const pageTotal      = document.getElementById('wh-page-total');
-const prevBtn        = document.getElementById('wh-prev-btn');
-const nextBtn        = document.getElementById('wh-next-btn');
 const grid           = document.getElementById('wh-grid');
 const emptyBrowse    = document.getElementById('wh-empty');
 const likedEmpty     = document.getElementById('wh-liked-empty');
@@ -158,9 +156,17 @@ function buildPurity() { return `${WH.purity.sfw?1:0}${WH.purity.sketchy?1:0}${W
 function purityLabel(p){ return {sfw:'SFW',sketchy:'Sketchy',nsfw:'NSFW'}[p]||p; }
 function fmtNum(n){ if(n>=1e6)return(n/1e6).toFixed(1)+'M'; if(n>=1e3)return(n/1e3).toFixed(1)+'k'; return String(n); }
 
-function setLoading(on){
-  WH.loading=on; spinner.hidden=!on; searchBtn.disabled=on;
+function setLoading(on, isAppend=false){
+  WH.loading=on; searchBtn.disabled=on;
+  if(!isAppend) spinner.hidden=!on;
   if(on){ emptyBrowse.hidden=true;likedEmpty.hidden=true;savedEmpty.hidden=true;assignedEmpty.hidden=true;errorBox.hidden=true; }
+  
+  const lmBtn = document.getElementById('wh-load-more-btn');
+  if(lmBtn) {
+    lmBtn.disabled = on;
+    lmBtn.innerHTML = on ? '<i data-lucide="loader" class="wh-spin-icon"></i> Loading...' : '<i data-lucide="plus"></i> Load More';
+    if(on && window.lucide) window.lucide.createIcons({nodes:[lmBtn]});
+  }
 }
 function hideAllStates(){ emptyBrowse.hidden=true;likedEmpty.hidden=true;savedEmpty.hidden=true;assignedEmpty.hidden=true;errorBox.hidden=true;spinner.hidden=true; }
 function showError(msg){ errorBox.hidden=false;errorMsg.textContent=msg;spinner.hidden=true; }
@@ -418,8 +424,6 @@ searchInput.addEventListener('input',()=>{searchClear.hidden=!searchInput.value;
 searchClear.addEventListener('click',()=>{searchInput.value='';searchClear.hidden=true;searchInput.focus();});
 searchInput.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();doSearch();}});
 searchBtn.addEventListener('click',doSearch);
-prevBtn.addEventListener('click',()=>{if(WH.page>1){WH.page--;fetchWallpapers(false);}});
-nextBtn.addEventListener('click',()=>{if(WH.page<WH.totalPages){WH.page++;fetchWallpapers(false);}});
 retryBtn.addEventListener('click',()=>fetchWallpapers(false));
 
 function doSearch(){
@@ -429,10 +433,29 @@ function doSearch(){
   fetchWallpapers(false);
 }
 
+function appendLoadMoreBtn() {
+  if (WH.view !== 'browse' || WH.page >= WH.totalPages) return;
+  let wrap = document.getElementById('wh-load-more-wrap');
+  if (wrap) wrap.remove();
+  wrap = document.createElement('div');
+  wrap.id = 'wh-load-more-wrap';
+  wrap.className = 'wh-load-more-wrap';
+  wrap.innerHTML = `<button id="wh-load-more-btn" class="wh-btn wh-btn--ghost wh-btn--lg"><i data-lucide="plus"></i> Load More</button>`;
+  wrap.querySelector('button').addEventListener('click', () => {
+    WH.page++;
+    fetchWallpapers(true);
+  });
+  grid.appendChild(wrap);
+}
+
 async function fetchWallpapers(append){
   if(WH.loading)return;
-  setLoading(true); grid.hidden=false; grid.innerHTML='';
-  pageControls.hidden=true; statusText.textContent='Scanning…'; resultCount.textContent='';
+  setLoading(true, append); grid.hidden=false; 
+  if(!append) grid.innerHTML='';
+  pageControls.hidden=true; 
+  const lmWrap = document.getElementById('wh-load-more-wrap');
+  if(lmWrap) lmWrap.hidden = true;
+  if(!append) { statusText.textContent='Scanning…'; resultCount.textContent=''; }
 
   const q=WH.query||WH.charName;
   const params=new URLSearchParams({categories:buildCats(),purity:buildPurity(),sorting:WH.sort,order:'desc',page:WH.page});
@@ -451,19 +474,30 @@ async function fetchWallpapers(append){
     const meta=json.meta||{};
     WH.totalPages=meta.last_page||1; WH.total=meta.total||json.data.length;
     if(meta.seed)WH.seed=meta.seed;
-    WH.results=append?WH.results.concat(json.data):json.data;
-    grid.innerHTML='';
-    WH.results.forEach((w,i)=>buildTile(w,i,'browse'));
+    
+    if(append) {
+      const startIdx = WH.results.length;
+      WH.results=WH.results.concat(json.data);
+      if(lmWrap) lmWrap.remove();
+      json.data.forEach((w,i)=>buildTile(w,startIdx+i,'browse'));
+    } else {
+      WH.results=json.data;
+      grid.innerHTML='';
+      WH.results.forEach((w,i)=>buildTile(w,i,'browse'));
+    }
+    
+    appendLoadMoreBtn();
     window.lucide?.createIcons({nodes:[grid]});
+    
     pageNum.textContent=WH.page; pageTotal.textContent=WH.totalPages;
     statusText.textContent=q?`"${q}"`:'Top results';
     resultCount.textContent=WH.total.toLocaleString()+' results';
     pageControls.hidden=!WH.results.length;
-    prevBtn.disabled=WH.page<=1; nextBtn.disabled=WH.page>=WH.totalPages;
+    
     if(!WH.results.length)emptyBrowse.hidden=false;
-    setLoading(false);
+    setLoading(false, append);
   }catch(err){
-    setLoading(false);
+    setLoading(false, append);
     const m=err.message;
     showError(m.includes('429')?'Rate limit — wait a moment.':m.includes('401')?'Unauthorized — check API key.':'Fetch failed: '+m);
   }
