@@ -471,7 +471,7 @@
   },
   "commits": [
     {
-      "hash": "PENDING",
+      "hash": "0c48689",
       "date": "2026-05-12",
       "message": "feat: unified DM/Group wizard — mode toggle, Group tab, isekai world questions, relationship web, memory framing, group immersion context in LLM; finalization pass",
       "scope": "playground/characters",
@@ -487,7 +487,7 @@
       "why": "Group creation was a separate, underpowered modal that lacked any immersion configuration. Merged DM/Group into a single wizard with a toggle pill; added a Group tab with memory framing choices (past/faint presience/none), group awareness, turn order, voice mode, isekai world-binding questions, relationship web between characters, and an opening scene. LLM engine injects all group context (isekai answers, relationship web, awareness/voice directives) per-character; memory framing shapes HOW characters remember prior 1-on-1 DMs."
     },
     {
-      "hash": "PENDING",
+      "hash": "0c48689",
       "date": "2026-05-12",
       "message": "fix: implement _injectImageMessage, _injectVideoMessage; add withNegative to image prompt LLM; inline image lightbox + CSS",
       "scope": "playground/characters",
@@ -502,7 +502,7 @@
       "why": "_injectImageMessage and _injectVideoMessage were called in 6+ places in ui.js but never defined — any image generation action threw a ReferenceError. Functions were implemented inside the initUI closure with full overlay controls (expand/download/save-to-gallery/delete), reusing a new #img-msg-lightbox overlay. generateImagePromptWithLLM gained withNegative:true support to return JSON {positive, negative} so the HiDream negative field is also AI-filled in the studio."
     },
     {
-      "hash": "PENDING",
+      "hash": "0c48689",
       "date": "2026-05-12",
       "message": "refactor: feed.json as sole feed source — decouple gallery array from feed rendering",
       "scope": "playground/characters",
@@ -514,7 +514,7 @@
       "why": "gallery array (extensions.underdark.gallery) was dual-purpose: lightbox/strip AND feed source. Now feed reads only from feed.json (permanent) and state.socialData.localPosts (local). addToGallery auto-creates a localPost mirror so every generated/uploaded image still appears in the feed. Gallery delete removes the matching localPost. All post-count displays updated to getAllFeedPosts. Gallery array is now solely for lightbox/strip."
     },
     {
-      "hash": "PENDING",
+      "hash": "0c48689",
       "date": "2026-05-12",
       "message": "feat: persistent social feed — feed.json, compose modal, local/permanent post merge, export",
       "scope": "playground/characters",
@@ -529,7 +529,7 @@
       "why": "Social feed was purely ephemeral — all posts (gallery images, generated art) lived only in localStorage with no path to permanent visibility across instances. Added data/feed.json as the git-committed post store (git push = visible everywhere), compose modal for in-app post creation as any character (text or image URL), getAllFeedPosts() merging gallery IDB images + permanent feed.json + local composed posts, loadFeedJson() parallel-fetched at startup, export-session-feed download button to extract local posts as a ready-to-merge JSON fragment. Post IDs replace index-based keys throughout for stable comment and like state."
     },
     {
-      "hash": "PENDING",
+      "hash": "0c48689",
       "date": "2026-05-12",
       "message": "feat: immersive RP UX pass — animated streaming indicator, rich QR groups, speech/thought CSS, directional message animations",
       "scope": "playground/characters",
@@ -543,7 +543,7 @@
       "why": "The roleplay UI lacked visual feedback during streaming, quick-reply prompts were generic and flat, text rendering made no visual distinction between dialogue/thought/action, and message entrance animations were identical for user vs bot. Comprehensive UX pass: dynamic input placeholder reflecting active character, expanded QR bar with 4 themed groups × 4 evocative entries, animated streaming dots + character name pulse in bot-label, `.rp-speech` amber glow + `.rp-thought` violet shimmer + `em` muted silver layer in CSS, and differentiated spring-eased slide-in animations per message origin."
     },
     {
-      "hash": "PENDING",
+      "hash": "0c48689",
       "date": "2026-05-12",
       "message": "fix: avatar resolution for gallery-promoted images; cache invalidation on avatar change",
       "scope": "playground/characters",
@@ -555,7 +555,7 @@
       "why": "When a gallery image (stored as idb:img: ref) was set as a character's avatar, getAvatarUrl would call resolveCharAvatar which looked in the wrong IDB store (avatar:<charId> vs img:<blobId>), returning null and showing a broken avatar. Also, the avatar cache was keyed only by charId and never invalidated on change, so newly set avatars continued showing the old image until page reload. Fixed getAvatarUrl to detect idb:img: refs and route to resolveImageUrl; changed cache structure to key on the ref value; added cache busting in both avatar-set paths."
     },
     {
-      "hash": "PENDING",
+      "hash": "0c48689",
       "date": "2026-05-12",
       "message": "fix: resolve idb refs in social/hot feed; auto-refresh feed on image generation",
       "scope": "playground/characters",
@@ -567,7 +567,7 @@
       "why": "_renderPostList passed raw idb:img: refs directly into innerHTML as <img src> without resolving them via IndexedDB — generated images appeared broken in the social feed and hot feed. Added async resolution pass before rendering. Also wired social/hot feed live refresh after every image generation path so new images appear immediately without requiring the user to navigate away and back."
     },
     {
-      "hash": "PENDING",
+      "hash": "0c48689",
       "date": "2026-05-12",
       "message": "feat: expand Image Studio Quick tab — scene groups, mood/outfit/activity presets, 20 rel dynamics",
       "scope": "playground/characters",
@@ -582,7 +582,7 @@
       "why": "The Quick tab had only 18 undifferentiated scene presets and 10 relationship pills — insufficient variety for a character image generation tool. Expanded to ~60 grouped scene presets across 6 themed categories, plus three new preset sections (Mood, Outfit, Activity) that apply additively without resetting unrelated fields; relationships expanded from 10 to 20 entries."
     },
     {
-      "hash": "PENDING",
+      "hash": "0c48689",
       "date": "2026-05-12",
       "message": "refactor: remove dead modules, extract shared-utils, rename sims btn",
       "scope": "playground/characters",
@@ -604,7 +604,7 @@
       "why": "char-creator.js and sims-editor.js were dead — char-editor.js merged both and no code imported them. image-gen.css, creator.css, and sims.css styled modals that no longer exist in the HTML. Extracted esc/debounce/slugify/generateId/pick/showToast (defined 3-6 times each) into a single shared-utils.js module; char-editor and commands now import from it. btn-sims-edit renamed to btn-char-edit as it routes to char-editor."
     },
     {
-      "hash": "PENDING",
+      "hash": "0c48689",
       "date": "2026-05-12",
       "message": "feat: ritual initiation wizard — multi-step first-run gate for Underdark",
       "scope": "playground/characters",
@@ -618,7 +618,7 @@
       "why": "The API key gate was a single flat panel with no context — new users had no idea what they were entering, which model to pick, or how to configure content expectations before their first conversation. Replaced with a 4-step ritual wizard: animated sigil intro + glitch title, authentication step, model picker (12 curated models in a card grid) + content threshold dial (0-100 → sets nsfwBypass and inject flags), and identity matrix (name + persona). Themed as an 'initiation' to match the Underdark aesthetic."
     },
     {
-      "hash": "PENDING",
+      "hash": "0c48689",
       "date": "2026-05-12",
       "message": "feat: uplink home node — animated portal button across all pages",
       "scope": "global",
