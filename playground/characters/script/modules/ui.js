@@ -2437,729 +2437,81 @@ export function initUI() {
         lucideRefresh($grid);
     }
 
-    // ── Image Generation Modal ────────────────────────────────────────────────
-    let _imgGenModel    = DEFAULT_MODEL;
-    let _imgGenDataUrl  = null;
-    let _imgGenPrompt   = '';
-    let _imgGenNegative = '';
-    let _imgGenSeed     = null;
-    let _imgGenFilter   = 'all'; // 'all' | 'nsfw' | 'edit'
-
-    // Scene Builder state — tracks active selections per group
-    // single-select groups: one value or null
-    // multi-select groups (accessories, quality, skinEffects, fantasyFx): Set of values
-    const _scene = {
-        nsfw:          'sfw',
-        // Outfit tab
-        clothingState: null,
-        clothing:      null,
-        accessories:   new Set(),
-        hair:          null,
-        // Pose & Act tab
-        cam:           null,
-        pose:          null,
-        activity:      null,
-        bodyFocus:     null,
-        partners:      null,
-        // Scene tab
-        env:           null,
-        timeOfDay:     null,
-        weather:       null,
-        mood:          null,
-        // Style tab
-        style:         'photorealistic photography, 8k',
-        quality:       new Set(),
-        colorTone:     null,
-        composition:   null,
-        // Extra tab
-        expr:          null,
-        skinEffects:   new Set(),
-        vibe:          null,
-        fantasyFx:     new Set(),
-        // Custom text fields
-        clothingCustom:  '',
-        poseCustom:      '',
-        envCustom:       '',
-        activityCustom:  '',
-        // Homebrew
-        positive: '',
-        negative: '',
-    };
-
-    // Groups that are multi-select (use Sets)
-    const _MULTI_GROUPS = new Set(['accessories','quality','skinEffects','fantasyFx']);
-
-    function _sceneToExtras() {
-        // Returns a flat comma string of all active single-select scene values
-        // (used only as a legacy fallback; buildImagePrompt receives _scene directly)
-        const sv = (k) => {
-            const v = _scene[k];
-            if (!v) return '';
-            if (v === '__custom__') return _scene[`${k}Custom`] || '';
-            return v;
-        };
-        const parts = [
-            sv('clothingState'), sv('clothing'), sv('hair'),
-            sv('cam'), sv('pose'), sv('activity'), sv('bodyFocus'), sv('partners'),
-            sv('env'), sv('timeOfDay'), sv('weather'), sv('mood'),
-            sv('style'), sv('colorTone'), sv('composition'),
-            sv('expr'), sv('vibe'),
-            ...[..._scene.accessories], ...[..._scene.quality],
-            ...[..._scene.skinEffects], ...[..._scene.fantasyFx],
-        ];
-        if (_scene.positive) parts.push(_scene.positive.trim());
-        return parts.filter(Boolean).join(', ');
-    }
-
-    function _sceneNegativeExtras() {
-        return _scene.negative?.trim() || '';
-    }
-
-    function _sceneIsExplicit() {
-        return _scene.nsfw === 'explicit' || _scene.nsfw === 'unrestricted';
-    }
-
-    function _sceneBadgeCount() {
-        let n = 0;
-        const singleKeys = ['clothingState','clothing','hair','cam','pose','activity',
-            'bodyFocus','partners','env','timeOfDay','weather','mood','colorTone',
-            'composition','expr','vibe'];
-        for (const k of singleKeys) if (_scene[k]) n++;
-        for (const k of ['accessories','quality','skinEffects','fantasyFx']) n += _scene[k].size;
-        if (_scene.positive || _scene.negative) n++;
-        if (_scene.nsfw !== 'sfw') n++;
-        return n;
-    }
-
-    function _updateSceneBadge() {
-        const $b = qs('#img-gen-scene-badge');
-        if (!$b) return;
-        const n = _sceneBadgeCount();
-        $b.textContent = n > 0 ? `${n} active` : '';
-    }
-
-    function _rebuildPrompt() {
-        const charId = state.activeBotId;
-        const includeNsfw = _scene.nsfw !== 'sfw' && (state.config.flags?.injectAdult !== false || _sceneIsExplicit());
-        const { positive, negative } = buildImagePrompt({ charId, scene: _scene, includeNsfw, nsfwLevel: _scene.nsfw });
-        _imgGenNegative = negative;
-        const $ta = qs('#img-gen-prompt');
-        if ($ta) $ta.value = positive;
-        const $neg = qs('#img-gen-negative-prompt');
-        if ($neg) $neg.value = negative;
-    }
-
-    // Scene presets — sets multiple _scene fields at once
-    const _SCENE_PRESETS = {
-        portrait:  { cam: 'close-up portrait, face', expr: 'seductive, lidded eyes, bedroom eyes', mood: 'soft diffused natural light', style: 'photorealistic photography, 8k', vibe: 'sensual, erotic atmosphere' },
-        boudoir:   { clothingState: 'partially undressed', clothing: 'sexy lingerie set', pose: 'lying on side, seductive', env: 'bedroom, intimate setting', mood: 'candlelight, warm flickering', cam: 'full body shot', vibe: 'sensual, erotic atmosphere' },
-        pinup:     { pose: 'standing, confident pose', style: 'pin-up art style, vintage', cam: 'full body shot', mood: 'studio lighting, professional', vibe: 'playful, fun, teasing' },
-        action:    { pose: 'action pose, fighting stance', cam: 'dynamic diagonal composition', mood: 'dramatic cinematic lighting', vibe: 'aggressive, dominant, intense' },
-        fantasy:   { env: 'fantasy castle throne room', mood: 'volumetric god rays through window', style: 'dark fantasy art, gothic', vibe: 'mysterious, ethereal' },
-        intimate:  { env: 'bedroom, intimate setting', cam: 'tight intimate framing', mood: 'candlelight, warm flickering', expr: 'seductive, lidded eyes, bedroom eyes', vibe: 'romantic, intimate, loving' },
-        poolside:  { env: 'poolside, swimming pool', clothing: 'bikini swimwear', mood: 'warm golden hour light', timeOfDay: 'golden hour sunset, warm tones', vibe: 'playful, fun, teasing' },
-        dungeon:   { env: 'dungeon stone walls chains', mood: 'candlelight, warm flickering', style: 'dark fantasy art, gothic', vibe: 'dark, ominous, dangerous' },
-        school:    { clothing: 'school uniform', env: 'classroom school', timeOfDay: 'morning, bright daylight', vibe: 'playful, fun, teasing' },
-        office:    { clothing: 'business office attire', env: 'office desk', timeOfDay: 'afternoon, midday sun', pose: 'sitting elegantly', vibe: 'sensual, erotic atmosphere' },
-    };
-
-    function _applyScenePreset(presetKey) {
-        const preset = _SCENE_PRESETS[presetKey];
-        if (!preset) return;
-        Object.assign(_scene, preset);
-    }
-
-    function _syncSceneChipsToState($modal) {
-        // Re-syncs all chip active states to match _scene after a preset apply or reset
-        qsa('.scene-chip', $modal).forEach($c => {
-            const group = $c.dataset.group;
-            if (!group) return;
-            if (_MULTI_GROUPS.has(group)) {
-                $c.classList.toggle('scene-chip--active', _scene[group].has($c.dataset.val));
-            } else {
-                $c.classList.toggle('scene-chip--active', _scene[group] === $c.dataset.val);
+    // ── Quick Snapshot ────────────────────────────────────────────────────────
+    // One-click scene capture — uses LLM to build the best possible prompt from
+    // current character data + chat history, then generates immediately.
+    // No modal, no configuration. Result goes straight into the chat thread.
+    async function _runQuickSnapshot(btn = null) {
+        if (btn) {
+            if (btn.disabled) return;
+            btn.disabled = true;
+            const orig = btn.innerHTML;
+            btn.innerHTML = '<i data-lucide="loader-2" class="spin"></i>';
+            lucideRefresh(btn);
+            try {
+                await _doSnapshot();
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = orig;
+                lucideRefresh(btn);
             }
-        });
-        // Sync NSFW pills
-        qsa('.scene-pill', $modal).forEach($p => {
-            $p.classList.toggle('scene-pill--active', $p.dataset.nsfw === _scene.nsfw);
-        });
-        // Sync homebrew textareas
-        const $sp = qs('#scene-positive', $modal);
-        const $sn = qs('#scene-negative', $modal);
-        if ($sp) $sp.value = _scene.positive;
-        if ($sn) $sn.value = _scene.negative;
-    }
-
-    function _wireSceneBuilder() {
-        const $modal = qs('#modal-image-gen');
-        if (!$modal) return;
-
-        // ── Toggle open/close ──
-        const $toggle = qs('#img-gen-scene-toggle', $modal);
-        const $panel  = qs('#img-gen-scene-panel', $modal);
-        $toggle?.addEventListener('click', () => {
-            const open = $panel?.hidden;
-            if ($panel) $panel.hidden = !open;
-            $toggle.setAttribute('aria-expanded', String(open));
-            lucideRefresh($toggle);
-        });
-
-        // ── Tab switching ──
-        qs('#scene-tabs', $modal)?.addEventListener('click', e => {
-            const $tab = e.target.closest('.scene-tab');
-            if (!$tab) return;
-            const target = $tab.dataset.tab;
-            qsa('.scene-tab', $modal).forEach(t => t.classList.toggle('scene-tab--active', t.dataset.tab === target));
-            qsa('.scene-tab-panel', $modal).forEach(p => p.classList.toggle('scene-tab-panel--active', p.dataset.panel === target));
-        });
-
-        // ── NSFW pills ──
-        qsa('.scene-pill', $modal).forEach($p => {
-            $p.addEventListener('click', () => {
-                _scene.nsfw = $p.dataset.nsfw;
-                qsa('.scene-pill', $modal).forEach(x => x.classList.remove('scene-pill--active'));
-                $p.classList.add('scene-pill--active');
-                // When switching to NSFW, auto-switch model filter to NSFW
-                if (_scene.nsfw !== 'sfw' && _imgGenFilter === 'all') {
-                    _imgGenFilter = 'nsfw';
-                }
-                _updateSceneBadge();
-                _rebuildPrompt();
-                _renderImgGenModelGrid();
-            });
-        });
-
-        // ── Scene presets ──
-        qs('#scene-preset-chips', $modal)?.addEventListener('click', e => {
-            const $chip = e.target.closest('[data-preset]');
-            if (!$chip) return;
-            const was = $chip.classList.contains('scene-chip--active');
-            qsa('[data-preset]', $modal).forEach(c => c.classList.remove('scene-chip--active'));
-            if (!was) {
-                _applyScenePreset($chip.dataset.preset);
-                $chip.classList.add('scene-chip--active');
-                _syncSceneChipsToState($modal);
-                _updateSceneBadge();
-                _rebuildPrompt();
-            }
-        });
-
-        // ── Multi-select chips (accessories, quality, skinEffects, fantasyFx) ──
-        qsa('.scene-chip--multi', $modal).forEach($c => {
-            $c.addEventListener('click', () => {
-                const group = $c.dataset.group;
-                const val   = $c.dataset.val;
-                if (_scene[group].has(val)) {
-                    _scene[group].delete(val);
-                    $c.classList.remove('scene-chip--active');
-                } else {
-                    _scene[group].add(val);
-                    $c.classList.add('scene-chip--active');
-                }
-                _updateSceneBadge();
-                _rebuildPrompt();
-            });
-        });
-
-        // ── Single-select chips ──
-        qsa('.scene-chip:not(.scene-chip--custom):not(.scene-chip--multi):not([data-preset])', $modal).forEach($c => {
-            $c.addEventListener('click', () => {
-                const group = $c.dataset.group;
-                const val   = $c.dataset.val;
-                // Nullable: empty-string val = deselect
-                if (val === '') {
-                    _scene[group] = null;
-                    qsa(`.scene-chip[data-group="${group}"]`, $modal).forEach(x => x.classList.remove('scene-chip--active'));
-                    $c.classList.add('scene-chip--active');
-                    _updateSceneBadge();
-                    _rebuildPrompt();
-                    return;
-                }
-                const already = _scene[group] === val;
-                _scene[group] = already ? null : val;
-                qsa(`.scene-chip[data-group="${group}"]`, $modal).forEach(x => x.classList.remove('scene-chip--active'));
-                if (!already) $c.classList.add('scene-chip--active');
-                const $ci = qs(`#scene-${group}-custom`, $modal);
-                if ($ci) $ci.hidden = true;
-                _updateSceneBadge();
-                _rebuildPrompt();
-            });
-        });
-
-        // ── Custom chips ──
-        qsa('.scene-chip--custom', $modal).forEach($c => {
-            $c.addEventListener('click', () => {
-                const group = $c.dataset.group;
-                const $ci   = qs(`#scene-${group}-custom`, $modal);
-                if (!$ci) return;
-                const open = $ci.hidden;
-                $ci.hidden = !open;
-                if (open) {
-                    _scene[group] = '__custom__';
-                    qsa(`.scene-chip[data-group="${group}"]`, $modal).forEach(x => x.classList.remove('scene-chip--active'));
-                    $c.classList.add('scene-chip--active');
-                    $ci.focus();
-                } else {
-                    if (_scene[group] === '__custom__') { _scene[group] = null; $c.classList.remove('scene-chip--active'); }
-                }
-                _updateSceneBadge();
-                _rebuildPrompt();
-            });
-        });
-
-        // ── Custom text inputs ──
-        [
-            ['scene-clothing-custom',  'clothingCustom'],
-            ['scene-pose-custom',      'poseCustom'],
-            ['scene-env-custom',       'envCustom'],
-            ['scene-activity-custom',  'activityCustom'],
-        ].forEach(([id, key]) => {
-            qs(`#${id}`, $modal)?.addEventListener('input', e => {
-                _scene[key] = e.target.value;
-                _updateSceneBadge();
-                _rebuildPrompt();
-            });
-        });
-
-        // ── Homebrew textareas ──
-        qs('#scene-positive', $modal)?.addEventListener('input', e => {
-            _scene.positive = e.target.value;
-            _updateSceneBadge();
-        });
-        qs('#scene-negative', $modal)?.addEventListener('input', e => {
-            _scene.negative = e.target.value;
-            _updateSceneBadge();
-        });
-
-        // ── Reset button ──
-        qs('#scene-reset-btn', $modal)?.addEventListener('click', () => {
-            // Reset all to defaults
-            _scene.nsfw = 'sfw';
-            _scene.clothingState = null; _scene.clothing = null; _scene.hair = null;
-            _scene.cam = null; _scene.pose = null; _scene.activity = null;
-            _scene.bodyFocus = null; _scene.partners = null;
-            _scene.env = null; _scene.timeOfDay = null; _scene.weather = null; _scene.mood = null;
-            _scene.style = 'photorealistic photography, 8k'; _scene.colorTone = null; _scene.composition = null;
-            _scene.expr = null; _scene.vibe = null;
-            _scene.accessories.clear(); _scene.quality.clear();
-            _scene.skinEffects.clear(); _scene.fantasyFx.clear();
-            _scene.clothingCustom = ''; _scene.poseCustom = '';
-            _scene.envCustom = ''; _scene.activityCustom = '';
-            _scene.positive = ''; _scene.negative = '';
-            // Clear all preset chips
-            qsa('[data-preset]', $modal).forEach(c => c.classList.remove('scene-chip--active'));
-            _syncSceneChipsToState($modal);
-            // Hide all custom inputs
-            qsa('.scene-custom-input', $modal).forEach(i => { i.hidden = true; i.value = ''; });
-            _updateSceneBadge();
-            _rebuildPrompt();
-            showToast('Scene reset', 'info', 1200);
-        });
-    }
-
-    function openImageGenModal(userHint = '', targetCharId = null) {
-        const $modal = qs('#modal-image-gen');
-        if (!$modal) return;
-
-        const charId = targetCharId || state.activeBotId;
-
-        // Always sync NSFW pill to reality flag on open
-        const nsfwFlag = state.config.flags?.injectAdult !== false;
-        if (!nsfwFlag) {
-            _scene.nsfw = 'sfw';
-        } else if (_scene.nsfw === 'sfw') {
-            _scene.nsfw = 'explicit'; // default to explicit when adult content is enabled
-        }
-        qsa('.scene-pill', $modal).forEach(p => p.classList.toggle('scene-pill--active', p.dataset.nsfw === _scene.nsfw));
-
-        // Open scene builder by default
-        const $panel  = qs('#img-gen-scene-panel', $modal);
-        const $toggle = qs('#img-gen-scene-toggle', $modal);
-        if ($panel) $panel.hidden = false;
-        if ($toggle) $toggle.setAttribute('aria-expanded', 'true');
-
-        // Build prompt with current scene state
-        const includeNsfw = _scene.nsfw !== 'sfw' && (nsfwFlag || _sceneIsExplicit());
-        const { positive, negative } = buildImagePrompt({ charId, scene: _scene, includeNsfw, nsfwLevel: _scene.nsfw });
-        _imgGenNegative = negative;
-        const $ta    = qs('#img-gen-prompt', $modal);
-        if ($ta) $ta.value = userHint || positive;
-        const $neg = qs('#img-gen-negative-prompt', $modal);
-        if ($neg) $neg.value = negative;
-
-        _renderImgGenModelGrid();
-
-        // Context strip
-        const $ctx = qs('#img-gen-context', $modal);
-        if ($ctx) {
-            const char = charId ? state.loadedCharacters[charId] : null;
-            const override = charId ? getCharOverride(charId) : {};
-            const charName = override.nickname || char?.name || '';
-            const lastBot = [...state.history].reverse().find(m => m.role === 'bot');
-            const snippet = lastBot?.content
-                ?.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 80) || '';
-            $ctx.innerHTML = charName
-                ? `<span class="img-gen-ctx__char"><i data-lucide="user"></i> ${esc(charName)}</span>${snippet ? `<span class="img-gen-ctx__scene">${esc(snippet)}…</span>` : ''}`
-                : '';
-            lucideRefresh($ctx);
-        }
-
-        const $prev = qs('#img-gen-preview', $modal);
-        if ($prev) $prev.hidden = true;
-        _imgGenDataUrl = null;
-
-        _updateSceneBadge();
-        qs('#img-gen-cost', $modal).textContent = '';
-        $modal.hidden = false;
-        lucideRefresh($modal);
-        setTimeout(() => $ta?.focus(), 80);
-    }
-
-    function _renderImgGenModelGrid() {
-        const $wrap = qs('#img-gen-model-wrap');
-        const $grid = qs('#img-gen-model-grid');
-        if (!$grid) return;
-
-        const nsfwActive = _scene.nsfw !== 'sfw';
-
-        // Render filter tabs if not already present
-        if ($wrap && !qs('.img-model-filters', $wrap)) {
-            const $filters = document.createElement('div');
-            $filters.className = 'img-model-filters';
-            $filters.innerHTML = `
-                <button class="img-model-filter${_imgGenFilter==='all'?' img-model-filter--active':''}" data-filter="all">All</button>
-                <button class="img-model-filter${_imgGenFilter==='nsfw'?' img-model-filter--active':''}" data-filter="nsfw">NSFW</button>
-                <button class="img-model-filter${_imgGenFilter==='edit'?' img-model-filter--active':''}" data-filter="edit">Edit</button>
-            `;
-            $wrap.insertBefore($filters, $grid);
-            $filters.addEventListener('click', e => {
-                const btn = e.target.closest('[data-filter]');
-                if (!btn) return;
-                _imgGenFilter = btn.dataset.filter;
-                qsa('.img-model-filter', $filters).forEach(b => b.classList.toggle('img-model-filter--active', b.dataset.filter === _imgGenFilter));
-                _renderImgGenModelGrid();
-            });
-        } else if ($wrap) {
-            // Update active state on existing tabs
-            qsa('.img-model-filter', $wrap).forEach(b => b.classList.toggle('img-model-filter--active', b.dataset.filter === _imgGenFilter));
-        }
-
-        const filtered = IMAGE_MODELS.filter(m => {
-            if (_imgGenFilter === 'nsfw') return m.nsfw;
-            if (_imgGenFilter === 'edit') return m.img2img;
-            return true;
-        });
-
-        $grid.innerHTML = filtered.map(m => {
-            const tagHtml = m.tags.map(t =>
-                `<span class="img-model-tag img-model-tag--${t}">${t}</span>`
-            ).join('');
-            const subBadge = m.sub
-                ? `<span class="img-model-sub img-model-sub--included" title="Included in nano-gpt subscription">SUB</span>`
-                : `<span class="img-model-sub img-model-sub--credits" title="Uses pay-per-use credits">CREDITS</span>`;
-            const active = m.id === _imgGenModel ? ' img-model-card--active' : '';
-            const nsfwWarning = nsfwActive && !m.nsfw ? ' img-model-card--no-nsfw' : '';
-            return `<button class="img-model-card${active}${nsfwWarning}" data-model="${esc(m.id)}" type="button" title="${esc(m.desc)}${nsfwActive && !m.nsfw ? ' — may not support explicit content' : ''}">
-                <div class="img-model-card__header">
-                    <span class="img-model-card__label">${esc(m.label)}</span>
-                    ${subBadge}
-                </div>
-                <span class="img-model-card__tags">${tagHtml}</span>
-                <span class="img-model-card__desc">${esc(m.desc)}</span>
-                ${nsfwActive && !m.nsfw ? '<span class="img-model-card__nsfw-warn">SFW only</span>' : ''}
-            </button>`;
-        }).join('');
-
-        qsa('.img-model-card', $grid).forEach(btn => {
-            btn.addEventListener('click', () => {
-                _imgGenModel = btn.dataset.model;
-                qsa('.img-model-card', $grid).forEach(b => b.classList.toggle('img-model-card--active', b.dataset.model === _imgGenModel));
-            });
-        });
-    }
-
-    async function _runImageGeneration() {
-        const $modal    = qs('#modal-image-gen');
-        const $genBtn   = qs('#img-gen-generate', $modal);
-        const $regenBtn = qs('#img-gen-regenerate', $modal);
-        const $prev     = qs('#img-gen-preview', $modal);
-        const $prevImg  = qs('#img-gen-preview-img', $modal);
-        const $cost     = qs('#img-gen-cost', $modal);
-
-        let prompt = qs('#img-gen-prompt', $modal)?.value.trim();
-        if (!prompt) { showToast('Enter a prompt first', 'warn'); return; }
-
-        // Use persisted negative from last buildImagePrompt, overridable by the UI field
-        const negFromField = qs('#img-gen-negative-prompt', $modal)?.value.trim();
-        const negPrompt = negFromField || _imgGenNegative || '';
-
-        const size = qs('#img-gen-size', $modal)?.value || '1024x1024';
-        const seedRaw = qs('#img-gen-seed', $modal)?.value;
-        const seed = seedRaw ? parseInt(seedRaw) : undefined;
-
-        // Disable buttons, show loading state
-        if ($genBtn) { $genBtn.disabled = true; $genBtn.innerHTML = '<i data-lucide="loader-2" class="spin"></i> Generating…'; lucideRefresh($genBtn); }
-        if ($regenBtn) $regenBtn.disabled = true;
-        if ($cost) $cost.textContent = 'Generating…';
-
-        try {
-            _imgGenPrompt = prompt;
-            _imgGenSeed   = seed;
-            const dataUrl = await generateImage({ model: _imgGenModel, prompt, negativePrompt: negPrompt, size, seed });
-            _imgGenDataUrl = dataUrl;
-
-            if ($prevImg) $prevImg.src = dataUrl;
-            if ($prev)    $prev.hidden = false;
-            if ($cost)    $cost.textContent = `Model: ${_imgGenModel}`;
-
-            // Auto-insert image into chat thread as a collapsed image message
-            _injectImageMessage(dataUrl, prompt, _imgGenModel);
-
-            // Auto-save to character gallery (offloads data URL to IDB)
-            const charId = state.activeBotId;
-            if (charId) {
-                await addToGallery(charId, dataUrl);
-                renderGalleryStrip(charId);
-                showToast('Image saved to gallery', 'info', 2000);
-            }
-
-        } catch (err) {
-            if ($cost) $cost.textContent = '';
-            showToast(`Image generation failed: ${err.message}`, 'error', 5000);
-        } finally {
-            if ($genBtn) { $genBtn.disabled = false; $genBtn.innerHTML = '<i data-lucide="sparkles"></i> Generate'; lucideRefresh($genBtn); }
-            if ($regenBtn) $regenBtn.disabled = false;
-        }
-    }
-
-    function _injectImageMessage(dataUrl, prompt, model, existingMsgId = null) {
-        const $t = qs('#message-thread');
-        if (!$t) return;
-
-        const charId   = state.activeBotId;
-        const char     = charId ? state.loadedCharacters[charId] : null;
-        const override = charId ? getCharOverride(charId) : {};
-        const charName = override.nickname || char?.name || 'Scene';
-
-        // Persist to history on first injection (not on replay from history)
-        let msgId;
-        if (!existingMsgId) {
-            const histMsg = addMessage('image', dataUrl, charId, { model, prompt });
-            msgId = histMsg.id;
         } else {
-            msgId = existingMsgId;
+            await _doSnapshot();
         }
-
-        const $msg  = document.createElement('div');
-        $msg.className = 'message message--image';
-        $msg.dataset.imgMsgId = msgId;
-
-        $msg.innerHTML = `
-            <div class="message__img-bubble">
-                <div class="message__img-header">
-                    <span class="message__img-label"><i data-lucide="image"></i> ${esc(charName)}</span>
-                    <button class="message__img-toggle btn-icon btn-icon--small" title="Toggle image" aria-expanded="false">
-                        <i data-lucide="eye"></i>
-                    </button>
-                </div>
-                <div class="message__img-content" hidden>
-                    <img src="${esc(dataUrl)}" class="message__img-photo" alt="Generated scene" loading="lazy">
-                    <details class="message__img-details">
-                        <summary class="message__img-details-label"><i data-lucide="info"></i> Prompt details</summary>
-                        <div class="message__img-details-body">
-                            <div class="message__img-details-row"><strong>Model</strong><span>${esc(model)}</span></div>
-                            <div class="message__img-details-row"><strong>Prompt</strong><span class="message__img-details-prompt">${esc(prompt)}</span></div>
-                        </div>
-                    </details>
-                    <div class="message__img-actions">
-                        <button class="msg-action msg-action--img-save" data-img-msg="${esc(msgId)}" title="Save to gallery"><i data-lucide="image-plus"></i></button>
-                        <button class="msg-action msg-action--img-dl" data-img-msg="${esc(msgId)}" title="Download"><i data-lucide="download"></i></button>
-                        <button class="msg-action msg-action--img-del" data-img-msg="${esc(msgId)}" title="Remove from thread"><i data-lucide="trash-2"></i></button>
-                    </div>
-                </div>
-            </div>`;
-
-        // Store data URL on element for action handlers
-        $msg._imgDataUrl = dataUrl;
-
-        // Toggle visibility
-        qs('.message__img-toggle', $msg).addEventListener('click', btn => {
-            const $content = qs('.message__img-content', $msg);
-            const open     = $content.hidden;
-            $content.hidden = !open;
-            btn.target.closest('button').setAttribute('aria-expanded', String(open));
-            btn.target.closest('button').querySelector('i').setAttribute('data-lucide', open ? 'eye-off' : 'eye');
-            lucideRefresh(btn.target.closest('button'));
-        });
-
-        // Download
-        qs('.msg-action--img-dl', $msg).addEventListener('click', () => {
-            const a    = document.createElement('a');
-            a.href     = dataUrl;
-            a.download = `underdark-img-${Date.now()}.png`;
-            a.click();
-        });
-
-        // Delete from thread and history (also purges IDB blob)
-        qs('.msg-action--img-del', $msg).addEventListener('click', async () => {
-            await deleteImageMessage(msgId);
-            $msg.remove();
-        });
-
-        // Save to gallery (re-save in case user closes modal without saving)
-        qs('.msg-action--img-save', $msg).addEventListener('click', async () => {
-            const cid = state.activeBotId;
-            if (!cid) { showToast('No active character', 'warn'); return; }
-            await addToGallery(cid, dataUrl);
-            renderGalleryStrip(cid);
-            showToast('Saved to gallery', 'info', 1800);
-        });
-
-        lucideRefresh($msg);
-        $t.appendChild($msg);
-        $t.scrollTop = $t.scrollHeight;
     }
 
-    // ── Video message injection ───────────────────────────────────────────────
-    function _injectVideoMessage(videoUrl, existingMsgId) {
-        const $t = qs('#message-thread');
-        if (!$t || !videoUrl) return;
+    async function _doSnapshot() {
+        const charId     = state.activeBotId;
+        const nsfwFlag   = state.config.flags?.injectAdult !== false;
+        const includeNsfw = nsfwFlag;
+        const nsfwLevel  = nsfwFlag ? 'explicit' : 'sfw';
 
-        let msgId;
-        if (!existingMsgId) {
-            const histMsg = addMessage('video', videoUrl, null, {});
-            msgId = histMsg.id;
-        } else {
-            msgId = existingMsgId;
+        // Ensure the character card is loaded before building the prompt
+        if (charId && !state.loadedCharacters[charId]) {
+            await loadCharacterCard(charId).catch(() => null);
         }
 
-        const $msg = document.createElement('div');
-        $msg.className = 'message message--video';
-        $msg.dataset.msgId = msgId;
-
-        $msg.innerHTML = `
-            <div class="message__bubble">
-                <div class="message__video-header">
-                    <i data-lucide="film"></i>
-                    <span>Generated Video</span>
-                    <button class="msg-action msg-action--vid-dl" title="Download"><i data-lucide="download"></i></button>
-                    <button class="msg-action msg-action--danger msg-action--vid-del" title="Remove"><i data-lucide="trash-2"></i></button>
-                </div>
-                <video src="${esc(videoUrl)}" class="message__video" controls loop playsinline></video>
-            </div>`;
-
-        qs('.msg-action--vid-dl', $msg)?.addEventListener('click', () => {
-            const a = document.createElement('a');
-            a.href = videoUrl;
-            a.download = `underdark-video-${Date.now()}.mp4`;
-            a.click();
-        });
-        qs('.msg-action--vid-del', $msg)?.addEventListener('click', () => {
-            state.chat.history = state.chat.history.filter(m => m.id !== msgId);
-            saveState();
-            $msg.remove();
+        // Build prompt via LLM — reads char physical sheet + last 8 chat messages
+        const prompt = await generateImagePromptWithLLM({
+            charId,
+            userHint: '',
+            scene:        { nsfw: nsfwLevel },
+            includeNsfw,
+            historyDepth: 8,
         });
 
-        lucideRefresh($msg);
-        $t.appendChild($msg);
-        $t.scrollTop = $t.scrollHeight;
+        // Pick best model: prefer NSFW-capable HiDream when adult content is on,
+        // fall back to flux-dev for SFW
+        const model = nsfwFlag ? 'hidream' : 'flux-dev';
+
+        const { negative } = buildImagePrompt({ charId, scene: { nsfw: nsfwLevel }, includeNsfw, nsfwLevel });
+        const dataUrl = await generateImage({ model, prompt, negativePrompt: negative, size: '1024x1024' });
+
+        _injectImageMessage(dataUrl, prompt, model);
+
+        if (charId) {
+            await addToGallery(charId, dataUrl);
+            renderGalleryStrip(charId);
+        }
+        showToast('Scene captured', 'info', 2000);
     }
 
-    // Modal event bindings
-    qs('#img-gen-close')?.addEventListener('click', () => { qs('#modal-image-gen').hidden = true; });
-    qs('#img-gen-cancel')?.addEventListener('click', () => { qs('#modal-image-gen').hidden = true; });
-    qs('.modal__backdrop', qs('#modal-image-gen'))?.addEventListener('click', () => { qs('#modal-image-gen').hidden = true; });
-    qs('#img-gen-generate')?.addEventListener('click', _runImageGeneration);
-    qs('#img-gen-regenerate')?.addEventListener('click', _runImageGeneration);
-
-    qs('#img-gen-rebuild-prompt')?.addEventListener('click', _rebuildPrompt);
-
-    // ── AI Prompt generation ──────────────────────────────────────────────────
-    qs('#img-gen-ai-prompt')?.addEventListener('click', async () => {
-        const $btn = qs('#img-gen-ai-prompt');
-        const $ta  = qs('#img-gen-prompt');
-        if (!$btn || !$ta) return;
-
-        const charId    = state.activeBotId;
-        const nsfw      = _sceneIsExplicit() || (state.config.flags?.injectAdult !== false);
-        const userHint  = $ta.value.trim();
-
-        const origHtml = $btn.innerHTML;
-        $btn.disabled = true;
-        $btn.innerHTML = '<i data-lucide="loader-2" class="spin"></i>';
-        lucideRefresh($btn);
-
-        try {
-            const prompt = await generateImagePromptWithLLM({ charId, userHint, scene: _scene, includeNsfw: nsfw });
-            $ta.value = prompt;
-            $ta.dispatchEvent(new Event('input'));
-        } catch (err) {
-            showToast(`AI prompt failed: ${err.message}`, 'error', 4000);
-        } finally {
-            $btn.disabled = false;
-            $btn.innerHTML = origHtml;
-            lucideRefresh($btn);
-        }
-    });
-
-    qs('#img-gen-save-gallery')?.addEventListener('click', async () => {
-        if (!_imgGenDataUrl) return;
-        const cid = state.activeBotId;
-        if (!cid) { showToast('No active character', 'warn'); return; }
-        await addToGallery(cid, _imgGenDataUrl);
-        renderGalleryStrip(cid);
-        showToast('Saved to gallery', 'info', 1800);
-    });
-
-    qs('#img-gen-download')?.addEventListener('click', () => {
-        if (!_imgGenDataUrl) return;
-        const a    = document.createElement('a');
-        a.href     = _imgGenDataUrl;
-        a.download = `underdark-gen-${Date.now()}.png`;
-        a.click();
-    });
-
-    // Set as avatar from preview
-    qs('#img-gen-set-avatar')?.addEventListener('click', async () => {
-        if (!_imgGenDataUrl) return;
-        const cid = state.activeBotId;
-        if (!cid) { showToast('No active character', 'warn'); return; }
-        const meta = state.characters.find(c => c.id === cid);
-        const co   = ensureGalleryStore(cid);
-        if (!meta || !co) return;
-        const gallery = co.extensions.underdark.gallery;
-        // Archive old avatar to gallery if it exists
-        if (meta.avatar_path && !gallery.includes(meta.avatar_path)) gallery.unshift(meta.avatar_path);
-        // Offload new avatar data URL to IDB
-        const stored = isDataUrl(_imgGenDataUrl)
-            ? await saveImageBlob(`avatar-gen-${cid}-${Date.now()}`, _imgGenDataUrl).catch(() => _imgGenDataUrl)
-            : _imgGenDataUrl;
-        meta.avatar_path = stored;
-        if (!gallery.includes(stored)) gallery.push(stored);
-        saveState();
-        renderRoster();
-        renderGalleryStrip(cid);
-        showToast('Avatar updated');
-    });
-
-    // Wire scene builder (chips, toggles, custom inputs) — called once at boot
-    _wireSceneBuilder();
-
-    // Gallery → Generate New
+    // Gallery → open studio instead of the removed modal
     qs('#gallery-gen-new')?.addEventListener('click', () => {
         const cid = galleryCharId || state.activeBotId;
         qs('#modal-gallery').hidden = true;
-        openImageGenModal('', cid);
+        openImgStudio(cid);
     });
 
-    // Also allow opening from a toolbar button (quick access)
-    qs('#btn-image-gen')?.addEventListener('click', () => openImageGenModal(''));
+    // Toolbar snapshot button
+    qs('#btn-quick-snapshot')?.addEventListener('click', function() { _runQuickSnapshot(this).catch(err => showToast(`Snapshot failed: ${err.message}`, 'error', 5000)); });
+
 
     // ── Image Studio — full wizard ─────────────────────────────────────────────
     // Loaded from rp-gen-presets.json; populated once at boot.
     let _studioPresets   = null;
     let _studioWired     = false;
+    let _studioCharId    = null;   // which character the current scene belongs to
 
     // Studio scene state — mirrors _scene shape plus extra fields for
     // the studio-only chip groups (clothingTop, clothingBottom, etc.)
@@ -3209,6 +2561,27 @@ export function initUI() {
 
     let _studioModel   = DEFAULT_MODEL;
     let _studioDataUrl = null;
+
+    // ── Reset all scene selections to defaults ────────────────────────────────
+    function _resetStudioScene(skipNsfw = false) {
+        Object.assign(_studioScene, {
+            hair: null, expr: null, clothingState: null, clothing: null,
+            clothingTop: null, clothingBottom: null, clothingFootwear: null,
+            cam: null, pose: null, bodyFocus: null, partners: null, activity: null,
+            env: null, timeOfDay: null, weather: null, mood: null, vibe: null,
+            style: 'photorealistic photography, 8k', colorTone: null, composition: null,
+            poseCustom: '', activityCustom: '', clothingCustom: '', envCustom: '',
+            positive: '', negative: '',
+        });
+        if (!skipNsfw) _studioScene.nsfw = 'sfw';
+        _studioScene.accessories.clear();
+        _studioScene.quality.clear();
+        _studioScene.skinEffects.clear();
+        _studioScene.fantasyFx.clear();
+        qs('#img-studio')?.querySelectorAll('.studio-custom-input').forEach(i => { i.hidden = true; i.value = ''; });
+        qs('#img-studio')?.querySelectorAll('.studio-preset-card').forEach(c => c.classList.remove('active'));
+        qs('#img-studio')?.querySelectorAll('.studio-rel-pill').forEach(c => c.classList.remove('active'));
+    }
 
     // ── Fetch presets JSON once ───────────────────────────────────────────────
     async function _loadStudioPresets() {
@@ -3336,10 +2709,12 @@ export function initUI() {
     }
 
     function _applyStudioScenePreset(preset) {
+        // Clear scene first so preset fields don't layer on top of a different preset
+        _resetStudioScene(true);   // skipNsfw — don't touch the NSFW level
+
         const f = preset.fields || {};
         Object.keys(f).forEach(k => {
             if (k.endsWith('_add')) {
-                // multi-group additions
                 const realKey = k.slice(0, -4);
                 const set = _studioScene[realKey] instanceof Set ? _studioScene[realKey] : (_studioScene[realKey] = new Set());
                 (Array.isArray(f[k]) ? f[k] : [f[k]]).forEach(v => set.add(v));
@@ -3585,7 +2960,7 @@ export function initUI() {
             negative:        _studioScene.negative,
         };
 
-        const charId = state.activeBotId;
+        const charId = _studioCharId || state.activeBotId;
         const includeNsfw = _studioScene.nsfw !== 'sfw';
         const { positive, negative } = buildImagePrompt({ charId, scene: merged, includeNsfw, nsfwLevel: _studioScene.nsfw });
 
@@ -3707,22 +3082,7 @@ export function initUI() {
 
         // Reset
         qs('#studio-reset-btn')?.addEventListener('click', () => {
-            Object.assign(_studioScene, {
-                nsfw: 'sfw', hair: null, expr: null, clothingState: null, clothing: null,
-                clothingTop: null, clothingBottom: null, clothingFootwear: null,
-                cam: null, pose: null, bodyFocus: null, partners: null, activity: null,
-                env: null, timeOfDay: null, weather: null, mood: null, vibe: null,
-                style: 'photorealistic photography, 8k', colorTone: null, composition: null,
-                poseCustom: '', activityCustom: '', clothingCustom: '', envCustom: '',
-                positive: '', negative: '',
-            });
-            _studioScene.accessories.clear();
-            _studioScene.quality.clear();
-            _studioScene.skinEffects.clear();
-            _studioScene.fantasyFx.clear();
-            qs('#img-studio')?.querySelectorAll('.studio-custom-input').forEach(i => { i.hidden = true; i.value = ''; });
-            qs('#img-studio')?.querySelectorAll('.studio-preset-card').forEach(c => c.classList.remove('active'));
-            qs('#img-studio')?.querySelectorAll('.studio-rel-pill').forEach(c => c.classList.remove('active'));
+            _resetStudioScene();
             _syncStudioChipsToState();
             _studioRebuildPrompt();
             _studioUpdateBadges();
@@ -3908,6 +3268,14 @@ export function initUI() {
 
         const cid = charId || state.activeBotId;
 
+        // Reset scene when the character changes — prevents cross-character contamination
+        if (cid && cid !== _studioCharId) {
+            _resetStudioScene(true);  // skipNsfw=true so NSFW level is set below
+            _studioCharId = cid;
+        } else if (!_studioCharId) {
+            _studioCharId = cid;
+        }
+
         // Sync NSFW from reality config
         const nsfwFlag = state.config.flags?.injectAdult !== false;
         if (!nsfwFlag) {
@@ -3934,6 +3302,9 @@ export function initUI() {
             _studioWired = true;
         }
 
+        // After panels exist, sync chip visual state to scene (needed after char-change reset)
+        _syncStudioChipsToState();
+
         await _renderStudioCharInfo(cid);
         _renderStudioModelGrid();
         _studioRebuildPrompt();
@@ -3950,7 +3321,7 @@ export function initUI() {
 
     // ── Studio event bindings ────────────────────────────────────────────────
     qs('#studio-close')?.addEventListener('click', closeImgStudio);
-    qs('#studio-quick-gen-btn')?.addEventListener('click', () => { closeImgStudio(); openImageGenModal(''); });
+    qs('#studio-quick-gen-btn')?.addEventListener('click', function() { _runQuickSnapshot(this).catch(err => showToast(`Snapshot failed: ${err.message}`, 'error', 5000)); });
     qs('#studio-gen-btn')?.addEventListener('click', _runStudioGeneration);
     qs('#studio-regenerate')?.addEventListener('click', _runStudioGeneration);
 
@@ -6050,9 +5421,9 @@ export function initUI() {
             });
 
             if (result?.handled) {
-                // /image — open the image generation studio
+                // /image — quick snapshot: generate scene image from current context
                 if (result.action === 'open-image-gen') {
-                    openImageGenModal(result.args || '');
+                    _runQuickSnapshot().catch(err => showToast(`Snapshot failed: ${err.message}`, 'error', 5000));
                     $textarea.focus();
                     return;
                 }
@@ -6768,26 +6139,8 @@ export function initUI() {
         if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); qs('#codex-custom-inject-btn')?.click(); }
     });
 
-    // Codex: quick image gen (uses current scene context, no modal)
-    qs('#codex-quick-img')?.addEventListener('click', async () => {
-        const btn = qs('#codex-quick-img');
-        if (!btn || btn.classList.contains('loading')) return;
-        btn.classList.add('loading');
-        try {
-            const prompt = await generateImagePromptWithLLM({ historyDepth: 8 });
-            const dataUrl = await generateImage({ model: 'hidream', prompt });
-            const msg = await new Promise(resolve => {
-                addMessage('image', dataUrl, null, {});
-                resolve(state.chat.history.at(-1));
-            });
-            renderMessageThread();
-            showToast('Scene captured', 'info', 2000);
-        } catch (err) {
-            showToast(`Image generation failed: ${err.message}`, 'error', 4000);
-        } finally {
-            btn.classList.remove('loading');
-        }
-    });
+    // Codex: quick snapshot (same as toolbar button)
+    qs('#codex-quick-img')?.addEventListener('click', function() { _runQuickSnapshot(this).catch(err => showToast(`Snapshot failed: ${err.message}`, 'error', 5000)); });
 
     // Codex: quick video gen — opens the video gen modal pre-filled
     qs('#codex-quick-vid')?.addEventListener('click', () => openVideoGenModal());

@@ -341,7 +341,11 @@ export function buildImagePrompt(opts = {}) {
     }
 
     // ── 19. Scene context from recent chat history ────────────────────────────
-    if (historyDepth > 0) {
+    // Only inject when the user hasn't manually configured the scene — if cam,
+    // pose, env, or activity chips are set, those already define the scene and
+    // raw prose from the chat would add noise and contradictions.
+    const hasManualScene = sv('cam') || sv('pose') || sv('env') || sv('activity');
+    if (historyDepth > 0 && !hasManualScene) {
         const recentHistory = state.history.slice(-historyDepth);
         const lastBot = [...recentHistory].reverse().find(m => m.role === 'bot');
         if (lastBot?.content) {
@@ -349,7 +353,7 @@ export function buildImagePrompt(opts = {}) {
                 .replace(/<[^>]+>/g, '')
                 .replace(/\*{1,3}([^*]+)\*{1,3}/g, '$1')
                 .replace(/_([^_]+)_/g, '$1')
-                .replace(/\s+/g, ' ').trim().slice(0, 200);
+                .replace(/\s+/g, ' ').trim().slice(0, 150);
             if (sceneText) pos.push(sceneText);
         }
     }
