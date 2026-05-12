@@ -422,7 +422,7 @@
 
   "commits": [
     {
-      "hash": "pending",
+      "hash": "2f55e3d",
       "date": "2026-05-12",
       "message": "Underdark overhaul: Scene Codex, video generation, expanded model list",
       "scope": "playground/characters",
