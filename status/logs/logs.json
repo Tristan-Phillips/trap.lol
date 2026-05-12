@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.1.7",
+    "schema_version": "1.1.8",
     "last_updated": "2026-05-12",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": ["_protocol", "identity", "philosophy", "architecture", "pages", "design_system", "rules", "anti_patterns", "language_fingerprint", "evolution", "commits", "sessions", "for_new_llm"]
@@ -422,6 +422,19 @@
 
   "commits": [
     {
+      "hash": "pending",
+      "date": "2026-05-12",
+      "message": "fix: studio char load, clothing field pass-through, rel accessories guard",
+      "scope": "playground/characters",
+      "impact": "medium",
+      "files": [
+        "playground/characters/script/modules/ui.js",
+        "playground/characters/script/main.js",
+        "status/logs/logs.json"
+      ],
+      "why": "Studio was silently dropping clothingTop/Bottom/Footwear by collapsing them into clothing before passing to buildImagePrompt; character info showed blank because loadedCharacters may be empty when the studio opens first; relationships preset was adding empty-string accessories to the Set."
+    },
+    {
       "hash": "ca85a17",
       "date": "2026-05-12",
       "message": "image-engine: rewrite buildImagePrompt for correct token ordering and additive clothing",
@@ -678,6 +691,21 @@
   ],
 
   "sessions": [
+    {
+      "date": "2026-05-12",
+      "agent": "Claude Sonnet 4.6",
+      "type": "bug_fix",
+      "summary": "Fixed three bugs in the Image Studio that caused character info to not load and clothing fields to be silently dropped. (1) _renderStudioCharInfo was synchronous — if the character card wasn't in loadedCharacters yet the info strip showed blank. Fixed by making it async and calling loadCharacterCard() before reading state. (2) _studioRebuildPrompt was collapsing clothingTop/Bottom/Footwear into the clothing field via || join — causing them to be dropped when clothing was also selected. Fixed by passing all three as native fields. (3) Relationships preset was adding r.accessories to the Set even when the value was an empty string, polluting the prompt. Fixed with a non-empty string guard.",
+      "decisions": [
+        "_renderStudioCharInfo is now async and awaited in openImgStudio — char info and prompt rebuild both depend on the card being loaded.",
+        "clothingTop/clothingBottom/clothingFootwear are passed as native fields in the merged scene object — not collapsed into clothing.",
+        "Relationship preset accessories guard: only add to Set if r.accessories is a non-empty string after trim."
+      ],
+      "rules_reinforced": [
+        "Any function that reads state.loadedCharacters must guard against the character not yet being loaded — call loadCharacterCard() first.",
+        "Studio merged scene must pass all per-part clothing fields as separate keys — never collapse them before buildImagePrompt sees them."
+      ]
+    },
     {
       "date": "2026-05-12",
       "agent": "Claude Sonnet 4.6",

@@ -3367,9 +3367,9 @@ export function initUI() {
                 if (!was) {
                     if (r.vibe)        _studioScene.vibe = r.vibe;
                     if (r.expr)        _studioScene.expr = r.expr;
-                    if (r.accessories) {
+                    if (r.accessories && String(r.accessories).trim()) {
                         if (!(_studioScene.accessories instanceof Set)) _studioScene.accessories = new Set();
-                        _studioScene.accessories.add(r.accessories);
+                        _studioScene.accessories.add(String(r.accessories).trim());
                     }
                     $p.classList.add('active');
                     _syncStudioChipsToState();
@@ -3423,7 +3423,7 @@ export function initUI() {
     }
 
     // ── Build character info strip ────────────────────────────────────────────
-    function _renderStudioCharInfo(charId) {
+    async function _renderStudioCharInfo(charId) {
         const $name   = qs('#studio-char-name');
         const $traits = qs('#studio-char-traits');
         const $snip   = qs('#studio-char-scene-snippet');
@@ -3438,6 +3438,12 @@ export function initUI() {
             if ($snip)  $snip.textContent = '';
             if ($badge) $badge.hidden = true;
             return;
+        }
+
+        // Ensure the character card is loaded — it may not be in memory if the
+        // session was restored from saved state without visiting the char first.
+        if (!state.loadedCharacters[charId]) {
+            await loadCharacterCard(charId).catch(() => null);
         }
 
         const char     = state.loadedCharacters[charId];
@@ -3543,38 +3549,40 @@ export function initUI() {
 
     // ── Rebuild prompt from studio state ─────────────────────────────────────
     function _studioRebuildPrompt() {
-        // Build a merged scene object that maps _studioScene → buildImagePrompt shape
+        // Pass all _studioScene fields through as-is — buildImagePrompt handles
+        // clothingTop/Bottom/Footwear as native additive fields.
         const merged = {
-            nsfw:          _studioScene.nsfw,
-            clothingState: _studioScene.clothingState,
-            clothing:      _studioScene.clothing
-                         || [_studioScene.clothingTop, _studioScene.clothingBottom, _studioScene.clothingFootwear].filter(Boolean).join(', ')
-                         || null,
-            clothingCustom: _studioScene.clothingCustom,
-            accessories:   _studioScene.accessories,
-            hair:          _studioScene.hair,
-            cam:           _studioScene.cam,
-            pose:          _studioScene.pose,
-            poseCustom:    _studioScene.poseCustom,
-            activity:      _studioScene.activity,
-            activityCustom: _studioScene.activityCustom,
-            bodyFocus:     _studioScene.bodyFocus,
-            partners:      _studioScene.partners,
-            expr:          _studioScene.expr,
-            skinEffects:   _studioScene.skinEffects,
-            env:           _studioScene.env,
-            envCustom:     _studioScene.envCustom,
-            timeOfDay:     _studioScene.timeOfDay,
-            weather:       _studioScene.weather,
-            mood:          _studioScene.mood,
-            vibe:          _studioScene.vibe,
-            fantasyFx:     _studioScene.fantasyFx,
-            style:         _studioScene.style,
-            colorTone:     _studioScene.colorTone,
-            composition:   _studioScene.composition,
-            quality:       _studioScene.quality,
-            positive:      _studioScene.positive,
-            negative:      _studioScene.negative,
+            nsfw:            _studioScene.nsfw,
+            clothingState:   _studioScene.clothingState,
+            clothing:        _studioScene.clothing,
+            clothingTop:     _studioScene.clothingTop,
+            clothingBottom:  _studioScene.clothingBottom,
+            clothingFootwear:_studioScene.clothingFootwear,
+            clothingCustom:  _studioScene.clothingCustom,
+            accessories:     _studioScene.accessories,
+            hair:            _studioScene.hair,
+            cam:             _studioScene.cam,
+            pose:            _studioScene.pose,
+            poseCustom:      _studioScene.poseCustom,
+            activity:        _studioScene.activity,
+            activityCustom:  _studioScene.activityCustom,
+            bodyFocus:       _studioScene.bodyFocus,
+            partners:        _studioScene.partners,
+            expr:            _studioScene.expr,
+            skinEffects:     _studioScene.skinEffects,
+            env:             _studioScene.env,
+            envCustom:       _studioScene.envCustom,
+            timeOfDay:       _studioScene.timeOfDay,
+            weather:         _studioScene.weather,
+            mood:            _studioScene.mood,
+            vibe:            _studioScene.vibe,
+            fantasyFx:       _studioScene.fantasyFx,
+            style:           _studioScene.style,
+            colorTone:       _studioScene.colorTone,
+            composition:     _studioScene.composition,
+            quality:         _studioScene.quality,
+            positive:        _studioScene.positive,
+            negative:        _studioScene.negative,
         };
 
         const charId = state.activeBotId;
@@ -3926,7 +3934,7 @@ export function initUI() {
             _studioWired = true;
         }
 
-        _renderStudioCharInfo(cid);
+        await _renderStudioCharInfo(cid);
         _renderStudioModelGrid();
         _studioRebuildPrompt();
         _studioUpdateBadges();
