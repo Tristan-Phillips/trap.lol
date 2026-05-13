@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.3.4",
+    "schema_version": "1.3.5",
     "last_updated": "2026-05-13",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -470,6 +470,20 @@
     ]
   },
   "commits": [
+    {
+      "hash": "PENDING",
+      "date": "2026-05-13",
+      "message": "feat(arena): chat bubble visual overhaul — RP text layers, entry animations, streaming indicator",
+      "scope": "playground/characters — arena.css, responsive.css, ui.js",
+      "impact": "high",
+      "files": [
+        "playground/characters/style/arena.css",
+        "playground/characters/style/responsive.css",
+        "playground/characters/script/modules/ui.js",
+        "status/logs/logs.json"
+      ],
+      "why": "Chat message rendering had flat white text with no visual hierarchy — every narrative layer (narration, action, speech, thought, system tags) looked identical. Complete overhaul: bot bubbles now deep dark glass with left accent bar + hover reveal gradient; user bubbles warm amber gradient; slide-in animations per side; streaming class with pulsing left bar; RP text layers given distinct colours/glows (gold speech, violet thought, dim lavender narration, monospace status tags); [STATUS value] bracket patterns tokenised to rp-tag badges; rp-narration class auto-applied to pure narration paragraphs."
+    },
     {
       "hash": "3558642",
       "date": "2026-05-13",
@@ -1125,6 +1139,23 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-13",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Chat rendering quality overhaul. Message bubbles completely restyled — bot bubbles now deep dark glass with a left accent bar that reveals on hover; user bubbles warm amber gradient; both sides have entry slide-in animations. RP text layers given a full sensory palette: speech (warm gold glow), thought (cool violet breathe animation), action/em (mid-lavender italic), narration paragraphs (dim lavender-grey via rp-narration class). System bracket tags like [SANITY 43%] tokenised to monospace accent badges. Streaming messages pulse the left accent bar during content arrival.",
+      "decisions": [
+        "rp-narration class applied post-parse via regex on <p> elements that contain no rp-speech, rp-thought, or <em> — this correctly identifies pure scene-setting paragraphs without changing the markdown pipeline.",
+        "[STATUS value] bracket token detection runs BEFORE marked.js parse to survive the HTML transformation — pattern: /\\[([A-Z][A-Z0-9 _\\-]{0,24}(?:\\s+[\\d\\w%\\/\\.\\-]{1,12})?)\\]/g.",
+        "Bot bubble uses ::before pseudo-element for the left gradient bar (not a real DOM element) — opacity:0 at rest, opacity:1 on hover, animated on .message--streaming.",
+        "bubble-in and bubble-in-user animations use cubic-bezier(0.22, 1, 0.36, 1) for a snappy overshoot-free entry — slide 6px from respective side.",
+        "rp-thought-breathe is a 5s ease-in-out opacity cycle — stops on hover to prevent interference with the hover glow state."
+      ],
+      "rules_reinforced": [
+        "Token substitution in renderMarkdown() must run BEFORE marked.parse() or the marked pipeline will corrupt bracket syntax into escaped HTML entities.",
+        "::before pseudo-elements are preferred over injected DOM nodes for decorative UI elements — zero JS, zero DOM pollution."
+      ]
+    },
     {
       "date": "2026-05-13",
       "agent": "Claude Sonnet 4.6",

@@ -205,32 +205,43 @@ function renderMarkdown(text) {
     };
     const rpFlush = html => html.replace(/«rp(\d+)»/g, (_, i) => {
         const { type, inner } = rpTokens[Number(i)];
-        // esc() here: inner was captured before DOMPurify ran, so it must be
-        // escaped before re-injection to prevent post-sanitisation XSS.
         return `<span class=”rp-${type}”>${esc(inner)}</span>`;
     });
 
     try {
+        // [STATUS value] / [LABEL] bracket tags — styled system tokens
+        // Must run before any other substitution so brackets survive marked
+        text = text.replace(/\[([A-Z][A-Z0-9 _\-]{0,24}(?:\s+[\d\w%\/\.\-]{1,12})?)\]/g,
+            (_, inner) => rpToken('tag', inner));
+
         // _inner thought_ — consume before marked.js can interpret the underscores
         text = text.replace(/(?<![_\w])_([^_\n]{2,}?)_(?![_\w])/g, (_, inner) =>
             rpToken('thought', inner));
+
         // “straight quoted speech” — tokenise pre-parse so marked can't entity-encode the quotes
         text = text.replace(/”([^”\n]{2,}?)”/g, (_, inner) =>
             rpToken('speech', `”${inner}”`));
-        // *action/narration* — left for marked.js, which converts it to <em> natively
+
+        // *action/narration* — left for marked.js which converts to <em> natively
         let html = marked.parse(text, { breaks: true, gfm: true });
+
         if (typeof DOMPurify !== 'undefined') {
             html = DOMPurify.sanitize(html, { USE_PROFILES: { html: true } });
         } else {
-            // DOMPurify shard failed to load — fall back to escaped plain text
-            // rather than injecting unsanitized model HTML into the DOM.
             return `<p>${esc(text).replace(/\n/g, '<br>')}</p>`;
         }
+
         // Restore RP spans after sanitisation (DOMPurify never sees them)
         html = rpFlush(html);
+
         // Curly/smart quotes output by the LLM — safe to handle post-sanitize
         html = html.replace(/”([^””<>\n]{2,}?)”/g,
-            (_, inner) => `<span class=”rp-speech”>”${inner}”</span>`);
+            (_, inner) => `<span class=”rp-speech”>“${inner}”</span>`);
+
+        // Paragraphs that are purely narration (no rp-speech, no em) → rp-narration class
+        html = html.replace(/<p>((?!.*rp-speech|.*rp-thought|.*<em>)[^<]{20,})<\/p>/g,
+            (_, inner) => `<p class=”rp-narration”>${inner}</p>`);
+
         return html;
     } catch (_) {
         return `<p>${esc(text).replace(/\n/g, '<br>')}</p>`;
