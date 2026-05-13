@@ -218,9 +218,10 @@ function renderMarkdown(text) {
         text = text.replace(/(?<![_\w])_([^_\n]{2,}?)_(?![_\w])/g, (_, inner) =>
             rpToken('thought', inner));
 
-        // “straight quoted speech” — tokenise pre-parse so marked can't entity-encode the quotes
-        text = text.replace(/”([^”\n]{2,}?)”/g, (_, inner) =>
-            rpToken('speech', `”${inner}”`));
+        // Quoted speech — straight and curly/smart quotes (LLMs almost always output curly)
+        // Tokenise pre-parse so marked.js can't entity-encode the quote characters
+        text = text.replace(/[“”]((?:[^””\n]){2,}?)[””]/g, (_, inner) =>
+            rpToken('speech', `“${inner}”`));
 
         // *action/narration* — left for marked.js which converts to <em> natively
         let html = marked.parse(text, { breaks: true, gfm: true });
@@ -233,10 +234,6 @@ function renderMarkdown(text) {
 
         // Restore RP spans after sanitisation (DOMPurify never sees them)
         html = rpFlush(html);
-
-        // Curly/smart quotes output by the LLM — safe to handle post-sanitize
-        html = html.replace(/”([^””<>\n]{2,}?)”/g,
-            (_, inner) => `<span class=”rp-speech”>“${inner}”</span>`);
 
         // Paragraphs that are purely narration (no rp-speech, no em) → rp-narration class
         html = html.replace(/<p>((?!.*rp-speech|.*rp-thought|.*<em>)[^<]{20,})<\/p>/g,

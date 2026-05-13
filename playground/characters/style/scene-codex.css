@@ -578,41 +578,7 @@
     background: #000;
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   RP Layer Enhancements — speech / action / thought visual layers
-   These sit in message bubbles after marked.parse + DOMPurify.
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-/* Spoken dialogue — warm amber-gold, slightly elevated */
-.rp-speech {
-    color: var(--accent-warm, #f4a830);
-    font-weight: 500;
-}
-
-/* Inner thought — violet italic, slightly dimmed */
-.rp-thought {
-    color: rgba(190, 41, 236, 0.85);
-    font-style: italic;
-    opacity: 0.9;
-}
-
-/* Ambient scene description — message bubble gets subtle scene color when bot is writing */
-.message--bot .message__bubble {
-    background: rgba(10, 5, 22, 0.55);
-    border: 1px solid rgba(190, 41, 236, 0.1);
-    border-radius: 10px 10px 10px 3px;
-    padding: 12px 14px;
-    line-height: 1.75;
-    color: rgba(230, 220, 255, 0.92);
-}
-
-.message--user .message__bubble {
-    background: rgba(190, 41, 236, 0.08);
-    border: 1px solid rgba(190, 41, 236, 0.15);
-    border-radius: 10px 10px 3px 10px;
-    padding: 10px 14px;
-    color: rgba(220, 210, 255, 0.9);
-}
+/* RP layer styles and message bubble styles live in responsive.css and arena.css */
 
 /* Streaming cursor */
 .message__content .stream-cursor::after {
