@@ -281,11 +281,10 @@
 }
 
 /* ── Grid area ───────────────────────────────────────────────────────────── */
-.wh-grid-area { flex: 1; min-height: 0; position: relative; overflow: hidden; }
+.wh-grid-area { flex: 1; min-height: 0; position: relative; overflow-y: auto; overflow-x: hidden; }
 
 .wh-grid {
-  height: 100%;
-  overflow-y: auto;
+  min-height: 100%;
   padding: 10px;
   display: grid;
   align-content: start;
@@ -347,7 +346,7 @@ kbd {
   overflow: hidden;
   position: relative;
   background: rgba(255,255,255,0.02);
-  border: 1px solid rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
   cursor: pointer;
   aspect-ratio: 16 / 9;
   transition:
@@ -364,8 +363,45 @@ kbd {
   border-color: transparent;
   z-index: 2;
 }
-.wh-tile--nsfw    { border-color: rgba(239,68,68,0.18); }
-.wh-tile--sketchy { border-color: rgba(251,191,36,0.12); }
+
+/* Purity-coded borders with subtle passive glow pulses */
+.wh-tile--sfw {
+  border-color: rgba(74,222,128,0.18);
+  box-shadow: 0 0 0 0 rgba(74,222,128,0);
+  animation: wh-pulse-sfw 4s ease-in-out infinite;
+}
+.wh-tile--sketchy {
+  border-color: rgba(251,191,36,0.2);
+  animation: wh-pulse-sketchy 4.5s ease-in-out infinite;
+}
+.wh-tile--nsfw {
+  border-color: rgba(239,68,68,0.22);
+  animation: wh-pulse-nsfw 5s ease-in-out infinite;
+}
+
+/* Passive glow pulses — very subtle, offset per purity so they don't all sync */
+@keyframes wh-pulse-sfw {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(74,222,128,0),  0 2px 8px -4px rgba(0,0,0,0.45); }
+  50%       { box-shadow: 0 0 8px 0 rgba(74,222,128,0.08), 0 2px 8px -4px rgba(0,0,0,0.45); }
+}
+@keyframes wh-pulse-sketchy {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(251,191,36,0),   0 2px 8px -4px rgba(0,0,0,0.45); }
+  50%       { box-shadow: 0 0 9px 0 rgba(251,191,36,0.09), 0 2px 8px -4px rgba(0,0,0,0.45); }
+}
+@keyframes wh-pulse-nsfw {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0),    0 2px 8px -4px rgba(0,0,0,0.45); }
+  50%       { box-shadow: 0 0 10px 0 rgba(239,68,68,0.1),  0 2px 8px -4px rgba(0,0,0,0.45); }
+}
+
+/* Hover overrides purity animation with immediate accent glow */
+.wh-tile--sfw:hover,
+.wh-tile--sketchy:hover,
+.wh-tile--nsfw:hover {
+  animation: none;
+}
+.wh-tile--sfw:hover     { box-shadow: 0 16px 36px -8px rgba(0,0,0,0.75), 0 0 0 1px rgba(74,222,128,0.4),  0 0 18px -2px rgba(74,222,128,0.22); }
+.wh-tile--sketchy:hover { box-shadow: 0 16px 36px -8px rgba(0,0,0,0.75), 0 0 0 1px rgba(251,191,36,0.42), 0 0 18px -2px rgba(251,191,36,0.2); }
+.wh-tile--nsfw:hover    { box-shadow: 0 16px 36px -8px rgba(0,0,0,0.75), 0 0 0 1px rgba(239,68,68,0.44),  0 0 18px -2px rgba(239,68,68,0.22); }
 
 .wh-tile__img-wrap { width: 100%; height: 100%; position: relative; }
 .wh-tile__img {
@@ -465,8 +501,9 @@ kbd {
   column-count: auto;
   column-width: 220px;
   column-gap: 7px;
-  height: auto !important;
-  overflow-y: auto;
+  height: auto;
+  min-height: unset;
+  overflow-y: unset;
 }
 .wh-grid--masonry .wh-tile {
   aspect-ratio: unset;
