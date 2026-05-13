@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.3.3",
+    "schema_version": "1.3.4",
     "last_updated": "2026-05-13",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -470,6 +470,20 @@
     ]
   },
   "commits": [
+    {
+      "hash": "3558642",
+      "date": "2026-05-13",
+      "message": "refactor(image-engine): intelligent prompt builder + Describe Scene feature",
+      "scope": "playground/characters — image-engine.js, ui.js, index.html, img-studio.css",
+      "impact": "high",
+      "files": [
+        "playground/characters/script/modules/image-engine.js",
+        "playground/characters/script/modules/ui.js",
+        "playground/characters/index.html",
+        "playground/characters/style/img-studio.css"
+      ],
+      "why": "buildImagePrompt was dumping raw char editor prose directly into image prompts — fields like distinctiveFeatures and scarsMarks contain narrative text with parentheticals and semicolons that image models treat as noise. Lorebook entries (world lore) were also being injected, producing completely irrelevant tokens like 'The spice melange is the most valuable substance...' in Jinx's prompt. Replaced with _cleanVisualField() keyword extractor, removed lore/scenario/history injection from the static builder, rewrote the LLM path with a structured char sheet format, and added the Describe Scene UI with charWeight/sceneWeight sliders."
+    },
     {
       "hash": "a495c17",
       "date": "2026-05-13",
@@ -1111,6 +1125,24 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-13",
+      "agent": "Claude Sonnet 4.6",
+      "type": "bug_fix",
+      "summary": "Image prompt builder overhaul. The static buildImagePrompt() was dumping raw char editor field values verbatim into prompts — narrative prose with parentheticals ('Pale grey-white (underground pallor)'), semicolons, and long descriptions. Worse, lorebook entries (world lore) were injected wholesale, polluting prompts with completely unrelated lore like 'The spice melange...' Added _cleanVisualField() to strip parentheticals/split on semicolons/cap word count before injection. Removed lorebook injection, world scenario injection, and raw chat history injection from the static path. Rewrote generateImagePromptWithLLM() with _buildCharContext() structured sheet format and a new system prompt requiring visual keywords not prose. Added describeSceneWithLLM() with charWeight/sceneWeight sliders and a collapsible Describe Scene panel in the prompt bar.",
+      "decisions": [
+        "Lorebook entries removed from buildImagePrompt() entirely — they are world-knowledge prose that image models cannot use and actively harm prompt quality.",
+        "_cleanVisualField() strips (parentheticals) and splits on semicolons/commas before injecting any char editor field — prevents prose from contaminating the token stream.",
+        "describeSceneWithLLM() is a separate function from generateImagePromptWithLLM() — different use case: char-sheet-to-visual-baseline vs scene-vibe-from-history.",
+        "charWeight and sceneWeight sliders (0-1 each, default 70%/50%) let the user control how much detail the LLM allocates to character description vs environment/atmosphere.",
+        "Describe Scene panel is collapsible (hidden by default) so it doesn't add visual noise when not in use."
+      ],
+      "rules_reinforced": [
+        "Never inject lorebook entries into image prompts — lorebooks contain narrative world-knowledge, not visual descriptors.",
+        "Char editor fields are written for LLM roleplay context, not image models — always translate through a keyword extractor before use in buildImagePrompt().",
+        "Separate LLM-based prompt generation (requires API call) from static keyword assembly (instant, no API) — both have different appropriate use cases."
+      ]
+    },
     {
       "date": "2026-05-13",
       "agent": "Claude Sonnet 4.6",
