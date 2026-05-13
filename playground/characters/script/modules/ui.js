@@ -182,69 +182,62 @@ function buildAvatarHtml(av, className = '', extraAttr = '') {
 }
 
 // ── Markdown Renderer ─────────────────────────────────────────────────────────
-// RP text layer detection — logic-based, no codes required from the LLM.
-// Patterns detected automatically:
-//   “quoted text”   → .rp-speech  (warm gold — character's spoken voice)
-//   *action text*   → <em>        (muted italic — narration/action, handled by marked)
-//   _inner thought_ → .rp-thought (violet italic — internal monologue)
-//
-// Implementation: operate entirely on the final HTML string AFTER marked.parse()
-// and DOMPurify.sanitize(), so neither library can interfere with the spans we inject.
-// “straight quotes” are handled pre-parse via placeholder tokens to survive marked's
-// quote-entity conversion; curly/smart quotes are handled post-sanitize directly.
-//
-// Token array is local to each call — safe under concurrent group-chat streaming.
+// All RP span injection runs POST-DOMPurify on the sanitised HTML string.
+// No pre-tokenisation needed — we inject directly into the final HTML so
+// neither marked nor DOMPurify can interfere.
 
 function renderMarkdown(text) {
-    // Local token table per invocation — no shared mutable state
-    const rpTokens = [];
-    const rpToken = (type, inner) => {
-        const idx = rpTokens.length;
-        rpTokens.push({ type, inner });
-        return `«rp${idx}»`;
-    };
-    const rpFlush = html => html.replace(/«rp(\d+)»/g, (_, i) => {
-        const { type, inner } = rpTokens[Number(i)];
-        return `<span class=”rp-${type}”>${esc(inner)}</span>`;
-    });
-
     try {
-        // [STATUS value] / [LABEL] bracket tags — styled system tokens
-        // Must run before any other substitution so brackets survive marked
-        text = text.replace(/\[([A-Z][A-Z0-9 _\-]{0,24}(?:\s+[\d\w%\/\.\-]{1,12})?)\]/g,
-            (_, inner) => rpToken('tag', inner));
-
-        // _inner thought_ — consume before marked.js can interpret the underscores
-        text = text.replace(/(?<![_\w])_([^_\n]{2,}?)_(?![_\w])/g, (_, inner) =>
-            rpToken('thought', inner));
-
-        // Quoted speech — straight ASCII “ (U+0022) and curly “ ” in one pass
-        // RegExp constructor used so unicode escapes are unambiguous (editor auto-curls literals)
-        text = text.replace(new RegExp('[\\u0022\\u201C\\u201D]((?:[^\\u0022\\u201C\\u201D\\n]){2,}?)[\\u0022\\u201C\\u201D]', 'g'),
-            (_, inner) => rpToken('speech', '“' + inner + '”'));
-
-        // *action/narration* — left for marked.js which converts to <em> natively
+        // 1. Parse markdown → HTML
         let html = marked.parse(text, { breaks: true, gfm: true });
 
+        // 2. Sanitise
         if (typeof DOMPurify !== 'undefined') {
             html = DOMPurify.sanitize(html, { USE_PROFILES: { html: true } });
         } else {
-            return `<p>${esc(text).replace(/\n/g, '<br>')}</p>`;
+            return '<p>' + esc(text).replace(/\n/g, '<br>') + '</p>';
         }
 
-        // DEBUG — remove after confirming
-        if (rpTokens.length) console.log('[rp] tokens:', rpTokens.length, '| pre-flush snippet:', html.slice(0, 300));
-        // Restore RP spans — DOMPurify may entity-encode « » → &laquo;/&raquo;
-        html = html.replace(/&laquo;rp(\d+)&raquo;/g, '\xABrp$1\xBB');
-        html = rpFlush(html);
+        // 3. Post-sanitise RP injection — operate on text nodes only (between > and <)
+        //    Replace patterns that appear in text content, not inside HTML tags.
 
-        // Paragraphs that are purely narration (no rp-speech, no em) → rp-narration class
+        // Speech: “double-quoted” — straight U+0022, curly U+201C/D, &quot; (marked may encode straight quotes)
+        html = html.replace(/>([^<]*)</g, (match, textNode) => {
+            const replaced = textNode
+                // &quot;...&quot; — marked entity-encodes straight quotes
+                .replace(/&quot;((?:[^<]){2,}?)&quot;/g,
+                    (_, inner) => '<span class=”rp-speech”>“' + inner + '”</span>')
+                // “curly open” … “curly close”
+                .replace(/“((?:[^“”<]){2,}?)”/g,
+                    (_, inner) => '<span class=”rp-speech”>“' + inner + '”</span>')
+                // straight “...”
+                .replace(/”((?:[^”<\n]){2,}?)”/g,
+                    (_, inner) => '<span class=”rp-speech”>“' + inner + '”</span>');
+            return '>' + replaced + '<';
+        });
+
+        // Thought: _underscore wrapped_ (only in text nodes, not already inside tags)
+        html = html.replace(/>([^<]*)</g, (match, textNode) => {
+            const replaced = textNode.replace(/(?<![_\w])_((?:[^_\n]){2,}?)_(?![_\w])/g,
+                (_, inner) => '<span class=”rp-thought”>' + inner + '</span>');
+            return '>' + replaced + '<';
+        });
+
+        // Status tags: [ALL CAPS] or [ALL CAPS value]
+        html = html.replace(/>([^<]*)</g, (match, textNode) => {
+            const replaced = textNode.replace(/\[([A-Z][A-Z0-9 _\-]{0,24}(?:\s+[\d\w%\/\.\-]{1,12})?)\]/g,
+                (_, inner) => '<span class=”rp-tag”>' + esc(inner) + '</span>');
+            return '>' + replaced + '<';
+        });
+
+        // Narration paragraphs — no speech/thought/em inside → dim lavender class
         html = html.replace(/<p>((?!.*rp-speech|.*rp-thought|.*<em>)[^<]{20,})<\/p>/g,
-            (_, inner) => `<p class=”rp-narration”>${inner}</p>`);
+            (_, inner) => '<p class=”rp-narration”>' + inner + '</p>');
 
         return html;
-    } catch (_) {
-        return `<p>${esc(text).replace(/\n/g, '<br>')}</p>`;
+    } catch (e) {
+        console.error('[renderMarkdown]', e);
+        return '<p>' + esc(text).replace(/\n/g, '<br>') + '</p>';
     }
 }
 
