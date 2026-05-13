@@ -14,7 +14,6 @@
 
 import { state, getCharOverride } from './state.js';
 import { getApiKey }               from '../../../../glass/script/modules/llm-auth.js';
-import { scanLorebooks }           from './lorebook.js';
 
 const API_BASE = 'https://nano-gpt.com/v1/images/generations';
 
@@ -148,20 +147,42 @@ export const IMAGE_MODELS = [
 
 export const DEFAULT_MODEL = 'hidream';
 
+// ── Visual keyword extractor ──────────────────────────────────────────────────
+// Converts a raw override field value into clean image-prompt keywords.
+// Fields from the char editor often contain narrative prose with parenthetical
+// notes, semicolons, and long descriptions unsuitable for image models.
+// This strips parentheticals, splits on semicolons, deduplicates, and trims
+// to at most `maxWords` words per token so the model stays anchored visually.
+function _cleanVisualField(raw, maxWords = 8) {
+    if (!raw) return [];
+    return raw
+        .split(/[;,]+/)
+        .map(s => s.replace(/\([^)]*\)/g, '').trim())  // strip (parentheticals)
+        .map(s => s.replace(/[^\w\s\-']/g, '').trim()) // strip special chars
+        .filter(s => s.length > 1)
+        .map(s => s.split(/\s+/).slice(0, maxWords).join(' '))
+        .filter(s => s.length > 0);
+}
+
 // ── Prompt Builder ────────────────────────────────────────────────────────────
 // Structured prompt assembly. Scene builder fields are injected into the exact
 // structural position that image models weight most heavily.
 //
 // Output order:
-//   SUBJECT + PHYSICAL (incl. adult anatomy inline) → HAIR OVERRIDE →
-//   CLOTHING (state + outfit-type + top/bottom/footwear + accessories) →
-//   POSE → ACTIVITY → EXPRESSION → SKIN FX → CAMERA → PARTNERS →
-//   ENVIRONMENT → TIME/WEATHER → LIGHTING → VIBE → FANTASY FX →
-//   ART STYLE → COLOR/COMPOSITION → NSFW TAG → SCENE CONTEXT →
-//   LORE → QUALITY → HOMEBREW
+//   SUBJECT → HAIR → EYES → FACE FEATURES → DISTINGUISHING MARKS →
+//   ADULT ANATOMY (if nsfw) → CLOTHING → POSE → ACTIVITY → EXPRESSION →
+//   SKIN FX → CAMERA → BODY FOCUS → PARTNERS → ENVIRONMENT →
+//   TIME/WEATHER → LIGHTING → VIBE → FANTASY FX → ART STYLE →
+//   COLOR/COMPOSITION → NSFW TAG → QUALITY → HOMEBREW
 //
-// Placing adult anatomy with the physical subject (not after style tags) ensures
-// models anchor to it correctly — early tokens carry the highest weight.
+// KEY DESIGN DECISIONS:
+//   - Narrative prose fields (distinctiveFeatures, scarsMarks, etc.) are run
+//     through _cleanVisualField() which strips parentheticals and splits on
+//     semicolons, preventing prose dumps in the model's token stream.
+//   - Lorebook entries are NEVER injected — they contain world-knowledge prose
+//     that is meaningless or harmful to image models.
+//   - Chat history is NEVER injected raw — use describeSceneWithLLM() for that.
+//   - World scenario is NEVER injected — same reason.
 //
 // Returns { positive, negative } — callers combine them as needed for each API.
 export function buildImagePrompt(opts = {}) {
@@ -169,7 +190,6 @@ export function buildImagePrompt(opts = {}) {
         charId       = state.activeBotId,
         scene        = {},
         userAddition = '',
-        historyDepth = 6,
         includeNsfw  = true,
         nsfwLevel    = 'explicit',
     } = opts;
@@ -198,54 +218,69 @@ export function buildImagePrompt(opts = {}) {
         const v = override[f];
         return (v && String(v).trim() && String(v).toLowerCase() !== 'n/a') ? String(v).trim() : '';
     };
+    // Clean visual field — strips prose/parentheticals from an override field
+    const cv = (f, maxWords = 8) => _cleanVisualField(ov(f), maxWords);
 
     const pos = [];
     const neg = [];
 
-    // ── 1. Primary subject: character name + full physical description ─────────
-    // Adult anatomy is placed here (not after style tags) so the model anchors
-    // to it as part of the subject definition, not as a late-stage tag.
+    // ── 1. Primary subject ────────────────────────────────────────────────────
+    // Name first, then concise physical keywords. We never dump raw prose here.
     const physParts = [];
-    const push = (...fields) => fields.forEach(f => { const v = ov(f); if (v) physParts.push(v); });
-    push('species', 'gender', 'age', 'height', 'bodyType', 'skinTone');
-    if (ov('hairColor')) physParts.push(`${ov('hairColor')}${ov('hairStyle') ? ` ${ov('hairStyle')}` : ''} hair`);
-    if (ov('eyeColor'))  physParts.push(`${ov('eyeColor')} eyes`);
-    push('faceShape', 'complexion', 'jawType', 'cheekbones', 'eyeShape', 'lipsType',
-         'distinctiveFeatures', 'tattoos', 'scarsMarks');
 
-    // Inline adult anatomy when NSFW — models weight subject-block tokens highest
+    // Clean short fields — these are usually 1-3 words and safe verbatim
+    ['species', 'gender'].forEach(f => { const v = ov(f); if (v) physParts.push(v); });
+    if (ov('age'))    physParts.push(`${ov('age').replace(/[^\d]+/g, '').slice(0,3) || ov('age')} years old`);
+    if (ov('height')) physParts.push(ov('height').split(/[,;]/)[0].trim().slice(0, 20));
+
+    // Body/skin — these are usually short enough to use directly
+    ['bodyType', 'skinTone'].forEach(f => { const v = cv(f, 6); physParts.push(...v); });
+
+    // Hair and eyes — construct clean natural phrases
+    if (ov('hairColor')) {
+        const hc = ov('hairColor').split(/[,;(]/)[0].trim();
+        const hs = ov('hairStyle') ? ov('hairStyle').split(/[,;(]/)[0].trim() : '';
+        physParts.push(hs ? `${hc} ${hs} hair` : `${hc} hair`);
+    }
+    if (ov('eyeColor')) {
+        physParts.push(`${ov('eyeColor').split(/[,;(]/)[0].trim()} eyes`);
+    }
+
+    // Face features — clean and short
+    ['faceShape', 'complexion', 'jawType', 'cheekbones', 'eyeShape', 'lipsType']
+        .forEach(f => { const v = cv(f, 5); physParts.push(...v); });
+
+    // Distinctive visual marks — clean prose down to keywords
+    ['distinctiveFeatures', 'tattoos', 'scarsMarks']
+        .forEach(f => { const v = cv(f, 7); physParts.push(...v); });
+
+    // Adult anatomy inline — placed with subject so model anchors correctly
     if (includeNsfw && nsfwLevel !== 'sfw') {
-        push('breastSize', 'breastShape', 'areolaeSize', 'nippleColor',
-             'penisSize', 'penisShape', 'buttocksSize', 'buttocksShape',
-             'bodyHair', 'genitalia', 'intimateMarkings', 'otherAdultFeatures');
+        ['breastSize', 'breastShape', 'areolaeSize', 'nippleColor',
+         'penisSize', 'penisShape', 'buttocksSize', 'buttocksShape',
+         'bodyHair', 'genitalia', 'intimateMarkings', 'otherAdultFeatures']
+            .forEach(f => { const v = cv(f, 6); physParts.push(...v); });
     }
 
     if (physParts.length) {
-        pos.push(`${charName}, ${physParts.join(', ')}`);
-    } else if (char?.description) {
-        pos.push(`${charName}, ${char.description.replace(/\s+/g, ' ').trim().slice(0, 180)}`);
+        pos.push(`${charName}, ${physParts.filter(Boolean).join(', ')}`);
     } else {
         pos.push(charName);
     }
 
-    // ── 2. Hair style override (scene-level, overrides char default) ───────────
+    // ── 2. Hair style override (scene-level) ──────────────────────────────────
     const hair = sv('hair');
     if (hair) pos.push(hair);
 
-    // ── 3. Clothing ─────────────────────────────────────────────────────────────
-    // Priority: clothingState > outfit-type > top+bottom+footwear > char defaults
-    // All present values are combined — they are complementary, not mutually exclusive.
+    // ── 3. Clothing ──────────────────────────────────────────────────────────
     const clothingParts = [];
 
     const clothingState = sv('clothingState');
     if (clothingState) clothingParts.push(clothingState);
 
-    // Outfit type (e.g. "sexy lingerie set") — the primary outfit selector
     const clothing = sv('clothing');
     if (clothing) clothingParts.push(clothing);
 
-    // Per-part selectors from the studio (top / bottom / footwear)
-    // These add specificity on top of the outfit type, never replace it.
     const clothingTop      = sv('clothingTop');
     const clothingBottom   = sv('clothingBottom');
     const clothingFootwear = sv('clothingFootwear');
@@ -253,136 +288,73 @@ export function buildImagePrompt(opts = {}) {
     if (clothingBottom)   clothingParts.push(clothingBottom);
     if (clothingFootwear) clothingParts.push(clothingFootwear);
 
-    // If nothing at all was selected, fall back to char's own style fields
+    // Fallback to char's own style fields only when no scene clothing selected
     if (!clothingParts.length) {
-        ['outfitDescription', 'styleArchetype', 'colorPalette', 'signatureItem',
-         'footwear', 'jewelry', 'makeupStyle', 'headwear', 'eyewear']
-            .forEach(f => { const v = ov(f); if (v) clothingParts.push(v); });
+        // outfitDescription can be long prose — clean it
+        const outfitKw = cv('outfitDescription', 8);
+        if (outfitKw.length) clothingParts.push(...outfitKw);
+        // These are usually short single-word descriptors
+        ['styleArchetype', 'colorPalette', 'signatureItem', 'footwear',
+         'jewelry', 'makeupStyle', 'headwear', 'eyewear']
+            .forEach(f => { const v = cv(f, 5); clothingParts.push(...v); });
     }
 
     const accessories = mv('accessories');
     if (accessories) clothingParts.push(accessories);
 
-    if (clothingParts.length) pos.push(clothingParts.join(', '));
+    if (clothingParts.length) pos.push(clothingParts.filter(Boolean).join(', '));
 
-    // ── 4. Pose / body position ────────────────────────────────────────────────
-    const pose = sv('pose');
-    if (pose) pos.push(pose);
+    // ── 4–9. Pose / activity / expression / skin FX / camera / focus ──────────
+    const pose = sv('pose');        if (pose)     pos.push(pose);
+    const activity = sv('activity');if (activity) pos.push(activity);
+    const expr = sv('expr');        if (expr)     pos.push(expr);
+    const skinFx = mv('skinEffects');if (skinFx)  pos.push(skinFx);
+    const cam = sv('cam');          if (cam)      pos.push(cam);
+    const bodyFocus = sv('bodyFocus');if (bodyFocus) pos.push(bodyFocus);
+    const partners = sv('partners');if (partners) pos.push(partners);
 
-    // ── 5. Activity / act ─────────────────────────────────────────────────────
-    const activity = sv('activity');
-    if (activity) pos.push(activity);
-
-    // ── 6. Expression / emotion ───────────────────────────────────────────────
-    const expr = sv('expr');
-    if (expr) pos.push(expr);
-
-    // ── 7. Skin & body effects ────────────────────────────────────────────────
-    const skinFx = mv('skinEffects');
-    if (skinFx) pos.push(skinFx);
-
-    // ── 8. Camera / framing ───────────────────────────────────────────────────
-    const cam = sv('cam');
-    if (cam) pos.push(cam);
-
-    // ── 9. Body focus ─────────────────────────────────────────────────────────
-    const bodyFocus = sv('bodyFocus');
-    if (bodyFocus) pos.push(bodyFocus);
-
-    // ── 10. Partners ──────────────────────────────────────────────────────────
-    const partners = sv('partners');
-    if (partners) pos.push(partners);
-
-    // ── 11. Environment ───────────────────────────────────────────────────────
+    // ── 10. Environment ───────────────────────────────────────────────────────
+    // Only use explicitly-selected env chip — never auto-inject world scenario
     const env = sv('env');
-    if (env) {
-        pos.push(env);
-    } else {
-        const worldScenario = state.reality?.worldConfig?.scenario || '';
-        if (worldScenario) pos.push(worldScenario.replace(/\s+/g, ' ').trim().slice(0, 100));
-    }
+    if (env) pos.push(env);
 
-    // ── 12. Time of day + weather ─────────────────────────────────────────────
-    const timeOfDay = sv('timeOfDay');
-    if (timeOfDay) pos.push(timeOfDay);
-    const weather = sv('weather');
-    if (weather) pos.push(weather);
+    // ── 11. Time / weather / mood / vibe / fantasy FX ─────────────────────────
+    const timeOfDay = sv('timeOfDay'); if (timeOfDay) pos.push(timeOfDay);
+    const weather   = sv('weather');   if (weather)   pos.push(weather);
+    const mood      = sv('mood');      if (mood)      pos.push(mood);
+    const vibe      = sv('vibe');      if (vibe)      pos.push(vibe);
+    const fantasyFx = mv('fantasyFx'); if (fantasyFx) pos.push(fantasyFx);
 
-    // ── 13. Lighting / mood ───────────────────────────────────────────────────
-    const mood = sv('mood');
-    if (mood) pos.push(mood);
+    // ── 12. Art style ─────────────────────────────────────────────────────────
+    pos.push(sv('style') || 'photorealistic photography, 8k');
 
-    // ── 14. Scene vibe ────────────────────────────────────────────────────────
-    const vibe = sv('vibe');
-    if (vibe) pos.push(vibe);
+    // ── 13. Color tone + composition ──────────────────────────────────────────
+    const colorTone   = sv('colorTone');   if (colorTone)   pos.push(colorTone);
+    const composition = sv('composition'); if (composition) pos.push(composition);
 
-    // ── 15. Fantasy / special FX ──────────────────────────────────────────────
-    const fantasyFx = mv('fantasyFx');
-    if (fantasyFx) pos.push(fantasyFx);
-
-    // ── 16. Art style ─────────────────────────────────────────────────────────
-    const style = sv('style') || 'photorealistic photography, 8k';
-    pos.push(style);
-
-    // ── 17. Color tone + composition ──────────────────────────────────────────
-    const colorTone = sv('colorTone');
-    if (colorTone) pos.push(colorTone);
-    const composition = sv('composition');
-    if (composition) pos.push(composition);
-
-    // ── 18. NSFW tag — placed after style so it modifies rendering intent ──────
+    // ── 14. NSFW tag ──────────────────────────────────────────────────────────
     if (includeNsfw && nsfwLevel !== 'sfw') {
         const nsfwTags = {
             suggestive:   'suggestive, sensual, tasteful nudity',
             explicit:     'explicit, nsfw, uncensored, sexually explicit',
-            unrestricted: 'fully explicit, uncensored, maximally detailed adult scene, anatomically correct, no restrictions',
+            unrestricted: 'fully explicit, uncensored, maximally detailed adult scene, anatomically correct',
         };
         pos.push(nsfwTags[nsfwLevel] || nsfwTags.explicit);
     }
 
-    // ── 19. Scene context from recent chat history ────────────────────────────
-    // Only inject when the user hasn't manually configured the scene — if cam,
-    // pose, env, or activity chips are set, those already define the scene and
-    // raw prose from the chat would add noise and contradictions.
-    const hasManualScene = sv('cam') || sv('pose') || sv('env') || sv('activity');
-    if (historyDepth > 0 && !hasManualScene) {
-        const recentHistory = state.history.slice(-historyDepth);
-        const lastBot = [...recentHistory].reverse().find(m => m.role === 'bot');
-        if (lastBot?.content) {
-            const sceneText = lastBot.content
-                .replace(/<[^>]+>/g, '')
-                .replace(/\*{1,3}([^*]+)\*{1,3}/g, '$1')
-                .replace(/_([^_]+)_/g, '$1')
-                .replace(/\s+/g, ' ').trim().slice(0, 150);
-            if (sceneText) pos.push(sceneText);
-        }
-    }
-
-    // ── 20. Active lorebook entries ───────────────────────────────────────────
-    if (state.lorebooks?.length) {
-        scanLorebooks(state.history, state.lorebooks, 5).slice(0, 2).forEach(e => {
-            const brief = e.content.replace(/\s+/g, ' ').trim().slice(0, 100);
-            if (brief) pos.push(brief);
-        });
-    }
-
-    // ── 21. Quality tags (user-selected or baseline) ──────────────────────────
+    // ── 15. Quality tags ──────────────────────────────────────────────────────
     const qualityOverrides = mv('quality');
     if (qualityOverrides) {
         pos.push(qualityOverrides);
     } else {
-        const qualityBase = nsfwLevel === 'unrestricted'
-            ? 'masterpiece, best quality, highly detailed, sharp focus, anatomically correct, perfect anatomy, 8k uhd'
-            : 'masterpiece, best quality, highly detailed, sharp focus, cinematic lighting, 8k resolution';
-        pos.push(qualityBase);
+        pos.push('masterpiece, best quality, highly detailed, sharp focus, cinematic lighting, 8k');
     }
 
-    // ── 22. Homebrew positive injection ───────────────────────────────────────
+    // ── 16. Homebrew positive injection ───────────────────────────────────────
     if (scene.positive?.trim()) pos.push(scene.positive.trim());
     if (userAddition?.trim())   pos.push(userAddition.trim());
 
     // ── Negative prompt ───────────────────────────────────────────────────────
-    // Covers the most common failure modes across SD/FLUX/HiDream models.
     const baseNeg = [
         'worst quality, low quality, normal quality, jpeg artifacts, blurry, pixelated',
         'deformed, ugly, disfigured, bad anatomy, wrong anatomy, extra limbs, missing limbs',
@@ -405,14 +377,112 @@ export function buildImagePrompt(opts = {}) {
     };
 }
 
+// ── Shared LLM call helper ────────────────────────────────────────────────────
+async function _llmCall({ model, systemPrompt, userMessage, maxTokens = 400, temperature = 0.7 }) {
+    const apiKey = getApiKey();
+    if (!apiKey) throw new Error('No API key configured.');
+    const LLM_API = 'https://nano-gpt.com/api/v1/chat/completions';
+    const res = await fetch(LLM_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+        body: JSON.stringify({
+            model, max_tokens: maxTokens, temperature, stream: false,
+            messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user',   content: userMessage  },
+            ],
+        }),
+    });
+    if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        try { const j = await res.json(); msg = j.error?.message || (typeof j.error === 'string' ? j.error : msg); } catch (_) {}
+        throw new Error(msg);
+    }
+    const data = await res.json();
+    const content = data.choices?.[0]?.message?.content?.trim();
+    if (!content) throw new Error('LLM returned empty response.');
+    return content;
+}
+
+// ── Shared char context builder ───────────────────────────────────────────────
+// Builds a clean, structured character context document for LLM ingestion.
+// Deliberately separates narrative prose (personality, scenario) from visual
+// facts (physical, style) so the LLM can weight them correctly.
+function _buildCharContext(charId, opts = {}) {
+    const { includeNsfw = true, includeHistory = false, historyDepth = 8 } = opts;
+    const char     = charId ? state.loadedCharacters[charId] : null;
+    const override = charId ? getCharOverride(charId) : {};
+    const charName = override.nickname || char?.name || 'a character';
+    const userName = state.config.userName || 'User';
+
+    const clean = (v) => v ? String(v).replace(/\([^)]*\)/g, '').replace(/;/g, ',').trim() : '';
+    const ov    = (f) => { const v = override[f]; return (v && String(v).trim() && String(v).toLowerCase() !== 'n/a') ? clean(String(v)) : ''; };
+
+    const lines = [`CHARACTER: ${charName}`];
+
+    // Physical — structured as key: value pairs for the LLM to reference
+    const phys = [];
+    if (ov('species'))  phys.push(`species: ${ov('species')}`);
+    if (ov('gender'))   phys.push(`gender: ${ov('gender')}`);
+    if (ov('age'))      phys.push(`age: ${ov('age')}`);
+    if (ov('height'))   phys.push(`height: ${ov('height').split(/[,;]/)[0].trim()}`);
+    if (ov('bodyType')) phys.push(`build: ${ov('bodyType')}`);
+    if (ov('skinTone')) phys.push(`skin: ${ov('skinTone').split(/[,;]/)[0].trim()}`);
+    if (ov('hairColor')) {
+        const hc = ov('hairColor').split(/[,;(]/)[0].trim();
+        const hs = ov('hairStyle') ? ov('hairStyle').split(/[,;(]/)[0].trim() : '';
+        phys.push(`hair: ${hc}${hs ? ', ' + hs : ''}`);
+    }
+    if (ov('eyeColor')) phys.push(`eyes: ${ov('eyeColor').split(/[,;(]/)[0].trim()}`);
+    ['faceShape','complexion','jawType','eyeShape','lipsType'].forEach(f => {
+        const v = ov(f); if (v) phys.push(`${f}: ${v.split(/[,;]/)[0].trim()}`);
+    });
+    if (ov('distinctiveFeatures')) phys.push(`distinctive: ${ov('distinctiveFeatures').slice(0, 120)}`);
+    if (ov('tattoos'))   phys.push(`tattoos: ${ov('tattoos').slice(0, 80)}`);
+    if (ov('scarsMarks')) phys.push(`scars/marks: ${ov('scarsMarks').slice(0, 80)}`);
+
+    if (includeNsfw) {
+        const adult = [];
+        ['breastSize','breastShape','areolaeSize','nippleColor','buttocksSize','buttocksShape',
+         'bodyHair','genitalia','intimateMarkings','otherAdultFeatures'].forEach(f => {
+            const v = ov(f); if (v) adult.push(`${f}: ${v.split(/[,;]/)[0].trim()}`);
+        });
+        if (adult.length) phys.push(...adult);
+    }
+
+    if (phys.length) lines.push('PHYSICAL:\n' + phys.map(p => `  ${p}`).join('\n'));
+
+    // Style / default appearance
+    const style = [];
+    ['styleArchetype','outfitDescription','colorPalette','signatureItem',
+     'footwear','jewelry','makeupStyle','headwear','eyewear'].forEach(f => {
+        const v = ov(f); if (v) style.push(`${f}: ${v.slice(0, 80)}`);
+    });
+    if (style.length) lines.push('DEFAULT STYLE:\n' + style.map(s => `  ${s}`).join('\n'));
+
+    // Recent conversation history (for scene context)
+    if (includeHistory && state.history.length) {
+        const recent = state.history.slice(-historyDepth);
+        const transcript = recent
+            .filter(m => m.role === 'user' || m.role === 'bot')
+            .map(m => {
+                const speaker = m.role === 'user' ? userName : charName;
+                const text = m.content
+                    .replace(/<[^>]+>/g, '')
+                    .replace(/\*{1,3}([^*]+)\*{1,3}/g, '$1')
+                    .replace(/_([^_]+)_/g, '$1')
+                    .replace(/\s+/g, ' ').trim().slice(0, 280);
+                return `  ${speaker}: ${text}`;
+            }).join('\n');
+        if (transcript) lines.push('RECENT SCENE:\n' + transcript);
+    }
+
+    return { charName, context: lines.join('\n\n') };
+}
+
 // ── LLM-assisted prompt generation ───────────────────────────────────────────
-// Calls the LLM (character's model or global model) to write a rich, coherent
-// image generation prompt that:
-//   • Anchors to the character's precise physical description
-//   • Captures the current scene context and emotional tone
-//   • Maintains continuity with what has happened in the chat
-//   • Translates narrative text into concrete, painterly image-prompt language
-//
+// Reads char JSON + scene builder state + optional chat history and asks the
+// LLM to write a clean, visually-accurate image generation prompt.
 // Returns the prompt string. Throws on API failure.
 export async function generateImagePromptWithLLM(opts = {}) {
     const {
@@ -424,197 +494,233 @@ export async function generateImagePromptWithLLM(opts = {}) {
         withNegative = false,
     } = opts;
 
-    const apiKey = getApiKey();
-    if (!apiKey) throw new Error('No API key configured.');
-
-    const char     = charId ? state.loadedCharacters[charId] : null;
-    const meta     = charId ? state.characters.find(c => c.id === charId) : null;
     const override = charId ? getCharOverride(charId) : {};
-    const charName = override.nickname || char?.name || 'the character';
-    const userName = state.config.userName || 'User';
-
-    // Pick which model to call — character override first, then global config
     const llmModel = override.modelOverride || state.config.model || 'deepseek-r1';
 
-    // Build a rich context document for the LLM
-    const contextParts = [];
+    const { context } = _buildCharContext(charId, { includeNsfw, includeHistory: true, historyDepth });
 
-    // Character physical sheet
-    const physFields = [];
-    const addPh = (...keys) => keys.forEach(k => { const v = override[k]; if (v && String(v).trim()) physFields.push(String(v).trim()); });
-    addPh('species','gender','age','height','bodyType','skinTone');
-    if (override.hairColor) physFields.push(`${override.hairColor} ${override.hairStyle || ''}`.trim() + ' hair');
-    if (override.eyeColor)  physFields.push(`${override.eyeColor} eyes`);
-    addPh('distinctiveFeatures','faceShape','complexion','jawType','cheekbones',
-          'eyeShape','noseType','lipsType','tattoos','scarsMarks','posture','gait');
-    if (physFields.length) contextParts.push(`Character: ${charName}\nPhysical: ${physFields.join(', ')}`);
-
-    // Style
-    const styleFields = [];
-    const addSt = (...keys) => keys.forEach(k => { const v = override[k]; if (v && String(v).trim()) styleFields.push(String(v).trim()); });
-    addSt('styleArchetype','outfitDescription','colorPalette','signatureItem','footwear','jewelry','makeupStyle','lipstickColor','eyeMakeup','headwear','eyewear');
-    if (styleFields.length) contextParts.push(`Style/outfit: ${styleFields.join(', ')}`);
-
-    // Adult anatomy (when nsfw enabled)
-    if (includeNsfw) {
-        const adultFields = [];
-        const addAd = (...keys) => keys.forEach(k => {
-            const v = override[k];
-            if (v && String(v).trim() && String(v).toLowerCase() !== 'n/a') adultFields.push(String(v).trim());
-        });
-        addAd('breastSize','breastShape','areolaeSize','nippleColor','buttocksSize','buttocksShape','bodyHair','genitalia','otherAdultFeatures','intimateMarkings');
-        if (adultFields.length) contextParts.push(`Adult anatomy: ${adultFields.join(', ')}`);
-    }
-
-    // World scenario
-    const worldScenario = state.reality?.worldConfig?.scenario || state.config.groupScenario || '';
-    if (worldScenario) contextParts.push(`World/setting: ${worldScenario.trim().slice(0, 300)}`);
-
-    // Character scenario from card
-    if (char?.scenario) contextParts.push(`Scene context: ${char.scenario.trim().slice(0, 200)}`);
-
-    // Recent chat history — last N messages, both user and bot
-    const recent = state.history.slice(-historyDepth);
-    if (recent.length) {
-        const transcript = recent
-            .filter(m => m.role === 'user' || m.role === 'bot')
-            .map(m => {
-                const speaker = m.role === 'user' ? userName : charName;
-                const text = m.content
-                    .replace(/<[^>]+>/g, '')
-                    .replace(/\*{1,3}([^*]+)\*{1,3}/g, '$1')
-                    .replace(/_([^_]+)_/g, '$1')
-                    .replace(/\s+/g, ' ')
-                    .trim()
-                    .slice(0, 300);
-                return `${speaker}: ${text}`;
-            })
-            .join('\n');
-        if (transcript) contextParts.push(`Recent conversation:\n${transcript}`);
-    }
-
-    // Active lorebook
-    if (state.lorebooks?.length) {
-        const lore = scanLorebooks(state.history, state.lorebooks, 5);
-        lore.slice(0, 3).forEach(e => {
-            const brief = e.content.replace(/\s+/g, ' ').trim().slice(0, 150);
-            if (brief) contextParts.push(`Lore: ${brief}`);
-        });
-    }
-
-    // Scene builder selections — all groups
-    const sv2 = (k) => { const v = scene[k]; if (!v) return ''; if (v === '__custom__') return scene[`${k}Custom`] || ''; return v; };
+    // Scene builder selections — structured list, no raw prose
+    const sv2 = (k) => { const v = scene[k]; if (!v) return ''; if (v === '__custom__') return scene[`${k}Custom`] || ''; return String(v); };
     const mv2 = (k) => { const v = scene[k]; if (!v) return ''; if (v instanceof Set) return [...v].join(', '); if (Array.isArray(v)) return v.join(', '); return String(v); };
-    const sceneSelections = [
-        sv2('clothingState') && `Clothing state: ${sv2('clothingState')}`,
-        sv2('clothing')      && `Outfit: ${sv2('clothing')}`,
-        mv2('accessories')   && `Accessories: ${mv2('accessories')}`,
-        sv2('hair')          && `Hair: ${sv2('hair')}`,
-        sv2('cam')           && `Camera: ${sv2('cam')}`,
-        sv2('pose')          && `Pose: ${sv2('pose')}`,
-        sv2('activity')      && `Activity/act: ${sv2('activity')}`,
-        sv2('bodyFocus')     && `Body focus: ${sv2('bodyFocus')}`,
-        sv2('partners')      && `Partners: ${sv2('partners')}`,
-        sv2('expr')          && `Expression: ${sv2('expr')}`,
-        mv2('skinEffects')   && `Skin effects: ${mv2('skinEffects')}`,
-        sv2('env')           && `Location: ${sv2('env')}`,
-        sv2('timeOfDay')     && `Time: ${sv2('timeOfDay')}`,
-        sv2('weather')       && `Weather: ${sv2('weather')}`,
-        sv2('mood')          && `Lighting: ${sv2('mood')}`,
-        sv2('vibe')          && `Scene vibe: ${sv2('vibe')}`,
-        mv2('fantasyFx')     && `Fantasy elements: ${mv2('fantasyFx')}`,
-        sv2('style')         && `Art style: ${sv2('style')}`,
-        sv2('colorTone')     && `Color tone: ${sv2('colorTone')}`,
-        sv2('composition')   && `Composition: ${sv2('composition')}`,
-        scene.nsfw && scene.nsfw !== 'sfw' && `NSFW level: ${scene.nsfw}`,
-        scene.positive?.trim() && `Additional details: ${scene.positive.trim()}`,
+    const sceneParts = [
+        sv2('clothingState') && `clothing state: ${sv2('clothingState')}`,
+        sv2('clothing')      && `outfit type: ${sv2('clothing')}`,
+        sv2('clothingTop')   && `top: ${sv2('clothingTop')}`,
+        sv2('clothingBottom')&& `bottom: ${sv2('clothingBottom')}`,
+        sv2('clothingFootwear')&&`footwear: ${sv2('clothingFootwear')}`,
+        mv2('accessories')   && `accessories: ${mv2('accessories')}`,
+        sv2('hair')          && `hair style: ${sv2('hair')}`,
+        sv2('pose')          && `pose: ${sv2('pose')}`,
+        sv2('activity')      && `activity: ${sv2('activity')}`,
+        sv2('expr')          && `expression: ${sv2('expr')}`,
+        mv2('skinEffects')   && `skin effects: ${mv2('skinEffects')}`,
+        sv2('cam')           && `camera: ${sv2('cam')}`,
+        sv2('bodyFocus')     && `focus: ${sv2('bodyFocus')}`,
+        sv2('partners')      && `with: ${sv2('partners')}`,
+        sv2('env')           && `location: ${sv2('env')}`,
+        sv2('timeOfDay')     && `time of day: ${sv2('timeOfDay')}`,
+        sv2('weather')       && `weather: ${sv2('weather')}`,
+        sv2('mood')          && `lighting: ${sv2('mood')}`,
+        sv2('vibe')          && `vibe: ${sv2('vibe')}`,
+        mv2('fantasyFx')     && `fantasy fx: ${mv2('fantasyFx')}`,
+        sv2('style')         && `art style: ${sv2('style')}`,
+        sv2('colorTone')     && `color tone: ${sv2('colorTone')}`,
+        sv2('composition')   && `composition: ${sv2('composition')}`,
+        includeNsfw && scene.nsfw && scene.nsfw !== 'sfw' && `content level: ${scene.nsfw}`,
+        scene.positive?.trim() && `extra details: ${scene.positive.trim()}`,
     ].filter(Boolean);
-    if (sceneSelections.length) contextParts.push(`Scene builder selections:\n${sceneSelections.join('\n')}`);
 
-    // User's additional direction
-    if (userHint.trim()) contextParts.push(`User direction: ${userHint.trim()}`);
+    const sceneBlock = sceneParts.length
+        ? 'SCENE BUILDER SELECTIONS:\n' + sceneParts.map(p => `  ${p}`).join('\n')
+        : '';
+
+    const userBlock = userHint.trim() ? `USER DIRECTION: ${userHint.trim()}` : '';
+
+    const fullContext = [context, sceneBlock, userBlock].filter(Boolean).join('\n\n');
 
     const systemPrompt = withNegative
-        ? `You are an expert image prompt engineer for AI art generators (Stable Diffusion, FLUX, HiDream, etc).
+        ? `You are a master image prompt engineer for AI art generators (Stable Diffusion, FLUX, HiDream).
 
-Given detailed context about a character and the current scene, respond with a JSON object containing exactly two keys:
-- "positive": the main image generation prompt
-- "negative": a negative prompt listing what to exclude for the best result
+You receive a structured character sheet and scene description. Write a precise, visually-rich image generation prompt.
 
-Rules for "positive":
-- Write comma-separated descriptive phrases in natural English
-- Anchor to the character's exact physical traits (do not invent new ones)
-- Describe what is visually present: appearance, pose, expression, clothing, lighting, environment, mood
-- Reflect the emotional tone from the recent conversation
-- Include explicit anatomy naturally if it is in the context
-- End with quality keywords: masterpiece, best quality, highly detailed, sharp focus, cinematic lighting
-- Maximum 250 words
+Respond with ONLY a JSON object — no markdown fences, no explanation:
+{
+  "positive": "...",
+  "negative": "..."
+}
 
-Rules for "negative":
-- List visual failure modes to avoid: bad anatomy, extra limbs, deformed faces, watermarks, text, blurry, low quality
-- If the scene is SFW, include: nsfw, nudity, explicit
-- Maximum 80 words
+POSITIVE PROMPT RULES:
+- Comma-separated visual keywords and short phrases — no sentences, no narrative
+- First: character name + core visual identity (hair colour, eye colour, defining features)
+- Then: current state (clothing/nudity, pose, expression)
+- Then: environment, lighting, atmosphere
+- Then: camera/composition
+- End with: masterpiece, best quality, highly detailed, sharp focus, 8k
+- Include explicit anatomy naturally if NSFW level is provided — but as clean keywords, not prose
+- Do NOT invent physical traits not in the character sheet
+- Max 200 words
 
-Respond ONLY with the JSON object — no markdown fences, no explanation.`
-        : `You are an expert image prompt engineer for AI art generators (Stable Diffusion, FLUX, HiDream, etc).
+NEGATIVE PROMPT RULES:
+- Only standard quality/anatomy failure modes
+- Max 60 words`
+        : `You are a master image prompt engineer for AI art generators (Stable Diffusion, FLUX, HiDream).
 
-Given detailed context about a character and the current scene, write a single, highly-specific image generation prompt.
+You receive a structured character sheet and scene description. Write a precise, visually-rich image generation prompt.
 
-Rules:
-- Write ONLY the prompt text — no preamble, no explanation, no markdown
-- Describe what is visually present: character appearance, pose, expression, clothing, lighting, environment, mood
-- Use comma-separated descriptive phrases in natural English
-- Anchor to the character's exact physical traits (do not invent new ones)
-- Reflect the emotional tone and setting from the recent conversation
-- If explicit anatomy is included in the context, include it naturally in physical detail descriptions
-- End with quality keywords: masterpiece, best quality, highly detailed, sharp focus, cinematic lighting
-- Maximum 250 words`;
+Output ONLY the prompt — no preamble, no explanation, no markdown.
 
-    const userMessage = withNegative
-        ? `${contextParts.join('\n\n')}\n\nWrite the positive and negative prompts as a JSON object now.`
-        : `${contextParts.join('\n\n')}\n\nWrite the image generation prompt now.`;
+RULES:
+- Comma-separated visual keywords and short phrases — no sentences, no narrative prose
+- First: character name + core visual identity (defining hair, eyes, skin, build)
+- Then: current appearance state (clothing, pose, expression)
+- Then: environment, time of day, lighting, atmosphere
+- Then: camera angle, composition, focus
+- End with: masterpiece, best quality, highly detailed, sharp focus, 8k
+- Include explicit anatomy as clean keywords if NSFW level is in the context
+- Do NOT invent traits not present in the character sheet
+- Max 200 words`;
 
-    const LLM_API = 'https://nano-gpt.com/api/v1/chat/completions';
-    const res = await fetch(LLM_API, {
-        method: 'POST',
-        headers: {
-            'Content-Type':  'application/json',
-            'Authorization': `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-            model: llmModel,
-            messages: [
-                { role: 'system', content: systemPrompt },
-                { role: 'user',   content: userMessage  },
-            ],
-            max_tokens: 400,
-            temperature: 0.7,
-            stream: false,
-        }),
+    const content = await _llmCall({
+        model: llmModel,
+        systemPrompt,
+        userMessage: `${fullContext}\n\nWrite the image generation prompt now.`,
+        maxTokens: 450,
+        temperature: 0.65,
     });
-
-    if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        try { const j = await res.json(); msg = j.error?.message || (typeof j.error === 'string' ? j.error : msg); } catch (_) {}
-        throw new Error(msg);
-    }
-
-    const data = await res.json();
-    const content = data.choices?.[0]?.message?.content?.trim();
-    if (!content) throw new Error('LLM returned empty prompt.');
 
     if (withNegative) {
         try {
-            // Strip any accidental markdown fences before parsing
-            const clean = content.replace(/^```[a-z]*\n?/i, '').replace(/\n?```$/,'').trim();
+            const clean = content.replace(/^```[a-z]*\n?/i, '').replace(/\n?```$/, '').trim();
             const parsed = JSON.parse(clean);
             if (parsed.positive) return { positive: parsed.positive, negative: parsed.negative || '' };
         } catch (_) {}
-        // Fallback: treat the whole response as positive
         return { positive: content, negative: '' };
     }
 
     return content;
+}
+
+// ── Describe Scene — AI scene description with adjustable weights ─────────────
+// The "Describe Scene" button flow:
+//   1. Takes the character's JSON fields as the physical baseline
+//   2. Reads the studio's current chip selections as the scene state
+//   3. Optionally reads recent chat history for what's happening right now
+//   4. User can supply a free-text hint
+//   5. charWeight (0–1) controls how much detail goes to physical description
+//   6. sceneWeight (0–1) controls how much detail goes to environment/atmosphere
+//
+// Returns { positive, negative }. Throws on API failure.
+export async function describeSceneWithLLM(opts = {}) {
+    const {
+        charId      = state.activeBotId,
+        scene       = {},
+        userHint    = '',
+        charWeight  = 0.7,   // 0 = barely mention char, 1 = full detailed char desc
+        sceneWeight = 0.5,   // 0 = ignore scene, 1 = rich environment description
+        includeNsfw = true,
+        historyDepth = 4,
+    } = opts;
+
+    const override  = charId ? getCharOverride(charId) : {};
+    const llmModel  = override.modelOverride || state.config.model || 'deepseek-r1';
+
+    const { context } = _buildCharContext(charId, {
+        includeNsfw,
+        includeHistory: sceneWeight > 0.3 && historyDepth > 0,
+        historyDepth,
+    });
+
+    // Scene builder — only include if sceneWeight is significant
+    const sv2 = (k) => { const v = scene[k]; if (!v) return ''; if (v === '__custom__') return scene[`${k}Custom`] || ''; return String(v); };
+    const mv2 = (k) => { const v = scene[k]; if (!v) return ''; if (v instanceof Set) return [...v].join(', '); if (Array.isArray(v)) return v.join(', '); return String(v); };
+
+    const sceneLines = [];
+    // Appearance state (always relevant)
+    if (sv2('clothingState')) sceneLines.push(`clothing state: ${sv2('clothingState')}`);
+    if (sv2('clothing'))      sceneLines.push(`outfit: ${sv2('clothing')}`);
+    if (sv2('clothingTop'))   sceneLines.push(`top: ${sv2('clothingTop')}`);
+    if (sv2('clothingBottom'))sceneLines.push(`bottom: ${sv2('clothingBottom')}`);
+    if (sv2('clothingFootwear'))sceneLines.push(`footwear: ${sv2('clothingFootwear')}`);
+    if (mv2('accessories'))   sceneLines.push(`accessories: ${mv2('accessories')}`);
+    if (sv2('hair'))          sceneLines.push(`hair: ${sv2('hair')}`);
+    if (sv2('pose'))          sceneLines.push(`pose: ${sv2('pose')}`);
+    if (sv2('activity'))      sceneLines.push(`activity: ${sv2('activity')}`);
+    if (sv2('expr'))          sceneLines.push(`expression: ${sv2('expr')}`);
+    if (mv2('skinEffects'))   sceneLines.push(`skin effects: ${mv2('skinEffects')}`);
+    if (sv2('cam'))           sceneLines.push(`camera: ${sv2('cam')}`);
+    if (sv2('bodyFocus'))     sceneLines.push(`body focus: ${sv2('bodyFocus')}`);
+    if (sv2('partners'))      sceneLines.push(`with: ${sv2('partners')}`);
+    // Environment (weighted)
+    if (sceneWeight > 0.2) {
+        if (sv2('env'))       sceneLines.push(`location: ${sv2('env')}`);
+        if (sv2('timeOfDay')) sceneLines.push(`time of day: ${sv2('timeOfDay')}`);
+        if (sv2('weather'))   sceneLines.push(`weather: ${sv2('weather')}`);
+        if (sv2('mood'))      sceneLines.push(`lighting: ${sv2('mood')}`);
+        if (sv2('vibe'))      sceneLines.push(`vibe: ${sv2('vibe')}`);
+        if (mv2('fantasyFx')) sceneLines.push(`fantasy fx: ${mv2('fantasyFx')}`);
+    }
+    if (sv2('style'))         sceneLines.push(`art style: ${sv2('style')}`);
+    if (sv2('colorTone'))     sceneLines.push(`color tone: ${sv2('colorTone')}`);
+    if (sv2('composition'))   sceneLines.push(`composition: ${sv2('composition')}`);
+    if (includeNsfw && scene.nsfw && scene.nsfw !== 'sfw') sceneLines.push(`content level: ${scene.nsfw}`);
+    if (scene.positive?.trim()) sceneLines.push(`extra: ${scene.positive.trim()}`);
+
+    const sceneBlock = sceneLines.length
+        ? 'SCENE STATE:\n' + sceneLines.map(l => `  ${l}`).join('\n')
+        : '';
+
+    const charDepth = charWeight >= 0.8 ? 'full detail — describe every listed physical trait precisely'
+        : charWeight >= 0.5 ? 'moderate — key defining features: hair, eyes, skin, build, top 2-3 distinguishing marks'
+        : 'minimal — name + 3-4 most iconic visual traits only';
+
+    const sceneDepth = sceneWeight >= 0.8 ? 'rich environment — describe setting, atmosphere, lighting, mood in detail'
+        : sceneWeight >= 0.4 ? 'moderate — scene location, lighting quality, general atmosphere'
+        : 'minimal — just the immediate action and expression';
+
+    const systemPrompt = `You are a master image prompt engineer for AI art generators (Stable Diffusion, FLUX, HiDream).
+
+Given a character sheet and current scene state, write a single image generation prompt.
+
+CHARACTER DEPTH INSTRUCTION: ${charDepth}
+SCENE DEPTH INSTRUCTION: ${sceneDepth}
+
+OUTPUT FORMAT — comma-separated visual tags and short phrases, ordered as:
+1. Character name + physical identity (per character depth)
+2. Current appearance state (clothing, pose, expression — always include)
+3. Environment and atmosphere (per scene depth)
+4. Camera, framing, composition
+5. Art style and quality tags
+
+RULES:
+- Plain text only — no JSON, no markdown, no explanation
+- No narrative sentences — only visual descriptors and concrete nouns
+- Do NOT invent physical traits absent from the character sheet
+- Include explicit anatomy as clean keywords if content level is present
+- End with: masterpiece, best quality, highly detailed, sharp focus, 8k
+- Max 180 words`;
+
+    const hint = userHint.trim() ? `\n\nUSER DIRECTION: ${userHint.trim()}` : '';
+    const fullContext = [context, sceneBlock].filter(Boolean).join('\n\n') + hint;
+
+    const positive = await _llmCall({
+        model:       llmModel,
+        systemPrompt,
+        userMessage: `${fullContext}\n\nWrite the image prompt now.`,
+        maxTokens:   380,
+        temperature: 0.6,
+    });
+
+    // Build negative using the standard helper (no LLM needed for this)
+    const nsfwNeg = (includeNsfw && scene.nsfw && scene.nsfw !== 'sfw')
+        ? ''
+        : 'nude, naked, nsfw, explicit, genitalia, exposed';
+    const negative = [
+        scene.negative?.trim() || '',
+        'worst quality, low quality, jpeg artifacts, blurry, deformed, bad anatomy, extra limbs, missing limbs, extra fingers, fused fingers, watermark, text, signature',
+        nsfwNeg,
+    ].filter(Boolean).join(', ');
+
+    return { positive, negative };
 }
 
 // ── Fetch generated image as a local data URL ─────────────────────────────────

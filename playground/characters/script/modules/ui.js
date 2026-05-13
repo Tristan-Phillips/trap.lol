@@ -19,7 +19,7 @@ import {
 import { resolveImageUrl, saveImageBlob, deleteImageBlob, isIdbImageRef, idbImageRefId, isDataUrl } from './storage.js';
 import { buildPayload, streamCompletion } from './llm-engine.js';
 import { parseCommand, executeCommand, filterCommands, COMMANDS } from './commands.js';
-import { IMAGE_MODELS, DEFAULT_MODEL, buildImagePrompt, generateImagePromptWithLLM, generateImage, VIDEO_MODELS, generateVideo, generateVideoPromptWithLLM } from './image-engine.js';
+import { IMAGE_MODELS, DEFAULT_MODEL, buildImagePrompt, generateImagePromptWithLLM, describeSceneWithLLM, generateImage, VIDEO_MODELS, generateVideo, generateVideoPromptWithLLM } from './image-engine.js';
 import { addBook, removeBook, addEntry, updateEntry, removeEntry, createBook, scanLorebooks } from './lorebook.js';
 import { parseCharacterCard, buildCard, normalizeData } from './parser-v2.js';
 import { getApiKey, setApiKey, clearApiKey, isValidKeyFormat, restoreKeyFromCookie } from '../../../../glass/script/modules/llm-auth.js';
@@ -3765,6 +3765,56 @@ export function initUI() {
             $btn.innerHTML = origHtml;
             lucideRefresh($btn);
         }
+    });
+
+    // Describe Scene — toggle controls panel
+    qs('#studio-describe-scene')?.addEventListener('click', () => {
+        const $panel = qs('#studio-describe-controls');
+        if (!$panel) return;
+        $panel.hidden = !$panel.hidden;
+        qs('#studio-describe-scene')?.classList.toggle('active', !$panel.hidden);
+    });
+
+    // Describe Scene — Run button fires the LLM
+    async function _runDescribeScene() {
+        const $btn  = qs('#studio-describe-run');
+        const $ta   = qs('#studio-prompt-ta');
+        const $negTa= qs('#studio-neg-ta');
+        if (!$ta) return;
+        const origHtml = $btn?.innerHTML;
+        if ($btn) { $btn.disabled = true; $btn.innerHTML = '<i data-lucide="loader-2" class="spin"></i> …'; lucideRefresh($btn); }
+        try {
+            const charId     = _studioCharId || state.activeBotId;
+            const nsfw       = _studioScene.nsfw !== 'sfw';
+            const charWeight = parseFloat(qs('#studio-char-weight')?.value ?? '0.7');
+            const sceneWeight= parseFloat(qs('#studio-scene-weight')?.value ?? '0.5');
+            const userHint   = qs('#studio-describe-hint')?.value.trim() || '';
+            const { positive, negative } = await describeSceneWithLLM({
+                charId, scene: _studioScene, userHint,
+                charWeight, sceneWeight,
+                includeNsfw: nsfw, historyDepth: 4,
+            });
+            $ta.value = positive;
+            if ($negTa && negative) $negTa.value = negative;
+            showToast('Scene described', 'info', 1500);
+        } catch (err) {
+            showToast(`Describe Scene failed: ${err.message}`, 'error', 4000);
+        } finally {
+            if ($btn) { $btn.disabled = false; $btn.innerHTML = origHtml; lucideRefresh($btn); }
+        }
+    }
+    qs('#studio-describe-run')?.addEventListener('click', _runDescribeScene);
+
+    // Live slider label updates
+    qs('#studio-char-weight')?.addEventListener('input', e => {
+        const pct = Math.round(parseFloat(e.target.value) * 100);
+        const $lbl = qs('#studio-char-weight-val');
+        if ($lbl) $lbl.textContent = `${pct}%`;
+    });
+    qs('#studio-scene-weight')?.addEventListener('input', e => {
+        const pct = Math.round(parseFloat(e.target.value) * 100);
+        const $lbl = qs('#studio-scene-weight-val');
+        if ($lbl) $lbl.textContent = `${pct}%`;
     });
 
     qs('#studio-img-set-avatar')?.addEventListener('click', async () => {

@@ -714,6 +714,146 @@
     font-family: var(--font-mono);
 }
 
+/* ── Describe Scene button ── */
+.studio-describe-btn {
+    border-color: rgba(100, 200, 255, 0.25) !important;
+    color: rgba(100, 200, 255, 0.75) !important;
+}
+
+.studio-describe-btn:hover {
+    background: rgba(100, 200, 255, 0.09) !important;
+    border-color: rgba(100, 200, 255, 0.5) !important;
+    color: #64c8ff !important;
+}
+
+/* ── Describe Scene weight controls ── */
+.studio-describe-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(100, 200, 255, 0.12);
+    background: rgba(100, 200, 255, 0.04);
+}
+
+.studio-describe-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.studio-describe-label {
+    font-size: 0.62rem;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    white-space: nowrap;
+    width: 116px;
+    flex-shrink: 0;
+}
+
+.studio-weight-slider {
+    flex: 1;
+    height: 3px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: rgba(100, 200, 255, 0.18);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+}
+
+.studio-weight-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: #64c8ff;
+    border: 2px solid rgba(6, 3, 14, 1);
+    box-shadow: 0 0 6px rgba(100, 200, 255, 0.4);
+    cursor: pointer;
+}
+
+.studio-weight-slider::-moz-range-thumb {
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: #64c8ff;
+    border: 2px solid rgba(6, 3, 14, 1);
+    cursor: pointer;
+}
+
+.studio-weight-val {
+    font-size: 0.62rem;
+    font-family: var(--font-mono);
+    color: #64c8ff;
+    width: 32px;
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.studio-describe-hint-input {
+    width: 100%;
+    padding: 5px 8px;
+    border-radius: 6px;
+    border: 1px solid rgba(100, 200, 255, 0.15);
+    background: rgba(100, 200, 255, 0.04);
+    color: var(--text-secondary);
+    font-size: 0.72rem;
+    outline: none;
+    font-family: var(--font-ui, sans-serif);
+    margin-top: 2px;
+    box-sizing: border-box;
+}
+
+.studio-describe-hint-input:focus {
+    border-color: rgba(100, 200, 255, 0.38);
+    background: rgba(100, 200, 255, 0.07);
+}
+
+.studio-describe-hint-input::placeholder {
+    color: rgba(255, 255, 255, 0.2);
+    font-style: italic;
+}
+
+.studio-describe-run-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    border: 1px solid rgba(100, 200, 255, 0.3);
+    background: rgba(100, 200, 255, 0.1);
+    color: #64c8ff;
+    font-size: 0.7rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.14s;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.studio-describe-run-btn:hover:not(:disabled) {
+    background: rgba(100, 200, 255, 0.18);
+    border-color: rgba(100, 200, 255, 0.55);
+    box-shadow: 0 0 10px rgba(100, 200, 255, 0.18);
+}
+
+.studio-describe-run-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.studio-describe-run-btn svg,
+.studio-describe-run-btn [data-lucide] { width: 12px; height: 12px; }
+
+/* Describe Scene button active state (panel open) */
+.studio-describe-btn.active {
+    background: rgba(100, 200, 255, 0.1) !important;
+    border-color: rgba(100, 200, 255, 0.45) !important;
+    color: #64c8ff !important;
+}
+
 /* ── Bottom prompt bar ── */
 .img-studio__prompt-bar {
     flex-shrink: 0;

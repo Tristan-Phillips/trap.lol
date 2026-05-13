@@ -1785,9 +1785,29 @@
           <span class="img-studio__prompt-label">Prompt</span>
           <div class="img-studio__prompt-actions">
             <button id="studio-rebuild-prompt" class="btn btn--ghost btn--xs" title="Rebuild prompt from current scene selections"><i data-lucide="refresh-cw"></i> Rebuild</button>
-            <button id="studio-ai-prompt" class="btn btn--ghost btn--xs" title="Use AI to write the best possible prompt from character + scene context"><i data-lucide="sparkles"></i> AI Prompt</button>
+            <button id="studio-ai-prompt" class="btn btn--ghost btn--xs" title="Use AI to write a precise prompt from character JSON + scene context"><i data-lucide="sparkles"></i> AI Prompt</button>
+            <button id="studio-describe-scene" class="btn btn--ghost btn--xs studio-describe-btn" title="Describe Scene — AI reads char sheet and current state to write a focused visual prompt"><i data-lucide="eye"></i> Describe Scene</button>
           </div>
         </div>
+
+        <!-- Describe Scene weight controls (collapsed by default, toggled by Describe Scene button) -->
+        <div class="studio-describe-controls" id="studio-describe-controls" hidden>
+          <div class="studio-describe-row">
+            <label class="studio-describe-label">Character detail</label>
+            <input type="range" id="studio-char-weight" class="studio-weight-slider" min="0" max="1" step="0.1" value="0.7">
+            <span class="studio-weight-val" id="studio-char-weight-val">70%</span>
+          </div>
+          <div class="studio-describe-row">
+            <label class="studio-describe-label">Scene/environment</label>
+            <input type="range" id="studio-scene-weight" class="studio-weight-slider" min="0" max="1" step="0.1" value="0.5">
+            <span class="studio-weight-val" id="studio-scene-weight-val">50%</span>
+          </div>
+          <div class="studio-describe-row" style="gap:6px;margin-top:2px">
+            <input type="text" id="studio-describe-hint" class="studio-describe-hint-input" placeholder="Optional direction — 'focus on eyes', 'moody atmosphere'…" style="flex:1;margin-top:0">
+            <button id="studio-describe-run" class="btn btn--xs studio-describe-run-btn"><i data-lucide="eye"></i> Run</button>
+          </div>
+        </div>
+
         <textarea id="studio-prompt-ta" class="img-studio__prompt-ta" rows="3" placeholder="Prompt auto-builds from your selections — edit freely…"></textarea>
         <div class="img-studio__prompt-header" style="margin-top:2px">
           <span class="img-studio__prompt-label" style="color:rgba(255,100,100,0.5)">Negative</span>
