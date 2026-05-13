@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.3.2",
+    "schema_version": "1.3.3",
     "last_updated": "2026-05-13",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -470,6 +470,19 @@
     ]
   },
   "commits": [
+    {
+      "hash": "a495c17",
+      "date": "2026-05-13",
+      "message": "fix(responsive): 100dvh + safe-area overhaul; wallhaven grid scroll + purity borders",
+      "scope": "playground/characters",
+      "impact": "high",
+      "files": [
+        "playground/characters/style/responsive.css",
+        "playground/characters/style/wallhaven.css",
+        "status/logs/logs.json"
+      ],
+      "why": "responsive.css complete rewrite: iOS 100vh clips content under Dynamic Island/home bar — replaced with 100dvh + -webkit-fill-available, all safe-area-insets absorbed once on .underdark-layout with no double-application, full device cascade from iPad to iPhone SE. wallhaven.css: Load More was squishing tiles because .wh-grid had height:100% inside overflow:hidden parent — fixed by moving scroll ownership to .wh-grid-area and using min-height on the grid; purity-coded glow-pulse border animations added (sfw=green, sketchy=amber, nsfw=red, staggered 4-5s periods)."
+    },
     {
       "hash": "a541509",
       "date": "2026-05-13",
@@ -1098,6 +1111,24 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-13",
+      "agent": "Claude Sonnet 4.6",
+      "type": "bug_fix",
+      "summary": "Follow-on to Wallhaven UX overhaul. Fixed Load More squishing tiles by transferring scroll ownership from .wh-grid (height:100%) to .wh-grid-area (overflow-y:auto), so the grid grows with content. Added purity-coded passive glow-pulse border animations to tiles (sfw green, sketchy amber, nsfw red; staggered 4–5s periods; hover overrides animation with sharp matching glow). Complete responsive.css rewrite: replaced all 100vh with 100dvh and -webkit-fill-available, single safe-area-inset application at .underdark-layout root, full breakpoint cascade for iPad, iPhone 14, iPhone SE, pointer:coarse touch improvements.",
+      "decisions": [
+        "Scroll container for wallhaven grid moved to .wh-grid-area (overflow-y:auto); .wh-grid uses min-height:100% so it fills the area when few tiles exist but grows unbounded when Load More adds tiles.",
+        "Masonry mode removes competing overflow-y:auto (now inherits from parent scroll container).",
+        "Purity glow pulses are intentionally subtle (8-10px, 0.08-0.1 opacity at peak) — they communicate type passively without distracting from the images.",
+        "Hover on purity tiles cancels the animation (animation:none) and applies a single crisp ring glow instead — two effects at once would be chaotic.",
+        "Safe-area-inset strategy: underdark-layout absorbs all four sides once, sidebars add their lateral inset as extra padding, input zone uses max() for home-bar clearance on top of the layout root's bottom inset."
+      ],
+      "rules_reinforced": [
+        "Never use height:100% on a scroll child inside overflow:hidden — the parent's height cap becomes the child's cap and content gets squished. Use min-height:100% and put overflow-y:auto on the parent.",
+        "100vh on iOS includes browser chrome (URL bar + home indicator); always use 100dvh for full-screen layouts on mobile.",
+        "Apply env(safe-area-inset-*) at exactly one place in the hierarchy — the layout root. Children that add their own safe-area padding will double-apply and clip content."
+      ]
+    },
     {
       "date": "2026-05-13",
       "agent": "Claude Sonnet 4.6",
