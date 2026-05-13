@@ -1,8 +1,8 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.3.1",
-    "last_updated": "2026-05-12",
+    "schema_version": "1.3.2",
+    "last_updated": "2026-05-13",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
       "_protocol",
@@ -470,6 +470,68 @@
     ]
   },
   "commits": [
+    {
+      "hash": "PENDING",
+      "date": "2026-05-13",
+      "message": "feat: Wallhaven arena full UX overhaul — god-tier tiles, lightbox, shimmer, mobile nav fix, auto-fetch",
+      "scope": "playground/characters",
+      "impact": "high",
+      "files": [
+        "playground/characters/index.html",
+        "playground/characters/script/modules/wallhaven.js",
+        "playground/characters/style/wallhaven.css",
+        "status/logs/logs.json"
+      ],
+      "why": "Wallhaven was functional but flat — tiles had no shimmer skeleton, the lightbox showed a blank src flash instead of a blurred thumbnail placeholder, the mobile nav was positioned between header and content instead of at the bottom, the char-name-changed check was always false (WH.charName already overwritten before comparison), and opening without a character left an empty state instead of auto-fetching top results. Full CSS pass: richer hover animations, touch-device always-visible overlays, masonry via CSS columns, keyboard shortcut strip in lightbox and empty state, improved spacing and depth throughout."
+    },
+    {
+      "hash": "82f4f15",
+      "date": "2026-05-12",
+      "message": "Subtle",
+      "scope": "playground/characters",
+      "impact": "low",
+      "files": [
+        "playground/characters/index.html",
+        "playground/characters/style/config-panel.css"
+      ],
+      "why": "Minor visual polish pass on character arena; exact scope not captured in commit message."
+    },
+    {
+      "hash": "9ca7e18",
+      "date": "2026-05-12",
+      "message": "Additional context menu",
+      "scope": "playground/characters",
+      "impact": "medium",
+      "files": [
+        "playground/characters/index.html",
+        "playground/characters/script/modules/ui.js",
+        "playground/characters/style/config-panel.css"
+      ],
+      "why": "Overflow menu (⋮) needed to be always visible on all screen sizes to expose Wallhaven Gallery, Export, and other secondary actions on desktop — it was previously hidden except on ≤520px."
+    },
+    {
+      "hash": "8adf37b",
+      "date": "2026-05-12",
+      "message": "feat: show character portrait softly behind chat tint",
+      "scope": "playground/characters",
+      "impact": "medium",
+      "files": [
+        "playground/characters/script/modules/ui.js"
+      ],
+      "why": "When a chat tint colour is active and no custom arena background overrides it, the active character's avatar should appear as a softly blurred, dimmed cinematic layer behind the colour wash for immersion depth."
+    },
+    {
+      "hash": "b5e26dd",
+      "date": "2026-05-12",
+      "message": "fix: make overflow menu always visible; fix tint picker anchor positioning",
+      "scope": "playground/characters",
+      "impact": "medium",
+      "files": [
+        "playground/characters/script/modules/ui.js",
+        "playground/characters/style/config-panel.css"
+      ],
+      "why": "Overflow button was CSS-hidden on desktop so Wallhaven Gallery was inaccessible. Tint popup was anchoring to #chat-bg-btn which is hidden (getBoundingClientRect returns all zeros), causing it to appear at top-left corner — refactored initChatTintPicker to accept a dynamic anchor element."
+    },
     {
       "hash": "99ab9ee",
       "date": "2026-05-12",
@@ -1036,6 +1098,25 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-13",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Wallhaven arena full UX overhaul. Previous session (2026-05-12) had also fixed: overflow menu always visible on desktop (config-panel.css), tint picker anchor-positioning bug (openTintPicker now accepts dynamic anchor element so overflow-triggered tint popup anchors to the overflow button not hidden #chat-bg-btn), and character portrait softly behind chat tint (applyChatTint calls updateCinematicBackground when tint is active and no custom bg set). This session: mobile bottom nav moved to correct DOM position (was between header and body, now at arena bottom), full wallhaven.css overhaul (shimmer skeleton tiles, touch-device always-visible overlay, masonry via CSS columns, richer hover animations, keyboard shortcut strips), wallhaven.js bug fixes (charName changed-check was always false because WH.charName was overwritten before the comparison — fixed by capturing prevName first; auto-fetch top results when opening with no char and no prior results; blurred thumbnail placeholder in lightbox before full-res loads; preload-then-swap image reveal with animation; tileObserver rootMargin widened).",
+      "decisions": [
+        "Masonry layout uses CSS columns (column-count:auto; column-width:220px) — no JS column-balancer needed, tiles break naturally.",
+        "Lightbox shows blurred thumbnail immediately on open, then swaps to full-res on load — never a blank flash.",
+        "Wallhaven auto-fetches toplist on first open with no character, so the gallery is never empty on entry.",
+        "prevName captured before WH.charName is overwritten — nameChanged check now works correctly for re-opening with same char.",
+        "Keyboard shortcut strip added to lightbox (desktop only via pointer:coarse media query) and to the empty-browse state.",
+        "Tile observer rootMargin widened to 150px 0px and root set to null (viewport) instead of the grid element — prevents tiles at edges being missed when grid has overflow:hidden."
+      ],
+      "rules_reinforced": [
+        "Always capture previous state before mutating it when that previous value is needed for a comparison later in the same function.",
+        "Hidden elements (hidden attr or display:none) return zero from getBoundingClientRect — never anchor popups to elements that might be hidden; pass anchor as a parameter.",
+        "Mobile tab bars should be last in DOM flow for flex column layouts, not first."
+      ]
+    },
     {
       "date": "2026-05-12",
       "agent": "Claude Sonnet 4.6",

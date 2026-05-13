@@ -2569,14 +2569,6 @@
     </div>
   </header>
 
-  <!-- ── Mobile view tab bar (shown below grid on small screens) ── -->
-  <nav class="wh-mobile-tabs" id="wh-mobile-tabs" aria-label="Gallery views">
-    <button class="wh-mobile-tab active" data-wview="browse"><i data-lucide="grid-2x2"></i><span>Browse</span></button>
-    <button class="wh-mobile-tab" data-wview="liked"><i data-lucide="heart"></i><span>Liked <span class="wh-liked-badge" id="wh-liked-count-m">0</span></span></button>
-    <button class="wh-mobile-tab" data-wview="saved"><i data-lucide="bookmark"></i><span>Saved <span class="wh-saved-badge" id="wh-saved-count-m">0</span></span></button>
-    <button class="wh-mobile-tab" data-wview="assigned"><i data-lucide="user-check"></i><span>Assigned</span></button>
-  </nav>
-
   <!-- ── Body: sidebar + grid ── -->
   <div class="wh-body">
 
@@ -2688,7 +2680,14 @@
         <div class="wh-empty-state" id="wh-empty">
           <div class="wh-empty-icon"><i data-lucide="image"></i></div>
           <p class="wh-empty-msg">Search for wallpapers or press <kbd>Search</kbd> to load top results.</p>
-          <p class="wh-empty-hint">Connect an API key in the top-right to unlock Sketchy &amp; NSFW.</p>
+          <p class="wh-empty-hint">API key unlocks Sketchy &amp; NSFW &mdash; paste it in the header.</p>
+          <div class="wh-kb-hints">
+            <span class="wh-kb-hint"><kbd>L</kbd> like</span>
+            <span class="wh-kb-hint"><kbd>S</kbd> save</span>
+            <span class="wh-kb-hint"><kbd>D</kbd> download</span>
+            <span class="wh-kb-hint"><kbd>←</kbd><kbd>→</kbd> navigate</span>
+            <span class="wh-kb-hint"><kbd>Esc</kbd> close</span>
+          </div>
         </div>
         <div class="wh-empty-state" id="wh-liked-empty" hidden>
           <div class="wh-empty-icon"><i data-lucide="heart"></i></div>
@@ -2719,6 +2718,14 @@
 
     </div>
   </div>
+
+  <!-- ── Mobile view tab bar (bottom nav on small screens) ── -->
+  <nav class="wh-mobile-tabs" id="wh-mobile-tabs" aria-label="Gallery views">
+    <button class="wh-mobile-tab active" data-wview="browse"><i data-lucide="grid-2x2"></i><span>Browse</span></button>
+    <button class="wh-mobile-tab" data-wview="liked"><i data-lucide="heart"></i><span>Liked <span class="wh-liked-badge" id="wh-liked-count-m">0</span></span></button>
+    <button class="wh-mobile-tab" data-wview="saved"><i data-lucide="bookmark"></i><span>Saved <span class="wh-saved-badge" id="wh-saved-count-m">0</span></span></button>
+    <button class="wh-mobile-tab" data-wview="assigned"><i data-lucide="user-check"></i><span>Assigned</span></button>
+  </nav>
 
 </main>
 
@@ -2767,6 +2774,16 @@
 
     <!-- slide counter -->
     <div class="wh-lb-counter" id="wh-lb-counter"></div>
+
+    <!-- keyboard hints (desktop only) -->
+    <div class="wh-lb-kb-strip" aria-hidden="true">
+      <span><kbd>L</kbd> like</span>
+      <span><kbd>S</kbd> save</span>
+      <span><kbd>D</kbd> dl</span>
+      <span><kbd>+</kbd><kbd>-</kbd> zoom</span>
+      <span><kbd>0</kbd> reset</span>
+      <span><kbd>Esc</kbd> close</span>
+    </div>
   </div>
 </div>
 

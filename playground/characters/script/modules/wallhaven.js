@@ -136,20 +136,32 @@ const tileObserver = new IntersectionObserver((entries, obs) => {
     if (!entry.isIntersecting) return;
     const img = entry.target.querySelector('.wh-tile__img--pending');
     if (img && img.dataset.src) {
-      img.onerror = () => {
-        const fb = img.dataset.fallback;
-        if (fb && img.src !== fb) { img.src = fb; return; }
-        img.classList.add('wh-tile__img--error');
-        img.removeAttribute('onerror');
+      const preload = new Image();
+      preload.onload = () => {
+        img.src = img.dataset.src;
+        img.removeAttribute('data-src');
+        img.classList.remove('wh-tile__img--pending');
+        img.classList.add('wh-tile__img--reveal');
+        entry.target.classList.remove('wh-tile--skeleton');
       };
-      img.src = img.dataset.src;
-      img.removeAttribute('data-src');
-      img.classList.remove('wh-tile__img--pending');
-      img.classList.add('wh-tile__img--reveal');
+      preload.onerror = () => {
+        const fb = img.dataset.fallback;
+        if (fb) {
+          img.src = fb;
+          img.removeAttribute('data-src');
+          img.classList.remove('wh-tile__img--pending');
+          img.classList.add('wh-tile__img--reveal');
+          entry.target.classList.remove('wh-tile--skeleton');
+        } else {
+          img.classList.add('wh-tile__img--error');
+          entry.target.classList.remove('wh-tile--skeleton');
+        }
+      };
+      preload.src = img.dataset.src;
     }
     obs.unobserve(entry.target);
   });
-}, { root: grid, rootMargin: '100px', threshold: 0 });
+}, { root: null, rootMargin: '150px 0px', threshold: 0 });
 
 function buildCats()   { return `${WH.cats.general?1:0}${WH.cats.anime?1:0}${WH.cats.people?1:0}`; }
 function buildPurity() { return `${WH.purity.sfw?1:0}${WH.purity.sketchy?1:0}${WH.purity.nsfw?1:0}`; }
@@ -525,7 +537,7 @@ function buildTile(w,idx,set){
   const isAssigned=WH.assigned.has(w.id)&&(WH.assigned.get(w.id)||[]).length>0;
 
   const tile=document.createElement('div');
-  tile.className=`wh-tile wh-tile--${w.purity}`;
+  tile.className=`wh-tile wh-tile--${w.purity} wh-tile--skeleton`;
   tile.dataset.idx=idx; tile.dataset.set=set;
 
   tile.innerHTML=`
@@ -728,11 +740,21 @@ function openLightbox(idx,set){
 function renderLightbox(){
   resetLbView();
   const ds=lbDataset(), w=ds[WH.lbIndex]; if(!w)return;
-  lbImg.classList.add('wh-lb-img--loading'); lbImg.src='';
-  const t=new Image();
-  t.onload=()=>{lbImg.src=w.path;lbImg.classList.remove('wh-lb-img--loading');};
-  t.onerror=()=>{lbImg.src=w.thumbs.large;lbImg.classList.remove('wh-lb-img--loading');};
-  t.src=w.path;
+  // Show thumbnail immediately as blurred placeholder, then swap to full-res
+  lbImg.src = w.thumbs.large || '';
+  lbImg.style.filter = 'blur(8px)';
+  lbImg.classList.add('wh-lb-img--loading');
+  const t = new Image();
+  t.onload = () => {
+    lbImg.src = w.path;
+    lbImg.style.filter = '';
+    lbImg.classList.remove('wh-lb-img--loading');
+  };
+  t.onerror = () => {
+    lbImg.style.filter = '';
+    lbImg.classList.remove('wh-lb-img--loading');
+  };
+  t.src = w.path;
   lbRes.textContent=w.resolution;
   lbPurityEl.textContent=purityLabel(w.purity); lbPurityEl.className=`wh-lb-badge wh-lb-badge--${w.purity}`;
   lbCat.textContent=w.category;
@@ -883,6 +905,7 @@ function zoomLbCentre(d){
 function resetLbView(){
   LBV.scale=1;LBV.tx=0;LBV.ty=0;
   if(lbViewport){lbViewport.style.transform='';lbViewport.classList.remove('wh-lb-dragging');}
+  if(lbImg){lbImg.style.filter='';}
   const $s=lb.querySelector('.wh-lightbox__stage');
   if($s){$s.classList.remove('wh-lb-stage--can-pan','wh-lb-stage--panning');}
   if(lbZoomPill)lbZoomPill.classList.remove('wh-lb-zoom-pill--visible');
@@ -992,6 +1015,7 @@ if(whOpenBtn){
 }
 
 window.openWallhavenGallery = function(charName, charId){
+  const prevName = WH.charName;
   WH.charName=charName||''; WH.charId=charId||null;
   charLabel.textContent=charName||'Visual Archive';
   searchInput.value=charName||''; searchClear.hidden=!charName;
@@ -1000,9 +1024,12 @@ window.openWallhavenGallery = function(charName, charId){
   updateBadges(); populateCharSelects(); window.lucide?.createIcons();
   document.querySelectorAll('.wh-view-tab').forEach(b=>b.classList.toggle('active',b.dataset.wview==='browse'));
   WH.view='browse'; filtersPanel.style.display=''; charFilterWrap.hidden=true;
-  const nameChanged=charName&&charName!==WH.charName;
+  const nameChanged=charName&&charName!==prevName;
   if(charName&&(WH.results.length===0||nameChanged)){
     WH.results=[]; WH.query=charName; WH.page=1; WH.seed=null; fetchWallpapers(false);
+  } else if(!charName&&WH.results.length===0){
+    // No char, no prior results — auto-fetch top results so it never opens empty
+    WH.query=''; WH.page=1; WH.seed=null; fetchWallpapers(false);
   } else { renderCurrentView(); }
 };
 
