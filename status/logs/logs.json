@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.3.5",
+    "schema_version": "1.3.6",
     "last_updated": "2026-05-13",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -471,9 +471,33 @@
   },
   "commits": [
     {
-      "hash": "PENDING",
+      "hash": "9867353",
       "date": "2026-05-13",
-      "message": "feat(arena): chat bubble visual overhaul — RP text layers, entry animations, streaming indicator",
+      "message": "fix(css): version-bust arena, scene-codex, responsive imports to clear browser cache",
+      "scope": "playground/characters — style.css, index.html",
+      "impact": "low",
+      "files": [
+        "playground/characters/style/style.css",
+        "playground/characters/index.html"
+      ],
+      "why": "arena.css + scene-codex.css changes were committed but browsers were serving stale cached @import versions — query param bumps force re-fetch."
+    },
+    {
+      "hash": "0db139f",
+      "date": "2026-05-13",
+      "message": "fix(arena): remove scene-codex.css bubble+rp overrides; fix curly-quote speech detection",
+      "scope": "playground/characters — scene-codex.css, ui.js",
+      "impact": "high",
+      "files": [
+        "playground/characters/style/scene-codex.css",
+        "playground/characters/script/modules/ui.js"
+      ],
+      "why": "scene-codex.css had stale .message--bot/.message--user .message__bubble rules loaded after arena.css — killing dark glass gradient and gold speech colour. Speech regex only matched straight quotes but LLMs output curly/smart quotes; unified to [\"\"…\"\"] char class."
+    },
+    {
+      "hash": "2408429",
+      "date": "2026-05-13",
+      "message": "feat(arena): chat bubble overhaul — RP layers, entry animations, streaming indicator",
       "scope": "playground/characters — arena.css, responsive.css, ui.js",
       "impact": "high",
       "files": [
