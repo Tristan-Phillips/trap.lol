@@ -232,7 +232,10 @@ function renderMarkdown(text) {
             return `<p>${esc(text).replace(/\n/g, '<br>')}</p>`;
         }
 
-        // Restore RP spans after sanitisation (DOMPurify never sees them)
+        // DEBUG — remove after confirming
+        if (rpTokens.length) console.log('[rp] tokens:', rpTokens.length, '| pre-flush snippet:', html.slice(0, 300));
+        // Restore RP spans — DOMPurify may entity-encode « » → &laquo;/&raquo;
+        html = html.replace(/&laquo;rp(\d+)&raquo;/g, '\xABrp$1\xBB');
         html = rpFlush(html);
 
         // Paragraphs that are purely narration (no rp-speech, no em) → rp-narration class
