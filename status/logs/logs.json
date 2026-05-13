@@ -471,7 +471,7 @@
   },
   "commits": [
     {
-      "hash": "PENDING",
+      "hash": "37c6eb5",
       "date": "2026-05-13",
       "message": "feat(characters): group chat overhaul — random mode, overlord scene gen, LLM world questions, group image context, image eye-toggle, portrait blur slider",
       "scope": "playground/characters — ui.js, image-engine.js, index.html, char-editor.css, chat.css",
