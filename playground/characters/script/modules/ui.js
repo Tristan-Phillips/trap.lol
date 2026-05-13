@@ -198,36 +198,27 @@ function renderMarkdown(text) {
             return '<p>' + esc(text).replace(/\n/g, '<br>') + '</p>';
         }
 
-        // 3. Post-sanitise RP injection — operate on text nodes only (between > and <)
-        //    Replace patterns that appear in text content, not inside HTML tags.
+        // 3. Post-sanitise RP injection via RegExp constructors (no literal quote chars — editor auto-curls them)
+        // U+0022 = straight “    U+201C = left curly “    U+201D = right curly “
+        // U+2018 = left curly '  U+2019 = right curly '
 
-        // Speech: “double-quoted” — straight U+0022, curly U+201C/D, &quot; (marked may encode straight quotes)
-        html = html.replace(/>([^<]*)</g, (match, textNode) => {
-            const replaced = textNode
-                // &quot;...&quot; — marked entity-encodes straight quotes
-                .replace(/&quot;((?:[^<]){2,}?)&quot;/g,
-                    (_, inner) => '<span class=”rp-speech”>“' + inner + '”</span>')
-                // “curly open” … “curly close”
-                .replace(/“((?:[^“”<]){2,}?)”/g,
-                    (_, inner) => '<span class=”rp-speech”>“' + inner + '”</span>')
-                // straight “...”
-                .replace(/”((?:[^”<\n]){2,}?)”/g,
-                    (_, inner) => '<span class=”rp-speech”>“' + inner + '”</span>');
-            return '>' + replaced + '<';
-        });
+        // Any open-quote char followed by content followed by any close-quote char
+        const Q  = '\\u0022\\u201C\\u201D\\u2018\\u2019'; // all quote chars (open or close)
+        const NQ = '[^\\u0022\\u201C\\u201D\\u2018\\u2019<\\n]'; // not a quote, <, or newline
+        const speechRe  = new RegExp('[' + Q + '](' + NQ + '{2,}?)[' + Q + ']', 'g');
+        // &quot; variant — marked entity-encodes straight “ when inside certain contexts
+        const quotedEntRe = /&quot;((?:[^<]){2,}?)&quot;/g;
+        const thoughtRe = /(?<![_\w])_((?:[^_\n]){2,}?)_(?![_\w])/g;
+        const tagRe     = /\[([A-Z][A-Z0-9 _\-]{0,24}(?:\s+[\d\w%\/.\-]{1,12})?)\]/g;
 
-        // Thought: _underscore wrapped_ (only in text nodes, not already inside tags)
-        html = html.replace(/>([^<]*)</g, (match, textNode) => {
-            const replaced = textNode.replace(/(?<![_\w])_((?:[^_\n]){2,}?)_(?![_\w])/g,
-                (_, inner) => '<span class=”rp-thought”>' + inner + '</span>');
-            return '>' + replaced + '<';
-        });
-
-        // Status tags: [ALL CAPS] or [ALL CAPS value]
-        html = html.replace(/>([^<]*)</g, (match, textNode) => {
-            const replaced = textNode.replace(/\[([A-Z][A-Z0-9 _\-]{0,24}(?:\s+[\d\w%\/\.\-]{1,12})?)\]/g,
-                (_, inner) => '<span class=”rp-tag”>' + esc(inner) + '</span>');
-            return '>' + replaced + '<';
+        // Run all replacements in a single text-node pass
+        html = html.replace(/>([^<]+)</g, (_, textNode) => {
+            let t = textNode;
+            t = t.replace(quotedEntRe, (__, inner) => '<span class=”rp-speech”>“' + inner + '”</span>');
+            t = t.replace(speechRe,    (__, inner) => '<span class=”rp-speech”>“' + inner + '”</span>');
+            t = t.replace(thoughtRe,   (__, inner) => '<span class=”rp-thought”>' + inner + '</span>');
+            t = t.replace(tagRe,       (__, inner) => '<span class=”rp-tag”>' + esc(inner) + '</span>');
+            return '>' + t + '<';
         });
 
         // Narration paragraphs — no speech/thought/em inside → dim lavender class
