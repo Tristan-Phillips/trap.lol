@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.3.6",
+    "schema_version": "1.3.7",
     "last_updated": "2026-05-13",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -470,6 +470,58 @@
     ]
   },
   "commits": [
+    {
+      "hash": "PENDING",
+      "date": "2026-05-13",
+      "message": "feat(characters): group chat overhaul — random mode, overlord scene gen, LLM world questions, group image context, image eye-toggle, portrait blur slider",
+      "scope": "playground/characters — ui.js, image-engine.js, index.html, char-editor.css, chat.css",
+      "impact": "high",
+      "files": [
+        "playground/characters/script/modules/ui.js",
+        "playground/characters/script/modules/image-engine.js",
+        "playground/characters/index.html",
+        "playground/characters/style/char-editor.css",
+        "playground/characters/style/chat.css",
+        "status/logs/logs.json"
+      ],
+      "why": "Group chats felt like broken 1-on-1 chats — all characters fired first_mes at once, no random mode existed, world questions were static, and images ignored group context entirely."
+    },
+    {
+      "hash": "da44401",
+      "date": "2026-05-13",
+      "message": "fix(ui): build all speech/thought regexes via RegExp constructor with \\uXXXX escapes",
+      "scope": "playground/characters — ui.js",
+      "impact": "high",
+      "files": ["playground/characters/script/modules/ui.js"],
+      "why": "VSCode silently auto-curled straight \" into typographic \" in regex literals — RegExp constructor with \\uXXXX is the only safe way to include quote chars."
+    },
+    {
+      "hash": "df02d3d",
+      "date": "2026-05-13",
+      "message": "refactor(ui): rewrite renderMarkdown — post-DOMPurify injection, no token system",
+      "scope": "playground/characters — ui.js",
+      "impact": "high",
+      "files": ["playground/characters/script/modules/ui.js"],
+      "why": "Pre-tokenise approach had three failure points (editor curling, DOMPurify guillemet encoding, esc() double-encoding) — post-DOMPurify text-node injection eliminates all of them."
+    },
+    {
+      "hash": "797cdec",
+      "date": "2026-05-13",
+      "message": "debug(ui): decode DOMPurify-encoded guillemets before rpFlush; add token log",
+      "scope": "playground/characters — ui.js",
+      "impact": "low",
+      "files": ["playground/characters/script/modules/ui.js"],
+      "why": "DOMPurify entity-encodes « (U+00AB) to &laquo; in text nodes — needed decode pass to restore placeholders before flush regex could match them."
+    },
+    {
+      "hash": "3ed6378",
+      "date": "2026-05-13",
+      "message": "fix(ui): use RegExp constructor for speech quote detection — editor was auto-curling literals",
+      "scope": "playground/characters — ui.js",
+      "impact": "medium",
+      "files": ["playground/characters/script/modules/ui.js"],
+      "why": "Speech detection regex with literal \" chars never matched because VS Code converted them to curly quotes on save."
+    },
     {
       "hash": "9867353",
       "date": "2026-05-13",
@@ -1163,6 +1215,24 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-13",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Group chat overhaul across 6 feature areas. Added: random turn mode with @mention override (1-2 char random replies); portrait blur slider in tint popup (per-chat, saves to chat config); eye-toggle on generated images (dims to near-invisible, reversible); Overlord 'Generate with AI' button in group wizard that drafts opening scene via LLM; LLM-generated character-aware world questions replacing static bank; group context in image prompt builder (all participants + relationships). Also suppressed per-character first_mes firing on group creation — opening scene flow replaces it.",
+      "decisions": [
+        "Random mode picks 1 bot with 40% chance of a second; @mentions always guarantee inclusion + optionally pull in one extra random bot.",
+        "Isekai questions are generated fresh per unique character set — cached by character ID signature so tab re-entry doesn't refetch.",
+        "LLM world question fallback to static bank on API failure so wizard never shows empty questions.",
+        "Image prompt builder detects group chat (state.activeBotIds.length > 1 && chat.type === 'group') and passes _buildGroupContext instead of single-char context.",
+        "Portrait blur slider added to tint popup as 0–80px range; updateCinematicBackground now reads portraitBlur from chat config instead of hardcoded 45px.",
+        "Per-character first_mes suppressed in groups entirely — too many characters firing simultaneously breaks group immersion."
+      ],
+      "rules_reinforced": [
+        "VSCode auto-curls straight \" in string/regex literals — always use RegExp constructor with \\uXXXX for quote patterns.",
+        "All 14 commits from previous speech-colour debug session were local-only — always verify push status when testing on production (GitHub Pages)."
+      ]
+    },
     {
       "date": "2026-05-13",
       "agent": "Claude Sonnet 4.6",

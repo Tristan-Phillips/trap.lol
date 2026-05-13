@@ -17,7 +17,7 @@ import {
     addReaction, getReactions, exportSessionJson, importSessionJson
 } from './state.js';
 import { resolveImageUrl, saveImageBlob, deleteImageBlob, isIdbImageRef, idbImageRefId, isDataUrl } from './storage.js';
-import { buildPayload, streamCompletion } from './llm-engine.js';
+import { buildPayload, streamCompletion, fetchCompletion } from './llm-engine.js';
 import { parseCommand, executeCommand, filterCommands, COMMANDS } from './commands.js';
 import { IMAGE_MODELS, DEFAULT_MODEL, buildImagePrompt, generateImagePromptWithLLM, describeSceneWithLLM, generateImage, VIDEO_MODELS, generateVideo, generateVideoPromptWithLLM } from './image-engine.js';
 import { addBook, removeBook, addEntry, updateEntry, removeEntry, createBook, scanLorebooks } from './lorebook.js';
@@ -1085,6 +1085,8 @@ export function initUI() {
     function openThreadSetup(mode = 'dm') {
         _tsSelectedIds.clear();
         _tsCurrentTab = 0;
+        _isekaiGenSig = '';
+        _isekaiGenRunning = false;
 
         const $modal = qs('#modal-thread-setup');
 
@@ -1219,6 +1221,8 @@ export function initUI() {
                 _tsUpdateFooter();
                 // Refresh group dynamic content if group tab is active
                 if (_tsMode === 'group' && TS_TABS[_tsCurrentTab] === 'group') {
+                    // Force re-gen questions when character set changes
+                    _isekaiGenSig = '';
                     _tsRenderIsekaiQuestions();
                     _tsRenderRelGrid();
                 }
@@ -1347,26 +1351,109 @@ export function initUI() {
         }
     }
 
-    // ── Isekai world-binding questions (populated on group tab entry) ──────────
-    function _tsRenderIsekaiQuestions() {
+    // ── Isekai world-binding questions (LLM-generated per character selection) ──
+    let _isekaiGenSig = '';     // "id1|id2|…" of the last successful gen
+    let _isekaiGenRunning = false;
+
+    async function _tsRenderIsekaiQuestions(force = false) {
         const $container = qs('#ts-isekai-questions');
         if (!$container) return;
         if (_tsSelectedIds.size === 0) {
             $container.innerHTML = '<div class="ts-isekai-placeholder">Select characters first — world questions appear here based on who you\'ve invited.</div>';
+            _isekaiGenSig = '';
             return;
         }
-        // Determine which question set to show based on chars selected
-        // Show all by default; in future can filter by character tags/genres
+
+        // Preserve any already-filled answers before re-render
         const existing = {};
         qsa('.ts-isekai-field', $container).forEach(f => {
-            existing[f.dataset.key] = f.value;
+            if (f.value.trim()) existing[f.dataset.key] = f.value;
         });
-        $container.innerHTML = _ISEKAI_QUESTIONS.map(q => `
-            <div class="ts-field-group">
-                <label class="ts-label">${esc(q.label)}</label>
-                <textarea class="control-textarea ts-textarea ts-isekai-field" data-key="${esc(q.key)}" rows="2"
-                    placeholder="${esc(q.placeholder)}">${esc(existing[q.key] || '')}</textarea>
-            </div>`).join('');
+
+        const sig = Array.from(_tsSelectedIds).sort().join('|');
+
+        // If same chars and not forced, just re-render with existing answers (no API call)
+        if (!force && sig === _isekaiGenSig) {
+            // Just re-paint with whatever questions are already there — no-op if already rendered
+            return;
+        }
+
+        if (_isekaiGenRunning) return;
+        _isekaiGenRunning = true;
+
+        $container.innerHTML = '<div class="ts-isekai-placeholder ts-isekai-placeholder--generating"><i data-lucide="loader-2"></i> Crafting world questions for these characters…</div>';
+        lucideRefresh($container);
+
+        try {
+            // Load all cards first
+            await Promise.all(Array.from(_tsSelectedIds).map(id => loadCharacterCard(id)));
+
+            const charSummaries = Array.from(_tsSelectedIds).map(id => {
+                const card = state.loadedCharacters[id];
+                const meta = state.characters.find(c => c.id === id);
+                const name = card?.name || meta?.name || id;
+                const tags = [card?.world, card?.tags].filter(Boolean).join(', ');
+                const personality = (card?.personality || card?.description || '').slice(0, 200).trim();
+                return `${name}${tags ? ` [${tags}]` : ''}${personality ? ': ' + personality : ''}`;
+            }).join('\n');
+
+            const scenario = qs('#ts-scenario-text')?.value.trim()
+                || state.reality?.worldConfig?.scenario || '';
+
+            const promptText = [
+                `You are designing a roleplay group chat setup wizard.`,
+                `The following characters have been selected:`,
+                charSummaries,
+                scenario ? `The scenario/world: ${scenario}` : '',
+                ``,
+                `Generate exactly 5 short, specific, evocative world-binding questions that will help the player define the context of this group encounter.`,
+                `The questions should feel tailored to THESE specific characters — not generic fantasy tropes.`,
+                `Each question should draw out: setting, relationships, tension, motivation, or stakes — specific to this group.`,
+                ``,
+                `Respond ONLY with a JSON array of 5 objects, no markdown fences:`,
+                `[`,
+                `  {"key":"q1","label":"Short question label","placeholder":"An evocative example answer (2–6 words)"},`,
+                `  ...`,
+                `]`,
+                `Keys must be: q1, q2, q3, q4, q5. Labels max 60 chars. Placeholders max 60 chars.`
+            ].filter(Boolean).join('\n');
+
+            const payload = {
+                model:    state.config.model || 'deepseek-r1',
+                messages: [{ role: 'user', content: promptText }],
+                max_tokens:  600,
+                temperature: 0.82,
+            };
+
+            const { text } = await fetchCompletion(payload);
+
+            // Parse the JSON response — strip any accidental markdown wrapping
+            const cleaned = text.replace(/^```[a-z]*\n?/i, '').replace(/```\s*$/, '').trim();
+            const questions = JSON.parse(cleaned);
+
+            if (!Array.isArray(questions) || !questions.length) throw new Error('Bad response format');
+
+            _isekaiGenSig = sig;
+            $container.innerHTML = questions.map(q => `
+                <div class="ts-field-group">
+                    <label class="ts-label">${esc(q.label)}</label>
+                    <textarea class="control-textarea ts-textarea ts-isekai-field" data-key="${esc(q.key)}" rows="2"
+                        placeholder="${esc(q.placeholder)}">${esc(existing[q.key] || '')}</textarea>
+                </div>`).join('');
+
+        } catch (e) {
+            console.warn('[isekai questions] LLM failed, falling back to static', e);
+            // Fall back to static question bank
+            _isekaiGenSig = sig;
+            $container.innerHTML = _ISEKAI_QUESTIONS.map(q => `
+                <div class="ts-field-group">
+                    <label class="ts-label">${esc(q.label)}</label>
+                    <textarea class="control-textarea ts-textarea ts-isekai-field" data-key="${esc(q.key)}" rows="2"
+                        placeholder="${esc(q.placeholder)}">${esc(existing[q.key] || '')}</textarea>
+                </div>`).join('');
+        } finally {
+            _isekaiGenRunning = false;
+        }
     }
 
     // ── Relationship web (char-pair rows with relationship label) ─────────────
@@ -1411,6 +1498,87 @@ export function initUI() {
                     placeholder="e.g. Rivals with unspoken respect, former lovers, sworn enemies…">
             </div>`;
         }).join('');
+    }
+
+    async function _tsGenerateOpeningScene() {
+        const $btn     = qs('#ts-gen-scene-btn');
+        const $ta      = qs('#ts-group-intro');
+        if (!$ta) return;
+
+        if (!_tsSelectedIds.size) { showToast('Select characters first', 'warn'); return; }
+
+        $btn && ($btn.disabled = true, $btn.innerHTML = '<i data-lucide="loader-2"></i> Generating…');
+        if ($btn) lucideRefresh($btn);
+
+        try {
+            // Build a condensed character manifest for the prompt
+            const charLines = [];
+            for (const id of _tsSelectedIds) {
+                await loadCharacterCard(id);
+                const meta = state.characters.find(c => c.id === id);
+                const card = state.loadedCharacters[id];
+                const name = card?.name || meta?.name || id;
+                const desc = (card?.description || card?.personality || '').slice(0, 300).trim();
+                const world = card?.world || '';
+                charLines.push(`${name}${world ? ` (from: ${world})` : ''}${desc ? ' — ' + desc : ''}`);
+            }
+
+            // Collect isekai answers
+            const isekaiParts = [];
+            qsa('.ts-isekai-field').forEach(f => {
+                const q = _ISEKAI_QUESTIONS.find(q => q.key === f.dataset.key);
+                const v = f.value.trim();
+                if (q && v) isekaiParts.push(`${q.label}: ${v}`);
+            });
+
+            const scenario = qs('#ts-scenario-text')?.value.trim()
+                || state.reality?.worldConfig?.scenario
+                || '';
+
+            const userName = qs('#ts-user-name')?.value.trim() || state.config.userName || 'the player';
+
+            const prompt = [
+                `Write an atmospheric, narrator-voice opening scene for a group roleplay.`,
+                ``,
+                `CHARACTERS PRESENT:\n${charLines.map(l => `  • ${l}`).join('\n')}`,
+                scenario ? `WORLD / SCENARIO:\n${scenario}` : '',
+                isekaiParts.length ? `WORLD CONTEXT:\n${isekaiParts.map(p => `  ${p}`).join('\n')}` : '',
+                `THE PLAYER IS: ${userName}`,
+                ``,
+                `RULES:`,
+                `- 2–4 vivid paragraphs, no dialogue`,
+                `- Third-person omniscient narrator voice`,
+                `- Ground the reader in place, atmosphere, and who is here`,
+                `- Hint at the tensions and dynamics without resolving them`,
+                `- End on a moment that invites action — leave it open`,
+                `- Do not address the player directly`,
+                `- No meta-commentary, no "in this story…" framing`,
+            ].filter(Boolean).join('\n');
+
+            const payload = {
+                model:    state.config.model || 'deepseek-r1',
+                messages: [
+                    { role: 'system', content: 'You are a master narrative writer for immersive roleplay. Write vivid, grounded, evocative scene-setting prose. Do not explain your writing.' },
+                    { role: 'user',   content: prompt }
+                ],
+                max_tokens:  600,
+                temperature: 0.88,
+            };
+
+            const { text } = await fetchCompletion(payload);
+            if (text) {
+                $ta.value = text.trim();
+                showToast('Opening scene drafted — edit freely', 'success', 3000);
+            }
+        } catch (e) {
+            showToast(`Scene gen failed: ${e.message}`, 'error', 5000);
+        } finally {
+            if ($btn) {
+                $btn.disabled = false;
+                $btn.innerHTML = '<i data-lucide="sparkles"></i> Generate with AI';
+                lucideRefresh($btn);
+            }
+        }
     }
 
     async function _tsCommit() {
@@ -1541,8 +1709,8 @@ export function initUI() {
             }
         }
 
-        // First messages
-        if (!state.history.length || (_tsMode === 'group' && gc?.groupIntro)) {
+        // First messages — suppress in group chats entirely (opening scene + chat flow handles it)
+        if (_tsMode !== 'group' && !state.history.length) {
             for (const botId of botIds) {
                 const char = state.loadedCharacters[botId];
                 const meta = state.characters.find(c => c.id === botId);
@@ -1560,6 +1728,7 @@ export function initUI() {
     qs('#ts-close')?.addEventListener('click',   () => hideModal('modal-thread-setup'));
     qs('#ts-cancel')?.addEventListener('click',  () => hideModal('modal-thread-setup'));
     qs('#modal-thread-setup .modal__backdrop')?.addEventListener('click', () => hideModal('modal-thread-setup'));
+    qs('#ts-gen-scene-btn')?.addEventListener('click', _tsGenerateOpeningScene);
 
     // Mode toggle (DM / Group pill)
     qsa('.ts-mode-btn').forEach(btn => {
@@ -2256,10 +2425,14 @@ export function initUI() {
         const bgCfg = state.config.chatBackground;
         if (bgCfg?.preset || bgCfg?.url) return;
         if (path) {
+            const blur   = state.chat?.config?.portraitBlur ?? 45;
+            const bright = bgCfg?.bright ?? 30;
             $bg.style.backgroundImage = `url(${path})`;
+            $bg.style.filter = `blur(${blur}px) brightness(${bright / 100}) saturate(1.3)`;
             $bg.classList.add('arena__bg--visible');
         } else {
             $bg.style.backgroundImage = 'none';
+            $bg.style.filter = '';
             $bg.classList.remove('arena__bg--visible');
         }
     }
@@ -2345,6 +2518,7 @@ export function initUI() {
 
             const currentColor = state.chat?.config?.tintColor || null;
             const currentOpacity = state.chat?.config?.tintOpacity ?? 18;
+            const currentBlur = state.chat?.config?.portraitBlur ?? 45;
 
             $popup = document.createElement('div');
             $popup.className = 'chat-bg-popup';
@@ -2362,6 +2536,11 @@ export function initUI() {
                     <span class="chat-bg-popup__label">Opacity</span>
                     <input type="range" min="5" max="50" value="${currentOpacity}" id="tint-opacity-slider">
                     <span id="tint-opacity-val">${currentOpacity}%</span>
+                </div>
+                <div class="chat-bg-popup__opacity">
+                    <span class="chat-bg-popup__label">Portrait blur</span>
+                    <input type="range" min="0" max="80" value="${currentBlur}" id="tint-blur-slider">
+                    <span id="tint-blur-val">${currentBlur}px</span>
                 </div>`;
 
             const rect = anchor.getBoundingClientRect();
@@ -2393,6 +2572,23 @@ export function initUI() {
                 state.chat.config.tintOpacity = v;
                 saveState();
                 applyChatTint();
+            });
+
+            const $blurSlider = $popup.querySelector('#tint-blur-slider');
+            const $blurVal    = $popup.querySelector('#tint-blur-val');
+            $blurSlider?.addEventListener('input', () => {
+                const v = parseInt($blurSlider.value);
+                if ($blurVal) $blurVal.textContent = v + 'px';
+                if (!state.chat) return;
+                if (!state.chat.config) state.chat.config = {};
+                state.chat.config.portraitBlur = v;
+                saveState();
+                // Apply immediately to arena background
+                const $bg = qs('#arena-background');
+                if ($bg?.classList.contains('arena__bg--visible')) {
+                    const bright = state.config.chatBackground?.bright ?? 30;
+                    $bg.style.filter = `blur(${v}px) brightness(${bright / 100}) saturate(1.3)`;
+                }
             });
         };
 
@@ -5300,6 +5496,7 @@ export function initUI() {
                     <div class="img-msg__frame">
                         <img src="${esc(dataUrl)}" class="img-msg__img" loading="lazy" alt="Generated image">
                         <div class="img-msg__overlay">
+                            <button class="img-msg__btn img-msg__btn--hide" data-action="hide" title="Hide image"><i data-lucide="eye-off"></i></button>
                             <button class="img-msg__btn" data-action="expand" title="View full size"><i data-lucide="expand"></i></button>
                             <button class="img-msg__btn" data-action="download" title="Download"><i data-lucide="download"></i></button>
                             <button class="img-msg__btn" data-action="gallery" title="Save to gallery"><i data-lucide="image-plus"></i></button>
@@ -5312,6 +5509,16 @@ export function initUI() {
                     </div>
                 </div>
             </div>`;
+
+        // Hide/show toggle — dims the image frame to near-invisible; re-click to restore
+        qs('[data-action="hide"]', $el).addEventListener('click', () => {
+            const $frame = $el.querySelector('.img-msg__frame');
+            const $btn   = $el.querySelector('[data-action="hide"]');
+            const hidden = $frame.classList.toggle('img-msg__frame--hidden');
+            $btn.title = hidden ? 'Show image' : 'Hide image';
+            $btn.innerHTML = hidden ? '<i data-lucide="eye"></i>' : '<i data-lucide="eye-off"></i>';
+            lucideRefresh($btn);
+        });
 
         // Expand — open in lightbox overlay (reuse inline lightbox)
         qs('[data-action="expand"]', $el).addEventListener('click', () => {
@@ -6341,18 +6548,46 @@ export function initUI() {
         const mode = state.chat?.threadConfig?.groupTurnMode || state.config.groupTurnMode || 'auto';
         const bots = state.activeBotIds;
         let respondingBots;
+
+        // Parse @mentions from user message — match @Name (case-insensitive, stops at space/punct)
+        const mentionRe = /@([\w\-']+(?:\s[\w\-']+)?)/gi;
+        const mentionMatches = [...(text.matchAll(mentionRe))].map(m => m[1].toLowerCase().trim());
+        const mentionedBots = mentionMatches.length
+            ? bots.filter(id => {
+                const name = (state.characters.find(c => c.id === id)?.name || '').toLowerCase();
+                return mentionMatches.some(m => name.startsWith(m) || m.startsWith(name.split(' ')[0]));
+            })
+            : [];
+
         if (bots.length <= 1 || mode === 'manual' || mode === 'player-driven') {
             // manual / player-driven: only the active (user-selected) bot speaks
-            respondingBots = [state.activeBotId];
+            respondingBots = mentionedBots.length ? mentionedBots : [state.activeBotId];
         } else if (mode === 'round-robin') {
             // One bot per turn, cycling through the roster in order
             const sid = state.chat.id;
             if (_rrIndex[sid] === undefined) _rrIndex[sid] = 0;
             const idx = _rrIndex[sid] % bots.length;
-            respondingBots = [bots[idx]];
+            respondingBots = mentionedBots.length ? mentionedBots : [bots[idx]];
             _rrIndex[sid] = (idx + 1) % bots.length;
+        } else if (mode === 'random') {
+            // Random: pick 1-2 characters. @mentions guarantee inclusion.
+            if (mentionedBots.length) {
+                // Mentioned bots always respond; add one random non-mentioned if pool allows
+                const pool = bots.filter(id => !mentionedBots.includes(id));
+                if (pool.length && Math.random() > 0.45) {
+                    const extra = pool[Math.floor(Math.random() * pool.length)];
+                    respondingBots = [...mentionedBots, extra];
+                } else {
+                    respondingBots = mentionedBots;
+                }
+            } else {
+                // No mentions — pick 1 bot, 40% chance of a second
+                const shuffled = [...bots].sort(() => Math.random() - 0.5);
+                respondingBots = [shuffled[0]];
+                if (shuffled.length > 1 && Math.random() < 0.40) respondingBots.push(shuffled[1]);
+            }
         } else {
-            // auto: all bots respond sequentially
+            // auto: all bots respond sequentially (respect @mentions to also always include them first)
             respondingBots = bots;
         }
 

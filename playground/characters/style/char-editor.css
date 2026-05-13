@@ -1422,12 +1422,33 @@
     line-height: 1.5;
 }
 
+.ts-gen-scene-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    background: rgba(168,85,247,0.12);
+    border: 1px solid rgba(168,85,247,0.28);
+    border-radius: 5px;
+    color: #c4b5fd;
+    font-size: 0.72rem;
+    font-family: var(--font-mono, monospace);
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    white-space: nowrap;
+}
+.ts-gen-scene-btn:hover { background: rgba(168,85,247,0.22); border-color: rgba(168,85,247,0.5); color: #e9d5ff; }
+.ts-gen-scene-btn:disabled { opacity: 0.45; pointer-events: none; }
+.ts-gen-scene-btn svg, .ts-gen-scene-btn i { width: 12px; height: 12px; }
+
 /* ── Radio card grid ── */
 .ts-radio-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 8px;
 }
+.ts-radio-grid--4 { grid-template-columns: repeat(4, 1fr); }
 .ts-radio-grid--3 { grid-template-columns: repeat(3, 1fr); }
 .ts-radio-grid--2 { grid-template-columns: 1fr 1fr; }
 
@@ -1499,6 +1520,18 @@
     color: rgba(180,160,210,0.35);
     font-style: italic;
     padding: 12px 0;
+}
+.ts-isekai-placeholder--generating {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: rgba(168,85,247,0.55);
+    font-style: normal;
+}
+.ts-isekai-placeholder--generating svg,
+.ts-isekai-placeholder--generating i {
+    width: 13px; height: 13px;
+    animation: spin 0.9s linear infinite;
 }
 
 /* ── Relationship grid ── */
@@ -1575,6 +1608,7 @@
 @media (max-width: 640px) {
     .ts-radio-grid { grid-template-columns: 1fr; }
     .ts-radio-grid--3 { grid-template-columns: 1fr 1fr; }
+    .ts-radio-grid--4 { grid-template-columns: 1fr 1fr; }
     .ts-mode-toggle { gap: 0; }
     .ts-mode-btn { padding: 4px 10px; font-size: 0.68rem; }
 }

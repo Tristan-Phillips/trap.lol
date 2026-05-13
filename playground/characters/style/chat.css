@@ -410,6 +410,12 @@
 .img-msg__btn--danger:hover { background: rgba(239,68,68,0.55); border-color: #ef4444; }
 .img-msg__btn:disabled { opacity: 0.4; pointer-events: none; }
 
+/* Hidden image state — frame dims to near-transparent; overlay stays accessible */
+.img-msg__frame--hidden .img-msg__img { opacity: 0.06; filter: blur(8px); transition: opacity 0.3s, filter 0.3s; }
+.img-msg__frame--hidden .img-msg__overlay { opacity: 1; }
+.img-msg__btn--hide { order: -1; }
+.img-msg__frame--hidden .img-msg__btn--hide { border-color: rgba(var(--accent-rgb),0.5); color: var(--theme-accent); }
+
 .img-msg__footer {
     display: flex;
     align-items: baseline;

@@ -480,6 +480,48 @@ function _buildCharContext(charId, opts = {}) {
     return { charName, context: lines.join('\n\n') };
 }
 
+// ── Group context builder ─────────────────────────────────────────────────────
+function _buildGroupContext(charIds, opts = {}) {
+    const { includeNsfw = true } = opts;
+    const gc = state.chat?.groupConfig;
+    const sections = [];
+
+    sections.push(`GROUP SCENE — ${charIds.length} CHARACTERS PRESENT:`);
+
+    charIds.forEach(id => {
+        const { context } = _buildCharContext(id, { includeNsfw, includeHistory: false });
+        sections.push(context);
+    });
+
+    // Relationship web from groupConfig
+    if (gc?.relationships) {
+        const relLines = [];
+        for (const [idA, bMap] of Object.entries(gc.relationships)) {
+            for (const [idB, desc] of Object.entries(bMap)) {
+                const nameA = state.characters.find(c => c.id === idA)?.name || idA;
+                const nameB = state.characters.find(c => c.id === idB)?.name || idB;
+                relLines.push(`  ${nameA} ↔ ${nameB}: ${desc}`);
+            }
+        }
+        if (relLines.length) sections.push('RELATIONSHIPS:\n' + relLines.join('\n'));
+    }
+
+    // Recent history (last few turns across all characters)
+    const userName = state.config.userName || 'User';
+    if (state.history?.length) {
+        const recent = state.history.slice(-8);
+        const transcript = recent
+            .filter(m => m.role === 'user' || m.role === 'bot')
+            .map(m => {
+                const char = m.role === 'bot' ? (state.characters.find(c => c.id === m.botId)?.name || 'Character') : userName;
+                return `  ${char}: ${m.content.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 200)}`;
+            }).join('\n');
+        if (transcript) sections.push('RECENT SCENE:\n' + transcript);
+    }
+
+    return sections.join('\n\n');
+}
+
 // ── LLM-assisted prompt generation ───────────────────────────────────────────
 // Reads char JSON + scene builder state + optional chat history and asks the
 // LLM to write a clean, visually-accurate image generation prompt.
@@ -497,7 +539,13 @@ export async function generateImagePromptWithLLM(opts = {}) {
     const override = charId ? getCharOverride(charId) : {};
     const llmModel = override.modelOverride || state.config.model || 'deepseek-r1';
 
-    const { context } = _buildCharContext(charId, { includeNsfw, includeHistory: true, historyDepth });
+    // In a group chat with multiple participants, build a combined context for all
+    const activeIds = state.activeBotIds || (charId ? [charId] : []);
+    const isGroup = activeIds.length > 1 && state.chat?.type === 'group';
+
+    const { context } = isGroup
+        ? { context: _buildGroupContext(activeIds, { includeNsfw }) }
+        : _buildCharContext(charId, { includeNsfw, includeHistory: true, historyDepth });
 
     // Scene builder selections — structured list, no raw prose
     const sv2 = (k) => { const v = scene[k]; if (!v) return ''; if (v === '__custom__') return scene[`${k}Custom`] || ''; return String(v); };
@@ -538,6 +586,10 @@ export async function generateImagePromptWithLLM(opts = {}) {
 
     const fullContext = [context, sceneBlock, userBlock].filter(Boolean).join('\n\n');
 
+    const groupNote = isGroup
+        ? `\n- This is a GROUP SCENE with multiple characters — describe all of them together in the frame\n- List each character's name and key visual traits, then describe them as an ensemble\n- Composition should show interaction / spatial relationship between characters`
+        : '';
+
     const systemPrompt = withNegative
         ? `You are a master image prompt engineer for AI art generators (Stable Diffusion, FLUX, HiDream).
 
@@ -558,7 +610,7 @@ POSITIVE PROMPT RULES:
 - End with: masterpiece, best quality, highly detailed, sharp focus, 8k
 - Include explicit anatomy naturally if NSFW level is provided — but as clean keywords, not prose
 - Do NOT invent physical traits not in the character sheet
-- Max 200 words
+- Max 200 words${groupNote}
 
 NEGATIVE PROMPT RULES:
 - Only standard quality/anatomy failure modes
@@ -578,7 +630,7 @@ RULES:
 - End with: masterpiece, best quality, highly detailed, sharp focus, 8k
 - Include explicit anatomy as clean keywords if NSFW level is in the context
 - Do NOT invent traits not present in the character sheet
-- Max 200 words`;
+- Max 200 words${groupNote}`;
 
     const content = await _llmCall({
         model: llmModel,

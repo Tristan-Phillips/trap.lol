@@ -1265,13 +1265,21 @@
         <!-- Turn order -->
         <div class="ts-group-section">
           <div class="ts-group-section__label"><i data-lucide="arrow-right-left"></i> Turn Order</div>
-          <div class="ts-radio-grid ts-radio-grid--3" id="ts-turn-order">
+          <div class="ts-radio-grid ts-radio-grid--4" id="ts-turn-order">
             <label class="ts-radio-card">
               <input type="radio" name="ts-turn" value="auto" checked>
               <div class="ts-radio-card__body">
                 <span class="ts-radio-card__icon">⚡</span>
                 <span class="ts-radio-card__title">Auto</span>
                 <span class="ts-radio-card__desc">All characters respond in sequence after each of your messages.</span>
+              </div>
+            </label>
+            <label class="ts-radio-card">
+              <input type="radio" name="ts-turn" value="random">
+              <div class="ts-radio-card__body">
+                <span class="ts-radio-card__icon">🎲</span>
+                <span class="ts-radio-card__title">Random</span>
+                <span class="ts-radio-card__desc">1–2 characters reply per turn at random. @Name to guarantee a response.</span>
               </div>
             </label>
             <label class="ts-radio-card">
@@ -1328,7 +1336,12 @@
 
         <!-- Group intro override -->
         <div class="ts-group-section">
-          <div class="ts-group-section__label"><i data-lucide="scroll"></i> Opening Scene <span class="ts-hint">optional</span></div>
+          <div class="ts-group-section__label" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;">
+            <span><i data-lucide="scroll"></i> Opening Scene <span class="ts-hint">optional</span></span>
+            <button id="ts-gen-scene-btn" class="ts-gen-scene-btn" title="Draft opening scene with AI using the characters and world answers above">
+              <i data-lucide="sparkles"></i> Generate with AI
+            </button>
+          </div>
           <p class="ts-group-desc">A narrator-voice intro injected as the first system message when the group opens. Sets the scene before anyone speaks.</p>
           <textarea id="ts-group-intro" class="control-textarea ts-textarea" rows="4" placeholder="The tavern falls silent as the three of them exchange glances across the firelit table…"></textarea>
         </div>
