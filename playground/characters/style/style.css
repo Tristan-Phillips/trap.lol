@@ -8,7 +8,7 @@
 
 /* ── Layout Components ── */
 @import './sidebar.css';
-@import './arena.css';
+@import './arena.css?v=2';
 @import './terminal.css';
 @import './chat.css';
 
@@ -34,10 +34,10 @@
 @import './wallhaven.css';
 
 /* ── Scene Codex (god view) + Video Gen ── */
-@import './scene-codex.css';
+@import './scene-codex.css?v=2';
 
 /* ── Image Studio (full-screen generation wizard) ── */
 @import './img-studio.css';
 
 /* ── Responsive (must be last) ── */
-@import './responsive.css';
+@import './responsive.css?v=2';
