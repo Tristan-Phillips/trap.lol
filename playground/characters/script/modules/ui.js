@@ -218,10 +218,10 @@ function renderMarkdown(text) {
         text = text.replace(/(?<![_\w])_([^_\n]{2,}?)_(?![_\w])/g, (_, inner) =>
             rpToken('thought', inner));
 
-        // Quoted speech — straight and curly/smart quotes (LLMs almost always output curly)
-        // Tokenise pre-parse so marked.js can't entity-encode the quote characters
-        text = text.replace(/[“”]((?:[^””\n]){2,}?)[””]/g, (_, inner) =>
-            rpToken('speech', `“${inner}”`));
+        // Quoted speech — straight ASCII “ (U+0022) and curly “ ” in one pass
+        // RegExp constructor used so unicode escapes are unambiguous (editor auto-curls literals)
+        text = text.replace(new RegExp('[\\u0022\\u201C\\u201D]((?:[^\\u0022\\u201C\\u201D\\n]){2,}?)[\\u0022\\u201C\\u201D]', 'g'),
+            (_, inner) => rpToken('speech', '“' + inner + '”'));
 
         // *action/narration* — left for marked.js which converts to <em> natively
         let html = marked.parse(text, { breaks: true, gfm: true });
