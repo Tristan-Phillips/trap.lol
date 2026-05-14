@@ -347,17 +347,9 @@ function buildAIDirectivesBlock(override, charName, flags) {
     const lines = [];
     const add = (label, val) => { if (val && String(val).trim()) lines.push(`${label}: ${val}`); };
 
-    // Prose format map
-    const fmtMap = {
-        'prose': 'pure narrative prose',
-        'dialogue-heavy': 'dialogue-heavy with minimal action beats',
-        'action-prose': 'action beats mixed with prose',
-        'asterisk': 'use *asterisks* for action, plain text for speech',
-        'italics': 'use _italics_ for action, plain text for speech',
-    };
-    if (override.responseFormat && fmtMap[override.responseFormat]) {
-        lines.push(`Response Format: ${fmtMap[override.responseFormat]}`);
-    }
+    // Response format: UFR governs the exact markup — but prose-style hints still apply.
+    // We skip the raw responseFormat injection to avoid conflicting with UFR's tag rules.
+    // (asterisk/italics modes would tell the model to use different syntax than UFR specifies.)
 
     // Prose style
     const styleMap = {
@@ -457,10 +449,63 @@ function buildGroupIsolationBlock(charName, otherChars) {
     return `\n\n[GROUP ISOLATION — CRITICAL]\nYou are EXCLUSIVELY ${charName}. You write ONLY ${charName}'s words, actions, and thoughts. The other characters present (${forbidden}) are controlled by a separate AI process — you MUST NOT write their dialogue, actions, inner thoughts, or any content attributed to them. Do not narrate what other characters do or say in detail — that is the Overlord narrator's job. If another character is mentioned in your response, it must only be through ${charName}'s perception of them, not as authored content for them. Writing as another character will break the roleplay.`;
 }
 
+// ── Build structured player identity block ────────────────────────────────────
+// Replaces the bare "About User: …" paragraph with a proper character-sheet
+// framing so the LLM treats the player as a fully-realised person in the scene.
+function buildPlayerBlock(config, flags) {
+    const userName = config.userName || 'User';
+    const lines    = [];
+
+    // Core persona / background text (free-form, always included if present)
+    if (config.userPersona?.trim()) {
+        lines.push(`Identity: ${config.userPersona.trim()}`);
+    }
+
+    // Structured fields (injected from the player sheet when populated)
+    const add = (label, val) => { if (val && String(val).trim()) lines.push(`${label}: ${val}`); };
+    add('Appearance',     config.playerAppearance);
+    add('Current mood',   config.playerMood);
+    add('Role in scene',  config.playerRole);
+    add('Status',         config.playerStatus);
+
+    if (!lines.length) return '';
+    return `\n\n[THE PLAYER — ${userName.toUpperCase()}]\n${lines.join('\n')}\nTreat ${userName} as a fully-realised person in this world. React to their appearance, mood, and role as you would any character — with genuine awareness, not generic deference.`;
+}
+
 // ── Thought injection directive ───────────────────────────────────────────────
 function buildThoughtsDirective(flags) {
     if (!flag(flags, 'showThoughts', false)) return '';
     return `\n\n[Inner Thoughts]\nWrap ${'{C}'}'s private thoughts in <think>…</think> tags at the start of your response before the spoken/acted reply. These thoughts should be raw, unfiltered, and honest — what ${'{C}'} actually feels versus what they show.`;
+}
+
+// ── Build Overlord scene context for _fireOverlord ───────────────────────────
+// Assembles everything Overlord needs to write contextually-aware narration:
+// scenario tone, character roster, player identity, and current meter readings.
+// Called by ui.js and passed into the Overlord system prompt.
+export function buildOverlordContext({ charNames = [], scenario = '', playerName = 'the player', playerRole = '', playerAppearance = '', meters = {} } = {}) {
+    const charList = charNames.length
+        ? `Characters present: ${charNames.join(', ')}`
+        : '';
+    const playerLine = [
+        `Player: ${playerName}`,
+        playerRole       ? `Role: ${playerRole}`       : '',
+        playerAppearance ? `Appearance: ${playerAppearance}` : '',
+    ].filter(Boolean).join(' | ');
+
+    const meterLines = [];
+    if (meters.tension  != null) meterLines.push(`Tension ${meters.tension}%`);
+    if (meters.intimacy != null) meterLines.push(`Intimacy ${meters.intimacy}%`);
+    if (meters.danger   != null) meterLines.push(`Danger ${meters.danger}%`);
+    const meterStr = meterLines.length ? `Scene meters: ${meterLines.join(', ')}` : '';
+
+    const parts = [
+        scenario    ? `Scenario / tone: ${scenario.slice(0, 300)}` : '',
+        charList,
+        playerLine,
+        meterStr,
+    ].filter(Boolean);
+
+    return parts.join('\n');
 }
 
 // ── Strip <think> from display text, return both ──────────────────────────────
@@ -485,8 +530,10 @@ function buildSystemPrompt(character, config, override, { isGroup = false, other
             .replace(/\{\{char\}\}/gi, charName)
             .replace(/\{\{user\}\}/gi, userName);
         const persistentMemoryOverride = override.persistentMemory || character.persistentMemory;
-        return base
+        return buildUFRDirective(charName, isGroup).trimStart()
+            + '\n\n' + base
             + (persistentMemoryOverride?.trim() ? `\n\n[Character Memory — things ${charName} remembers across all conversations]\n${persistentMemoryOverride.trim()}` : '')
+            + buildPlayerBlock(config, flags)
             + buildConsistencyBlock(override, charName, flags).replace(/\{C\}/g, charName)
             + buildAppearanceBlock(override, charName, flags)
             + buildVoiceBlock(override, charName, flags)
@@ -498,7 +545,6 @@ function buildSystemPrompt(character, config, override, { isGroup = false, other
             + buildThoughtsDirective(flags).replace(/\{C\}/g, charName)
             + buildImpersonationBlock(userName, flags).replace(/\{C\}/g, charName)
             + (isGroup && otherChars.length ? buildGroupIsolationBlock(charName, otherChars) : '')
-            + buildUFRDirective(charName, isGroup)
             + (override.appendToSystem ? `\n\n${override.appendToSystem}` : '')
             + (config.nsfwBypass ? `\n\n${config.nsfwBypass}` : '');
     }
@@ -524,7 +570,6 @@ function buildSystemPrompt(character, config, override, { isGroup = false, other
     if (character.description) sections.push(`Character Persona:\n${character.description}`);
     if (character.personality)  sections.push(`Personality: ${character.personality}`);
     if (character.scenario)     sections.push(`Scenario: ${character.scenario}`);
-    if (config.userPersona)     sections.push(`About ${userName}: ${config.userPersona}`);
 
     // Per-character persistent memory (cross-session facts remembered about this char)
     const persistentMemory = override.persistentMemory || character.persistentMemory;
@@ -532,7 +577,11 @@ function buildSystemPrompt(character, config, override, { isGroup = false, other
         sections.push(`[Character Memory — things ${charName} remembers across all conversations]\n${persistentMemory.trim()}`);
     }
 
-    const fullPrompt = sections.filter(Boolean).join('\n\n')
+    // UFR leads the prompt — the model reads format rules before character identity,
+    // making them harder to override by later creative instructions.
+    const fullPrompt = buildUFRDirective(charName, isGroup).trimStart()
+        + '\n\n' + sections.filter(Boolean).join('\n\n')
+        + buildPlayerBlock(config, flags)
         + buildConsistencyBlock(override, charName, flags).replace(/\{C\}/g, charName)
         + buildAppearanceBlock(override, charName, flags)
         + buildVoiceBlock(override, charName, flags)
@@ -544,7 +593,6 @@ function buildSystemPrompt(character, config, override, { isGroup = false, other
         + buildThoughtsDirective(flags).replace(/\{C\}/g, charName)
         + buildImpersonationBlock(userName, flags).replace(/\{C\}/g, charName)
         + (isGroup && otherChars.length ? buildGroupIsolationBlock(charName, otherChars) : '')
-        + buildUFRDirective(charName, isGroup)
         + (override.appendToSystem ? `\n\n${override.appendToSystem}` : '')
         + (config.nsfwBypass ? `\n\n${config.nsfwBypass}` : '');
 

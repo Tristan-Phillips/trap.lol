@@ -18,7 +18,7 @@ import {
     exportFullInstance, importFullInstance
 } from './state.js';
 import { resolveImageUrl, saveImageBlob, deleteImageBlob, isIdbImageRef, idbImageRefId, isDataUrl } from './storage.js';
-import { buildPayload, streamCompletion, fetchCompletion } from './llm-engine.js';
+import { buildPayload, streamCompletion, fetchCompletion, buildOverlordContext } from './llm-engine.js';
 import { parseCommand, executeCommand, filterCommands, COMMANDS } from './commands.js';
 import { IMAGE_MODELS, DEFAULT_MODEL, buildImagePrompt, generateImagePromptWithLLM, describeSceneWithLLM, generateImage, VIDEO_MODELS, generateVideo, generateVideoPromptWithLLM } from './image-engine.js';
 import { addBook, removeBook, addEntry, updateEntry, removeEntry, createBook, scanLorebooks } from './lorebook.js';
@@ -6227,8 +6227,8 @@ export function initUI() {
 
     // ── Overlord message in thread ────────────────────────────────────────────
     // Renders the narrator/Overlord block — a full-width cinematic band.
-    // mode: 'scene' (default) | 'transition' | 'reaction' | 'moment' | 'recap'
-    // Each mode gets a distinct sub-label and optional icon variant.
+    // mode: 'scene' | 'transition' | 'reaction' | 'moment' | 'recap'
+    //     | 'entrance' | 'whisper' | 'irony'
     function _injectOverlordMessage(content, $target, mode = 'scene') {
         const $t = $target || $thread;
         if (!$t || !content) return;
@@ -6238,6 +6238,9 @@ export function initUI() {
             reaction:   'OVERLORD — ENVIRONMENT',
             moment:     'OVERLORD — MOMENT',
             recap:      'OVERLORD — RECAP',
+            entrance:   'OVERLORD — ENTRANCE',
+            whisper:    'OVERLORD — WHISPER',
+            irony:      'OVERLORD — IRONY',
         };
         const modeIcons = {
             scene:      'eye',
@@ -6245,6 +6248,9 @@ export function initUI() {
             reaction:   'zap',
             moment:     'heart',
             recap:      'book-open',
+            entrance:   'user-plus',
+            whisper:    'ear',
+            irony:      'theater',
         };
         const label = modeLabels[mode] || 'OVERLORD';
         const icon  = modeIcons[mode]  || 'eye';
@@ -6271,37 +6277,57 @@ export function initUI() {
 
     // ── Overlord LLM call helper ──────────────────────────────────────────────
     // Shared async helper to call the LLM with Overlord voice and inject result.
-    // `promptFn` receives { charNames, scenario, histText } and returns the user message string.
+    // `promptFn` receives { charNames, scenario, histText, isGroup, playerName,
+    //   playerRole, playerAppearance, meters } and returns the user message string.
     async function _fireOverlord(mode, promptFn, maxTokens = 400) {
         const key = getApiKey();
         if (!key) throw new Error('API key required');
 
-        const isGroup = state.chat?.type === 'group';
+        const isGroup   = state.chat?.type === 'group';
         const charNames = (state.chat?.botIds || state.activeBotIds || [])
             .map(id => {
                 const ov = getCharOverride(id);
                 return ov?.nickname || state.loadedCharacters[id]?.name || id;
             }).filter(Boolean);
 
-        const scenario = state.reality?.worldConfig?.scenario || state.chat?.threadConfig?.threadScenario || '';
+        const scenario        = state.reality?.worldConfig?.scenario || state.chat?.threadConfig?.threadScenario || '';
+        const playerName      = state.config.userName || 'User';
+        const playerRole      = state.config.playerRole || '';
+        const playerAppearance = state.config.playerAppearance || '';
+
+        // Read live meter values from DOM (source of truth — they're updated by updateCodexMeters)
+        const meters = {
+            tension:  parseInt(qs('#codex-tension-val')?.textContent  || '40', 10),
+            intimacy: parseInt(qs('#codex-intimacy-val')?.textContent || '25', 10),
+            danger:   parseInt(qs('#codex-danger-val')?.textContent   || '15', 10),
+        };
+
         const hist = state.history.filter(m => m.role !== 'image').slice(-14);
         const histText = hist.map(m => {
             const name = m.role === 'user'
-                ? (state.config.userName || 'User')
+                ? playerName
                 : (state.loadedCharacters[m.botId]?.name || 'Character');
             return `${name}: ${m.content?.slice(0, 250)}`;
         }).join('\n');
 
-        const userMsg = promptFn({ charNames, scenario, histText, isGroup });
+        // Rich Overlord scene context — injected into system prompt so every Overlord
+        // call is attuned to the current state of the scene, not just generic narration.
+        const overlordCtx = buildOverlordContext({ charNames, scenario, playerName, playerRole, playerAppearance, meters });
+
+        const overlordSystem = [
+            `You are OVERLORD — the omniscient narrator voice of this collaborative roleplay. You are not any character. You are the unseen author: all-knowing, all-perceiving, writing in present tense with literary, sensory prose.`,
+            `Your voice: cinematic, atmospheric, precise. Never melodramatic. Never generic. Every image you conjure should feel earned and specific to THIS scene, THESE people, THIS moment.`,
+            `Rules you never break:\n• Do NOT write character dialogue or spoken words\n• Do NOT write what characters decide to do — only what the world and atmosphere do\n• Do NOT address the player directly or use second person\n• Do NOT use bullet points or lists — write in continuous prose\n• Keep responses focused: 1-3 paragraphs unless instructed otherwise`,
+            overlordCtx ? `Current scene state:\n${overlordCtx}` : '',
+        ].filter(Boolean).join('\n\n');
+
+        const userMsg = promptFn({ charNames, scenario, histText, isGroup, playerName, playerRole, playerAppearance, meters });
 
         const { text } = await fetchCompletion({
             model: state.config.model || 'deepseek-r1',
             messages: [
-                {
-                    role: 'system',
-                    content: `You are OVERLORD — the omniscient narrator voice in a collaborative roleplay. You are NOT any of the characters. You describe scenes, environments, and transitions with literary, sensory prose. You never speak as a character; you speak as the all-seeing author. Write in present tense. Be vivid, atmospheric, and brief (2-3 paragraphs max). Do not include character dialogue or actions — leave that to the characters themselves.`
-                },
-                { role: 'user', content: userMsg }
+                { role: 'system', content: overlordSystem },
+                { role: 'user',   content: userMsg }
             ],
             max_tokens: maxTokens,
             temperature: 0.82
@@ -7762,8 +7788,12 @@ export function initUI() {
         set('sys-directive',   c.sysDirective);
         set('authors-note',    c.authorsNote);
         set('nsfw-bypass',     c.nsfwBypass);
-        set('user-name-input',    c.userName);
-        set('user-persona-input', c.userPersona);
+        set('user-name-input',       c.userName);
+        set('user-persona-input',    c.userPersona);
+        set('player-appearance',     c.playerAppearance);
+        set('player-mood',           c.playerMood);
+        set('player-role',           c.playerRole);
+        set('player-status',         c.playerStatus);
         set('an-depth-input',  c.authorsNoteDepth);   setBadge('an-depth-val',  c.authorsNoteDepth);
         set('group-delay-input', c.groupAutoDelay);   setBadge('group-delay-val', `${c.groupAutoDelay}ms`);
         set('context-strategy', c.contextStrategy);
@@ -7820,10 +7850,15 @@ export function initUI() {
             saveState();
         }, 300));
     }
-    bindText('authors-note',       'authorsNote');
-    bindText('nsfw-bypass',        'nsfwBypass');
-    bindText('user-name-input',    'userName');
-    bindText('user-persona-input', 'userPersona');
+    bindText('authors-note',          'authorsNote');
+    bindText('nsfw-bypass',           'nsfwBypass');
+    bindText('user-name-input',       'userName');
+    bindText('user-persona-input',    'userPersona');
+    // Player sheet extended fields
+    bindText('player-appearance',     'playerAppearance');
+    bindText('player-mood',           'playerMood');
+    bindText('player-role',           'playerRole');
+    bindText('player-status',         'playerStatus');
 
     qs('#stream-toggle')?.addEventListener('change', e => setConfig({ stream: e.target.checked }));
     qs('#context-strategy')?.addEventListener('change', e => setConfig({ contextStrategy: e.target.value }));
@@ -8347,6 +8382,36 @@ export function initUI() {
         await _fireOverlord('moment', ({ charNames, histText }) =>
             `Narrate the unspoken charged moment between ${charNames.join(' and ')}. Describe the tension, electricity, or vulnerability in the space between them — what the body language, the silence, the air itself says that words don't. 1-2 intimate paragraphs. No dialogue.\n\n${histText}`,
             280
+        );
+    });
+
+    // Codex admin: Overlord narrates a character's entrance into the scene
+    _codexAdminBtn('#codex-overlord-entrance', async () => {
+        if (!getApiKey()) throw new Error('API key required');
+        const enteringChar = state.activeBotId
+            ? (getCharOverride(state.activeBotId)?.nickname || state.loadedCharacters[state.activeBotId]?.name || 'the character')
+            : (state.chat?.botIds?.map(id => getCharOverride(id)?.nickname || state.loadedCharacters[id]?.name).filter(Boolean).join(', ') || 'the character');
+        await _fireOverlord('entrance', ({ scenario, histText }) =>
+            `Write a cinematic entrance narration for ${enteringChar}. Describe how they arrive, how they carry themselves, what their presence does to the air and the space. This is the moment the scene registers their existence. Do not write their dialogue. 1-2 vivid paragraphs.\n\n${scenario ? `Setting: ${scenario.slice(0, 200)}\n\n` : ''}${histText}`,
+            320
+        );
+    });
+
+    // Codex admin: Overlord whispers — something only the player perceives (dramatic irony, aside)
+    _codexAdminBtn('#codex-overlord-whisper', async () => {
+        if (!getApiKey()) throw new Error('API key required');
+        await _fireOverlord('whisper', ({ charNames, histText, playerName }) =>
+            `Whisper something to ${playerName} that only they can perceive — a truth the characters don't know, a detail hidden just beneath the surface, an observation the narrator is sharing privately. This is an aside, a secret shared between the Overlord and the player alone. Keep it brief, intriguing, and intimate. 1 short paragraph.\n\n${histText}`,
+            220
+        );
+    });
+
+    // Codex admin: Overlord injects dramatic irony — reveals something the characters cannot see
+    _codexAdminBtn('#codex-overlord-irony', async () => {
+        if (!getApiKey()) throw new Error('API key required');
+        await _fireOverlord('irony', ({ charNames, histText, scenario }) =>
+            `Write a dramatic irony injection for this scene. Reveal to the reader (not to the characters) something that the characters themselves do not know — a hidden truth, an incoming event, a contradiction between what they believe and what is actually happening. Write as the omniscient narrator stepping briefly outside the characters' perspective. 1-2 paragraphs. Do not address the characters directly.\n\n${scenario ? `Setting: ${scenario.slice(0, 200)}\n\n` : ''}${histText}`,
+            300
         );
     });
 

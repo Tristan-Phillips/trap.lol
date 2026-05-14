@@ -620,6 +620,7 @@
 }
 .config-group--toggle label { margin-bottom: 0; }
 .config-sub-label { text-transform: none; letter-spacing: 0; font-size: 0.65rem; }
+.config-group__hint { text-transform: none; letter-spacing: 0; font-size: 0.6rem; opacity: 0.55; font-weight: 400; }
 .config-hint {
     font-size: 0.68rem;
     color: var(--text-muted);

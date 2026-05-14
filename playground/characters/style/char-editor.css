@@ -1867,6 +1867,30 @@
 .overlord-block--recap .overlord-block__end { color: rgba(99, 102, 241, 0.5); }
 .overlord-block--recap .overlord-block__body { border-left-color: rgba(99, 102, 241, 0.35); font-style: normal; }
 
+/* entrance — emerald green: a presence arriving */
+.overlord-block--entrance .overlord-block__glyph { background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.4); }
+.overlord-block--entrance .overlord-block__glyph svg { color: #10b981; }
+.overlord-block--entrance .overlord-block__label { color: #10b981; letter-spacing: 0.12em; }
+.overlord-block--entrance .overlord-block__line { background: linear-gradient(90deg, rgba(16, 185, 129, 0.6), transparent); }
+.overlord-block--entrance .overlord-block__end { color: rgba(16, 185, 129, 0.5); }
+.overlord-block--entrance .overlord-block__body { border-left-color: rgba(16, 185, 129, 0.35); }
+
+/* whisper — cool slate/silver: a secret shared only with the player */
+.overlord-block--whisper .overlord-block__glyph { background: rgba(148, 163, 184, 0.12); border-color: rgba(148, 163, 184, 0.35); }
+.overlord-block--whisper .overlord-block__glyph svg { color: #94a3b8; }
+.overlord-block--whisper .overlord-block__label { color: #94a3b8; letter-spacing: 0.15em; font-size: 0.65rem; }
+.overlord-block--whisper .overlord-block__line { background: linear-gradient(90deg, rgba(148, 163, 184, 0.4), transparent); }
+.overlord-block--whisper .overlord-block__end { color: rgba(148, 163, 184, 0.4); }
+.overlord-block--whisper .overlord-block__body { border-left-color: rgba(148, 163, 184, 0.25); font-style: italic; opacity: 0.88; }
+
+/* irony — amber-orange: dramatic irony, the author's knowing gaze */
+.overlord-block--irony .overlord-block__glyph { background: rgba(251, 146, 60, 0.15); border-color: rgba(251, 146, 60, 0.4); }
+.overlord-block--irony .overlord-block__glyph svg { color: #fb923c; }
+.overlord-block--irony .overlord-block__label { color: #fb923c; letter-spacing: 0.1em; }
+.overlord-block--irony .overlord-block__line { background: linear-gradient(90deg, rgba(251, 146, 60, 0.6), transparent); }
+.overlord-block--irony .overlord-block__end { color: rgba(251, 146, 60, 0.5); }
+.overlord-block--irony .overlord-block__body { border-left-color: rgba(251, 146, 60, 0.35); }
+
 /* ── AI Choice Picker modal ── */
 .choice-picker .modal__body {
     display: flex;
