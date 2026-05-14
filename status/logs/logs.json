@@ -473,7 +473,7 @@
   },
   "commits": [
     {
-      "hash": "TBD_C",
+      "hash": "2a04432",
       "date": "2026-05-14",
       "message": "feat(underdark): quality pass — thread config gear, memory compression, codex-meters.js module — ui.js v92",
       "scope": "playground/characters — ui.js, llm-engine.js, index.html, arena.css, controls.css, style.css, main.js, new codex-meters.js",
@@ -2587,7 +2587,7 @@
         "requested": "2026-05-14",
         "completed": "2026-05-14",
         "description": "No way to view or edit a thread's threadConfig after creation. Header gear icon opens a compact modal with Core (scenario, model, temp, maxOutput, player name/persona, lorebooks) and Tone (full narrativeTone) tabs.",
-        "notes": "Done in TBD_C. #btn-thread-config added to arena header (settings-2 icon). Modal #modal-thread-config with Core + Tone tabs. Gear shows accent dot-badge (.arena-action--active) when overrides are set. Saved to chat.threadConfig on Apply. _updateThreadConfigBadge() called in renderAll().",
+        "notes": "Done in 2a04432. #btn-thread-config added to arena header (settings-2 icon). Modal #modal-thread-config with Core + Tone tabs. Gear shows accent dot-badge (.arena-action--active) when overrides are set. Saved to chat.threadConfig on Apply. _updateThreadConfigBadge() called in renderAll().",
         "files_affected": ["playground/characters/index.html", "playground/characters/script/modules/ui.js", "playground/characters/style/arena.css", "playground/characters/style/controls.css"]
       },
       {
@@ -2597,7 +2597,7 @@
         "requested": "2026-05-14",
         "completed": "2026-05-14",
         "description": "When messages drop past the context horizon, fire a background LLM call to summarise them into a compact digest block shown in the horizon divider.",
-        "notes": "Done in TBD_C. summarizeDroppedMessages() added to llm-engine.js — 300-token background call, sessionStorage cache per chatId+horizonMsgId. Patches summary into .context-horizon__summary below the lock divider. arena.css: .context-horizon refactored to flex-column, new .context-horizon__summary/.summary-label/.summary-body styles.",
+        "notes": "Done in 2a04432. summarizeDroppedMessages() added to llm-engine.js — 300-token background call, sessionStorage cache per chatId+horizonMsgId. Patches summary into .context-horizon__summary below the lock divider. arena.css: .context-horizon refactored to flex-column, new .context-horizon__summary/.summary-label/.summary-body styles.",
         "files_affected": ["playground/characters/script/modules/llm-engine.js", "playground/characters/script/modules/ui.js", "playground/characters/style/arena.css"]
       },
       {
@@ -2607,7 +2607,7 @@
         "requested": "2026-05-14",
         "completed": "2026-05-14",
         "description": "Move meter logic out of ui.js closure into a proper ES module for testability and code organisation.",
-        "notes": "Done in TBD_C. codex-meters.js created with initCodexMeters() dependency injection. applyStatusTags, setMeterDOM, keywordMeterScore, llmScoreMeters, updateCodexMeters all moved. ui.js imports module and retains shim functions for backward-compatible call sites.",
+        "notes": "Done in 2a04432. codex-meters.js created with initCodexMeters() dependency injection. applyStatusTags, setMeterDOM, keywordMeterScore, llmScoreMeters, updateCodexMeters all moved. ui.js imports module and retains shim functions for backward-compatible call sites.",
         "files_affected": ["playground/characters/script/modules/codex-meters.js", "playground/characters/script/modules/ui.js"]
       }
     ]
