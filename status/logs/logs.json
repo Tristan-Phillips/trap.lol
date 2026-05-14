@@ -473,7 +473,7 @@
   },
   "commits": [
     {
-      "hash": "TBD_P2",
+      "hash": "4c4df09",
       "date": "2026-05-14",
       "message": "feat(underdark): phase 2 — emoji avatars, image placeholders, scenario AI wizard, codex admin, overlord auto-fire, continuity rules",
       "scope": "playground/characters — ui.js, index.html, char-editor.css, main.js; data/scenario-index.json; status/logs/logs.json",
