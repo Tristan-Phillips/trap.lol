@@ -473,7 +473,7 @@
   },
   "commits": [
     {
-      "hash": "TBD",
+      "hash": "d27712b",
       "date": "2026-05-14",
       "message": "feat(underdark): force-trigger, character isolation, UFR format system, Overlord expansion — ui.js v88",
       "scope": "playground/characters — ui.js, llm-engine.js, state.js, main.js, index.html, arena.css, char-editor.css, style.css; status/logs/logs.json",
