@@ -30,7 +30,12 @@ import { qs, qsa, esc, debounce } from './shared-utils.js';
 // Does NOT use marked.js to avoid dependency — covers the common character-card patterns.
 function renderMarkdownSafe(text) {
     if (!text) return '';
+    // esc() encodes &, <, >, ", ' — we then re-apply inline markdown on the
+    // escaped string. &gt; (from >) is restored after escaping so that arrow
+    // notation (->, =>) and > quote characters in character card text display
+    // correctly. &lt; stays encoded — raw < in user content is kept safe.
     return esc(text)
+        .replace(/&gt;/g,                '>')
         .replace(/\*\*\*([^*]+)\*\*\*/g, '<strong><em>$1</em></strong>')
         .replace(/\*\*([^*]+)\*\*/g,     '<strong>$1</strong>')
         .replace(/\*([^*\n]+)\*/g,       '<em>$1</em>')
@@ -141,6 +146,7 @@ function showPickerModal(title, generateFn) {
         lucideRefresh(modal);
 
         let selected = null;
+        let onCustomInput = null;
 
         const cleanup = (val) => {
             modal.hidden = true;
@@ -148,6 +154,7 @@ function showPickerModal(title, generateFn) {
             $cancel?.removeEventListener('click', onCancel);
             $close?.removeEventListener('click', onCancel);
             $bd?.removeEventListener('click', onCancel);
+            if (onCustomInput) { $custom?.removeEventListener('input', onCustomInput); onCustomInput = null; }
             res(val);
         };
         const onOk     = () => cleanup(selected || $custom?.value.trim() || null);
@@ -172,12 +179,15 @@ function showPickerModal(title, generateFn) {
                         if ($custom) $custom.value = '';
                     });
                 });
-                if ($custom) $custom.addEventListener('input', () => {
-                    if ($custom.value.trim()) {
-                        qsa('.choice-picker__option', $options).forEach(b => b.classList.remove('is-selected'));
-                        selected = null;
-                    }
-                });
+                if ($custom) {
+                    onCustomInput = () => {
+                        if ($custom.value.trim()) {
+                            qsa('.choice-picker__option', $options).forEach(b => b.classList.remove('is-selected'));
+                            selected = null;
+                        }
+                    };
+                    $custom.addEventListener('input', onCustomInput);
+                }
                 lucideRefresh(modal);
             }
         }).catch(() => {
@@ -186,8 +196,10 @@ function showPickerModal(title, generateFn) {
     });
 }
 
-function lucideRefresh(_node) {
-    if (window.lucide) window.lucide.createIcons();
+function lucideRefresh(node) {
+    if (!window.lucide) return;
+    if (node) window.lucide.createIcons({ nodes: [node] });
+    else window.lucide.createIcons();
 }
 
 // ── Toast notifications ───────────────────────────────────────────────────────
@@ -216,26 +228,30 @@ function isEmoji(str) {
 }
 
 // ── Avatar resolver cache ─────────────────────────────────────────────────────
+// Keyed by charId → { ref, url } so each character occupies one slot with no
+// risk of collision between charId strings and the old :url suffix scheme.
 const _avatarCache = {};
 async function getAvatarUrl(charId, stored) {
     if (!stored) return null;
     if (!stored.startsWith('idb:')) return stored;
-    if (_avatarCache[charId] === stored) return _avatarCache[`${charId}:url`] || null;
+    const entry = _avatarCache[charId];
+    if (entry?.ref === stored) return entry.url || null;
     // idb:img:<blobId> refs (gallery images promoted to avatar)
     if (isIdbImageRef(stored)) {
         const url = await resolveImageUrl(stored).catch(() => null);
-        if (url) { _avatarCache[charId] = stored; _avatarCache[`${charId}:url`] = url; }
+        if (url) _avatarCache[charId] = { ref: stored, url };
         return url;
     }
     // Legacy idb:<charId> avatar slot
     const url = await resolveCharAvatar(charId, stored).catch(() => null);
-    if (url) { _avatarCache[charId] = stored; _avatarCache[`${charId}:url`] = url; }
+    if (url) _avatarCache[charId] = { ref: stored, url };
     return url;
 }
 function getAvatarUrlSync(charId, stored) {
     if (!stored) return null;
     if (!stored.startsWith('idb:')) return stored;
-    if (_avatarCache[charId] === stored) return _avatarCache[`${charId}:url`] || null;
+    const entry = _avatarCache[charId];
+    if (entry?.ref === stored) return entry.url || null;
     return null;
 }
 
@@ -299,10 +315,13 @@ function renderMarkdown(text) {
 }
 
 // ── Group auto-response manager ───────────────────────────────────────────────
-let _groupAbort = false;
+// Each send increments _groupGeneration. The IIFE loop captures its value at
+// start and bails out if it no longer matches — prevents stale loops from a
+// previous turn from injecting responses into a new turn.
+let _groupGeneration = 0;
 const _rrIndex = {};   // sessionId → next round-robin bot index
 function clearGroupTimers() {
-    _groupAbort = true;
+    _groupGeneration++;
 }
 
 // ── Narrative flag keys (shared between syncConfigUI and init bindings) ────────
@@ -3326,7 +3345,6 @@ export function initUI() {
                 meta.avatar_path = ref;
                 // Bust cache so next getAvatarUrl resolves the new ref
                 delete _avatarCache[id];
-                delete _avatarCache[`${id}:url`];
                 saveState();
                 renderRoster();
                 renderGalleryStrip(id);
@@ -4427,7 +4445,6 @@ export function initUI() {
         if (!gallery.includes(stored)) gallery.push(stored);
         // Bust cache so next getAvatarUrl resolves the new ref
         delete _avatarCache[cid];
-        delete _avatarCache[`${cid}:url`];
         saveState();
         renderRoster();
         renderGalleryStrip(cid);
@@ -6706,6 +6723,12 @@ export function initUI() {
         const rawAv = meta?.avatar_path || char.avatar;
         if (rawAv?.startsWith('idb:')) await getAvatarUrl(botId, rawAv).catch(() => {});
 
+        // Snapshot the active chat/reality IDs at stream start.
+        // onDone validates these before writing state — prevents responses from
+        // a previous stream landing in the wrong chat if the user switches mid-generation.
+        const _streamChatId    = state.chat?.id;
+        const _streamRealityId = state.reality?.id;
+
         state.isStreaming = true;
         const controller = new AbortController();
         state.pendingAbort = controller;
@@ -6810,6 +6833,15 @@ export function initUI() {
                     // Clean up any lingering thinking indicator
                     $thinkingAside?.remove();
 
+                    // If the user switched chat/reality while this stream was in flight,
+                    // discard the response — it doesn't belong here.
+                    if (state.chat?.id !== _streamChatId || state.reality?.id !== _streamRealityId) {
+                        $botMsg.remove();
+                        state.isStreaming = false;
+                        setSendState(false);
+                        return;
+                    }
+
                     const msg = addMessage('bot', finalText, botId, {
                         tokens,
                         model: payload.model,
@@ -6863,16 +6895,24 @@ export function initUI() {
                 },
                 (err) => {
                     $thinkingAside?.remove();
-                    $content.innerHTML = `<span class="msg-error">[Error: ${esc(err.message)}]</span>`;
+                    $botMsg.remove();
                     state.isStreaming = false;
                     setSendState(false);
+                    // AbortError = user pressed stop — silent. All other errors get a toast.
+                    if (err?.name !== 'AbortError') {
+                        showToast(`Generation error: ${err.message}`, 'error', 6000);
+                    }
                 },
                 controller.signal
             );
         } catch (err) {
-            $content.innerHTML = `<span class="msg-error">[Error: ${esc(err.message)}]</span>`;
+            $thinkingAside?.remove();
+            $botMsg.remove();
             state.isStreaming = false;
             setSendState(false);
+            if (err?.name !== 'AbortError') {
+                showToast(`Generation error: ${err.message}`, 'error', 6000);
+            }
         }
     }
 
@@ -6896,10 +6936,9 @@ export function initUI() {
             // Restore normal label
             const activeChar = state.loadedCharacters[state.activeBotId];
             const displayName = activeChar
-                ? (getCharOverride(state.activeBotId).nickname || activeChar.name)
-                : null;
-            if ($label && displayName) $label.textContent = `→ ${displayName}`;
-            else if ($label) $label.textContent = '';
+                ? (getCharOverride(state.activeBotId)?.nickname || activeChar.name || '')
+                : '';
+            if ($label) $label.textContent = displayName ? `→ ${displayName}` : '';
         }
         lucideRefresh($btn);
     }
@@ -6963,7 +7002,7 @@ export function initUI() {
 
         // Stop if streaming — also cancel any queued group bots
         if (state.isStreaming) {
-            _groupAbort = true;
+            clearGroupTimers();
             state.pendingAbort?.abort();
             return;
         }
@@ -7044,7 +7083,9 @@ export function initUI() {
         appendMessage(msg);
         renderChats();
 
-        _groupAbort = false;
+        // Bump generation so any still-running loop from a previous turn self-terminates
+        clearGroupTimers();
+        const myGen = _groupGeneration;
 
         // Determine which bots respond this turn based on turn mode
         // threadConfig.groupTurnMode (set by wizard) takes precedence over reality-wide setting
@@ -7098,16 +7139,21 @@ export function initUI() {
             await triggerBotResponse(respondingBots[0], pendingReinject);
         } else {
             // Sequential queue: each bot awaits the previous, with a brief gap.
-            // pendingReinject only fires on the first bot of the turn.
+            // pendingReinject only fires on the first responding bot of the turn.
+            // myGen is captured at send-time; if a new send arrives (or stop is pressed)
+            // _groupGeneration increments and this loop self-terminates.
             const delay = state.config.groupAutoDelay || 600;
             (async () => {
-                let first = true;
+                let rejectConsumed = false;
                 for (const botId of respondingBots) {
-                    if (_groupAbort) break;
+                    if (_groupGeneration !== myGen) break;
                     await new Promise(r => setTimeout(r, delay));
-                    if (_groupAbort) break;
-                    await triggerBotResponse(botId, first ? pendingReinject : '');
-                    first = false;
+                    if (_groupGeneration !== myGen) break;
+                    // pendingReinject fires exactly once, on the first bot that
+                    // successfully starts (not deferred if a prior bot errored out).
+                    const ri = rejectConsumed ? '' : pendingReinject;
+                    await triggerBotResponse(botId, ri);
+                    rejectConsumed = true;
                 }
             })();
         }

@@ -404,16 +404,6 @@ export function addMessage(role, content, botId = null, meta = {}) {
         edited: false
     };
 
-    // Offload image data URLs to IndexedDB to avoid localStorage quota exhaustion.
-    if (role === 'image' && isDataUrl(content)) {
-        saveImageBlob(msgId, content).then(idbRef => {
-            msg.content = idbRef;
-            saveState();
-        }).catch(() => {
-            // Keep raw data URL in memory if IDB fails; saveState() already called below
-        });
-    }
-
     state.chat.history.push(msg);
     state.chat.updatedAt = Date.now();
     state.reality.updatedAt = Date.now();
@@ -430,6 +420,20 @@ export function addMessage(role, content, botId = null, meta = {}) {
     if (role === 'user') state.telemetry.turns++;
     state.telemetry.totalTokens += msg.tokens;
     state.telemetry.sessionTokens += msg.tokens;
+
+    // Offload image data URLs to IndexedDB to avoid localStorage quota exhaustion.
+    // saveState() is deferred until after the IDB write so the persisted record
+    // always contains the idb: ref rather than the raw data URL.
+    if (role === 'image' && isDataUrl(content)) {
+        saveImageBlob(msgId, content).then(idbRef => {
+            msg.content = idbRef;
+        }).catch(() => {
+            // IDB failed — keep raw data URL in msg.content and fall through to saveState
+        }).finally(() => {
+            saveState();
+        });
+        return msg;
+    }
 
     saveState();
     return msg;
