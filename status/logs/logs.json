@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.3.11",
+    "schema_version": "1.3.12",
     "last_updated": "2026-05-14",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -470,6 +470,32 @@
     ]
   },
   "commits": [
+    {
+      "hash": "1cf7280",
+      "date": "2026-05-14",
+      "message": "fix(underdark): resolve 11 bugs from codebase audit",
+      "scope": "playground/characters — ui.js, state.js, main.js, index.html",
+      "impact": "high",
+      "files": [
+        "playground/characters/script/modules/ui.js",
+        "playground/characters/script/modules/state.js",
+        "playground/characters/script/main.js",
+        "playground/characters/index.html"
+      ],
+      "why": "Comprehensive bug audit found 3 critical, 5 major, and 4 minor issues — IDB/localStorage race condition on image save, detached group chat loops that survived turn boundaries, stale streaming closure writing responses to wrong chats, lucideRefresh re-initialising every icon on the page on every call (~98 times per session), listener leaks on repeated modal opens, orphan placeholder DOM nodes on stream failure, and > character encoding breaking character card display."
+    },
+    {
+      "hash": "ba7a700",
+      "date": "2026-05-14",
+      "message": "style(overlord): amber/gold palette, slow pulse animation",
+      "scope": "playground/characters — char-editor.css, index.html",
+      "impact": "low",
+      "files": [
+        "playground/characters/style/char-editor.css",
+        "playground/characters/index.html"
+      ],
+      "why": "User requested a completely unique color palette for the Overlord block distinct from the site's violet accent — switched to amber/gold (#E8A830, #C8780A, #7A4A06) with a 4s ease-in-out box-shadow pulse to give the narrator presence without flickering."
+    },
     {
       "hash": "234e0f1",
       "date": "2026-05-14",
@@ -1274,6 +1300,24 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-14",
+      "agent": "Claude Sonnet 4.6",
+      "type": "bug_fix",
+      "summary": "Full codebase audit of playground/characters — identified 3 critical, 5 major, 4 minor bugs and resolved all 12. Critical fixes: IDB/localStorage race in addMessage (saveState now deferred until after blob write), detached group loop replaced boolean abort flag with generation token, streaming closure now snapshots chat/reality IDs and discards responses written to wrong context. Major fixes: lucideRefresh scoped to passed node, picker modal listener leak closed, orphan placeholder removed on stream failure instead of showing un-persisted error bubble, renderMarkdownSafe > encoding restored for arrow notation in character cards. Minor: avatar cache namespace, setSendState undefined guard, reinject ordering in group queue.",
+      "decisions": [
+        "IDB blob write must complete before saveState — using .finally() to guarantee exactly one save regardless of success or failure.",
+        "Boolean abort flags are unsafe for detached async IIFEs — incrementing generation tokens allow old loops to self-identify and exit without any shared mutable boolean.",
+        "Stream context must be snapshotted at call time — closures over state.chat are stale if the user switches chat while streaming.",
+        "lucideRefresh should always scope to the passed node — global createIcons() on every call scales O(n) with DOM size and is called ~98 times per active session.",
+        "On stream abort or error, the un-persisted placeholder DOM node should be removed rather than left as a visible ghost — errors surface via toast instead."
+      ],
+      "rules_reinforced": [
+        "Never call lucide.createIcons() without { nodes: [el] } scoping unless at boot — unscoped calls are O(full DOM) and accumulate during streaming.",
+        "Async operations that depend on a context (chat session, reality) must snapshot the relevant IDs before going async and validate them in callbacks.",
+        "IDB writes and their corresponding state saves are a pair — never save state before the IDB write completes or the persisted record will contain stale data."
+      ]
+    },
     {
       "date": "2026-05-14",
       "agent": "Claude Sonnet 4.6",
