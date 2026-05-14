@@ -13,7 +13,7 @@
 @import './chat.css';
 
 /* ── Controls & Utilities ── */
-@import './controls.css';
+@import './controls.css?v=2';
 @import './utilities.css';
 
 /* ── Feature Panels ── */

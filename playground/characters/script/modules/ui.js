@@ -8655,7 +8655,60 @@ export function initUI() {
         if (!ok) return;
         localStorage.clear();
         // Also wipe IndexedDB avatar store
-        try { const { idbClear } = await import('./storage.js'); await idbClear(); } catch (_) {}
+        try { const { idbClear } = await import('./storage.js?v=3'); await idbClear(); } catch (_) {}
+        location.reload();
+    });
+
+    // ── Hard Reset (reality editor footer button) ─────────────────────────────
+    qs('#btn-hard-reset')?.addEventListener('click', async () => {
+        // Step 1: ask about images before doing anything destructive
+        const keepImages = await new Promise(resolve => {
+            const $d = document.createElement('div');
+            $d.className = 'modal hard-reset-prompt';
+            $d.innerHTML = `
+                <div class="modal__backdrop"></div>
+                <div class="hard-reset-prompt__box">
+                    <div class="hard-reset-prompt__icon"><i data-lucide="rotate-ccw"></i></div>
+                    <p class="hard-reset-prompt__title">Factory Reset</p>
+                    <p class="hard-reset-prompt__body">All characters, threads, continuities, API keys, and settings will be wiped.<br>Keep your generated images?</p>
+                    <div class="hard-reset-prompt__actions">
+                        <button class="ce-btn ce-btn--accent" data-ans="keep">Keep Images</button>
+                        <button class="ce-btn ce-btn--ghost hard-reset-prompt__wipe-btn" data-ans="wipe">Wipe Everything</button>
+                        <button class="ce-btn ce-btn--ghost" data-ans="cancel">Cancel</button>
+                    </div>
+                </div>`;
+            document.body.appendChild($d);
+            if (window.lucide) window.lucide.createIcons({ nodes: [$d] });
+            $d.addEventListener('click', e => {
+                const ans = e.target.closest('[data-ans]')?.dataset.ans;
+                if (!ans) return;
+                $d.remove();
+                resolve(ans === 'keep' ? true : ans === 'wipe' ? false : null);
+            });
+        });
+
+        if (keepImages === null) return; // cancelled
+
+        // Step 2: wipe everything
+        clearApiKey();
+        localStorage.clear();
+        sessionStorage.clear();
+
+        try {
+            const { idbGetAllEntries, idbSetBulk, idbClear } = await import('./storage.js?v=3');
+            if (keepImages) {
+                // Preserve only idb:img:* blobs (generated images), drop avatars
+                const all = await idbGetAllEntries();
+                const imageEntries = Object.fromEntries(
+                    Object.entries(all).filter(([k]) => k.startsWith('img:'))
+                );
+                await idbClear();
+                if (Object.keys(imageEntries).length) await idbSetBulk(imageEntries);
+            } else {
+                await idbClear();
+            }
+        } catch (_) {}
+
         location.reload();
     });
 

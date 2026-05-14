@@ -632,3 +632,85 @@ input:checked + .toggle-switch__slider::before        { transform: translateX(16
     cursor: pointer;
 }
 .tc-inherit-row label { cursor: pointer; }
+
+/* ── Hard Reset Button (reality editor footer) ── */
+.re-reset-btn {
+    opacity: 0.35;
+    color: var(--text-muted);
+    transition: opacity 0.2s, color 0.2s;
+}
+.re-reset-btn:hover {
+    opacity: 0.75;
+    color: #ef4444;
+}
+
+/* ── Hard Reset Prompt Dialog ── */
+.hard-reset-prompt {
+    position: fixed;
+    inset: 0;
+    z-index: 9000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.hard-reset-prompt .modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    backdrop-filter: blur(4px);
+}
+.hard-reset-prompt__box {
+    position: relative;
+    z-index: 1;
+    background: rgba(12,6,20,0.97);
+    border: 1px solid rgba(239,68,68,0.25);
+    border-radius: 12px;
+    padding: 28px 28px 24px;
+    max-width: 360px;
+    width: calc(100% - 32px);
+    box-shadow: 0 24px 64px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.04);
+    text-align: center;
+    animation: hrpIn 0.18s ease;
+}
+@keyframes hrpIn {
+    from { opacity: 0; transform: scale(0.94) translateY(8px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+.hard-reset-prompt__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: rgba(239,68,68,0.1);
+    border: 1px solid rgba(239,68,68,0.25);
+    margin: 0 auto 16px;
+    color: #ef4444;
+}
+.hard-reset-prompt__icon svg { width: 20px; height: 20px; }
+.hard-reset-prompt__title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-main);
+    margin: 0 0 10px;
+    letter-spacing: 0.01em;
+}
+.hard-reset-prompt__body {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin: 0 0 22px;
+}
+.hard-reset-prompt__actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.hard-reset-prompt__wipe-btn {
+    border-color: rgba(239,68,68,0.35) !important;
+    color: #ef4444 !important;
+}
+.hard-reset-prompt__wipe-btn:hover {
+    background: rgba(239,68,68,0.08) !important;
+    border-color: rgba(239,68,68,0.6) !important;
+}

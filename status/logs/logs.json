@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.3.21",
+    "schema_version": "1.3.22",
     "last_updated": "2026-05-14",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -472,6 +472,21 @@
     ]
   },
   "commits": [
+    {
+      "hash": "PENDING",
+      "date": "2026-05-14",
+      "message": "feat(underdark): hard reset button in continuity config — wipe all data with optional image preservation — ui.js v96",
+      "scope": "playground/characters — index.html, ui.js, controls.css, style.css",
+      "impact": "medium",
+      "files": [
+        "playground/characters/index.html",
+        "playground/characters/script/modules/ui.js",
+        "playground/characters/style/controls.css",
+        "playground/characters/style/style.css",
+        "status/logs/logs.json"
+      ],
+      "why": "User requested a subtle factory reset button in continuity config that wipes all API keys, localStorage, sessionStorage, and IDB — prompting whether to preserve generated images — so the app can be reset to a clean first-run state without manually clearing browser storage. Three-option dialog (Keep Images / Wipe Everything / Cancel) implemented inline without confirm() to allow the third cancel path."
+    },
     {
       "hash": "2a04432",
       "date": "2026-05-14",
@@ -1453,6 +1468,22 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-14",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Hard reset button added to continuity config. Subtle ghost icon button (.re-reset-btn) in reality editor footer — muted by default, red-tint hover hint. Clicking opens a custom three-option inline dialog (Keep Images / Wipe Everything / Cancel) without confirm(). Wipe path: clearApiKey(), localStorage.clear(), sessionStorage.clear(), then idbClear(). Keep Images path: idbGetAllEntries() filtered to img: prefix keys, idbClear(), idbSetBulk(imageEntries). All CSS added to controls.css (.re-reset-btn, .hard-reset-prompt*, animation hrpIn). controls.css bumped to ?v=2, style.css?v=71. Also fixed API key singleton bug from previous session — image-engine.js and commands.js imported llm-auth.js bare (no ?v=), browser split them from ui.js's ?v=3 instance causing setApiKey/getApiKey to operate on separate module instances; unified all imports to ?v=3 across all 7 modules.",
+      "decisions": [
+        "Three-option dialog (not confirm()) required because two binary prompts (really reset? then keep images?) felt clunky — a single custom dialog with three named actions is cleaner UX.",
+        "Button is subtle by design — opacity 0.35 at rest, red only on hover — hard reset is accessible but not accidentally triggerable.",
+        "Image preservation filters on img: key prefix only (not avatar: prefix) — generated images are user content worth keeping; avatars are typically small and easily re-generated.",
+        "Inline dialog via DOM append (not a modal system) — avoids requiring modal infrastructure to be ready for a destructive action that fires during configuration."
+      ],
+      "rules_reinforced": [
+        "All importers of a shared ES module must use identical URL strings — mismatched ?v= strings cause the browser to create separate module instances and break singleton state.",
+        "Destructive actions must have a cancel escape, not just a confirmation — three options beats two binary modals."
+      ]
+    },
     {
       "date": "2026-05-14",
       "agent": "Claude Sonnet 4.6",
@@ -2609,6 +2640,16 @@
         "description": "Move meter logic out of ui.js closure into a proper ES module for testability and code organisation.",
         "notes": "Done in 2a04432. codex-meters.js created with initCodexMeters() dependency injection. applyStatusTags, setMeterDOM, keywordMeterScore, llmScoreMeters, updateCodexMeters all moved. ui.js imports module and retains shim functions for backward-compatible call sites.",
         "files_affected": ["playground/characters/script/modules/codex-meters.js", "playground/characters/script/modules/ui.js"]
+      },
+      {
+        "id": "hard-reset-button",
+        "title": "Factory reset button in continuity config — wipe all data, keep images optional",
+        "status": "done",
+        "requested": "2026-05-14",
+        "completed": "2026-05-14",
+        "description": "Subtle ghost icon button (#btn-hard-reset) in reality editor footer. Opens custom three-option inline dialog: Keep Images, Wipe Everything, Cancel. Wipes API keys, localStorage, sessionStorage, IDB (with optional img: key preservation).",
+        "notes": "Done this session. HTML: #btn-hard-reset with .re-reset-btn class in reality editor footer. JS handler in ui.js after Danger Zone section — inline DOM-append dialog, not modal system. CSS: .re-reset-btn (opacity 0.35, red hover), .hard-reset-prompt* box (centered, fade-in animation). controls.css?v=2, style.css?v=71.",
+        "files_affected": ["playground/characters/index.html", "playground/characters/script/modules/ui.js", "playground/characters/style/controls.css", "playground/characters/style/style.css"]
       }
     ]
   },
