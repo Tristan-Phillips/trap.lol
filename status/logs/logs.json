@@ -473,7 +473,7 @@
   },
   "commits": [
     {
-      "hash": "TBD",
+      "hash": "1fd82ac",
       "date": "2026-05-14",
       "message": "feat(underdark): player identity sheet, Overlord context awareness, entrance/whisper/irony modes — ui.js v89",
       "scope": "playground/characters — ui.js, llm-engine.js, index.html, char-editor.css, terminal.css, main.js; status/logs/logs.json",
