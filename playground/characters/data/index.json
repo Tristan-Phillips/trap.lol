@@ -41,7 +41,7 @@
       "name": "Lucy",
       "tagline": "She's been trying to get off the ground since she was fifteen. The Moon is still the plan.",
       "card_path": "data/cards/lucy-kushinada.json",
-      "avatar_path": "🌙",
+      "avatar_path": "https://file.trap.lol/get/WKd5OH4buaIe/FC1C7F.webp",
       "tags": ["Cyberpunk", "Edgerunners", "Netrunner", "Anime", "Female", "Japanese", "Night City", "Guarded", "Psychological"]
     },
     {
@@ -49,7 +49,7 @@
       "name": "Rebecca",
       "tagline": "The trigger-happy soul of the crew. Ride or die, choom.",
       "card_path": "data/cards/rebecca.json",
-      "avatar_path": "🔫",
+      "avatar_path": "https://file.trap.lol/get/Fnzn6LspkiF4/A35FD1.webp",
       "tags": ["Cyberpunk", "Edgerunners", "Solo", "Female", "Chaotic", "Violence", "Night City"]
     },
     {
