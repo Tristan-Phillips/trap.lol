@@ -473,7 +473,7 @@
   },
   "commits": [
     {
-      "hash": "TBD_HOTFIX",
+      "hash": "6bb471c",
       "date": "2026-05-14",
       "message": "fix(underdark): maxTokens→max_tokens in all fetchCompletion calls; model fallback; scroll after image swap",
       "scope": "playground/characters — ui.js, main.js; status/logs/logs.json",
