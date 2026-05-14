@@ -1651,49 +1651,72 @@
 }
 
 /* ── Overlord block — narrator/scene injection, full-width cinematic band ── */
+/*
+ * Overlord palette — amber/gold, completely separate from the site's violet accent.
+ * --ov-hi:  #E8A830  warm gold (highlights, glow core)
+ * --ov-mid: #C8780A  burnt amber (borders, rails)
+ * --ov-dim: #7A4A06  deep spice (faded lines, end glyphs)
+ * --ov-bg:  #110B02  near-black with amber undertone (body bg)
+ * --ov-txt: #F5E6C8  warm parchment (body text)
+ */
+
+/* ── entry animation ── */
+@keyframes overlord-in {
+    from { opacity: 0; transform: translateY(10px) scale(0.995); }
+    to   { opacity: 1; transform: translateY(0)   scale(1); }
+}
+
+/* ── border pulse — slow 4 s breathe on box-shadow glow ── */
+@keyframes overlord-pulse {
+    0%,100% { box-shadow:
+        0 0 18px  rgba(200, 120, 10, 0.18),
+        0 0 50px  rgba(200, 120, 10, 0.06),
+        inset 0 0 24px rgba(200, 120, 10, 0.04); }
+    50%      { box-shadow:
+        0 0 28px  rgba(232, 168, 48, 0.38),
+        0 0 70px  rgba(232, 168, 48, 0.14),
+        inset 0 0 32px rgba(232, 168, 48, 0.08); }
+}
+
 .overlord-block {
     position: relative;
     width: 100%;
     padding: 0 20px;
-    margin: 24px 0;
+    margin: 28px 0;
     box-sizing: border-box;
-    animation: overlord-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-@keyframes overlord-in {
-    from { opacity: 0; transform: translateY(8px); }
-    to   { opacity: 1; transform: translateY(0); }
+    animation: overlord-in 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-/* top and bottom rails */
+/* ── rails ── */
 .overlord-block__rail {
     display: flex;
     align-items: center;
     gap: 10px;
     padding: 0 2px;
 }
-.overlord-block__rail--top { margin-bottom: 12px; }
-.overlord-block__rail--bottom { margin-top: 12px; justify-content: flex-end; }
+.overlord-block__rail--top    { margin-bottom: 10px; }
+.overlord-block__rail--bottom { margin-top: 10px; justify-content: flex-end; }
 
 .overlord-block__glyph {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 28px;
-    height: 28px;
+    width: 26px;
+    height: 26px;
     border-radius: 50%;
-    border: 1px solid rgba(190, 41, 236, 0.55);
-    background: rgba(190, 41, 236, 0.12);
-    color: rgba(190, 41, 236, 0.9);
+    border: 1px solid rgba(200, 120, 10, 0.65);
+    background: rgba(200, 120, 10, 0.14);
+    color: #E8A830;
     flex-shrink: 0;
-    box-shadow: 0 0 12px rgba(190, 41, 236, 0.25);
+    box-shadow: 0 0 10px rgba(200, 120, 10, 0.30), inset 0 0 6px rgba(232, 168, 48, 0.10);
 }
-.overlord-block__glyph svg { width: 13px; height: 13px; }
+.overlord-block__glyph svg { width: 12px; height: 12px; }
 
 .overlord-block__label {
     font-family: var(--font-mono);
-    font-size: 0.62rem;
-    letter-spacing: 0.22em;
-    color: rgba(190, 41, 236, 0.7);
+    font-size: 0.60rem;
+    letter-spacing: 0.28em;
+    color: rgba(200, 120, 10, 0.80);
     flex-shrink: 0;
     text-transform: uppercase;
 }
@@ -1702,63 +1725,66 @@
     flex: 1;
     height: 1px;
     background: linear-gradient(90deg,
-        rgba(190, 41, 236, 0.5) 0%,
-        rgba(190, 41, 236, 0.08) 100%
+        rgba(200, 120, 10, 0.55) 0%,
+        rgba(200, 120, 10, 0.06) 100%
     );
 }
 .overlord-block__rail--bottom .overlord-block__line {
     background: linear-gradient(90deg,
-        rgba(190, 41, 236, 0.08) 0%,
-        rgba(190, 41, 236, 0.5) 100%
+        rgba(200, 120, 10, 0.06) 0%,
+        rgba(200, 120, 10, 0.55) 100%
     );
 }
 
 .overlord-block__end {
-    font-size: 0.55rem;
-    color: rgba(190, 41, 236, 0.45);
-    letter-spacing: 0.3em;
+    font-size: 0.52rem;
+    color: rgba(122, 74, 6, 0.80);
+    letter-spacing: 0.35em;
     flex-shrink: 0;
 }
 
-/* body */
+/* ── body ── */
 .overlord-block__body {
     position: relative;
-    padding: 20px 28px 22px;
+    padding: 22px 30px 24px;
     background:
         repeating-linear-gradient(
             0deg,
             transparent,
             transparent 3px,
-            rgba(190, 41, 236, 0.018) 3px,
-            rgba(190, 41, 236, 0.018) 4px
+            rgba(200, 120, 10, 0.022) 3px,
+            rgba(200, 120, 10, 0.022) 4px
         ),
-        linear-gradient(135deg,
-            rgba(190, 41, 236, 0.10) 0%,
-            rgba(20, 10, 35, 0.85) 50%,
-            rgba(99, 20, 140, 0.08) 100%
+        linear-gradient(160deg,
+            rgba(17, 11, 2, 0.97) 0%,
+            rgba(28, 16, 4, 0.95) 40%,
+            rgba(22, 12, 2, 0.97) 100%
         );
-    border: 1px solid rgba(190, 41, 236, 0.3);
-    border-radius: 4px;
-    box-shadow:
-        0 0 40px rgba(190, 41, 236, 0.10),
-        inset 0 0 30px rgba(190, 41, 236, 0.04),
-        inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(200, 120, 10, 0.38);
+    border-radius: 3px;
     overflow: hidden;
+    animation: overlord-pulse 4s ease-in-out infinite;
 }
+
+/* top highlight bar */
 .overlord-block__body::before {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0;
     height: 2px;
     background: linear-gradient(90deg,
-        transparent 0%,
-        rgba(190, 41, 236, 0.8) 30%,
-        rgba(255, 180, 255, 0.9) 50%,
-        rgba(190, 41, 236, 0.8) 70%,
-        transparent 100%
+        transparent     0%,
+        rgba(122, 74,  6, 0.6)  15%,
+        rgba(232, 168, 48, 0.95) 40%,
+        rgba(255, 220, 120, 1)   50%,
+        rgba(232, 168, 48, 0.95) 60%,
+        rgba(122, 74,  6, 0.6)  85%,
+        transparent    100%
     );
-    box-shadow: 0 0 12px rgba(190, 41, 236, 0.6);
+    box-shadow: 0 0 14px rgba(232, 168, 48, 0.55), 0 1px 4px rgba(200, 120, 10, 0.3);
 }
+
+/* bottom dim bar */
 .overlord-block__body::after {
     content: '';
     position: absolute;
@@ -1766,29 +1792,50 @@
     height: 1px;
     background: linear-gradient(90deg,
         transparent 0%,
-        rgba(190, 41, 236, 0.4) 50%,
+        rgba(200, 120, 10, 0.30) 50%,
         transparent 100%
     );
 }
 
-/* text inside */
+/* left accent edge */
+.overlord-block__body .overlord-block__edge {
+    display: none; /* injected via pseudo on a wrapper if needed */
+}
+
+/* ── body text ── */
 .overlord-block__body p {
-    margin: 0 0 0.75em;
-    font-size: 0.92rem;
-    line-height: 1.8;
-    color: rgba(237, 220, 255, 0.92);
+    margin: 0 0 0.8em;
+    font-size: 0.91rem;
+    line-height: 1.82;
+    color: #F0DEB8;
     font-style: italic;
-    text-shadow: 0 0 20px rgba(190, 41, 236, 0.15);
+    text-shadow: 0 0 18px rgba(200, 120, 10, 0.12);
 }
 .overlord-block__body p:last-child { margin-bottom: 0; }
+
 .overlord-block__body strong {
-    color: #f0d9ff;
+    color: #FFD98A;
     font-style: normal;
-    text-shadow: 0 0 16px rgba(190, 41, 236, 0.4);
+    font-weight: 600;
+    text-shadow: 0 0 14px rgba(232, 168, 48, 0.45);
 }
 .overlord-block__body em {
-    color: rgba(190, 41, 236, 0.95);
+    color: #D4960E;
     font-style: italic;
+}
+.overlord-block__body h2,
+.overlord-block__body h3,
+.overlord-block__body h4 {
+    color: #E8A830;
+    font-style: normal;
+    margin: 0.6em 0 0.3em;
+    font-family: var(--font-mono);
+    letter-spacing: 0.05em;
+}
+.overlord-block__body hr {
+    border: none;
+    border-top: 1px solid rgba(200, 120, 10, 0.25);
+    margin: 1em 0;
 }
 
 /* ── AI Choice Picker modal ── */
