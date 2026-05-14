@@ -471,7 +471,7 @@
   },
   "commits": [
     {
-      "hash": "TBD",
+      "hash": "a19a4c5",
       "date": "2026-05-14",
       "message": "feat(characters): narrative tone config, per-field spark buttons, group profile panel, last-speaker portrait, gallery picker, thread model override fix",
       "scope": "playground/characters — ui.js, llm-engine.js, state.js, index.html, arena.css, char-editor.css",
