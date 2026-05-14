@@ -606,6 +606,157 @@
     text-shadow: 0 0 16px rgba(147, 197, 253, 0.6), 0 0 36px rgba(96, 165, 250, 0.22);
 }
 
+/* ── Player message UFR layers — lighter variant so bot responses stay focal ──
+   All rp-* classes inherit at ~78% intensity vs the bot equivalents.           */
+.message--user .message__content .rp-speech {
+    color: rgba(242, 203, 126, 0.78);
+    text-shadow: 0 0 10px rgba(242,203,126,0.28), 0 0 20px rgba(242,203,126,0.08);
+}
+.message--user .message__content .rp-speech:hover {
+    color: rgba(255, 233, 168, 0.92);
+    text-shadow: 0 0 14px rgba(255,233,168,0.5), 0 0 30px rgba(255,200,80,0.18);
+}
+.message--user .message__content .rp-thought {
+    color: rgba(196, 168, 255, 0.72);
+    text-shadow: 0 0 8px rgba(180,145,255,0.25), 0 0 18px rgba(160,120,255,0.08);
+    opacity: 0.78;
+    animation: none;
+}
+.message--user .message__content .rp-thought:hover {
+    opacity: 0.92;
+    text-shadow: 0 0 12px rgba(196,168,255,0.42), 0 0 28px rgba(160,120,255,0.18);
+}
+.message--user .message__content .rp-action {
+    color: rgba(147, 197, 253, 0.72);
+    text-shadow: 0 0 7px rgba(96,165,250,0.24), 0 0 16px rgba(96,165,250,0.07);
+}
+.message--user .message__content .rp-action:hover {
+    color: rgba(191, 219, 254, 0.88);
+    text-shadow: 0 0 12px rgba(147,197,253,0.44), 0 0 26px rgba(96,165,250,0.16);
+}
+.message--user .message__content p.rp-narration {
+    color: rgba(195, 188, 215, 0.62);
+    font-size: 0.92em;
+    line-height: 1.82;
+    letter-spacing: 0.015em;
+}
+
+/* ── Player monogram avatar ── */
+.message__avatar--monogram {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1em;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    letter-spacing: 0.02em;
+    color: rgba(var(--accent-warm-rgb), 0.92);
+    text-shadow: 0 0 10px rgba(var(--accent-warm-rgb), 0.45);
+    user-select: none;
+}
+
+/* ── Message variant navigator ── */
+.msg-variants {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 4px;
+}
+.msg-variant-btn {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 4px;
+    color: var(--text-muted);
+    opacity: 0.55;
+    padding: 2px 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: opacity 0.15s, border-color 0.15s;
+}
+.msg-variant-btn:hover:not(:disabled) {
+    opacity: 1;
+    border-color: rgba(190,41,236,0.35);
+    color: rgba(190,41,236,0.8);
+}
+.msg-variant-btn:disabled {
+    opacity: 0.2;
+    cursor: default;
+}
+.msg-variant-btn svg,
+.msg-variant-btn i { width: 11px; height: 11px; }
+.msg-variant-count {
+    font-size: 0.62rem;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    opacity: 0.55;
+    letter-spacing: 0.04em;
+}
+
+/* ── Scene break divider ── */
+.scene-divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0 4px;
+    margin: 2px 0;
+    pointer-events: none;
+    user-select: none;
+}
+.scene-divider__line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(190,41,236,0.2), transparent);
+}
+.scene-divider__label {
+    font-size: 0.58rem;
+    font-family: var(--font-mono);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(190, 41, 236, 0.45);
+    white-space: nowrap;
+    padding: 1px 8px;
+    border: 1px solid rgba(190, 41, 236, 0.15);
+    border-radius: 10px;
+    background: rgba(190, 41, 236, 0.04);
+}
+
+/* ── Memory horizon divider ── */
+.context-horizon {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    margin: 6px 0;
+    border-radius: 6px;
+    background: rgba(96, 60, 12, 0.12);
+    border: 1px solid rgba(161, 97, 23, 0.2);
+    font-size: 0.65rem;
+    font-family: var(--font-mono);
+    color: rgba(217, 143, 50, 0.65);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    pointer-events: none;
+    user-select: none;
+}
+.context-horizon svg,
+.context-horizon i {
+    width: 11px;
+    height: 11px;
+    opacity: 0.7;
+    flex-shrink: 0;
+}
+/* Messages above the horizon — faded + sepia to signal they're outside context */
+.message--horizon-past {
+    opacity: 0.35;
+    filter: sepia(0.4) saturate(0.6);
+    transition: opacity 0.2s ease;
+}
+.message--horizon-past:hover {
+    opacity: 0.6;
+    filter: sepia(0.1) saturate(0.85);
+}
+
 /* ── Message thread spacing ── */
 .arena__thread { gap: 10px; }
 
@@ -923,6 +1074,38 @@
     background: rgba(var(--accent-rgb), 0.14);
     border-color: rgba(var(--accent-rgb), 0.35);
     color: var(--theme-accent);
+}
+
+/* AI contextual suggestion group — distinct warm-gold accent */
+.qr-group--ai {
+    border-left: 2px solid rgba(var(--accent-warm-rgb), 0.3);
+    padding-left: 8px;
+}
+.qr-group__label--ai {
+    color: rgba(var(--accent-warm-rgb), 0.7);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.qr-group__label--ai svg,
+.qr-group__label--ai i { width: 10px; height: 10px; }
+.qr-btn--ai {
+    background: rgba(var(--accent-warm-rgb), 0.06);
+    border-color: rgba(var(--accent-warm-rgb), 0.18);
+    color: rgba(var(--accent-warm-rgb), 0.82);
+    font-family: var(--font-sans);
+    font-size: 0.68rem;
+    font-style: italic;
+    letter-spacing: 0.01em;
+    white-space: normal;
+    text-align: left;
+    line-height: 1.35;
+}
+.qr-btn--ai:hover {
+    background: rgba(var(--accent-warm-rgb), 0.14);
+    border-color: rgba(var(--accent-warm-rgb), 0.4);
+    color: rgba(var(--accent-warm-rgb), 1);
+    font-style: normal;
 }
 
 /* ── Social feed arena ── */

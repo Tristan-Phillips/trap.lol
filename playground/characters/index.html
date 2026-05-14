@@ -282,9 +282,19 @@
                                 <span id="codex-danger-val" class="codex-meter__val">15</span>
                             </div>
                         </div>
-                        <div class="scene-codex__arc">
-                            <div class="scene-codex__label scene-codex__label--inner"><i data-lucide="git-commit"></i> Arc</div>
-                            <input id="codex-arc-input" type="text" class="codex-input" placeholder="Narrative arc note…">
+                        <!-- Scene Ledger — 4 structured slots injected into Overlord context -->
+                        <div class="scene-codex__ledger">
+                            <div class="scene-codex__label scene-codex__label--inner"><i data-lucide="book-open"></i> Scene Ledger</div>
+                            <div class="codex-ledger-grid">
+                                <label class="codex-ledger__label" title="Narrative arc or scene goal">Arc</label>
+                                <input id="codex-arc-note" type="text" class="codex-input codex-ledger__input" placeholder="Scene goal or arc beat…">
+                                <label class="codex-ledger__label" title="A secret only you know — never stated aloud">Secret</label>
+                                <input id="codex-secret" type="text" class="codex-input codex-ledger__input" placeholder="Hidden truth the characters don't know…">
+                                <label class="codex-ledger__label" title="Something that is building toward a reveal">Reveal</label>
+                                <input id="codex-reveal-pending" type="text" class="codex-input codex-ledger__input" placeholder="What's building toward a reveal…">
+                                <label class="codex-ledger__label" title="Current relationship dynamic">Relation</label>
+                                <input id="codex-relationship-state" type="text" class="codex-input codex-ledger__input" placeholder="Current relationship tension or dynamic…">
+                            </div>
                         </div>
                         <div class="scene-codex__label scene-codex__label--inner"><i data-lucide="image"></i> Quick Media</div>
                         <div class="codex-media-btns">
@@ -339,7 +349,8 @@
                         <div id="codex-session-stats" class="codex-session-stats">
                             <span class="codex-stat"><span class="codex-stat__k">Turns</span><span id="cstat-turns" class="codex-stat__v">—</span></span>
                             <span class="codex-stat"><span class="codex-stat__k">Tokens</span><span id="cstat-tokens" class="codex-stat__v">—</span></span>
-                            <span class="codex-stat"><span class="codex-stat__k">Model</span><span id="cstat-model" class="codex-stat__v codex-stat__v--accent">—</span></span>
+                            <span class="codex-stat"><span class="codex-stat__k">Scene</span><span id="cstat-scene" class="codex-stat__v codex-stat__v--accent">—</span></span>
+                            <span class="codex-stat"><span class="codex-stat__k">Model</span><span id="cstat-model" class="codex-stat__v">—</span></span>
                             <span class="codex-stat"><span class="codex-stat__k">NSFW</span><span id="cstat-nsfw" class="codex-stat__v">—</span></span>
                         </div>
                     </div>
@@ -3038,7 +3049,7 @@
 
 <div id="toast-container" class="toast-container"></div>
 <script src="https://cdn.trap.lol/shards/lucide.min.js"></script><script src="https://cdn.trap.lol/shards/marked.min.js"></script><script src="https://cdn.trap.lol/shards/purify.min.js"></script>
-<script type="module" src="./script/main.js?v=59"></script>
+<script type="module" src="./script/main.js?v=60"></script>
 <!-- ── Wallhaven Arena ── -->
 <script src="./script/modules/wallhaven.js"></script>
 

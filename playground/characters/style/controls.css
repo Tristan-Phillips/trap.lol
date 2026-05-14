@@ -224,6 +224,15 @@ input:checked + .toggle-switch__slider::before        { transform: translateX(16
     letter-spacing: 0;
 }
 .debug-prompt[open] .debug-prompt__hint { display: none; }
+.debug-prompt__tok {
+    font-size: 0.6rem;
+    opacity: 0.55;
+    font-family: var(--font-mono);
+    margin-left: 4px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    background: rgba(var(--accent-rgb), 0.08);
+}
 .debug-prompt__body {
     padding: 10px 14px;
     margin: 0;
@@ -236,6 +245,68 @@ input:checked + .toggle-switch__slider::before        { transform: translateX(16
     max-height: 400px;
     overflow-y: auto;
     background: rgba(0,0,0,0.2);
+}
+
+/* Prompt inspector sections */
+.pi-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+.pi-section {
+    border-top: 1px solid rgba(var(--accent-rgb), 0.08);
+}
+.pi-section:first-child { border-top: none; }
+.pi-section__head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    font-size: 0.62rem;
+    font-family: var(--font-mono);
+    cursor: pointer;
+    user-select: none;
+    list-style: none;
+    background: rgba(0,0,0,0.15);
+    transition: background 0.12s;
+}
+.pi-section__head:hover { background: rgba(var(--accent-rgb), 0.06); }
+.pi-section__role {
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+.pi-section__role--system { background: rgba(190,41,236,0.15); color: rgba(190,41,236,0.9); }
+.pi-section__role--user   { background: rgba(var(--accent-warm-rgb),0.12); color: rgba(var(--accent-warm-rgb),0.85); }
+.pi-section__role--assistant { background: rgba(80,200,120,0.12); color: rgba(80,200,120,0.85); }
+.pi-section__label {
+    flex: 1;
+    color: var(--text-muted);
+    opacity: 0.75;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+.pi-section__tok {
+    font-size: 0.58rem;
+    opacity: 0.45;
+}
+.pi-section__body {
+    padding: 8px 16px;
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.61rem;
+    color: var(--text-muted);
+    line-height: 1.55;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 260px;
+    overflow-y: auto;
+    background: rgba(0,0,0,0.25);
+    border-top: 1px solid rgba(var(--accent-rgb), 0.06);
 }
 
 /* ── Message thought bubble ── */

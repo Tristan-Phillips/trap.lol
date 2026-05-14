@@ -6041,15 +6041,24 @@ export function initUI() {
         const commentCount  = msgObj.comments?.length || 0;
         const hasComments   = commentCount > 0;
         const isBot         = role === 'bot';
+        const isUser        = role === 'user';
         const modelLabel    = msgObj.model ? `<span class="message__model-badge">${esc(msgObj.model.split('/').pop() || msgObj.model)}</span>` : '';
         const tokenLabel    = (isBot && msgObj.tokens > 0) ? `<span class="message__token-badge" title="${msgObj.tokens} tokens">${msgObj.tokens}t</span>` : '';
+
+        // Player avatar: monogram initial if no explicit avatar set
+        const playerInitial = isUser
+            ? (state.config.userName || 'You').trim().slice(0, 2).toUpperCase()
+            : null;
+        const avatarHtml = isUser && !avatar
+            ? `<div class="message__avatar message__avatar--monogram">${esc(playerInitial)}</div>`
+            : buildAvatarHtml(avatar, 'message__avatar');
 
         const $msg = document.createElement('div');
         $msg.className = `message message--${role}`;
         $msg.dataset.msgId = id;
 
         $msg.innerHTML = `
-            ${buildAvatarHtml(avatar, 'message__avatar')}
+            ${avatarHtml}
             <div class="message__main">
                 <div class="message__header">
                     <span class="message__name">${esc(name)}</span>
@@ -6074,6 +6083,15 @@ export function initUI() {
                     <div class="message__content">${renderMarkdown(content)}</div>
                 </div>
                 ${msgObj.edited ? '<span class="message__meta-tag">edited</span>' : ''}
+                ${(isBot && msgObj.variants?.length) ? (() => {
+                    const total = (msgObj.variants?.length || 0) + 1;
+                    const cur   = (msgObj.variantIdx ?? 0) + 1;
+                    return `<div class="msg-variants" data-msg-id="${esc(id)}">
+                        <button class="msg-variant-btn" data-dir="-1" title="Previous variant" ${cur <= 1 ? 'disabled' : ''}><i data-lucide="chevron-left"></i></button>
+                        <span class="msg-variant-count">${cur} / ${total}</span>
+                        <button class="msg-variant-btn" data-dir="1" title="Next variant" ${cur >= total ? 'disabled' : ''}><i data-lucide="chevron-right"></i></button>
+                    </div>`;
+                })() : ''}
                 ${(() => {
                     const r = msgObj.reactions || {};
                     const entries = Object.entries(r).filter(([, who]) => who.length > 0);
@@ -6139,13 +6157,19 @@ export function initUI() {
             });
         });
 
-        // ── Retry (regenerate — removes this message, re-runs) ───────────────
+        // ── Retry (regenerate — saves old as variant, replaces content) ────────
         qs('[data-action="retry"]', $msg)?.addEventListener('click', async () => {
             if (state.isStreaming) return;
             const targetBotId = qs('[data-action="retry"]', $msg)?.dataset.botId || state.activeBotId;
             if (!targetBotId) return;
             const idx = state.history.findIndex(m => m.id === id);
             if (idx >= 0) {
+                // Save current content as a variant before removing
+                const msgObj = state.history[idx];
+                if (msgObj.content) {
+                    if (!msgObj.variants) msgObj.variants = [];
+                    msgObj.variants.push(msgObj.content);
+                }
                 state.chat.history = state.history.slice(0, idx);
                 saveState();
                 const allMsgs = qsa('.message', $thread);
@@ -6223,6 +6247,39 @@ export function initUI() {
             if (!ok) return;
             deleteMessage(id);
             $msg.remove();
+        });
+
+        // ── Variant navigator ────────────────────────────────────────────────
+        qsa('.msg-variant-btn', $msg).forEach(btn => {
+            btn.addEventListener('click', () => {
+                const msgObj = state.history.find(m => m.id === id);
+                if (!msgObj) return;
+                const variants = msgObj.variants || [];
+                if (!variants.length) return;
+                const total = variants.length + 1; // variants + current
+                const curIdx = msgObj.variantIdx ?? 0;
+                const dir = parseInt(btn.dataset.dir, 10);
+                const newIdx = Math.max(0, Math.min(total - 1, curIdx + dir));
+                if (newIdx === curIdx) return;
+
+                // variants[0..n-1] are past versions; current content is "slot n"
+                // Navigate: slot 0 = variants[0], slot n = current content
+                const allVersions = [...variants, msgObj.content]; // [v0, v1, ..., current]
+                msgObj.content = allVersions[newIdx];
+                msgObj.variantIdx = newIdx;
+                // Re-store all other versions back into variants array
+                msgObj.variants = allVersions.filter((_, i) => i !== newIdx);
+                saveState();
+
+                // Update DOM
+                const $content = qs('.message__content', $msg);
+                if ($content) $content.innerHTML = renderMarkdown(msgObj.content);
+                const $count = qs('.msg-variant-count', $msg);
+                if ($count) $count.textContent = `${newIdx + 1} / ${total}`;
+                const [$prev, $next] = qsa('.msg-variant-btn', $msg);
+                if ($prev) $prev.disabled = newIdx <= 0;
+                if ($next) $next.disabled = newIdx >= total - 1;
+            });
         });
 
         if (!$thread) return;
@@ -6317,9 +6374,13 @@ export function initUI() {
             return `${name}: ${m.content?.slice(0, 250)}`;
         }).join('\n');
 
+        // Read scene ledger and scene number
+        const ledger = state.config._codexLedger || {};
+        const sceneNumber = _countScenes();
+
         // Rich Overlord scene context — injected into system prompt so every Overlord
         // call is attuned to the current state of the scene, not just generic narration.
-        const overlordCtx = buildOverlordContext({ charNames, scenario, playerName, playerRole, playerAppearance, meters });
+        const overlordCtx = buildOverlordContext({ charNames, scenario, playerName, playerRole, playerAppearance, meters, ledger, sceneNumber });
 
         const overlordSystem = [
             `You are OVERLORD — the omniscient narrator voice of this collaborative roleplay. You are not any character. You are the unseen author: all-knowing, all-perceiving, writing in present tense with literary, sensory prose.`,
@@ -6339,6 +6400,14 @@ export function initUI() {
             max_tokens: maxTokens,
             temperature: 0.82
         });
+        // Scene break divider — inject before each Overlord block in live mode
+        if ($thread && $thread.childElementCount > 0 && !$thread.lastElementChild?.classList.contains('scene-divider')) {
+            const $sd = document.createElement('div');
+            const sceneNum = _countScenes();
+            $sd.className = 'scene-divider';
+            $sd.innerHTML = `<span class="scene-divider__line"></span><span class="scene-divider__label">Scene ${sceneNum + 1}</span><span class="scene-divider__line"></span>`;
+            $thread.appendChild($sd);
+        }
         _injectOverlordMessage(text, null, mode);
         // Persist to history so it survives page reload (overlordMode stored via meta)
         addMessage('system', text, null, { overlordMode: mode });
@@ -6772,8 +6841,38 @@ export function initUI() {
             return;
         }
 
-        state.history.forEach(msg => {
+        let _scenesRendered = 0; // local counter for scene divider numbering during replay
+
+        // Compute horizon index — which messages fall outside the context window
+        // Uses same token budget formula as applyContextStrategy in llm-engine.js
+        const _horizon = (() => {
+            const rc = state.config;
+            const budget = (rc.maxContext || 8192) - (rc.maxOutput || 512) - 800; // ~800t for system prompt
+            const msgs = state.history.filter(m => m.role !== 'image' && m.role !== 'video');
+            if (msgs.length < 2) return -1;
+            let tokens = 0;
+            let cutIdx = -1;
+            for (let i = msgs.length - 1; i >= 1; i--) {
+                tokens += Math.ceil((msgs[i].content?.length || 0) / 4) + 8;
+                if (tokens > budget) { cutIdx = i; break; }
+            }
+            if (cutIdx < 1) return -1;
+            // cutIdx is index in filtered array; map back to full history index
+            const cutMsg = msgs[cutIdx];
+            return state.history.findIndex(m => m === cutMsg);
+        })();
+
+        state.history.forEach((msg, idx) => {
             if (!$thread) return;
+
+            // Inject horizon divider just before the first in-context message
+            if (idx === _horizon + 1 && _horizon >= 0) {
+                const $div = document.createElement('div');
+                $div.className = 'context-horizon';
+                $div.innerHTML = `<i data-lucide="lock"></i><span>Context limit — messages above not sent to LLM</span>`;
+                $thread.appendChild($div);
+            }
+
             if (msg.role === 'image') {
                 // Resolve IDB reference before injecting
                 resolveImageUrl(msg.content).then(dataUrl => {
@@ -6790,12 +6889,24 @@ export function initUI() {
                 return;
             }
             if (msg.role === 'system' && !msg._isAnchor) {
+                // Scene break divider — rendered before the Overlord block it belongs to
+                if (msg.sceneBreak && $thread.childElementCount > 0 && !$thread.lastElementChild?.classList.contains('scene-divider')) {
+                    const $sd = document.createElement('div');
+                    $sd.className = 'scene-divider';
+                    $sd.innerHTML = `<span class="scene-divider__line"></span><span class="scene-divider__label">Scene ${_scenesRendered + 1}</span><span class="scene-divider__line"></span>`;
+                    $thread.appendChild($sd);
+                }
                 _injectOverlordMessage(msg.content, null, msg.overlordMode || 'scene');
+                _scenesRendered++;
                 return;
             }
             const char = msg.botId ? state.loadedCharacters[msg.botId] : null;
             const meta = msg.botId ? state.characters.find(c => c.id === msg.botId) : null;
-            appendMessage(msg, char?.name || null, meta?.avatar_path || char?.avatar, msg.thoughts || null);
+            const $el = appendMessage(msg, char?.name || null, meta?.avatar_path || char?.avatar, msg.thoughts || null);
+            // Mark messages above horizon as horizon-past
+            if (_horizon >= 0 && idx < _horizon + 1) {
+                $el?.classList.add('message--horizon-past');
+            }
         });
 
         // Auto-trigger Overlord scene-set for group chats that have history but no Overlord block.
@@ -6816,6 +6927,25 @@ export function initUI() {
                 350
             );
         } catch { /* silent — auto-trigger should never break the chat */ }
+    }
+
+    async function _maybeAutoTransition() {
+        if (!getApiKey()) return;
+        const turns = state.telemetry?.turns ?? 0;
+        const n = state.config.autoTransitionEvery ?? 8;
+        if (n <= 0 || turns <= 0 || turns % n !== 0) return;
+
+        // Check if an Overlord block already appeared in the last N messages
+        const recent = state.history.slice(-n);
+        const hasRecentOverlord = recent.some(m => m.role === 'system' && m.overlordMode);
+        if (hasRecentOverlord) return;
+
+        try {
+            await _fireOverlord('transition', ({ charNames, histText }) =>
+                `Narrate a scene transition for this roleplay. The current participants are: ${charNames.join(', ')}. Based on what has happened so far, write a brief atmospheric transition — a time-skip, movement to a new location, or a shift in mood. 1-2 vivid paragraphs. No dialogue.\n\n${histText}`,
+                250
+            );
+        } catch { /* silent */ }
     }
 
     // ── Thread Search ─────────────────────────────────────────────────────────
@@ -6949,12 +7079,58 @@ export function initUI() {
         },
     ];
 
+    // AI-generated contextual quick replies — cached per history length
+    let _aiQRCache = null;    // { histLen: N, replies: string[] }
+
+    async function _generateAIQuickReplies() {
+        const key = getApiKey();
+        if (!key) return;
+        const hist = state.history.filter(m => m.role === 'bot' || m.role === 'user').slice(-3);
+        if (hist.length < 1) return;
+        const histLen = state.history.length;
+        if (_aiQRCache?.histLen === histLen) return; // already cached for this turn
+
+        const snippet = hist.map(m => {
+            const name = m.role === 'user'
+                ? (state.config.userName || 'You')
+                : (state.loadedCharacters[m.botId]?.name || 'Character');
+            return `${name}: ${m.content?.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 120)}`;
+        }).join('\n');
+
+        try {
+            const { text } = await fetchCompletion({
+                model: state.config.model || 'deepseek-r1',
+                messages: [
+                    { role: 'system', content: 'You generate short reply starters for a player in a collaborative roleplay. Output ONLY a JSON array of exactly 4 strings, each 4-12 words. Each string is a complete first-person reply starter that the player can build on. Vary the tone: one bold/assertive, one curious, one emotional, one playful. No quotes around the full output — just raw JSON array.' },
+                    { role: 'user', content: `Recent exchange:\n${snippet}\n\nGenerate 4 reply starters.` }
+                ],
+                max_tokens: 120,
+                temperature: 0.9
+            });
+            const replies = parseLLMArray(text).slice(0, 4).filter(r => typeof r === 'string' && r.trim());
+            if (replies.length) {
+                _aiQRCache = { histLen, replies };
+                // Invalidate built flag so next bar open shows new suggestions
+                const $bar = qs('#quick-reply-bar');
+                if ($bar) delete $bar.dataset.built;
+            }
+        } catch { /* silent — AI suggestions are optional */ }
+    }
+
     qs('#btn-quick-reply')?.addEventListener('click', () => {
         const $bar = qs('#quick-reply-bar');
         if (!$bar) return;
         const open = $bar.hidden;
         if (open && !$bar.dataset.built) {
-            $bar.innerHTML = QR_GROUPS.map(grp =>
+            const aiSection = _aiQRCache?.replies?.length
+                ? `<div class="qr-group qr-group--ai">
+                    <span class="qr-group__label qr-group__label--ai"><i data-lucide="sparkles"></i> Suggested</span>
+                    ${_aiQRCache.replies.map((r, i) =>
+                        `<button class="qr-btn qr-btn--ai" data-qr-ai="${i}" title="${esc(r)}">${esc(r)}</button>`
+                    ).join('')}
+                   </div>`
+                : '';
+            $bar.innerHTML = aiSection + QR_GROUPS.map(grp =>
                 `<div class="qr-group">
                     <span class="qr-group__label">${esc(grp.label)}</span>
                     ${grp.entries.map(e =>
@@ -6963,8 +7139,25 @@ export function initUI() {
                 </div>`
             ).join('');
             $bar.dataset.built = '1';
+            lucideRefresh($bar);
         }
         $bar.hidden = !open;
+    });
+
+    // AI suggestion chip click handler
+    document.addEventListener('click', e => {
+        const btn = e.target.closest('.qr-btn--ai');
+        if (!btn) return;
+        const idx = parseInt(btn.dataset.qrAi, 10);
+        const text = _aiQRCache?.replies?.[idx];
+        if (!text) return;
+        const $ta = qs('#rp-input');
+        if (!$ta) return;
+        $ta.value = $ta.value ? `${$ta.value}\n${text}` : text;
+        $ta.dispatchEvent(new Event('input'));
+        $ta.focus();
+        const $bar = qs('#quick-reply-bar');
+        if ($bar) $bar.hidden = true;
     });
 
     // Flat lookup map for click handler
@@ -7313,20 +7506,38 @@ export function initUI() {
                 meters:              _liveMeters,
             });
 
-            // Debug: show built system prompt as a one-time collapsible block,
-            // only when the thread has no prior debug message this session.
+            // Debug: structured prompt inspector — parses payload.messages into
+            // labelled sections with token count badges. Only shown once per thread load.
             if (state.config.flags?.showSystemPrompt && !qs('.message--debug', $thread)) {
-                const sysMsgs = payload.messages.filter(m => m.role === 'system');
-                const sysText = sysMsgs.map(m => m.content).join('\n\n---\n\n');
-                const $debug  = document.createElement('div');
+                const estimateTok = s => Math.round((s || '').length / 4);
+                const totalTok = payload.messages.reduce((s, m) => s + estimateTok(m.content) + 8, 0);
+
+                const sections = payload.messages.map((m, i) => {
+                    const tok = estimateTok(m.content) + 8;
+                    // Extract section label from block header like [SECTION TITLE] or first line
+                    const headerMatch = m.content.match(/^\[([A-Z][A-Z0-9 _\-]{1,40})\]/);
+                    const firstLine = m.content.split('\n')[0].slice(0, 60);
+                    const label = headerMatch ? headerMatch[1] : (m.role === 'system' ? `System ${i + 1}` : `${m.role[0].toUpperCase()}${m.role.slice(1)} ${i + 1}`);
+                    return `<details class="pi-section">
+                        <summary class="pi-section__head">
+                            <span class="pi-section__role pi-section__role--${esc(m.role)}">${esc(m.role)}</span>
+                            <span class="pi-section__label">${esc(label)}</span>
+                            <span class="pi-section__tok">${tok}t</span>
+                        </summary>
+                        <pre class="pi-section__body">${esc(m.content)}</pre>
+                    </details>`;
+                }).join('');
+
+                const $debug = document.createElement('div');
                 $debug.className = 'message message--debug';
                 $debug.innerHTML = `
                     <details class="debug-prompt">
                         <summary class="debug-prompt__label">
-                            <i data-lucide="terminal"></i> System Prompt
+                            <i data-lucide="terminal"></i> Prompt Inspector
+                            <span class="debug-prompt__tok">${totalTok}t total · ${payload.messages.length} blocks</span>
                             <span class="debug-prompt__hint">click to expand</span>
                         </summary>
-                        <pre class="debug-prompt__body">${esc(sysText)}</pre>
+                        <div class="pi-body">${sections}</div>
                     </details>`;
                 $thread.insertBefore($debug, $botMsg);
                 lucideRefresh($debug);
@@ -7426,6 +7637,10 @@ export function initUI() {
                     // Always update codex meters/digest after each bot message — keeps the
                     // ambient status live even when the codex panel is closed.
                     updateCodexDigest();
+                    // Background: generate AI contextual quick reply starters for this turn
+                    _generateAIQuickReplies();
+                    // Auto transition every N turns (default 8) if no Overlord block in last N messages
+                    _maybeAutoTransition();
                 },
                 (err) => {
                     $thinkingAside?.remove();
@@ -7818,6 +8033,13 @@ export function initUI() {
         set('group-turn-mode',  c.groupTurnMode);
         if (qs('#model-select') && c.model) qs('#model-select').value = c.model;
         if (qs('#stream-toggle')) qs('#stream-toggle').checked = c.stream;
+
+        // Scene ledger fields
+        const ledger = c._codexLedger || {};
+        set('codex-arc-note',            ledger.arcNote          || '');
+        set('codex-secret',              ledger.secret           || '');
+        set('codex-reveal-pending',      ledger.revealPending    || '');
+        set('codex-relationship-state',  ledger.relationshipState|| '');
 
         // World tab — worldConfig.scenario is authoritative
         const worldScenario = state.reality?.worldConfig?.scenario || '';
@@ -8293,15 +8515,31 @@ export function initUI() {
     $codexBtn?.addEventListener('click', toggleCodex);
     $codexClose?.addEventListener('click', closeCodex);
 
-    // Scene Codex: god-control buttons — use same REINJECT_LABELS system
-    qsa('.codex-inject-btn[data-ri]').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const key = btn.dataset.ri;
-            if (!key || !REINJECT_LABELS[key]) return;
-            const charName = getCharOverride(state.activeBotId)?.nickname
+    // Helper: returns a character name string for directive targeting.
+    // In group mode shows a quick inline picker; in DM mode returns activeBotId name.
+    async function _pickTargetChar() {
+        const botIds = state.chat?.botIds || [];
+        const isGroup = state.chat?.type === 'group' && botIds.length > 1;
+        if (!isGroup) {
+            return getCharOverride(state.activeBotId)?.nickname
                 || state.loadedCharacters[state.activeBotId]?.name
                 || 'Character';
-            const directive = REINJECT_LABELS[key].replace(/\{CHAR\}/g, charName);
+        }
+        const names = botIds.map(id => getCharOverride(id)?.nickname || state.loadedCharacters[id]?.name || id);
+        const opts = ['All characters', ...names];
+        const picked = await showPickerModal('Target Character', async () => opts);
+        if (picked === null) return null; // cancelled
+        return picked === 'All characters' ? 'the character' : picked;
+    }
+
+    // Scene Codex: god-control buttons — use same REINJECT_LABELS system
+    qsa('.codex-inject-btn[data-ri]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const key = btn.dataset.ri;
+            if (!key || !REINJECT_LABELS[key]) return;
+            const charName = await _pickTargetChar();
+            if (charName === null) return; // user cancelled
+            const directive = REINJECT_LABELS[key].replace(/\{CHAR\}/g, charName || 'Character');
             const ta = qs('#rp-input');
             if (!ta) return;
             ta.dataset.pendingReinject = directive;
@@ -8309,7 +8547,7 @@ export function initUI() {
             // Visual feedback
             btn.classList.add('codex-inject-btn--fired');
             setTimeout(() => btn.classList.remove('codex-inject-btn--fired'), 700);
-            showToast(`Directive queued: ${key}`, 'info', 1800);
+            showToast(`Directive queued: ${key}${charName ? ` → ${charName}` : ''}`, 'info', 1800);
         });
     });
 
@@ -8552,22 +8790,59 @@ export function initUI() {
         }
     }
 
-    // Codex: scene digest — last assistant message plain text excerpt
+    // Count Overlord scene blocks in history — used for scene numbering
+    function _countScenes() {
+        return state.history.filter(m => m.role === 'system' && m.overlordMode).length;
+    }
+
+    // Codex: live structured digest
     function updateCodexDigest() {
         const $digest = qs('#codex-digest');
         if (!$digest) return;
         updateCodexMeters();
 
-        const lastBot = [...state.history].reverse().find(m => m.role === 'bot');
-        if (!lastBot?.content) {
+        const history = state.history;
+        if (!history.length) {
             $digest.innerHTML = '<span class="codex-digest__empty">Start a conversation to see scene context.</span>';
         } else {
-            const plain = lastBot.content
-                .replace(/<[^>]+>/g, '')
-                .replace(/\*{1,3}([^*]+)\*{1,3}/g, '$1')
-                .replace(/_([^_]+)_/g, '$1')
-                .replace(/\s+/g, ' ').trim().slice(0, 280);
-            $digest.textContent = plain + (plain.length === 280 ? '…' : '');
+            // Active characters with last spoken line
+            const activeBotIds = state.chat?.botIds || (state.activeBotId ? [state.activeBotId] : []);
+            const charLines = activeBotIds.map(bid => {
+                const name = getCharOverride(bid)?.nickname || state.loadedCharacters[bid]?.name || bid;
+                const av   = (() => {
+                    const meta = state.characters.find(c => c.id === bid);
+                    const rawAv = meta?.avatar_path || state.loadedCharacters[bid]?.avatar || null;
+                    return rawAv ? getAvatarUrlSync(bid, rawAv) : null;
+                })();
+                const avHtml = buildAvatarHtml(av, 'codex-digest__av', '', state.characters.find(c => c.id === bid));
+                const lastMsg = [...history].reverse().find(m => m.botId === bid && m.role === 'bot');
+                const snippet = lastMsg?.content
+                    ? lastMsg.content.replace(/<[^>]+>/g, '').replace(/\*{1,3}([^*]+)\*{1,3}/g, '$1').replace(/\s+/g, ' ').trim().slice(0, 80)
+                    : '—';
+                return `<div class="codex-digest__char">
+                    ${avHtml}
+                    <div class="codex-digest__char-body">
+                        <span class="codex-digest__char-name">${esc(name)}</span>
+                        <span class="codex-digest__char-line">${esc(snippet)}${snippet.length === 80 ? '…' : ''}</span>
+                    </div>
+                </div>`;
+            }).join('');
+
+            // Last Overlord mode
+            const lastOverlord = [...history].reverse().find(m => m.role === 'system' && m.overlordMode);
+            const sceneCount = _countScenes();
+            const overlordLabel = lastOverlord?.overlordMode
+                ? `<span class="codex-digest__meta codex-digest__meta--overlord">Overlord: ${esc(lastOverlord.overlordMode)}</span>`
+                : '';
+            const sceneLabel = sceneCount > 0
+                ? `<span class="codex-digest__meta">Scene ${sceneCount}</span>`
+                : '';
+
+            $digest.innerHTML = charLines || '<span class="codex-digest__empty">No characters active.</span>';
+            if (overlordLabel || sceneLabel) {
+                $digest.insertAdjacentHTML('beforeend',
+                    `<div class="codex-digest__meta-row">${overlordLabel}${sceneLabel}</div>`);
+            }
         }
 
         // Session stats strip
@@ -8582,6 +8857,7 @@ export function initUI() {
         const $tokens = qs('#cstat-tokens');
         const $model  = qs('#cstat-model');
         const $nsfw   = qs('#cstat-nsfw');
+        const $scene  = qs('#cstat-scene');
         if ($turns)  $turns.textContent  = turns;
         if ($tokens) $tokens.textContent = tokens > 999 ? `${(tokens/1000).toFixed(1)}k` : tokens;
         if ($model)  $model.textContent  = modelShort;
@@ -8589,11 +8865,18 @@ export function initUI() {
             $nsfw.textContent = nsfw ? 'ON' : 'OFF';
             $nsfw.className = `codex-stat__v ${nsfw ? 'codex-stat__v--accent' : 'codex-stat__v--dim'}`;
         }
+        if ($scene) $scene.textContent = _countScenes() || '—';
     }
 
-    // Arc note persistence
-    qs('#codex-arc-input')?.addEventListener('change', e => {
-        setConfig({ _codexArc: e.target.value });
+    // Scene ledger persistence — 4 structured slots
+    const _codexLedgerIds = ['codex-arc-note', 'codex-secret', 'codex-reveal-pending', 'codex-relationship-state'];
+    const _codexLedgerKeys = ['arcNote', 'secret', 'revealPending', 'relationshipState'];
+    _codexLedgerIds.forEach((elId, i) => {
+        qs(`#${elId}`)?.addEventListener('change', e => {
+            const ledger = state.config._codexLedger || {};
+            ledger[_codexLedgerKeys[i]] = e.target.value;
+            setConfig({ _codexLedger: ledger });
+        });
     });
 
     // Keyboard shortcut for codex
@@ -8838,13 +9121,12 @@ export function initUI() {
     });
 
     qsa('.reinject-btn[data-ri]').forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', async () => {
             const key = btn.dataset.ri;
             if (!key || !REINJECT_LABELS[key]) return;
-            const charName = getCharOverride(state.activeBotId)?.nickname
-                || state.loadedCharacters[state.activeBotId]?.name
-                || 'Character';
-            const directive = REINJECT_LABELS[key].replace(/\{CHAR\}/g, charName);
+            const charName = await _pickTargetChar();
+            if (charName === null) return;
+            const directive = REINJECT_LABELS[key].replace(/\{CHAR\}/g, charName || 'Character');
             const ta = qs('#rp-input');
             if (!ta) return;
             ta.dataset.pendingReinject = (ta.dataset.pendingReinject || '') + '\n' + directive;

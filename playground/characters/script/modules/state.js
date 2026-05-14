@@ -400,6 +400,9 @@ export function addMessage(role, content, botId = null, meta = {}) {
         prompt: meta.prompt || null,
         thoughts: meta.thoughts || null,
         overlordMode: meta.overlordMode || null,
+        sceneBreak: meta.sceneBreak ?? (meta.overlordMode ? true : false),
+        variants: meta.variants || [],
+        variantIdx: meta.variantIdx ?? 0,
         comments: [],
         reactions: {},
         edited: false
@@ -510,7 +513,7 @@ export function removeBotFromChat(id) {
  * Returns a collection of history entries from other chats in this reality
  * for a specific bot. This is the "past memory" injected into the prompt.
  */
-export function getBotMemoriesFromReality(botId, currentChatId, limit = 10) {
+export function getBotMemoriesFromReality(botId, currentChatId, limit = 20) {
     const memories = [];
     state.reality.chats.forEach(c => {
         if (c.id === currentChatId) return; // Skip current

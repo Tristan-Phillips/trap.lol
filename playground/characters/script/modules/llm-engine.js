@@ -476,7 +476,7 @@ function buildThoughtsDirective(flags) {
 // Assembles everything Overlord needs to write contextually-aware narration:
 // scenario tone, character roster, player identity, and current meter readings.
 // Called by ui.js and passed into the Overlord system prompt.
-export function buildOverlordContext({ charNames = [], scenario = '', playerName = 'the player', playerRole = '', playerAppearance = '', meters = {} } = {}) {
+export function buildOverlordContext({ charNames = [], scenario = '', playerName = 'the player', playerRole = '', playerAppearance = '', meters = {}, ledger = {}, sceneNumber = null } = {}) {
     const charList = charNames.length
         ? `Characters present: ${charNames.join(', ')}`
         : '';
@@ -492,11 +492,22 @@ export function buildOverlordContext({ charNames = [], scenario = '', playerName
     if (meters.danger   != null) meterLines.push(`Danger ${meters.danger}%`);
     const meterStr = meterLines.length ? `Scene meters: ${meterLines.join(', ')}` : '';
 
+    const ledgerLines = [];
+    if (ledger.arcNote)           ledgerLines.push(`Arc: ${ledger.arcNote}`);
+    if (ledger.secret)            ledgerLines.push(`Secret: ${ledger.secret}`);
+    if (ledger.revealPending)     ledgerLines.push(`Reveal building: ${ledger.revealPending}`);
+    if (ledger.relationshipState) ledgerLines.push(`Relationship state: ${ledger.relationshipState}`);
+    const ledgerStr = ledgerLines.length ? `[Scene Ledger]\n${ledgerLines.join('\n')}` : '';
+
+    const sceneLabel = sceneNumber != null ? `Scene ${sceneNumber}` : '';
+
     const parts = [
+        sceneLabel,
         scenario    ? `Scenario / tone: ${scenario.slice(0, 300)}` : '',
         charList,
         playerLine,
         meterStr,
+        ledgerStr,
     ].filter(Boolean);
 
     return parts.join('\n');

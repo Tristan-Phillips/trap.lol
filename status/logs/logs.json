@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.3.19",
+    "schema_version": "1.3.20",
     "last_updated": "2026-05-14",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -472,6 +472,26 @@
     ]
   },
   "commits": [
+    {
+      "hash": "TBD_B",
+      "date": "2026-05-14",
+      "message": "feat(underdark): batch B — player identity, scene ledger, digest, horizon, AI quick replies, variants, scene markers, char targeting, prompt inspector — ui.js v91",
+      "scope": "playground/characters — ui.js, llm-engine.js, state.js, index.html, arena.css, scene-codex.css, controls.css, style.css, main.js",
+      "impact": "high",
+      "files": [
+        "playground/characters/script/modules/ui.js",
+        "playground/characters/script/modules/llm-engine.js",
+        "playground/characters/script/modules/state.js",
+        "playground/characters/script/main.js",
+        "playground/characters/index.html",
+        "playground/characters/style/arena.css",
+        "playground/characters/style/scene-codex.css",
+        "playground/characters/style/controls.css",
+        "playground/characters/style/style.css",
+        "status/logs/logs.json"
+      ],
+      "why": "Batch B — 11 features implementing the next layer of immersion and information architecture: (6) Player bubble lighter-variant UFR rendering — rp-* classes at 78% intensity for user messages; monogram initial avatar for players; (7) Scene markers — sceneBreak field on message schema, scene-divider element injected before each Overlord block; (8) Message variants — retry appends old content to variants[], chevron navigator with counter rendered below message; (9) Structured codex digest — live char rows with avatar/name/last-line, Overlord mode badge, scene number badge; (11) Auto transition every N=8 turns — fires _fireOverlord transition if no Overlord block appeared in last N messages; (12) Memory horizon UI — context cut divider with lock icon; out-of-context messages faded to 35% + sepia; (13) Memory depth 20; (14) Scene ledger — 4 structured codex slots injected into buildOverlordContext; (15) Char-targeted directives — group mode shows char picker on inject buttons; (16) AI contextual quick replies — background LLM generates 4 reply starters per turn, shown as warm-gold chips; (18) Structured prompt inspector — payload messages parsed into labelled details with role badge + token count; (19) Scene number tracking via _countScenes()."
+    },
     {
       "hash": "f5653e0",
       "date": "2026-05-14",
@@ -1418,6 +1438,28 @@
       "date": "2026-05-14",
       "agent": "Claude Sonnet 4.6",
       "type": "feature_development",
+      "summary": "Batch B — 11 features across immersion, scene management, and information display. Player bubble UFR rendering: rp-speech/action/thought/narration classes applied at 78% intensity for user messages (lighter variant) so bot responses stay visually dominant; players get monogram initial avatars instead of generic emoji. Scene markers: sceneBreak field in message schema, auto-set for all Overlord messages; scene-divider element (purple gradient pill) injected before each Overlord block in both live and history-replay modes, numbered sequentially. Message variant navigator: retry preserves old content in variants[], chevron prev/next navigator with turn counter renders below bot messages when variants exist. Structured codex digest: replaced plain text excerpt with live character rows (22px avatar, name in mono, last spoken line truncated to 80 chars), Overlord mode badge, scene number badge; session stats strip gains Scene counter. Auto transition: _maybeAutoTransition fires after each bot turn — if turns%N==0 and no Overlord block in last N messages, auto-fires transition narration. Memory horizon UI: context cut point computed from token budget, rendered as amber lock-icon divider; out-of-context messages faded to 35% opacity with sepia filter, hoverable to 60%. Memory depth bumped to 20. Scene ledger: 4 structured slots replace single arc input — Arc, Secret, Reveal, Relationship; stored in state.config._codexLedger; injected into buildOverlordContext (Overlord-only, not every bot message per user decision). Character-targeted directives: codex inject + reinject tray buttons show showPickerModal char list in group mode; All characters option maps to 'the character' string. AI contextual quick replies: background fetchCompletion after each bot turn generates 4 reply starters, cached in _aiQRCache; displayed as warm-gold italic chips above static QR groups when bar opens. Structured prompt inspector: showSystemPrompt flag now renders each payload message as a collapsible <details> block with role badge (colour-coded), section label (from [HEADER] or message number), and token count; total token budget shown in summary. Scene number tracking: _countScenes() counts overlord-mode history entries, displayed in cstat-scene stat strip, scene divider labels, and passed as sceneNumber into buildOverlordContext.",
+      "decisions": [
+        "Player UFR at lighter variant (78% intensity) rather than full — bot responses must stay the visual focal point; symmetric UFR would dilute the character's presence.",
+        "Scene ledger injection is Overlord-only (not every bot message) — individual character responses stay lean; the Overlord is the narrative meta-layer and should hold meta-state.",
+        "AI quick replies auto-generate after each bot turn (not on-demand) — the cache means zero wait time when the bar opens; background calls are cheap at 120 tokens.",
+        "Variant navigation uses a flat [variants..., currentContent] array — navigating rearranges the content and variants fields so the 'current' content is always msgObj.content, not a separate pointer.",
+        "_countScenes() reads from state.history overlordMode field rather than DOM .overlord-block count — DOM is not available in llm-engine.js context; history is the ground truth.",
+        "Auto transition default N=8 stored in state.config.autoTransitionEvery — configurable without a UI element yet; default 8 feels like 2-3 exchanges per character.",
+        "Memory horizon uses a local token budget estimate (text.length/4) — exact same formula as applyContextStrategy, no need to import estimateTokens into ui.js.",
+        "Character picker for targeted directives shows All characters as first option — most use case is directing a specific character, but scene-wide directives should remain easy."
+      ],
+      "rules_reinforced": [
+        "Lighter intensity for player UFR vs bot UFR is correct — characters are the stars, the player is the author.",
+        "Scene ledger meta-state belongs to the Overlord system prompt, not character prompts.",
+        "Background async calls (AI quick replies, LLM meter scoring) must never block or show errors to the user — silent catch everywhere.",
+        "DOM is always the source of truth for live values; state.history is the source of truth for persistent structural values."
+      ]
+    },
+    {
+      "date": "2026-05-14",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
       "summary": "Foundation batch — five LLM information architecture improvements. (1) rp-action visual layer: *asterisk* text now renders with blue-silver glow as a distinct 4th format tier (Physical action) alongside speech/thought/narration; UFR directive explicitly enumerates all four layers with examples. (2) STATUS tag meter feedback: bot responses can now contain [TENSION X%]/[INTIMACY X%]/[DANGER X%] tags that directly update the codex meters live during a session. (3) LLM-scored meters: hybrid scoring system — keyword heuristic fires immediately, background LLM call every 3 turns returns structured {tension,intimacy,danger} JSON and overwrites the estimate; result cached in sessionStorage per history length. (4) Enriched group cue card: the per-character turn anchor now includes the last spoken line from every other character and a live meter state string so the LLM has full situational context at write time. (5) Narrative tone in DMs: tone config section moved from Group-only tab to Generation tab (always visible); llm-engine.js injects a [NARRATIVE TONE DIRECTIVE] system message for DM threads when fields are set; tone collected once in thread setup and mirrored into gc for group threads to avoid double DOM reads.",
       "decisions": [
         "<em>→rp-action conversion runs post-sanitize, after the text-node narration pass, so there is no interference between the two passes — narration regex was updated from excluding <em> to excluding .rp-action spans.",
@@ -2204,6 +2246,116 @@
   "pending_work": {
     "_note": "This section tracks features requested by trap that are partially or fully unimplemented. An LLM reading this file must check this section before asking what to do. Status values: 'not_started' | 'in_progress' | 'done' | 'deferred' | 'wont_do'. Update status and notes after each session. Never remove entries — only update them.",
     "features": [
+      {
+        "id": "player-bubble-ufr",
+        "title": "Player bubble UFR rendering + identity monogram",
+        "status": "done",
+        "requested": "2026-05-14",
+        "completed": "2026-05-14",
+        "description": "Apply UFR rp-* CSS classes to player messages at lighter intensity (78%) so bot responses stay visually dominant. Use monogram initial avatar instead of generic emoji.",
+        "notes": "Done in TBD_B. arena.css: .message--user .message__content .rp-* at 78% intensity. appendMessage: playerInitial computed from userName, avatarHtml uses .message__avatar--monogram div for users without avatar.",
+        "files_affected": ["playground/characters/style/arena.css", "playground/characters/script/modules/ui.js"]
+      },
+      {
+        "id": "scene-markers",
+        "title": "Scene markers in history with divider",
+        "status": "done",
+        "requested": "2026-05-14",
+        "completed": "2026-05-14",
+        "description": "sceneBreak field added to message schema, auto-set for all Overlord messages. renderFullHistory injects .scene-divider element before each Overlord block, numbered sequentially. _fireOverlord also injects divider in live mode.",
+        "notes": "Done in TBD_B. state.js addMessage: sceneBreak: meta.sceneBreak ?? (meta.overlordMode ? true : false). renderFullHistory: _scenesRendered counter, scene-divider div injected before overlord render. arena.css: .scene-divider with gradient lines and purple pill label.",
+        "files_affected": ["playground/characters/script/modules/state.js", "playground/characters/script/modules/ui.js", "playground/characters/style/arena.css"]
+      },
+      {
+        "id": "message-variants",
+        "title": "Message variants / retry navigator",
+        "status": "done",
+        "requested": "2026-05-14",
+        "completed": "2026-05-14",
+        "description": "Retry appends current content to variants[] before removing message. appendMessage renders chevron prev/next navigator with turn counter when variants exist. State persisted via saveState.",
+        "notes": "Done in TBD_B. state.js: variants: [], variantIdx: 0 in message schema. Retry handler saves to variants before history slice. appendMessage: .msg-variants nav rendered for bot messages with variants. Variant click handler rearranges variants/content array.",
+        "files_affected": ["playground/characters/script/modules/state.js", "playground/characters/script/modules/ui.js", "playground/characters/style/arena.css"]
+      },
+      {
+        "id": "structured-codex-digest",
+        "title": "Structured codex live digest + scene number tracking",
+        "status": "done",
+        "requested": "2026-05-14",
+        "completed": "2026-05-14",
+        "description": "updateCodexDigest rebuilt to show active char rows (avatar, name, last line), Overlord mode badge, scene number. _countScenes() counts overlordMode history entries. cstat-scene stat added.",
+        "notes": "Done in TBD_B. _countScenes() added. updateCodexDigest: builds .codex-digest__char rows per activeBotId with avatar/name/line; .codex-digest__meta-row with mode + scene labels. scene-codex.css: new codex-digest__char/av/name/line/meta-row styles.",
+        "files_affected": ["playground/characters/script/modules/ui.js", "playground/characters/style/scene-codex.css", "playground/characters/index.html"]
+      },
+      {
+        "id": "auto-overlord-transition",
+        "title": "Auto Overlord transition every N turns",
+        "status": "done",
+        "requested": "2026-05-14",
+        "completed": "2026-05-14",
+        "description": "_maybeAutoTransition fires after each bot turn — if turns%N==0 and no Overlord block in last N messages, auto-fires transition narration. N=8 default, stored as state.config.autoTransitionEvery.",
+        "notes": "Done in TBD_B. _maybeAutoTransition() checks turns%n and recent history for Overlord. Called after _generateAIQuickReplies in triggerBotResponse onDone.",
+        "files_affected": ["playground/characters/script/modules/ui.js"]
+      },
+      {
+        "id": "memory-horizon-ui",
+        "title": "Memory horizon UI — context cut divider + faded past messages",
+        "status": "done",
+        "requested": "2026-05-14",
+        "completed": "2026-05-14",
+        "description": "renderFullHistory computes context cut index from token budget. Injects .context-horizon divider at cut point. Messages above horizon get .message--horizon-past (opacity:0.35, sepia filter).",
+        "notes": "Done in TBD_B. Token budget: (maxContext - maxOutput - 800t for system prompt) using text.length/4 estimate. context-horizon div has lock icon + label. arena.css: .context-horizon amber divider, .message--horizon-past faded+sepia.",
+        "files_affected": ["playground/characters/script/modules/ui.js", "playground/characters/style/arena.css"]
+      },
+      {
+        "id": "scene-ledger",
+        "title": "Structured scene ledger (4 slots, Overlord-only)",
+        "status": "done",
+        "requested": "2026-05-14",
+        "completed": "2026-05-14",
+        "description": "Codex arc input replaced with 4 structured slots: Arc, Secret, Reveal Pending, Relationship State. Stored in state.config._codexLedger. Injected into buildOverlordContext only.",
+        "notes": "Done in TBD_B. index.html: .codex-ledger-grid with 4 label+input pairs. state.js not changed (stored in config). ui.js: 4 change listeners write to _codexLedger obj. syncConfigUI restores fields. buildOverlordContext: ledger param adds [Scene Ledger] block. scene-codex.css: .codex-ledger-grid 2-col grid.",
+        "files_affected": ["playground/characters/index.html", "playground/characters/script/modules/ui.js", "playground/characters/script/modules/llm-engine.js", "playground/characters/style/scene-codex.css"]
+      },
+      {
+        "id": "char-targeted-directives",
+        "title": "Character-targeted directives via picker",
+        "status": "done",
+        "requested": "2026-05-14",
+        "completed": "2026-05-14",
+        "description": "Codex inject and reinject tray buttons show showPickerModal with char list in group mode. Selected name replaces {CHAR} in directive. All characters option maps to generic string.",
+        "notes": "Done in TBD_B. _pickTargetChar() helper: DM returns activeBotId name; group shows showPickerModal(['All characters', ...names]). Codex inject and reinject handlers made async, await _pickTargetChar().",
+        "files_affected": ["playground/characters/script/modules/ui.js"]
+      },
+      {
+        "id": "ai-contextual-quick-replies",
+        "title": "AI contextual quick replies auto-inject",
+        "status": "done",
+        "requested": "2026-05-14",
+        "completed": "2026-05-14",
+        "description": "Background fetchCompletion after each bot turn generates 4 contextual reply starters. Cached in _aiQRCache per history length. Shown as warm-gold italic chips above static presets when QR bar opens.",
+        "notes": "Done in TBD_B. _generateAIQuickReplies(): fetches last 3 messages, LLM returns JSON array of 4 strings, stored in _aiQRCache. QR bar build: aiSection injected before static groups. .qr-btn--ai warm-gold italic style. Separate click handler for .qr-btn--ai.",
+        "files_affected": ["playground/characters/script/modules/ui.js", "playground/characters/style/arena.css"]
+      },
+      {
+        "id": "structured-prompt-inspector",
+        "title": "Structured prompt inspector",
+        "status": "done",
+        "requested": "2026-05-14",
+        "completed": "2026-05-14",
+        "description": "When showSystemPrompt flag is on, instead of raw <pre> dump, payload.messages are parsed into labelled <details> sections with role badge, section label, and token count. Total token count in summary.",
+        "notes": "Done in TBD_B. estimateTok = s.length/4. Each message gets pi-section details with pi-section__role (colour-coded by role), label from [HEADER] match or role+index, tok badge. controls.css: pi-* styles.",
+        "files_affected": ["playground/characters/script/modules/ui.js", "playground/characters/style/controls.css"]
+      },
+      {
+        "id": "memory-depth-20",
+        "title": "Memory depth increased to 20",
+        "status": "done",
+        "requested": "2026-05-14",
+        "completed": "2026-05-14",
+        "description": "getBotMemoriesFromReality default limit bumped from 10 to 20 so characters have twice as much cross-chat memory context.",
+        "notes": "Done in TBD_B. state.js: getBotMemoriesFromReality(botId, currentChatId, limit = 20).",
+        "files_affected": ["playground/characters/script/modules/state.js"]
+      },
       {
         "id": "rp-action-format-layer",
         "title": "rp-action visual layer for *asterisk* physical actions",
