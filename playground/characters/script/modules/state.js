@@ -6,7 +6,7 @@
  * and isolated continuities.
  */
 
-import { saveAvatar, loadAvatar, deleteAvatar, isDataUrl, saveImageBlob, deleteImageBlob, isIdbImageRef, idbImageRefId } from './storage.js';
+import { saveAvatar, loadAvatar, deleteAvatar, isDataUrl, saveImageBlob, deleteImageBlob, isIdbImageRef, idbImageRefId, idbGetAllEntries, idbSetBulk } from './storage.js';
 
 const STORAGE_KEY = 'underdark_v4';
 const CHARS_KEY   = 'underdark_chars_v4';
@@ -616,7 +616,7 @@ export async function importSessionJson(jsonString) {
     const data = JSON.parse(jsonString);
     const chat = data.chat || data.session;
     if (!chat) throw new Error('Invalid import format');
-    
+
     chat.id = `chat-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
     chat.name = `${chat.name} (imported)`;
     state.reality.chats.unshift(chat);
@@ -634,4 +634,66 @@ export async function importSessionJson(jsonString) {
     }
     saveState();
     return chat;
+}
+
+// ── Full Instance Export / Import ─────────────────────────────────────────────
+// Exports everything: all realities, all chats, all characters, all IDB blobs
+// (avatars, gallery images, chat image messages). API keys are never included.
+
+export async function exportFullInstance() {
+    const idbBlobs = await idbGetAllEntries().catch(() => ({}));
+    const payload = {
+        version:        'underdark_full_v1',
+        exportedAt:     new Date().toISOString(),
+        realities:      state.realities,
+        activeRealityId: state.activeRealityId,
+        characters:     state.characters,
+        loadedCharacters: state.loadedCharacters,
+        socialData:     state.socialData,
+        telemetry:      state.telemetry,
+        idb:            idbBlobs,
+    };
+    return JSON.stringify(payload);
+}
+
+export async function importFullInstance(jsonString) {
+    const data = JSON.parse(jsonString);
+    if (data.version !== 'underdark_full_v1') throw new Error('Unrecognised export format. Expected underdark_full_v1.');
+
+    // Restore IDB blobs first (avatars, images) — must complete before UI loads characters
+    if (data.idb && Object.keys(data.idb).length) {
+        await idbSetBulk(data.idb).catch(e => console.warn('[import] IDB restore partial:', e));
+    }
+
+    // Restore state
+    state.realities         = data.realities     || [];
+    state.activeRealityId   = data.activeRealityId || null;
+    state.characters        = data.characters    || [];
+    state.loadedCharacters  = data.loadedCharacters || {};
+    state.socialData        = data.socialData    || {};
+    state.telemetry         = data.telemetry     || { turns: 0, totalTokens: 0, sessionTokens: 0 };
+
+    // Sanitize — same logic as loadState post-load
+    if (!state.realities.length) {
+        const real = createReality('Continuity Alpha');
+        state.realities.push(real);
+    }
+    state.realities.forEach(real => {
+        if (!real.chats.length) real.chats.push(createChat('dm', [], 'New Message'));
+        if (!real.activeChatId || !real.chats.find(c => c.id === real.activeChatId)) {
+            real.activeChatId = real.chats[0].id;
+        }
+        const saved = real.config || {};
+        real.config = { ...defaultConfig(), ...saved };
+        real.config.flags = { ...defaultConfig().flags, ...(saved.flags || {}) };
+        real.chats.forEach(chat => {
+            if (!chat.threadConfig) chat.threadConfig = defaultThreadConfig();
+            else chat.threadConfig = { ...defaultThreadConfig(), ...chat.threadConfig };
+        });
+    });
+    if (!state.activeRealityId || !state.realities.find(r => r.id === state.activeRealityId)) {
+        state.activeRealityId = state.realities[0].id;
+    }
+
+    saveState();
 }

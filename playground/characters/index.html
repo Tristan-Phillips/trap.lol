@@ -7,7 +7,7 @@
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2306040A'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%23ef4444' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23ef4444'/%3E%3C/svg%3E" />
     <link rel="stylesheet" href="../../glass/style/style.css">
     <link rel="stylesheet" href="./style/style.css?v=70">
-    <link rel="stylesheet" href="./style/char-editor.css?v=13">
+    <link rel="stylesheet" href="./style/char-editor.css?v=14">
 </head>
 <body class="underdark-page">
 
@@ -743,6 +743,17 @@
                     <button id="btn-export-session" class="btn btn--ghost btn--sm btn--flex"><i data-lucide="download"></i> Export</button>
                     <button id="btn-import-session" class="btn btn--ghost btn--sm btn--flex"><i data-lucide="upload"></i> Import</button>
                     <input type="file" id="session-import-input" hidden accept=".json">
+                  </div>
+                </div>
+
+                <!-- Full Instance Backup -->
+                <div class="config-section">
+                  <div class="config-section__title"><i data-lucide="database"></i> Full Backup</div>
+                  <div class="config-hint" style="margin-bottom:8px">Export every continuity, chat, character, and image. Import on any browser to fully restore. API keys are never included.</div>
+                  <div class="config-group config-row--flex">
+                    <button id="btn-export-full" class="btn btn--ghost btn--sm btn--flex"><i data-lucide="hard-drive-download"></i> Export All</button>
+                    <button id="btn-import-full" class="btn btn--ghost btn--sm btn--flex instance-import-btn"><i data-lucide="upload"></i> Import All</button>
+                    <input type="file" id="full-import-input" hidden accept=".json">
                   </div>
                 </div>
 

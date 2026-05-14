@@ -1924,6 +1924,17 @@
     .ts-mode-btn { padding: 4px 10px; font-size: 0.68rem; }
 }
 
+/* ── Full instance import — subtle danger tint ───────────────────────────── */
+.instance-import-btn {
+    border-color: rgba(239,68,68,0.25) !important;
+    color: rgba(239,68,68,0.75) !important;
+}
+.instance-import-btn:hover {
+    background: rgba(239,68,68,0.08) !important;
+    border-color: rgba(239,68,68,0.45) !important;
+    color: rgba(239,68,68,0.95) !important;
+}
+
 /* ── Group icon emoji picker ──────────────────────────────────────────────── */
 .ts-group-icon-row {
     display: flex;

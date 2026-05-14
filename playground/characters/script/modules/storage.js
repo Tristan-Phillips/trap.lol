@@ -122,3 +122,32 @@ export async function resolveImageUrl(val) {
 export function isDataUrl(str) {
     return typeof str === 'string' && str.startsWith('data:');
 }
+
+// ── Bulk IDB access (used by export) ─────────────────────────────────────────
+
+export async function idbGetAllEntries() {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+        const tx    = db.transaction(STORE_BLOBS, 'readonly');
+        const store = tx.objectStore(STORE_BLOBS);
+        const result = {};
+        const curReq = store.openCursor();
+        curReq.onsuccess = e => {
+            const cursor = e.target.result;
+            if (cursor) { result[cursor.key] = cursor.value; cursor.continue(); }
+            else resolve(result);
+        };
+        curReq.onerror = e => reject(e.target.error);
+    });
+}
+
+export async function idbSetBulk(entries) {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+        const tx    = db.transaction(STORE_BLOBS, 'readwrite');
+        const store = tx.objectStore(STORE_BLOBS);
+        Object.entries(entries).forEach(([k, v]) => store.put(v, k));
+        tx.oncomplete = () => resolve();
+        tx.onerror    = e => reject(e.target.error);
+    });
+}

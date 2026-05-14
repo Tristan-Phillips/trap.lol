@@ -14,7 +14,8 @@ import {
     getCharOverride, setCharOverride,
     setConfig, saveCharacter, deleteCharacter,
     defaultCharOverride, defaultThreadConfig, defaultGroupConfig, resolveCharAvatar,
-    addReaction, getReactions, exportSessionJson, importSessionJson
+    addReaction, getReactions, exportSessionJson, importSessionJson,
+    exportFullInstance, importFullInstance
 } from './state.js';
 import { resolveImageUrl, saveImageBlob, deleteImageBlob, isIdbImageRef, idbImageRefId, isDataUrl } from './storage.js';
 import { buildPayload, streamCompletion, fetchCompletion } from './llm-engine.js';
@@ -24,7 +25,7 @@ import { addBook, removeBook, addEntry, updateEntry, removeEntry, createBook, sc
 import { parseCharacterCard, buildCard, normalizeData } from './parser-v2.js';
 import { getApiKey, setApiKey, clearApiKey, isValidKeyFormat, restoreKeyFromCookie } from '../../../../glass/script/modules/llm-auth.js';
 import { initCharEditor } from './char-editor.js';
-import { qs, qsa, esc, debounce } from './shared-utils.js';
+import { qs, qsa, esc, debounce, parseLLMArray, parseLLMJson, parseLLMLines } from './shared-utils.js';
 
 // Light markdown renderer for profile details — bold, italic, headers, line breaks only.
 // Does NOT use marked.js to avoid dependency — covers the common character-card patterns.
@@ -1536,7 +1537,7 @@ export function initUI() {
                         max_tokens: 220,
                         temperature: 0.95,
                     });
-                    return (text || '').split('\n').map(s => s.trim()).filter(Boolean).slice(0, 3);
+                    return parseLLMLines(text);
                 });
                 if (chosen) $ta.value = chosen;
             });
@@ -1621,10 +1622,7 @@ export function initUI() {
 
             const { text } = await fetchCompletion(payload);
 
-            // Parse the JSON response — strip any accidental markdown wrapping
-            const cleaned = text.replace(/^```[a-z]*\n?/i, '').replace(/```\s*$/, '').trim();
-            const questions = JSON.parse(cleaned);
-
+            const questions = parseLLMJson(text);
             if (!Array.isArray(questions) || !questions.length) throw new Error('Bad response format');
 
             _isekaiGenSig = sig;
@@ -1716,7 +1714,7 @@ export function initUI() {
                         max_tokens: 120,
                         temperature: 0.95,
                     });
-                    return (text || '').split('\n').map(s => s.trim().replace(/^["']|["']$/g, '')).filter(Boolean).slice(0, 3);
+                    return parseLLMLines(text);
                 });
                 if (chosen) $inp.value = chosen;
             });
@@ -1859,9 +1857,7 @@ export function initUI() {
                 temperature: 0.95,
             });
 
-            const cleaned = text.replace(/^```[a-z]*\n?/i, '').replace(/```\s*$/, '').trim();
-            const ideas = JSON.parse(cleaned);
-
+            const ideas = parseLLMJson(text);
             if (!Array.isArray(ideas)) throw new Error('bad format');
 
             $ideas.hidden = false;
@@ -2110,7 +2106,7 @@ export function initUI() {
                     max_tokens: 120,
                     temperature: 0.9,
                 });
-                return (text || '').split('\n').map(s => s.trim().replace(/^["\-•\d.]+\s*/g, '')).filter(Boolean).slice(0, 3);
+                return parseLLMLines(text);
             });
             if (chosen) $inp.value = chosen;
         });
@@ -2190,10 +2186,7 @@ export function initUI() {
                             max_tokens: 120,
                             temperature: 0.9
                         });
-                        try {
-                            const match = text.match(/\[[\s\S]*\]/);
-                            return match ? JSON.parse(match[0]) : ['Option A', 'Option B', 'Option C'];
-                        } catch { return ['Option A', 'Option B', 'Option C']; }
+                        return parseLLMArray(text, ['Option A', 'Option B', 'Option C']);
                     }
                 );
                 if (chosen === null) return;
@@ -2215,11 +2208,7 @@ export function initUI() {
                 temperature: 0.3
             });
 
-            let recIds = [];
-            try {
-                const match = recText.match(/\[[\s\S]*\]/);
-                recIds = match ? JSON.parse(match[0]) : [];
-            } catch { /* fall through */ }
+            const recIds = parseLLMArray(recText);
 
             const validRecs = recIds
                 .filter(id => _scenarioIndex.some(s => s.id === id))
@@ -6916,6 +6905,74 @@ export function initUI() {
             renderAll();
         } catch (err) {
             showToast(`Import failed: ${err.message}`, 'error');
+        }
+    });
+
+    // ── Full Instance Export / Import ─────────────────────────────────────────
+    qs('#btn-export-full')?.addEventListener('click', async function() {
+        const btn = this;
+        if (btn.disabled) return;
+        btn.disabled = true;
+        const orig = btn.innerHTML;
+        btn.innerHTML = '<i data-lucide="loader-2" class="spin"></i> Exporting…';
+        lucideRefresh(btn);
+        try {
+            const json = await exportFullInstance();
+            const blob = new Blob([json], { type: 'application/json' });
+            const url  = URL.createObjectURL(blob);
+            const a    = document.createElement('a');
+            a.href     = url;
+            a.download = `underdark-full-${new Date().toISOString().slice(0,10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Full export downloaded', 'success', 2500);
+        } catch (err) {
+            showToast(`Export failed: ${err.message}`, 'error', 5000);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = orig;
+            lucideRefresh(btn);
+        }
+    });
+
+    qs('#btn-import-full')?.addEventListener('click', () => {
+        qs('#full-import-input')?.click();
+    });
+
+    qs('#full-import-input')?.addEventListener('change', async e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        e.target.value = '';
+
+        const ok = await confirm(
+            'Import Full Instance',
+            'This will overwrite ALL current realities, chats, and characters. The import is permanent and cannot be undone. Proceed?',
+            { confirmLabel: 'Overwrite & Import', danger: true }
+        );
+        if (!ok) return;
+
+        const $btn = qs('#btn-import-full');
+        if ($btn) {
+            $btn.disabled = true;
+            $btn.innerHTML = '<i data-lucide="loader-2" class="spin"></i> Importing…';
+            lucideRefresh($btn);
+        }
+
+        try {
+            const text = await file.text();
+            await importFullInstance(text);
+            renderRealities();
+            renderChats();
+            renderAll();
+            showToast('Instance restored — welcome back', 'success', 3500);
+        } catch (err) {
+            showToast(`Import failed: ${err.message}`, 'error', 6000);
+        } finally {
+            if ($btn) {
+                $btn.disabled = false;
+                $btn.innerHTML = '<i data-lucide="upload"></i> Import All';
+                lucideRefresh($btn);
+            }
         }
     });
 

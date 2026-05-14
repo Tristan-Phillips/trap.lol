@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.3.14",
+    "schema_version": "1.3.15",
     "last_updated": "2026-05-14",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -472,6 +472,24 @@
     ]
   },
   "commits": [
+    {
+      "hash": "TBD_PHASE3",
+      "date": "2026-05-14",
+      "message": "feat(underdark): full instance export/import, LLM parse helpers, char-editor v14, ui.js v86",
+      "scope": "playground/characters — state.js, storage.js, ui.js, index.html, char-editor.css, main.js; shared-utils.js; status/logs/logs.json",
+      "impact": "high",
+      "files": [
+        "playground/characters/script/modules/state.js",
+        "playground/characters/script/modules/storage.js",
+        "playground/characters/script/modules/ui.js",
+        "playground/characters/script/modules/shared-utils.js",
+        "playground/characters/script/main.js",
+        "playground/characters/index.html",
+        "playground/characters/style/char-editor.css",
+        "status/logs/logs.json"
+      ],
+      "why": "Full instance backup: storage.js gained idbGetAllEntries/idbSetBulk for bulk IDB cursor walk; state.js exports exportFullInstance (full dump to underdark_full_v1 JSON) and importFullInstance (full restore with IDB bulk write + state sanitize + confirm guard). LLM response parsing centralised: shared-utils.js gained parseLLMArray/parseLLMJson/parseLLMLines — 7 inline ad-hoc patterns in ui.js replaced. Settings panel gained Full Backup section. Import All button has subtle red tint to signal destructive action."
+    },
     {
       "hash": "6bb471c",
       "date": "2026-05-14",
@@ -1334,6 +1352,23 @@
     {
       "date": "2026-05-14",
       "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Phase 3: full instance export/import and LLM response formatting cleanup. storage.js gained idbGetAllEntries (IDB cursor walk returning all key/value pairs) and idbSetBulk (bulk transaction write). state.js gained exportFullInstance (serialises all state + IDB blobs to underdark_full_v1 JSON) and importFullInstance (full restore: bulk IDB write, state overwrite, sanitize, save). UI: 'Full Backup' section in Settings panel with Export All and Import All buttons; import guarded by confirm dialog; Import All has subtle red tint. shared-utils.js gained parseLLMArray, parseLLMJson, parseLLMLines — the three patterns that were copy-pasted across 7 call sites in ui.js, now centralised. Also noted export/import infrastructure now satisfies the prerequisite for the auto-save system (deferred but unblocked).",
+      "decisions": [
+        "IDB bulk export uses a cursor walk rather than individual gets — single transaction, no per-key round trips, handles arbitrarily large blob stores.",
+        "Import uses idbSetBulk which opens a single readwrite transaction for all puts — more reliable than sequential idbSet calls which would each open their own transaction.",
+        "parseLLMArray/parseLLMJson/parseLLMLines go in shared-utils.js, not llm-engine.js — they operate on response strings after the fact, not on the request/response protocol itself.",
+        "parseLLMLines strips leading bullets, numbers, dashes, and quote characters — these are the common contaminants when the model ignores 'one per line, no preamble' instructions.",
+        "The 'Import All' button is tinted red (not full danger styling) to signal that it's destructive without being alarming — the confirm() dialog is the real safety gate."
+      ],
+      "rules_reinforced": [
+        "IDB bulk operations should use a single transaction per batch — opening N transactions for N items is fragile and slow.",
+        "LLM response parsers belong in shared-utils.js. Any new feature that needs to parse a structured LLM response should use parseLLMArray/parseLLMJson/parseLLMLines rather than writing inline."
+      ]
+    },
+    {
+      "date": "2026-05-14",
+      "agent": "Claude Sonnet 4.6",
       "type": "bug_fix",
       "summary": "Post-Phase-2 audit and hotfix pass. Found and fixed: (1) 5 Phase 2 fetchCompletion calls sent maxTokens (camelCase) instead of max_tokens — OpenAI-compatible API silently ignores unknown fields, so these calls ran completely uncapped; (2) 5 model fields were state.config.model without fallback — undefined before user selects a model; (3) missing $thread.scrollTop after placeholder→real image swap. Updated all pending_work entries to 'done' with implementation notes. ui.js bumped to v=85.",
       "decisions": [
@@ -2154,11 +2189,12 @@
       {
         "id": "export-import-full-instance",
         "title": "Export/import entire Underdark instance",
-        "status": "deferred",
+        "status": "done",
         "requested": "2026-05-14",
+        "completed": "2026-05-14",
         "description": "A button to export the entire characters/ sub-app state — all characters, chats, realities, lorebooks, settings — as a single JSON/ZIP file that can be imported on any browser or device. API keys excluded.",
-        "notes": "Deferred — user noted 'circle back later'. Implementation will require: (1) IDB dump of all avatar/gallery blobs into base64 in the export, (2) localStorage state export, (3) import re-hydration of both. Complex but not blocked on anything. Flag for a future session.",
-        "files_affected": ["playground/characters/script/modules/ui.js", "playground/characters/script/modules/storage.js", "playground/characters/index.html"]
+        "notes": "Done in this session. storage.js gained idbGetAllEntries() (cursor walk) and idbSetBulk() (bulk tx). state.js: exportFullInstance() dumps realities+characters+socialData+telemetry+all IDB blobs; importFullInstance() overwrites state, bulk-writes IDB, sanitizes, saves. UI: 'Full Backup' section in settings panel with Export All (btn-export-full) and Import All (btn-import-full, red-tinted danger visual). Import triggers confirm() before overwriting. Format: underdark_full_v1 JSON.",
+        "files_affected": ["playground/characters/script/modules/state.js", "playground/characters/script/modules/storage.js", "playground/characters/script/modules/ui.js", "playground/characters/index.html", "playground/characters/style/char-editor.css"]
       },
       {
         "id": "auto-save-backup-system",
@@ -2166,17 +2202,18 @@
         "status": "deferred",
         "requested": "2026-05-14",
         "description": "Automatic periodic backup system so if browser cache is cleared or a new device is used, the state can be restored. Depends on export/import feature being built first.",
-        "notes": "Deferred — user said 'much later'. Likely involves scheduled export to a user-configured remote endpoint or a downloadable rolling backup. Requires export-import-full-instance to be done first.",
+        "notes": "Export/import is now done (prerequisite met). Auto-save implementation would trigger exportFullInstance() on a schedule or after N turns. Could write to a user-configured endpoint or offer a downloadable rolling backup. Still deferred until user requests it.",
         "files_affected": []
       },
       {
         "id": "better-llm-response-formatting",
         "title": "Better LLM response format convention for suggestions/context/examples",
-        "status": "not_started",
+        "status": "done",
         "requested": "2026-05-14",
+        "completed": "2026-05-14",
         "description": "Improve the convention for how the app sends prompts to the LLM when requesting suggestions, examples, or generated context (not RP), and how it parses/formats the response for display. Currently ad hoc per feature.",
-        "notes": "Consider a shared prompt template module and a response parser that handles structured outputs (JSON arrays, numbered lists, delimited options). Applies to: showPickerModal generateFn calls, scenario recommendation, spark field suggestions, relationship suggestions, amplify/avoid ideas. A consistent prompt format reduces token waste and parsing failures.",
-        "files_affected": ["playground/characters/script/modules/llm-engine.js (possibly)", "playground/characters/script/modules/ui.js"]
+        "notes": "Done in this session. shared-utils.js gained three parse helpers: parseLLMArray (JSON array with markdown fence stripping + fallback), parseLLMJson (any JSON value), parseLLMLines (newline-delimited with bullet/number/quote stripping). All 7 inline parse patterns across ui.js replaced. All 3 helpers exported and imported in ui.js.",
+        "files_affected": ["playground/characters/script/modules/shared-utils.js", "playground/characters/script/modules/ui.js"]
       }
     ]
   },
