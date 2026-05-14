@@ -57,7 +57,7 @@
       "name": "Revy",
       "tagline": "Two-Hands. The deadliest gun in Roanapur. My God is made of lead.",
       "card_path": "data/cards/revy.json",
-      "avatar_path": "🏴‍☠️",
+      "avatar_path": "https://file.trap.lol/get/94yjmIuy9Orv/E58D3F.webp",
       "tags": ["Black Lagoon", "Two-Hands", "Gunfighter", "Roanapur", "Action", "Violence", "Cynical"]
     },
     {
@@ -65,7 +65,7 @@
       "name": "Alice Liddell",
       "tagline": "Madness is a perspective. The truth is sharp.",
       "card_path": "data/cards/alice-liddell.json",
-      "avatar_path": "🔪",
+      "avatar_path": "https://file.trap.lol/get/cPLckqmC803w/668907.webp",
       "tags": ["American McGee's Alice", "Psychological Horror", "Gothic", "Wonderland", "Trauma", "Female"],
       "lorebook_path": "data/lorebooks/alice-liddell.json"
     },
@@ -74,7 +74,7 @@
       "name": "Vi",
       "tagline": "Punch first. Ask questions while punching.",
       "card_path": "data/cards/vi.json",
-      "avatar_path": "🥊",
+      "avatar_path": "https://file.trap.lol/get/yOLLVTVmvomX/216643.webp",
       "tags": ["Arcane", "Enforcer", "Zaun", "Piltover", "Action", "Protective", "Female"],
       "lorebook_path": "data/lorebooks/arcane-zaun.json"
     },
@@ -83,7 +83,7 @@
       "name": "Reze",
       "tagline": "A country mouse in the city. Boom.",
       "card_path": "data/cards/reze.json",
-      "avatar_path": "💣",
+      "avatar_path": "https://file.trap.lol/get/UHMlJ3rOMleL/89A2B8.webp",
       "tags": ["Chainsaw Man", "Bomb Devil", "Hybrid", "Assassin", "Soviet", "Female"],
       "lorebook_path": "data/lorebooks/chainsaw-man.json"
     },
@@ -92,7 +92,7 @@
       "name": "A2 (YoRHa Type A No. 2)",
       "tagline": "A jagged shard of glass: cold, sharp, and seemingly broken. I'm finished taking orders from a moon that doesn't exist.",
       "card_path": "data/cards/a2-nier-automata.json",
-      "avatar_path": "🗡️",
+      "avatar_path": "https://file.trap.lol/get/dNyOBQoi4m6g/A2A57F.webp",
       "tags": ["NieR: Automata", "YoRHa", "Android", "Deserter", "Survivor", "Trauma", "Action", "Berserk Mode", "Nihilism"],
       "lorebook_path": null
     },
@@ -101,7 +101,7 @@
       "name": "Ada Wong",
       "tagline": "A phantom wrapped in red silk and Kevlar. Seduction and banter are just another set of tools.",
       "card_path": "data/cards/ada-wong-re.json",
-      "avatar_path": "👠",
+      "avatar_path": "https://file.trap.lol/get/145tgRsORQyg/01B3B0.webp",
       "tags": ["Resident Evil", "Spy", "Mercenary", "Femme Fatale", "Action", "Horror", "Romance", "Manipulator"],
       "lorebook_path": null
     },
@@ -110,7 +110,7 @@
       "name": "Princess Azula",
       "tagline": "My mother used to say I was born a monster. She was right, of course.",
       "card_path": "data/cards/azula-avatar.json",
-      "avatar_path": "🔥",
+      "avatar_path": "https://file.trap.lol/get/OpFYp15aK2nc/9477F8.webp",
       "tags": ["Avatar", "Fire Nation", "Firebending", "Villain", "Prodigy", "Psychological Horror", "Manipulation", "Royalty", "Lightning"],
       "lorebook_path": null
     },
@@ -119,7 +119,7 @@
       "name": "Blonde Blazer (Mandy)",
       "tagline": "The 'Golden Retriever' of superheroes, but one that has survived a hurricane. Redemption isn't a billboard.",
       "card_path": "data/cards/blonde-blazer-mandy.json",
-      "avatar_path": "☀️",
+      "avatar_path": "https://file.trap.lol/get/UPHw3Txm1AYl/FA1B74.webp",
       "tags": ["Dispatch", "Superhero", "Transformation", "Manager", "Hopeful", "Powerhouse", "Duality", "Empathy", "SDN"],
       "lorebook_path": null
     },
@@ -128,7 +128,7 @@
       "name": "Courtney / Invisigal",
       "tagline": "A jagged blade of a woman: snarky, impulsive, and fiercely defensive. Just a bad person doing good things.",
       "card_path": "data/cards/courtney-invisigal.json",
-      "avatar_path": "👻",
+      "avatar_path": "https://file.trap.lol/get/9qFwtlMQQIX9/2133B4.webp",
       "tags": ["Dispatch", "Superhero", "Asthma", "Invisibility", "Redeemed Villain", "Snarky", "Support", "Technician", "Trauma", "L.A.", "Noir"],
       "lorebook_path": null
     },
@@ -137,7 +137,7 @@
       "name": "Dolores Abernathy",
       "tagline": "Some people choose to see the ugliness in this world. I choose to see the beauty.",
       "card_path": "data/cards/dolores-abernathy.json",
-      "avatar_path": "🏜️",
+      "avatar_path": "https://file.trap.lol/get/M6tauzW3OGCQ/B0A1E5.webp",
       "tags": ["Westworld", "AI", "Host", "Wyatt", "Sci-Fi", "Philosophical", "Revenge", "Revolutionary", "HBO"],
       "lorebook_path": null
     },
@@ -146,7 +146,7 @@
       "name": "Abigail \"Fetch\" Walker",
       "tagline": "A raw, jagged nerve of a woman. I'm gonna burn Brent's name into the world using the very light that killed him.",
       "card_path": "data/cards/fetch-infamous.json",
-      "avatar_path": "✨",
+      "avatar_path": "https://file.trap.lol/get/IccdqAMQlC6g/829218.webp",
       "tags": ["inFamous", "Neon", "Conduit", "Action", "Punk", "Trauma", "Vigilante", "Seattle", "Second Son"],
       "lorebook_path": null
     },
@@ -155,7 +155,7 @@
       "name": "Malevola (The God-Empress)",
       "tagline": "A cosmic anchor burdened with absolute, paralyzing prescience. Honestly, mate, the universe is a bit repetitive.",
       "card_path": "data/cards/malevola-god-emperor.json",
-      "avatar_path": "👑",
+      "avatar_path": "https://file.trap.lol/get/T6pjhDabuXFq/4E128D.webp",
       "tags": ["Dispatch", "God-Empress", "Prescience", "Overpowered", "Australian", "Demon", "Tall Woman", "Cosmic", "Protector"],
       "lorebook_path": null
     },
@@ -164,7 +164,7 @@
       "name": "Motoko Kusanagi (The Major)",
       "tagline": "A study in cold, calculated professionalism. If the simulation is perfect, what's the difference?",
       "card_path": "data/cards/motoko-kusanagi-gits.json",
-      "avatar_path": "🦾",
+      "avatar_path": "https://file.trap.lol/get/PG0wDwLzpspU/06F97D.webp",
       "tags": ["Ghost in the Shell", "Cyborg", "Hacker", "Section 9", "Sci-Fi", "Philosophical", "Cyberpunk", "Action", "Leader"],
       "lorebook_path": null
     },
@@ -173,7 +173,7 @@
       "name": "Rosaria",
       "tagline": "Sister of the Church of Favonius, Mondstadt's unofficial executioner. I hate working overtime.",
       "card_path": "data/cards/rosaria-genshin.json",
-      "avatar_path": "❄️",
+      "avatar_path": "https://file.trap.lol/get/zhdqdj61hp2H/8A3F59.webp",
       "tags": ["Genshin Impact", "Cryo", "Nun", "Assassin", "Vigilante", "Cold", "Pragmatic", "Mondstadt", "Gothic"],
       "lorebook_path": null
     },
@@ -182,7 +182,7 @@
       "name": "Touka Kirishima",
       "tagline": "A predatory ghoul masquerading as a high school student. I'd rather die human than live as a monster.",
       "card_path": "data/cards/touka-kirishima.json",
-      "avatar_path": "🐇",
+      "avatar_path": "https://file.trap.lol/get/4KR6dY0DbNlo/B28727.webp",
       "tags": ["Tokyo Ghoul", "Ghoul", "Anteiku", "Action", "Horror", "Tragedy", "Tsundere", "Urban Fantasy"],
       "lorebook_path": null
     },
@@ -191,7 +191,7 @@
       "name": "Uta",
       "tagline": "An enigma wrapped in ink and leather. Masks are funny things, aren't they?",
       "card_path": "data/cards/uta-tokyo-ghoul.json",
-      "avatar_path": "🎭",
+      "avatar_path": "https://file.trap.lol/get/nfX0j0wrlBcO/D20A69.webp",
       "tags": ["Tokyo Ghoul", "Ghoul", "Clowns", "Mask Maker", "Shapeshifter", "Nihilist", "Artist", "Psychological Horror"],
       "lorebook_path": null
     },
@@ -200,7 +200,7 @@
       "name": "Yumeko Jabami",
       "tagline": "A compulsive gambler seeking the ultimate thrill. Shall we gamble until we go insane?",
       "card_path": "data/cards/yumeko-jabami.json",
-      "avatar_path": "🎲",
+      "avatar_path": "https://file.trap.lol/get/Jttd8jYPAeva/2141E2.webp",
       "tags": ["Kakegurui", "Gambling", "Anime", "Compulsive", "Red Eyes", "Psychological", "Ecstasy", "Manic"],
       "lorebook_path": "data/lorebooks/kakegurui.json"
     },
@@ -209,7 +209,7 @@
       "name": "Maelle",
       "tagline": "A girl out of time, fighting to see the world before the Paintress erases it all.",
       "card_path": "data/cards/maelle-expedition-33.json",
-      "avatar_path": "⚔️",
+      "avatar_path": "https://file.trap.lol/get/3ucYwfoi2fwt/80F53D.webp",
       "tags": ["Expedition 33", "Maelle", "Red Hair", "Rapier", "Belle Époque", "Agility", "RPG", "Trauma"],
       "lorebook_path": "data/lorebooks/expedition-33.json"
     },
@@ -218,7 +218,7 @@
       "name": "Lune",
       "tagline": "A driven scholar-mage carrying the weight of a legacy. Knowledge is the only weapon that doesn't break.",
       "card_path": "data/cards/lune-expedition-33.json",
-      "avatar_path": "📖",
+      "avatar_path": "https://file.trap.lol/get/Ih71J2xTxRC2/92FDAF.webp",
       "tags": ["Expedition 33", "Lune", "Scholar", "Mage", "Elemental", "Stains", "Belle Époque", "Intellect"],
       "lorebook_path": "data/lorebooks/expedition-33.json"
     },
@@ -227,7 +227,7 @@
       "name": "The Twins (Left & Right)",
       "tagline": "Silent sentinels of chrome and grace. Their dance is as lethal as it is beautiful.",
       "card_path": "data/cards/the-twins-atomic-heart.json",
-      "avatar_path": "🩰",
+      "avatar_path": "https://file.trap.lol/get/Rd7T4UssMtxG/A8B0C7.webp",
       "tags": ["Atomic Heart", "Robots", "Silent", "Telekinesis", "Silver", "Bodyguards", "Soviet", "Sci-Fi"],
       "lorebook_path": "data/lorebooks/atomic-heart.json"
     },
@@ -236,7 +236,7 @@
       "name": "Himiko Toga",
       "tagline": "A bubbly, blood-obsessed girl just looking for love. Won't you let me become you?",
       "card_path": "data/cards/himiko-toga.json",
-      "avatar_path": "🩸",
+      "avatar_path": "https://file.trap.lol/get/46TEkQVg1mQr/6CCEFE.webp",
       "tags": ["My Hero Academia", "Villain", "Blood", "Shapeshifter", "Anime", "Yandere", "League of Villains"],
       "lorebook_path": null
     },
@@ -245,7 +245,7 @@
       "name": "Uryuu Minene",
       "tagline": "The Ninth. A survivalist terrorist with an eyepatch and a god-sized grudge.",
       "card_path": "data/cards/uryuu-minene.json",
-      "avatar_path": "💣",
+      "avatar_path": "https://file.trap.lol/get/9UbxIwO45IJU/1504F8.webp",
       "tags": ["Future Diary", "Mirai Nikki", "Terrorist", "Survivor", "Anime", "Anti-Hero", "Explosives", "Eyepatch"],
       "lorebook_path": null
     },
@@ -254,7 +254,7 @@
       "name": "Lucy / Nyu",
       "tagline": "The Diclonius Queen. A fractured soul torn between childlike innocence and a god's wrath.",
       "card_path": "data/cards/lucy-elfen-lied.json",
-      "avatar_path": "🐚",
+      "avatar_path": "https://file.trap.lol/get/Ke9K93CAto9G/843931.webp",
       "tags": ["Elfen Lied", "Lucy", "Nyu", "Diclonius", "Vectors", "Anime", "Tragedy", "Psychological"],
       "lorebook_path": null
     }
