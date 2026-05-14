@@ -348,8 +348,12 @@ function renderMarkdown(text) {
             return '>' + t + '<';
         });
 
-        // Narration paragraphs — no speech/thought/em inside → dim lavender class
-        html = html.replace(/<p>((?!.*rp-speech|.*rp-thought|.*<em>)[^<]{20,})<\/p>/g,
+        // Action layer: <em> produced by marked from *asterisk* content → rp-action spans.
+        // Must run before the rp-narration pass so the presence check sees rp-action, not <em>.
+        html = html.replace(/<em>([\s\S]+?)<\/em>/g, (_, inner) => '<span class=”rp-action”>' + inner + '</span>');
+
+        // Narration paragraphs — no speech/thought/action inside → dim lavender class
+        html = html.replace(/<p>((?!.*rp-speech|.*rp-thought|.*rp-action)[^<]{20,})<\/p>/g,
             (_, inner) => '<p class=”rp-narration”>' + inner + '</p>');
 
         return html;
@@ -1940,6 +1944,16 @@ export function initUI() {
             tc.temperature = parseFloat(qs('#ts-temp-input')?.value || '0.8');
         }
 
+        // Narrative tone applies to ALL thread types — collect from the shared fields
+        const _tsSexualEnergy = qs('#ts-sexual-energy')?.value.trim() || '';
+        const _tsToneTags     = qs('#ts-tone-tags')?.value.trim() || '';
+        const _tsAmplify      = qs('#ts-amplify')?.value.trim() || '';
+        const _tsAvoid        = qs('#ts-avoid')?.value.trim() || '';
+        const _tsPacing       = qs('#ts-pacing')?.value.trim() || '';
+        if (_tsSexualEnergy || _tsToneTags || _tsAmplify || _tsAvoid || _tsPacing) {
+            tc.narrativeTone = { sexualEnergy: _tsSexualEnergy, toneTags: _tsToneTags, amplify: _tsAmplify, avoid: _tsAvoid, pacing: _tsPacing };
+        }
+
         // Build groupConfig for group threads
         let gc = null;
         if (_tsMode === 'group') {
@@ -1972,15 +1986,8 @@ export function initUI() {
                 if (val) gc.isekaiAnswers[f.dataset.key] = val;
             });
 
-            // Collect narrative tone config
-            const sexualEnergy = qs('#ts-sexual-energy')?.value.trim() || '';
-            const toneTags     = qs('#ts-tone-tags')?.value.trim() || '';
-            const amplify      = qs('#ts-amplify')?.value.trim() || '';
-            const avoid        = qs('#ts-avoid')?.value.trim() || '';
-            const pacing       = qs('#ts-pacing')?.value.trim() || '';
-            if (sexualEnergy || toneTags || amplify || avoid || pacing) {
-                gc.narrativeTone = { sexualEnergy, toneTags, amplify, avoid, pacing };
-            }
+            // Narrative tone already collected into tc.narrativeTone above — mirror into gc
+            if (tc.narrativeTone) gc.narrativeTone = tc.narrativeTone;
 
             // Collect relationship web
             qsa('.ts-rel-field').forEach(f => {
@@ -7282,7 +7289,14 @@ export function initUI() {
                 ...(tc.temperature != null ? { temperature: tc.temperature } : {}),
                 ...(tc.userName    != null ? { userName: tc.userName }       : {}),
                 ...(tc.userPersona != null ? { userPersona: tc.userPersona } : {}),
-                ...(_effectiveScenario ? { _worldScenario: _effectiveScenario } : {})
+                ...(_effectiveScenario ? { _worldScenario: _effectiveScenario } : {}),
+                _threadConfig: tc,  // full thread config for DM tone injection and future per-thread features
+            };
+            // Read live meter values to pass into the enriched cue card
+            const _liveMeters = {
+                tension:  parseInt(qs('#codex-tension-val')?.textContent  || '40', 10),
+                intimacy: parseInt(qs('#codex-intimacy-val')?.textContent || '25', 10),
+                danger:   parseInt(qs('#codex-danger-val')?.textContent   || '15', 10),
             };
             const payload = buildPayload({
                 character:           { ...char, id: botId },
@@ -7296,6 +7310,7 @@ export function initUI() {
                 groupConfig:         state.chat.groupConfig || null,
                 pendingReinject:     pendingReinject || '',
                 threadModelOverride: tc.model || null,
+                meters:              _liveMeters,
             });
 
             // Debug: show built system prompt as a one-time collapsible block,
@@ -7405,6 +7420,9 @@ export function initUI() {
                                 .catch(() => null);
                         }
                     }
+                    // Parse any [STATUS X%] tags from the response and drive meter bars directly.
+                    // The LLM controls the meters through its own output — values override heuristics.
+                    _applyStatusTags(finalText);
                     // Always update codex meters/digest after each bot message — keeps the
                     // ambient status live even when the codex panel is closed.
                     updateCodexDigest();
@@ -8432,35 +8450,106 @@ export function initUI() {
     });
 
     // Codex: narrative meters — update based on recent history analysis
+    // Parse [TENSION X%] / [INTIMACY X%] / [DANGER X%] tags from a bot response
+    // and directly update the corresponding codex meter bars.
+    function _applyStatusTags(text) {
+        if (!text) return;
+        const meterMap = {
+            TENSION:  { bar: '#codex-tension-bar',  val: '#codex-tension-val'  },
+            INTIMACY: { bar: '#codex-intimacy-bar', val: '#codex-intimacy-val' },
+            DANGER:   { bar: '#codex-danger-bar',   val: '#codex-danger-val'   },
+        };
+        // Match [TENSION 72%], [TENSION72%], [TENSION 72] — all valid forms
+        const tagRe = /\[([A-Z]+)\s*(\d{1,3})%?\]/g;
+        let match;
+        while ((match = tagRe.exec(text)) !== null) {
+            const key = match[1].toUpperCase();
+            const pct = Math.min(100, Math.max(0, parseInt(match[2], 10)));
+            const ids = meterMap[key];
+            if (!ids) continue;
+            const $bar = qs(ids.bar);
+            const $val = qs(ids.val);
+            if ($bar) $bar.style.width = `${pct}%`;
+            if ($val) $val.textContent = pct;
+        }
+    }
+
+    function _setMeterDOM(t, i, d) {
+        const $tb = qs('#codex-tension-bar');  const $tv = qs('#codex-tension-val');
+        const $ib = qs('#codex-intimacy-bar'); const $iv = qs('#codex-intimacy-val');
+        const $db = qs('#codex-danger-bar');   const $dv = qs('#codex-danger-val');
+        if ($tb) $tb.style.width = `${t}%`; if ($tv) $tv.textContent = t;
+        if ($ib) $ib.style.width = `${i}%`; if ($iv) $iv.textContent = i;
+        if ($db) $db.style.width = `${d}%`; if ($dv) $dv.textContent = d;
+    }
+
+    // Keyword heuristic — fast, zero cost, used as immediate estimate
+    function _keywordMeterScore(history) {
+        const recent = history.slice(-10).map(m => m.content?.toLowerCase() || '').join(' ');
+        const tensionKw  = ['stare','silence','tension','dare','challenge','confront','angry','afraid','edge','tense','hesitat','glare','clench','rigid','snap','snarl','warn'];
+        const intimacyKw = ['touch','kiss','whisper','skin','warm','hold','close','breath','moan','intimate','caress','embrace','shiver','pulse','flush','naked','bare','soft','gentle','tender'];
+        const dangerKw   = ['blood','weapon','kill','fight','danger','threat','stab','gun','blade','attack','pain','wound','die','death','scream','flee','trapped','hunt','aimed','shot'];
+        const score = kws => Math.min(100, kws.filter(k => recent.includes(k)).length * 11 + 8);
+        return { t: score(tensionKw), i: score(intimacyKw), d: score(dangerKw) };
+    }
+
+    // LLM meter scorer — fires every 3 turns in background, caches per message id
+    let _lastMeterScoredAt = 0; // telemetry.turns value at last LLM score
+    async function _llmScoreMeters() {
+        const key = getApiKey();
+        if (!key) return;
+        const history = state.history;
+        const recentMsgs = history.filter(m => m.role !== 'image').slice(-6);
+        if (!recentMsgs.length) return;
+
+        const cacheKey = `udmeter__${state.chat?.id}__${recentMsgs.at(-1)?.id}`;
+        try {
+            const cached = sessionStorage.getItem(cacheKey);
+            if (cached) {
+                const { t, i, d } = JSON.parse(cached);
+                _setMeterDOM(t, i, d);
+                return;
+            }
+        } catch (_) {}
+
+        const excerpt = recentMsgs.map(m => {
+            const who = m.role === 'user' ? (state.config.userName || 'User') : (state.loadedCharacters[m.botId]?.name || 'Character');
+            return `${who}: ${m.content?.slice(0, 200)}`;
+        }).join('\n');
+
+        try {
+            const { text } = await fetchCompletion({
+                model: state.config.model || 'deepseek-r1',
+                messages: [
+                    { role: 'system', content: 'You are a scene-analysis engine. Given a roleplay excerpt, score three dimensions 0-100 as integers. Return ONLY valid JSON: {"tension":N,"intimacy":N,"danger":N}. No explanation.' },
+                    { role: 'user',   content: `Score this scene:\n${excerpt}` }
+                ],
+                max_tokens: 30,
+                temperature: 0.1
+            });
+            const parsed = JSON.parse(text.trim());
+            const t = Math.min(100, Math.max(0, parseInt(parsed.tension,  10) || 0));
+            const i = Math.min(100, Math.max(0, parseInt(parsed.intimacy, 10) || 0));
+            const d = Math.min(100, Math.max(0, parseInt(parsed.danger,   10) || 0));
+            _setMeterDOM(t, i, d);
+            try { sessionStorage.setItem(cacheKey, JSON.stringify({ t, i, d })); } catch (_) {}
+        } catch (_) { /* silent — meters stay at keyword estimate */ }
+    }
+
     function updateCodexMeters() {
         const history = state.history;
         if (!history.length) return;
 
-        // Simple heuristic: scan last 10 messages for keyword signals
-        const recent = history.slice(-10).map(m => m.content?.toLowerCase() || '').join(' ');
+        // Always apply keyword estimate immediately (zero latency)
+        const { t, i, d } = _keywordMeterScore(history);
+        _setMeterDOM(t, i, d);
 
-        const tensionKw  = ['stare', 'silence', 'tension', 'dare', 'challenge', 'confront', 'angry', 'afraid', 'edge', 'tense', 'hesitat'];
-        const intimacyKw = ['touch', 'kiss', 'whisper', 'skin', 'warm', 'hold', 'close', 'breath', 'moan', 'intimate', 'caress', 'embrace'];
-        const dangerKw   = ['blood', 'weapon', 'kill', 'fight', 'danger', 'threat', 'stab', 'gun', 'blade', 'attack', 'pain', 'wound'];
-
-        const score = (kws) => Math.min(100, kws.filter(k => recent.includes(k)).length * 12 + 10);
-        const t = score(tensionKw);
-        const i = score(intimacyKw);
-        const d = score(dangerKw);
-
-        const $tb = qs('#codex-tension-bar');
-        const $ib = qs('#codex-intimacy-bar');
-        const $db = qs('#codex-danger-bar');
-        const $tv = qs('#codex-tension-val');
-        const $iv = qs('#codex-intimacy-val');
-        const $dv = qs('#codex-danger-val');
-
-        if ($tb) $tb.style.width = `${t}%`;
-        if ($ib) $ib.style.width = `${i}%`;
-        if ($db) $db.style.width = `${d}%`;
-        if ($tv) $tv.textContent = t;
-        if ($iv) $iv.textContent = i;
-        if ($dv) $dv.textContent = d;
+        // Every 3 turns, kick off a background LLM rescore
+        const turns = state.telemetry?.turns ?? 0;
+        if (turns > 0 && turns % 3 === 0 && turns !== _lastMeterScoredAt) {
+            _lastMeterScoredAt = turns;
+            _llmScoreMeters().catch(() => {});
+        }
     }
 
     // Codex: scene digest — last assistant message plain text excerpt

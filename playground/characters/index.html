@@ -1211,6 +1211,80 @@
           <label class="ts-label">Thread Name <span class="ts-hint">auto-generated from characters if left blank</span></label>
           <input type="text" id="ts-thread-name" class="ce-input" placeholder="Auto-name…">
         </div>
+
+        <!-- Narrative Tone — always visible (DM + Group) -->
+        <div class="ts-group-section" id="ts-narrative-section">
+          <div class="ts-group-section__label"><i data-lucide="flame"></i> Narrative Tone</div>
+          <p class="ts-group-desc">Set the flavour and energy that governs how every character writes in this thread. These directives are injected into every response.</p>
+
+          <!-- Sexual energy -->
+          <div class="ts-field-group">
+            <div class="ts-label-row">
+              <label class="ts-label">Sexual Energy</label>
+              <div class="ts-quick-pills" id="ts-sexual-energy-pills">
+                <button class="ts-quick-pill" data-target="ts-sexual-energy" data-val="none">none</button>
+                <button class="ts-quick-pill" data-target="ts-sexual-energy" data-val="subtle tension">subtle</button>
+                <button class="ts-quick-pill" data-target="ts-sexual-energy" data-val="slow burn, unresolved desire">slow burn</button>
+                <button class="ts-quick-pill" data-target="ts-sexual-energy" data-val="charged, flirtatious, physically aware">charged</button>
+                <button class="ts-quick-pill" data-target="ts-sexual-energy" data-val="explicit, raw, uninhibited">explicit</button>
+              </div>
+            </div>
+            <input type="text" id="ts-sexual-energy" class="ce-input" placeholder="e.g. slow burn desire, explicit but tasteful, purely romantic…">
+          </div>
+
+          <!-- Narrative tone chips -->
+          <div class="ts-field-group">
+            <div class="ts-label-row">
+              <label class="ts-label">Tone &amp; Atmosphere</label>
+              <div class="ts-quick-pills" id="ts-tone-pills">
+                <button class="ts-quick-pill ts-quick-pill--toggle" data-field="ts-tone-tags" data-val="dark">dark</button>
+                <button class="ts-quick-pill ts-quick-pill--toggle" data-field="ts-tone-tags" data-val="erotic">erotic</button>
+                <button class="ts-quick-pill ts-quick-pill--toggle" data-field="ts-tone-tags" data-val="psychologically complex">psycho</button>
+                <button class="ts-quick-pill ts-quick-pill--toggle" data-field="ts-tone-tags" data-val="violent tension">violent</button>
+                <button class="ts-quick-pill ts-quick-pill--toggle" data-field="ts-tone-tags" data-val="romantic">romantic</button>
+                <button class="ts-quick-pill ts-quick-pill--toggle" data-field="ts-tone-tags" data-val="comedic">comedic</button>
+                <button class="ts-quick-pill ts-quick-pill--toggle" data-field="ts-tone-tags" data-val="melancholic">melancholic</button>
+                <button class="ts-quick-pill ts-quick-pill--toggle" data-field="ts-tone-tags" data-val="surreal">surreal</button>
+              </div>
+            </div>
+            <input type="hidden" id="ts-tone-tags" value="">
+          </div>
+
+          <!-- Amplify -->
+          <div class="ts-field-group">
+            <div class="ts-label-row">
+              <label class="ts-label">Amplify <span class="ts-hint">lean into these</span></label>
+              <button class="ts-gen-scene-btn ts-gen-ideas-btn" data-gen="amplify" title="Get AI ideas for what to amplify">
+                <i data-lucide="sparkles"></i> ideas
+              </button>
+            </div>
+            <input type="text" id="ts-amplify" class="ce-input" placeholder="e.g. physical descriptions, power play, forbidden tension, sensory detail…">
+          </div>
+
+          <!-- Avoid -->
+          <div class="ts-field-group">
+            <div class="ts-label-row">
+              <label class="ts-label">Avoid <span class="ts-hint">hard limits for this thread</span></label>
+              <button class="ts-gen-scene-btn ts-gen-ideas-btn" data-gen="avoid" title="Get AI ideas for what to exclude">
+                <i data-lucide="sparkles"></i> ideas
+              </button>
+            </div>
+            <input type="text" id="ts-avoid" class="ce-input" placeholder="e.g. gore, non-con framing, death of named characters, breaking fourth wall…">
+          </div>
+
+          <!-- Pacing -->
+          <div class="ts-field-group">
+            <label class="ts-label">Response Pacing</label>
+            <div class="ts-quick-pills" style="margin-top:4px;">
+              <button class="ts-quick-pill" data-target="ts-pacing" data-val="short, punchy, reactive">punchy</button>
+              <button class="ts-quick-pill" data-target="ts-pacing" data-val="balanced prose, moderate length">balanced</button>
+              <button class="ts-quick-pill" data-target="ts-pacing" data-val="long, immersive, rich descriptions">immersive</button>
+              <button class="ts-quick-pill" data-target="ts-pacing" data-val="cinematic, scene-structured">cinematic</button>
+            </div>
+            <input type="text" id="ts-pacing" class="ce-input" style="margin-top:6px;" placeholder="e.g. dense prose, each reply advances plot, breathe between action beats…">
+          </div>
+        </div>
+
       </div>
 
       <!-- ── TAB: Group Config (group mode only) ── -->
@@ -1365,79 +1439,6 @@
                 <span class="ts-radio-card__desc">Slight tonal blending for narrative cohesion. Works well for tightly-knit parties.</span>
               </div>
             </label>
-          </div>
-        </div>
-
-        <!-- Narrative Config -->
-        <div class="ts-group-section" id="ts-narrative-section">
-          <div class="ts-group-section__label"><i data-lucide="flame"></i> Narrative Tone</div>
-          <p class="ts-group-desc">Set the flavour and energy that governs how every character writes in this thread. These directives are injected into every response.</p>
-
-          <!-- Sexual energy -->
-          <div class="ts-field-group">
-            <div class="ts-label-row">
-              <label class="ts-label">Sexual Energy</label>
-              <div class="ts-quick-pills" id="ts-sexual-energy-pills">
-                <button class="ts-quick-pill" data-target="ts-sexual-energy" data-val="none">none</button>
-                <button class="ts-quick-pill" data-target="ts-sexual-energy" data-val="subtle tension">subtle</button>
-                <button class="ts-quick-pill" data-target="ts-sexual-energy" data-val="slow burn, unresolved desire">slow burn</button>
-                <button class="ts-quick-pill" data-target="ts-sexual-energy" data-val="charged, flirtatious, physically aware">charged</button>
-                <button class="ts-quick-pill" data-target="ts-sexual-energy" data-val="explicit, raw, uninhibited">explicit</button>
-              </div>
-            </div>
-            <input type="text" id="ts-sexual-energy" class="ce-input" placeholder="e.g. slow burn desire, explicit but tasteful, purely romantic…">
-          </div>
-
-          <!-- Narrative tone chips -->
-          <div class="ts-field-group">
-            <div class="ts-label-row">
-              <label class="ts-label">Tone &amp; Atmosphere</label>
-              <div class="ts-quick-pills" id="ts-tone-pills">
-                <button class="ts-quick-pill ts-quick-pill--toggle" data-field="ts-tone-tags" data-val="dark">dark</button>
-                <button class="ts-quick-pill ts-quick-pill--toggle" data-field="ts-tone-tags" data-val="erotic">erotic</button>
-                <button class="ts-quick-pill ts-quick-pill--toggle" data-field="ts-tone-tags" data-val="psychologically complex">psycho</button>
-                <button class="ts-quick-pill ts-quick-pill--toggle" data-field="ts-tone-tags" data-val="violent tension">violent</button>
-                <button class="ts-quick-pill ts-quick-pill--toggle" data-field="ts-tone-tags" data-val="romantic">romantic</button>
-                <button class="ts-quick-pill ts-quick-pill--toggle" data-field="ts-tone-tags" data-val="comedic">comedic</button>
-                <button class="ts-quick-pill ts-quick-pill--toggle" data-field="ts-tone-tags" data-val="melancholic">melancholic</button>
-                <button class="ts-quick-pill ts-quick-pill--toggle" data-field="ts-tone-tags" data-val="surreal">surreal</button>
-              </div>
-            </div>
-            <input type="hidden" id="ts-tone-tags" value="">
-          </div>
-
-          <!-- Amplify -->
-          <div class="ts-field-group">
-            <div class="ts-label-row">
-              <label class="ts-label">Amplify <span class="ts-hint">lean into these</span></label>
-              <button class="ts-gen-scene-btn ts-gen-ideas-btn" data-gen="amplify" title="Get AI ideas for what to amplify">
-                <i data-lucide="sparkles"></i> ideas
-              </button>
-            </div>
-            <input type="text" id="ts-amplify" class="ce-input" placeholder="e.g. physical descriptions, power play, forbidden tension, sensory detail…">
-          </div>
-
-          <!-- Avoid -->
-          <div class="ts-field-group">
-            <div class="ts-label-row">
-              <label class="ts-label">Avoid <span class="ts-hint">hard limits for this thread</span></label>
-              <button class="ts-gen-scene-btn ts-gen-ideas-btn" data-gen="avoid" title="Get AI ideas for what to exclude">
-                <i data-lucide="sparkles"></i> ideas
-              </button>
-            </div>
-            <input type="text" id="ts-avoid" class="ce-input" placeholder="e.g. gore, non-con framing, death of named characters, breaking fourth wall…">
-          </div>
-
-          <!-- Pacing -->
-          <div class="ts-field-group">
-            <label class="ts-label">Response Pacing</label>
-            <div class="ts-quick-pills" style="margin-top:4px;">
-              <button class="ts-quick-pill" data-target="ts-pacing" data-val="short, punchy, reactive">punchy</button>
-              <button class="ts-quick-pill" data-target="ts-pacing" data-val="balanced prose, moderate length">balanced</button>
-              <button class="ts-quick-pill" data-target="ts-pacing" data-val="long, immersive, rich descriptions">immersive</button>
-              <button class="ts-quick-pill" data-target="ts-pacing" data-val="cinematic, scene-structured">cinematic</button>
-            </div>
-            <input type="text" id="ts-pacing" class="ce-input" style="margin-top:6px;" placeholder="e.g. dense prose, each reply advances plot, breathe between action beats…">
           </div>
         </div>
 
@@ -3037,7 +3038,7 @@
 
 <div id="toast-container" class="toast-container"></div>
 <script src="https://cdn.trap.lol/shards/lucide.min.js"></script><script src="https://cdn.trap.lol/shards/marked.min.js"></script><script src="https://cdn.trap.lol/shards/purify.min.js"></script>
-<script type="module" src="./script/main.js?v=58"></script>
+<script type="module" src="./script/main.js?v=59"></script>
 <!-- ── Wallhaven Arena ── -->
 <script src="./script/modules/wallhaven.js"></script>
 
