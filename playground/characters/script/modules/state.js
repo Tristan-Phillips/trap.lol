@@ -6,7 +6,7 @@
  * and isolated continuities.
  */
 
-import { saveAvatar, loadAvatar, deleteAvatar, isDataUrl, saveImageBlob, deleteImageBlob, isIdbImageRef, idbImageRefId, idbGetAllEntries, idbSetBulk } from './storage.js';
+import { saveAvatar, loadAvatar, deleteAvatar, isDataUrl, saveImageBlob, deleteImageBlob, isIdbImageRef, idbImageRefId, idbGetAllEntries, idbSetBulk } from './storage.js?v=3';
 
 const STORAGE_KEY = 'underdark_v4';
 const CHARS_KEY   = 'underdark_chars_v4';

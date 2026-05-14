@@ -10,9 +10,9 @@
  *   { handled: true, action: fn } — run async side-effect, caller awaits
  */
 
-import { state, setConfig, saveState, getCharOverride } from './state.js';
-export { IMAGE_MODELS, DEFAULT_MODEL, buildImagePrompt, generateImage } from './image-engine.js';
-import { esc as escHtml } from './shared-utils.js';
+import { state, setConfig, saveState, getCharOverride } from './state.js?v=2';
+export { IMAGE_MODELS, DEFAULT_MODEL, buildImagePrompt, generateImage } from './image-engine.js?v=3';
+import { esc as escHtml } from './shared-utils.js?v=4';
 
 // ── Registry ──────────────────────────────────────────────────────────────────
 // Each entry: { cmd, args, desc, detail }
@@ -110,7 +110,7 @@ export async function executeCommand(raw, { triggerBotResponse, appendSystemMess
         // Apply to active char's override
         const botId = state.activeBotId;
         if (botId) {
-            const { setCharOverride } = await import('./state.js');
+            const { setCharOverride } = await import('./state.js?v=2');
             setCharOverride(botId, { narrativePOV: pov });
         } else {
             showToast('No active character to apply POV to', 'warn');
@@ -134,7 +134,7 @@ export async function executeCommand(raw, { triggerBotResponse, appendSystemMess
         if (!args) { showToast('/remember requires a fact to record', 'warn'); return { handled: true }; }
         const botId = state.activeBotId;
         if (!botId) { showToast('No active character to remember for', 'warn'); return { handled: true }; }
-        const { getCharOverride: getCO, setCharOverride: setCO } = await import('./state.js');
+        const { getCharOverride: getCO, setCharOverride: setCO } = await import('./state.js?v=2');
         const override = getCO(botId);
         const existing = override.persistentMemory || '';
         const separator = existing.trim() ? '\n' : '';
@@ -151,7 +151,7 @@ export async function executeCommand(raw, { triggerBotResponse, appendSystemMess
         if (lastBotIdx === -1) { showToast('No bot message to retry', 'warn'); return { handled: true }; }
         const lastBot = history[history.length - 1 - lastBotIdx];
         // Remove it from state
-        const { deleteMessage } = await import('./state.js');
+        const { deleteMessage } = await import('./state.js?v=2');
         deleteMessage(lastBot.id);
         // Re-trigger bot response for the same bot
         await triggerBotResponse(lastBot.botId || state.activeBotId);
@@ -165,7 +165,7 @@ export async function executeCommand(raw, { triggerBotResponse, appendSystemMess
         const msgs = n > 0 ? history.slice(-n * 2) : history;
         if (!msgs.length) { showToast('No history to summarize', 'warn'); return { handled: true }; }
 
-        const apiKey = await import('../../../../glass/script/modules/llm-auth.js')
+        const apiKey = await import('../../../../glass/script/modules/llm-auth.js?v=3')
             .then(m => m.getApiKey()).catch(() => null);
         if (!apiKey) { showToast('API key required for /summary', 'warn'); return { handled: true }; }
 
@@ -215,7 +215,7 @@ export async function executeCommand(raw, { triggerBotResponse, appendSystemMess
         const history = state.history;
         if (history.length < 4) { showToast('Need at least 4 messages to compact', 'warn'); return { handled: true }; }
 
-        const apiKey = await import('../../../../glass/script/modules/llm-auth.js')
+        const apiKey = await import('../../../../glass/script/modules/llm-auth.js?v=3')
             .then(m => m.getApiKey()).catch(() => null);
         if (!apiKey) { showToast('API key required for /compact', 'warn'); return { handled: true }; }
 
