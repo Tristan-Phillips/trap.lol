@@ -473,7 +473,7 @@
   },
   "commits": [
     {
-      "hash": "PENDING",
+      "hash": "512c0d8",
       "date": "2026-05-14",
       "message": "feat(underdark): hard reset button in continuity config — wipe all data with optional image preservation — ui.js v96",
       "scope": "playground/characters — index.html, ui.js, controls.css, style.css",
