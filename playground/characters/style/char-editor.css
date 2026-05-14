@@ -1838,6 +1838,35 @@
     margin: 1em 0;
 }
 
+/* ── Overlord mode variants ── */
+.overlord-block--transition .overlord-block__glyph { background: rgba(56, 189, 248, 0.15); border-color: rgba(56, 189, 248, 0.4); }
+.overlord-block--transition .overlord-block__glyph svg { color: #38bdf8; }
+.overlord-block--transition .overlord-block__label { color: #38bdf8; }
+.overlord-block--transition .overlord-block__line { background: linear-gradient(90deg, rgba(56, 189, 248, 0.6), transparent); }
+.overlord-block--transition .overlord-block__end { color: rgba(56, 189, 248, 0.5); }
+.overlord-block--transition .overlord-block__body { border-left-color: rgba(56, 189, 248, 0.35); }
+
+.overlord-block--reaction .overlord-block__glyph { background: rgba(250, 204, 21, 0.15); border-color: rgba(250, 204, 21, 0.4); }
+.overlord-block--reaction .overlord-block__glyph svg { color: #facc15; }
+.overlord-block--reaction .overlord-block__label { color: #facc15; }
+.overlord-block--reaction .overlord-block__line { background: linear-gradient(90deg, rgba(250, 204, 21, 0.6), transparent); }
+.overlord-block--reaction .overlord-block__end { color: rgba(250, 204, 21, 0.5); }
+.overlord-block--reaction .overlord-block__body { border-left-color: rgba(250, 204, 21, 0.35); }
+
+.overlord-block--moment .overlord-block__glyph { background: rgba(236, 72, 153, 0.15); border-color: rgba(236, 72, 153, 0.4); }
+.overlord-block--moment .overlord-block__glyph svg { color: #ec4899; }
+.overlord-block--moment .overlord-block__label { color: #ec4899; }
+.overlord-block--moment .overlord-block__line { background: linear-gradient(90deg, rgba(236, 72, 153, 0.6), transparent); }
+.overlord-block--moment .overlord-block__end { color: rgba(236, 72, 153, 0.5); }
+.overlord-block--moment .overlord-block__body { border-left-color: rgba(236, 72, 153, 0.35); }
+
+.overlord-block--recap .overlord-block__glyph { background: rgba(99, 102, 241, 0.15); border-color: rgba(99, 102, 241, 0.4); }
+.overlord-block--recap .overlord-block__glyph svg { color: #818cf8; }
+.overlord-block--recap .overlord-block__label { color: #818cf8; letter-spacing: 0.1em; }
+.overlord-block--recap .overlord-block__line { background: linear-gradient(90deg, rgba(99, 102, 241, 0.6), transparent); }
+.overlord-block--recap .overlord-block__end { color: rgba(99, 102, 241, 0.5); }
+.overlord-block--recap .overlord-block__body { border-left-color: rgba(99, 102, 241, 0.35); font-style: normal; }
+
 /* ── AI Choice Picker modal ── */
 .choice-picker .modal__body {
     display: flex;

@@ -399,6 +399,7 @@ export function addMessage(role, content, botId = null, meta = {}) {
         model: meta.model || '',
         prompt: meta.prompt || null,
         thoughts: meta.thoughts || null,
+        overlordMode: meta.overlordMode || null,
         comments: [],
         reactions: {},
         edited: false

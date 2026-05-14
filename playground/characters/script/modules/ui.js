@@ -329,18 +329,21 @@ function renderMarkdown(text) {
         // Any open-quote char followed by content followed by any close-quote char
         const Q  = '\\u0022\\u201C\\u201D\\u2018\\u2019'; // all quote chars (open or close)
         const NQ = '[^\\u0022\\u201C\\u201D\\u2018\\u2019<\\n]'; // not a quote, <, or newline
-        const speechRe  = new RegExp('[' + Q + '](' + NQ + '{2,}?)[' + Q + ']', 'g');
+        const speechRe    = new RegExp('[' + Q + '](' + NQ + '{2,}?)[' + Q + ']', 'g');
         // &quot; variant — marked entity-encodes straight “ when inside certain contexts
         const quotedEntRe = /&quot;((?:[^<]){2,}?)&quot;/g;
-        const thoughtRe = /(?<![_\w])_((?:[^_\n]){2,}?)_(?![_\w])/g;
-        const tagRe     = /\[([A-Z][A-Z0-9 _\-]{0,24}(?:\s+[\d\w%\/.\-]{1,12})?)\]/g;
+        // UFR: ~tilde-wrapped~ inner thoughts, plus legacy _underscore_ thoughts
+        const thoughtRe   = /~((?:[^~\n]){2,}?)~/g;
+        const thoughtReUs = /(?<![_\w])_((?:[^_\n]){2,}?)_(?![_\w])/g;
+        const tagRe       = /\[([A-Z][A-Z0-9 _\-]{0,24}(?:\s+[\d\w%\/.\-]{1,12})?)\]/g;
 
         // Run all replacements in a single text-node pass
         html = html.replace(/>([^<]+)</g, (_, textNode) => {
             let t = textNode;
-            t = t.replace(quotedEntRe, (__, inner) => '<span class=”rp-speech”>“' + inner + '”</span>');
-            t = t.replace(speechRe,    (__, inner) => '<span class=”rp-speech”>“' + inner + '”</span>');
+            t = t.replace(quotedEntRe, (__, inner) => '<span class=”rp-speech”>”' + inner + '”</span>');
+            t = t.replace(speechRe,    (__, inner) => '<span class=”rp-speech”>”' + inner + '”</span>');
             t = t.replace(thoughtRe,   (__, inner) => '<span class=”rp-thought”>' + inner + '</span>');
+            t = t.replace(thoughtReUs, (__, inner) => '<span class=”rp-thought”>' + inner + '</span>');
             t = t.replace(tagRe,       (__, inner) => '<span class=”rp-tag”>' + esc(inner) + '</span>');
             return '>' + t + '<';
         });
@@ -665,6 +668,18 @@ export function initUI() {
                 if (target && target !== 'chat-bg-btn') qs(`#${target}`)?.click();
                 closeOverflow();
             });
+        });
+
+        // Force Response overflow item — triggers the active bot to respond without a user message
+        qs('#overflow-force-respond')?.addEventListener('click', async () => {
+            closeOverflow();
+            if (state.isStreaming) { showToast('Generation in progress — stop it first', 'warn'); return; }
+            if (!getApiKey()) { showToast('API key required', 'warn'); return; }
+            if (!state.activeBotId || !state.loadedCharacters[state.activeBotId]) {
+                showToast('No active character in thread', 'warn'); return;
+            }
+            clearGroupTimers();
+            await triggerBotResponse(state.activeBotId);
         });
         document.addEventListener('click', e => {
             if (!$overflowMenu.hidden && !$overflowMenu.contains(e.target) && e.target !== $overflowBtn) {
@@ -2706,6 +2721,8 @@ export function initUI() {
             return;
         }
 
+        const isGroup = state.chat?.type === 'group' && state.activeBotIds.length > 1;
+
         $container.innerHTML = state.activeBotIds.map(id => {
             const char = state.loadedCharacters[id];
             const meta = state.characters.find(c => c.id === id);
@@ -2716,6 +2733,7 @@ export function initUI() {
             return `
             <div class="active-bot ${isActive ? 'active-bot--selected' : ''}" data-id="${esc(id)}" title="${esc(name)}">
                 ${buildAvatarHtml(avatar, 'active-bot__avatar')}
+                ${isGroup ? `<button class="active-bot__force" data-force="${esc(id)}" title="Force ${esc(name)} to respond"><i data-lucide="zap"></i></button>` : ''}
                 <button class="active-bot__remove" data-remove="${esc(id)}" title="Remove ${esc(name)}">
                     <i data-lucide="x"></i>
                 </button>
@@ -2779,6 +2797,19 @@ export function initUI() {
                     const avUrl = await getAvatarUrl(state.activeBotId, newMeta.avatar_path || newActive?.avatar);
                     updateCinematicBackground(avUrl);
                 }
+            });
+        });
+
+        // Force-response zap buttons (group only) — fires triggerBotResponse for that specific char
+        qsa('[data-force]', $container).forEach($btn => {
+            $btn.addEventListener('click', async e => {
+                e.stopPropagation();
+                if (state.isStreaming) { showToast('Generation in progress — stop it first', 'warn'); return; }
+                if (!getApiKey()) { showToast('API key required', 'warn'); return; }
+                const id = $btn.dataset.force;
+                if (!state.loadedCharacters[id]) { showToast('Character not loaded', 'warn'); return; }
+                clearGroupTimers();
+                await triggerBotResponse(id);
             });
         });
 
@@ -6195,19 +6226,37 @@ export function initUI() {
     }
 
     // ── Overlord message in thread ────────────────────────────────────────────
-    // Renders the narrator/Overlord opening scene — a full-width cinematic band,
-    // not a chat bubble. Used for group opening scenes and narrator injections.
-    function _injectOverlordMessage(content, $target) {
+    // Renders the narrator/Overlord block — a full-width cinematic band.
+    // mode: 'scene' (default) | 'transition' | 'reaction' | 'moment' | 'recap'
+    // Each mode gets a distinct sub-label and optional icon variant.
+    function _injectOverlordMessage(content, $target, mode = 'scene') {
         const $t = $target || $thread;
         if (!$t || !content) return;
+        const modeLabels = {
+            scene:      'OVERLORD',
+            transition: 'OVERLORD — TRANSITION',
+            reaction:   'OVERLORD — ENVIRONMENT',
+            moment:     'OVERLORD — MOMENT',
+            recap:      'OVERLORD — RECAP',
+        };
+        const modeIcons = {
+            scene:      'eye',
+            transition: 'arrow-right',
+            reaction:   'zap',
+            moment:     'heart',
+            recap:      'book-open',
+        };
+        const label = modeLabels[mode] || 'OVERLORD';
+        const icon  = modeIcons[mode]  || 'eye';
         const $el = document.createElement('div');
-        $el.className = 'overlord-block';
+        $el.className = `overlord-block overlord-block--${mode}`;
+        $el.dataset.overlordMode = mode;
         $el.innerHTML = `
             <div class="overlord-block__rail overlord-block__rail--top">
                 <span class="overlord-block__glyph">
-                    <i data-lucide="eye"></i>
+                    <i data-lucide="${esc(icon)}"></i>
                 </span>
-                <span class="overlord-block__label">OVERLORD</span>
+                <span class="overlord-block__label">${esc(label)}</span>
                 <span class="overlord-block__line"></span>
             </div>
             <div class="overlord-block__body">${renderMarkdownSafe(content)}</div>
@@ -6218,6 +6267,49 @@ export function initUI() {
         $t.appendChild($el);
         lucideRefresh($el);
         $t.scrollTop = $t.scrollHeight;
+    }
+
+    // ── Overlord LLM call helper ──────────────────────────────────────────────
+    // Shared async helper to call the LLM with Overlord voice and inject result.
+    // `promptFn` receives { charNames, scenario, histText } and returns the user message string.
+    async function _fireOverlord(mode, promptFn, maxTokens = 400) {
+        const key = getApiKey();
+        if (!key) throw new Error('API key required');
+
+        const isGroup = state.chat?.type === 'group';
+        const charNames = (state.chat?.botIds || state.activeBotIds || [])
+            .map(id => {
+                const ov = getCharOverride(id);
+                return ov?.nickname || state.loadedCharacters[id]?.name || id;
+            }).filter(Boolean);
+
+        const scenario = state.reality?.worldConfig?.scenario || state.chat?.threadConfig?.threadScenario || '';
+        const hist = state.history.filter(m => m.role !== 'image').slice(-14);
+        const histText = hist.map(m => {
+            const name = m.role === 'user'
+                ? (state.config.userName || 'User')
+                : (state.loadedCharacters[m.botId]?.name || 'Character');
+            return `${name}: ${m.content?.slice(0, 250)}`;
+        }).join('\n');
+
+        const userMsg = promptFn({ charNames, scenario, histText, isGroup });
+
+        const { text } = await fetchCompletion({
+            model: state.config.model || 'deepseek-r1',
+            messages: [
+                {
+                    role: 'system',
+                    content: `You are OVERLORD — the omniscient narrator voice in a collaborative roleplay. You are NOT any of the characters. You describe scenes, environments, and transitions with literary, sensory prose. You never speak as a character; you speak as the all-seeing author. Write in present tense. Be vivid, atmospheric, and brief (2-3 paragraphs max). Do not include character dialogue or actions — leave that to the characters themselves.`
+                },
+                { role: 'user', content: userMsg }
+            ],
+            max_tokens: maxTokens,
+            temperature: 0.82
+        });
+        _injectOverlordMessage(text, null, mode);
+        // Persist to history so it survives page reload (overlordMode stored via meta)
+        addMessage('system', text, null, { overlordMode: mode });
+        return text;
     }
 
     // ── Image message in thread ───────────────────────────────────────────────
@@ -6610,8 +6702,8 @@ export function initUI() {
     }
 
     function renderFullHistory() {
-        const existing = qsa('.message', $thread);
-        existing.forEach(m => m.remove());
+        // Remove messages AND overlord blocks (both are re-injected from history)
+        qsa('.message, .overlord-block', $thread).forEach(m => m.remove());
         qs('#arena-welcome')?.remove();
 
         if (!state.history.length && !state.activeBotIds.length) {
@@ -6665,7 +6757,7 @@ export function initUI() {
                 return;
             }
             if (msg.role === 'system' && !msg._isAnchor) {
-                _injectOverlordMessage(msg.content);
+                _injectOverlordMessage(msg.content, null, msg.overlordMode || 'scene');
                 return;
             }
             const char = msg.botId ? state.loadedCharacters[msg.botId] : null;
@@ -6684,22 +6776,12 @@ export function initUI() {
     }
 
     async function _autoFireOverlord() {
-        const botIds = state.chat?.botIds || [];
-        const charNames = botIds.map(id =>
-            getCharOverride(id)?.nickname || state.loadedCharacters[id]?.name || 'Unknown'
-        ).filter(Boolean).join(', ');
-        const scenario = state.chat?.threadConfig?.threadScenario
-            || state.reality?.worldConfig?.scenario || '';
+        // _fireOverlord internally persists via addMessage + sets overlordMode
         try {
-            const { text } = await fetchCompletion({
-                model: state.config.model || 'deepseek-r1',
-                messages: [{ role: 'user', content: `You are Overlord, an omniscient narrator. Set the scene for a group roleplay involving: ${charNames}. ${scenario ? `Setting context: ${scenario.slice(0, 300)}` : ''}\n\nWrite a brief, atmospheric scene-setting passage (2-3 paragraphs) in present tense. Describe where everyone is, the mood, and what is about to begin. Be vivid and immersive.` }],
-                max_tokens: 350,
-                temperature: 0.8
-            });
-            const sysMsg = addMessage('system', text, null);
-            sysMsg._isAnchor = false;
-            _injectOverlordMessage(text);
+            await _fireOverlord('scene', ({ charNames, scenario }) =>
+                `Set the opening scene for a group roleplay involving: ${charNames.join(', ')}.${scenario ? ` Setting: ${scenario.slice(0, 300)}` : ''}\n\nWrite a brief, atmospheric scene-setting passage (2-3 paragraphs) in present tense. Describe where everyone is, the mood, and what is about to begin. Be vivid and immersive.`,
+                350
+            );
         } catch { /* silent — auto-trigger should never break the chat */ }
     }
 
@@ -8201,72 +8283,71 @@ export function initUI() {
     // Codex: quick video gen — opens the video gen modal pre-filled
     qs('#codex-quick-vid')?.addEventListener('click', () => openVideoGenModal());
 
-    // Codex admin: force Overlord to re-describe the scene
-    qs('#codex-force-overlord')?.addEventListener('click', async function() {
-        const btn = this;
-        if (btn.disabled) return;
-        btn.disabled = true;
-        const orig = btn.innerHTML;
-        btn.innerHTML = '<i data-lucide="loader-2" class="spin"></i>';
-        lucideRefresh(btn);
-        try {
-            const key = getApiKey();
-            if (!key) { showToast('API key required', 'warn'); return; }
-            const history = state.history.slice(-12);
-            const histText = history.map(m => {
-                const name = m.role === 'user'
-                    ? (state.config.userName || 'User')
-                    : (state.loadedCharacters[m.botId]?.name || 'Character');
-                return `${name}: ${m.content?.slice(0, 200)}`;
-            }).join('\n');
-            const { text } = await fetchCompletion({
-                model: state.config.model || 'deepseek-r1',
-                messages: [{ role: 'user', content: `Based on this recent exchange, write a vivid, atmospheric scene description as a narrator — 2-3 paragraphs covering: where the characters are, what has just happened, the mood and tension. Write in present tense, immersive prose.\n\n${histText}` }],
-                max_tokens: 400,
-                temperature: 0.8
-            });
-            _injectOverlordMessage(text);
-        } catch (err) {
-            showToast(`Overlord failed: ${err.message}`, 'error', 5000);
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = orig;
+    // ── Shared codex admin button helper ─────────────────────────────────────
+    function _codexAdminBtn(id, asyncFn) {
+        const btn = qs(id);
+        if (!btn) return;
+        btn.addEventListener('click', async function() {
+            if (btn.disabled) return;
+            btn.disabled = true;
+            const orig = btn.innerHTML;
+            btn.innerHTML = '<i data-lucide="loader-2" class="spin"></i>';
             lucideRefresh(btn);
-        }
+            try {
+                await asyncFn();
+            } catch (err) {
+                showToast(err.message || 'Action failed', 'error', 5000);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = orig;
+                lucideRefresh(btn);
+            }
+        });
+    }
+
+    // Codex admin: force Overlord to re-describe the scene
+    _codexAdminBtn('#codex-force-overlord', async () => {
+        if (!getApiKey()) throw new Error('API key required');
+        await _fireOverlord('scene', ({ histText }) =>
+            `Based on this recent exchange, write a vivid, atmospheric scene description as a narrator — 2-3 paragraphs covering: where the characters are, what has just happened, the mood and tension. Write in present tense, immersive prose.\n\n${histText}`,
+            400
+        );
     });
 
     // Codex admin: generate a story recap
-    qs('#codex-recap')?.addEventListener('click', async function() {
-        const btn = this;
-        if (btn.disabled) return;
-        btn.disabled = true;
-        const orig = btn.innerHTML;
-        btn.innerHTML = '<i data-lucide="loader-2" class="spin"></i>';
-        lucideRefresh(btn);
-        try {
-            const key = getApiKey();
-            if (!key) { showToast('API key required', 'warn'); return; }
-            const allMsgs = state.history.filter(m => m.role !== 'image');
-            const histText = allMsgs.slice(-30).map(m => {
-                const name = m.role === 'user'
-                    ? (state.config.userName || 'User')
-                    : (state.loadedCharacters[m.botId]?.name || 'Character');
-                return `${name}: ${m.content?.slice(0, 300)}`;
-            }).join('\n');
-            const { text } = await fetchCompletion({
-                model: state.config.model || 'deepseek-r1',
-                messages: [{ role: 'user', content: `Write a concise story recap (3-5 bullet points) of the key events, emotional beats, and revelations from this roleplay session. Focus on what changed and what matters.\n\n${histText}` }],
-                max_tokens: 350,
-                temperature: 0.5
-            });
-            _injectOverlordMessage(`**Session Recap**\n\n${text}`);
-        } catch (err) {
-            showToast(`Recap failed: ${err.message}`, 'error', 5000);
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = orig;
-            lucideRefresh(btn);
-        }
+    _codexAdminBtn('#codex-recap', async () => {
+        if (!getApiKey()) throw new Error('API key required');
+        await _fireOverlord('recap', ({ histText }) =>
+            `Write a concise story recap (3-5 bullet points) of the key events, emotional beats, and revelations from this roleplay session. Focus on what changed and what matters.\n\n${histText}`,
+            350
+        );
+    });
+
+    // Codex admin: Overlord narrates a scene transition — time-skip / location shift
+    _codexAdminBtn('#codex-overlord-transition', async () => {
+        if (!getApiKey()) throw new Error('API key required');
+        await _fireOverlord('transition', ({ charNames, histText }) =>
+            `Narrate a scene transition for this roleplay. The current participants are: ${charNames.join(', ')}. Based on what has happened so far, write a brief atmospheric transition — a time-skip, movement to a new location, or a shift in mood. 1-2 vivid paragraphs. No dialogue.\n\n${histText}`,
+            300
+        );
+    });
+
+    // Codex admin: Overlord narrates an environmental reaction — weather, atmosphere, world responding
+    _codexAdminBtn('#codex-overlord-reaction', async () => {
+        if (!getApiKey()) throw new Error('API key required');
+        await _fireOverlord('reaction', ({ histText, scenario }) =>
+            `Based on the current scene and events, narrate a brief environmental reaction — how the world, weather, atmosphere, or background details respond to what is happening. 1 vivid paragraph. No character dialogue or action.\n\n${scenario ? `Setting context: ${scenario.slice(0, 200)}\n\n` : ''}${histText}`,
+            250
+        );
+    });
+
+    // Codex admin: Overlord narrates an intimate/charged moment — the unspoken between characters
+    _codexAdminBtn('#codex-overlord-moment', async () => {
+        if (!getApiKey()) throw new Error('API key required');
+        await _fireOverlord('moment', ({ charNames, histText }) =>
+            `Narrate the unspoken charged moment between ${charNames.join(' and ')}. Describe the tension, electricity, or vulnerability in the space between them — what the body language, the silence, the air itself says that words don't. 1-2 intimate paragraphs. No dialogue.\n\n${histText}`,
+            280
+        );
     });
 
     // Codex admin: reset scene meters to neutral

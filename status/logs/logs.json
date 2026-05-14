@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.3.15",
+    "schema_version": "1.3.17",
     "last_updated": "2026-05-14",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -472,6 +472,37 @@
     ]
   },
   "commits": [
+    {
+      "hash": "TBD",
+      "date": "2026-05-14",
+      "message": "feat(underdark): force-trigger, character isolation, UFR format system, Overlord expansion — ui.js v88",
+      "scope": "playground/characters — ui.js, llm-engine.js, state.js, main.js, index.html, arena.css, char-editor.css, style.css; status/logs/logs.json",
+      "impact": "high",
+      "files": [
+        "playground/characters/script/modules/ui.js",
+        "playground/characters/script/modules/llm-engine.js",
+        "playground/characters/script/modules/state.js",
+        "playground/characters/script/main.js",
+        "playground/characters/index.html",
+        "playground/characters/style/arena.css",
+        "playground/characters/style/char-editor.css",
+        "playground/characters/style/style.css",
+        "status/logs/logs.json"
+      ],
+      "why": "Four-pillar overhaul requested by trap: (1) Force-trigger — zap buttons on group character pills + overflow 'Force Response' item let the user manually provoke any character to respond without sending a user message; (2) Character isolation — three-layer bleed prevention: GROUP ISOLATION block in system prompt, full history attribution prefixing ALL messages with speaker name in group mode, and a post-history 'It is now X's turn' anchor; (3) UFR (Underdark Format Ruleset) — a universal format directive injected into every system prompt specifying double-quote speech, asterisk action, tilde thought, plain prose narration, and [STATUS] bracket tags; tilde thought rendering added to renderMarkdown; (4) Overlord expansion — _fireOverlord helper centralises all Overlord LLM calls, four new modes (transition/reaction/moment/recap) with distinct CSS palettes, five codex admin buttons wired via _codexAdminBtn boilerplate-eliminator, overlordMode persisted to message history and restored on renderFullHistory."
+    },
+    {
+      "hash": "ef44e81",
+      "date": "2026-05-14",
+      "message": "fix(underdark): guard spark/ideas buttons with API key check; log picker errors",
+      "scope": "playground/characters — ui.js, main.js",
+      "impact": "low",
+      "files": [
+        "playground/characters/script/modules/ui.js",
+        "playground/characters/script/main.js"
+      ],
+      "why": "showPickerModal's .catch() silently swallowed all fetchCompletion errors — when no API key was set the modal showed 'Generation failed' with no actionable feedback. Added getApiKey() guard at the top of the three spark/ideas handlers (.ts-spark-field-btn, .ts-gen-ideas-btn, _tsSparkSceneIdeas) to surface the failure as a toast instead. Also added console.warn to the .catch() so errors appear in DevTools."
+    },
     {
       "hash": "8ccd6fd",
       "date": "2026-05-14",
@@ -1349,6 +1380,27 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-14",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Phase 5 — Underdark control overhaul and format system. Four major pillars implemented: (1) Force-trigger: zap pill buttons in group chats + overflow 'Force Response' in DM allow the user to manually fire any character without sending a user message; (2) Character isolation: three-layer system prevents the LLM from writing as the wrong character — GROUP ISOLATION system prompt block, full history attribution (all messages prefixed Speaker: Content in group mode), and a post-history anchor message; (3) UFR (Underdark Format Ruleset): a format directive injected into every character's system prompt specifying exactly how to wrap speech/action/thought/narration; tilde thought rendering added to renderMarkdown alongside legacy underscore; (4) Overlord expansion: _fireOverlord centralises all narrator LLM calls, four new modes (transition/reaction/moment/recap) with distinct CSS palettes injected via _codexAdminBtn boilerplate eliminator, overlordMode persisted to message schema and restored on full history re-render.",
+      "decisions": [
+        "Force-trigger bypasses the user message send path entirely — calls clearGroupTimers() then triggerBotResponse() directly so no phantom user message appears in history.",
+        "Character isolation uses three layers rather than one because any single layer can be ignored by the LLM under creative pressure — system prompt block + history attribution + anchor message together create a strong enough signal.",
+        "UFR uses tilde (~) for thoughts because underscore is already ambiguous in markdown; the renderMarkdown function now handles both patterns to cover legacy history and new UFR-formatted responses.",
+        "_fireOverlord accepts a promptFn callback that receives {charNames, scenario, histText} — caller defines the narrative instruction, helper handles the LLM call and DOM/state injection.",
+        "_codexAdminBtn abstracts the disable/spinner/re-enable pattern that was repeated verbatim for every Overlord button — five buttons now wired in five lines.",
+        "overlordMode stored in message.meta so renderFullHistory can reconstruct the correct visual mode when re-rendering from history rather than defaulting all Overlord blocks to 'scene'.",
+        "renderFullHistory cleanup selector changed from '.message' to '.message, .overlord-block' to prevent stale live-injected blocks from persisting alongside history-reconstructed ones."
+      ],
+      "rules_reinforced": [
+        "The LLM cannot be trusted to stay in character in group mode without explicit isolation — GROUP ISOLATION block + turn anchor are mandatory for all group payloads.",
+        "All Overlord LLM calls must go through _fireOverlord — no direct fetchCompletion calls for narrator content.",
+        "overlordMode must be saved to message history at injection time, not inferred at render time.",
+        "Force-trigger must check state.isStreaming and getApiKey() before firing — same guards as the normal send path."
+      ]
+    },
     {
       "date": "2026-05-14",
       "agent": "Claude Sonnet 4.6",

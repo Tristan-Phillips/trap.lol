@@ -7,7 +7,7 @@
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2306040A'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%23ef4444' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23ef4444'/%3E%3C/svg%3E" />
     <link rel="stylesheet" href="../../glass/style/style.css">
     <link rel="stylesheet" href="./style/style.css?v=70">
-    <link rel="stylesheet" href="./style/char-editor.css?v=14">
+    <link rel="stylesheet" href="./style/char-editor.css?v=15">
 </head>
 <body class="underdark-page">
 
@@ -226,7 +226,10 @@
                     <button id="clear-thread" hidden></button>
                     <!-- Overflow -->
                     <button id="header-overflow-btn" class="btn-icon arena-action--overflow" title="More" aria-haspopup="true" aria-expanded="false"><i data-lucide="more-vertical"></i></button>
+                    <!-- Hidden — wired via JS, called by overflow menu or force-trigger flow -->
+                    <button id="btn-force-respond" hidden></button>
                     <div id="header-overflow-menu" class="header-overflow-menu" hidden role="menu">
+                        <button class="header-overflow-item" id="overflow-force-respond"><i data-lucide="zap"></i> Force Response</button>
                         <button class="header-overflow-item" data-overflow-for="btn-img-studio"><i data-lucide="wand-2"></i> Image Studio</button>
                         <button class="header-overflow-item" data-overflow-for="btn-video-gen"><i data-lucide="film"></i> Generate Video</button>
                         <button class="header-overflow-item" data-overflow-for="chat-bg-btn"><i data-lucide="palette"></i> Chat Tint</button>
@@ -313,7 +316,10 @@
                         </div>
                         <div class="scene-codex__label scene-codex__label--inner" style="margin-top:6px"><i data-lucide="settings"></i> Admin</div>
                         <div class="codex-admin-grid">
-                            <button class="codex-admin-btn" id="codex-force-overlord" title="Force Overlord to re-describe the current scene"><i data-lucide="eye"></i> Re-describe Scene</button>
+                            <button class="codex-admin-btn" id="codex-force-overlord" title="Force Overlord to re-describe the current scene"><i data-lucide="eye"></i> Re-describe</button>
+                            <button class="codex-admin-btn" id="codex-overlord-transition" title="Overlord narrates a scene transition or time-skip"><i data-lucide="arrow-right"></i> Transition</button>
+                            <button class="codex-admin-btn" id="codex-overlord-reaction" title="Overlord narrates an environmental reaction"><i data-lucide="cloud-lightning"></i> Environment</button>
+                            <button class="codex-admin-btn" id="codex-overlord-moment" title="Overlord narrates the charged unspoken moment between characters"><i data-lucide="heart"></i> The Moment</button>
                             <button class="codex-admin-btn" id="codex-recap" title="Generate a story recap of the thread so far"><i data-lucide="scroll-text"></i> Recap</button>
                             <button class="codex-admin-btn" id="codex-reset-meters" title="Reset scene tension/intimacy/danger meters to neutral"><i data-lucide="refresh-ccw"></i> Reset Meters</button>
                             <button class="codex-admin-btn" id="codex-snapshot-now" title="Generate a scene image right now"><i data-lucide="camera"></i> Snapshot</button>

@@ -109,6 +109,24 @@
 }
 .active-bot__remove svg { width: 8px; height: 8px; color: white; }
 .active-bot:hover .active-bot__remove { display: flex; }
+.active-bot__force {
+    position: absolute;
+    bottom: -3px; right: -3px;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: #7c3aed;
+    border: none;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    transition: var(--transition);
+    z-index: 2;
+}
+.active-bot__force svg { width: 8px; height: 8px; color: #e9d5ff; }
+.active-bot:hover .active-bot__force { display: flex; }
+.active-bot__force:hover { background: #9b57ff; transform: scale(1.15); }
 
 /* ── Thread container (wraps .arena__thread) ── */
 .arena__content {
