@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.3.9",
+    "schema_version": "1.3.10",
     "last_updated": "2026-05-14",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -470,6 +470,21 @@
     ]
   },
   "commits": [
+    {
+      "hash": "PENDING",
+      "date": "2026-05-14",
+      "message": "feat(ui): choice picker modal, spark/suggest via 3-option AI picker, fix image download, improve scene-intro style",
+      "scope": "playground/characters — ui.js, index.html, char-editor.css, main.js",
+      "impact": "medium",
+      "files": [
+        "playground/characters/script/modules/ui.js",
+        "playground/characters/script/main.js",
+        "playground/characters/index.html",
+        "playground/characters/style/char-editor.css",
+        "status/logs/logs.json"
+      ],
+      "why": "Spark/suggest/amplify/avoid buttons were filling directly with no visibility into what the AI generated — rewritten to show a 3-option choice picker (with free-text Other fallback); image download used raw data URL which browsers sometimes treat as file-picker; scene-intro lacked visual weight for the opening scene of a group roleplay."
+    },
     {
       "hash": "011336d",
       "date": "2026-05-14",
@@ -1244,6 +1259,22 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-14",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Added reusable showPickerModal() utility — generates 3 AI options in a styled modal with free-text Other fallback. Wired all spark/suggest/amplify/avoid buttons in the thread setup wizard to use it instead of directly filling fields. Fixed image download (data URL → blob URL conversion prevents browser file-picker dialog). Improved scene-intro message styling with gradient background, subtle shimmer, and Narrator attribution tag. Also fixed await-in-non-async bug in streamCompletion completion callback (last-speaker background update).",
+      "decisions": [
+        "showPickerModal takes a generateFn async callback that returns string[] — keeps the picker reusable for any AI-generation context without coupling it to specific LLM calls.",
+        "Picker opens immediately and shows loading state while the AI call runs — user sees activity rather than a frozen button.",
+        "Image download converts data URL to blob via fetch() then URL.createObjectURL() — avoids browser treating it as a file save location rather than an inline download.",
+        "scene-intro now has a right-aligned '— Narrator' credit and gradient background to differentiate it visually from bot messages."
+      ],
+      "rules_reinforced": [
+        "Always check async/await usage in callbacks passed to non-async-aware functions — await in a plain arrow function callback is a SyntaxError.",
+        "Image downloads should always use blob URL (URL.createObjectURL) not raw data URLs — raw data URL behavior varies by browser and OS."
+      ]
+    },
     {
       "date": "2026-05-14",
       "agent": "Claude Sonnet 4.6",

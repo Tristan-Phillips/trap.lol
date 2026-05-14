@@ -120,6 +120,72 @@ function promptModal(title, defaultValue = '', placeholder = '') {
     });
 }
 
+// Shows a modal with AI-generated options + an "Other" free-text input.
+// `generateFn` is async () => string[] (3–4 items). Returns the chosen string or null.
+function showPickerModal(title, generateFn) {
+    return new Promise(res => {
+        const modal    = qs('#modal-choice-picker');
+        if (!modal) { res(null); return; }
+        const $title   = qs('#choice-picker-title',   modal);
+        const $options = qs('#choice-picker-options',  modal);
+        const $custom  = qs('#choice-picker-custom',   modal);
+        const $ok      = qs('#choice-picker-ok',       modal);
+        const $cancel  = qs('#choice-picker-cancel',   modal);
+        const $close   = qs('#choice-picker-close',    modal);
+        const $bd      = qs('.modal__backdrop',        modal);
+
+        if ($title) $title.textContent = title;
+        if ($custom) $custom.value = '';
+        $options.innerHTML = `<div class="choice-picker__loading"><i data-lucide="loader-2"></i> Generating ideas…</div>`;
+        modal.hidden = false;
+        lucideRefresh(modal);
+
+        let selected = null;
+
+        const cleanup = (val) => {
+            modal.hidden = true;
+            $ok?.removeEventListener('click', onOk);
+            $cancel?.removeEventListener('click', onCancel);
+            $close?.removeEventListener('click', onCancel);
+            $bd?.removeEventListener('click', onCancel);
+            res(val);
+        };
+        const onOk     = () => cleanup(selected || $custom?.value.trim() || null);
+        const onCancel = () => cleanup(null);
+        $ok?.addEventListener('click', onOk);
+        $cancel?.addEventListener('click', onCancel);
+        $close?.addEventListener('click', onCancel);
+        $bd?.addEventListener('click', onCancel);
+
+        generateFn().then(options => {
+            if (!modal.hidden) {
+                $options.innerHTML = options.map((opt, i) => `
+                    <button class="choice-picker__option" data-idx="${i}">
+                        <span class="choice-picker__num">${i + 1}</span>
+                        <span>${esc(String(opt))}</span>
+                    </button>`).join('');
+                qsa('.choice-picker__option', $options).forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        qsa('.choice-picker__option', $options).forEach(b => b.classList.remove('is-selected'));
+                        btn.classList.add('is-selected');
+                        selected = options[Number(btn.dataset.idx)];
+                        if ($custom) $custom.value = '';
+                    });
+                });
+                if ($custom) $custom.addEventListener('input', () => {
+                    if ($custom.value.trim()) {
+                        qsa('.choice-picker__option', $options).forEach(b => b.classList.remove('is-selected'));
+                        selected = null;
+                    }
+                });
+                lucideRefresh(modal);
+            }
+        }).catch(() => {
+            $options.innerHTML = `<div class="choice-picker__loading">Generation failed — use the text field below.</div>`;
+        });
+    });
+}
+
 function lucideRefresh(_node) {
     if (window.lucide) window.lucide.createIcons();
 }
@@ -1373,61 +1439,42 @@ export function initUI() {
             </div>`).join('');
         lucideRefresh($container);
 
-        // Wire spark buttons
+        // Wire spark buttons — show 3 options via choice picker
         qsa('.ts-spark-field-btn', $container).forEach(btn => {
             btn.addEventListener('click', async () => {
-                const key    = btn.dataset.qkey;
-                const label  = btn.dataset.qlabel;
-                const $ta    = $container.querySelector(`.ts-isekai-field[data-key="${key}"]`);
+                const key   = btn.dataset.qkey;
+                const label = btn.dataset.qlabel;
+                const $ta   = $container.querySelector(`.ts-isekai-field[data-key="${key}"]`);
                 if (!$ta) return;
 
-                btn.disabled = true;
-                btn.innerHTML = '<i data-lucide="loader-2"></i>';
-                lucideRefresh(btn);
+                const charNames = Array.from(_tsSelectedIds).map(id => {
+                    const c = state.characters.find(x => x.id === id);
+                    return c?.name || id;
+                }).join(', ');
+                const scenario = qs('#ts-scenario-text')?.value.trim() || state.reality?.worldConfig?.scenario || '';
+                const otherAnswers = [];
+                qsa('.ts-isekai-field', $container).forEach(f => {
+                    if (f.dataset.key !== key && f.value.trim())
+                        otherAnswers.push(`${f.dataset.key}: ${f.value.trim()}`);
+                });
 
-                try {
-                    const charNames = Array.from(_tsSelectedIds).map(id => {
-                        const c = state.characters.find(x => x.id === id);
-                        return c?.name || id;
-                    }).join(', ');
-
-                    const scenario = qs('#ts-scenario-text')?.value.trim()
-                        || state.reality?.worldConfig?.scenario || '';
-
-                    // Gather other filled answers as context
-                    const otherAnswers = [];
-                    qsa('.ts-isekai-field', $container).forEach(f => {
-                        if (f.dataset.key !== key && f.value.trim()) {
-                            otherAnswers.push(`${f.dataset.key}: ${f.value.trim()}`);
-                        }
-                    });
-
-                    const payload = {
+                const chosen = await showPickerModal(`Spark: ${label}`, async () => {
+                    const { text } = await fetchCompletion({
                         model: state.config.model || 'deepseek-r1',
-                        messages: [{
-                            role: 'user',
-                            content: [
-                                `Characters: ${charNames}`,
-                                scenario ? `Scenario: ${scenario}` : '',
-                                otherAnswers.length ? `Already answered:\n${otherAnswers.join('\n')}` : '',
-                                ``,
-                                `For the question "${label}", write ONE evocative 1–2 sentence answer.`,
-                                `Be specific, vivid, and rooted in these characters. No preamble.`
-                            ].filter(Boolean).join('\n')
-                        }],
-                        max_tokens: 100,
-                        temperature: 0.9,
-                    };
-
-                    const { text } = await fetchCompletion(payload);
-                    if (text?.trim()) $ta.value = text.trim();
-                } catch (e) {
-                    showToast('Spark failed', 'warn');
-                } finally {
-                    btn.disabled = false;
-                    btn.innerHTML = '<i data-lucide="sparkles"></i> spark';
-                    lucideRefresh(btn);
-                }
+                        messages: [{ role: 'user', content: [
+                            `Characters: ${charNames}`,
+                            scenario ? `Scenario: ${scenario}` : '',
+                            otherAnswers.length ? `Already answered:\n${otherAnswers.join('\n')}` : '',
+                            ``,
+                            `For the question "${label}", write 3 distinct evocative 1–2 sentence answers.`,
+                            `Format: one answer per line, no numbering, no preamble.`
+                        ].filter(Boolean).join('\n') }],
+                        max_tokens: 220,
+                        temperature: 0.95,
+                    });
+                    return (text || '').split('\n').map(s => s.trim()).filter(Boolean).slice(0, 3);
+                });
+                if (chosen) $ta.value = chosen;
             });
         });
     }
@@ -1576,7 +1623,7 @@ export function initUI() {
         }).join('');
         lucideRefresh($grid);
 
-        // Wire suggest buttons
+        // Wire suggest buttons — show 3 options via choice picker
         qsa('.ts-spark-rel-btn', $grid).forEach(btn => {
             btn.addEventListener('click', async () => {
                 const pairKey = btn.dataset.pair;
@@ -1585,45 +1632,29 @@ export function initUI() {
                 const $inp    = $grid.querySelector(`.ts-rel-field[data-pair="${pairKey}"]`);
                 if (!$inp) return;
 
-                btn.disabled = true;
-                btn.innerHTML = '<i data-lucide="loader-2"></i>';
-                lucideRefresh(btn);
-
-                try {
-                    const scenario = qs('#ts-scenario-text')?.value.trim()
-                        || state.reality?.worldConfig?.scenario || '';
+                const chosen = await showPickerModal(`${nameA} ↔ ${nameB}`, async () => {
+                    const scenario  = qs('#ts-scenario-text')?.value.trim() || state.reality?.worldConfig?.scenario || '';
                     const charACard = state.loadedCharacters[pairKey.split('__')[0]];
                     const charBCard = state.loadedCharacters[pairKey.split('__')[1]];
                     const descA = (charACard?.description || charACard?.personality || '').slice(0, 200);
                     const descB = (charBCard?.description || charBCard?.personality || '').slice(0, 200);
-
-                    const payload = {
+                    const { text } = await fetchCompletion({
                         model: state.config.model || 'deepseek-r1',
-                        messages: [{
-                            role: 'user',
-                            content: [
-                                `Characters:`,
-                                `${nameA}: ${descA}`,
-                                `${nameB}: ${descB}`,
-                                scenario ? `Scenario: ${scenario}` : '',
-                                ``,
-                                `Describe the relationship between ${nameA} and ${nameB} in one punchy phrase (max 12 words).`,
-                                `Be specific and emotionally charged. No preamble, just the phrase.`
-                            ].filter(Boolean).join('\n')
-                        }],
-                        max_tokens: 60,
-                        temperature: 0.92,
-                    };
-
-                    const { text } = await fetchCompletion(payload);
-                    if (text?.trim()) $inp.value = text.trim().replace(/^["']|["']$/g, '');
-                } catch (e) {
-                    showToast('Suggest failed', 'warn');
-                } finally {
-                    btn.disabled = false;
-                    btn.innerHTML = '<i data-lucide="sparkles"></i> suggest';
-                    lucideRefresh(btn);
-                }
+                        messages: [{ role: 'user', content: [
+                            `Characters:`,
+                            `${nameA}: ${descA}`,
+                            `${nameB}: ${descB}`,
+                            scenario ? `Scenario: ${scenario}` : '',
+                            ``,
+                            `Give 3 distinct relationship dynamics between ${nameA} and ${nameB}.`,
+                            `Each: one punchy phrase, max 12 words. One per line, no numbering, no preamble.`
+                        ].filter(Boolean).join('\n') }],
+                        max_tokens: 120,
+                        temperature: 0.95,
+                    });
+                    return (text || '').split('\n').map(s => s.trim().replace(/^["']|["']$/g, '')).filter(Boolean).slice(0, 3);
+                });
+                if (chosen) $inp.value = chosen;
             });
         });
     }
@@ -1986,56 +2017,42 @@ export function initUI() {
         });
     });
 
-    // "Ideas" buttons on Amplify / Avoid fields
+    // "Ideas" buttons on Amplify / Avoid fields — show 3 options via choice picker
     qsa('.ts-gen-ideas-btn[data-gen]').forEach(btn => {
         btn.addEventListener('click', async () => {
-            const field  = btn.dataset.gen; // 'amplify' | 'avoid'
-            const $inp   = qs(`#ts-${field}`);
+            const field = btn.dataset.gen; // 'amplify' | 'avoid'
+            const $inp  = qs(`#ts-${field}`);
             if (!$inp) return;
             if (!_tsSelectedIds.size) { showToast('Select characters first', 'warn'); return; }
 
-            btn.disabled = true;
-            btn.innerHTML = '<i data-lucide="loader-2"></i>';
-            lucideRefresh(btn);
-
-            try {
+            const title = field === 'amplify' ? 'Amplify — choose elements to lean into' : 'Avoid — choose what to exclude';
+            const chosen = await showPickerModal(title, async () => {
                 const charNames = Array.from(_tsSelectedIds).map(id => state.characters.find(c => c.id === id)?.name || id).join(', ');
                 const toneTags  = qs('#ts-tone-tags')?.value.trim() || '';
                 const energy    = qs('#ts-sexual-energy')?.value.trim() || '';
                 const scenario  = qs('#ts-scenario-text')?.value.trim() || state.reality?.worldConfig?.scenario || '';
                 const opposite  = field === 'amplify' ? (qs('#ts-avoid')?.value.trim() || '') : (qs('#ts-amplify')?.value.trim() || '');
-
                 const instruction = field === 'amplify'
-                    ? `What narrative elements should be AMPLIFIED and leaned into hard?`
-                    : `What should be AVOIDED or excluded from this narrative?`;
-
+                    ? `Give 3 distinct sets of narrative elements to AMPLIFY. Each set: 3–5 comma-separated keywords.`
+                    : `Give 3 distinct sets of narrative elements to AVOID/exclude. Each set: 3–5 comma-separated keywords.`;
                 const { text } = await fetchCompletion({
                     model: state.config.model || 'deepseek-r1',
-                    messages: [{
-                        role: 'user',
-                        content: [
-                            `Characters: ${charNames}`,
-                            scenario ? `Scenario: ${scenario}` : '',
-                            energy ? `Sexual energy: ${energy}` : '',
-                            toneTags ? `Tone: ${toneTags}` : '',
-                            opposite ? `Already set for the opposite field: ${opposite}` : '',
-                            ``,
-                            instruction,
-                            `Give 4–6 specific, comma-separated keywords or short phrases. No preamble. Max 60 words total.`
-                        ].filter(Boolean).join('\n')
-                    }],
-                    max_tokens: 80,
-                    temperature: 0.88,
+                    messages: [{ role: 'user', content: [
+                        `Characters: ${charNames}`,
+                        scenario ? `Scenario: ${scenario}` : '',
+                        energy ? `Sexual energy: ${energy}` : '',
+                        toneTags ? `Tone: ${toneTags}` : '',
+                        opposite ? `Already set for the opposite field: ${opposite}` : '',
+                        ``,
+                        instruction,
+                        `One option per line, no numbering, no preamble.`
+                    ].filter(Boolean).join('\n') }],
+                    max_tokens: 120,
+                    temperature: 0.9,
                 });
-
-                if (text?.trim()) $inp.value = text.trim().replace(/^["\-•]+\s*/gm, '').replace(/\n/g, ', ').replace(/,\s*,/g, ',').trim();
-            } catch (e) {
-                showToast('Ideas failed', 'warn');
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i data-lucide="sparkles"></i> ideas';
-                lucideRefresh(btn);
-            }
+                return (text || '').split('\n').map(s => s.trim().replace(/^["\-•\d.]+\s*/g, '')).filter(Boolean).slice(0, 3);
+            });
+            if (chosen) $inp.value = chosen;
         });
     });
 
@@ -5922,12 +5939,27 @@ export function initUI() {
             lucideRefresh($lb);
         });
 
-        // Download
-        qs('[data-action="download"]', $el).addEventListener('click', () => {
-            const a = document.createElement('a');
-            a.href = dataUrl;
-            a.download = `underdark-${Date.now()}.png`;
-            a.click();
+        // Download — convert data URL to blob to avoid browser "save here" dialog
+        qs('[data-action="download"]', $el).addEventListener('click', async () => {
+            try {
+                let blobUrl;
+                if (dataUrl.startsWith('data:')) {
+                    const res  = await fetch(dataUrl);
+                    const blob = await res.blob();
+                    blobUrl = URL.createObjectURL(blob);
+                } else {
+                    blobUrl = dataUrl;
+                }
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = `underdark-${Date.now()}.png`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                if (dataUrl.startsWith('data:')) setTimeout(() => URL.revokeObjectURL(blobUrl), 30000);
+            } catch {
+                showToast('Download failed', 'warn');
+            }
         });
 
         // Save to gallery — in group chats, pick which character's gallery to save to
