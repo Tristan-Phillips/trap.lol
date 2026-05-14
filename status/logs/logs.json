@@ -473,7 +473,7 @@
   },
   "commits": [
     {
-      "hash": "TBD",
+      "hash": "f5653e0",
       "date": "2026-05-14",
       "message": "feat(underdark): foundation batch — rp-action layer, meter feedback, cue card enrichment, narrative tone in DMs — ui.js v90",
       "scope": "playground/characters — ui.js, llm-engine.js, arena.css, index.html, style.css, main.js",
@@ -2211,7 +2211,7 @@
         "requested": "2026-05-14",
         "completed": "2026-05-14",
         "description": "Add a distinct visual rendering tier for physical actions wrapped in *asterisks*. marked.js converts these to <em>, then a post-sanitize pass converts <em> to <span class=rp-action> (blue-silver glow). UFR directive expanded to enumerate all 4 format layers explicitly.",
-        "notes": "Done in TBD. renderMarkdown post-sanitize pass: replaces <em>text</em> → <span class=\"rp-action\">text</span>. Narration regex updated from <em>-exclusion to rp-action-exclusion. arena.css: .rp-action with rgba(147,197,253,0.92) color + hover glow. UFR directive in llm-engine.js rewritten to name 4 layers with examples.",
+        "notes": "Done in f5653e0. renderMarkdown post-sanitize pass: replaces <em>text</em> → <span class=\"rp-action\">text</span>. Narration regex updated from <em>-exclusion to rp-action-exclusion. arena.css: .rp-action with rgba(147,197,253,0.92) color + hover glow. UFR directive in llm-engine.js rewritten to name 4 layers with examples.",
         "files_affected": ["playground/characters/script/modules/ui.js", "playground/characters/script/modules/llm-engine.js", "playground/characters/style/arena.css"]
       },
       {
@@ -2221,7 +2221,7 @@
         "requested": "2026-05-14",
         "completed": "2026-05-14",
         "description": "Bot responses containing [TENSION X%], [INTIMACY X%], [DANGER X%] tags directly update the codex meter DOM in real time, closing the feedback loop between LLM output and UI state.",
-        "notes": "Done in TBD. _applyStatusTags(text) parses tags with regex, calls _setMeterDOM(t,i,d). Called in triggerBotResponse onDone before updateCodexDigest(). _setMeterDOM updates both the range input value and the .codex-meter__val span text.",
+        "notes": "Done in f5653e0. _applyStatusTags(text) parses tags with regex, calls _setMeterDOM(t,i,d). Called in triggerBotResponse onDone before updateCodexDigest(). _setMeterDOM updates both the range input value and the .codex-meter__val span text.",
         "files_affected": ["playground/characters/script/modules/ui.js"]
       },
       {
@@ -2231,7 +2231,7 @@
         "requested": "2026-05-14",
         "completed": "2026-05-14",
         "description": "Hybrid meter scoring system: keyword heuristic runs immediately after each turn for instant feedback; a background fetchCompletion call every 3 turns returns {tension,intimacy,danger} JSON and overwrites the keyword estimate. Result cached in sessionStorage per history length.",
-        "notes": "Done in TBD. _keywordMeterScore(history) — expanded keyword arrays return {t,i,d}. _llmScoreMeters() — async, sessionStorage cache key = 'underdark_meters_' + history.length. updateCodexMeters() rebuilt as hybrid: applies keyword immediately, schedules LLM call via setTimeout(0) every 3 turns. _lastMeterScoredAt tracks last scored turn count.",
+        "notes": "Done in f5653e0. _keywordMeterScore(history) — expanded keyword arrays return {t,i,d}. _llmScoreMeters() — async, sessionStorage cache key = 'underdark_meters_' + history.length. updateCodexMeters() rebuilt as hybrid: applies keyword immediately, schedules LLM call via setTimeout(0) every 3 turns. _lastMeterScoredAt tracks last scored turn count.",
         "files_affected": ["playground/characters/script/modules/ui.js"]
       },
       {
@@ -2241,7 +2241,7 @@
         "requested": "2026-05-14",
         "completed": "2026-05-14",
         "description": "The per-character turn anchor in group mode now includes the last spoken line from every other character and a live meter state string, giving the LLM full situational context at write time.",
-        "notes": "Done in TBD. buildPayload in llm-engine.js: otherLastLines built by scanning history for other character messages. meterStr built from ctx.meters (read from DOM by triggerBotResponse). groupAnchor expanded: YOUR TURN header + Last lines in scene + Scene state + Write ONLY directive.",
+        "notes": "Done in f5653e0. buildPayload in llm-engine.js: otherLastLines built by scanning history for other character messages. meterStr built from ctx.meters (read from DOM by triggerBotResponse). groupAnchor expanded: YOUR TURN header + Last lines in scene + Scene state + Write ONLY directive.",
         "files_affected": ["playground/characters/script/modules/llm-engine.js", "playground/characters/script/modules/ui.js"]
       },
       {
@@ -2251,7 +2251,7 @@
         "requested": "2026-05-14",
         "completed": "2026-05-14",
         "description": "Narrative tone fields (sexual energy, tone tags, amplify, avoid, pacing) moved from Group-only tab to Generation tab so DM threads can configure tone. llm-engine.js injects a [NARRATIVE TONE DIRECTIVE] system message for DM threads when any tone field is set.",
-        "notes": "Done in TBD. index.html: ts-narrative-section moved from #ts-panel-group to #ts-panel-generation (always visible). llm-engine.js: after group block, DM branch injects tone system message if config._threadConfig.narrativeTone has any fields set. ui.js thread setup: tone collected once into tc.narrativeTone before group check; gc.narrativeTone mirrored from tc.",
+        "notes": "Done in f5653e0. index.html: ts-narrative-section moved from #ts-panel-group to #ts-panel-generation (always visible). llm-engine.js: after group block, DM branch injects tone system message if config._threadConfig.narrativeTone has any fields set. ui.js thread setup: tone collected once into tc.narrativeTone before group check; gc.narrativeTone mirrored from tc.",
         "files_affected": ["playground/characters/index.html", "playground/characters/script/modules/llm-engine.js", "playground/characters/script/modules/ui.js"]
       },
       {
