@@ -473,7 +473,7 @@
   },
   "commits": [
     {
-      "hash": "TBD_PHASE3",
+      "hash": "8ccd6fd",
       "date": "2026-05-14",
       "message": "feat(underdark): full instance export/import, LLM parse helpers, char-editor v14, ui.js v86",
       "scope": "playground/characters — state.js, storage.js, ui.js, index.html, char-editor.css, main.js; shared-utils.js; status/logs/logs.json",
