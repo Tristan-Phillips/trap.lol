@@ -471,7 +471,7 @@
   },
   "commits": [
     {
-      "hash": "PENDING",
+      "hash": "011336d",
       "date": "2026-05-14",
       "message": "fix: missing comma in index.json after Lady Jessica avatar_path update",
       "scope": "playground/characters — data/index.json",
