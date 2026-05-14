@@ -473,7 +473,7 @@
   },
   "commits": [
     {
-      "hash": "TBD_B",
+      "hash": "30c6c8b",
       "date": "2026-05-14",
       "message": "feat(underdark): batch B — player identity, scene ledger, digest, horizon, AI quick replies, variants, scene markers, char targeting, prompt inspector — ui.js v91",
       "scope": "playground/characters — ui.js, llm-engine.js, state.js, index.html, arena.css, scene-codex.css, controls.css, style.css, main.js",
@@ -2253,7 +2253,7 @@
         "requested": "2026-05-14",
         "completed": "2026-05-14",
         "description": "Apply UFR rp-* CSS classes to player messages at lighter intensity (78%) so bot responses stay visually dominant. Use monogram initial avatar instead of generic emoji.",
-        "notes": "Done in TBD_B. arena.css: .message--user .message__content .rp-* at 78% intensity. appendMessage: playerInitial computed from userName, avatarHtml uses .message__avatar--monogram div for users without avatar.",
+        "notes": "Done in 30c6c8b. arena.css: .message--user .message__content .rp-* at 78% intensity. appendMessage: playerInitial computed from userName, avatarHtml uses .message__avatar--monogram div for users without avatar.",
         "files_affected": ["playground/characters/style/arena.css", "playground/characters/script/modules/ui.js"]
       },
       {
@@ -2263,7 +2263,7 @@
         "requested": "2026-05-14",
         "completed": "2026-05-14",
         "description": "sceneBreak field added to message schema, auto-set for all Overlord messages. renderFullHistory injects .scene-divider element before each Overlord block, numbered sequentially. _fireOverlord also injects divider in live mode.",
-        "notes": "Done in TBD_B. state.js addMessage: sceneBreak: meta.sceneBreak ?? (meta.overlordMode ? true : false). renderFullHistory: _scenesRendered counter, scene-divider div injected before overlord render. arena.css: .scene-divider with gradient lines and purple pill label.",
+        "notes": "Done in 30c6c8b. state.js addMessage: sceneBreak: meta.sceneBreak ?? (meta.overlordMode ? true : false). renderFullHistory: _scenesRendered counter, scene-divider div injected before overlord render. arena.css: .scene-divider with gradient lines and purple pill label.",
         "files_affected": ["playground/characters/script/modules/state.js", "playground/characters/script/modules/ui.js", "playground/characters/style/arena.css"]
       },
       {
@@ -2273,7 +2273,7 @@
         "requested": "2026-05-14",
         "completed": "2026-05-14",
         "description": "Retry appends current content to variants[] before removing message. appendMessage renders chevron prev/next navigator with turn counter when variants exist. State persisted via saveState.",
-        "notes": "Done in TBD_B. state.js: variants: [], variantIdx: 0 in message schema. Retry handler saves to variants before history slice. appendMessage: .msg-variants nav rendered for bot messages with variants. Variant click handler rearranges variants/content array.",
+        "notes": "Done in 30c6c8b. state.js: variants: [], variantIdx: 0 in message schema. Retry handler saves to variants before history slice. appendMessage: .msg-variants nav rendered for bot messages with variants. Variant click handler rearranges variants/content array.",
         "files_affected": ["playground/characters/script/modules/state.js", "playground/characters/script/modules/ui.js", "playground/characters/style/arena.css"]
       },
       {
@@ -2283,7 +2283,7 @@
         "requested": "2026-05-14",
         "completed": "2026-05-14",
         "description": "updateCodexDigest rebuilt to show active char rows (avatar, name, last line), Overlord mode badge, scene number. _countScenes() counts overlordMode history entries. cstat-scene stat added.",
-        "notes": "Done in TBD_B. _countScenes() added. updateCodexDigest: builds .codex-digest__char rows per activeBotId with avatar/name/line; .codex-digest__meta-row with mode + scene labels. scene-codex.css: new codex-digest__char/av/name/line/meta-row styles.",
+        "notes": "Done in 30c6c8b. _countScenes() added. updateCodexDigest: builds .codex-digest__char rows per activeBotId with avatar/name/line; .codex-digest__meta-row with mode + scene labels. scene-codex.css: new codex-digest__char/av/name/line/meta-row styles.",
         "files_affected": ["playground/characters/script/modules/ui.js", "playground/characters/style/scene-codex.css", "playground/characters/index.html"]
       },
       {
@@ -2293,7 +2293,7 @@
         "requested": "2026-05-14",
         "completed": "2026-05-14",
         "description": "_maybeAutoTransition fires after each bot turn — if turns%N==0 and no Overlord block in last N messages, auto-fires transition narration. N=8 default, stored as state.config.autoTransitionEvery.",
-        "notes": "Done in TBD_B. _maybeAutoTransition() checks turns%n and recent history for Overlord. Called after _generateAIQuickReplies in triggerBotResponse onDone.",
+        "notes": "Done in 30c6c8b. _maybeAutoTransition() checks turns%n and recent history for Overlord. Called after _generateAIQuickReplies in triggerBotResponse onDone.",
         "files_affected": ["playground/characters/script/modules/ui.js"]
       },
       {
@@ -2303,7 +2303,7 @@
         "requested": "2026-05-14",
         "completed": "2026-05-14",
         "description": "renderFullHistory computes context cut index from token budget. Injects .context-horizon divider at cut point. Messages above horizon get .message--horizon-past (opacity:0.35, sepia filter).",
-        "notes": "Done in TBD_B. Token budget: (maxContext - maxOutput - 800t for system prompt) using text.length/4 estimate. context-horizon div has lock icon + label. arena.css: .context-horizon amber divider, .message--horizon-past faded+sepia.",
+        "notes": "Done in 30c6c8b. Token budget: (maxContext - maxOutput - 800t for system prompt) using text.length/4 estimate. context-horizon div has lock icon + label. arena.css: .context-horizon amber divider, .message--horizon-past faded+sepia.",
         "files_affected": ["playground/characters/script/modules/ui.js", "playground/characters/style/arena.css"]
       },
       {
@@ -2313,7 +2313,7 @@
         "requested": "2026-05-14",
         "completed": "2026-05-14",
         "description": "Codex arc input replaced with 4 structured slots: Arc, Secret, Reveal Pending, Relationship State. Stored in state.config._codexLedger. Injected into buildOverlordContext only.",
-        "notes": "Done in TBD_B. index.html: .codex-ledger-grid with 4 label+input pairs. state.js not changed (stored in config). ui.js: 4 change listeners write to _codexLedger obj. syncConfigUI restores fields. buildOverlordContext: ledger param adds [Scene Ledger] block. scene-codex.css: .codex-ledger-grid 2-col grid.",
+        "notes": "Done in 30c6c8b. index.html: .codex-ledger-grid with 4 label+input pairs. state.js not changed (stored in config). ui.js: 4 change listeners write to _codexLedger obj. syncConfigUI restores fields. buildOverlordContext: ledger param adds [Scene Ledger] block. scene-codex.css: .codex-ledger-grid 2-col grid.",
         "files_affected": ["playground/characters/index.html", "playground/characters/script/modules/ui.js", "playground/characters/script/modules/llm-engine.js", "playground/characters/style/scene-codex.css"]
       },
       {
@@ -2323,7 +2323,7 @@
         "requested": "2026-05-14",
         "completed": "2026-05-14",
         "description": "Codex inject and reinject tray buttons show showPickerModal with char list in group mode. Selected name replaces {CHAR} in directive. All characters option maps to generic string.",
-        "notes": "Done in TBD_B. _pickTargetChar() helper: DM returns activeBotId name; group shows showPickerModal(['All characters', ...names]). Codex inject and reinject handlers made async, await _pickTargetChar().",
+        "notes": "Done in 30c6c8b. _pickTargetChar() helper: DM returns activeBotId name; group shows showPickerModal(['All characters', ...names]). Codex inject and reinject handlers made async, await _pickTargetChar().",
         "files_affected": ["playground/characters/script/modules/ui.js"]
       },
       {
@@ -2333,7 +2333,7 @@
         "requested": "2026-05-14",
         "completed": "2026-05-14",
         "description": "Background fetchCompletion after each bot turn generates 4 contextual reply starters. Cached in _aiQRCache per history length. Shown as warm-gold italic chips above static presets when QR bar opens.",
-        "notes": "Done in TBD_B. _generateAIQuickReplies(): fetches last 3 messages, LLM returns JSON array of 4 strings, stored in _aiQRCache. QR bar build: aiSection injected before static groups. .qr-btn--ai warm-gold italic style. Separate click handler for .qr-btn--ai.",
+        "notes": "Done in 30c6c8b. _generateAIQuickReplies(): fetches last 3 messages, LLM returns JSON array of 4 strings, stored in _aiQRCache. QR bar build: aiSection injected before static groups. .qr-btn--ai warm-gold italic style. Separate click handler for .qr-btn--ai.",
         "files_affected": ["playground/characters/script/modules/ui.js", "playground/characters/style/arena.css"]
       },
       {
@@ -2343,7 +2343,7 @@
         "requested": "2026-05-14",
         "completed": "2026-05-14",
         "description": "When showSystemPrompt flag is on, instead of raw <pre> dump, payload.messages are parsed into labelled <details> sections with role badge, section label, and token count. Total token count in summary.",
-        "notes": "Done in TBD_B. estimateTok = s.length/4. Each message gets pi-section details with pi-section__role (colour-coded by role), label from [HEADER] match or role+index, tok badge. controls.css: pi-* styles.",
+        "notes": "Done in 30c6c8b. estimateTok = s.length/4. Each message gets pi-section details with pi-section__role (colour-coded by role), label from [HEADER] match or role+index, tok badge. controls.css: pi-* styles.",
         "files_affected": ["playground/characters/script/modules/ui.js", "playground/characters/style/controls.css"]
       },
       {
@@ -2353,7 +2353,7 @@
         "requested": "2026-05-14",
         "completed": "2026-05-14",
         "description": "getBotMemoriesFromReality default limit bumped from 10 to 20 so characters have twice as much cross-chat memory context.",
-        "notes": "Done in TBD_B. state.js: getBotMemoriesFromReality(botId, currentChatId, limit = 20).",
+        "notes": "Done in 30c6c8b. state.js: getBotMemoriesFromReality(botId, currentChatId, limit = 20).",
         "files_affected": ["playground/characters/script/modules/state.js"]
       },
       {
