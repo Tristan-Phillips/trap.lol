@@ -1957,11 +1957,7 @@ export function initUI() {
         if (_tsMode === 'group' && gc?.groupIntro) {
             const introMsg = addMessage('system', gc.groupIntro, null);
             if (introMsg) {
-                const $el = document.createElement('div');
-                $el.className = 'message message--system message--scene-intro';
-                $el.innerHTML = `<div class="message__main"><div class="scene-intro-text">${renderMarkdownSafe(gc.groupIntro)}</div></div>`;
-                $thread?.appendChild($el);
-                $thread && ($thread.scrollTop = $thread.scrollHeight);
+                _injectOverlordMessage(gc.groupIntro, $thread);
             }
         }
 
@@ -5879,6 +5875,32 @@ export function initUI() {
         return $msg;
     }
 
+    // ── Overlord message in thread ────────────────────────────────────────────
+    // Renders the narrator/Overlord opening scene — a full-width cinematic band,
+    // not a chat bubble. Used for group opening scenes and narrator injections.
+    function _injectOverlordMessage(content, $target) {
+        const $t = $target || $thread;
+        if (!$t || !content) return;
+        const $el = document.createElement('div');
+        $el.className = 'overlord-block';
+        $el.innerHTML = `
+            <div class="overlord-block__rail overlord-block__rail--top">
+                <span class="overlord-block__glyph">
+                    <i data-lucide="eye"></i>
+                </span>
+                <span class="overlord-block__label">OVERLORD</span>
+                <span class="overlord-block__line"></span>
+            </div>
+            <div class="overlord-block__body">${renderMarkdownSafe(content)}</div>
+            <div class="overlord-block__rail overlord-block__rail--bottom">
+                <span class="overlord-block__line"></span>
+                <span class="overlord-block__end">&#9670; &#9670; &#9670;</span>
+            </div>`;
+        $t.appendChild($el);
+        lucideRefresh($el);
+        $t.scrollTop = $t.scrollHeight;
+    }
+
     // ── Image message in thread ───────────────────────────────────────────────
     // Renders a generated image as a thread card with lightbox, download,
     // add-to-gallery, and delete controls.
@@ -6314,6 +6336,10 @@ export function initUI() {
                 _injectVideoMessage(msg.content, msg.id);
                 return;
             }
+            if (msg.role === 'system' && !msg._isAnchor) {
+                _injectOverlordMessage(msg.content);
+                return;
+            }
             const char = msg.botId ? state.loadedCharacters[msg.botId] : null;
             const meta = msg.botId ? state.characters.find(c => c.id === msg.botId) : null;
             appendMessage(msg, char?.name || null, meta?.avatar_path || char?.avatar, msg.thoughts || null);
@@ -6603,6 +6629,8 @@ export function initUI() {
                         `<div class="cmd-compact"><div class="cmd-compact__label"><i data-lucide="archive"></i> Story Anchor</div><div class="cmd-compact__preview">${esc(m.content.replace(/^\[STORY ANCHOR[^\]]*\]\n/, ''))}</div></div>`,
                         { raw: true, label: 'Anchor' }
                     );
+                } else if (m.role === 'system') {
+                    _injectOverlordMessage(m.content, $t);
                 } else if (m.role === 'image') {
                     _injectImageMessage(m.content, m.prompt || '', m.model || '', m.id);
                 } else {
