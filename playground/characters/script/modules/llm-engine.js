@@ -12,9 +12,9 @@
  *  - Anti-jailbreak post-history optional directive
  */
 
-import { getApiKey } from '../../../../glass/script/modules/llm-auth.js';
-import { scanLorebooks } from './lorebook.js';
-import { getCharOverride, getBotMemoriesFromReality } from './state.js';
+import { getApiKey } from '../../../../glass/script/modules/llm-auth.js?v=3';
+import { scanLorebooks } from './lorebook.js?v=3';
+import { getCharOverride, getBotMemoriesFromReality } from './state.js?v=2';
 
 const API_BASE = 'https://nano-gpt.com/api/v1';
 
