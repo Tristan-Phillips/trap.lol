@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.3.20",
+    "schema_version": "1.3.21",
     "last_updated": "2026-05-14",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -472,6 +472,25 @@
     ]
   },
   "commits": [
+    {
+      "hash": "TBD_C",
+      "date": "2026-05-14",
+      "message": "feat(underdark): quality pass — thread config gear, memory compression, codex-meters.js module — ui.js v92",
+      "scope": "playground/characters — ui.js, llm-engine.js, index.html, arena.css, controls.css, style.css, main.js, new codex-meters.js",
+      "impact": "high",
+      "files": [
+        "playground/characters/script/modules/ui.js",
+        "playground/characters/script/modules/llm-engine.js",
+        "playground/characters/script/modules/codex-meters.js",
+        "playground/characters/script/main.js",
+        "playground/characters/index.html",
+        "playground/characters/style/arena.css",
+        "playground/characters/style/controls.css",
+        "playground/characters/style/style.css",
+        "status/logs/logs.json"
+      ],
+      "why": "Quality pass targeting three Priority 1 gaps: (1) Thread Config gear — #btn-thread-config in arena header opens modal with Core tab (scenario, model, temp, maxOutput, player name/persona, auto-attach lorebooks) and Tone tab (all narrativeTone fields, quick pills); gear dot-badge activates when any overrides are set; saved to chat.threadConfig, takes effect on next response. (2) Memory compression summaries — summarizeDroppedMessages() in llm-engine.js fires a 300-token background LLM call on dropped messages, caches per chatId+horizonMsgId in sessionStorage, patches summary into horizon divider when ready; .context-horizon__summary block styled in amber mono. (3) codex-meters.js module extraction — _applyStatusTags, _setMeterDOM, _keywordMeterScore, _llmScoreMeters, updateCodexMeters moved from ui.js closure into a proper ES module with init() dependency injection pattern; ui.js retains shim functions for backward-compatible call sites."
+    },
     {
       "hash": "30c6c8b",
       "date": "2026-05-14",
@@ -1434,6 +1453,22 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-14",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Quality pass with three deliverables. Thread Config gear: #btn-thread-config added to arena header (settings-2 icon), opens #modal-thread-config with Core tab (thread scenario, model override, temp/maxOutput inherit toggles, player name/persona overrides, auto-attach lorebooks) and Tone tab (full narrativeTone fields with quick pills matching thread setup wizard). Gear shows accent dot-badge when any overrides are active. Memory compression summaries: summarizeDroppedMessages() added to llm-engine.js — background LLM call on dropped messages produces 3-5 bullet memory digest, cached in sessionStorage per chatId+horizonMsgId, injected below context-horizon divider as styled .context-horizon__summary block. codex-meters.js module: all meter logic (keyword scoring, LLM scoring, DOM sync, status tag parsing) extracted from ui.js closure into a proper ES module using init() dependency injection; ui.js retains thin shims for backward-compatible call sites. Module split audit confirmed: social feed, image studio, and other UI sections cannot be extracted without a context-object refactor — deferred as a future architectural phase.",
+      "decisions": [
+        "Thread config gear surfaces in header (not just context menu) — in-chat access is the primary use case; users shouldn't need to leave the thread to adjust settings.",
+        "Memory summaries are background-async and patch in when ready — thread render is never blocked by the LLM call.",
+        "codex-meters.js uses init() dependency injection (not re-importing state/qs directly) — preserves the zero-build philosophy while enabling testability; modules receive live references so state mutations are reflected.",
+        "Module split of UI sections (social feed, image studio) deferred — closure coupling is too deep for safe extraction without a context-object pattern refactor; not worth the risk in a quality pass."
+      ],
+      "rules_reinforced": [
+        "Module extraction requires pure logic/data separation — UI sections that share closure state cannot be split without a context-object refactor.",
+        "Background async operations must never block synchronous render paths."
+      ]
+    },
     {
       "date": "2026-05-14",
       "agent": "Claude Sonnet 4.6",
@@ -2544,6 +2579,36 @@
         "description": "Improve the convention for how the app sends prompts to the LLM when requesting suggestions, examples, or generated context (not RP), and how it parses/formats the response for display. Currently ad hoc per feature.",
         "notes": "Done in this session. shared-utils.js gained three parse helpers: parseLLMArray (JSON array with markdown fence stripping + fallback), parseLLMJson (any JSON value), parseLLMLines (newline-delimited with bullet/number/quote stripping). All 7 inline parse patterns across ui.js replaced. All 3 helpers exported and imported in ui.js.",
         "files_affected": ["playground/characters/script/modules/shared-utils.js", "playground/characters/script/modules/ui.js"]
+      },
+      {
+        "id": "thread-config-gear",
+        "title": "Per-thread config editor accessible mid-thread via gear icon",
+        "status": "done",
+        "requested": "2026-05-14",
+        "completed": "2026-05-14",
+        "description": "No way to view or edit a thread's threadConfig after creation. Header gear icon opens a compact modal with Core (scenario, model, temp, maxOutput, player name/persona, lorebooks) and Tone (full narrativeTone) tabs.",
+        "notes": "Done in TBD_C. #btn-thread-config added to arena header (settings-2 icon). Modal #modal-thread-config with Core + Tone tabs. Gear shows accent dot-badge (.arena-action--active) when overrides are set. Saved to chat.threadConfig on Apply. _updateThreadConfigBadge() called in renderAll().",
+        "files_affected": ["playground/characters/index.html", "playground/characters/script/modules/ui.js", "playground/characters/style/arena.css", "playground/characters/style/controls.css"]
+      },
+      {
+        "id": "memory-compression-summaries",
+        "title": "LLM-summarised memory digest injected at context horizon",
+        "status": "done",
+        "requested": "2026-05-14",
+        "completed": "2026-05-14",
+        "description": "When messages drop past the context horizon, fire a background LLM call to summarise them into a compact digest block shown in the horizon divider.",
+        "notes": "Done in TBD_C. summarizeDroppedMessages() added to llm-engine.js — 300-token background call, sessionStorage cache per chatId+horizonMsgId. Patches summary into .context-horizon__summary below the lock divider. arena.css: .context-horizon refactored to flex-column, new .context-horizon__summary/.summary-label/.summary-body styles.",
+        "files_affected": ["playground/characters/script/modules/llm-engine.js", "playground/characters/script/modules/ui.js", "playground/characters/style/arena.css"]
+      },
+      {
+        "id": "codex-meters-module",
+        "title": "Extract codex meter logic into codex-meters.js ES module",
+        "status": "done",
+        "requested": "2026-05-14",
+        "completed": "2026-05-14",
+        "description": "Move meter logic out of ui.js closure into a proper ES module for testability and code organisation.",
+        "notes": "Done in TBD_C. codex-meters.js created with initCodexMeters() dependency injection. applyStatusTags, setMeterDOM, keywordMeterScore, llmScoreMeters, updateCodexMeters all moved. ui.js imports module and retains shim functions for backward-compatible call sites.",
+        "files_affected": ["playground/characters/script/modules/codex-meters.js", "playground/characters/script/modules/ui.js"]
       }
     ]
   },

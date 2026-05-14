@@ -52,6 +52,22 @@
     flex-shrink: 0;
 }
 
+/* Thread config gear — active state when overrides are set */
+.arena-action--active {
+    position: relative;
+    color: var(--theme-accent) !important;
+    box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.35);
+}
+.arena-action--active::after {
+    content: '';
+    position: absolute;
+    top: 4px; right: 4px;
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--theme-accent);
+    box-shadow: 0 0 4px var(--theme-glow);
+}
+
 /* ── Active Bot Pills ── */
 .active-bot {
     position: relative;
@@ -724,9 +740,9 @@
 /* ── Memory horizon divider ── */
 .context-horizon {
     display: flex;
-    align-items: center;
+    flex-direction: column;
     gap: 8px;
-    padding: 6px 12px;
+    padding: 8px 12px;
     margin: 6px 0;
     border-radius: 6px;
     background: rgba(96, 60, 12, 0.12);
@@ -739,12 +755,38 @@
     pointer-events: none;
     user-select: none;
 }
+.context-horizon > :first-child {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
 .context-horizon svg,
 .context-horizon i {
     width: 11px;
     height: 11px;
     opacity: 0.7;
     flex-shrink: 0;
+}
+.context-horizon__summary {
+    border-top: 1px solid rgba(161, 97, 23, 0.15);
+    padding-top: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.context-horizon__summary-label {
+    font-size: 0.58rem;
+    opacity: 0.6;
+    letter-spacing: 0.08em;
+}
+.context-horizon__summary-body {
+    font-size: 0.7rem;
+    font-family: var(--font-mono);
+    color: rgba(217, 143, 50, 0.8);
+    text-transform: none;
+    letter-spacing: 0;
+    white-space: pre-wrap;
+    line-height: 1.5;
 }
 /* Messages above the horizon — faded + sepia to signal they're outside context */
 .message--horizon-past {

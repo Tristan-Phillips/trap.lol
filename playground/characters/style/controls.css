@@ -614,3 +614,21 @@ input:checked + .toggle-switch__slider::before        { transform: translateX(16
 
 /* ── Input container: relative for autocomplete positioning ── */
 .input-container { position: relative; }
+
+/* ── Thread Config Editor ──────────────────────────────────────────────────── */
+.ts-studio--thread-config { max-width: 560px; }
+
+.tc-inherit-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 4px 0 6px;
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+}
+.tc-inherit-row input[type="checkbox"] {
+    accent-color: var(--theme-accent);
+    width: 13px; height: 13px;
+    cursor: pointer;
+}
+.tc-inherit-row label { cursor: pointer; }

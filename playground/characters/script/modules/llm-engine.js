@@ -1105,6 +1105,55 @@ export async function streamCompletion(payload, onChunk, onDone, onError, signal
     }
 }
 
+// ── Memory compression: summarise messages that dropped past the context horizon ──
+// Returns a compact summary string, or null if summarisation fails or is skipped.
+// Cache key: sessionStorage `underdark_memsummary_<chatId>_<horizonMsgId>`
+export async function summarizeDroppedMessages(messages, { model, chatId, horizonMsgId } = {}) {
+    const apiKey = getApiKey();
+    if (!apiKey || !messages?.length) return null;
+
+    const cacheKey = `underdark_memsummary_${chatId || 'x'}_${horizonMsgId || messages.length}`;
+    const cached = sessionStorage.getItem(cacheKey);
+    if (cached) return cached;
+
+    const turns = messages
+        .filter(m => m.role === 'user' || m.role === 'assistant')
+        .slice(-40)
+        .map(m => {
+            const speaker = m.role === 'user' ? 'Player' : (m._charName || 'Character');
+            return `${speaker}: ${(m.content || '').slice(0, 300)}`;
+        })
+        .join('\n');
+
+    const payload = {
+        model: model || 'deepseek-chat',
+        messages: [
+            {
+                role: 'system',
+                content: 'You are a concise story summariser. Compress the following roleplay exchange into 3-5 bullet points that capture: key events, emotional shifts, decisions made, and any reveals. Be specific about character names and facts. Output plain bullet points only — no preamble.'
+            },
+            { role: 'user', content: turns }
+        ],
+        max_tokens: 300,
+        stream: false,
+    };
+
+    try {
+        const res = await fetch(`${API_BASE}/chat/completions`, {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+            body:    JSON.stringify(payload)
+        });
+        if (!res.ok) return null;
+        const data = await res.json();
+        const summary = data.choices?.[0]?.message?.content?.trim() || null;
+        if (summary) sessionStorage.setItem(cacheKey, summary);
+        return summary;
+    } catch {
+        return null;
+    }
+}
+
 // ── Non-streaming fallback ────────────────────────────────────────────────────
 export async function fetchCompletion(payload) {
     const apiKey = getApiKey();

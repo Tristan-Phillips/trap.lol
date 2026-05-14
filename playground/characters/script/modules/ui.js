@@ -18,7 +18,7 @@ import {
     exportFullInstance, importFullInstance
 } from './state.js';
 import { resolveImageUrl, saveImageBlob, deleteImageBlob, isIdbImageRef, idbImageRefId, isDataUrl } from './storage.js';
-import { buildPayload, streamCompletion, fetchCompletion, buildOverlordContext } from './llm-engine.js';
+import { buildPayload, streamCompletion, fetchCompletion, buildOverlordContext, summarizeDroppedMessages } from './llm-engine.js';
 import { parseCommand, executeCommand, filterCommands, COMMANDS } from './commands.js';
 import { IMAGE_MODELS, DEFAULT_MODEL, buildImagePrompt, generateImagePromptWithLLM, describeSceneWithLLM, generateImage, VIDEO_MODELS, generateVideo, generateVideoPromptWithLLM } from './image-engine.js';
 import { addBook, removeBook, addEntry, updateEntry, removeEntry, createBook, scanLorebooks } from './lorebook.js';
@@ -26,6 +26,7 @@ import { parseCharacterCard, buildCard, normalizeData } from './parser-v2.js';
 import { getApiKey, setApiKey, clearApiKey, isValidKeyFormat, restoreKeyFromCookie } from '../../../../glass/script/modules/llm-auth.js';
 import { initCharEditor } from './char-editor.js';
 import { qs, qsa, esc, debounce, parseLLMArray, parseLLMJson, parseLLMLines } from './shared-utils.js';
+import { initCodexMeters, applyStatusTags, updateCodexMeters as _updateCodexMeters } from './codex-meters.js';
 
 // Light markdown renderer for profile details — bold, italic, headers, line breaks only.
 // Does NOT use marked.js to avoid dependency — covers the common character-card patterns.
@@ -387,6 +388,9 @@ export function initUI() {
     restoreKeyFromCookie();
     // Guard: clear any _pendingReinject that may have survived a previous session in localStorage
     if (state.config._pendingReinject) delete state.config._pendingReinject;
+
+    // Wire codex-meters module with closure dependencies
+    initCodexMeters({ qs, state, getApiKey, fetchCompletion });
 
     // ── Picker mode — closure variable, not window global ────────────────────
     let _pickerMode = null;
@@ -6869,8 +6873,26 @@ export function initUI() {
             if (idx === _horizon + 1 && _horizon >= 0) {
                 const $div = document.createElement('div');
                 $div.className = 'context-horizon';
-                $div.innerHTML = `<i data-lucide="lock"></i><span>Context limit — messages above not sent to LLM</span>`;
+                const droppedCount = _horizon + 1;
+                $div.innerHTML = `<div><i data-lucide="lock"></i><span>Context limit — ${droppedCount} message${droppedCount !== 1 ? 's' : ''} above not sent to LLM</span></div>`;
                 $thread.appendChild($div);
+
+                // Fire background summary of dropped messages — patches in when ready
+                if (getApiKey()) {
+                    const droppedMsgs = state.history.slice(0, _horizon + 1);
+                    const horizonMsgId = state.history[_horizon]?.id || String(_horizon);
+                    summarizeDroppedMessages(droppedMsgs, {
+                        model: state.config.model,
+                        chatId: state.chat?.id,
+                        horizonMsgId,
+                    }).then(summary => {
+                        if (!summary || !$div.isConnected) return;
+                        const $summary = document.createElement('div');
+                        $summary.className = 'context-horizon__summary';
+                        $summary.innerHTML = `<span class="context-horizon__summary-label">Memory digest</span><div class="context-horizon__summary-body">${esc(summary)}</div>`;
+                        $div.appendChild($summary);
+                    }).catch(() => {});
+                }
             }
 
             if (msg.role === 'image') {
@@ -7303,6 +7325,7 @@ export function initUI() {
         renderPersonaCharSelect();
         updateTelemetry();
         applyChatBackground();
+        _updateThreadConfigBadge();
 
         // Pre-load all active bot cards then render history + profile in the correct order.
         (async () => {
@@ -7946,6 +7969,210 @@ export function initUI() {
         };
         input.click();
     });
+
+    // ── Thread Config Editor (gear icon in header) ───────────────────────────
+    let _tcToneTags = '';
+
+    function openThreadConfig() {
+        const chat = state.chat;
+        if (!chat) return;
+        const tc = chat.threadConfig || {};
+        const tone = tc.narrativeTone || {};
+
+        qs('#tc-name-badge').textContent = chat.name;
+
+        // Core tab
+        qs('#tc-scenario').value        = tc.threadScenario || '';
+        qs('#tc-user-name').value       = tc.userName || '';
+        qs('#tc-user-persona').value    = tc.userPersona || '';
+        const $autoLore = qs('#tc-auto-attach-lorebooks');
+        if ($autoLore) $autoLore.checked = tc.autoAttachLorebooks !== false;
+
+        // Populate model select if needed (mirrors loadModels logic)
+        const $tcModel = qs('#tc-model-select');
+        if ($tcModel && $tcModel.options.length <= 1) {
+            fetch('../../glass/data/llm.json').then(r => r.json()).then(data => {
+                const optHtml = data._index.map(group => `
+                    <optgroup label="${esc(group.family)}">
+                        ${group.models.map(id => {
+                            const m = data.routing_table[id];
+                            return m ? `<option value="${esc(id)}">${esc(m.label)}</option>` : '';
+                        }).join('')}
+                    </optgroup>`).join('');
+                $tcModel.innerHTML = '<option value="">— Inherit from continuity —</option>' + optHtml;
+                $tcModel.value = tc.model || '';
+                lucideRefresh($tcModel.closest('.ts-studio'));
+            }).catch(() => {});
+        } else if ($tcModel) {
+            $tcModel.value = tc.model || '';
+        }
+
+        // Temp slider
+        const hasTempOverride = tc.temperature != null;
+        const $tempInherit = qs('#tc-temp-inherit');
+        const $tempInput   = qs('#tc-temp-input');
+        const $tempBadge   = qs('#tc-temp-badge');
+        if ($tempInherit) $tempInherit.checked = !hasTempOverride;
+        if ($tempInput)   { $tempInput.disabled = !hasTempOverride; $tempInput.value = tc.temperature ?? state.config.temperature ?? 0.8; }
+        if ($tempBadge)   $tempBadge.textContent = hasTempOverride ? parseFloat(tc.temperature).toFixed(2) : 'inherit';
+
+        // MaxOutput slider
+        const hasMaxOutOverride = tc.maxOutput != null;
+        const $maxInherit = qs('#tc-maxout-inherit');
+        const $maxInput   = qs('#tc-maxout-input');
+        const $maxBadge   = qs('#tc-maxout-badge');
+        if ($maxInherit) $maxInherit.checked = !hasMaxOutOverride;
+        if ($maxInput)   { $maxInput.disabled = !hasMaxOutOverride; $maxInput.value = tc.maxOutput ?? state.config.maxOutput ?? 512; }
+        if ($maxBadge)   $maxBadge.textContent = hasMaxOutOverride ? tc.maxOutput : 'inherit';
+
+        // Tone tab
+        _tcToneTags = tone.toneTags || '';
+        qs('#tc-sexual-energy').value = tone.sexualEnergy || '';
+        qs('#tc-tone-tags').value     = _tcToneTags;
+        qs('#tc-amplify').value       = tone.amplify || '';
+        qs('#tc-avoid').value         = tone.avoid   || '';
+        qs('#tc-pacing').value        = tone.pacing  || '';
+
+        // Sync quick pills to saved values
+        qsa('#tc-sexual-energy-pills .ts-quick-pill').forEach($p => {
+            $p.classList.toggle('active', $p.dataset.val === (tone.sexualEnergy || ''));
+        });
+        qsa('#tc-tone-pills .ts-quick-pill--toggle').forEach($p => {
+            const tags = _tcToneTags.split(',').map(s => s.trim()).filter(Boolean);
+            $p.classList.toggle('active', tags.includes($p.dataset.val));
+        });
+        qsa('[data-target="tc-pacing"]').forEach($p => {
+            $p.classList.toggle('active', $p.dataset.val === (tone.pacing || ''));
+        });
+
+        // Reset to Core tab
+        qsa('.tc-tab').forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected', 'false'); });
+        qsa('.tc-panel').forEach(p => { p.classList.remove('active'); p.hidden = true; });
+        const $firstTab   = qs('.tc-tab[data-tc-tab="core"]');
+        const $firstPanel = qs('#tc-panel-core');
+        if ($firstTab)   { $firstTab.classList.add('active'); $firstTab.setAttribute('aria-selected', 'true'); }
+        if ($firstPanel) { $firstPanel.classList.add('active'); $firstPanel.hidden = false; }
+
+        showModal('modal-thread-config');
+        lucideRefresh(qs('#modal-thread-config'));
+    }
+
+    // Tab switching
+    qsa('.tc-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            qsa('.tc-tab').forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected', 'false'); });
+            qsa('.tc-panel').forEach(p => { p.classList.remove('active'); p.hidden = true; });
+            tab.classList.add('active'); tab.setAttribute('aria-selected', 'true');
+            const $panel = qs(`#tc-panel-${tab.dataset.tcTab}`);
+            if ($panel) { $panel.classList.add('active'); $panel.hidden = false; }
+        });
+    });
+
+    // Inherit toggles
+    qs('#tc-temp-inherit')?.addEventListener('change', e => {
+        const $inp = qs('#tc-temp-input');
+        const $badge = qs('#tc-temp-badge');
+        if (!$inp) return;
+        $inp.disabled = e.target.checked;
+        $badge.textContent = e.target.checked ? 'inherit' : parseFloat($inp.value).toFixed(2);
+    });
+    qs('#tc-maxout-inherit')?.addEventListener('change', e => {
+        const $inp = qs('#tc-maxout-input');
+        const $badge = qs('#tc-maxout-badge');
+        if (!$inp) return;
+        $inp.disabled = e.target.checked;
+        $badge.textContent = e.target.checked ? 'inherit' : $inp.value;
+    });
+    qs('#tc-temp-input')?.addEventListener('input', e => {
+        const $badge = qs('#tc-temp-badge');
+        if ($badge) $badge.textContent = parseFloat(e.target.value).toFixed(2);
+    });
+    qs('#tc-maxout-input')?.addEventListener('input', e => {
+        const $badge = qs('#tc-maxout-badge');
+        if ($badge) $badge.textContent = e.target.value;
+    });
+
+    // Quick pills for Tone tab
+    qs('#tc-sexual-energy-pills')?.addEventListener('click', e => {
+        const $p = e.target.closest('.ts-quick-pill');
+        if (!$p) return;
+        const val = $p.dataset.val || '';
+        const $target = qs(`#${$p.dataset.target}`);
+        if ($target) $target.value = val === $target.value ? '' : val;
+        qsa('#tc-sexual-energy-pills .ts-quick-pill').forEach(b => b.classList.toggle('active', b.dataset.val === $target?.value));
+    });
+    qs('#tc-tone-pills')?.addEventListener('click', e => {
+        const $p = e.target.closest('.ts-quick-pill--toggle');
+        if (!$p) return;
+        const val = $p.dataset.val;
+        const $hidden = qs('#tc-tone-tags');
+        let tags = ($hidden?.value || '').split(',').map(s => s.trim()).filter(Boolean);
+        const idx = tags.indexOf(val);
+        if (idx >= 0) tags.splice(idx, 1); else tags.push(val);
+        _tcToneTags = tags.join(', ');
+        if ($hidden) $hidden.value = _tcToneTags;
+        $p.classList.toggle('active', idx < 0);
+    });
+    qsa('[data-target="tc-pacing"]').forEach($p => {
+        $p.addEventListener('click', () => {
+            const val = $p.dataset.val;
+            const $inp = qs('#tc-pacing');
+            if ($inp) $inp.value = val === $inp.value ? '' : val;
+            qsa('[data-target="tc-pacing"]').forEach(b => b.classList.toggle('active', b.dataset.val === $inp?.value));
+        });
+    });
+
+    // Save
+    qs('#tc-save')?.addEventListener('click', () => {
+        const chat = state.chat;
+        if (!chat) return;
+        if (!chat.threadConfig) chat.threadConfig = defaultThreadConfig();
+        const tc = chat.threadConfig;
+
+        tc.threadScenario = qs('#tc-scenario')?.value.trim() || '';
+        const modelVal    = qs('#tc-model-select')?.value || '';
+        tc.model          = modelVal || null;
+        tc.userName       = qs('#tc-user-name')?.value.trim()    || null;
+        tc.userPersona    = qs('#tc-user-persona')?.value.trim() || null;
+        tc.autoAttachLorebooks = qs('#tc-auto-attach-lorebooks')?.checked !== false;
+
+        tc.temperature = qs('#tc-temp-inherit')?.checked ? null : parseFloat(qs('#tc-temp-input')?.value || 0.8);
+        tc.maxOutput   = qs('#tc-maxout-inherit')?.checked ? null : parseInt(qs('#tc-maxout-input')?.value || 512, 10);
+
+        const tone = {
+            sexualEnergy: qs('#tc-sexual-energy')?.value.trim() || '',
+            toneTags:     _tcToneTags,
+            amplify:      qs('#tc-amplify')?.value.trim() || '',
+            avoid:        qs('#tc-avoid')?.value.trim()   || '',
+            pacing:       qs('#tc-pacing')?.value.trim()  || '',
+        };
+        const hasTone = Object.values(tone).some(v => v.trim() !== '');
+        tc.narrativeTone = hasTone ? tone : null;
+
+        saveState();
+        hideModal('modal-thread-config');
+        showToast('Thread settings saved', 'info', 1800);
+        // Update badge on active-bots header if custom config is set
+        _updateThreadConfigBadge();
+    });
+
+    qs('#btn-thread-config')?.addEventListener('click', openThreadConfig);
+    qs('#tc-close')?.addEventListener('click',  () => hideModal('modal-thread-config'));
+    qs('#tc-cancel')?.addEventListener('click', () => hideModal('modal-thread-config'));
+    qs('#modal-thread-config .modal__backdrop')?.addEventListener('click', () => hideModal('modal-thread-config'));
+
+    function _updateThreadConfigBadge() {
+        const $btn = qs('#btn-thread-config');
+        if (!$btn) return;
+        const tc = state.chat?.threadConfig;
+        const hasOverrides = tc && (
+            tc.threadScenario || tc.model || tc.temperature != null || tc.maxOutput != null ||
+            tc.userName || tc.userPersona ||
+            (tc.narrativeTone && Object.values(tc.narrativeTone).some(v => v))
+        );
+        $btn.classList.toggle('arena-action--active', !!hasOverrides);
+        $btn.title = hasOverrides ? 'Thread Settings (overrides active)' : 'Thread Settings';
+    }
 
     // ── Header Actions ────────────────────────────────────────────────────────
     qs('#clear-thread')?.addEventListener('click', async () => {
@@ -8690,105 +8917,9 @@ export function initUI() {
     // Codex: narrative meters — update based on recent history analysis
     // Parse [TENSION X%] / [INTIMACY X%] / [DANGER X%] tags from a bot response
     // and directly update the corresponding codex meter bars.
-    function _applyStatusTags(text) {
-        if (!text) return;
-        const meterMap = {
-            TENSION:  { bar: '#codex-tension-bar',  val: '#codex-tension-val'  },
-            INTIMACY: { bar: '#codex-intimacy-bar', val: '#codex-intimacy-val' },
-            DANGER:   { bar: '#codex-danger-bar',   val: '#codex-danger-val'   },
-        };
-        // Match [TENSION 72%], [TENSION72%], [TENSION 72] — all valid forms
-        const tagRe = /\[([A-Z]+)\s*(\d{1,3})%?\]/g;
-        let match;
-        while ((match = tagRe.exec(text)) !== null) {
-            const key = match[1].toUpperCase();
-            const pct = Math.min(100, Math.max(0, parseInt(match[2], 10)));
-            const ids = meterMap[key];
-            if (!ids) continue;
-            const $bar = qs(ids.bar);
-            const $val = qs(ids.val);
-            if ($bar) $bar.style.width = `${pct}%`;
-            if ($val) $val.textContent = pct;
-        }
-    }
-
-    function _setMeterDOM(t, i, d) {
-        const $tb = qs('#codex-tension-bar');  const $tv = qs('#codex-tension-val');
-        const $ib = qs('#codex-intimacy-bar'); const $iv = qs('#codex-intimacy-val');
-        const $db = qs('#codex-danger-bar');   const $dv = qs('#codex-danger-val');
-        if ($tb) $tb.style.width = `${t}%`; if ($tv) $tv.textContent = t;
-        if ($ib) $ib.style.width = `${i}%`; if ($iv) $iv.textContent = i;
-        if ($db) $db.style.width = `${d}%`; if ($dv) $dv.textContent = d;
-    }
-
-    // Keyword heuristic — fast, zero cost, used as immediate estimate
-    function _keywordMeterScore(history) {
-        const recent = history.slice(-10).map(m => m.content?.toLowerCase() || '').join(' ');
-        const tensionKw  = ['stare','silence','tension','dare','challenge','confront','angry','afraid','edge','tense','hesitat','glare','clench','rigid','snap','snarl','warn'];
-        const intimacyKw = ['touch','kiss','whisper','skin','warm','hold','close','breath','moan','intimate','caress','embrace','shiver','pulse','flush','naked','bare','soft','gentle','tender'];
-        const dangerKw   = ['blood','weapon','kill','fight','danger','threat','stab','gun','blade','attack','pain','wound','die','death','scream','flee','trapped','hunt','aimed','shot'];
-        const score = kws => Math.min(100, kws.filter(k => recent.includes(k)).length * 11 + 8);
-        return { t: score(tensionKw), i: score(intimacyKw), d: score(dangerKw) };
-    }
-
-    // LLM meter scorer — fires every 3 turns in background, caches per message id
-    let _lastMeterScoredAt = 0; // telemetry.turns value at last LLM score
-    async function _llmScoreMeters() {
-        const key = getApiKey();
-        if (!key) return;
-        const history = state.history;
-        const recentMsgs = history.filter(m => m.role !== 'image').slice(-6);
-        if (!recentMsgs.length) return;
-
-        const cacheKey = `udmeter__${state.chat?.id}__${recentMsgs.at(-1)?.id}`;
-        try {
-            const cached = sessionStorage.getItem(cacheKey);
-            if (cached) {
-                const { t, i, d } = JSON.parse(cached);
-                _setMeterDOM(t, i, d);
-                return;
-            }
-        } catch (_) {}
-
-        const excerpt = recentMsgs.map(m => {
-            const who = m.role === 'user' ? (state.config.userName || 'User') : (state.loadedCharacters[m.botId]?.name || 'Character');
-            return `${who}: ${m.content?.slice(0, 200)}`;
-        }).join('\n');
-
-        try {
-            const { text } = await fetchCompletion({
-                model: state.config.model || 'deepseek-r1',
-                messages: [
-                    { role: 'system', content: 'You are a scene-analysis engine. Given a roleplay excerpt, score three dimensions 0-100 as integers. Return ONLY valid JSON: {"tension":N,"intimacy":N,"danger":N}. No explanation.' },
-                    { role: 'user',   content: `Score this scene:\n${excerpt}` }
-                ],
-                max_tokens: 30,
-                temperature: 0.1
-            });
-            const parsed = JSON.parse(text.trim());
-            const t = Math.min(100, Math.max(0, parseInt(parsed.tension,  10) || 0));
-            const i = Math.min(100, Math.max(0, parseInt(parsed.intimacy, 10) || 0));
-            const d = Math.min(100, Math.max(0, parseInt(parsed.danger,   10) || 0));
-            _setMeterDOM(t, i, d);
-            try { sessionStorage.setItem(cacheKey, JSON.stringify({ t, i, d })); } catch (_) {}
-        } catch (_) { /* silent — meters stay at keyword estimate */ }
-    }
-
-    function updateCodexMeters() {
-        const history = state.history;
-        if (!history.length) return;
-
-        // Always apply keyword estimate immediately (zero latency)
-        const { t, i, d } = _keywordMeterScore(history);
-        _setMeterDOM(t, i, d);
-
-        // Every 3 turns, kick off a background LLM rescore
-        const turns = state.telemetry?.turns ?? 0;
-        if (turns > 0 && turns % 3 === 0 && turns !== _lastMeterScoredAt) {
-            _lastMeterScoredAt = turns;
-            _llmScoreMeters().catch(() => {});
-        }
-    }
+    // ── Codex meters — delegated to codex-meters.js module ──────────────────────
+    function _applyStatusTags(text) { applyStatusTags(text); }
+    function updateCodexMeters()    { _updateCodexMeters(); }
 
     // Count Overlord scene blocks in history — used for scene numbering
     function _countScenes() {
