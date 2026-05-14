@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.3.13",
+    "schema_version": "1.3.14",
     "last_updated": "2026-05-14",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -472,6 +472,19 @@
     ]
   },
   "commits": [
+    {
+      "hash": "TBD_HOTFIX",
+      "date": "2026-05-14",
+      "message": "fix(underdark): maxTokens→max_tokens in all fetchCompletion calls; model fallback; scroll after image swap",
+      "scope": "playground/characters — ui.js, main.js; status/logs/logs.json",
+      "impact": "medium",
+      "files": [
+        "playground/characters/script/modules/ui.js",
+        "playground/characters/script/main.js",
+        "status/logs/logs.json"
+      ],
+      "why": "Phase 2 fetchCompletion calls used camelCase maxTokens which the OpenAI-compatible API ignores — silent failure meant the model ran uncapped on scenario wizard, overlord auto-fire, recap, and force-overlord calls. Also added || 'deepseek-r1' fallback to 5 model fields that were undefined before user selected a model, and a scroll after the placeholder→real image swap."
+    },
     {
       "hash": "4c4df09",
       "date": "2026-05-14",
@@ -1321,6 +1334,21 @@
     {
       "date": "2026-05-14",
       "agent": "Claude Sonnet 4.6",
+      "type": "bug_fix",
+      "summary": "Post-Phase-2 audit and hotfix pass. Found and fixed: (1) 5 Phase 2 fetchCompletion calls sent maxTokens (camelCase) instead of max_tokens — OpenAI-compatible API silently ignores unknown fields, so these calls ran completely uncapped; (2) 5 model fields were state.config.model without fallback — undefined before user selects a model; (3) missing $thread.scrollTop after placeholder→real image swap. Updated all pending_work entries to 'done' with implementation notes. ui.js bumped to v=85.",
+      "decisions": [
+        "fetchCompletion passes the payload object directly to JSON.stringify for the wire — the correct field name is max_tokens (OpenAI API format), NOT maxTokens (JS convention). Any new call must use max_tokens.",
+        "state.config.model can be undefined on first load before user configures anything — always add || 'deepseek-r1' fallback for non-streaming fetchCompletion calls.",
+        "All pending_work entries from Phase 2 are now marked done — confirmed by reading the actual live code, not assuming the previous session's summary was complete."
+      ],
+      "rules_reinforced": [
+        "fetchCompletion payloads must use OpenAI API field names (snake_case: max_tokens, not camelCase: maxTokens) — the function passes the object directly to the wire without transformation.",
+        "Always verify pending_work statuses by reading live code after a session, not trusting the implementation summary — summaries can describe intent, not always what landed."
+      ]
+    },
+    {
+      "date": "2026-05-14",
+      "agent": "Claude Sonnet 4.6",
       "type": "feature_development",
       "summary": "Large multi-feature Phase 2 implementation for playground/characters (Underdark). Implemented: ♾️ prefix enforcement and permanent records for continuities and threads (rename replaces delete); group chat emoji avatar picker in creation modal with popup grid; thematic emoji fallback per character species/tags for avatars without URLs; animated image-loading placeholder injected before gen completes then swapped in-place; redo button on generated images opens 5-question style/vibe picker to guide the next generation; 3-step contextual AI scenario recommendation wizard backed by compact scenario-index.json; expanded codex god panel with 4 new inject buttons and Admin section; Overlord auto-fire on group chat open when history exists but no block present; pending_work tracking section added to logs.json with 14 entries; CSS for all new elements added to char-editor.css. Session continued from a prior compacted context via summary.",
       "decisions": [
@@ -2016,100 +2044,111 @@
       {
         "id": "continuity-prefix",
         "title": "Continuity names must start with ♾️ -",
-        "status": "in_progress",
+        "status": "done",
         "requested": "2026-05-14",
+        "completed": "2026-05-14",
         "description": "All new continuity (reality) names must be auto-prefixed with '♾️ - ' when created. Existing names not yet changed.",
-        "notes": "Auto-prefix on newReality() call in state.js. Enforce in UI input on create. Existing realities in localStorage will not be retroactively renamed.",
+        "notes": "Done in 4c4df09. Auto-prefix applied in new-reality-create handler in ui.js (const CONT_PREFIX = '♾️ - '). Existing realities in localStorage are not retroactively renamed by design.",
         "files_affected": ["playground/characters/script/modules/ui.js", "playground/characters/index.html"]
       },
       {
         "id": "no-delete-continuity",
         "title": "Cannot delete continuities",
-        "status": "in_progress",
+        "status": "done",
         "requested": "2026-05-14",
+        "completed": "2026-05-14",
         "description": "The delete button for realities/continuities must be removed or permanently disabled. Trap wants continuities to be permanent.",
-        "notes": "Remove or hide the delete-reality button in the reality editor panel. deleteReality() in state.js can remain for internal use but no UI trigger.",
+        "notes": "Done in 4c4df09. Verified: deleteReality() is imported in ui.js but no UI button wires to it. The reality editor modal has no delete action. deleteReality() remains in state.js for potential future internal use only.",
         "files_affected": ["playground/characters/index.html", "playground/characters/script/modules/ui.js"]
       },
       {
         "id": "no-delete-thread",
         "title": "Cannot delete threads",
-        "status": "in_progress",
+        "status": "done",
         "requested": "2026-05-14",
+        "completed": "2026-05-14",
         "description": "The delete button for chat threads must be removed or disabled. Threads are permanent records.",
-        "notes": "Remove trash icon from chat list items. deleteChat() in state.js can remain. renderChats() must not render delete button.",
+        "notes": "Done in 4c4df09. renderChats() context menu now only calls promptModal + renameChat (rename-only). No trash button rendered. deleteChat() remains in state.js unused by UI.",
         "files_affected": ["playground/characters/script/modules/ui.js"]
       },
       {
         "id": "sidebar-single-new-button",
         "title": "Collapse 'New Thread' + 'New DM' into one button",
-        "status": "in_progress",
+        "status": "done",
         "requested": "2026-05-14",
+        "completed": "2026-05-14",
         "description": "The left sidebar shows both 'New Thread' and 'New DM' buttons. Keep only one.",
-        "notes": "The button #chat-new-dm in index.html already says 'New Thread'. Remove or merge the second button. Keep the thread setup wizard flow.",
+        "notes": "Done — pre-existing state. Audit confirmed only one button (#chat-new-dm) exists in index.html and it already reads 'New Thread'. No duplicate button was present.",
         "files_affected": ["playground/characters/index.html"]
       },
       {
         "id": "group-emoji-avatar",
         "title": "Group chat emoji avatar picker on creation",
-        "status": "in_progress",
+        "status": "done",
         "requested": "2026-05-14",
+        "completed": "2026-05-14",
         "description": "When creating a group chat, show an emoji picker popup so the user can select an emoji as the group's icon/avatar. The chosen emoji is stored on the chat object and displayed as the group's avatar in the chat list.",
-        "notes": "The ts-group-icon input already exists as a plain text input. Replace with or augment with a popup emoji palette. Store selected emoji in chat.groupIcon. Render in renderChats() chat list item and in the arena header when in a group chat.",
+        "notes": "Done in 4c4df09. GROUP_EMOJIS array (55 emojis) + _initGroupEmojiPicker() IIFE. Hidden input #ts-group-icon + preview button #ts-group-icon-preview + popup #ts-group-icon-picker. CSS: .emoji-picker-popup, .ts-group-icon-btn. Renders as group avatar in renderChats().",
         "files_affected": ["playground/characters/index.html", "playground/characters/script/modules/ui.js", "playground/characters/style/char-editor.css"]
       },
       {
         "id": "character-emoji-avatar-fallback",
         "title": "Characters without avatar URLs use emoji placeholders",
-        "status": "in_progress",
+        "status": "done",
         "requested": "2026-05-14",
+        "completed": "2026-05-14",
         "description": "Characters that have no avatar_path or avatar field should display an appropriate emoji placeholder instead of a broken image or generic default.",
-        "notes": "buildAvatarHtml() already handles isEmoji() and falls back to 👤. The improvement: derive a fitting emoji from the character's tags, species, or name instead of always using 👤. A simple lookup table keyed on common tags (e.g. 'vampire' → 🧛, 'dragon' → 🐉, 'human' → 🧑, etc.) is sufficient.",
+        "notes": "Done in 4c4df09. _CHAR_EMOJI_MAP regex lookup table (21 entries: vampire→🧛, dragon→🐉, elf→🧝, etc.) + _charEmoji(charMeta) derives emoji from tags/species/name. buildAvatarHtml() extended with charMeta param. Falls back to 👤 if no match.",
         "files_affected": ["playground/characters/script/modules/ui.js"]
       },
       {
         "id": "snapshot-progress-bar",
         "title": "Image generation shows progress bar in thread while loading",
-        "status": "in_progress",
+        "status": "done",
         "requested": "2026-05-14",
+        "completed": "2026-05-14",
         "description": "When a snapshot/image is being generated, inject a placeholder message with an animated progress bar into the thread immediately. Replace it with the final image when generation completes.",
-        "notes": "_doSnapshot() and the image studio generation flow should call a new _injectImagePlaceholder() that appends a .img-msg--loading element. On complete, replace contents with the real image via _injectImageMessage() or in-place DOM swap. The placeholder should show a pulsing bar and a 'Generating…' label.",
+        "notes": "Done in 4c4df09. _injectImagePlaceholder() creates .message--image-loading with .img-loading-block (animated translateX bar). _doSnapshot() injects placeholder first, then on success calls replaceChild → _injectImageMessageInto($real, ...). On error, placeholder is removed. CSS: .img-loading-block with @keyframes imgBarSlide.",
         "files_affected": ["playground/characters/script/modules/ui.js", "playground/characters/style/char-editor.css"]
       },
       {
         "id": "image-redo-style-picker",
         "title": "Image redo button + 5 style questions",
-        "status": "in_progress",
+        "status": "done",
         "requested": "2026-05-14",
+        "completed": "2026-05-14",
         "description": "Add a 'redo' button to each generated image message. Clicking it opens a 5-question style picker (each question offers 3 choices). Questions cover visual style/mood/format (not character editing): e.g. film type, lighting, composition, palette, texture. Answers modify the next generation's prompt style suffix. This applies to that redo only — not a global setting.",
-        "notes": "Questions should be predetermined (not AI-generated) for speed and reliability. 5 questions × 3 options each. Answers get mapped to prompt modifier strings and appended to the original prompt before re-calling generateImage(). Show style picker as a modal or inline below the image.",
+        "notes": "Done in 4c4df09. _STYLE_QUESTIONS (5 q × 3 opts, predetermined). _showStylePicker() loops through them via showPickerModal. Redo button in _injectImageMessageInto overlay calls _showStylePicker() then _doSnapshot(modifiers). Each mod is a prompt suffix string (e.g. 'polaroid film grain, vintage photograph, faded colours, light leak').",
         "files_affected": ["playground/characters/script/modules/ui.js", "playground/characters/index.html", "playground/characters/style/char-editor.css"]
       },
       {
         "id": "scenario-recommendation-engine",
         "title": "Scenario preset AI recommendation via 3-step question wizard",
-        "status": "in_progress",
+        "status": "done",
         "requested": "2026-05-14",
+        "completed": "2026-05-14",
         "description": "Add a 'Find my scenario' option near the scenario preset selector. It runs a 3-step wizard where each question is generated by the LLM with the previous answer as context. After 3 answers, the LLM recommends 3 existing scenario presets from scenarios.json by ID. User picks one or skips.",
-        "notes": "Implementation strategy: create playground/characters/data/scenario-index.json with a compact summary of each scenario (id, name, 1-sentence summary, 3-5 tags). The recommendation LLM call only loads this index JSON (not full scenario text) to pick by id. Then the full scenario is looked up from the in-memory scenarios array. 3 questions total, each generated contextually. The wizard uses the existing showPickerModal pattern but extended to a multi-step flow.",
-        "files_affected": ["playground/characters/data/scenario-index.json (new)", "playground/characters/script/modules/ui.js", "playground/characters/index.html"]
+        "notes": "Done in 4c4df09. scenario-index.json created (31 entries, ~80 chars each). _loadScenarioIndex() fetches and caches it. 3-question wizard with AI-generated options per step (context-aware). LLM returns JSON array of 3 IDs. Final showPickerModal shows name+summary. Applies scenario text to #ts-scenario-text. Button: #ts-scenario-recommend.",
+        "files_affected": ["playground/characters/data/scenario-index.json", "playground/characters/script/modules/ui.js", "playground/characters/index.html"]
       },
       {
         "id": "codex-god-panel-expansion",
         "title": "Scene Codex god panel: more one-click controls + admin actions",
-        "status": "in_progress",
+        "status": "done",
         "requested": "2026-05-14",
+        "completed": "2026-05-14",
         "description": "Expand the God Controls column in the Scene Codex panel with additional one-click scene directives and admin-level controls. Admin controls might include: force Overlord to re-describe scene, clear/reset scene meters, trigger a group chat recap, skip to next story beat, silence a character for N turns, etc.",
-        "notes": "Add to the codex-inject-btn row and wire via data-ri attribute pattern. Some admin actions (recap, silence, force Overlord) will need new handler branches in the codex inject btn listener. Keep controls minimal and single-purpose — user said 'minute and more simple not too complex but one-click'.",
+        "notes": "Done in 4c4df09. Inject buttons added: Redirect (data-ri=redirect), Raise Tension (data-ri=tension), Reveal (data-ri=reveal), Vulnerable (data-ri=vulnerability). Admin section: #codex-force-overlord (re-describes scene from last 12 msgs), #codex-recap (3-5 bullet recap from last 30 msgs), #codex-reset-meters (tension→40, intimacy→20, danger→15), #codex-snapshot-now (calls _runQuickSnapshot). CSS: .codex-admin-grid, .codex-admin-btn (amber palette).",
         "files_affected": ["playground/characters/index.html", "playground/characters/script/modules/ui.js"]
       },
       {
         "id": "overlord-auto-triggers",
         "title": "Overlord auto-fires set-scene for group chats and applicable moments",
-        "status": "in_progress",
+        "status": "done",
         "requested": "2026-05-14",
+        "completed": "2026-05-14",
         "description": "Overlord should automatically generate and inject a scene-setting block when: (1) a group chat is loaded/opened with no existing Overlord message, (2) the /scene command is run without specifying content, (3) a new group chat is created and characters are loaded. Also applicable to DM chats on first load if a world scenario is set.",
-        "notes": "The group opening scene injection already exists in the group wizard flow. Needs to also trigger on switchChat() when loading a group thread with history but no Overlord block, and on newChat() for groups. For DMs, fire on first load if state.reality.worldConfig.scenario is set and thread is new.",
+        "notes": "Done in 4c4df09. _autoFireOverlord() fires at end of renderFullHistory() when: isGroup && !hasOverlordBlock && hasHistory && getApiKey(). Uses fetchCompletion with 2-3 paragraph scene-setting prompt using charNames + scenario. addMessage('system', text) + _injectOverlordMessage(text). Silent catch — auto-trigger never breaks chat.",
         "files_affected": ["playground/characters/script/modules/ui.js"]
       },
       {

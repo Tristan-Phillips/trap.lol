@@ -2182,12 +2182,12 @@ export function initUI() {
                     `Scenario Finder (${i + 1}/3): ${QUESTIONS[i]}`,
                     async () => {
                         const { text } = await fetchCompletion({
-                            model: state.config.model,
+                            model: state.config.model || 'deepseek-r1',
                             messages: [{
                                 role: 'user',
                                 content: `${prevContext}Generate exactly 3 short, distinct answer options for this question about roleplay scenario preference: "${QUESTIONS[i]}". Return ONLY a JSON array of 3 strings, no explanation. Example: ["Dark and tense","Warm and cozy","Mysterious and surreal"]`
                             }],
-                            maxTokens: 120,
+                            max_tokens: 120,
                             temperature: 0.9
                         });
                         try {
@@ -2206,12 +2206,12 @@ export function initUI() {
             ).join('\n');
 
             const { text: recText } = await fetchCompletion({
-                model: state.config.model,
+                model: state.config.model || 'deepseek-r1',
                 messages: [{
                     role: 'user',
                     content: `You are recommending roleplay scenario presets.\n\nUser answered 3 questions:\n1. "${answers[0]}"\n2. "${answers[1]}"\n3. "${answers[2]}"\n\nAvailable scenarios:\n${indexSummary}\n\nReturn ONLY a JSON array of exactly 3 scenario IDs that best match the user's answers, ordered best-first. Example: ["dark-fantasy","gothic-horror","cosmic-horror"]`
                 }],
-                maxTokens: 80,
+                max_tokens: 80,
                 temperature: 0.3
             });
 
@@ -3729,6 +3729,7 @@ export function initUI() {
                 $real.className = 'message message--image';
                 $placeholder.parentNode.replaceChild($real, $placeholder);
                 _injectImageMessageInto($real, dataUrl, prompt, model);
+                if ($thread) $thread.scrollTop = $thread.scrollHeight;
             } else {
                 _injectImageMessage(dataUrl, prompt, model);
             }
@@ -6698,9 +6699,9 @@ export function initUI() {
             || state.reality?.worldConfig?.scenario || '';
         try {
             const { text } = await fetchCompletion({
-                model: state.config.model,
+                model: state.config.model || 'deepseek-r1',
                 messages: [{ role: 'user', content: `You are Overlord, an omniscient narrator. Set the scene for a group roleplay involving: ${charNames}. ${scenario ? `Setting context: ${scenario.slice(0, 300)}` : ''}\n\nWrite a brief, atmospheric scene-setting passage (2-3 paragraphs) in present tense. Describe where everyone is, the mood, and what is about to begin. Be vivid and immersive.` }],
-                maxTokens: 350,
+                max_tokens: 350,
                 temperature: 0.8
             });
             const sysMsg = addMessage('system', text, null);
@@ -8158,9 +8159,9 @@ export function initUI() {
                 return `${name}: ${m.content?.slice(0, 200)}`;
             }).join('\n');
             const { text } = await fetchCompletion({
-                model: state.config.model,
+                model: state.config.model || 'deepseek-r1',
                 messages: [{ role: 'user', content: `Based on this recent exchange, write a vivid, atmospheric scene description as a narrator — 2-3 paragraphs covering: where the characters are, what has just happened, the mood and tension. Write in present tense, immersive prose.\n\n${histText}` }],
-                maxTokens: 400,
+                max_tokens: 400,
                 temperature: 0.8
             });
             _injectOverlordMessage(text);
@@ -8192,9 +8193,9 @@ export function initUI() {
                 return `${name}: ${m.content?.slice(0, 300)}`;
             }).join('\n');
             const { text } = await fetchCompletion({
-                model: state.config.model,
+                model: state.config.model || 'deepseek-r1',
                 messages: [{ role: 'user', content: `Write a concise story recap (3-5 bullet points) of the key events, emotional beats, and revelations from this roleplay session. Focus on what changed and what matters.\n\n${histText}` }],
-                maxTokens: 350,
+                max_tokens: 350,
                 temperature: 0.5
             });
             _injectOverlordMessage(`**Session Recap**\n\n${text}`);
