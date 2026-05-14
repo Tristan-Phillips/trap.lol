@@ -191,8 +191,9 @@ function showPickerModal(title, generateFn) {
                 }
                 lucideRefresh(modal);
             }
-        }).catch(() => {
+        }).catch(err => {
             $options.innerHTML = `<div class="choice-picker__loading">Generation failed — use the text field below.</div>`;
+            console.warn('[picker] generateFn failed:', err);
         });
     });
 }
@@ -1507,6 +1508,7 @@ export function initUI() {
         // Wire spark buttons — show 3 options via choice picker
         qsa('.ts-spark-field-btn', $container).forEach(btn => {
             btn.addEventListener('click', async () => {
+                if (!getApiKey()) { showToast('API key required for spark ideas', 'warn'); return; }
                 const key   = btn.dataset.qkey;
                 const label = btn.dataset.qlabel;
                 const $ta   = $container.querySelector(`.ts-isekai-field[data-key="${key}"]`);
@@ -1827,6 +1829,7 @@ export function initUI() {
     }
 
     async function _tsSparkSceneIdeas() {
+        if (!getApiKey()) { showToast('API key required for spark ideas', 'warn'); return; }
         const $btn   = qs('#ts-gen-scene-ideas-btn');
         const $ideas = qs('#ts-scene-ideas');
         const $ta    = qs('#ts-group-intro');
@@ -2076,6 +2079,7 @@ export function initUI() {
     // "Ideas" buttons on Amplify / Avoid fields — show 3 options via choice picker
     qsa('.ts-gen-ideas-btn[data-gen]').forEach(btn => {
         btn.addEventListener('click', async () => {
+            if (!getApiKey()) { showToast('API key required for ideas', 'warn'); return; }
             const field = btn.dataset.gen; // 'amplify' | 'avoid'
             const $inp  = qs(`#ts-${field}`);
             if (!$inp) return;
