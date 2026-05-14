@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.3.12",
+    "schema_version": "1.3.13",
     "last_updated": "2026-05-14",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -18,6 +18,7 @@
       "commits",
       "sessions",
       "for_new_llm",
+      "pending_work",
       "system_audit"
     ]
   },
@@ -41,7 +42,8 @@
       "rules.absolute": "Add new rules only if trap explicitly stated a hard rule. Do not infer rules — only record what was explicitly said or demonstrated through repeated preference.",
       "rules.strong_preferences": "Same as above but for preferences (not hard rules).",
       "anti_patterns": "Add to things_that_have_been_tried_and_rejected when something is removed or reversed. Add to common_mistakes_to_avoid when a class of error is identified.",
-      "language_fingerprint": "Update recurring_words_and_phrases if new vocabulary is consistently used. Add to vocabulary_never_used if trap explicitly rejects a word. Update tone/style descriptions if they become more precise."
+      "language_fingerprint": "Update recurring_words_and_phrases if new vocabulary is consistently used. Add to vocabulary_never_used if trap explicitly rejects a word. Update tone/style descriptions if they become more precise.",
+      "pending_work": "When a feature is requested by trap, add a new entry to pending_work.features[] with status 'not_started'. When work begins, set status to 'in_progress'. When complete, set to 'done' and add a note about the commit hash. When deferred, set to 'deferred' with a reason in notes. Never remove entries."
     },
     "staleness_detection": "If _meta.last_updated is more than 7 days ago, flag this to the user before starting work. The file may be significantly out of date. Ask if they want to do a sync pass before proceeding.",
     "validation_rules": [
@@ -470,6 +472,22 @@
     ]
   },
   "commits": [
+    {
+      "hash": "TBD_P2",
+      "date": "2026-05-14",
+      "message": "feat(underdark): phase 2 — emoji avatars, image placeholders, scenario AI wizard, codex admin, overlord auto-fire, continuity rules",
+      "scope": "playground/characters — ui.js, index.html, char-editor.css, main.js; data/scenario-index.json; status/logs/logs.json",
+      "impact": "high",
+      "files": [
+        "playground/characters/script/modules/ui.js",
+        "playground/characters/index.html",
+        "playground/characters/style/char-editor.css",
+        "playground/characters/script/main.js",
+        "playground/characters/data/scenario-index.json",
+        "status/logs/logs.json"
+      ],
+      "why": "Large multi-feature pass requested by trap: continuity names enforced with ♾️ prefix and made permanent (no delete); threads also non-deletable (renamed only); group chats get emoji avatar picker; characters without URLs get thematic emoji placeholders; snapshot image gen now shows animated progress placeholder until image completes; redo button on images opens 5-question style picker to refine next gen; scenario AI recommendation wizard uses compact index JSON to keep LLM context lean; codex god panel gains Redirect/Tension/Reveal/Vulnerable inject buttons plus Admin section (Re-describe, Recap, Reset Meters, Snapshot); group chats auto-fire Overlord scene-setting when history exists but no block is present; pending_work section added to logs.json for cross-session tracking."
+    },
     {
       "hash": "1cf7280",
       "date": "2026-05-14",
@@ -1303,6 +1321,27 @@
     {
       "date": "2026-05-14",
       "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Large multi-feature Phase 2 implementation for playground/characters (Underdark). Implemented: ♾️ prefix enforcement and permanent records for continuities and threads (rename replaces delete); group chat emoji avatar picker in creation modal with popup grid; thematic emoji fallback per character species/tags for avatars without URLs; animated image-loading placeholder injected before gen completes then swapped in-place; redo button on generated images opens 5-question style/vibe picker to guide the next generation; 3-step contextual AI scenario recommendation wizard backed by compact scenario-index.json; expanded codex god panel with 4 new inject buttons and Admin section; Overlord auto-fire on group chat open when history exists but no block present; pending_work tracking section added to logs.json with 14 entries; CSS for all new elements added to char-editor.css. Session continued from a prior compacted context via summary.",
+      "decisions": [
+        "Continuities (realities) and threads (chats) are permanent — delete removed and replaced with rename to prevent accidental data loss; matches the 'permanent record' philosophy.",
+        "Compact scenario-index.json (~80 chars per entry) used for AI recommendations instead of full scenarios.json (~800-2000 chars per entry) — ~95% context reduction for recommendation calls.",
+        "3-step wizard generates each question using the LLM with previous answers as context, then requests a JSON array of 3 IDs from scenario-index.json — keeps format machine-parseable.",
+        "_charEmoji() derives emoji from character tags/species/name via regex lookup table — avoids hardcoding, handles novel species gracefully with 🧙 fallback.",
+        "Image placeholder uses CSS animation (translateX slide) instead of a real progress percentage — no progress API available, shimmer communicates 'busy' without false precision.",
+        "Generation token pattern (_groupGeneration) already in place from Phase 1 — reused and confirmed effective for isolating async group chat loops.",
+        "Overlord auto-fire checks for existing .overlord-block before firing — idempotent, won't double-inject on re-renders.",
+        "pending_work section in logs.json uses status field (not_started/in_progress/done/deferred) so future LLM instances can triage work without reading full session history."
+      ],
+      "rules_reinforced": [
+        "Permanent record design: destructive actions on user-created content (chats, realities) should be replaced with safer alternatives (rename) — data loss from misclick is unrecoverable in IndexedDB.",
+        "LLM context for recommendation/classification calls should use the most compact representation that still provides enough signal — scenario summaries + tags is sufficient for matching.",
+        "Async placeholder-to-real swaps require a pre-created DOM element with a stable reference — the inner function pattern (_injectImageMessageInto) enables both fresh creation and in-place replacement."
+      ]
+    },
+    {
+      "date": "2026-05-14",
+      "agent": "Claude Sonnet 4.6",
       "type": "bug_fix",
       "summary": "Full codebase audit of playground/characters — identified 3 critical, 5 major, 4 minor bugs and resolved all 12. Critical fixes: IDB/localStorage race in addMessage (saveState now deferred until after blob write), detached group loop replaced boolean abort flag with generation token, streaming closure now snapshots chat/reality IDs and discards responses written to wrong context. Major fixes: lucideRefresh scoped to passed node, picker modal listener leak closed, orphan placeholder removed on stream failure instead of showing un-persisted error bubble, renderMarkdownSafe > encoding restored for arrow notation in character cards. Minor: avatar cache namespace, setSendState undefined guard, reinject ordering in group queue.",
       "decisions": [
@@ -1969,6 +2008,137 @@
       "Security at the boundary — validate user input, sanitize rendered content, expose nothing accidentally",
       "Surprise — the gacha pull, the terminal shortcut system, the cursor orb — the site rewards exploration",
       "Memory — the logs system exists because trap doesn't want to re-explain the same context every session. Honour it."
+    ]
+  },
+  "pending_work": {
+    "_note": "This section tracks features requested by trap that are partially or fully unimplemented. An LLM reading this file must check this section before asking what to do. Status values: 'not_started' | 'in_progress' | 'done' | 'deferred' | 'wont_do'. Update status and notes after each session. Never remove entries — only update them.",
+    "features": [
+      {
+        "id": "continuity-prefix",
+        "title": "Continuity names must start with ♾️ -",
+        "status": "in_progress",
+        "requested": "2026-05-14",
+        "description": "All new continuity (reality) names must be auto-prefixed with '♾️ - ' when created. Existing names not yet changed.",
+        "notes": "Auto-prefix on newReality() call in state.js. Enforce in UI input on create. Existing realities in localStorage will not be retroactively renamed.",
+        "files_affected": ["playground/characters/script/modules/ui.js", "playground/characters/index.html"]
+      },
+      {
+        "id": "no-delete-continuity",
+        "title": "Cannot delete continuities",
+        "status": "in_progress",
+        "requested": "2026-05-14",
+        "description": "The delete button for realities/continuities must be removed or permanently disabled. Trap wants continuities to be permanent.",
+        "notes": "Remove or hide the delete-reality button in the reality editor panel. deleteReality() in state.js can remain for internal use but no UI trigger.",
+        "files_affected": ["playground/characters/index.html", "playground/characters/script/modules/ui.js"]
+      },
+      {
+        "id": "no-delete-thread",
+        "title": "Cannot delete threads",
+        "status": "in_progress",
+        "requested": "2026-05-14",
+        "description": "The delete button for chat threads must be removed or disabled. Threads are permanent records.",
+        "notes": "Remove trash icon from chat list items. deleteChat() in state.js can remain. renderChats() must not render delete button.",
+        "files_affected": ["playground/characters/script/modules/ui.js"]
+      },
+      {
+        "id": "sidebar-single-new-button",
+        "title": "Collapse 'New Thread' + 'New DM' into one button",
+        "status": "in_progress",
+        "requested": "2026-05-14",
+        "description": "The left sidebar shows both 'New Thread' and 'New DM' buttons. Keep only one.",
+        "notes": "The button #chat-new-dm in index.html already says 'New Thread'. Remove or merge the second button. Keep the thread setup wizard flow.",
+        "files_affected": ["playground/characters/index.html"]
+      },
+      {
+        "id": "group-emoji-avatar",
+        "title": "Group chat emoji avatar picker on creation",
+        "status": "in_progress",
+        "requested": "2026-05-14",
+        "description": "When creating a group chat, show an emoji picker popup so the user can select an emoji as the group's icon/avatar. The chosen emoji is stored on the chat object and displayed as the group's avatar in the chat list.",
+        "notes": "The ts-group-icon input already exists as a plain text input. Replace with or augment with a popup emoji palette. Store selected emoji in chat.groupIcon. Render in renderChats() chat list item and in the arena header when in a group chat.",
+        "files_affected": ["playground/characters/index.html", "playground/characters/script/modules/ui.js", "playground/characters/style/char-editor.css"]
+      },
+      {
+        "id": "character-emoji-avatar-fallback",
+        "title": "Characters without avatar URLs use emoji placeholders",
+        "status": "in_progress",
+        "requested": "2026-05-14",
+        "description": "Characters that have no avatar_path or avatar field should display an appropriate emoji placeholder instead of a broken image or generic default.",
+        "notes": "buildAvatarHtml() already handles isEmoji() and falls back to 👤. The improvement: derive a fitting emoji from the character's tags, species, or name instead of always using 👤. A simple lookup table keyed on common tags (e.g. 'vampire' → 🧛, 'dragon' → 🐉, 'human' → 🧑, etc.) is sufficient.",
+        "files_affected": ["playground/characters/script/modules/ui.js"]
+      },
+      {
+        "id": "snapshot-progress-bar",
+        "title": "Image generation shows progress bar in thread while loading",
+        "status": "in_progress",
+        "requested": "2026-05-14",
+        "description": "When a snapshot/image is being generated, inject a placeholder message with an animated progress bar into the thread immediately. Replace it with the final image when generation completes.",
+        "notes": "_doSnapshot() and the image studio generation flow should call a new _injectImagePlaceholder() that appends a .img-msg--loading element. On complete, replace contents with the real image via _injectImageMessage() or in-place DOM swap. The placeholder should show a pulsing bar and a 'Generating…' label.",
+        "files_affected": ["playground/characters/script/modules/ui.js", "playground/characters/style/char-editor.css"]
+      },
+      {
+        "id": "image-redo-style-picker",
+        "title": "Image redo button + 5 style questions",
+        "status": "in_progress",
+        "requested": "2026-05-14",
+        "description": "Add a 'redo' button to each generated image message. Clicking it opens a 5-question style picker (each question offers 3 choices). Questions cover visual style/mood/format (not character editing): e.g. film type, lighting, composition, palette, texture. Answers modify the next generation's prompt style suffix. This applies to that redo only — not a global setting.",
+        "notes": "Questions should be predetermined (not AI-generated) for speed and reliability. 5 questions × 3 options each. Answers get mapped to prompt modifier strings and appended to the original prompt before re-calling generateImage(). Show style picker as a modal or inline below the image.",
+        "files_affected": ["playground/characters/script/modules/ui.js", "playground/characters/index.html", "playground/characters/style/char-editor.css"]
+      },
+      {
+        "id": "scenario-recommendation-engine",
+        "title": "Scenario preset AI recommendation via 3-step question wizard",
+        "status": "in_progress",
+        "requested": "2026-05-14",
+        "description": "Add a 'Find my scenario' option near the scenario preset selector. It runs a 3-step wizard where each question is generated by the LLM with the previous answer as context. After 3 answers, the LLM recommends 3 existing scenario presets from scenarios.json by ID. User picks one or skips.",
+        "notes": "Implementation strategy: create playground/characters/data/scenario-index.json with a compact summary of each scenario (id, name, 1-sentence summary, 3-5 tags). The recommendation LLM call only loads this index JSON (not full scenario text) to pick by id. Then the full scenario is looked up from the in-memory scenarios array. 3 questions total, each generated contextually. The wizard uses the existing showPickerModal pattern but extended to a multi-step flow.",
+        "files_affected": ["playground/characters/data/scenario-index.json (new)", "playground/characters/script/modules/ui.js", "playground/characters/index.html"]
+      },
+      {
+        "id": "codex-god-panel-expansion",
+        "title": "Scene Codex god panel: more one-click controls + admin actions",
+        "status": "in_progress",
+        "requested": "2026-05-14",
+        "description": "Expand the God Controls column in the Scene Codex panel with additional one-click scene directives and admin-level controls. Admin controls might include: force Overlord to re-describe scene, clear/reset scene meters, trigger a group chat recap, skip to next story beat, silence a character for N turns, etc.",
+        "notes": "Add to the codex-inject-btn row and wire via data-ri attribute pattern. Some admin actions (recap, silence, force Overlord) will need new handler branches in the codex inject btn listener. Keep controls minimal and single-purpose — user said 'minute and more simple not too complex but one-click'.",
+        "files_affected": ["playground/characters/index.html", "playground/characters/script/modules/ui.js"]
+      },
+      {
+        "id": "overlord-auto-triggers",
+        "title": "Overlord auto-fires set-scene for group chats and applicable moments",
+        "status": "in_progress",
+        "requested": "2026-05-14",
+        "description": "Overlord should automatically generate and inject a scene-setting block when: (1) a group chat is loaded/opened with no existing Overlord message, (2) the /scene command is run without specifying content, (3) a new group chat is created and characters are loaded. Also applicable to DM chats on first load if a world scenario is set.",
+        "notes": "The group opening scene injection already exists in the group wizard flow. Needs to also trigger on switchChat() when loading a group thread with history but no Overlord block, and on newChat() for groups. For DMs, fire on first load if state.reality.worldConfig.scenario is set and thread is new.",
+        "files_affected": ["playground/characters/script/modules/ui.js"]
+      },
+      {
+        "id": "export-import-full-instance",
+        "title": "Export/import entire Underdark instance",
+        "status": "deferred",
+        "requested": "2026-05-14",
+        "description": "A button to export the entire characters/ sub-app state — all characters, chats, realities, lorebooks, settings — as a single JSON/ZIP file that can be imported on any browser or device. API keys excluded.",
+        "notes": "Deferred — user noted 'circle back later'. Implementation will require: (1) IDB dump of all avatar/gallery blobs into base64 in the export, (2) localStorage state export, (3) import re-hydration of both. Complex but not blocked on anything. Flag for a future session.",
+        "files_affected": ["playground/characters/script/modules/ui.js", "playground/characters/script/modules/storage.js", "playground/characters/index.html"]
+      },
+      {
+        "id": "auto-save-backup-system",
+        "title": "Auto-save system for mindless backups",
+        "status": "deferred",
+        "requested": "2026-05-14",
+        "description": "Automatic periodic backup system so if browser cache is cleared or a new device is used, the state can be restored. Depends on export/import feature being built first.",
+        "notes": "Deferred — user said 'much later'. Likely involves scheduled export to a user-configured remote endpoint or a downloadable rolling backup. Requires export-import-full-instance to be done first.",
+        "files_affected": []
+      },
+      {
+        "id": "better-llm-response-formatting",
+        "title": "Better LLM response format convention for suggestions/context/examples",
+        "status": "not_started",
+        "requested": "2026-05-14",
+        "description": "Improve the convention for how the app sends prompts to the LLM when requesting suggestions, examples, or generated context (not RP), and how it parses/formats the response for display. Currently ad hoc per feature.",
+        "notes": "Consider a shared prompt template module and a response parser that handles structured outputs (JSON arrays, numbered lists, delimited options). Applies to: showPickerModal generateFn calls, scenario recommendation, spark field suggestions, relationship suggestions, amplify/avoid ideas. A consistent prompt format reduces token waste and parsing failures.",
+        "files_affected": ["playground/characters/script/modules/llm-engine.js (possibly)", "playground/characters/script/modules/ui.js"]
+      }
     ]
   },
   "system_audit": {

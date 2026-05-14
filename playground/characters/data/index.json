@@ -5,7 +5,7 @@
       "name": "Riley Blue",
       "tagline": "The heart of the cluster. Music is the only thing that doesn't lie.",
       "card_path": "data/cards/riley-blue.json",
-      "avatar_path": "🎧",
+      "avatar_path": "https://file.trap.lol/get/hRa095bcxePc/7C0E93.webp",
       "tags": ["Sense8", "Sensate", "Icelandic", "DJ", "Empath"],
       "lorebook_path": "data/lorebooks/sense8.json"
     },
@@ -32,7 +32,7 @@
       "name": "Harley Quinn",
       "tagline": "She left. Not because he changed. Because she did.",
       "card_path": "data/cards/harley-quinn.json",
-      "avatar_path": "🃏",
+      "avatar_path": "https://file.trap.lol/get/EutjWOF3exo9/BF28F9.webp",
       "tags": ["DC", "DCEU", "Female", "Antihero", "Gotham", "Chaotic", "Psychological", "Post-Trauma", "Comedy"],
       "lorebook_path": null
     },

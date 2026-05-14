@@ -7,7 +7,7 @@
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2306040A'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%23ef4444' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23ef4444'/%3E%3C/svg%3E" />
     <link rel="stylesheet" href="../../glass/style/style.css">
     <link rel="stylesheet" href="./style/style.css?v=70">
-    <link rel="stylesheet" href="./style/char-editor.css?v=12">
+    <link rel="stylesheet" href="./style/char-editor.css?v=13">
 </head>
 <body class="underdark-page">
 
@@ -306,6 +306,17 @@
                             <button class="codex-inject-btn" data-ri="slow" title="Slow the scene — more introspection"><i data-lucide="feather"></i> Slow Burn</button>
                             <button class="codex-inject-btn" data-ri="climax" title="Push toward scene climax"><i data-lucide="zap"></i> Climax</button>
                             <button class="codex-inject-btn" data-ri="afterglow" title="Aftercare / denouement beat"><i data-lucide="heart"></i> Afterglow</button>
+                            <button class="codex-inject-btn" data-ri="redirect" title="Redirect — steer scene away from current trajectory"><i data-lucide="corner-up-right"></i> Redirect</button>
+                            <button class="codex-inject-btn" data-ri="tension" title="Raise ambient tension without action"><i data-lucide="activity"></i> Raise Tension</button>
+                            <button class="codex-inject-btn" data-ri="reveal" title="Force a secret or hidden truth to surface"><i data-lucide="unlock"></i> Reveal</button>
+                            <button class="codex-inject-btn" data-ri="vulnerability" title="Push character to show emotional vulnerability"><i data-lucide="heart-crack"></i> Vulnerable</button>
+                        </div>
+                        <div class="scene-codex__label scene-codex__label--inner" style="margin-top:6px"><i data-lucide="settings"></i> Admin</div>
+                        <div class="codex-admin-grid">
+                            <button class="codex-admin-btn" id="codex-force-overlord" title="Force Overlord to re-describe the current scene"><i data-lucide="eye"></i> Re-describe Scene</button>
+                            <button class="codex-admin-btn" id="codex-recap" title="Generate a story recap of the thread so far"><i data-lucide="scroll-text"></i> Recap</button>
+                            <button class="codex-admin-btn" id="codex-reset-meters" title="Reset scene tension/intimacy/danger meters to neutral"><i data-lucide="refresh-ccw"></i> Reset Meters</button>
+                            <button class="codex-admin-btn" id="codex-snapshot-now" title="Generate a scene image right now"><i data-lucide="camera"></i> Snapshot</button>
                         </div>
                         <div class="scene-codex__custom-inject">
                             <input id="codex-custom-inject" type="text" class="codex-input" placeholder="Custom directive — fires on next send…">
@@ -1095,9 +1106,14 @@
 
         <div class="ts-field-group">
           <label class="ts-label">Scenario Preset</label>
-          <select id="ts-scenario-preset" class="control-select control-select--sm ts-select">
-            <option value="blank">— Inherit from Reality —</option>
-          </select>
+          <div class="ts-scenario-row">
+            <select id="ts-scenario-preset" class="control-select control-select--sm ts-select">
+              <option value="blank">— Inherit from Reality —</option>
+            </select>
+            <button type="button" id="ts-scenario-recommend" class="btn btn--ghost btn--sm ts-scenario-recommend-btn" title="Answer 3 questions to get scenario recommendations">
+              <i data-lucide="sparkles"></i> Find my scenario
+            </button>
+          </div>
         </div>
 
         <div class="ts-field-group">
@@ -1185,8 +1201,12 @@
             <input type="text" id="ts-group-name" class="ce-input" placeholder="e.g. The Rift Council…" maxlength="80">
           </div>
           <div class="ts-field-group">
-            <label class="ts-label">Group Icon <span class="ts-hint">emoji or 1-2 chars used as the avatar</span></label>
-            <input type="text" id="ts-group-icon" class="ce-input ts-group-icon-input" placeholder="⬡" maxlength="4">
+            <label class="ts-label">Group Icon</label>
+            <div class="ts-group-icon-row">
+              <button type="button" id="ts-group-icon-preview" class="ts-group-icon-btn" title="Pick emoji">⬡</button>
+              <input type="hidden" id="ts-group-icon" value="⬡">
+              <div id="ts-group-icon-picker" class="emoji-picker-popup" hidden></div>
+            </div>
           </div>
         </div>
 
