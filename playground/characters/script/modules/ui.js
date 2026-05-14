@@ -6792,8 +6792,9 @@ export function initUI() {
                     if (state.chat?.type === 'group' && state.chat?.botIds?.length > 1) {
                         const bgCfg = state.config.chatBackground;
                         if (!bgCfg?.preset && !bgCfg?.url) {
-                            const avUrl = await getAvatarUrl(botId, meta?.avatar_path || char?.avatar).catch(() => null);
-                            if (avUrl) updateCinematicBackground(avUrl);
+                            getAvatarUrl(botId, meta?.avatar_path || char?.avatar)
+                                .then(avUrl => { if (avUrl) updateCinematicBackground(avUrl); })
+                                .catch(() => null);
                         }
                     }
                     // Always update codex meters/digest after each bot message — keeps the
