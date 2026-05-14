@@ -471,7 +471,7 @@
   },
   "commits": [
     {
-      "hash": "PENDING",
+      "hash": "234e0f1",
       "date": "2026-05-14",
       "message": "feat(ui): Overlord block — cinematic narrator band replacing system message bubble",
       "scope": "playground/characters — ui.js, char-editor.css, index.html, main.js",
