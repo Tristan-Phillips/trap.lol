@@ -471,7 +471,7 @@
   },
   "commits": [
     {
-      "hash": "PENDING",
+      "hash": "62f1050",
       "date": "2026-05-14",
       "message": "feat(ui): choice picker modal, spark/suggest via 3-option AI picker, fix image download, improve scene-intro style",
       "scope": "playground/characters — ui.js, index.html, char-editor.css, main.js",
