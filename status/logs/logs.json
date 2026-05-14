@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.3.8",
+    "schema_version": "1.3.9",
     "last_updated": "2026-05-14",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -470,6 +470,15 @@
     ]
   },
   "commits": [
+    {
+      "hash": "PENDING",
+      "date": "2026-05-14",
+      "message": "fix: missing comma in index.json after Lady Jessica avatar_path update",
+      "scope": "playground/characters — data/index.json",
+      "impact": "critical",
+      "files": ["playground/characters/data/index.json", "status/logs/logs.json"],
+      "why": "Previous session updated Lady Jessica's avatar_path but dropped the trailing comma, producing invalid JSON — loadManifest() silently swallowed the parse error so all manifest characters failed to load on both local and production."
+    },
     {
       "hash": "a19a4c5",
       "date": "2026-05-14",
@@ -1235,6 +1244,22 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-14",
+      "agent": "Claude Sonnet 4.6",
+      "type": "bug_fix",
+      "summary": "Diagnosed and fixed blank arena / JS not loading. Root cause was a missing comma in data/index.json after Lady Jessica's avatar_path was updated last session — invalid JSON caused loadManifest() to silently fail, preventing all manifest characters from loading. Also confirmed CDN shard paths (cdn.trap.lol) are correct for production and verified all 10 JS modules return HTTP 200 on live. Clarified that local dev requires ../../shards/ paths (gitignored) per CLAUDE.md protocol while production uses cdn.trap.lol.",
+      "decisions": [
+        "JSON validation must be run on any data file edited as part of a session — python3 -m json.tool is the quick check.",
+        "loadManifest() silently catches parse errors so invalid JSON in index.json doesn't crash the app but does silently drop all manifest characters.",
+        "cdn.trap.lol returns 403 for localhost origins — local dev MUST use ../../shards/ per CLAUDE.md; production uses cdn.trap.lol URLs in the committed HTML.",
+        "Committed production HTML should always use cdn.trap.lol shard paths; the CLAUDE.md protocol for local dev (swap to /shards/ temporarily, restore before push) applies here too."
+      ],
+      "rules_reinforced": [
+        "Always run json.tool validation after editing any *.json file — a missing comma silently breaks manifest loading.",
+        "CLAUDE.md local dev protocol applies to index.html shard tags too: local = ../../shards/, production = cdn.trap.lol — swap before pushing, restore after."
+      ]
+    },
     {
       "date": "2026-05-14",
       "agent": "Claude Sonnet 4.6",
