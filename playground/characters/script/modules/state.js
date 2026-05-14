@@ -149,6 +149,15 @@ export function defaultGroupConfig() {
 
         // Voice/tone uniformity: 'distinct' (each char fully their own) | 'harmonised' (slight blending for cohesion)
         voiceMode: 'distinct',
+
+        // Narrative tone config — injected into every character's system context for this thread
+        narrativeTone: {
+            sexualEnergy: '',   // e.g. "slow burn, unresolved desire"
+            toneTags:     '',   // comma-separated tone keywords e.g. "dark,erotic,melancholic"
+            amplify:      '',   // e.g. "power dynamics, sensory detail"
+            avoid:        '',   // e.g. "gore, fourth-wall breaks"
+            pacing:       '',   // e.g. "balanced prose, moderate length"
+        },
     };
 }
 

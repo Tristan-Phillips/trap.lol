@@ -8,7 +8,7 @@
 
 /* ── Layout Components ── */
 @import './sidebar.css';
-@import './arena.css?v=3';
+@import './arena.css?v=4';
 @import './terminal.css';
 @import './chat.css';
 

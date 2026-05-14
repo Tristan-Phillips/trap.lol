@@ -6,8 +6,8 @@
     <title>The Underdark // Reality Matrix</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2306040A'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%23ef4444' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23ef4444'/%3E%3C/svg%3E" />
     <link rel="stylesheet" href="../../glass/style/style.css">
-    <link rel="stylesheet" href="./style/style.css?v=69">
-    <link rel="stylesheet" href="./style/char-editor.css?v=8">
+    <link rel="stylesheet" href="./style/style.css?v=70">
+    <link rel="stylesheet" href="./style/char-editor.css?v=9">
 </head>
 <body class="underdark-page">
 
@@ -1324,10 +1324,83 @@
           </div>
         </div>
 
-        <!-- Isekai / World questions (dynamically populated based on scenario + chars selected) -->
+        <!-- Narrative Config -->
+        <div class="ts-group-section" id="ts-narrative-section">
+          <div class="ts-group-section__label"><i data-lucide="flame"></i> Narrative Tone</div>
+          <p class="ts-group-desc">Set the flavour and energy that governs how every character writes in this thread. These directives are injected into every response.</p>
+
+          <!-- Sexual energy -->
+          <div class="ts-field-group">
+            <div class="ts-label-row">
+              <label class="ts-label">Sexual Energy</label>
+              <div class="ts-quick-pills" id="ts-sexual-energy-pills">
+                <button class="ts-quick-pill" data-target="ts-sexual-energy" data-val="none">none</button>
+                <button class="ts-quick-pill" data-target="ts-sexual-energy" data-val="subtle tension">subtle</button>
+                <button class="ts-quick-pill" data-target="ts-sexual-energy" data-val="slow burn, unresolved desire">slow burn</button>
+                <button class="ts-quick-pill" data-target="ts-sexual-energy" data-val="charged, flirtatious, physically aware">charged</button>
+                <button class="ts-quick-pill" data-target="ts-sexual-energy" data-val="explicit, raw, uninhibited">explicit</button>
+              </div>
+            </div>
+            <input type="text" id="ts-sexual-energy" class="ce-input" placeholder="e.g. slow burn desire, explicit but tasteful, purely romantic…">
+          </div>
+
+          <!-- Narrative tone chips -->
+          <div class="ts-field-group">
+            <div class="ts-label-row">
+              <label class="ts-label">Tone &amp; Atmosphere</label>
+              <div class="ts-quick-pills" id="ts-tone-pills">
+                <button class="ts-quick-pill ts-quick-pill--toggle" data-field="ts-tone-tags" data-val="dark">dark</button>
+                <button class="ts-quick-pill ts-quick-pill--toggle" data-field="ts-tone-tags" data-val="erotic">erotic</button>
+                <button class="ts-quick-pill ts-quick-pill--toggle" data-field="ts-tone-tags" data-val="psychologically complex">psycho</button>
+                <button class="ts-quick-pill ts-quick-pill--toggle" data-field="ts-tone-tags" data-val="violent tension">violent</button>
+                <button class="ts-quick-pill ts-quick-pill--toggle" data-field="ts-tone-tags" data-val="romantic">romantic</button>
+                <button class="ts-quick-pill ts-quick-pill--toggle" data-field="ts-tone-tags" data-val="comedic">comedic</button>
+                <button class="ts-quick-pill ts-quick-pill--toggle" data-field="ts-tone-tags" data-val="melancholic">melancholic</button>
+                <button class="ts-quick-pill ts-quick-pill--toggle" data-field="ts-tone-tags" data-val="surreal">surreal</button>
+              </div>
+            </div>
+            <input type="hidden" id="ts-tone-tags" value="">
+          </div>
+
+          <!-- Amplify -->
+          <div class="ts-field-group">
+            <div class="ts-label-row">
+              <label class="ts-label">Amplify <span class="ts-hint">lean into these</span></label>
+              <button class="ts-gen-scene-btn ts-gen-ideas-btn" data-gen="amplify" title="Get AI ideas for what to amplify">
+                <i data-lucide="sparkles"></i> ideas
+              </button>
+            </div>
+            <input type="text" id="ts-amplify" class="ce-input" placeholder="e.g. physical descriptions, power play, forbidden tension, sensory detail…">
+          </div>
+
+          <!-- Avoid -->
+          <div class="ts-field-group">
+            <div class="ts-label-row">
+              <label class="ts-label">Avoid <span class="ts-hint">hard limits for this thread</span></label>
+              <button class="ts-gen-scene-btn ts-gen-ideas-btn" data-gen="avoid" title="Get AI ideas for what to exclude">
+                <i data-lucide="sparkles"></i> ideas
+              </button>
+            </div>
+            <input type="text" id="ts-avoid" class="ce-input" placeholder="e.g. gore, non-con framing, death of named characters, breaking fourth wall…">
+          </div>
+
+          <!-- Pacing -->
+          <div class="ts-field-group">
+            <label class="ts-label">Response Pacing</label>
+            <div class="ts-quick-pills" style="margin-top:4px;">
+              <button class="ts-quick-pill" data-target="ts-pacing" data-val="short, punchy, reactive">punchy</button>
+              <button class="ts-quick-pill" data-target="ts-pacing" data-val="balanced prose, moderate length">balanced</button>
+              <button class="ts-quick-pill" data-target="ts-pacing" data-val="long, immersive, rich descriptions">immersive</button>
+              <button class="ts-quick-pill" data-target="ts-pacing" data-val="cinematic, scene-structured">cinematic</button>
+            </div>
+            <input type="text" id="ts-pacing" class="ce-input" style="margin-top:6px;" placeholder="e.g. dense prose, each reply advances plot, breathe between action beats…">
+          </div>
+        </div>
+
+        <!-- Context questions (dynamically generated based on characters + scenario) -->
         <div class="ts-group-section" id="ts-isekai-section">
-          <div class="ts-group-section__label"><i data-lucide="map"></i> World Binding</div>
-          <p class="ts-group-desc">Answer these to anchor your group in the world. The AI uses your answers to set the stage for every member.</p>
+          <div class="ts-group-section__label"><i data-lucide="map"></i> Context Questions <span class="ts-hint">AI-generated for these characters</span></div>
+          <p class="ts-group-desc">Answer these to anchor your group. The AI tailors these questions to the specific characters you've selected — not a generic template.</p>
           <div id="ts-isekai-questions" class="ts-isekai-questions">
             <!-- Populated dynamically by JS once characters are selected -->
             <div class="ts-isekai-placeholder">Select characters first — world questions appear here based on who you've invited.</div>
@@ -1338,11 +1411,17 @@
         <div class="ts-group-section">
           <div class="ts-group-section__label" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;">
             <span><i data-lucide="scroll"></i> Opening Scene <span class="ts-hint">optional</span></span>
-            <button id="ts-gen-scene-btn" class="ts-gen-scene-btn" title="Draft opening scene with AI using the characters and world answers above">
-              <i data-lucide="sparkles"></i> Generate with AI
-            </button>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <button id="ts-gen-scene-ideas-btn" class="ts-gen-scene-btn" title="Get a few short scene concept ideas to spark your own writing">
+                <i data-lucide="lightbulb"></i> Spark ideas
+              </button>
+              <button id="ts-gen-scene-btn" class="ts-gen-scene-btn" title="Draft a full opening scene with AI using everything set above">
+                <i data-lucide="sparkles"></i> Generate
+              </button>
+            </div>
           </div>
           <p class="ts-group-desc">A narrator-voice intro injected as the first system message when the group opens. Sets the scene before anyone speaks.</p>
+          <div id="ts-scene-ideas" class="ts-scene-ideas" hidden></div>
           <textarea id="ts-group-intro" class="control-textarea ts-textarea" rows="4" placeholder="The tavern falls silent as the three of them exchange glances across the firelit table…"></textarea>
         </div>
 
@@ -2892,7 +2971,7 @@
 
 <div id="toast-container" class="toast-container"></div>
 <script src="../../shards/lucide.min.js"></script><script src="../../shards/marked.min.js"></script><script src="../../shards/purify.min.js"></script>
-<script type="module" src="./script/main.js?v=55"></script>
+<script type="module" src="./script/main.js?v=56"></script>
 <!-- ── Wallhaven Arena ── -->
 <script src="./script/modules/wallhaven.js"></script>
 

@@ -23,7 +23,7 @@
       "name": "Lady Jessica",
       "tagline": "She disobeyed the Sisterhood once. The consequences are still unfolding.",
       "card_path": "data/cards/lady-jessica.json",
-      "avatar_path": "🏜️",
+      "avatar_path": "https://file.trap.lol/get/59Qu5jfaCmAr/AB0F25.webp"
       "tags": ["Dune", "Bene Gesserit", "Female", "Nobility", "Mature", "Political", "Literary"],
       "lorebook_path": "data/lorebooks/dune-arrakis.json"
     },

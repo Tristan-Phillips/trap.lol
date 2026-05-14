@@ -771,6 +771,18 @@ export function buildPayload(ctx) {
             groupContextParts.push(`[VOICE DIRECTIVE]\nWhile remaining yourself, be aware that this group shares a bond — allow a subtle tonal coherence with the others in the group. You may echo themes, finish each other's metaphors, or harmonise emotionally where it feels organic. Do not imitate or ventriloquise the others.`);
         }
 
+        // Narrative tone config — governs the flavour of every response in this thread
+        const nt = gc.narrativeTone;
+        if (nt && (nt.sexualEnergy || nt.toneTags || nt.amplify || nt.avoid || nt.pacing)) {
+            const toneLines = [];
+            if (nt.sexualEnergy) toneLines.push(`Sexual energy: ${nt.sexualEnergy}`);
+            if (nt.toneTags)     toneLines.push(`Tone tags: ${nt.toneTags}`);
+            if (nt.amplify)      toneLines.push(`Lean into: ${nt.amplify}`);
+            if (nt.avoid)        toneLines.push(`Avoid: ${nt.avoid}`);
+            if (nt.pacing)       toneLines.push(`Pacing / response style: ${nt.pacing}`);
+            groupContextParts.push(`[NARRATIVE TONE DIRECTIVE — THIS THREAD]\nThe following narrative rules apply to every response you write in this thread. Treat them as hard constraints that override your defaults:\n${toneLines.join('\n')}`);
+        }
+
         if (groupContextParts.length) {
             messages.push({ role: 'system', content: groupContextParts.join('\n\n') });
         }
@@ -847,7 +859,9 @@ export function buildPayload(ctx) {
     }
 
     // 6. Assemble payload
-    const model = override.modelOverride || config.model || 'deepseek-r1';
+    // Thread-level model (tc.model) takes priority over per-character modelOverride,
+    // since the thread setting is the user's explicit "this thread uses this model" choice.
+    const model = (ctx.threadModelOverride || override.modelOverride || config.model || 'deepseek-r1');
 
     return {
         model,

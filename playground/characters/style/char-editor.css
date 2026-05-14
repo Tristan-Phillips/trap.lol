@@ -1422,6 +1422,74 @@
     line-height: 1.5;
 }
 
+/* ── Narrative config label row (label + action button on same line) ── */
+.ts-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 5px;
+}
+.ts-label-row .ts-label { margin: 0; }
+
+/* ── Quick-fill pill row ── */
+.ts-quick-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 5px;
+}
+.ts-quick-pill {
+    padding: 3px 9px;
+    background: rgba(168,85,247,0.08);
+    border: 1px solid rgba(168,85,247,0.2);
+    border-radius: 20px;
+    color: rgba(200,180,230,0.65);
+    font-size: 0.69rem;
+    font-family: var(--font-mono, monospace);
+    cursor: pointer;
+    transition: background 0.14s, border-color 0.14s, color 0.14s;
+    white-space: nowrap;
+}
+.ts-quick-pill:hover { background: rgba(168,85,247,0.18); border-color: rgba(168,85,247,0.4); color: #e9d5ff; }
+.ts-quick-pill--active { background: rgba(168,85,247,0.25); border-color: rgba(168,85,247,0.55); color: #f3e8ff; }
+
+/* ── Scene ideas panel ── */
+.ts-scene-ideas {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+.ts-scene-ideas__label {
+    font-size: 0.7rem;
+    color: rgba(168,85,247,0.55);
+    font-family: var(--font-mono, monospace);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+.ts-scene-idea-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 8px 10px;
+    background: rgba(168,85,247,0.07);
+    border: 1px solid rgba(168,85,247,0.18);
+    border-radius: 7px;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.14s, border-color 0.14s;
+}
+.ts-scene-idea-card:hover { background: rgba(168,85,247,0.14); border-color: rgba(168,85,247,0.35); }
+.ts-scene-idea-card__num {
+    font-size: 0.65rem;
+    font-family: var(--font-mono, monospace);
+    color: rgba(168,85,247,0.55);
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+.ts-scene-idea-card__text { font-size: 0.78rem; color: rgba(220,205,245,0.85); line-height: 1.45; }
+
 .ts-gen-scene-btn {
     display: inline-flex;
     align-items: center;

@@ -1155,6 +1155,13 @@ export function initUI() {
         if ($gName)  $gName.value  = '';
         if ($gIcon)  $gIcon.value  = '';
         if ($gIntro) $gIntro.value = '';
+        // Reset narrative tone fields
+        ['ts-sexual-energy','ts-tone-tags','ts-amplify','ts-avoid','ts-pacing'].forEach(id => {
+            const $f = qs(`#${id}`); if ($f) $f.value = '';
+        });
+        qsa('.ts-quick-pill--active').forEach(p => p.classList.remove('ts-quick-pill--active'));
+        const $sceneIdeas = qs('#ts-scene-ideas');
+        if ($sceneIdeas) { $sceneIdeas.hidden = true; $sceneIdeas.innerHTML = ''; }
         const radiosDefault = { 'ts-mem-frame': 'past', 'ts-grp-awareness': 'aware', 'ts-turn': 'auto', 'ts-voice': 'distinct' };
         Object.entries(radiosDefault).forEach(([name, val]) => {
             const $r = qs(`input[name="${name}"][value="${val}"]`);
@@ -1351,6 +1358,80 @@ export function initUI() {
         }
     }
 
+    // ── Render question fields with per-field spark buttons ─────────────────────
+    function _tsRenderQuestionFields($container, questions, existing = {}) {
+        $container.innerHTML = questions.map(q => `
+            <div class="ts-field-group">
+                <div class="ts-label-row">
+                    <label class="ts-label">${esc(q.label)}</label>
+                    <button class="ts-gen-scene-btn ts-spark-field-btn" data-qkey="${esc(q.key)}" data-qlabel="${esc(q.label)}" title="Spark an idea for this field">
+                        <i data-lucide="sparkles"></i> spark
+                    </button>
+                </div>
+                <textarea class="control-textarea ts-textarea ts-isekai-field" data-key="${esc(q.key)}" rows="2"
+                    placeholder="${esc(q.placeholder)}">${esc(existing[q.key] || '')}</textarea>
+            </div>`).join('');
+        lucideRefresh($container);
+
+        // Wire spark buttons
+        qsa('.ts-spark-field-btn', $container).forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const key    = btn.dataset.qkey;
+                const label  = btn.dataset.qlabel;
+                const $ta    = $container.querySelector(`.ts-isekai-field[data-key="${key}"]`);
+                if (!$ta) return;
+
+                btn.disabled = true;
+                btn.innerHTML = '<i data-lucide="loader-2"></i>';
+                lucideRefresh(btn);
+
+                try {
+                    const charNames = Array.from(_tsSelectedIds).map(id => {
+                        const c = state.characters.find(x => x.id === id);
+                        return c?.name || id;
+                    }).join(', ');
+
+                    const scenario = qs('#ts-scenario-text')?.value.trim()
+                        || state.reality?.worldConfig?.scenario || '';
+
+                    // Gather other filled answers as context
+                    const otherAnswers = [];
+                    qsa('.ts-isekai-field', $container).forEach(f => {
+                        if (f.dataset.key !== key && f.value.trim()) {
+                            otherAnswers.push(`${f.dataset.key}: ${f.value.trim()}`);
+                        }
+                    });
+
+                    const payload = {
+                        model: state.config.model || 'deepseek-r1',
+                        messages: [{
+                            role: 'user',
+                            content: [
+                                `Characters: ${charNames}`,
+                                scenario ? `Scenario: ${scenario}` : '',
+                                otherAnswers.length ? `Already answered:\n${otherAnswers.join('\n')}` : '',
+                                ``,
+                                `For the question "${label}", write ONE evocative 1–2 sentence answer.`,
+                                `Be specific, vivid, and rooted in these characters. No preamble.`
+                            ].filter(Boolean).join('\n')
+                        }],
+                        max_tokens: 100,
+                        temperature: 0.9,
+                    };
+
+                    const { text } = await fetchCompletion(payload);
+                    if (text?.trim()) $ta.value = text.trim();
+                } catch (e) {
+                    showToast('Spark failed', 'warn');
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i data-lucide="sparkles"></i> spark';
+                    lucideRefresh(btn);
+                }
+            });
+        });
+    }
+
     // ── Isekai world-binding questions (LLM-generated per character selection) ──
     let _isekaiGenSig = '';     // "id1|id2|…" of the last successful gen
     let _isekaiGenRunning = false;
@@ -1381,7 +1462,7 @@ export function initUI() {
         if (_isekaiGenRunning) return;
         _isekaiGenRunning = true;
 
-        $container.innerHTML = '<div class="ts-isekai-placeholder ts-isekai-placeholder--generating"><i data-lucide="loader-2"></i> Crafting world questions for these characters…</div>';
+        $container.innerHTML = '<div class="ts-isekai-placeholder ts-isekai-placeholder--generating"><i data-lucide="loader-2"></i> Generating questions for these characters…</div>';
         lucideRefresh($container);
 
         try {
@@ -1404,18 +1485,20 @@ export function initUI() {
                 `You are designing a roleplay group chat setup wizard.`,
                 `The following characters have been selected:`,
                 charSummaries,
-                scenario ? `The scenario/world: ${scenario}` : '',
+                scenario ? `Context / scenario: ${scenario}` : '',
                 ``,
-                `Generate exactly 5 short, specific, evocative world-binding questions that will help the player define the context of this group encounter.`,
-                `The questions should feel tailored to THESE specific characters — not generic fantasy tropes.`,
-                `Each question should draw out: setting, relationships, tension, motivation, or stakes — specific to this group.`,
+                `Generate exactly 5 short, specific, evocative context questions to help the player define this group encounter.`,
+                `The questions must be tailored to THESE characters specifically — not generic templates.`,
+                `Questions can be about: where they are, why they're together, what tensions exist, what the player's role is, what's at stake, how they relate to each other.`,
+                `Do NOT assume the scenario is fantasy or "isekai" — it could be anything (modern, sci-fi, slice-of-life, erotic, etc).`,
+                `Draw the questions naturally from the characters' personalities, worlds, and the scenario if given.`,
                 ``,
                 `Respond ONLY with a JSON array of 5 objects, no markdown fences:`,
                 `[`,
-                `  {"key":"q1","label":"Short question label","placeholder":"An evocative example answer (2–6 words)"},`,
+                `  {"key":"q1","label":"Short question label (max 55 chars)","placeholder":"An evocative example answer (max 55 chars)"},`,
                 `  ...`,
                 `]`,
-                `Keys must be: q1, q2, q3, q4, q5. Labels max 60 chars. Placeholders max 60 chars.`
+                `Keys must be: q1, q2, q3, q4, q5.`
             ].filter(Boolean).join('\n');
 
             const payload = {
@@ -1434,23 +1517,13 @@ export function initUI() {
             if (!Array.isArray(questions) || !questions.length) throw new Error('Bad response format');
 
             _isekaiGenSig = sig;
-            $container.innerHTML = questions.map(q => `
-                <div class="ts-field-group">
-                    <label class="ts-label">${esc(q.label)}</label>
-                    <textarea class="control-textarea ts-textarea ts-isekai-field" data-key="${esc(q.key)}" rows="2"
-                        placeholder="${esc(q.placeholder)}">${esc(existing[q.key] || '')}</textarea>
-                </div>`).join('');
+            _tsRenderQuestionFields($container, questions, existing);
 
         } catch (e) {
             console.warn('[isekai questions] LLM failed, falling back to static', e);
             // Fall back to static question bank
             _isekaiGenSig = sig;
-            $container.innerHTML = _ISEKAI_QUESTIONS.map(q => `
-                <div class="ts-field-group">
-                    <label class="ts-label">${esc(q.label)}</label>
-                    <textarea class="control-textarea ts-textarea ts-isekai-field" data-key="${esc(q.key)}" rows="2"
-                        placeholder="${esc(q.placeholder)}">${esc(existing[q.key] || '')}</textarea>
-                </div>`).join('');
+            _tsRenderQuestionFields($container, _ISEKAI_QUESTIONS, existing);
         } finally {
             _isekaiGenRunning = false;
         }
@@ -1492,90 +1565,232 @@ export function initUI() {
                     <span class="ts-rel-row__x">↔</span>
                     ${buildAvatarHtml(avB, 'ts-rel-avatar')}
                     <span class="ts-rel-row__name">${nameB}</span>
+                    <button class="ts-gen-scene-btn ts-spark-rel-btn" data-pair="${esc(pairKey)}" data-na="${nameA}" data-nb="${nameB}" title="Suggest a relationship dynamic" style="margin-left:auto;">
+                        <i data-lucide="sparkles"></i> suggest
+                    </button>
                 </div>
                 <input type="text" class="ce-input ts-rel-field" data-pair="${esc(pairKey)}"
                     value="${esc(existing[pairKey] || '')}"
                     placeholder="e.g. Rivals with unspoken respect, former lovers, sworn enemies…">
             </div>`;
         }).join('');
+        lucideRefresh($grid);
+
+        // Wire suggest buttons
+        qsa('.ts-spark-rel-btn', $grid).forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const pairKey = btn.dataset.pair;
+                const nameA   = btn.dataset.na;
+                const nameB   = btn.dataset.nb;
+                const $inp    = $grid.querySelector(`.ts-rel-field[data-pair="${pairKey}"]`);
+                if (!$inp) return;
+
+                btn.disabled = true;
+                btn.innerHTML = '<i data-lucide="loader-2"></i>';
+                lucideRefresh(btn);
+
+                try {
+                    const scenario = qs('#ts-scenario-text')?.value.trim()
+                        || state.reality?.worldConfig?.scenario || '';
+                    const charACard = state.loadedCharacters[pairKey.split('__')[0]];
+                    const charBCard = state.loadedCharacters[pairKey.split('__')[1]];
+                    const descA = (charACard?.description || charACard?.personality || '').slice(0, 200);
+                    const descB = (charBCard?.description || charBCard?.personality || '').slice(0, 200);
+
+                    const payload = {
+                        model: state.config.model || 'deepseek-r1',
+                        messages: [{
+                            role: 'user',
+                            content: [
+                                `Characters:`,
+                                `${nameA}: ${descA}`,
+                                `${nameB}: ${descB}`,
+                                scenario ? `Scenario: ${scenario}` : '',
+                                ``,
+                                `Describe the relationship between ${nameA} and ${nameB} in one punchy phrase (max 12 words).`,
+                                `Be specific and emotionally charged. No preamble, just the phrase.`
+                            ].filter(Boolean).join('\n')
+                        }],
+                        max_tokens: 60,
+                        temperature: 0.92,
+                    };
+
+                    const { text } = await fetchCompletion(payload);
+                    if (text?.trim()) $inp.value = text.trim().replace(/^["']|["']$/g, '');
+                } catch (e) {
+                    showToast('Suggest failed', 'warn');
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i data-lucide="sparkles"></i> suggest';
+                    lucideRefresh(btn);
+                }
+            });
+        });
+    }
+
+    // ── Shared scene context builder (used by Generate + Spark ideas) ───────────
+    async function _tsGatherSceneContext() {
+        const charLines = [];
+        for (const id of _tsSelectedIds) {
+            await loadCharacterCard(id);
+            const meta = state.characters.find(c => c.id === id);
+            const card = state.loadedCharacters[id];
+            const name = card?.name || meta?.name || id;
+            const personality = (card?.personality || card?.description || '').slice(0, 300).trim();
+            const world = card?.world || '';
+            charLines.push(`${name}${world ? ` (${world})` : ''}${personality ? ': ' + personality : ''}`);
+        }
+
+        // Collect all filled isekai answers — read label from nearest ts-label in the DOM
+        const isekaiParts = [];
+        qsa('.ts-isekai-field').forEach(f => {
+            const v = f.value.trim();
+            if (!v) return;
+            const label = f.closest('.ts-field-group')?.querySelector('.ts-label')?.textContent?.trim() || f.dataset.key;
+            isekaiParts.push(`${label}: ${v}`);
+        });
+
+        const scenario = qs('#ts-scenario-text')?.value.trim()
+            || state.reality?.worldConfig?.scenario || '';
+
+        const userName = qs('#ts-user-name')?.value.trim() || state.config.userName || 'the player';
+
+        // Narrative tone
+        const tone = {
+            sexualEnergy: qs('#ts-sexual-energy')?.value.trim() || '',
+            toneTags:     qs('#ts-tone-tags')?.value.trim() || '',
+            amplify:      qs('#ts-amplify')?.value.trim() || '',
+            avoid:        qs('#ts-avoid')?.value.trim() || '',
+            pacing:       qs('#ts-pacing')?.value.trim() || '',
+        };
+        const toneLines = [
+            tone.sexualEnergy && `Sexual energy: ${tone.sexualEnergy}`,
+            tone.toneTags     && `Tone: ${tone.toneTags}`,
+            tone.amplify      && `Lean into: ${tone.amplify}`,
+            tone.avoid        && `Avoid: ${tone.avoid}`,
+            tone.pacing       && `Pacing: ${tone.pacing}`,
+        ].filter(Boolean);
+
+        return { charLines, isekaiParts, scenario, userName, toneLines };
     }
 
     async function _tsGenerateOpeningScene() {
-        const $btn     = qs('#ts-gen-scene-btn');
-        const $ta      = qs('#ts-group-intro');
+        const $btn = qs('#ts-gen-scene-btn');
+        const $ta  = qs('#ts-group-intro');
         if (!$ta) return;
-
         if (!_tsSelectedIds.size) { showToast('Select characters first', 'warn'); return; }
 
-        $btn && ($btn.disabled = true, $btn.innerHTML = '<i data-lucide="loader-2"></i> Generating…');
+        $btn && ($btn.disabled = true, $btn.innerHTML = '<i data-lucide="loader-2"></i> Writing…');
         if ($btn) lucideRefresh($btn);
 
         try {
-            // Build a condensed character manifest for the prompt
-            const charLines = [];
-            for (const id of _tsSelectedIds) {
-                await loadCharacterCard(id);
-                const meta = state.characters.find(c => c.id === id);
-                const card = state.loadedCharacters[id];
-                const name = card?.name || meta?.name || id;
-                const desc = (card?.description || card?.personality || '').slice(0, 300).trim();
-                const world = card?.world || '';
-                charLines.push(`${name}${world ? ` (from: ${world})` : ''}${desc ? ' — ' + desc : ''}`);
-            }
-
-            // Collect isekai answers
-            const isekaiParts = [];
-            qsa('.ts-isekai-field').forEach(f => {
-                const q = _ISEKAI_QUESTIONS.find(q => q.key === f.dataset.key);
-                const v = f.value.trim();
-                if (q && v) isekaiParts.push(`${q.label}: ${v}`);
-            });
-
-            const scenario = qs('#ts-scenario-text')?.value.trim()
-                || state.reality?.worldConfig?.scenario
-                || '';
-
-            const userName = qs('#ts-user-name')?.value.trim() || state.config.userName || 'the player';
+            const { charLines, isekaiParts, scenario, userName, toneLines } = await _tsGatherSceneContext();
 
             const prompt = [
-                `Write an atmospheric, narrator-voice opening scene for a group roleplay.`,
+                `Write an immersive, narrator-voice opening scene for a group roleplay. This is the entry point — what the player sees before anyone speaks.`,
                 ``,
                 `CHARACTERS PRESENT:\n${charLines.map(l => `  • ${l}`).join('\n')}`,
                 scenario ? `WORLD / SCENARIO:\n${scenario}` : '',
                 isekaiParts.length ? `WORLD CONTEXT:\n${isekaiParts.map(p => `  ${p}`).join('\n')}` : '',
-                `THE PLAYER IS: ${userName}`,
+                `THE PLAYER IS KNOWN AS: ${userName}`,
+                toneLines.length ? `NARRATIVE DIRECTIVES (hard constraints):\n${toneLines.map(l => `  ${l}`).join('\n')}` : '',
                 ``,
-                `RULES:`,
-                `- 2–4 vivid paragraphs, no dialogue`,
-                `- Third-person omniscient narrator voice`,
-                `- Ground the reader in place, atmosphere, and who is here`,
-                `- Hint at the tensions and dynamics without resolving them`,
-                `- End on a moment that invites action — leave it open`,
-                `- Do not address the player directly`,
-                `- No meta-commentary, no "in this story…" framing`,
+                `WRITING RULES:`,
+                `- 3–5 rich paragraphs. No dialogue — all description and atmosphere`,
+                `- Third-person omniscient narrator voice. Sensory, grounded`,
+                `- Open with the physical space — make the reader feel it`,
+                `- Introduce each character through gesture, presence, or detail — never by narrating their biography`,
+                `- Honour the narrative directives above precisely — they override your defaults`,
+                `- Hint at tensions and dynamics; resolve nothing`,
+                `- End on a charged, open beat — an action waiting to begin`,
+                `- Do not address the player directly. Do not use second-person ("you")`,
+                `- No meta commentary, no "in this story" framing`,
             ].filter(Boolean).join('\n');
 
-            const payload = {
+            const { text } = await fetchCompletion({
                 model:    state.config.model || 'deepseek-r1',
                 messages: [
-                    { role: 'system', content: 'You are a master narrative writer for immersive roleplay. Write vivid, grounded, evocative scene-setting prose. Do not explain your writing.' },
+                    { role: 'system', content: 'You are a master of literary roleplay scene-setting. You write with precision and atmosphere. Honour the narrative directives given to you exactly. Do not explain, preface, or comment on your writing.' },
                     { role: 'user',   content: prompt }
                 ],
-                max_tokens:  600,
-                temperature: 0.88,
-            };
+                max_tokens:  900,
+                temperature: 0.9,
+            });
 
-            const { text } = await fetchCompletion(payload);
             if (text) {
                 $ta.value = text.trim();
-                showToast('Opening scene drafted — edit freely', 'success', 3000);
+                qs('#ts-scene-ideas') && (qs('#ts-scene-ideas').hidden = true);
+                showToast('Scene written — edit freely', 'success', 3000);
             }
         } catch (e) {
             showToast(`Scene gen failed: ${e.message}`, 'error', 5000);
         } finally {
             if ($btn) {
                 $btn.disabled = false;
-                $btn.innerHTML = '<i data-lucide="sparkles"></i> Generate with AI';
+                $btn.innerHTML = '<i data-lucide="sparkles"></i> Generate';
+                lucideRefresh($btn);
+            }
+        }
+    }
+
+    async function _tsSparkSceneIdeas() {
+        const $btn   = qs('#ts-gen-scene-ideas-btn');
+        const $ideas = qs('#ts-scene-ideas');
+        const $ta    = qs('#ts-group-intro');
+        if (!$ideas || !$ta) return;
+        if (!_tsSelectedIds.size) { showToast('Select characters first', 'warn'); return; }
+
+        $btn && ($btn.disabled = true, $btn.innerHTML = '<i data-lucide="loader-2"></i>');
+        if ($btn) lucideRefresh($btn);
+
+        try {
+            const { charLines, isekaiParts, scenario, toneLines } = await _tsGatherSceneContext();
+
+            const prompt = [
+                `Brainstorm 4 short, distinct opening scene concepts for a group roleplay.`,
+                `CHARACTERS: ${charLines.map(l => l.split(':')[0]).join(', ')}`,
+                scenario ? `SCENARIO: ${scenario}` : '',
+                isekaiParts.length ? `CONTEXT: ${isekaiParts.slice(0, 3).join(' | ')}` : '',
+                toneLines.length ? `TONE: ${toneLines.join(' | ')}` : '',
+                ``,
+                `Each concept = 1–2 sentences MAX. Terse, evocative, different from each other.`,
+                `Respond ONLY with a JSON array of 4 strings. No markdown, no preamble.`,
+            ].filter(Boolean).join('\n');
+
+            const { text } = await fetchCompletion({
+                model:    state.config.model || 'deepseek-r1',
+                messages: [{ role: 'user', content: prompt }],
+                max_tokens:  300,
+                temperature: 0.95,
+            });
+
+            const cleaned = text.replace(/^```[a-z]*\n?/i, '').replace(/```\s*$/, '').trim();
+            const ideas = JSON.parse(cleaned);
+
+            if (!Array.isArray(ideas)) throw new Error('bad format');
+
+            $ideas.hidden = false;
+            $ideas.innerHTML = `<div class="ts-scene-ideas__label">Pick one to use — or let them inspire you:</div>`
+                + ideas.map((idea, i) => `
+                    <button class="ts-scene-idea-card" data-idea="${esc(String(idea))}">
+                        <span class="ts-scene-idea-card__num">${i + 1}</span>
+                        <span class="ts-scene-idea-card__text">${esc(String(idea))}</span>
+                    </button>`).join('');
+            lucideRefresh($ideas);
+
+            qsa('.ts-scene-idea-card', $ideas).forEach(card => {
+                card.addEventListener('click', () => {
+                    $ta.value = card.dataset.idea;
+                    $ideas.hidden = true;
+                    showToast('Idea copied to scene field — expand it or generate', 'info', 2500);
+                });
+            });
+        } catch (e) {
+            showToast('Spark failed — try Generate instead', 'warn');
+        } finally {
+            if ($btn) {
+                $btn.disabled = false;
+                $btn.innerHTML = '<i data-lucide="lightbulb"></i> Spark ideas';
                 lucideRefresh($btn);
             }
         }
@@ -1647,6 +1862,16 @@ export function initUI() {
                 const val = f.value.trim();
                 if (val) gc.isekaiAnswers[f.dataset.key] = val;
             });
+
+            // Collect narrative tone config
+            const sexualEnergy = qs('#ts-sexual-energy')?.value.trim() || '';
+            const toneTags     = qs('#ts-tone-tags')?.value.trim() || '';
+            const amplify      = qs('#ts-amplify')?.value.trim() || '';
+            const avoid        = qs('#ts-avoid')?.value.trim() || '';
+            const pacing       = qs('#ts-pacing')?.value.trim() || '';
+            if (sexualEnergy || toneTags || amplify || avoid || pacing) {
+                gc.narrativeTone = { sexualEnergy, toneTags, amplify, avoid, pacing };
+            }
 
             // Collect relationship web
             qsa('.ts-rel-field').forEach(f => {
@@ -1729,6 +1954,90 @@ export function initUI() {
     qs('#ts-cancel')?.addEventListener('click',  () => hideModal('modal-thread-setup'));
     qs('#modal-thread-setup .modal__backdrop')?.addEventListener('click', () => hideModal('modal-thread-setup'));
     qs('#ts-gen-scene-btn')?.addEventListener('click', _tsGenerateOpeningScene);
+    qs('#ts-gen-scene-ideas-btn')?.addEventListener('click', _tsSparkSceneIdeas);
+
+    // ── Narrative quick-fill pills ────────────────────────────────────────────
+    // data-target pills: click → set input value (single-select, re-click clears)
+    qsa('.ts-quick-pill[data-target]').forEach(pill => {
+        pill.addEventListener('click', () => {
+            const $inp = qs(`#${pill.dataset.target}`);
+            if (!$inp) return;
+            if ($inp.value === pill.dataset.val) {
+                $inp.value = '';
+                pill.classList.remove('ts-quick-pill--active');
+            } else {
+                $inp.value = pill.dataset.val;
+                // Deactivate siblings
+                pill.closest('.ts-quick-pills')?.querySelectorAll('.ts-quick-pill').forEach(p => p.classList.remove('ts-quick-pill--active'));
+                pill.classList.add('ts-quick-pill--active');
+            }
+        });
+    });
+
+    // data-field toggle pills: multi-select, comma-join into hidden input
+    qsa('.ts-quick-pill--toggle[data-field]').forEach(pill => {
+        pill.addEventListener('click', () => {
+            pill.classList.toggle('ts-quick-pill--active');
+            const $hidden = qs(`#${pill.dataset.field}`);
+            if (!$hidden) return;
+            const active = Array.from(pill.closest('.ts-quick-pills')?.querySelectorAll('.ts-quick-pill--active') || [])
+                .map(p => p.dataset.val);
+            $hidden.value = active.join(',');
+        });
+    });
+
+    // "Ideas" buttons on Amplify / Avoid fields
+    qsa('.ts-gen-ideas-btn[data-gen]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const field  = btn.dataset.gen; // 'amplify' | 'avoid'
+            const $inp   = qs(`#ts-${field}`);
+            if (!$inp) return;
+            if (!_tsSelectedIds.size) { showToast('Select characters first', 'warn'); return; }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader-2"></i>';
+            lucideRefresh(btn);
+
+            try {
+                const charNames = Array.from(_tsSelectedIds).map(id => state.characters.find(c => c.id === id)?.name || id).join(', ');
+                const toneTags  = qs('#ts-tone-tags')?.value.trim() || '';
+                const energy    = qs('#ts-sexual-energy')?.value.trim() || '';
+                const scenario  = qs('#ts-scenario-text')?.value.trim() || state.reality?.worldConfig?.scenario || '';
+                const opposite  = field === 'amplify' ? (qs('#ts-avoid')?.value.trim() || '') : (qs('#ts-amplify')?.value.trim() || '');
+
+                const instruction = field === 'amplify'
+                    ? `What narrative elements should be AMPLIFIED and leaned into hard?`
+                    : `What should be AVOIDED or excluded from this narrative?`;
+
+                const { text } = await fetchCompletion({
+                    model: state.config.model || 'deepseek-r1',
+                    messages: [{
+                        role: 'user',
+                        content: [
+                            `Characters: ${charNames}`,
+                            scenario ? `Scenario: ${scenario}` : '',
+                            energy ? `Sexual energy: ${energy}` : '',
+                            toneTags ? `Tone: ${toneTags}` : '',
+                            opposite ? `Already set for the opposite field: ${opposite}` : '',
+                            ``,
+                            instruction,
+                            `Give 4–6 specific, comma-separated keywords or short phrases. No preamble. Max 60 words total.`
+                        ].filter(Boolean).join('\n')
+                    }],
+                    max_tokens: 80,
+                    temperature: 0.88,
+                });
+
+                if (text?.trim()) $inp.value = text.trim().replace(/^["\-•]+\s*/gm, '').replace(/\n/g, ', ').replace(/,\s*,/g, ',').trim();
+            } catch (e) {
+                showToast('Ideas failed', 'warn');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i data-lucide="sparkles"></i> ideas';
+                lucideRefresh(btn);
+            }
+        });
+    });
 
     // Mode toggle (DM / Group pill)
     qsa('.ts-mode-btn').forEach(btn => {
@@ -2204,8 +2513,14 @@ export function initUI() {
                 const meta = state.characters.find(c => c.id === id);
                 setActiveBot(id);
                 renderActiveBots();
-                if (char) renderProfile(char, id);
-                if (meta) updateCinematicBackground(await getAvatarUrl(id, meta.avatar_path || char?.avatar));
+                // In group chats: only update the input placeholder / send target.
+                // Do NOT render the right panel or change the cinematic background
+                // (background follows last speaker, not pill clicks).
+                const isGroup = state.chat?.type === 'group' && (state.activeBotIds?.length > 1);
+                if (!isGroup) {
+                    if (char) renderProfile(char, id);
+                    if (meta) updateCinematicBackground(await getAvatarUrl(id, meta.avatar_path || char?.avatar));
+                }
                 renderPersonaCharSelect();
             });
 
@@ -2259,6 +2574,81 @@ export function initUI() {
         } else {
             $ta.placeholder = 'Select a character to begin…';
         }
+    }
+
+    // ── Group Profile Panel — multi-char overview ─────────────────────────────
+    function _renderGroupProfilePanel() {
+        const $pc = qs('#profile-card');
+        const $pa = qs('#profile-actions');
+        const $gs = qs('#gallery-strip');
+        if (!$pc) return;
+        if ($pa) $pa.hidden = true;
+        if ($gs) $gs.hidden = true;
+
+        const botIds = state.chat?.botIds || state.activeBotIds || [];
+        const gc     = state.chat?.groupConfig;
+
+        const memberRows = botIds.map(id => {
+            const char = state.loadedCharacters[id];
+            const meta = state.characters.find(c => c.id === id);
+            const name = char?.name || meta?.name || id;
+            const tagline = meta?.tagline || char?.tagline || '';
+            const rawAv = meta?.avatar_path || char?.avatar;
+            const av = getAvatarUrlSync(id, rawAv) || rawAv;
+            const avHtml = buildAvatarHtml(av, 'grp-member__avatar');
+
+            // Resolve IDB avatars async
+            if (rawAv?.startsWith('idb:')) {
+                getAvatarUrl(id, rawAv).then(url => {
+                    const $el = $pc.querySelector(`.grp-member[data-id="${id}"] .grp-member__avatar`);
+                    if ($el && url) $el.style.backgroundImage = `url(${url})`;
+                }).catch(() => {});
+            }
+
+            return `
+            <div class="grp-member" data-id="${esc(id)}">
+                ${avHtml}
+                <div class="grp-member__info">
+                    <span class="grp-member__name">${esc(name)}</span>
+                    ${tagline ? `<span class="grp-member__tag">${esc(tagline)}</span>` : ''}
+                </div>
+                <button class="grp-member__profile-btn" data-id="${esc(id)}" title="View ${esc(name)}">
+                    <i data-lucide="external-link"></i>
+                </button>
+            </div>`;
+        }).join('');
+
+        const toneHtml = gc?.narrativeTone && Object.values(gc.narrativeTone).some(Boolean)
+            ? `<div class="grp-tone-block">
+                <div class="grp-tone-block__label">Narrative Tone</div>
+                ${gc.narrativeTone.sexualEnergy ? `<div class="grp-tone-row"><span>Energy</span><span>${esc(gc.narrativeTone.sexualEnergy)}</span></div>` : ''}
+                ${gc.narrativeTone.toneTags     ? `<div class="grp-tone-row"><span>Tone</span><span>${esc(gc.narrativeTone.toneTags)}</span></div>` : ''}
+                ${gc.narrativeTone.amplify      ? `<div class="grp-tone-row"><span>Amplify</span><span>${esc(gc.narrativeTone.amplify)}</span></div>` : ''}
+                ${gc.narrativeTone.avoid        ? `<div class="grp-tone-row"><span>Avoid</span><span>${esc(gc.narrativeTone.avoid)}</span></div>` : ''}
+                ${gc.narrativeTone.pacing       ? `<div class="grp-tone-row"><span>Pacing</span><span>${esc(gc.narrativeTone.pacing)}</span></div>` : ''}
+               </div>`
+            : '';
+
+        $pc.innerHTML = `
+        <div class="grp-overview">
+            <div class="grp-overview__header">
+                <span class="grp-overview__label">Group Members</span>
+                <span class="grp-overview__count">${botIds.length}</span>
+            </div>
+            <div class="grp-overview__members">${memberRows}</div>
+            ${toneHtml}
+        </div>`;
+
+        lucideRefresh($pc);
+
+        // Wire individual profile view buttons
+        qsa('.grp-member__profile-btn', $pc).forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const id   = btn.dataset.id;
+                const char = state.loadedCharacters[id];
+                if (char) renderProfile(char, id);
+            });
+        });
     }
 
     // ── Profile Panel ─────────────────────────────────────────────────────────
@@ -5540,11 +5930,44 @@ export function initUI() {
             a.click();
         });
 
-        // Save to gallery
+        // Save to gallery — in group chats, pick which character's gallery to save to
         qs('[data-action="gallery"]', $el).addEventListener('click', async () => {
-            const charId = state.activeBotId;
+            const btn    = qs('[data-action="gallery"]', $el);
+            const botIds = state.activeBotIds || [];
+            const isGroup = state.chat?.type === 'group' && botIds.length > 1;
+
+            let charId = state.activeBotId;
+            if (isGroup) {
+                // Show a small inline picker
+                const existing = $el.querySelector('.img-gallery-picker');
+                if (existing) { existing.remove(); return; }
+                const $picker = document.createElement('div');
+                $picker.className = 'img-gallery-picker';
+                $picker.innerHTML = botIds.map(id => {
+                    const c = state.characters.find(x => x.id === id);
+                    return `<button class="img-gallery-picker__btn" data-id="${esc(id)}">${esc(c?.name || id)}</button>`;
+                }).join('');
+                btn.insertAdjacentElement('afterend', $picker);
+                $picker.querySelectorAll('.img-gallery-picker__btn').forEach(b => {
+                    b.addEventListener('click', async () => {
+                        $picker.remove();
+                        const cid = b.dataset.id;
+                        btn.disabled = true;
+                        await addToGallery(cid, dataUrl);
+                        renderGalleryStrip(cid);
+                        btn.innerHTML = '<i data-lucide="check"></i>';
+                        lucideRefresh(btn);
+                        showToast(`Saved to ${state.characters.find(c => c.id === cid)?.name || 'gallery'}`, 'success');
+                        setTimeout(() => { btn.innerHTML = '<i data-lucide="image-plus"></i>'; btn.disabled = false; lucideRefresh(btn); }, 1800);
+                    });
+                });
+                document.addEventListener('click', function close(ev) {
+                    if (!$picker.contains(ev.target) && ev.target !== btn) { $picker.remove(); document.removeEventListener('click', close); }
+                }, { capture: true });
+                return;
+            }
+
             if (!charId) { showToast('No active character', 'warn'); return; }
-            const btn = qs('[data-action="gallery"]', $el);
             btn.disabled = true;
             await addToGallery(charId, dataUrl);
             renderGalleryStrip(charId);
@@ -6100,12 +6523,22 @@ export function initUI() {
 
             renderFullHistory();
 
-            const botId = state.activeBotId;
+            const botId   = state.activeBotId;
+            const isGroup = state.chat?.type === 'group' && (state.chat?.botIds?.length > 1);
+
             if (!botId) {
                 const $pc = qs('#profile-card');
                 if ($pc) $pc.innerHTML = '<div class="profile-view__empty">No character selected</div>';
                 const $pa = qs('#profile-actions'); if ($pa) $pa.hidden = true;
                 const $gs = qs('#gallery-strip');   if ($gs) $gs.hidden = true;
+                return;
+            }
+
+            if (isGroup) {
+                // Group chat: show a multi-avatar summary panel, don't pin to one character
+                _renderGroupProfilePanel();
+                renderActiveBots();
+                // Background will be set by the last speaker on first response
                 return;
             }
 
@@ -6253,16 +6686,17 @@ export function initUI() {
                 ...(_effectiveScenario ? { _worldScenario: _effectiveScenario } : {})
             };
             const payload = buildPayload({
-                character:       { ...char, id: botId },
-                history:         state.history,
-                lore:            state.lorebooks,
-                config:          _effectiveConfig,
-                isGroup:         state.chat.type === 'group',
-                allChars:        state.chat.botIds.map(id => ({ ...state.loadedCharacters[id], id })),
-                sessionId:       state.chat.id,
-                shareMemory:     state.chat.shareMemory,
-                groupConfig:     state.chat.groupConfig || null,
-                pendingReinject: pendingReinject || ''
+                character:           { ...char, id: botId },
+                history:             state.history,
+                lore:                state.lorebooks,
+                config:              _effectiveConfig,
+                isGroup:             state.chat.type === 'group',
+                allChars:            state.chat.botIds.map(id => ({ ...state.loadedCharacters[id], id })),
+                sessionId:           state.chat.id,
+                shareMemory:         state.chat.shareMemory,
+                groupConfig:         state.chat.groupConfig || null,
+                pendingReinject:     pendingReinject || '',
+                threadModelOverride: tc.model || null,
             });
 
             // Debug: show built system prompt as a one-time collapsible block,
@@ -6354,6 +6788,14 @@ export function initUI() {
                     state.isStreaming = false;
                     setSendState(false);
                     updateTelemetry();
+                    // In group chats: update cinematic background to last speaker's portrait
+                    if (state.chat?.type === 'group' && state.chat?.botIds?.length > 1) {
+                        const bgCfg = state.config.chatBackground;
+                        if (!bgCfg?.preset && !bgCfg?.url) {
+                            const avUrl = await getAvatarUrl(botId, meta?.avatar_path || char?.avatar).catch(() => null);
+                            if (avUrl) updateCinematicBackground(avUrl);
+                        }
+                    }
                     // Always update codex meters/digest after each bot message — keeps the
                     // ambient status live even when the codex panel is closed.
                     updateCodexDigest();
