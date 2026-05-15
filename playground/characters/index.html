@@ -6,7 +6,7 @@
     <title>The Underdark // Reality Matrix</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2306040A'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%23ef4444' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23ef4444'/%3E%3C/svg%3E" />
     <link rel="stylesheet" href="../../glass/style/style.css">
-    <link rel="stylesheet" href="./style/style.css?v=74">
+    <link rel="stylesheet" href="./style/style.css?v=75">
     <link rel="stylesheet" href="./style/char-editor.css?v=16">
 </head>
 <body class="underdark-page">
@@ -257,7 +257,8 @@
                 <button id="add-char-btn" class="btn-icon" title="Add fragment"><i data-lucide="user-plus"></i></button>
                 <div class="arena__actions">
                     <!-- Primary: always visible -->
-                    <button id="btn-thread-config" class="btn-icon arena-action--primary" title="Thread Settings"><i data-lucide="settings-2"></i></button>
+                    <button id="btn-open-settings-hdr" class="btn-icon arena-action--primary" title="Settings"><i data-lucide="settings-2"></i></button>
+                    <button id="btn-thread-config" class="btn-icon arena-action--primary" title="Thread Settings"><i data-lucide="sliders"></i></button>
                     <button id="scene-codex-btn" class="btn-icon arena-action--primary" title="Scene Codex [C]"><i data-lucide="compass"></i></button>
                     <button id="focus-mode-btn" class="btn-icon arena-action--primary" title="Immersive Mode [F]"><i data-lucide="book-open"></i></button>
                     <button id="toggle-terminal" class="btn-icon arena-action--primary" title="Terminal"><i data-lucide="terminal"></i></button>
@@ -584,192 +585,8 @@
 
             <!-- Config Tab — Generation settings + Persona + Backup -->
             <div id="tab-config" class="tab-panel" role="tabpanel">
-              <div class="settings-section-label">Generation &amp; Interface</div>
-  <div class="config-view config-scroll">
-
-    <!-- Neural Routing -->
-    <div class="config-section config-section--key">
-      <div class="config-section__title"><i data-lucide="key-round"></i> Neural Routing</div>
-      <div class="config-group">
-        <div class="config-row">
-          <input type="password" id="api-key-input" class="control-input control-input--sm" placeholder="sk-nano-…">
-          <button id="api-key-toggle" class="btn-icon btn-icon--small"><i data-lucide="eye"></i></button>
-          <button id="api-key-save" class="btn btn--accent btn--sm">Save</button>
-        </div>
-        <div id="api-key-status" class="config-hint config-hint--status"></div>
-      </div>
-      <div class="config-group">
-        <label>Model</label>
-        <select id="model-select" class="control-select control-select--sm"></select>
-      </div>
-      <div class="config-group">
-        <label>Context Strategy</label>
-        <select id="context-strategy" class="control-select control-select--sm">
-          <option value="sliding">Sliding Window</option>
-          <option value="summarize">Summarize + Tail</option>
-        </select>
-      </div>
-      <div class="config-group--toggle">
-        <label><input type="checkbox" id="stream-toggle" checked> Streaming</label>
-      </div>
-    </div>
-
-    <!-- Arena Background -->
-    <div class="config-section">
-      <div class="config-section__title"><i data-lucide="image"></i> Arena Background</div>
-      <div class="config-group">
-        <label>Presets</label>
-        <div class="bg-presets-row">
-          <button class="bg-preset btn btn--ghost btn--xs" data-bg="" title="None">Off</button>
-          <button class="bg-preset btn btn--ghost btn--xs" data-bg="ember" title="Ember">Ember</button>
-          <button class="bg-preset btn btn--ghost btn--xs" data-bg="abyss" title="Abyss">Abyss</button>
-          <button class="bg-preset btn btn--ghost btn--xs" data-bg="void" title="Void">Void</button>
-          <button class="bg-preset btn btn--ghost btn--xs" data-bg="neon" title="Neon">Neon</button>
-          <button class="bg-preset btn btn--ghost btn--xs" data-bg="sakura" title="Sakura">Sakura</button>
-          <button class="bg-preset btn btn--ghost btn--xs" data-bg="deep" title="Deep">Deep</button>
-          <button class="bg-preset btn btn--ghost btn--xs" data-bg="ash" title="Ash">Ash</button>
-        </div>
-      </div>
-      <div class="config-group">
-        <label>Custom URL</label>
-        <div class="config-row">
-          <input type="text" id="bg-url-input" class="control-input control-input--sm" placeholder="https://...">
-          <button id="bg-url-apply" class="btn btn--accent btn--sm">Apply</button>
-        </div>
-      </div>
-      <div class="config-grid">
-        <div class="config-group">
-          <label>Blur <span id="bg-blur-val" class="config-badge">45</span></label>
-          <input type="range" id="bg-blur-input" min="0" max="80" value="45" class="config-range">
-        </div>
-        <div class="config-group">
-          <label>Brightness <span id="bg-bright-val" class="config-badge">30</span></label>
-          <input type="range" id="bg-bright-input" min="5" max="100" value="30" class="config-range">
-        </div>
-        <div class="config-group">
-          <label>Opacity <span id="bg-opacity-val" class="config-badge">50</span></label>
-          <input type="range" id="bg-opacity-input" min="10" max="100" value="50" class="config-range">
-        </div>
-      </div>
-    </div>
-
-    <!-- Generation Parameters -->
-    <div class="config-section">
-      <div class="config-section__title"><i data-lucide="sliders-horizontal"></i> Generation</div>
-      <div class="config-grid">
-        <div class="config-group">
-          <label>Temperature <span id="temp-val" class="config-badge">1.00</span></label>
-          <input type="range" id="temp-input" min="0" max="2" step="0.01" value="1" class="config-range">
-        </div>
-        <div class="config-group">
-          <label>Top-P <span id="topp-val" class="config-badge">0.90</span></label>
-          <input type="range" id="topp-input" min="0" max="1" step="0.01" value="0.9" class="config-range">
-        </div>
-        <div class="config-group">
-          <label>Top-K <span id="topk-val" class="config-badge">40</span></label>
-          <input type="range" id="topk-input" min="0" max="200" step="1" value="40" class="config-range">
-        </div>
-        <div class="config-group">
-          <label>Min-P <span id="minp-val" class="config-badge">0.05</span></label>
-          <input type="range" id="minp-input" min="0" max="1" step="0.01" value="0.05" class="config-range">
-        </div>
-        <div class="config-group">
-          <label>Rep. Penalty <span id="rep-val" class="config-badge">1.00</span></label>
-          <input type="range" id="rep-input" min="1" max="2" step="0.01" value="1" class="config-range">
-        </div>
-        <div class="config-group">
-          <label>Presence Pen. <span id="pres-val" class="config-badge">0.00</span></label>
-          <input type="range" id="pres-input" min="0" max="2" step="0.01" value="0" class="config-range">
-        </div>
-        <div class="config-group">
-          <label>Freq. Penalty <span id="freq-val" class="config-badge">0.00</span></label>
-          <input type="range" id="freq-input" min="0" max="2" step="0.01" value="0" class="config-range">
-        </div>
-        <div class="config-group">
-          <label>Max Context <span id="maxctx-val" class="config-badge">8192</span></label>
-          <input type="range" id="maxctx-input" min="1024" max="32768" step="512" value="8192" class="config-range">
-        </div>
-        <div class="config-group">
-          <label>Max Output <span id="maxout-val" class="config-badge">2048</span></label>
-          <input type="range" id="maxout-input" min="256" max="8192" step="256" value="2048" class="config-range">
-        </div>
-      </div>
-    </div>
-
-    <!-- Narrative Injection -->
-    <div class="config-section">
-      <div class="config-section__title"><i data-lucide="pen-tool"></i> Narrative Injection</div>
-      <div class="config-group">
-        <label>Author's Note <span class="config-hint" style="font-weight:400;">(injected at depth)</span></label>
-        <textarea id="authors-note" class="control-textarea control-textarea--sm" rows="3" placeholder="Persistent guidance injected into context…"></textarea>
-      </div>
-      <div class="config-group">
-        <label>Depth <span id="an-depth-val" class="config-badge">4</span></label>
-        <input type="range" id="an-depth-input" min="1" max="20" step="1" value="4" class="config-range">
-      </div>
-      <div class="config-group">
-        <label>System Directive Override</label>
-        <textarea id="sys-directive" class="control-textarea control-textarea--sm" rows="3" placeholder="Prepended to every system prompt…"></textarea>
-      </div>
-      <div class="config-group">
-        <label>NSFW Bypass Phrase</label>
-        <input type="text" id="nsfw-bypass" class="control-input control-input--sm" placeholder="Custom jailbreak phrase…">
-      </div>
-    </div>
-
-
-    <!-- Narrative Flags -->
-    <div class="config-section">
-      <div class="config-section__title"><i data-lucide="toggle-right"></i> Narrative Flags</div>
-      <div class="config-flags-grid">
-        <label class="config-flag-toggle"><input type="checkbox" id="flag-showThoughts"> Show inner thoughts</label>
-        <label class="config-flag-toggle"><input type="checkbox" id="flag-showSystemPrompt"> Debug system prompt</label>
-        <label class="config-flag-toggle"><input type="checkbox" id="flag-injectConsistency"> Inject consistency</label>
-        <label class="config-flag-toggle"><input type="checkbox" id="flag-injectSliders"> Inject sliders</label>
-        <label class="config-flag-toggle"><input type="checkbox" id="flag-injectAppearance"> Inject appearance</label>
-        <label class="config-flag-toggle"><input type="checkbox" id="flag-injectAdult" checked> Inject adult content</label>
-        <label class="config-flag-toggle"><input type="checkbox" id="flag-injectPersonality"> Inject personality</label>
-        <label class="config-flag-toggle"><input type="checkbox" id="flag-injectVoice"> Inject voice</label>
-        <label class="config-flag-toggle"><input type="checkbox" id="flag-injectStyle"> Inject style</label>
-        <label class="config-flag-toggle"><input type="checkbox" id="flag-injectAIDirectives"> AI directives</label>
-        <label class="config-flag-toggle"><input type="checkbox" id="flag-impersonationBlock"> Block impersonation</label>
-        <label class="config-flag-toggle"><input type="checkbox" id="flag-povFirst"> POV first person</label>
-        <label class="config-flag-toggle"><input type="checkbox" id="flag-jailbreakResistance"> Jailbreak resistance</label>
-      </div>
-    </div>
-
-    <!-- Danger Zone -->
-    <div class="config-section config-section--danger">
-      <div class="config-section__title"><i data-lucide="alert-triangle"></i> Danger Zone</div>
-      <button id="maintenance-purge" class="btn btn--ghost btn--full btn--sm btn--danger-ghost">
-        <i data-lucide="refresh-cw"></i> Purge &amp; Re-align
-      </button>
-      <button id="btn-clear-all-data" class="btn btn--ghost btn--full btn--sm btn--danger-ghost">
-        <i data-lucide="trash-2"></i> Wipe All Data
-      </button>
-    </div>
-
-  </div>
-
-              <div class="settings-section-label settings-section-label--persona">Identity &amp; Persona</div>
               <div class="config-scroll">
-
-                <!-- User Identity -->
-                <div class="config-section">
-                  <div class="config-section__title"><i data-lucide="user"></i> Your Identity</div>
-                  <div class="config-group">
-                    <label>Preset</label>
-                    <select id="persona-preset-select" class="control-select control-select--sm"></select>
-                  </div>
-                  <div class="config-group"><label>Name</label><input type="text" id="user-name-input" class="control-input control-input--sm" placeholder="Your name in the story"></div>
-                  <div class="config-group"><label>Bio / Persona</label><textarea id="user-persona-input" class="control-textarea control-textarea--sm" rows="4" placeholder="Who you are in this world…"></textarea></div>
-                  <div class="config-group"><label>Appearance <span class="config-group__hint">how characters see you</span></label><input type="text" id="player-appearance" class="control-input control-input--sm" placeholder="e.g. Tall, dark-haired, a scar under the left eye…"></div>
-                  <div class="config-group"><label>Current mood <span class="config-group__hint">emotional state right now</span></label><input type="text" id="player-mood" class="control-input control-input--sm" placeholder="e.g. Guarded but curious, barely concealing exhaustion…"></div>
-                  <div class="config-group"><label>Role in scene <span class="config-group__hint">narrative function</span></label><input type="text" id="player-role" class="control-input control-input--sm" placeholder="e.g. The outsider who knows too much, the handler…"></div>
-                  <div class="config-group"><label>Status <span class="config-group__hint">current state tags</span></label><input type="text" id="player-status" class="control-input control-input--sm" placeholder="e.g. Injured, armed, disguised…"></div>
-                </div>
-
-                <!-- Character Override -->
+                <!-- Character Override — only per-character settings live here -->
                 <div class="config-section">
                   <div class="config-section__title"><i data-lucide="sliders-horizontal"></i> Character Override</div>
                   <div id="persona-char-header" class="persona-char-header" hidden></div>
@@ -788,7 +605,7 @@
                     </div>
                     <div class="config-group">
                       <label>System Prompt Suffix</label>
-                      <textarea id="persona-system-suffix" data-po="appendToSystem" class="control-textarea control-textarea--sm" rows="3" placeholder="Appended to this character's system prompt…"></textarea>
+                      <textarea id="persona-system-suffix" data-po="appendToSystem" class="control-textarea control-textarea--sm" rows="3" placeholder="Appended to this character&apos;s system prompt…"></textarea>
                     </div>
                     <div class="config-section__title config-section__title--inner"><i data-lucide="sliders"></i> Behaviour Dials</div>
                     <div class="config-group">
@@ -809,33 +626,287 @@
                     </div>
                   </div>
                 </div>
-
-                <!-- Session -->
-                <div class="config-section">
-                  <div class="config-section__title"><i data-lucide="archive"></i> Session</div>
-                  <div class="config-group config-row--flex">
-                    <button id="btn-export-session" class="btn btn--ghost btn--sm btn--flex"><i data-lucide="download"></i> Export</button>
-                    <button id="btn-import-session" class="btn btn--ghost btn--sm btn--flex"><i data-lucide="upload"></i> Import</button>
-                    <input type="file" id="session-import-input" hidden accept=".json">
-                  </div>
+                <!-- Global settings moved to Settings modal -->
+                <div class="config-section__goto-settings">
+                  <button id="btn-open-settings" class="btn btn--ghost btn--full btn--sm">
+                    <i data-lucide="settings-2"></i> Global Settings
+                  </button>
                 </div>
-
-                <!-- Full Instance Backup -->
-                <div class="config-section">
-                  <div class="config-section__title"><i data-lucide="database"></i> Full Backup</div>
-                  <div class="config-hint" style="margin-bottom:8px">Export every continuity, chat, character, and image. Import on any browser to fully restore. API keys are never included.</div>
-                  <div class="config-group config-row--flex">
-                    <button id="btn-export-full" class="btn btn--ghost btn--sm btn--flex"><i data-lucide="hard-drive-download"></i> Export All</button>
-                    <button id="btn-import-full" class="btn btn--ghost btn--sm btn--flex instance-import-btn"><i data-lucide="upload"></i> Import All</button>
-                    <input type="file" id="full-import-input" hidden accept=".json">
-                  </div>
-                </div>
-
               </div>
             </div>
         </div>
     </aside>
 
+</div>
+
+<!-- ── Settings Modal ── -->
+<div id="modal-settings" class="modal modal--settings" hidden>
+  <div class="modal__backdrop" data-close-settings></div>
+  <div class="settings-modal">
+    <header class="settings-modal__header">
+      <span class="settings-modal__title"><i data-lucide="settings-2"></i> Settings</span>
+      <button id="settings-close-btn" class="btn-icon settings-modal__close"><i data-lucide="x"></i></button>
+    </header>
+    <div class="settings-modal__body">
+
+      <!-- Left nav -->
+      <nav class="settings-nav">
+        <button class="settings-nav__item active" data-stab="neural"><i data-lucide="key-round"></i> Neural</button>
+        <button class="settings-nav__item" data-stab="generation"><i data-lucide="sliders-horizontal"></i> Generation</button>
+        <button class="settings-nav__item" data-stab="narrative"><i data-lucide="pen-tool"></i> Narrative</button>
+        <button class="settings-nav__item" data-stab="interface"><i data-lucide="monitor"></i> Interface</button>
+        <button class="settings-nav__item" data-stab="persona"><i data-lucide="user-circle-2"></i> My Persona</button>
+        <button class="settings-nav__item" data-stab="backup"><i data-lucide="database"></i> Backup</button>
+        <button class="settings-nav__item" data-stab="gallery"><i data-lucide="images"></i> Gallery</button>
+      </nav>
+
+      <!-- Panels -->
+      <div class="settings-panels">
+
+        <!-- ── Neural ── -->
+        <div class="settings-panel active" data-stab="neural">
+          <div class="settings-panel__title">Neural Routing</div>
+          <div class="config-section">
+            <div class="config-group">
+              <label>API Key</label>
+              <div class="config-row">
+                <input type="password" id="api-key-input" class="control-input control-input--sm" placeholder="sk-nano-…">
+                <button id="api-key-toggle" class="btn-icon btn-icon--small"><i data-lucide="eye"></i></button>
+                <button id="api-key-save" class="btn btn--accent btn--sm">Save</button>
+              </div>
+              <div id="api-key-status" class="config-hint config-hint--status"></div>
+            </div>
+            <div class="config-group">
+              <label>Default Model</label>
+              <select id="model-select" class="control-select control-select--sm"></select>
+            </div>
+            <div class="config-group">
+              <label>Context Strategy</label>
+              <select id="context-strategy" class="control-select control-select--sm">
+                <option value="sliding">Sliding Window</option>
+                <option value="summarize">Summarize + Tail</option>
+              </select>
+            </div>
+            <div class="config-group--toggle">
+              <label><input type="checkbox" id="stream-toggle" checked> Streaming</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Generation ── -->
+        <div class="settings-panel" data-stab="generation">
+          <div class="settings-panel__title">Generation Parameters</div>
+          <div class="config-section">
+            <div class="config-grid">
+              <div class="config-group">
+                <label>Temperature <span id="temp-val" class="config-badge">1.00</span></label>
+                <input type="range" id="temp-input" min="0" max="2" step="0.01" value="1" class="config-range">
+              </div>
+              <div class="config-group">
+                <label>Top-P <span id="topp-val" class="config-badge">0.90</span></label>
+                <input type="range" id="topp-input" min="0" max="1" step="0.01" value="0.9" class="config-range">
+              </div>
+              <div class="config-group">
+                <label>Top-K <span id="topk-val" class="config-badge">40</span></label>
+                <input type="range" id="topk-input" min="0" max="200" step="1" value="40" class="config-range">
+              </div>
+              <div class="config-group">
+                <label>Min-P <span id="minp-val" class="config-badge">0.05</span></label>
+                <input type="range" id="minp-input" min="0" max="1" step="0.01" value="0.05" class="config-range">
+              </div>
+              <div class="config-group">
+                <label>Rep. Penalty <span id="rep-val" class="config-badge">1.00</span></label>
+                <input type="range" id="rep-input" min="1" max="2" step="0.01" value="1" class="config-range">
+              </div>
+              <div class="config-group">
+                <label>Presence Pen. <span id="pres-val" class="config-badge">0.00</span></label>
+                <input type="range" id="pres-input" min="0" max="2" step="0.01" value="0" class="config-range">
+              </div>
+              <div class="config-group">
+                <label>Freq. Penalty <span id="freq-val" class="config-badge">0.00</span></label>
+                <input type="range" id="freq-input" min="0" max="2" step="0.01" value="0" class="config-range">
+              </div>
+              <div class="config-group">
+                <label>Max Context <span id="maxctx-val" class="config-badge">8192</span></label>
+                <input type="range" id="maxctx-input" min="1024" max="32768" step="512" value="8192" class="config-range">
+              </div>
+              <div class="config-group">
+                <label>Max Output <span id="maxout-val" class="config-badge">2048</span></label>
+                <input type="range" id="maxout-input" min="256" max="8192" step="256" value="2048" class="config-range">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Narrative ── -->
+        <div class="settings-panel" data-stab="narrative">
+          <div class="settings-panel__title">Narrative Injection &amp; Flags</div>
+          <div class="config-section">
+            <div class="config-group">
+              <label>Author's Note <span class="config-hint" style="font-weight:400">(injected at depth)</span></label>
+              <textarea id="authors-note" class="control-textarea control-textarea--sm" rows="3" placeholder="Persistent guidance injected into context…"></textarea>
+            </div>
+            <div class="config-group">
+              <label>Depth <span id="an-depth-val" class="config-badge">4</span></label>
+              <input type="range" id="an-depth-input" min="1" max="20" step="1" value="4" class="config-range">
+            </div>
+            <div class="config-group">
+              <label>System Directive Override</label>
+              <textarea id="sys-directive" class="control-textarea control-textarea--sm" rows="3" placeholder="Prepended to every system prompt…"></textarea>
+            </div>
+            <div class="config-group">
+              <label>NSFW Bypass Phrase</label>
+              <input type="text" id="nsfw-bypass" class="control-input control-input--sm" placeholder="Custom jailbreak phrase…">
+            </div>
+          </div>
+          <div class="config-section">
+            <div class="config-section__title"><i data-lucide="toggle-right"></i> Narrative Flags</div>
+            <div class="config-flags-grid">
+              <label class="config-flag-toggle"><input type="checkbox" id="flag-showThoughts"> Show inner thoughts</label>
+              <label class="config-flag-toggle"><input type="checkbox" id="flag-showSystemPrompt"> Debug system prompt</label>
+              <label class="config-flag-toggle"><input type="checkbox" id="flag-injectConsistency"> Inject consistency</label>
+              <label class="config-flag-toggle"><input type="checkbox" id="flag-injectSliders"> Inject sliders</label>
+              <label class="config-flag-toggle"><input type="checkbox" id="flag-injectAppearance"> Inject appearance</label>
+              <label class="config-flag-toggle"><input type="checkbox" id="flag-injectAdult" checked> Inject adult content</label>
+              <label class="config-flag-toggle"><input type="checkbox" id="flag-injectPersonality"> Inject personality</label>
+              <label class="config-flag-toggle"><input type="checkbox" id="flag-injectVoice"> Inject voice</label>
+              <label class="config-flag-toggle"><input type="checkbox" id="flag-injectStyle"> Inject style</label>
+              <label class="config-flag-toggle"><input type="checkbox" id="flag-injectAIDirectives"> AI directives</label>
+              <label class="config-flag-toggle"><input type="checkbox" id="flag-impersonationBlock"> Block impersonation</label>
+              <label class="config-flag-toggle"><input type="checkbox" id="flag-povFirst"> POV first person</label>
+              <label class="config-flag-toggle"><input type="checkbox" id="flag-jailbreakResistance"> Jailbreak resistance</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Interface ── -->
+        <div class="settings-panel" data-stab="interface">
+          <div class="settings-panel__title">Interface &amp; Appearance</div>
+          <div class="config-section">
+            <div class="config-section__title"><i data-lucide="image"></i> Arena Background</div>
+            <div class="config-group">
+              <label>Presets</label>
+              <div class="bg-presets-row">
+                <button class="bg-preset btn btn--ghost btn--xs" data-bg="" title="None">Off</button>
+                <button class="bg-preset btn btn--ghost btn--xs" data-bg="ember" title="Ember">Ember</button>
+                <button class="bg-preset btn btn--ghost btn--xs" data-bg="abyss" title="Abyss">Abyss</button>
+                <button class="bg-preset btn btn--ghost btn--xs" data-bg="void" title="Void">Void</button>
+                <button class="bg-preset btn btn--ghost btn--xs" data-bg="neon" title="Neon">Neon</button>
+                <button class="bg-preset btn btn--ghost btn--xs" data-bg="sakura" title="Sakura">Sakura</button>
+                <button class="bg-preset btn btn--ghost btn--xs" data-bg="deep" title="Deep">Deep</button>
+                <button class="bg-preset btn btn--ghost btn--xs" data-bg="ash" title="Ash">Ash</button>
+              </div>
+            </div>
+            <div class="config-group">
+              <label>Custom URL</label>
+              <div class="config-row">
+                <input type="text" id="bg-url-input" class="control-input control-input--sm" placeholder="https://...">
+                <button id="bg-url-apply" class="btn btn--accent btn--sm">Apply</button>
+              </div>
+            </div>
+            <div class="config-grid">
+              <div class="config-group">
+                <label>Blur <span id="bg-blur-val" class="config-badge">45</span></label>
+                <input type="range" id="bg-blur-input" min="0" max="80" value="45" class="config-range">
+              </div>
+              <div class="config-group">
+                <label>Brightness <span id="bg-bright-val" class="config-badge">30</span></label>
+                <input type="range" id="bg-bright-input" min="5" max="100" value="30" class="config-range">
+              </div>
+              <div class="config-group">
+                <label>Opacity <span id="bg-opacity-val" class="config-badge">50</span></label>
+                <input type="range" id="bg-opacity-input" min="10" max="100" value="50" class="config-range">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── My Persona ── -->
+        <div class="settings-panel" data-stab="persona">
+          <div class="settings-panel__title">My Persona <span class="settings-panel__sub">Applied to the active continuity</span></div>
+          <div class="config-section">
+            <div class="config-group">
+              <label>Preset</label>
+              <select id="persona-preset-select" class="control-select control-select--sm"></select>
+            </div>
+            <div class="config-group">
+              <label>Name</label>
+              <input type="text" id="user-name-input" class="control-input control-input--sm" placeholder="Your name in the story">
+            </div>
+            <div class="config-group">
+              <label>Bio / Persona</label>
+              <textarea id="user-persona-input" class="control-textarea control-textarea--sm" rows="4" placeholder="Who you are in this world…"></textarea>
+            </div>
+            <div class="config-group">
+              <label>Appearance <span class="config-group__hint">how characters see you</span></label>
+              <input type="text" id="player-appearance" class="control-input control-input--sm" placeholder="e.g. Tall, dark-haired, a scar under the left eye…">
+            </div>
+            <div class="config-group">
+              <label>Current mood <span class="config-group__hint">emotional state right now</span></label>
+              <input type="text" id="player-mood" class="control-input control-input--sm" placeholder="e.g. Guarded but curious, barely concealing exhaustion…">
+            </div>
+            <div class="config-group">
+              <label>Role in scene <span class="config-group__hint">narrative function</span></label>
+              <input type="text" id="player-role" class="control-input control-input--sm" placeholder="e.g. The outsider who knows too much, the handler…">
+            </div>
+            <div class="config-group">
+              <label>Status <span class="config-group__hint">current state tags</span></label>
+              <input type="text" id="player-status" class="control-input control-input--sm" placeholder="e.g. Injured, armed, disguised…">
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Backup ── -->
+        <div class="settings-panel" data-stab="backup">
+          <div class="settings-panel__title">Backup &amp; Data</div>
+          <div class="config-section">
+            <div class="config-section__title"><i data-lucide="archive"></i> Session</div>
+            <div class="config-hint" style="margin-bottom:8px">Export or import the current chat thread only.</div>
+            <div class="config-group config-row--flex">
+              <button id="btn-export-session" class="btn btn--ghost btn--sm btn--flex"><i data-lucide="download"></i> Export Session</button>
+              <button id="btn-import-session" class="btn btn--ghost btn--sm btn--flex"><i data-lucide="upload"></i> Import Session</button>
+              <input type="file" id="session-import-input" hidden accept=".json">
+            </div>
+          </div>
+          <div class="config-section">
+            <div class="config-section__title"><i data-lucide="database"></i> Full Backup</div>
+            <div class="config-hint" style="margin-bottom:8px">Export every continuity, chat, character, and image. API keys are never included.</div>
+            <div class="config-group config-row--flex">
+              <button id="btn-export-full" class="btn btn--ghost btn--sm btn--flex"><i data-lucide="hard-drive-download"></i> Export All</button>
+              <button id="btn-import-full" class="btn btn--ghost btn--sm btn--flex instance-import-btn"><i data-lucide="upload"></i> Import All</button>
+              <input type="file" id="full-import-input" hidden accept=".json">
+            </div>
+          </div>
+          <div class="config-section config-section--danger">
+            <div class="config-section__title"><i data-lucide="alert-triangle"></i> Danger Zone</div>
+            <button id="maintenance-purge" class="btn btn--ghost btn--full btn--sm btn--danger-ghost">
+              <i data-lucide="refresh-cw"></i> Purge &amp; Re-align
+            </button>
+            <button id="btn-clear-all-data" class="btn btn--ghost btn--full btn--sm btn--danger-ghost">
+              <i data-lucide="trash-2"></i> Wipe All Data
+            </button>
+          </div>
+        </div>
+
+        <!-- ── Gallery ── -->
+        <div class="settings-panel" data-stab="gallery">
+          <div class="settings-panel__title">Image Gallery <span class="settings-panel__sub">All generated images across all continuities</span></div>
+          <div class="settings-gallery">
+            <div class="settings-gallery__toolbar">
+              <input type="text" id="settings-gallery-search" class="control-input control-input--sm" placeholder="Search by character, prompt…">
+              <select id="settings-gallery-filter" class="control-select control-select--sm">
+                <option value="">All Characters</option>
+              </select>
+            </div>
+            <div id="settings-gallery-grid" class="settings-gallery__grid">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /.settings-panels -->
+    </div><!-- /.settings-modal__body -->
+  </div><!-- /.settings-modal -->
 </div>
 
 <!-- ── Video Generation Modal ── -->

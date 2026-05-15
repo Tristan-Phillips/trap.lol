@@ -22,6 +22,7 @@
 
 /* ── Overlays & Modals ── */
 @import './modals.css';
+@import './settings-modal.css';
 @import './oracle.css';
 @import './gallery-modal.css';
 

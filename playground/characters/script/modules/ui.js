@@ -1476,7 +1476,7 @@ export function initUI() {
         if (!$grid) return;
         const q = query.toLowerCase();
         const chars = state.characters.filter(c =>
-            !q || c.name.toLowerCase().includes(q));
+            !q || c.name.toLowerCase().includes(q)).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
         if (!chars.length) {
             $grid.innerHTML = '<div style="color:rgba(180,160,210,0.4);font-size:.8rem;grid-column:1/-1;padding:16px 0;">No characters found.</div>';
@@ -2519,6 +2519,108 @@ export function initUI() {
         openThreadSetup('dm');
     });
 
+    // ── Settings Modal ───────────────────────────────────────────────────────
+    const $settingsModal = qs('#modal-settings');
+
+    function openSettings(tab = 'neural') {
+        if (!$settingsModal) return;
+        $settingsModal.hidden = false;
+        switchSettingsTab(tab);
+        lucideRefresh($settingsModal);
+        if (tab === 'gallery') renderSettingsGallery();
+    }
+
+    function closeSettings() {
+        if ($settingsModal) $settingsModal.hidden = true;
+    }
+
+    function switchSettingsTab(target) {
+        qsa('.settings-nav__item', $settingsModal).forEach($b => $b.classList.toggle('active', $b.dataset.stab === target));
+        qsa('.settings-panel', $settingsModal).forEach($p => $p.classList.toggle('active', $p.dataset.stab === target));
+        if (target === 'gallery') renderSettingsGallery();
+    }
+
+    qs('#settings-close-btn', $settingsModal)?.addEventListener('click', closeSettings);
+    $settingsModal?.addEventListener('click', e => { if (e.target.dataset.closeSettings !== undefined) closeSettings(); });
+    $settingsModal?.querySelector('[data-close-settings]')?.addEventListener('click', closeSettings);
+
+    qsa('.settings-nav__item', $settingsModal).forEach($btn => {
+        $btn.addEventListener('click', () => switchSettingsTab($btn.dataset.stab));
+    });
+
+    // Open from arena header button
+    qs('#btn-open-settings-hdr')?.addEventListener('click', () => openSettings('neural'));
+    // Open from Config tab "Global Settings" button
+    qs('#btn-open-settings')?.addEventListener('click', () => openSettings('neural'));
+
+    // ── Settings Gallery ─────────────────────────────────────────────────────
+    async function renderSettingsGallery() {
+        const $grid = qs('#settings-gallery-grid', $settingsModal);
+        if (!$grid) return;
+
+        // Collect all gallery images from all characters
+        const items = [];
+        for (const meta of state.characters) {
+            const char = state.loadedCharacters[meta.id];
+            if (!char) continue;
+            const imgs = char.extensions?.underdark?.gallery || [];
+            imgs.forEach((ref, i) => {
+                items.push({ charId: meta.id, charName: char.name || meta.name, ref, idx: i });
+            });
+        }
+
+        // Apply search/filter
+        const search = (qs('#settings-gallery-search', $settingsModal)?.value || '').toLowerCase();
+        const filterChar = qs('#settings-gallery-filter', $settingsModal)?.value || '';
+        const filtered = items.filter(it =>
+            (!filterChar || it.charId === filterChar) &&
+            (!search || it.charName.toLowerCase().includes(search))
+        );
+
+        if (!filtered.length) {
+            $grid.innerHTML = `<div class="settings-gallery__empty"><i data-lucide="images"></i><p>No images yet. Generate some in the Image Studio.</p></div>`;
+            lucideRefresh($grid);
+            return;
+        }
+
+        // Populate character filter
+        const $filter = qs('#settings-gallery-filter', $settingsModal);
+        if ($filter && $filter.options.length <= 1) {
+            state.characters.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.textContent = state.loadedCharacters[c.id]?.name || c.name;
+                $filter.appendChild(opt);
+            });
+        }
+
+        // Resolve and render
+        $grid.innerHTML = '<div class="settings-gallery__loading">Loading…</div>';
+        const resolved = await Promise.all(filtered.map(async it => {
+            const url = await resolveImageUrl(it.ref).catch(() => null);
+            return url ? { ...it, url } : null;
+        }));
+        const valid = resolved.filter(Boolean);
+
+        $grid.innerHTML = valid.map(it => `
+            <div class="sg-item" data-char-id="${esc(it.charId)}" data-idx="${it.idx}" title="${esc(it.charName)}">
+                <img src="${esc(it.url)}" class="sg-item__img" loading="lazy" alt="${esc(it.charName)}">
+                <div class="sg-item__meta">${esc(it.charName)}</div>
+            </div>`).join('');
+
+        qsa('.sg-item', $grid).forEach($item => {
+            $item.addEventListener('click', () => {
+                const cId  = $item.dataset.charId;
+                const idx  = +$item.dataset.idx;
+                closeSettings();
+                openLightbox(cId, idx);
+            });
+        });
+    }
+
+    qs('#settings-gallery-search', $settingsModal)?.addEventListener('input', debounce(() => renderSettingsGallery(), 300));
+    qs('#settings-gallery-filter', $settingsModal)?.addEventListener('change', () => renderSettingsGallery());
+
     // ── API Key ───────────────────────────────────────────────────────────────
     const $apiInput  = qs('#api-key-input');
     const $apiSave   = qs('#api-key-save');
@@ -2594,7 +2696,7 @@ export function initUI() {
             return c.name.toLowerCase().includes(q)
                 || (c.tagline || '').toLowerCase().includes(q)
                 || (c.tags || []).some(t => t.toLowerCase().includes(q));
-        });
+        }).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
         if (!filtered.length) {
             $charList.innerHTML = `
@@ -3470,7 +3572,7 @@ export function initUI() {
         const chars = state.characters.filter(c => {
             if (!q) return true;
             return c.name.toLowerCase().includes(q) || (c.tagline || '').toLowerCase().includes(q);
-        });
+        }).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
         if (!chars.length) {
             $grid.innerHTML = '<p style="color:var(--text-muted);font-size:.8rem;text-align:center;padding:1rem;grid-column:1/-1;">No characters found</p>';
             return;
