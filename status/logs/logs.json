@@ -473,7 +473,7 @@
   },
   "commits": [
     {
-      "hash": "0000000",
+      "hash": "87710d2",
       "date": "2026-05-15",
       "message": "feat(underdark): profile flyout, settings restructure, expanded gen params, suffix completion — ui.js v101",
       "scope": "playground/characters — ui.js, index.html, main.js, style/utilities.css, style/settings-modal.css, data/cards/*",
