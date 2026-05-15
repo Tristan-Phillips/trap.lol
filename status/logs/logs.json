@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.3.23",
+    "schema_version": "1.3.24",
     "last_updated": "2026-05-15",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -474,6 +474,21 @@
   "commits": [
     {
       "hash": "PENDING",
+      "date": "2026-05-15",
+      "message": "feat(underdark): Batch C — Living World stream + post-from-thread — ui.js v98",
+      "scope": "playground/characters — ui.js, index.html, main.js, social.css",
+      "impact": "high",
+      "files": [
+        "playground/characters/script/modules/ui.js",
+        "playground/characters/script/main.js",
+        "playground/characters/index.html",
+        "playground/characters/style/social.css",
+        "status/logs/logs.json"
+      ],
+      "why": "Batch C: Living World stream mode lets characters post autonomously on a configurable timer (AI-generated captions via fetchCompletion, typewriter animation on inject, pause/resume/speed control); post-from-thread adds an action button to bot messages that AI-generates an in-character caption and saves a local feed post — both features turn the social feed from static to live."
+    },
+    {
+      "hash": "3db09be",
       "date": "2026-05-15",
       "message": "refactor(underdark): Batch A+B — ctx object refactor + right sidebar Profile/Codex/Config tabs — ui.js v97",
       "scope": "playground/characters — ui.js, index.html, main.js, terminal.css, style.css",
@@ -1484,6 +1499,22 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-15",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Batch C executed (continued from Phase 7 session). Living World stream mode: characters post autonomously on a configurable timer (15s/30s/60s/2m), each post AI-generated via fetchCompletion with in-character prompt, injected at top of feed with typewriter animation + cursor blink. Start/Pause controlled from social sidebar (Living World button) and in-feed bar. Post-from-thread: bot message action button (image-plus icon) AI-generates a caption from the message snippet and saves a local feed post. Fixed a ctx object literal syntax bug (ctx.galleryCharId: null → galleryCharId: null) found on review.",
+      "decisions": [
+        "Living World uses fetchCompletion (non-streaming) for post generation — streaming into a typewriter makes the typewriter feel redundant; a completed post typed out character-by-character is the right UX.",
+        "Speed control lives in the sidebar select (not a slider) — 4 named presets (Fast/Normal/Slow/Chill) with ±20% jitter are cleaner than a continuous range for a social feed cadence.",
+        "Post-from-thread uses claude-haiku model for caption generation — fast + cheap, caption is only 1-2 sentences.",
+        "Stream bar in feed arena (purple pulsing indicator) communicates live mode is active without interrupting the feed scroll area."
+      ],
+      "rules_reinforced": [
+        "Object literal property names must be plain identifiers — ctx.galleryCharId as a property key is invalid JS syntax (parser sees it as a computed property name that fails).",
+        "Living World stop must clearTimeout AND null the timer ref to prevent double-fire if resumed quickly."
+      ]
+    },
     {
       "date": "2026-05-15",
       "agent": "Claude Sonnet 4.6",

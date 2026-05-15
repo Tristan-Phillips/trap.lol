@@ -6,7 +6,7 @@
     <title>The Underdark // Reality Matrix</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2306040A'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%23ef4444' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23ef4444'/%3E%3C/svg%3E" />
     <link rel="stylesheet" href="../../glass/style/style.css">
-    <link rel="stylesheet" href="./style/style.css?v=72">
+    <link rel="stylesheet" href="./style/style.css?v=73">
     <link rel="stylesheet" href="./style/char-editor.css?v=16">
 </head>
 <body class="underdark-page">
@@ -191,6 +191,17 @@
                 <button id="social-hot-btn" class="social-sidebar__hot-btn active">
                     <i data-lucide="flame"></i> Hot Feed
                 </button>
+            </div>
+            <div class="social-sidebar__lw">
+                <button id="lw-start-btn" class="social-sidebar__lw-btn" title="Start AI-driven Living World feed — characters post autonomously">
+                    <i data-lucide="radio"></i> Living World
+                </button>
+                <select id="lw-speed-select" class="social-sidebar__lw-speed" title="Post frequency">
+                    <option value="15">Fast (15s)</option>
+                    <option value="30" selected>Normal (30s)</option>
+                    <option value="60">Slow (60s)</option>
+                    <option value="120">Chill (2m)</option>
+                </select>
             </div>
             <div class="social-sidebar__section-label">Characters</div>
             <div id="social-char-list" class="social-char-list"></div>
@@ -460,6 +471,11 @@
                     <button id="feed-add-post-btn" class="btn btn--accent btn--sm"><i data-lucide="plus-square"></i> Post</button>
                 </div>
             </header>
+            <div id="lw-stream-bar" class="lw-stream-bar" hidden>
+                <span class="lw-stream-bar__pulse"></span>
+                <span class="lw-stream-bar__label">Living World — characters are active</span>
+                <button id="lw-pause-btn" class="lw-stream-bar__pause btn btn--ghost btn--sm"><i data-lucide="pause"></i> Pause</button>
+            </div>
             <div class="feed-arena__body">
                 <div id="social-feed-container" class="feed-scroll-area feed-scroll-area--main"></div>
                 <aside class="feed-arena__sidebar">

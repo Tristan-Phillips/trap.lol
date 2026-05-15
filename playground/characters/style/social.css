@@ -7,6 +7,116 @@
     padding: 8px 8px 4px;
     flex-shrink: 0;
 }
+
+/* ── Living World controls (sidebar) ── */
+.social-sidebar__lw {
+    padding: 4px 8px 4px;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+.social-sidebar__lw-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 8px;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    transition: background 0.14s, border-color 0.14s, color 0.14s;
+    white-space: nowrap;
+}
+.social-sidebar__lw-btn svg { width: 13px; height: 13px; flex-shrink: 0; }
+.social-sidebar__lw-btn:hover {
+    background: rgba(180, 120, 255, 0.08);
+    border-color: rgba(180, 120, 255, 0.25);
+    color: var(--text-main);
+}
+.social-sidebar__lw-btn.active {
+    background: rgba(180, 120, 255, 0.12);
+    border-color: rgba(180, 120, 255, 0.4);
+    color: #c89fff;
+    animation: lw-btn-pulse 2s ease-in-out infinite;
+}
+@keyframes lw-btn-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(180,120,255,0); }
+    50%       { box-shadow: 0 0 0 4px rgba(180,120,255,0.12); }
+}
+.social-sidebar__lw-speed {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 6px;
+    color: var(--text-muted);
+    font-size: 0.68rem;
+    font-family: var(--font-mono);
+    padding: 4px 6px;
+    cursor: pointer;
+    max-width: 90px;
+}
+.social-sidebar__lw-speed:focus { outline: 1px solid rgba(180,120,255,0.4); }
+
+/* ── Living World stream bar (above feed) ── */
+.lw-stream-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 16px;
+    background: linear-gradient(90deg, rgba(180,120,255,0.08) 0%, rgba(180,120,255,0.04) 100%);
+    border-bottom: 1px solid rgba(180,120,255,0.2);
+    font-size: 0.72rem;
+    font-family: var(--font-mono);
+    color: #c89fff;
+}
+.lw-stream-bar__pulse {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #c89fff;
+    flex-shrink: 0;
+    animation: lw-pulse-dot 1.4s ease-in-out infinite;
+}
+@keyframes lw-pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: 0.4; transform: scale(0.7); }
+}
+.lw-stream-bar__label { flex: 1; opacity: 0.9; }
+.lw-stream-bar__pause { color: #c89fff; border-color: rgba(180,120,255,0.3); font-size: 0.68rem; }
+
+/* ── Living World post animations ── */
+.feed-post--lw-new {
+    animation: lw-post-slide-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes lw-post-slide-in {
+    from { opacity: 0; transform: translateY(-12px) scale(0.98); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.lw-typing-text { white-space: pre-wrap; }
+.lw-cursor {
+    display: inline-block;
+    color: #c89fff;
+    animation: lw-cursor-blink 0.7s step-end infinite;
+}
+@keyframes lw-cursor-blink {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0; }
+}
+.feed-post__lw-badge {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.65rem;
+    color: #c89fff;
+    opacity: 0.7;
+    margin-left: auto;
+}
+.feed-post__lw-badge svg { width: 11px; height: 11px; }
 .social-sidebar__hot-btn {
     width: 100%;
     display: flex;

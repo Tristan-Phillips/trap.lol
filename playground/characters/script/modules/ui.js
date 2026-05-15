@@ -402,7 +402,7 @@ export function initUI() {
         $feedArena: null,
 
         // Gallery / lightbox state
-        ctx.galleryCharId: null,
+        galleryCharId: null,
         lbImages: [],
         lbRefs:   [],
         lbIndex:  0,
@@ -410,6 +410,11 @@ export function initUI() {
         // Social feed state
         feedMode: 'hot',
         permanentFeedPosts: [],
+
+        // Living World stream
+        streamActive: false,
+        streamTimer:  null,
+        streamSpeed:  30,  // seconds between posts
 
         // Image studio state
         studioPresets:  null,
@@ -5579,6 +5584,136 @@ export function initUI() {
         showToast(`Exported ${posts.length} post${posts.length !== 1 ? 's' : ''}.`);
     });
 
+    // ── Living World Stream ───────────────────────────────────────────────────
+    function lwUpdateUI() {
+        const $bar   = qs('#lw-stream-bar');
+        const $start = qs('#lw-start-btn');
+        if ($bar)   $bar.hidden   = !ctx.streamActive;
+        if ($start) {
+            $start.classList.toggle('active', ctx.streamActive);
+            $start.innerHTML = ctx.streamActive
+                ? `<i data-lucide="pause-circle"></i> Pause World`
+                : `<i data-lucide="radio"></i> Living World`;
+            lucideRefresh($start);
+        }
+    }
+
+    async function lwGeneratePost() {
+        if (!state.characters.length || !getApiKey()) return;
+        // Pick a random character weighted towards those with fewer recent posts
+        const pick = state.characters[Math.floor(Math.random() * state.characters.length)];
+        const charId  = pick.id;
+        const char    = state.loadedCharacters[charId];
+        const meta    = pick;
+        const charName = char?.name || meta?.name || 'Unknown';
+        const scenario = state.reality?.worldConfig?.scenario || '';
+        const recentPosts = getAllFeedPosts(charId).slice(0, 3).map(p => p.caption).filter(Boolean).join(' | ');
+
+        try {
+            const { text } = await fetchCompletion({
+                messages: [{
+                    role: 'user',
+                    content: `You are ${charName}. Write a short, in-character social media post (1–3 sentences). No hashtags. No quotes. Be specific and evocative — reference your world, mood, or something you just witnessed.\n${scenario ? `World context: ${scenario.slice(0, 200)}\n` : ''}${recentPosts ? `Your recent posts (don't repeat): ${recentPosts}\n` : ''}Post:`
+                }],
+                model: state.config?.model || 'claude-haiku-4-5-20251001',
+                max_tokens: 120,
+                apiKey: getApiKey(),
+            });
+
+            if (!text?.trim() || !ctx.streamActive) return;
+
+            _saveLocalPost(charId, { type: 'text', src: null, caption: text.trim() });
+
+            // Inject into current feed view with typing animation
+            if ($feedList && !$feedList.hidden) {
+                const av       = getAvatarUrlSync(charId, meta?.avatar_path || char?.avatar) || meta?.avatar_path || char?.avatar;
+                const avHtml   = av && !isEmoji(av) ? `style="background-image:url('${esc(av)}')"` : '';
+                const avTxt    = av && !isEmoji(av) ? '' : (av || '👤');
+                const id       = `lw-${charId}-${Date.now()}`;
+                const article  = document.createElement('article');
+                article.className = 'feed-post feed-post--text feed-post--lw-new';
+                article.dataset.postId  = id;
+                article.dataset.charId  = charId;
+                article.innerHTML = `
+                    <header class="feed-post__header">
+                        <div class="feed-post__header-avatar" ${avHtml}>${avTxt}</div>
+                        <div class="feed-post__header-info">
+                            <span class="feed-post__header-name">${esc(charName)}</span>
+                            <span class="feed-post__header-sub">just now</span>
+                        </div>
+                        <span class="feed-post__lw-badge"><i data-lucide="radio"></i></span>
+                    </header>
+                    <div class="feed-post__body">
+                        <div class="feed-post__caption"><strong>${esc(charName)}</strong> <span class="lw-typing-text"></span><span class="lw-cursor">▌</span></div>
+                    </div>`;
+
+                $feedList.prepend(article);
+                lucideRefresh(article);
+
+                // Typewriter effect
+                const $text   = qs('.lw-typing-text', article);
+                const $cursor = qs('.lw-cursor', article);
+                const chars   = [...text.trim()];
+                let i = 0;
+                const type = () => {
+                    if (i < chars.length) {
+                        $text.textContent += chars[i++];
+                        setTimeout(type, 18 + Math.random() * 22);
+                    } else {
+                        if ($cursor) $cursor.remove();
+                        article.classList.remove('feed-post--lw-new');
+                        // Refresh to normal post rendering after 1s
+                        setTimeout(() => {
+                            if (ctx.feedMode === 'hot') renderHotFeed();
+                            else if (ctx.feedMode === charId) renderSocialFeed(charId);
+                            renderSocialSidebar();
+                        }, 1000);
+                    }
+                };
+                setTimeout(type, 200);
+            } else {
+                renderSocialSidebar();
+            }
+        } catch (_) { /* silently skip on error */ }
+    }
+
+    function lwScheduleNext() {
+        if (!ctx.streamActive) return;
+        const jitter = (Math.random() * 0.4 + 0.8);  // ±20% jitter
+        ctx.streamTimer = setTimeout(async () => {
+            if (!ctx.streamActive) return;
+            await lwGeneratePost();
+            lwScheduleNext();
+        }, ctx.streamSpeed * 1000 * jitter);
+    }
+
+    function startLivingWorld() {
+        if (!state.characters.length) { showToast('Add characters first.', 'warn'); return; }
+        if (!getApiKey()) { showToast('API key required for Living World.', 'warn'); return; }
+        ctx.streamActive = true;
+        lwUpdateUI();
+        switchSidebarTab('social');
+        showToast('Living World started — characters are posting.', 'info', 2500);
+        lwScheduleNext();
+    }
+
+    function pauseLivingWorld() {
+        ctx.streamActive = false;
+        if (ctx.streamTimer) { clearTimeout(ctx.streamTimer); ctx.streamTimer = null; }
+        lwUpdateUI();
+        showToast('Living World paused.', 'info', 1500);
+    }
+
+    qs('#lw-start-btn')?.addEventListener('click', () => {
+        if (ctx.streamActive) pauseLivingWorld(); else startLivingWorld();
+    });
+
+    qs('#lw-pause-btn')?.addEventListener('click', pauseLivingWorld);
+
+    qs('#lw-speed-select')?.addEventListener('change', e => {
+        ctx.streamSpeed = parseInt(e.target.value, 10) || 30;
+    });
+
     // ── Lightbox ──────────────────────────────────────────────────────────────
     async function openLightbox(charId, startIndex) {
         ctx.galleryCharId = charId;
@@ -6100,6 +6235,7 @@ export function initUI() {
                         <button class="msg-action" data-action="edit"    title="Edit message"><i data-lucide="pencil"></i></button>
                         ${isBot ? `<button class="msg-action" data-action="retry"  title="Regenerate" data-bot-id="${esc(botId || '')}"><i data-lucide="refresh-cw"></i></button>` : ''}
                         ${isBot ? `<button class="msg-action" data-action="branch" title="Branch from here (keep this, regenerate)" data-bot-id="${esc(botId || '')}"><i data-lucide="git-branch"></i></button>` : ''}
+                        ${isBot ? `<button class="msg-action" data-action="post-feed" title="Post as ${esc(name)} to feed" data-bot-id="${esc(botId || '')}"><i data-lucide="image-plus"></i></button>` : ''}
                         <button class="msg-action ${hasComments ? 'msg-action--has-annotation' : ''}" data-action="comment" title="Annotate${hasComments ? ` (${commentCount})` : ''}">
                             <i data-lucide="message-square"></i>
                             ${hasComments ? `<span class="msg-action__badge">${commentCount}</span>` : ''}
@@ -6238,6 +6374,35 @@ export function initUI() {
                 const meta = m.botId ? state.characters.find(ch => ch.id === m.botId) : null;
                 appendMessage(m, c?.name || null, meta?.avatar_path || c?.avatar, m.thoughts || null);
             });
+        });
+
+        // ── Post to Feed ─────────────────────────────────────────────────────
+        qs('[data-action="post-feed"]', $msg)?.addEventListener('click', async () => {
+            const targetBotId = qs('[data-action="post-feed"]', $msg)?.dataset.botId || botId;
+            if (!targetBotId) return;
+            const $btn = qs('[data-action="post-feed"]', $msg);
+            if ($btn) { $btn.disabled = true; $btn.querySelector('i').dataset.lucide = 'loader'; lucideRefresh($btn); }
+            try {
+                let caption = null;
+                if (getApiKey()) {
+                    const char = state.loadedCharacters[targetBotId];
+                    const charName = char?.name || name;
+                    const snippet = content.slice(0, 300);
+                    const { text } = await fetchCompletion({
+                        messages: [
+                            { role: 'user', content: `You are ${charName}. Write a short, in-character social media caption (1–2 sentences, no hashtags, no quotes) inspired by this moment from a roleplay:\n\n"${snippet}"` }
+                        ],
+                        model: state.config?.model || 'claude-haiku-4-5-20251001',
+                        max_tokens: 80,
+                        apiKey: getApiKey(),
+                    }).catch(() => ({ text: null }));
+                    caption = text?.trim() || null;
+                }
+                _saveLocalPost(targetBotId, { type: 'text', src: null, caption: caption || content.slice(0, 200) });
+                showToast(`Posted to ${esc(name)}'s feed.`);
+            } finally {
+                if ($btn) { $btn.disabled = false; $btn.querySelector('i').dataset.lucide = 'image-plus'; lucideRefresh($btn); }
+            }
         });
 
         // ── React ────────────────────────────────────────────────────────────
