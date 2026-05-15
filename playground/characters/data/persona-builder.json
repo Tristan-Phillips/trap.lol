@@ -1,0 +1,70 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "description": "Fixed questions for the Quick Create persona builder in the setup wizard. Each question has a set of pre-defined chips the user can select. The AI uses all answers to generate a 2-sentence persona."
+  },
+  "questions": [
+    {
+      "id": "sex",
+      "label": "Sex",
+      "icon": "user",
+      "options": ["Male", "Female", "Non-binary", "Fluid", "Rather not say"]
+    },
+    {
+      "id": "build",
+      "label": "Build",
+      "icon": "ruler",
+      "options": ["Petite", "Slim", "Average", "Athletic", "Muscular", "Heavyset", "Tall & lean", "Short & stocky"]
+    },
+    {
+      "id": "skin",
+      "label": "Skin",
+      "icon": "sun",
+      "options": ["Pale", "Fair", "Olive", "Brown", "Dark brown", "Deep black", "Tan", "Freckled"]
+    },
+    {
+      "id": "age",
+      "label": "Age range",
+      "icon": "calendar",
+      "options": ["Teen (13–17)", "Young adult (18–25)", "Adult (26–35)", "Mid-life (36–50)", "Older (50+)", "Ancient / ageless"]
+    },
+    {
+      "id": "archetype",
+      "label": "Role / Archetype",
+      "icon": "shield",
+      "options": ["Warrior", "Rogue", "Mage", "Healer", "Scholar", "Leader", "Outcast", "Trickster", "Wanderer", "Ordinary person"]
+    },
+    {
+      "id": "skills",
+      "label": "Core skills",
+      "icon": "zap",
+      "multi": true,
+      "options": ["Combat", "Stealth", "Magic", "Persuasion", "Survival", "Technology", "Medicine", "Crafting", "Intelligence / hacking", "Leadership"]
+    },
+    {
+      "id": "magic",
+      "label": "Magic",
+      "icon": "sparkles",
+      "options": ["None", "Minor / subtle", "Moderate", "Powerful", "Ancient / forbidden", "Unknown to self"]
+    },
+    {
+      "id": "personality",
+      "label": "Personality",
+      "icon": "brain",
+      "multi": true,
+      "options": ["Cold & calculating", "Warm & empathetic", "Witty / dry humour", "Impulsive", "Cautious", "Idealistic", "Cynical", "Loyal", "Secretive", "Chaotic"]
+    },
+    {
+      "id": "motivation",
+      "label": "Primary drive",
+      "icon": "target",
+      "options": ["Survival", "Power", "Revenge", "Belonging", "Knowledge", "Freedom", "Redemption", "Wealth", "Love", "Duty"]
+    },
+    {
+      "id": "tone",
+      "label": "Tone they carry",
+      "icon": "mic",
+      "options": ["Quiet & reserved", "Blunt & direct", "Charming & disarming", "Unsettling / unpredictable", "Noble & formal", "Street-smart & casual", "Intellectual & verbose"]
+    }
+  ]
+}

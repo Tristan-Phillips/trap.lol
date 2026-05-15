@@ -544,7 +544,6 @@ export function initUI() {
         $gate.hidden = false;
         _gateShowStep(startStep);
         _gateBuildModelGrid();
-        _gateUpdateThresholdUi(_gateThreshold);
         if (window.lucide) window.lucide.createIcons({ nodes: [$gate] });
     }
     function hideGate() {
@@ -612,11 +611,18 @@ export function initUI() {
         });
         $gateInput?.addEventListener('input', () => { if ($gateError) $gateError.hidden = true; });
 
-        // Step 2: model grid + threshold
-        const $thresh = qs('#gate-threshold', $gate);
-        $thresh?.addEventListener('input', () => {
-            _gateThreshold = +$thresh.value;
-            _gateUpdateThresholdUi(_gateThreshold);
+        // Step 2: model grid + threshold tier buttons
+        const $badge = qs('#gate-threshold-value', $gate);
+        qsa('.api-gate__tier-btn', $gate).forEach($btn => {
+            $btn.addEventListener('click', () => {
+                _gateThreshold = +$btn.dataset.value;
+                qsa('.api-gate__tier-btn', $gate).forEach($b => $b.classList.remove('active'));
+                $btn.classList.add('active');
+                if ($badge) {
+                    $badge.textContent = $btn.dataset.label;
+                    $badge.classList.toggle('api-gate__threshold-badge--high', _gateThreshold >= 60);
+                }
+            });
         });
         qs('#gate-back-2', $gate)?.addEventListener('click', () => _gateShowStep(1, 'back'));
         qs('#gate-next-2', $gate)?.addEventListener('click', () => _gateShowStep(3));
@@ -626,6 +632,101 @@ export function initUI() {
         qs('#gate-finish', $gate)?.addEventListener('click', _gateFinish);
         qs('#gate-user-persona', $gate)?.addEventListener('keydown', e => {
             if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) _gateFinish();
+        });
+
+        // ── Quick Create persona builder ──────────────────────────────────────
+        let _qcAnswers = {};  // { questionId: value | value[] }
+
+        async function _qcInit() {
+            const $questions = qs('#qc-questions', $gate);
+            if (!$questions || $questions.dataset.loaded) return;
+            try {
+                const data = await fetch('./data/persona-builder.json').then(r => r.json());
+                $questions.innerHTML = data.questions.map(q => `
+                    <div class="qc-question" data-qid="${esc(q.id)}">
+                        <div class="qc-question__label">${esc(q.label)}</div>
+                        <div class="qc-question__chips">
+                            ${q.options.map(opt => `
+                                <button type="button" class="qc-chip${q.multi ? ' qc-chip--multi' : ''}" data-qid="${esc(q.id)}" data-val="${esc(opt)}">${esc(opt)}</button>
+                            `).join('')}
+                        </div>
+                    </div>`).join('');
+                $questions.dataset.loaded = '1';
+
+                qsa('.qc-chip', $questions).forEach($chip => {
+                    $chip.addEventListener('click', () => {
+                        const qid   = $chip.dataset.qid;
+                        const val   = $chip.dataset.val;
+                        const multi = $chip.classList.contains('qc-chip--multi');
+                        if (multi) {
+                            const cur = Array.isArray(_qcAnswers[qid]) ? _qcAnswers[qid] : [];
+                            if (cur.includes(val)) {
+                                _qcAnswers[qid] = cur.filter(v => v !== val);
+                                $chip.classList.remove('active');
+                            } else {
+                                _qcAnswers[qid] = [...cur, val];
+                                $chip.classList.add('active');
+                            }
+                        } else {
+                            _qcAnswers[qid] = val;
+                            qsa(`.qc-chip[data-qid="${qid}"]`, $questions).forEach($c => $c.classList.remove('active'));
+                            $chip.classList.add('active');
+                        }
+                    });
+                });
+                lucideRefresh($questions);
+            } catch (_) { /* silently skip if file missing */ }
+        }
+
+        qs('#qc-open-btn', $gate)?.addEventListener('click', async () => {
+            const $panel = qs('#qc-panel', $gate);
+            if (!$panel) return;
+            $panel.hidden = false;
+            await _qcInit();
+            $panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
+
+        qs('#qc-close-btn', $gate)?.addEventListener('click', () => {
+            const $panel = qs('#qc-panel', $gate);
+            if ($panel) $panel.hidden = true;
+        });
+
+        qs('#qc-generate-btn', $gate)?.addEventListener('click', async () => {
+            if (!getApiKey()) { showToast('API key required to generate a persona.', 'warn'); return; }
+            const $btn  = qs('#qc-generate-btn', $gate);
+            const $ta   = qs('#gate-user-persona', $gate);
+            if (!$btn || !$ta) return;
+
+            const answered = Object.entries(_qcAnswers).filter(([, v]) => v && (Array.isArray(v) ? v.length > 0 : true));
+            if (!answered.length) { showToast('Select at least one option first.', 'warn'); return; }
+
+            $btn.disabled = true;
+            $btn.innerHTML = `<i data-lucide="loader-2"></i> Generating…`;
+            lucideRefresh($btn);
+
+            const summary = answered.map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`).join(' | ');
+            try {
+                const { text } = await fetchCompletion({
+                    messages: [{
+                        role: 'user',
+                        content: `Write a 2-sentence brief persona for a roleplay character based on these traits: ${summary}. Be vivid and specific. No intro, no labels — just the persona directly, written in third person. Max 2 sentences.`
+                    }],
+                    model: state.config?.model || _gateModel || 'claude-haiku-4-5-20251001',
+                    max_tokens: 120,
+                    apiKey: getApiKey(),
+                });
+                if (text?.trim()) {
+                    $ta.value = text.trim();
+                    qs('#qc-panel', $gate).hidden = true;
+                    showToast('Persona generated.', 'info', 1500);
+                }
+            } catch (err) {
+                showToast('Generation failed — try again.', 'error');
+            } finally {
+                $btn.disabled = false;
+                $btn.innerHTML = `<i data-lucide="sparkles"></i> Generate Persona`;
+                lucideRefresh($btn);
+            }
         });
 
         // Show gate if wizard was never fully completed OR key is missing
