@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.3.24",
+    "schema_version": "1.3.25",
     "last_updated": "2026-05-15",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -472,6 +472,34 @@
     ]
   },
   "commits": [
+    {
+      "hash": "0000000",
+      "date": "2026-05-15",
+      "message": "feat(underdark): profile flyout, settings restructure, expanded gen params, suffix completion — ui.js v101",
+      "scope": "playground/characters — ui.js, index.html, main.js, style/utilities.css, style/settings-modal.css, data/cards/*",
+      "impact": "high",
+      "files": [
+        "playground/characters/script/modules/ui.js",
+        "playground/characters/script/main.js",
+        "playground/characters/index.html",
+        "playground/characters/style/utilities.css",
+        "playground/characters/style/settings-modal.css",
+        "playground/characters/data/cards/rebecca.json",
+        "playground/characters/data/cards/revy.json",
+        "playground/characters/data/cards/reze.json",
+        "playground/characters/data/cards/riley-blue.json",
+        "playground/characters/data/cards/rosaria-genshin.json",
+        "playground/characters/data/cards/samantha-eve-wilkins.json",
+        "playground/characters/data/cards/the-twins-atomic-heart.json",
+        "playground/characters/data/cards/touka-kirishima.json",
+        "playground/characters/data/cards/uryuu-minene.json",
+        "playground/characters/data/cards/uta-tokyo-ghoul.json",
+        "playground/characters/data/cards/vi.json",
+        "playground/characters/data/cards/yumeko-jabami.json",
+        "status/logs/logs.json"
+      ],
+      "why": "Profile flyout replaces the settings header button with a NanoGPT-style avatar button (bottom-left, next to Uplink) that reveals a menu linking to Settings, My Persona, Backup, and Uplink Home; Interface tab removed from Settings (Arena Background lives in Chat Tint overlay); Generation expanded with Typical P, TFS-Z, Epsilon/ETA cutoffs, Seed control with roll+lock; Wallhaven API key surfaced in Neural panel; Thread Settings moved into More overflow dropdown; final 12 character system_prompt_suffix fields completed (rebecca.json JSON syntax error fixed first)."
+    },
     {
       "hash": "8f61b48",
       "date": "2026-05-15",
@@ -1499,6 +1527,24 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-15",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Session continuation from Batch C context overflow. Completed all 30 character system_prompt_suffix updates (fixed pre-existing JSON syntax error in rebecca.json — muscleTone value had a parenthetical annotation outside quotes). Implemented profile flyout (NanoGPT-inspired avatar button next to Uplink, opens a flyout with Settings/My Persona/Backup/Uplink Home links). Settings modal restructured: Interface tab removed (Arena Background belongs to Chat Tint overlay), Generation panel massively expanded (Typical P, TFS-Z, Epsilon/ETA cutoffs, Seed with roll+lock), Neural panel gains Wallhaven API key section with get-key link. Thread Settings moved from persistent header button into the More overflow dropdown. Profile flyout also updates display name from active continuity config.userName.",
+      "decisions": [
+        "Profile flyout position: bottom-left at 3.6rem from left, next to Uplink — mirrors the NanoGPT sidebar bottom-left avatar pattern but adapted to fixed overlay layout.",
+        "Interface tab removed from Settings entirely — Arena Background is already accessible via Chat Tint overlay (More menu) which is the right place for it per-thread.",
+        "Wallhaven API key in Settings Neural panel syncs to localStorage.getItem('wh_apikey') — same key used by wallhaven.js module; saves directly to localStorage so wallhaven picks it up on next open without requiring a page reload.",
+        "Generation parameters grouped into 3 sections: Sampling (core params), Penalties (rep/presence/freq/epsilon/eta), Context & Output — easier to scan than a flat grid.",
+        "Seed control: text input + dice roll button + lock button — lock toasts the locked value, empty clears seed to null (random per call).",
+        "Thread Settings hidden from arena header (moved to overflow) to reduce header clutter — Settings button also removed from header since profile flyout replaces it."
+      ],
+      "rules_reinforced": [
+        "JSON values cannot contain inline parenthetical annotations — 8 (Cybernetic) is invalid; must be a string: '8 (Cybernetic)'.",
+        "When removing DOM elements that have JS listeners, use optional chaining on all querySelector calls — removal is safe if the JS uses ?. throughout."
+      ]
+    },
     {
       "date": "2026-05-15",
       "agent": "Claude Sonnet 4.6",

@@ -248,6 +248,24 @@
 }
 .sg-item:hover .sg-item__meta { opacity: 1; }
 
+/* ── Neural panel link ── */
+.settings-neural__apikey-link {
+    color: rgba(190, 41, 236, 0.7);
+    text-decoration: none;
+    transition: color 0.14s;
+}
+.settings-neural__apikey-link:hover { color: #d88fff; text-decoration: underline; }
+
+/* ── Generation hint text ── */
+.config-group__hint {
+    font-size: 0.6rem;
+    color: rgba(190, 160, 220, 0.35);
+    display: block;
+    margin-top: 3px;
+    line-height: 1.4;
+    font-family: var(--font-sans, sans-serif);
+}
+
 /* ── Responsive ── */
 @media (max-width: 640px) {
     .settings-modal {

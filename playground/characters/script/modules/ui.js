@@ -2548,10 +2548,52 @@ export function initUI() {
         $btn.addEventListener('click', () => switchSettingsTab($btn.dataset.stab));
     });
 
-    // Open from arena header button
-    qs('#btn-open-settings-hdr')?.addEventListener('click', () => openSettings('neural'));
     // Open from Config tab "Global Settings" button
     qs('#btn-open-settings')?.addEventListener('click', () => openSettings('neural'));
+
+    // ── Profile Flyout ───────────────────────────────────────────────────────
+    const $profileBtn    = qs('#profile-btn');
+    const $profileFlyout = qs('#profile-flyout');
+
+    function openProfileFlyout() {
+        if (!$profileFlyout) return;
+        // Update display name from active continuity persona
+        const nameEl = qs('#profile-flyout__name');
+        if (nameEl) nameEl.textContent = state.config?.userName || 'Wanderer';
+        $profileFlyout.hidden = false;
+        $profileBtn?.setAttribute('aria-expanded', 'true');
+        lucideRefresh($profileFlyout);
+    }
+
+    function closeProfileFlyout() {
+        if (!$profileFlyout) return;
+        $profileFlyout.hidden = true;
+        $profileBtn?.setAttribute('aria-expanded', 'false');
+    }
+
+    $profileBtn?.addEventListener('click', e => {
+        e.stopPropagation();
+        $profileFlyout?.hidden ? openProfileFlyout() : closeProfileFlyout();
+    });
+
+    document.addEventListener('click', e => {
+        if ($profileFlyout && !$profileFlyout.hidden && !$profileFlyout.contains(e.target) && e.target !== $profileBtn) {
+            closeProfileFlyout();
+        }
+    });
+
+    qs('#profile-flyout-settings')?.addEventListener('click', () => {
+        closeProfileFlyout();
+        openSettings('neural');
+    });
+    qs('#profile-flyout-persona')?.addEventListener('click', () => {
+        closeProfileFlyout();
+        openSettings('persona');
+    });
+    qs('#profile-flyout-backup')?.addEventListener('click', () => {
+        closeProfileFlyout();
+        openSettings('backup');
+    });
 
     // ── Settings Gallery ─────────────────────────────────────────────────────
     async function renderSettingsGallery() {
@@ -2668,6 +2710,34 @@ export function initUI() {
     });
 
     updateApiStatus();
+
+    // ── Wallhaven API Key (Settings > Neural) ────────────────────────────────
+    const $whKeyInput  = qs('#settings-wh-apikey');
+    const $whKeyToggle = qs('#settings-wh-apikey-toggle');
+    const $whKeySave   = qs('#settings-wh-apikey-save');
+
+    if ($whKeyInput) $whKeyInput.value = localStorage.getItem('wh_apikey') || '';
+
+    $whKeyToggle?.addEventListener('click', () => {
+        if (!$whKeyInput) return;
+        const show = $whKeyInput.type === 'password';
+        $whKeyInput.type = show ? 'text' : 'password';
+        const icon = $whKeyToggle.querySelector('i');
+        if (icon) icon.dataset.lucide = show ? 'eye-off' : 'eye';
+        lucideRefresh($whKeyToggle);
+    });
+
+    $whKeySave?.addEventListener('click', () => {
+        if (!$whKeyInput) return;
+        const val = $whKeyInput.value.trim();
+        localStorage.setItem('wh_apikey', val);
+        // Sync to the Wallhaven module's in-memory state if available
+        if (window.WH) window.WH.apiKey = val;
+        // Sync the Wallhaven modal input if open
+        const $whmInput = qs('#wh-apikey-input');
+        if ($whmInput) $whmInput.value = val;
+        showToast('Wallhaven API key saved', 'success');
+    });
 
     // ── Character Roster ──────────────────────────────────────────────────────
     const $charList = qs('#character-list');
@@ -8634,11 +8704,16 @@ export function initUI() {
         set('topp-input',      c.topP);               setBadge('topp-val',      c.topP?.toFixed(2));
         set('topk-input',      c.topK);               setBadge('topk-val',      c.topK);
         set('minp-input',      c.minP);               setBadge('minp-val',      c.minP?.toFixed(2));
+        set('typicalp-input',  c.typicalP ?? 1);      setBadge('typicalp-val',  (c.typicalP ?? 1).toFixed(2));
+        set('tfsz-input',      c.tfsZ ?? 1);          setBadge('tfsz-val',      (c.tfsZ ?? 1).toFixed(2));
         set('rep-input',       c.repetitionPenalty);  setBadge('rep-val',       c.repetitionPenalty?.toFixed(2));
         set('pres-input',      c.presencePenalty);    setBadge('pres-val',      c.presencePenalty?.toFixed(2));
         set('freq-input',      c.frequencyPenalty);   setBadge('freq-val',      c.frequencyPenalty?.toFixed(2));
+        set('epsilon-input',   c.epsilonCutoff ?? 0); setBadge('epsilon-val',   c.epsilonCutoff ?? 0);
+        set('eta-input',       c.etaCutoff ?? 0);     setBadge('eta-val',       c.etaCutoff ?? 0);
         set('maxctx-input',    c.maxContext);          setBadge('maxctx-val',    c.maxContext);
         set('maxout-input',    c.maxOutput);           setBadge('maxout-val',    c.maxOutput);
+        if (qs('#seed-input')) qs('#seed-input').value = c.seed != null ? c.seed : '';
         set('sys-directive',   c.sysDirective);
         set('authors-note',    c.authorsNote);
         set('nsfw-bypass',     c.nsfwBypass);
@@ -8689,13 +8764,40 @@ export function initUI() {
     bindSlider('topp-input',       'topp-val',      'topP');
     bindSlider('topk-input',       'topk-val',      'topK', true);
     bindSlider('minp-input',       'minp-val',      'minP');
+    bindSlider('typicalp-input',   'typicalp-val',  'typicalP');
+    bindSlider('tfsz-input',       'tfsz-val',      'tfsZ');
     bindSlider('rep-input',        'rep-val',       'repetitionPenalty');
     bindSlider('pres-input',       'pres-val',      'presencePenalty');
     bindSlider('freq-input',       'freq-val',      'frequencyPenalty');
+    bindSlider('epsilon-input',    'epsilon-val',   'epsilonCutoff', true);
+    bindSlider('eta-input',        'eta-val',       'etaCutoff', true);
     bindSlider('maxctx-input',     'maxctx-val',    'maxContext', true);
     bindSlider('maxout-input',     'maxout-val',    'maxOutput', true);
     bindSlider('an-depth-input',   'an-depth-val',  'authorsNoteDepth', true);
     bindSlider('group-delay-input','group-delay-val','groupAutoDelay', true, v => `${v}ms`);
+
+    // Seed controls
+    qs('#seed-roll')?.addEventListener('click', () => {
+        const seed = Math.floor(Math.random() * 2147483647);
+        const $inp = qs('#seed-input');
+        if ($inp) $inp.value = seed;
+        setConfig({ seed });
+    });
+    qs('#seed-lock')?.addEventListener('click', () => {
+        const $inp = qs('#seed-input');
+        const val = $inp?.value.trim();
+        if (val && val !== '' && val !== '-1') {
+            setConfig({ seed: parseInt(val, 10) });
+            showToast(`Seed locked: ${val}`, 'info');
+        } else {
+            setConfig({ seed: null });
+            showToast('Seed unlocked — random each call', 'info');
+        }
+    });
+    qs('#seed-input')?.addEventListener('change', e => {
+        const val = e.target.value.trim();
+        setConfig({ seed: val ? parseInt(val, 10) : null });
+    });
 
     const bindText = (id, key) => {
         const $el = qs(`#${id}`);
