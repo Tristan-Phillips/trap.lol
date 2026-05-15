@@ -105,7 +105,10 @@ export function defaultThreadConfig() {
         // Lorebook overrides: array of lorebook IDs that should always be active for this thread
         // Characters' lorebooks are auto-attached unless autoAttachLorebooks === false
         autoAttachLorebooks: true,
-        pinnedLoreBookIds:   []
+        pinnedLoreBookIds:   [],
+        // Thread activity log — array of { id, ts, type, text, editable }
+        // types: 'event' | 'message' | 'scene' | 'note'
+        log: []
     };
 }
 

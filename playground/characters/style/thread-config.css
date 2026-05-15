@@ -721,6 +721,187 @@
     color: #f0d0ff;
 }
 
+/* ── Log tab ── */
+.tc-log-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    flex-shrink: 0;
+}
+
+.tc-log-toolbar__title {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(190, 41, 236, 0.7);
+}
+.tc-log-toolbar__title svg { width: 12px; height: 12px; }
+
+.tc-log-toolbar__actions {
+    display: flex;
+    gap: 6px;
+}
+
+.tc-log-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 10px;
+    border-radius: 7px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: rgba(190, 160, 220, 0.55);
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: background 0.13s, border-color 0.13s, color 0.13s;
+}
+.tc-log-btn svg { width: 11px; height: 11px; }
+.tc-log-btn:hover {
+    background: rgba(190, 41, 236, 0.1);
+    border-color: rgba(190, 41, 236, 0.25);
+    color: #d88fff;
+}
+.tc-log-btn--save {
+    background: rgba(190, 41, 236, 0.12);
+    border-color: rgba(190, 41, 236, 0.3);
+    color: rgba(190, 41, 236, 0.85);
+}
+.tc-log-btn--danger:hover {
+    background: rgba(220, 50, 50, 0.1);
+    border-color: rgba(220, 50, 50, 0.3);
+    color: rgba(255, 120, 120, 0.85);
+}
+.tc-log-btn--cancel { color: rgba(190, 160, 220, 0.4); }
+
+.tc-log-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+}
+
+.tc-log-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 40px 20px;
+    text-align: center;
+    color: rgba(190, 160, 220, 0.3);
+}
+.tc-log-empty svg { width: 32px; height: 32px; opacity: 0.2; }
+.tc-log-empty p { font-size: 0.72rem; line-height: 1.5; max-width: 260px; }
+
+.tc-log-entry {
+    display: flex;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 9px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.05);
+    transition: border-color 0.13s;
+}
+.tc-log-entry:hover { border-color: rgba(190, 41, 236, 0.15); }
+
+.tc-log-entry__icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+.tc-log-entry__icon svg { width: 12px; height: 12px; }
+
+.tc-log-entry__icon--event   { background: rgba(100,200,255,0.1); color: rgba(100,200,255,0.7); }
+.tc-log-entry__icon--message { background: rgba(190,41,236,0.1);  color: rgba(190,41,236,0.7); }
+.tc-log-entry__icon--scene   { background: rgba(255,180,50,0.1);  color: rgba(255,180,50,0.7); }
+.tc-log-entry__icon--note    { background: rgba(100,220,150,0.1); color: rgba(100,220,150,0.7); }
+
+.tc-log-entry__body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.tc-log-entry__meta {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.tc-log-entry__type {
+    font-family: var(--font-mono);
+    font-size: 0.56rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(190, 160, 220, 0.45);
+    font-weight: 600;
+}
+
+.tc-log-entry__time {
+    font-size: 0.6rem;
+    color: rgba(190, 160, 220, 0.3);
+    font-family: var(--font-mono);
+}
+
+.tc-log-entry__edit-btn,
+.tc-log-entry__del-btn {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    background: none;
+    border: none;
+    color: rgba(190, 160, 220, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    margin-left: auto;
+    transition: color 0.12s, background 0.12s;
+    opacity: 0;
+}
+.tc-log-entry__del-btn { margin-left: 2px; }
+.tc-log-entry__edit-btn svg,
+.tc-log-entry__del-btn svg { width: 10px; height: 10px; }
+.tc-log-entry:hover .tc-log-entry__edit-btn,
+.tc-log-entry:hover .tc-log-entry__del-btn { opacity: 1; }
+.tc-log-entry__edit-btn:hover { background: rgba(190,41,236,0.12); color: #d88fff; }
+.tc-log-entry__del-btn:hover  { background: rgba(220,50,50,0.1); color: rgba(255,120,120,0.85); }
+
+.tc-log-entry__text {
+    font-size: 0.74rem;
+    color: rgba(220,200,255,0.65);
+    line-height: 1.45;
+    word-break: break-word;
+    font-family: var(--font-sans, sans-serif);
+}
+.tc-log-entry__text--hidden { display: none; }
+
+.tc-log-entry__edit-area {
+    font-size: 0.74rem;
+    min-height: 52px;
+    resize: vertical;
+}
+
+.tc-log-entry__edit-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 2px;
+}
+
 /* ── Responsive ── */
 @media (max-width: 640px) {
     .tc-shell {

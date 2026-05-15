@@ -2966,6 +2966,7 @@ export function initUI() {
         renderPersonaCharSelect();
         renderWelcomeGrid();
         showToast(`${char.name} added to thread`);
+        tcLogPush('event', `${char.name} added to thread`);
         const avatarUrl = await getAvatarUrl(id, meta.avatar_path || char.avatar);
         updateCinematicBackground(avatarUrl);
 
@@ -3106,8 +3107,10 @@ export function initUI() {
             $btn.addEventListener('click', async e => {
                 e.stopPropagation();
                 const id = $btn.dataset.remove;
+                const _removedName = state.loadedCharacters[id]?.name || state.characters.find(c => c.id === id)?.name || id;
                 removeBotFromChat(id);
                 delete _rrIndex[state.chat.id];
+                tcLogPush('event', `${_removedName} removed from thread`);
                 renderActiveBots();
                 renderRoster();
                 const newActive = state.loadedCharacters[state.activeBotId];
@@ -6879,6 +6882,9 @@ export function initUI() {
         _injectOverlordMessage(text, null, mode);
         // Persist to history so it survives page reload (overlordMode stored via meta)
         addMessage('system', text, null, { overlordMode: mode });
+        // Auto-log scene/overlord events
+        const _sceneSummary = text.replace(/\*{1,3}([^*]+)\*{1,3}/g, '$1').replace(/\s+/g, ' ').trim().slice(0, 120);
+        tcLogPush('scene', `[${mode}] ${_sceneSummary}${text.length > 120 ? '…' : ''}`);
         return text;
     }
 
@@ -8079,6 +8085,10 @@ export function initUI() {
                     $botMsg.dataset.msgId = msg.id;
                     $content.innerHTML   = renderMarkdown(finalText);
 
+                    // Auto-log: 1-sentence message summary (first 120 chars, stripped of markdown)
+                    const _logSummary = finalText.replace(/\*{1,3}([^*]+)\*{1,3}/g, '$1').replace(/\s+/g, ' ').trim().slice(0, 120);
+                    tcLogPush('message', `${char?.name || 'Character'}: ${_logSummary}${finalText.length > 120 ? '…' : ''}`);
+
                     // Patch token badge into the live message element
                     if (tokens > 0) {
                         const $hdr = qs('.message__header', $botMsg);
@@ -8624,6 +8634,12 @@ export function initUI() {
         saveState();
         hideModal('modal-thread-config');
         showToast('Thread settings saved', 'info', 1800);
+        // Log config change
+        const _changes = [];
+        if (tc.model) _changes.push(`model → ${tc.model.split('/').pop()}`);
+        if (tc.temperature != null) _changes.push(`temp → ${tc.temperature.toFixed(2)}`);
+        if (tc.narrativeTone?.toneTags) _changes.push(`tone → ${tc.narrativeTone.toneTags}`);
+        if (_changes.length) tcLogPush('event', `Thread settings updated: ${_changes.join(', ')}`);
         // Update badge on active-bots header if custom config is set
         _updateThreadConfigBadge();
     });
@@ -8632,6 +8648,144 @@ export function initUI() {
     qs('#tc-close')?.addEventListener('click',  () => hideModal('modal-thread-config'));
     qs('#tc-cancel')?.addEventListener('click', () => hideModal('modal-thread-config'));
     qs('#modal-thread-config .tc-modal__backdrop')?.addEventListener('click', () => hideModal('modal-thread-config'));
+
+    // ── Thread Log ───────────────────────────────────────────────────────────
+
+    function _tcLog() {
+        const tc = state.chat?.threadConfig;
+        if (!tc) return null;
+        if (!Array.isArray(tc.log)) tc.log = [];
+        return tc.log;
+    }
+
+    function tcLogPush(type, text) {
+        const log = _tcLog();
+        if (!log) return;
+        log.push({
+            id:   `log-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`,
+            ts:   Date.now(),
+            type, // 'event' | 'message' | 'scene' | 'note'
+            text
+        });
+        saveState();
+    }
+
+    function renderThreadLog() {
+        const $list = qs('#tc-log-list');
+        if (!$list) return;
+        const log = _tcLog();
+        if (!log) return;
+
+        if (!log.length) {
+            $list.innerHTML = `
+                <div class="tc-log-empty">
+                    <i data-lucide="scroll-text"></i>
+                    <p>No entries yet. Events, scene transitions, and message summaries will appear here automatically.</p>
+                </div>`;
+            lucideRefresh($list);
+            return;
+        }
+
+        const ICONS = { event: 'activity', message: 'message-square', scene: 'sparkles', note: 'pencil-line' };
+        const LABELS = { event: 'Event', message: 'Message', scene: 'Scene', note: 'Note' };
+
+        $list.innerHTML = [...log].reverse().map(entry => {
+            const d = new Date(entry.ts);
+            const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const dateStr = d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+            return `
+            <div class="tc-log-entry" data-log-id="${esc(entry.id)}" data-type="${esc(entry.type)}">
+                <div class="tc-log-entry__icon tc-log-entry__icon--${esc(entry.type)}">
+                    <i data-lucide="${ICONS[entry.type] || 'circle'}"></i>
+                </div>
+                <div class="tc-log-entry__body">
+                    <div class="tc-log-entry__meta">
+                        <span class="tc-log-entry__type">${LABELS[entry.type] || entry.type}</span>
+                        <span class="tc-log-entry__time">${dateStr} ${timeStr}</span>
+                        <button class="tc-log-entry__edit-btn" data-log-edit="${esc(entry.id)}" title="Edit"><i data-lucide="pencil"></i></button>
+                        <button class="tc-log-entry__del-btn" data-log-del="${esc(entry.id)}" title="Delete"><i data-lucide="x"></i></button>
+                    </div>
+                    <div class="tc-log-entry__text" data-log-text="${esc(entry.id)}">${esc(entry.text)}</div>
+                    <textarea class="tc-log-entry__edit-area tc-textarea" data-log-ta="${esc(entry.id)}" rows="2" hidden>${esc(entry.text)}</textarea>
+                    <div class="tc-log-entry__edit-actions" data-log-actions="${esc(entry.id)}" hidden>
+                        <button class="tc-log-btn tc-log-btn--save" data-log-save="${esc(entry.id)}"><i data-lucide="check"></i> Save</button>
+                        <button class="tc-log-btn tc-log-btn--cancel" data-log-cancel="${esc(entry.id)}"><i data-lucide="x"></i> Cancel</button>
+                    </div>
+                </div>
+            </div>`;
+        }).join('');
+
+        lucideRefresh($list);
+
+        // Edit button
+        qsa('[data-log-edit]', $list).forEach($btn => {
+            $btn.addEventListener('click', () => {
+                const id = $btn.dataset.logEdit;
+                const $text = qs(`[data-log-text="${id}"]`, $list);
+                const $ta   = qs(`[data-log-ta="${id}"]`, $list);
+                const $acts = qs(`[data-log-actions="${id}"]`, $list);
+                if (!$ta) return;
+                $ta.value   = $text?.textContent || '';
+                $text?.classList.add('tc-log-entry__text--hidden');
+                $ta.hidden  = false;
+                if ($acts) $acts.hidden = false;
+                $ta.focus();
+            });
+        });
+
+        // Save edit
+        qsa('[data-log-save]', $list).forEach($btn => {
+            $btn.addEventListener('click', () => {
+                const id  = $btn.dataset.logSave;
+                const $ta = qs(`[data-log-ta="${id}"]`, $list);
+                const log = _tcLog();
+                if (!log || !$ta) return;
+                const entry = log.find(e => e.id === id);
+                if (entry) { entry.text = $ta.value.trim(); saveState(); }
+                renderThreadLog();
+            });
+        });
+
+        // Cancel edit
+        qsa('[data-log-cancel]', $list).forEach($btn => {
+            $btn.addEventListener('click', () => renderThreadLog());
+        });
+
+        // Delete
+        qsa('[data-log-del]', $list).forEach($btn => {
+            $btn.addEventListener('click', () => {
+                const id  = $btn.dataset.logDel;
+                const log = _tcLog();
+                if (!log) return;
+                const idx = log.findIndex(e => e.id === id);
+                if (idx >= 0) { log.splice(idx, 1); saveState(); }
+                renderThreadLog();
+            });
+        });
+    }
+
+    // Add manual note
+    qs('#tc-log-add-note')?.addEventListener('click', () => {
+        tcLogPush('note', 'New note — click edit to write.');
+        renderThreadLog();
+    });
+
+    // Clear log
+    qs('#tc-log-clear')?.addEventListener('click', async () => {
+        const ok = await confirm('Clear Log', 'Delete all log entries for this thread?', { danger: true });
+        if (!ok) return;
+        const log = _tcLog();
+        if (log) { log.length = 0; saveState(); }
+        renderThreadLog();
+    });
+
+    // Render log when Log tab is opened
+    const _origTcNavClick = (tab) => {
+        if (tab.dataset.tcTab === 'log') renderThreadLog();
+    };
+    qsa('.tc-nav__item').forEach(tab => {
+        tab.addEventListener('click', () => _origTcNavClick(tab));
+    });
 
     function _updateThreadConfigBadge() {
         const $btn = qs('#btn-thread-config');

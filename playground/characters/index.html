@@ -6,7 +6,7 @@
     <title>The Underdark // Reality Matrix</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2306040A'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%23ef4444' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23ef4444'/%3E%3C/svg%3E" />
     <link rel="stylesheet" href="../../glass/style/style.css">
-    <link rel="stylesheet" href="./style/style.css?v=77">
+    <link rel="stylesheet" href="./style/style.css?v=78">
     <link rel="stylesheet" href="./style/char-editor.css?v=16">
 </head>
 <body class="underdark-page">
@@ -1281,6 +1281,10 @@
           <i data-lucide="user-round"></i>
           <span>Identity</span>
         </button>
+        <button class="tc-nav__item" data-tc-tab="log" role="tab" aria-selected="false">
+          <i data-lucide="scroll-text"></i>
+          <span>Log</span>
+        </button>
       </nav>
 
       <!-- Panels -->
@@ -1473,6 +1477,27 @@
               <p>Identity overrides let you play a different character or role in this specific thread without affecting other threads in the same continuity. Leave blank to use the continuity-level persona.</p>
             </div>
           </section>
+
+        </div>
+
+        <!-- ── LOG ── -->
+        <div class="tc-panel" id="tc-panel-log" role="tabpanel" hidden>
+
+          <div class="tc-log-toolbar">
+            <span class="tc-log-toolbar__title"><i data-lucide="scroll-text"></i> Thread Activity Log</span>
+            <div class="tc-log-toolbar__actions">
+              <button id="tc-log-add-note" class="tc-log-btn" title="Add manual note">
+                <i data-lucide="plus"></i> Note
+              </button>
+              <button id="tc-log-clear" class="tc-log-btn tc-log-btn--danger" title="Clear entire log">
+                <i data-lucide="trash-2"></i>
+              </button>
+            </div>
+          </div>
+
+          <div id="tc-log-list" class="tc-log-list">
+            <!-- Populated by JS -->
+          </div>
 
         </div>
 
@@ -3452,7 +3477,7 @@
 
 <div id="toast-container" class="toast-container"></div>
 <script src="https://cdn.trap.lol/shards/lucide.min.js"></script><script src="https://cdn.trap.lol/shards/marked.min.js"></script><script src="https://cdn.trap.lol/shards/purify.min.js"></script>
-<script type="module" src="./script/main.js?v=66"></script>
+<script type="module" src="./script/main.js?v=67"></script>
 <!-- ── Wallhaven Arena ── -->
 <script src="./script/modules/wallhaven.js"></script>
 
