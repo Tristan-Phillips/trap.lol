@@ -473,7 +473,7 @@
   },
   "commits": [
     {
-      "hash": "PENDING",
+      "hash": "8f61b48",
       "date": "2026-05-15",
       "message": "feat(underdark): Batch C — Living World stream + post-from-thread — ui.js v98",
       "scope": "playground/characters — ui.js, index.html, main.js, social.css",
