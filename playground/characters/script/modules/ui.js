@@ -8465,7 +8465,7 @@ export function initUI() {
                     </optgroup>`).join('');
                 $tcModel.innerHTML = '<option value="">— Inherit from continuity —</option>' + optHtml;
                 $tcModel.value = tc.model || '';
-                lucideRefresh($tcModel.closest('.ts-studio'));
+                lucideRefresh($tcModel.closest('.tc-shell'));
             }).catch(() => {});
         } else if ($tcModel) {
             $tcModel.value = tc.model || '';
@@ -8498,21 +8498,21 @@ export function initUI() {
         qs('#tc-pacing').value        = tone.pacing  || '';
 
         // Sync quick pills to saved values
-        qsa('#tc-sexual-energy-pills .ts-quick-pill').forEach($p => {
+        qsa('#tc-sexual-energy-pills .tc-energy-node').forEach($p => {
             $p.classList.toggle('active', $p.dataset.val === (tone.sexualEnergy || ''));
         });
-        qsa('#tc-tone-pills .ts-quick-pill--toggle').forEach($p => {
+        qsa('#tc-tone-pills .tc-tone-chip').forEach($p => {
             const tags = _tcToneTags.split(',').map(s => s.trim()).filter(Boolean);
             $p.classList.toggle('active', tags.includes($p.dataset.val));
         });
-        qsa('[data-target="tc-pacing"]').forEach($p => {
+        qsa('#tc-pacing-pills .tc-pacing-btn').forEach($p => {
             $p.classList.toggle('active', $p.dataset.val === (tone.pacing || ''));
         });
 
         // Reset to Core tab
-        qsa('.tc-tab').forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected', 'false'); });
+        qsa('.tc-nav__item').forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected', 'false'); });
         qsa('.tc-panel').forEach(p => { p.classList.remove('active'); p.hidden = true; });
-        const $firstTab   = qs('.tc-tab[data-tc-tab="core"]');
+        const $firstTab   = qs('.tc-nav__item[data-tc-tab="core"]');
         const $firstPanel = qs('#tc-panel-core');
         if ($firstTab)   { $firstTab.classList.add('active'); $firstTab.setAttribute('aria-selected', 'true'); }
         if ($firstPanel) { $firstPanel.classList.add('active'); $firstPanel.hidden = false; }
@@ -8522,9 +8522,9 @@ export function initUI() {
     }
 
     // Tab switching
-    qsa('.tc-tab').forEach(tab => {
+    qsa('.tc-nav__item').forEach(tab => {
         tab.addEventListener('click', () => {
-            qsa('.tc-tab').forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected', 'false'); });
+            qsa('.tc-nav__item').forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected', 'false'); });
             qsa('.tc-panel').forEach(p => { p.classList.remove('active'); p.hidden = true; });
             tab.classList.add('active'); tab.setAttribute('aria-selected', 'true');
             const $panel = qs(`#tc-panel-${tab.dataset.tcTab}`);
@@ -8534,39 +8534,46 @@ export function initUI() {
 
     // Inherit toggles
     qs('#tc-temp-inherit')?.addEventListener('change', e => {
-        const $inp = qs('#tc-temp-input');
+        const $inp   = qs('#tc-temp-input');
         const $badge = qs('#tc-temp-badge');
         if (!$inp) return;
         $inp.disabled = e.target.checked;
-        $badge.textContent = e.target.checked ? 'inherit' : parseFloat($inp.value).toFixed(2);
+        if ($badge) {
+            $badge.textContent = e.target.checked ? 'inherit' : parseFloat($inp.value).toFixed(2);
+            $badge.dataset.inherit = e.target.checked ? 'true' : 'false';
+        }
     });
     qs('#tc-maxout-inherit')?.addEventListener('change', e => {
-        const $inp = qs('#tc-maxout-input');
+        const $inp   = qs('#tc-maxout-input');
         const $badge = qs('#tc-maxout-badge');
         if (!$inp) return;
         $inp.disabled = e.target.checked;
-        $badge.textContent = e.target.checked ? 'inherit' : $inp.value;
+        if ($badge) {
+            $badge.textContent = e.target.checked ? 'inherit' : $inp.value;
+            $badge.dataset.inherit = e.target.checked ? 'true' : 'false';
+        }
     });
     qs('#tc-temp-input')?.addEventListener('input', e => {
         const $badge = qs('#tc-temp-badge');
-        if ($badge) $badge.textContent = parseFloat(e.target.value).toFixed(2);
+        if ($badge) { $badge.textContent = parseFloat(e.target.value).toFixed(2); $badge.dataset.inherit = 'false'; }
     });
     qs('#tc-maxout-input')?.addEventListener('input', e => {
         const $badge = qs('#tc-maxout-badge');
-        if ($badge) $badge.textContent = e.target.value;
+        if ($badge) { $badge.textContent = e.target.value; $badge.dataset.inherit = 'false'; }
     });
 
-    // Quick pills for Tone tab
+    // Energy nodes (Sexual Energy scale)
     qs('#tc-sexual-energy-pills')?.addEventListener('click', e => {
-        const $p = e.target.closest('.ts-quick-pill');
+        const $p = e.target.closest('.tc-energy-node');
         if (!$p) return;
         const val = $p.dataset.val || '';
         const $target = qs(`#${$p.dataset.target}`);
         if ($target) $target.value = val === $target.value ? '' : val;
-        qsa('#tc-sexual-energy-pills .ts-quick-pill').forEach(b => b.classList.toggle('active', b.dataset.val === $target?.value));
+        qsa('#tc-sexual-energy-pills .tc-energy-node').forEach(b => b.classList.toggle('active', b.dataset.val === $target?.value));
     });
+    // Tone chips (multi-select)
     qs('#tc-tone-pills')?.addEventListener('click', e => {
-        const $p = e.target.closest('.ts-quick-pill--toggle');
+        const $p = e.target.closest('.tc-tone-chip');
         if (!$p) return;
         const val = $p.dataset.val;
         const $hidden = qs('#tc-tone-tags');
@@ -8577,13 +8584,14 @@ export function initUI() {
         if ($hidden) $hidden.value = _tcToneTags;
         $p.classList.toggle('active', idx < 0);
     });
-    qsa('[data-target="tc-pacing"]').forEach($p => {
-        $p.addEventListener('click', () => {
-            const val = $p.dataset.val;
-            const $inp = qs('#tc-pacing');
-            if ($inp) $inp.value = val === $inp.value ? '' : val;
-            qsa('[data-target="tc-pacing"]').forEach(b => b.classList.toggle('active', b.dataset.val === $inp?.value));
-        });
+    // Pacing buttons
+    qs('#tc-pacing-pills')?.addEventListener('click', e => {
+        const $p = e.target.closest('.tc-pacing-btn');
+        if (!$p) return;
+        const val = $p.dataset.val;
+        const $inp = qs('#tc-pacing');
+        if ($inp) $inp.value = val === $inp.value ? '' : val;
+        qsa('#tc-pacing-pills .tc-pacing-btn').forEach(b => b.classList.toggle('active', b.dataset.val === $inp?.value));
     });
 
     // Save
@@ -8623,7 +8631,7 @@ export function initUI() {
     qs('#btn-thread-config')?.addEventListener('click', openThreadConfig);
     qs('#tc-close')?.addEventListener('click',  () => hideModal('modal-thread-config'));
     qs('#tc-cancel')?.addEventListener('click', () => hideModal('modal-thread-config'));
-    qs('#modal-thread-config .modal__backdrop')?.addEventListener('click', () => hideModal('modal-thread-config'));
+    qs('#modal-thread-config .tc-modal__backdrop')?.addEventListener('click', () => hideModal('modal-thread-config'));
 
     function _updateThreadConfigBadge() {
         const $btn = qs('#btn-thread-config');

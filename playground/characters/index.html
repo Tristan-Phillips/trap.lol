@@ -6,7 +6,7 @@
     <title>The Underdark // Reality Matrix</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2306040A'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%23ef4444' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23ef4444'/%3E%3C/svg%3E" />
     <link rel="stylesheet" href="../../glass/style/style.css">
-    <link rel="stylesheet" href="./style/style.css?v=76">
+    <link rel="stylesheet" href="./style/style.css?v=77">
     <link rel="stylesheet" href="./style/char-editor.css?v=16">
 </head>
 <body class="underdark-page">
@@ -1245,146 +1245,250 @@
 <!-- ══════════════════════════════════════════════
      THREAD CONFIG EDITOR (mid-thread gear)
 ══════════════════════════════════════════════ -->
-<div id="modal-thread-config" class="modal ts-modal" hidden role="dialog" aria-modal="true" aria-labelledby="tc-title">
-  <div class="modal__backdrop"></div>
-  <div class="ts-studio ts-studio--thread-config">
+<div id="modal-thread-config" class="modal tc-modal" hidden role="dialog" aria-modal="true" aria-labelledby="tc-title">
+  <div class="modal__backdrop tc-modal__backdrop"></div>
+  <div class="tc-shell">
 
-    <header class="ts-header">
-      <div class="ts-header__left">
-        <i data-lucide="settings-2" class="ts-header__icon"></i>
-        <h2 id="tc-title" class="ts-header__title">Thread Settings</h2>
-        <span id="tc-name-badge" class="ts-badge"></span>
+    <!-- ── Header ── -->
+    <header class="tc-hdr">
+      <div class="tc-hdr__left">
+        <div class="tc-hdr__icon-wrap"><i data-lucide="sliders"></i></div>
+        <div class="tc-hdr__meta">
+          <h2 id="tc-title" class="tc-hdr__title">Thread Settings</h2>
+          <span id="tc-name-badge" class="tc-hdr__thread-name"></span>
+        </div>
       </div>
-      <button id="tc-close" class="ce-btn ce-btn--ghost ce-btn--icon" aria-label="Close"><i data-lucide="x"></i></button>
+      <div class="tc-hdr__right">
+        <span class="tc-hdr__scope-tag">Per-thread overrides</span>
+        <button id="tc-close" class="tc-close-btn" aria-label="Close"><i data-lucide="x"></i></button>
+      </div>
     </header>
 
-    <nav class="ts-tabs" role="tablist">
-      <button class="tc-tab active" data-tc-tab="core" role="tab" aria-selected="true"><i data-lucide="sliders-horizontal"></i> Core</button>
-      <button class="tc-tab" data-tc-tab="tone" role="tab" aria-selected="false"><i data-lucide="flame"></i> Tone</button>
-    </nav>
+    <!-- ── Layout: nav + panels ── -->
+    <div class="tc-layout">
 
-    <div class="ts-body">
+      <!-- Left nav -->
+      <nav class="tc-nav" role="tablist">
+        <button class="tc-nav__item active" data-tc-tab="core" role="tab" aria-selected="true">
+          <i data-lucide="cpu"></i>
+          <span>Core</span>
+        </button>
+        <button class="tc-nav__item" data-tc-tab="tone" role="tab" aria-selected="false">
+          <i data-lucide="flame"></i>
+          <span>Tone</span>
+        </button>
+        <button class="tc-nav__item" data-tc-tab="identity" role="tab" aria-selected="false">
+          <i data-lucide="user-round"></i>
+          <span>Identity</span>
+        </button>
+      </nav>
 
-      <!-- ── TAB: Core ── -->
-      <div class="tc-panel active" id="tc-panel-core" role="tabpanel">
-        <p class="ts-panel__desc">Per-thread overrides. Null values inherit from the continuity. Changes take effect on the next response.</p>
+      <!-- Panels -->
+      <div class="tc-panels">
 
-        <div class="ts-field-group">
-          <label class="ts-label">Thread Scenario <span class="ts-hint">layered on top of world scenario</span></label>
-          <textarea id="tc-scenario" class="control-textarea ts-textarea" rows="5" placeholder="Additional context specific to this thread…"></textarea>
-        </div>
+        <!-- ── CORE ── -->
+        <div class="tc-panel active" id="tc-panel-core" role="tabpanel">
 
-        <div class="ts-field-group">
-          <label class="ts-label">Model Override <span class="ts-hint">blank = inherit from continuity</span></label>
-          <select id="tc-model-select" class="control-select control-select--sm ts-select">
-            <option value="">— Inherit from continuity —</option>
-          </select>
-        </div>
-
-        <div class="ts-gen-grid">
-          <div class="ts-field-group">
-            <label class="ts-label">Temperature <span id="tc-temp-badge" class="ts-badge ts-badge--sm">inherit</span></label>
-            <div class="tc-inherit-row">
-              <input type="checkbox" id="tc-temp-inherit" checked> <label for="tc-temp-inherit" class="ts-hint">Inherit</label>
+          <section class="tc-section">
+            <div class="tc-section__hdr">
+              <i data-lucide="file-text"></i>
+              <span>Scenario</span>
+              <em class="tc-section__note">layered on top of world scenario</em>
             </div>
-            <input type="range" id="tc-temp-input" class="config-range" min="0" max="2" step="0.01" value="0.8" disabled>
-          </div>
-          <div class="ts-field-group">
-            <label class="ts-label">Max Output <span id="tc-maxout-badge" class="ts-badge ts-badge--sm">inherit</span></label>
-            <div class="tc-inherit-row">
-              <input type="checkbox" id="tc-maxout-inherit" checked> <label for="tc-maxout-inherit" class="ts-hint">Inherit</label>
+            <textarea id="tc-scenario" class="tc-textarea" rows="4" placeholder="Additional context specific to this thread — location, time, circumstances…"></textarea>
+          </section>
+
+          <section class="tc-section">
+            <div class="tc-section__hdr">
+              <i data-lucide="cpu"></i>
+              <span>Model &amp; Generation</span>
             </div>
-            <input type="range" id="tc-maxout-input" class="config-range" min="256" max="8192" step="256" value="512" disabled>
-          </div>
-        </div>
-
-        <div class="ts-field-group">
-          <label class="ts-label">Player Name Override <span class="ts-hint">blank = inherit</span></label>
-          <input type="text" id="tc-user-name" class="ce-input" placeholder="Inherit from continuity…">
-        </div>
-
-        <div class="ts-field-group">
-          <label class="ts-label">Player Persona Override <span class="ts-hint">blank = inherit</span></label>
-          <textarea id="tc-user-persona" class="control-textarea ts-textarea" rows="3" placeholder="Inherit from continuity…"></textarea>
-        </div>
-
-        <div class="ts-field-group">
-          <label class="ts-label">Lorebooks</label>
-          <label class="config-flag-toggle">
-            <input type="checkbox" id="tc-auto-attach-lorebooks" checked> Auto-attach character lorebooks
-          </label>
-        </div>
-      </div>
-
-      <!-- ── TAB: Tone ── -->
-      <div class="tc-panel" id="tc-panel-tone" role="tabpanel" hidden>
-        <p class="ts-panel__desc">Narrative tone directives injected into every response in this thread. Overrides continuity defaults.</p>
-
-        <div class="ts-field-group">
-          <div class="ts-label-row">
-            <label class="ts-label">Sexual Energy</label>
-            <div class="ts-quick-pills" id="tc-sexual-energy-pills">
-              <button class="ts-quick-pill" data-target="tc-sexual-energy" data-val="none">none</button>
-              <button class="ts-quick-pill" data-target="tc-sexual-energy" data-val="subtle tension">subtle</button>
-              <button class="ts-quick-pill" data-target="tc-sexual-energy" data-val="slow burn, unresolved desire">slow burn</button>
-              <button class="ts-quick-pill" data-target="tc-sexual-energy" data-val="charged, flirtatious, physically aware">charged</button>
-              <button class="ts-quick-pill" data-target="tc-sexual-energy" data-val="explicit, raw, uninhibited">explicit</button>
+            <div class="tc-field">
+              <label class="tc-label">Model <em class="tc-label__note">blank = inherit</em></label>
+              <select id="tc-model-select" class="tc-select">
+                <option value="">— Inherit from continuity —</option>
+              </select>
             </div>
-          </div>
-          <input type="text" id="tc-sexual-energy" class="ce-input" placeholder="e.g. slow burn, explicit but tasteful…">
-        </div>
-
-        <div class="ts-field-group">
-          <div class="ts-label-row">
-            <label class="ts-label">Tone &amp; Atmosphere</label>
-            <div class="ts-quick-pills" id="tc-tone-pills">
-              <button class="ts-quick-pill ts-quick-pill--toggle" data-field="tc-tone-tags" data-val="dark">dark</button>
-              <button class="ts-quick-pill ts-quick-pill--toggle" data-field="tc-tone-tags" data-val="erotic">erotic</button>
-              <button class="ts-quick-pill ts-quick-pill--toggle" data-field="tc-tone-tags" data-val="psychologically complex">psycho</button>
-              <button class="ts-quick-pill ts-quick-pill--toggle" data-field="tc-tone-tags" data-val="violent tension">violent</button>
-              <button class="ts-quick-pill ts-quick-pill--toggle" data-field="tc-tone-tags" data-val="romantic">romantic</button>
-              <button class="ts-quick-pill ts-quick-pill--toggle" data-field="tc-tone-tags" data-val="comedic">comedic</button>
-              <button class="ts-quick-pill ts-quick-pill--toggle" data-field="tc-tone-tags" data-val="melancholic">melancholic</button>
-              <button class="ts-quick-pill ts-quick-pill--toggle" data-field="tc-tone-tags" data-val="surreal">surreal</button>
+            <div class="tc-sliders-grid">
+              <div class="tc-field">
+                <div class="tc-field__header">
+                  <label class="tc-label">Temperature</label>
+                  <span id="tc-temp-badge" class="tc-inherit-badge" data-inherit="true">inherit</span>
+                </div>
+                <label class="tc-inherit-toggle">
+                  <input type="checkbox" id="tc-temp-inherit" checked>
+                  <span class="tc-inherit-toggle__track"><span class="tc-inherit-toggle__thumb"></span></span>
+                  <span class="tc-inherit-toggle__label">Inherit from continuity</span>
+                </label>
+                <input type="range" id="tc-temp-input" class="tc-range" min="0" max="2" step="0.01" value="0.8" disabled>
+              </div>
+              <div class="tc-field">
+                <div class="tc-field__header">
+                  <label class="tc-label">Max Output</label>
+                  <span id="tc-maxout-badge" class="tc-inherit-badge" data-inherit="true">inherit</span>
+                </div>
+                <label class="tc-inherit-toggle">
+                  <input type="checkbox" id="tc-maxout-inherit" checked>
+                  <span class="tc-inherit-toggle__track"><span class="tc-inherit-toggle__thumb"></span></span>
+                  <span class="tc-inherit-toggle__label">Inherit from continuity</span>
+                </label>
+                <input type="range" id="tc-maxout-input" class="tc-range" min="256" max="8192" step="256" value="512" disabled>
+              </div>
             </div>
+          </section>
+
+          <section class="tc-section">
+            <div class="tc-section__hdr">
+              <i data-lucide="book-open"></i>
+              <span>Lorebooks</span>
+            </div>
+            <label class="tc-toggle-row">
+              <input type="checkbox" id="tc-auto-attach-lorebooks" checked>
+              <span class="tc-toggle-row__track"><span class="tc-toggle-row__thumb"></span></span>
+              <div>
+                <span class="tc-toggle-row__label">Auto-attach character lorebooks</span>
+                <span class="tc-toggle-row__sub">Automatically include each character's lorebook in context</span>
+              </div>
+            </label>
+          </section>
+
+        </div>
+
+        <!-- ── TONE ── -->
+        <div class="tc-panel" id="tc-panel-tone" role="tabpanel" hidden>
+
+          <section class="tc-section">
+            <div class="tc-section__hdr">
+              <i data-lucide="zap"></i>
+              <span>Sexual Energy</span>
+              <em class="tc-section__note">sets the baseline charge for all responses</em>
+            </div>
+            <div class="tc-energy-scale" id="tc-sexual-energy-pills">
+              <button class="tc-energy-node" data-target="tc-sexual-energy" data-val="" data-level="0">
+                <span class="tc-energy-node__dot"></span>
+                <span class="tc-energy-node__label">Off</span>
+              </button>
+              <button class="tc-energy-node" data-target="tc-sexual-energy" data-val="subtle tension" data-level="1">
+                <span class="tc-energy-node__dot"></span>
+                <span class="tc-energy-node__label">Subtle</span>
+              </button>
+              <button class="tc-energy-node" data-target="tc-sexual-energy" data-val="slow burn, unresolved desire" data-level="2">
+                <span class="tc-energy-node__dot"></span>
+                <span class="tc-energy-node__label">Slow burn</span>
+              </button>
+              <button class="tc-energy-node" data-target="tc-sexual-energy" data-val="charged, flirtatious, physically aware" data-level="3">
+                <span class="tc-energy-node__dot"></span>
+                <span class="tc-energy-node__label">Charged</span>
+              </button>
+              <button class="tc-energy-node" data-target="tc-sexual-energy" data-val="explicit, raw, uninhibited" data-level="4">
+                <span class="tc-energy-node__dot"></span>
+                <span class="tc-energy-node__label">Explicit</span>
+              </button>
+            </div>
+            <input type="text" id="tc-sexual-energy" class="tc-input" placeholder="Custom directive…">
+          </section>
+
+          <section class="tc-section">
+            <div class="tc-section__hdr">
+              <i data-lucide="layers"></i>
+              <span>Tone &amp; Atmosphere</span>
+              <em class="tc-section__note">toggle all that apply</em>
+            </div>
+            <div class="tc-tone-chips" id="tc-tone-pills">
+              <button class="tc-tone-chip" data-field="tc-tone-tags" data-val="dark"><i data-lucide="moon"></i> Dark</button>
+              <button class="tc-tone-chip" data-field="tc-tone-tags" data-val="erotic"><i data-lucide="heart"></i> Erotic</button>
+              <button class="tc-tone-chip" data-field="tc-tone-tags" data-val="psychologically complex"><i data-lucide="brain"></i> Psycho</button>
+              <button class="tc-tone-chip" data-field="tc-tone-tags" data-val="violent tension"><i data-lucide="sword"></i> Violent</button>
+              <button class="tc-tone-chip" data-field="tc-tone-tags" data-val="romantic"><i data-lucide="flower-2"></i> Romantic</button>
+              <button class="tc-tone-chip" data-field="tc-tone-tags" data-val="comedic"><i data-lucide="smile"></i> Comedic</button>
+              <button class="tc-tone-chip" data-field="tc-tone-tags" data-val="melancholic"><i data-lucide="cloud-rain"></i> Melancholic</button>
+              <button class="tc-tone-chip" data-field="tc-tone-tags" data-val="surreal"><i data-lucide="sparkles"></i> Surreal</button>
+              <button class="tc-tone-chip" data-field="tc-tone-tags" data-val="tense, high-stakes"><i data-lucide="alert-triangle"></i> Tense</button>
+              <button class="tc-tone-chip" data-field="tc-tone-tags" data-val="intimate, confessional"><i data-lucide="message-circle"></i> Intimate</button>
+            </div>
+            <input type="hidden" id="tc-tone-tags" value="">
+          </section>
+
+          <div class="tc-row-fields">
+            <section class="tc-section tc-section--half">
+              <div class="tc-section__hdr"><i data-lucide="trending-up"></i><span>Amplify</span></div>
+              <input type="text" id="tc-amplify" class="tc-input" placeholder="lean into these… physical tension, power dynamics…">
+            </section>
+            <section class="tc-section tc-section--half">
+              <div class="tc-section__hdr"><i data-lucide="shield-off"></i><span>Avoid</span></div>
+              <input type="text" id="tc-avoid" class="tc-input" placeholder="hard limits… gore, fourth wall breaks…">
+            </section>
           </div>
-          <input type="hidden" id="tc-tone-tags" value="">
+
+          <section class="tc-section">
+            <div class="tc-section__hdr">
+              <i data-lucide="activity"></i>
+              <span>Response Pacing</span>
+            </div>
+            <div class="tc-pacing-row" id="tc-pacing-pills">
+              <button class="tc-pacing-btn" data-target="tc-pacing" data-val="short, punchy, reactive">
+                <i data-lucide="zap"></i>
+                <span>Punchy</span>
+              </button>
+              <button class="tc-pacing-btn" data-target="tc-pacing" data-val="balanced prose, moderate length">
+                <i data-lucide="minus"></i>
+                <span>Balanced</span>
+              </button>
+              <button class="tc-pacing-btn" data-target="tc-pacing" data-val="long, immersive, rich descriptions">
+                <i data-lucide="book-open"></i>
+                <span>Immersive</span>
+              </button>
+              <button class="tc-pacing-btn" data-target="tc-pacing" data-val="cinematic, scene-structured">
+                <i data-lucide="film"></i>
+                <span>Cinematic</span>
+              </button>
+            </div>
+            <input type="text" id="tc-pacing" class="tc-input" style="margin-top:8px;" placeholder="Custom pacing directive…">
+          </section>
+
         </div>
 
-        <div class="ts-field-group">
-          <label class="ts-label">Amplify <span class="ts-hint">lean into these</span></label>
-          <input type="text" id="tc-amplify" class="ce-input" placeholder="e.g. physical descriptions, power play, forbidden tension…">
+        <!-- ── IDENTITY ── -->
+        <div class="tc-panel" id="tc-panel-identity" role="tabpanel" hidden>
+
+          <section class="tc-section">
+            <div class="tc-section__hdr">
+              <i data-lucide="user-round"></i>
+              <span>Player Identity Override</span>
+              <em class="tc-section__note">blank = inherit from continuity</em>
+            </div>
+            <div class="tc-field">
+              <label class="tc-label">Name</label>
+              <input type="text" id="tc-user-name" class="tc-input" placeholder="Inherit from continuity…">
+            </div>
+            <div class="tc-field" style="margin-top:12px;">
+              <label class="tc-label">Persona</label>
+              <textarea id="tc-user-persona" class="tc-textarea" rows="4" placeholder="Inherit from continuity — describe who you are in this specific thread…"></textarea>
+            </div>
+          </section>
+
+          <section class="tc-section tc-section--info">
+            <div class="tc-info-card">
+              <i data-lucide="info"></i>
+              <p>Identity overrides let you play a different character or role in this specific thread without affecting other threads in the same continuity. Leave blank to use the continuity-level persona.</p>
+            </div>
+          </section>
+
         </div>
 
-        <div class="ts-field-group">
-          <label class="ts-label">Avoid <span class="ts-hint">hard limits for this thread</span></label>
-          <input type="text" id="tc-avoid" class="ce-input" placeholder="e.g. gore, death of named characters, breaking fourth wall…">
-        </div>
+      </div><!-- .tc-panels -->
+    </div><!-- .tc-layout -->
 
-        <div class="ts-field-group">
-          <label class="ts-label">Response Pacing</label>
-          <div class="ts-quick-pills" style="margin-top:4px;">
-            <button class="ts-quick-pill" data-target="tc-pacing" data-val="short, punchy, reactive">punchy</button>
-            <button class="ts-quick-pill" data-target="tc-pacing" data-val="balanced prose, moderate length">balanced</button>
-            <button class="ts-quick-pill" data-target="tc-pacing" data-val="long, immersive, rich descriptions">immersive</button>
-            <button class="ts-quick-pill" data-target="tc-pacing" data-val="cinematic, scene-structured">cinematic</button>
-          </div>
-          <input type="text" id="tc-pacing" class="ce-input" style="margin-top:6px;" placeholder="e.g. dense prose, breathe between action beats…">
-        </div>
-      </div>
-
-    </div><!-- .ts-body -->
-
-    <footer class="ts-footer">
-      <div class="ts-footer__left">
-        <button id="tc-cancel" class="ce-btn ce-btn--ghost">Cancel</button>
-      </div>
-      <div class="ts-footer__right">
-        <button id="tc-save" class="ce-btn ce-btn--accent"><i data-lucide="save"></i> Apply to Thread</button>
-      </div>
+    <footer class="tc-footer">
+      <button id="tc-cancel" class="tc-btn tc-btn--ghost">
+        <i data-lucide="x"></i> Cancel
+      </button>
+      <button id="tc-save" class="tc-btn tc-btn--apply">
+        <i data-lucide="check"></i> Apply to Thread
+      </button>
     </footer>
 
-  </div><!-- .ts-studio -->
+  </div><!-- .tc-shell -->
 </div>
 
 <!-- ══════════════════════════════════════════════
@@ -3348,7 +3452,7 @@
 
 <div id="toast-container" class="toast-container"></div>
 <script src="https://cdn.trap.lol/shards/lucide.min.js"></script><script src="https://cdn.trap.lol/shards/marked.min.js"></script><script src="https://cdn.trap.lol/shards/purify.min.js"></script>
-<script type="module" src="./script/main.js?v=65"></script>
+<script type="module" src="./script/main.js?v=66"></script>
 <!-- ── Wallhaven Arena ── -->
 <script src="./script/modules/wallhaven.js"></script>
 
