@@ -1,7 +1,7 @@
 /**
  * main.js — Underdark Bootstrapper
  */
-import { initUI } from './modules/ui.js?v=103';
+import { initUI } from './modules/ui.js?v=104';
 
 function boot() {
     try {

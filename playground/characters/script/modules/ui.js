@@ -3149,6 +3149,9 @@ export function initUI() {
         _updateInputPlaceholder(displayName);
 
         lucideRefresh($container);
+
+        // Keep cast strip in sync whenever active-bots updates
+        if (qs('#scene-codex')?.classList.contains('scene-codex--open')) renderCodexCast();
     }
 
     function _updateInputPlaceholder(charName) {
@@ -9427,12 +9430,89 @@ export function initUI() {
     const $codexBtn  = qs('#scene-codex-btn');
     const $codexClose = qs('#scene-codex-close');
 
+    // ── Cast strip — character roster with star/favorite ─────────────────────
+    function renderCodexCast() {
+        const $cast = qs('#codex-cast');
+        if (!$cast) return;
+
+        const botIds = state.chat?.botIds || (state.activeBotId ? [state.activeBotId] : []);
+        if (!botIds.length) {
+            $cast.innerHTML = '<span class="codex-cast__empty">No characters in scene.</span>';
+            $codex?.classList.remove('scene-codex--dm', 'scene-codex--group');
+            return;
+        }
+
+        const isGroup = state.chat?.type === 'group' && botIds.length > 1;
+        $codex?.classList.toggle('scene-codex--dm', !isGroup);
+        $codex?.classList.toggle('scene-codex--group', isGroup);
+
+        const starred = new Set(state.config._starredBots || []);
+
+        $cast.innerHTML = botIds.map(id => {
+            const char   = state.loadedCharacters[id];
+            const meta   = state.characters.find(c => c.id === id);
+            const name   = getCharOverride(id)?.nickname || char?.name || '?';
+            const rawAv  = meta?.avatar_path || char?.avatar || null;
+            const av     = rawAv ? getAvatarUrlSync(id, rawAv) : null;
+            const isActive  = id === state.activeBotId;
+            const isStarred = starred.has(id);
+
+            const lastMsg = [...state.history].reverse().find(m => m.botId === id && m.role === 'bot');
+            const snippet = lastMsg?.content
+                ? lastMsg.content.replace(/<[^>]+>/g, '').replace(/\*{1,3}([^*]+)\*{1,3}/g, '$1').replace(/\s+/g, ' ').trim().slice(0, 40)
+                : '';
+
+            const avStyle = av ? `style="background-image:url(${av})"` : '';
+            const initials = name.slice(0, 2).toUpperCase();
+
+            return `<div class="codex-cast-card ${isActive ? 'codex-cast-card--active' : ''} ${isStarred ? 'codex-cast-card--starred' : ''}" data-cast-id="${esc(id)}">
+                <div class="codex-cast-card__avatar-wrap">
+                    <div class="codex-cast-card__avatar" ${avStyle}>${av ? '' : initials}</div>
+                    <button class="codex-cast-card__star ${isStarred ? 'starred' : ''}" data-star="${esc(id)}" title="${isStarred ? 'Unstar' : 'Star'} ${esc(name)}">
+                        <i data-lucide="star"></i>
+                    </button>
+                </div>
+                <span class="codex-cast-card__name">${esc(name)}</span>
+                ${isGroup && snippet ? `<span class="codex-cast-card__snippet">${esc(snippet)}${snippet.length === 40 ? '…' : ''}</span>` : ''}
+            </div>`;
+        }).join('');
+
+        // Async patch IDB avatars
+        botIds.forEach(async id => {
+            const char  = state.loadedCharacters[id];
+            const meta  = state.characters.find(c => c.id === id);
+            const rawAv = meta?.avatar_path || char?.avatar;
+            if (rawAv?.startsWith('idb:')) {
+                const url = await getAvatarUrl(id, rawAv);
+                if (url) {
+                    const $av = qs(`.codex-cast-card[data-cast-id="${id}"] .codex-cast-card__avatar`, $cast);
+                    if ($av) { $av.style.backgroundImage = `url(${url})`; $av.textContent = ''; }
+                }
+            }
+        });
+
+        lucideRefresh($cast);
+    }
+
+    // Star button event delegation on cast strip
+    qs('#codex-cast')?.addEventListener('click', e => {
+        const btn = e.target.closest('[data-star]');
+        if (!btn) return;
+        const id = btn.dataset.star;
+        const starred = new Set(state.config._starredBots || []);
+        if (starred.has(id)) starred.delete(id);
+        else starred.add(id);
+        setConfig({ _starredBots: [...starred] });
+        renderCodexCast();
+    });
+
     function openCodex() {
         if (!$codex) return;
         $codex.hidden = false;
         // Defer so the browser sees display:block before animating
         requestAnimationFrame(() => $codex.classList.add('scene-codex--open'));
         $codexBtn?.classList.add('active');
+        renderCodexCast();
         updateCodexDigest();
         lucideRefresh($codex);
     }
@@ -9642,6 +9722,8 @@ export function initUI() {
         const $digest = qs('#codex-digest');
         if (!$digest) return;
         updateCodexMeters();
+        // Refresh cast strip snippets (last-spoken lines) on every digest update
+        if (qs('#scene-codex')?.classList.contains('scene-codex--open')) renderCodexCast();
 
         const history = state.history;
         if (!history.length) {

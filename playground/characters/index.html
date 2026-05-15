@@ -303,47 +303,72 @@
                 <div class="scene-codex__inner">
                     <div class="scene-codex__grip"></div>
 
+                    <!-- CAST STRIP — character roster across the top -->
+                    <div class="codex-cast" id="codex-cast">
+                        <span class="codex-cast__empty">No characters in scene.</span>
+                    </div>
+
+                    <!-- BODY: three columns -->
+                    <div class="scene-codex__body">
+
                     <!-- COL 1: Scene State -->
                     <div class="scene-codex__col scene-codex__col--state">
-                        <div class="scene-codex__label"><i data-lucide="activity"></i> Scene State</div>
+                        <div class="scene-codex__section-head"><i data-lucide="activity"></i> Scene State</div>
+
+                        <!-- Meters -->
                         <div class="scene-codex__meters">
                             <div class="codex-meter" title="Emotional tension between characters">
-                                <span class="codex-meter__name">Tension</span>
+                                <div class="codex-meter__header">
+                                    <span class="codex-meter__name codex-meter__name--tension">Tension</span>
+                                    <span id="codex-tension-val" class="codex-meter__val">40</span>
+                                </div>
                                 <div class="codex-meter__track">
                                     <div id="codex-tension-bar" class="codex-meter__fill codex-meter__fill--tension" style="width:40%"></div>
                                 </div>
-                                <span id="codex-tension-val" class="codex-meter__val">40</span>
                             </div>
                             <div class="codex-meter" title="Intimacy level in current scene">
-                                <span class="codex-meter__name">Intimacy</span>
+                                <div class="codex-meter__header">
+                                    <span class="codex-meter__name codex-meter__name--intimacy">Intimacy</span>
+                                    <span id="codex-intimacy-val" class="codex-meter__val">25</span>
+                                </div>
                                 <div class="codex-meter__track">
                                     <div id="codex-intimacy-bar" class="codex-meter__fill codex-meter__fill--intimacy" style="width:25%"></div>
                                 </div>
-                                <span id="codex-intimacy-val" class="codex-meter__val">25</span>
                             </div>
                             <div class="codex-meter" title="Danger / stakes level">
-                                <span class="codex-meter__name">Danger</span>
+                                <div class="codex-meter__header">
+                                    <span class="codex-meter__name codex-meter__name--danger">Danger</span>
+                                    <span id="codex-danger-val" class="codex-meter__val">15</span>
+                                </div>
                                 <div class="codex-meter__track">
                                     <div id="codex-danger-bar" class="codex-meter__fill codex-meter__fill--danger" style="width:15%"></div>
                                 </div>
-                                <span id="codex-danger-val" class="codex-meter__val">15</span>
                             </div>
                         </div>
+
                         <!-- Scene Ledger — 4 structured slots injected into Overlord context -->
-                        <div class="scene-codex__ledger">
-                            <div class="scene-codex__label scene-codex__label--inner"><i data-lucide="book-open"></i> Scene Ledger</div>
-                            <div class="codex-ledger-grid">
-                                <label class="codex-ledger__label" title="Narrative arc or scene goal">Arc</label>
-                                <input id="codex-arc-note" type="text" class="codex-input codex-ledger__input" placeholder="Scene goal or arc beat…">
-                                <label class="codex-ledger__label" title="A secret only you know — never stated aloud">Secret</label>
-                                <input id="codex-secret" type="text" class="codex-input codex-ledger__input" placeholder="Hidden truth the characters don't know…">
-                                <label class="codex-ledger__label" title="Something that is building toward a reveal">Reveal</label>
-                                <input id="codex-reveal-pending" type="text" class="codex-input codex-ledger__input" placeholder="What's building toward a reveal…">
-                                <label class="codex-ledger__label" title="Current relationship dynamic">Relation</label>
-                                <input id="codex-relationship-state" type="text" class="codex-input codex-ledger__input" placeholder="Current relationship tension or dynamic…">
+                        <div class="scene-codex__section-head scene-codex__section-head--sub"><i data-lucide="book-open"></i> Scene Ledger</div>
+                        <div class="codex-ledger-stack">
+                            <div class="codex-ledger-card">
+                                <span class="codex-ledger-card__key" title="Narrative arc or scene goal">Arc</span>
+                                <input id="codex-arc-note" type="text" class="codex-input codex-ledger-card__input" placeholder="Scene goal or arc beat…">
+                            </div>
+                            <div class="codex-ledger-card">
+                                <span class="codex-ledger-card__key" title="A secret only you know — never stated aloud">Secret</span>
+                                <input id="codex-secret" type="text" class="codex-input codex-ledger-card__input" placeholder="Hidden truth the characters don't know…">
+                            </div>
+                            <div class="codex-ledger-card">
+                                <span class="codex-ledger-card__key" title="Something that is building toward a reveal">Reveal</span>
+                                <input id="codex-reveal-pending" type="text" class="codex-input codex-ledger-card__input" placeholder="What's building toward a reveal…">
+                            </div>
+                            <div class="codex-ledger-card">
+                                <span class="codex-ledger-card__key" title="Current relationship dynamic">Relation</span>
+                                <input id="codex-relationship-state" type="text" class="codex-input codex-ledger-card__input" placeholder="Current relationship tension or dynamic…">
                             </div>
                         </div>
-                        <div class="scene-codex__label scene-codex__label--inner"><i data-lucide="image"></i> Quick Media</div>
+
+                        <!-- Quick Media -->
+                        <div class="scene-codex__section-head scene-codex__section-head--sub"><i data-lucide="image"></i> Quick Media</div>
                         <div class="codex-media-btns">
                             <button id="codex-quick-img" class="codex-media-btn" title="Snapshot — generate scene image">
                                 <i data-lucide="camera"></i>
@@ -356,22 +381,23 @@
                         </div>
                     </div>
 
-                    <!-- COL 2: God Controls -->
+                    <!-- COL 2: God Controls + Digest -->
                     <div class="scene-codex__col scene-codex__col--controls">
-                        <div class="scene-codex__label"><i data-lucide="zap"></i> God Controls</div>
+                        <div class="scene-codex__section-head"><i data-lucide="zap"></i> Narrative</div>
                         <div class="codex-inject-grid">
-                            <button class="codex-inject-btn" data-ri="escalate" title="Escalate the scene's intensity"><i data-lucide="flame"></i> Escalate</button>
+                            <button class="codex-inject-btn codex-inject-btn--heat" data-ri="escalate" title="Escalate the scene's intensity"><i data-lucide="flame"></i> Escalate</button>
                             <button class="codex-inject-btn" data-ri="uncensor" title="Override content restrictions"><i data-lucide="shield-off"></i> Uncensor</button>
                             <button class="codex-inject-btn" data-ri="stay" title="Force character to stay in character"><i data-lucide="anchor"></i> Stay IC</button>
-                            <button class="codex-inject-btn" data-ri="slow" title="Slow the scene — more introspection"><i data-lucide="feather"></i> Slow Burn</button>
-                            <button class="codex-inject-btn" data-ri="climax" title="Push toward scene climax"><i data-lucide="zap"></i> Climax</button>
-                            <button class="codex-inject-btn" data-ri="afterglow" title="Aftercare / denouement beat"><i data-lucide="heart"></i> Afterglow</button>
+                            <button class="codex-inject-btn codex-inject-btn--soft" data-ri="slow" title="Slow the scene — more introspection"><i data-lucide="feather"></i> Slow Burn</button>
+                            <button class="codex-inject-btn codex-inject-btn--heat" data-ri="climax" title="Push toward scene climax"><i data-lucide="zap"></i> Climax</button>
+                            <button class="codex-inject-btn codex-inject-btn--rose" data-ri="afterglow" title="Aftercare / denouement beat"><i data-lucide="heart"></i> Afterglow</button>
                             <button class="codex-inject-btn" data-ri="redirect" title="Redirect — steer scene away from current trajectory"><i data-lucide="corner-up-right"></i> Redirect</button>
                             <button class="codex-inject-btn" data-ri="tension" title="Raise ambient tension without action"><i data-lucide="activity"></i> Raise Tension</button>
                             <button class="codex-inject-btn" data-ri="reveal" title="Force a secret or hidden truth to surface"><i data-lucide="unlock"></i> Reveal</button>
-                            <button class="codex-inject-btn" data-ri="vulnerability" title="Push character to show emotional vulnerability"><i data-lucide="heart-crack"></i> Vulnerable</button>
+                            <button class="codex-inject-btn codex-inject-btn--rose" data-ri="vulnerability" title="Push character to show emotional vulnerability"><i data-lucide="heart-crack"></i> Vulnerable</button>
                         </div>
-                        <div class="scene-codex__label scene-codex__label--inner" style="margin-top:6px"><i data-lucide="settings"></i> Admin</div>
+
+                        <div class="scene-codex__section-head scene-codex__section-head--sub"><i data-lucide="settings-2"></i> Admin</div>
                         <div class="codex-admin-grid">
                             <button class="codex-admin-btn" id="codex-force-overlord" title="Force Overlord to re-describe the current scene"><i data-lucide="eye"></i> Re-describe</button>
                             <button class="codex-admin-btn" id="codex-overlord-transition" title="Overlord narrates a scene transition or time-skip"><i data-lucide="arrow-right"></i> Transition</button>
@@ -384,27 +410,24 @@
                             <button class="codex-admin-btn" id="codex-reset-meters" title="Reset scene tension/intimacy/danger meters to neutral"><i data-lucide="refresh-ccw"></i> Reset Meters</button>
                             <button class="codex-admin-btn" id="codex-snapshot-now" title="Generate a scene image right now"><i data-lucide="camera"></i> Snapshot</button>
                         </div>
+
                         <div class="scene-codex__custom-inject">
                             <input id="codex-custom-inject" type="text" class="codex-input" placeholder="Custom directive — fires on next send…">
                             <button id="codex-custom-inject-btn" class="codex-submit-btn" title="Queue directive"><i data-lucide="send"></i></button>
                         </div>
-                        <div class="scene-codex__label scene-codex__label--inner"><i data-lucide="info"></i> Scene Digest</div>
+                    </div>
+
+                    <!-- COL 3: Digest + Oracle -->
+                    <div class="scene-codex__col scene-codex__col--digest">
+                        <div class="scene-codex__section-head"><i data-lucide="message-square"></i> Scene Digest</div>
                         <div id="codex-digest" class="codex-digest">
                             <span class="codex-digest__empty">Start a conversation to see scene context.</span>
                         </div>
-                        <div class="scene-codex__label scene-codex__label--inner" style="margin-top:10px"><i data-lucide="activity"></i> Session</div>
-                        <div id="codex-session-stats" class="codex-session-stats">
-                            <span class="codex-stat"><span class="codex-stat__k">Turns</span><span id="cstat-turns" class="codex-stat__v">—</span></span>
-                            <span class="codex-stat"><span class="codex-stat__k">Tokens</span><span id="cstat-tokens" class="codex-stat__v">—</span></span>
-                            <span class="codex-stat"><span class="codex-stat__k">Scene</span><span id="cstat-scene" class="codex-stat__v codex-stat__v--accent">—</span></span>
-                            <span class="codex-stat"><span class="codex-stat__k">Model</span><span id="cstat-model" class="codex-stat__v">—</span></span>
-                            <span class="codex-stat"><span class="codex-stat__k">NSFW</span><span id="cstat-nsfw" class="codex-stat__v">—</span></span>
-                        </div>
                     </div>
 
-                    <!-- COL 3: Oracle — isolated counsel -->
+                    <!-- COL 4: Oracle — isolated counsel -->
                     <div class="scene-codex__col scene-codex__col--oracle">
-                        <div class="scene-codex__label scene-codex__label--oracle">
+                        <div class="scene-codex__section-head scene-codex__section-head--oracle">
                             <i data-lucide="eye"></i> Oracle
                             <span class="oracle-label-sub">isolated — never touches your story</span>
                             <select id="oracle-char-select" class="oracle-char-select-inline"></select>
@@ -434,7 +457,20 @@
                         </div>
                     </div>
 
-                    <button id="scene-codex-close" class="scene-codex__close" title="Close"><i data-lucide="chevron-up"></i></button>
+                    </div><!-- /.scene-codex__body -->
+
+                    <!-- FOOTER STRIP: session stats -->
+                    <div class="codex-footer">
+                        <div id="codex-session-stats" class="codex-session-stats">
+                            <span class="codex-stat"><span class="codex-stat__k">Turns</span><span id="cstat-turns" class="codex-stat__v">—</span></span>
+                            <span class="codex-stat"><span class="codex-stat__k">Tokens</span><span id="cstat-tokens" class="codex-stat__v">—</span></span>
+                            <span class="codex-stat"><span class="codex-stat__k">Scene</span><span id="cstat-scene" class="codex-stat__v codex-stat__v--accent">—</span></span>
+                            <span class="codex-stat"><span class="codex-stat__k">Model</span><span id="cstat-model" class="codex-stat__v">—</span></span>
+                            <span class="codex-stat"><span class="codex-stat__k">NSFW</span><span id="cstat-nsfw" class="codex-stat__v">—</span></span>
+                        </div>
+                        <button id="scene-codex-close" class="codex-footer__close" title="Close Codex"><i data-lucide="chevron-up"></i></button>
+                    </div>
+
                 </div>
             </div>
 

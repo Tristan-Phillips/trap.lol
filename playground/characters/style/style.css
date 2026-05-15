@@ -36,7 +36,7 @@
 @import './wallhaven.css';
 
 /* ── Scene Codex (god view) + Video Gen ── */
-@import './scene-codex.css?v=2';
+@import './scene-codex.css?v=3';
 
 /* ── Image Studio (full-screen generation wizard) ── */
 @import './img-studio.css';
