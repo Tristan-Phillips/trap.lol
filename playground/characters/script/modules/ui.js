@@ -392,6 +392,41 @@ export function initUI() {
     // Wire codex-meters module with closure dependencies
     initCodexMeters({ qs, state, getApiKey, fetchCompletion });
 
+    // ── Shared context object ─────────────────────────────────────────────────
+    // All cross-section mutable state lives here so sub-modules can be extracted
+    // without breaking closure references. Sections read/write ctx.* directly.
+    const ctx = {
+        // Sidebar & arena visibility
+        activeSidebarTab: 'chats',
+        $chatArena: null,    // assigned after DOM query in Social Feed section
+        $feedArena: null,
+
+        // Gallery / lightbox state
+        ctx.galleryCharId: null,
+        lbImages: [],
+        lbRefs:   [],
+        lbIndex:  0,
+
+        // Social feed state
+        feedMode: 'hot',
+        permanentFeedPosts: [],
+
+        // Image studio state
+        studioPresets:  null,
+        studioWired:    false,
+        studioCharId:   null,
+        studioModel:    null,   // set to DEFAULT_MODEL after import
+        studioDataUrl:  null,
+
+        // Streaming / thread
+        streamChatId:    null,
+        streamRealityId: null,
+
+        // Oracle
+        oracleHistory:  [],
+        oracleStreaming: false,
+    };
+
     // ── Picker mode — closure variable, not window global ────────────────────
     let _pickerMode = null;
 
@@ -709,10 +744,8 @@ export function initUI() {
     });
 
     // ── Sidebar Tabs (Chats / Roster / Social) ───────────────────────────────
-    let _activeSidebarTab = 'chats';
-
     function switchSidebarTab(target) {
-        _activeSidebarTab = target;
+        ctx.activeSidebarTab = target;
         qsa('.sidebar-tab').forEach(b => {
             b.classList.toggle('active', b.dataset.view === target);
             b.setAttribute('aria-selected', b.dataset.view === target ? 'true' : 'false');
@@ -725,21 +758,19 @@ export function initUI() {
             const $cs = qs('#chat-search-input');
             if ($cs) $cs.value = '';
             renderChats();
-            // Switch to chat arena
-            if ($chatArena) $chatArena.hidden = false;
-            if ($feedArena) $feedArena.hidden = true;
+            if (ctx.$chatArena) ctx.$chatArena.hidden = false;
+            if (ctx.$feedArena) ctx.$feedArena.hidden = true;
         } else if (target === 'roster') {
-            if ($chatArena) $chatArena.hidden = false;
-            if ($feedArena) $feedArena.hidden = true;
+            if (ctx.$chatArena) ctx.$chatArena.hidden = false;
+            if (ctx.$feedArena) ctx.$feedArena.hidden = true;
         } else if (target === 'social') {
             renderSocialSidebar();
-            // Open hot feed by default if nothing selected
-            if ($chatArena) $chatArena.hidden = true;
-            if ($feedArena) $feedArena.hidden = false;
-            if (!galleryCharId) {
+            if (ctx.$chatArena) ctx.$chatArena.hidden = true;
+            if (ctx.$feedArena) ctx.$feedArena.hidden = false;
+            if (!ctx.galleryCharId) {
                 openHotFeed();
             } else {
-                renderSocialFeed(galleryCharId);
+                renderSocialFeed(ctx.galleryCharId);
             }
         }
     }
@@ -2715,10 +2746,10 @@ export function initUI() {
             toggleTerminal(false);
         }
         qsa('.tab-btn').forEach(b => {
-            b.classList.toggle('active', b.dataset.tab === 'character');
-            b.setAttribute('aria-selected', b.dataset.tab === 'character');
+            b.classList.toggle('active', b.dataset.tab === 'profile');
+            b.setAttribute('aria-selected', b.dataset.tab === 'profile');
         });
-        qsa('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-character'));
+        qsa('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-profile'));
     }
 
     // ── Active Bots Header ────────────────────────────────────────────────────
@@ -3390,7 +3421,7 @@ export function initUI() {
     qs('#picker-search-input')?.addEventListener('input', debounce(e => renderPickerGrid(e.target.value), 200));
 
     // ── Gallery ────────────────────────────────────────────────────────────────
-    let galleryCharId = null;
+    // ctx.galleryCharId, ctx.lbImages, ctx.lbRefs, ctx.lbIndex declared in ctx above
     let lbImages = [];   // resolved display URLs (for <img src>)
     let lbRefs   = [];   // raw storage refs (for save/delete operations)
     let lbIndex  = 0;
@@ -3418,7 +3449,7 @@ export function initUI() {
         const result = [];
 
         // Permanent feed.json posts (newest-first within this source)
-        _permanentFeedPosts.filter(p => p.charId === charId).forEach((p, i) => {
+        ctx.permanentFeedPosts.filter(p => p.charId === charId).forEach((p, i) => {
             const id = p.id || `perm-${charId}-${i}`;
             if (seen.has(id)) return;
             seen.add(id);
@@ -3523,7 +3554,7 @@ export function initUI() {
 
     // ── Gallery modal (manage / add / remove) ─────────────────────────────────
     function openGalleryModal(id) {
-        galleryCharId = id;
+        ctx.galleryCharId = id;
         const char = state.loadedCharacters[id];
         const meta = state.characters.find(c => c.id === id);
         const $gcn = qs('#gallery-char-name'); if ($gcn) $gcn.textContent = char?.name || meta?.name || 'Gallery';
@@ -3772,9 +3803,9 @@ export function initUI() {
             if (charId) {
                 await addToGallery(charId, dataUrl);
                 renderGalleryStrip(charId);
-                if ($feedArena && !$feedArena.hidden) {
-                    if (_feedMode === 'hot') renderHotFeed();
-                    else if (_feedMode === charId) renderSocialFeed(charId);
+                if (ctx.$feedArena && !ctx.$feedArena.hidden) {
+                    if (ctx.feedMode === 'hot') renderHotFeed();
+                    else if (ctx.feedMode === charId) renderSocialFeed(charId);
                 }
             }
             showToast('Scene captured', 'info', 2000);
@@ -3786,7 +3817,7 @@ export function initUI() {
 
     // Gallery → open studio instead of the removed modal
     qs('#gallery-gen-new')?.addEventListener('click', () => {
-        const cid = galleryCharId || state.activeBotId;
+        const cid = ctx.galleryCharId || state.activeBotId;
         qs('#modal-gallery').hidden = true;
         openImgStudio(cid);
     });
@@ -3796,10 +3827,7 @@ export function initUI() {
 
 
     // ── Image Studio — full wizard ─────────────────────────────────────────────
-    // Loaded from rp-gen-presets.json; populated once at boot.
-    let _studioPresets   = null;
-    let _studioWired     = false;
-    let _studioCharId    = null;   // which character the current scene belongs to
+    // ctx.studioPresets, ctx.studioWired, ctx.studioCharId declared in ctx above
 
     // Studio scene state — mirrors _scene shape plus extra fields for
     // the studio-only chip groups (clothingTop, clothingBottom, etc.)
@@ -3847,8 +3875,7 @@ export function initUI() {
 
     const _STUDIO_MULTI_GROUPS = new Set(['accessories','quality','skinEffects','fantasyFx']);
 
-    let _studioModel   = DEFAULT_MODEL;
-    let _studioDataUrl = null;
+    ctx.studioModel = DEFAULT_MODEL;   // set after DEFAULT_MODEL import is resolved
 
     // ── Reset all scene selections to defaults ────────────────────────────────
     function _resetStudioScene(skipNsfw = false) {
@@ -3873,14 +3900,14 @@ export function initUI() {
 
     // ── Fetch presets JSON once ───────────────────────────────────────────────
     async function _loadStudioPresets() {
-        if (_studioPresets) return _studioPresets;
+        if (ctx.studioPresets) return ctx.studioPresets;
         try {
             const res  = await fetch('./data/rp-gen-presets.json');
-            _studioPresets = await res.json();
+            ctx.studioPresets = await res.json();
         } catch (_) {
-            _studioPresets = {};
+            ctx.studioPresets = {};
         }
-        return _studioPresets;
+        return ctx.studioPresets;
     }
 
     // ── Render a flat chip list into a container ──────────────────────────────
@@ -3991,9 +4018,9 @@ export function initUI() {
 
     function _renderScenePresetCards() {
         const $grid = qs('#studio-scene-preset-grid');
-        if (!$grid || !_studioPresets?.scenes) return;
+        if (!$grid || !ctx.studioPresets?.scenes) return;
         $grid.innerHTML = '';
-        const scenes = _studioPresets.scenes;
+        const scenes = ctx.studioPresets.scenes;
         if (scenes.groups) {
             scenes.groups.forEach(grp => {
                 const $lbl = document.createElement('div');
@@ -4013,25 +4040,25 @@ export function initUI() {
 
     function _renderMoodPresets() {
         const $grid = qs('#studio-mood-preset-grid');
-        if (!$grid || !_studioPresets?.mood_presets?.entries) return;
+        if (!$grid || !ctx.studioPresets?.mood_presets?.entries) return;
         $grid.innerHTML = '';
-        _studioPresets.mood_presets.entries.forEach(p => $grid.appendChild(_makePresetCard(p, $grid, { noReset: true })));
+        ctx.studioPresets.mood_presets.entries.forEach(p => $grid.appendChild(_makePresetCard(p, $grid, { noReset: true })));
         lucideRefresh($grid);
     }
 
     function _renderOutfitPresets() {
         const $grid = qs('#studio-outfit-preset-grid');
-        if (!$grid || !_studioPresets?.outfit_presets?.entries) return;
+        if (!$grid || !ctx.studioPresets?.outfit_presets?.entries) return;
         $grid.innerHTML = '';
-        _studioPresets.outfit_presets.entries.forEach(p => $grid.appendChild(_makePresetCard(p, $grid, { noReset: true })));
+        ctx.studioPresets.outfit_presets.entries.forEach(p => $grid.appendChild(_makePresetCard(p, $grid, { noReset: true })));
         lucideRefresh($grid);
     }
 
     function _renderActivityPresets() {
         const $grid = qs('#studio-activity-preset-grid');
-        if (!$grid || !_studioPresets?.activity_presets?.entries) return;
+        if (!$grid || !ctx.studioPresets?.activity_presets?.entries) return;
         $grid.innerHTML = '';
-        _studioPresets.activity_presets.entries.forEach(p => $grid.appendChild(_makePresetCard(p, $grid, { noReset: true })));
+        ctx.studioPresets.activity_presets.entries.forEach(p => $grid.appendChild(_makePresetCard(p, $grid, { noReset: true })));
         lucideRefresh($grid);
     }
 
@@ -4054,9 +4081,9 @@ export function initUI() {
     // ── Render relationship pills ─────────────────────────────────────────────
     function _renderRelPills() {
         const $c = qs('#studio-rel-pills');
-        if (!$c || !_studioPresets?.relationships?.entries) return;
+        if (!$c || !ctx.studioPresets?.relationships?.entries) return;
         $c.innerHTML = '';
-        _studioPresets.relationships.entries.forEach(r => {
+        ctx.studioPresets.relationships.entries.forEach(r => {
             const $p = document.createElement('button');
             $p.className = 'studio-rel-pill';
             $p.dataset.relId = r.id;
@@ -4093,7 +4120,7 @@ export function initUI() {
                 ? `<span class="studio-model-card__sub studio-model-card__sub--included">SUB</span>`
                 : `<span class="studio-model-card__sub studio-model-card__sub--credits">CREDITS</span>`;
             const warn  = nsfwActive && !m.nsfw ? ' style="opacity:.55"' : '';
-            const active = m.id === _studioModel ? ' active' : '';
+            const active = m.id === ctx.studioModel ? ' active' : '';
             return `<button class="studio-model-card${active}" data-model="${esc(m.id)}" type="button"${warn}>
                 <div class="studio-model-card__label">${esc(m.label)}</div>
                 <div class="studio-model-card__tags">${tags}</div>
@@ -4103,22 +4130,22 @@ export function initUI() {
         }).join('');
         $grid.querySelectorAll('.studio-model-card').forEach($c => {
             $c.addEventListener('click', () => {
-                _studioModel = $c.dataset.model;
-                $grid.querySelectorAll('.studio-model-card').forEach(x => x.classList.toggle('active', x.dataset.model === _studioModel));
+                ctx.studioModel = $c.dataset.model;
+                $grid.querySelectorAll('.studio-model-card').forEach(x => x.classList.toggle('active', x.dataset.model === ctx.studioModel));
                 // Also sync the action-row select
                 const $sel = qs('#studio-model-select');
-                if ($sel) $sel.value = _studioModel;
+                if ($sel) $sel.value = ctx.studioModel;
             });
         });
         // Also populate action-row select
         const $sel = qs('#studio-model-select');
         if ($sel) {
             $sel.innerHTML = IMAGE_MODELS.map(m =>
-                `<option value="${esc(m.id)}"${m.id === _studioModel ? ' selected' : ''}>${esc(m.label)}${m.nsfw ? '' : ' ★'}</option>`
+                `<option value="${esc(m.id)}"${m.id === ctx.studioModel ? ' selected' : ''}>${esc(m.label)}${m.nsfw ? '' : ' ★'}</option>`
             ).join('');
             $sel.addEventListener('change', () => {
-                _studioModel = $sel.value;
-                $grid.querySelectorAll('.studio-model-card').forEach(x => x.classList.toggle('active', x.dataset.model === _studioModel));
+                ctx.studioModel = $sel.value;
+                $grid.querySelectorAll('.studio-model-card').forEach(x => x.classList.toggle('active', x.dataset.model === ctx.studioModel));
             });
         }
     }
@@ -4314,7 +4341,7 @@ export function initUI() {
             negative:        _studioScene.negative,
         };
 
-        const charId = _studioCharId || state.activeBotId;
+        const charId = ctx.studioCharId || state.activeBotId;
         const includeNsfw = _studioScene.nsfw !== 'sfw';
         const { positive, negative } = buildImagePrompt({ charId, scene: merged, includeNsfw, nsfwLevel: _studioScene.nsfw });
 
@@ -4544,17 +4571,17 @@ export function initUI() {
         if ($cost)    $cost.textContent = '';
 
         try {
-            const dataUrl = await generateImage({ model: _studioModel, prompt, negativePrompt: negPrompt, size, seed });
-            _studioDataUrl = dataUrl;
+            const dataUrl = await generateImage({ model: ctx.studioModel, prompt, negativePrompt: negPrompt, size, seed });
+            ctx.studioDataUrl = dataUrl;
 
             if ($img)    $img.src = dataUrl;
             if ($wrap)   $wrap.hidden = false;
             if ($pholder)$pholder.hidden = true;
-            if ($cost)   $cost.textContent = `Model: ${_studioModel}`;
+            if ($cost)   $cost.textContent = `Model: ${ctx.studioModel}`;
             if ($regen)  $regen.hidden = false;
 
             // Auto-inject into chat thread
-            _injectImageMessage(dataUrl, prompt, _studioModel);
+            _injectImageMessage(dataUrl, prompt, ctx.studioModel);
 
             // Auto-save to character gallery
             const charId = state.activeBotId;
@@ -4563,9 +4590,9 @@ export function initUI() {
                 renderGalleryStrip(charId);
                 _renderStudioGalleryStrip(charId);
                 // Refresh social/hot feed if currently visible
-                if ($feedArena && !$feedArena.hidden) {
-                    if (_feedMode === 'hot') renderHotFeed();
-                    else if (_feedMode === charId) renderSocialFeed(charId);
+                if (ctx.$feedArena && !ctx.$feedArena.hidden) {
+                    if (ctx.feedMode === 'hot') renderHotFeed();
+                    else if (ctx.feedMode === charId) renderSocialFeed(charId);
                 }
                 showToast('Image saved to gallery', 'info', 2000);
             }
@@ -4609,7 +4636,7 @@ export function initUI() {
             $img.title = 'Click to use as base';
             $img.addEventListener('click', () => {
                 // Load into preview as current
-                _studioDataUrl = src;
+                ctx.studioDataUrl = src;
                 const $pImg = qs('#studio-preview-img');
                 const $wrap = qs('#studio-img-wrap');
                 const $ph   = qs('#studio-placeholder');
@@ -4631,11 +4658,11 @@ export function initUI() {
         const cid = charId || state.activeBotId;
 
         // Reset scene when the character changes — prevents cross-character contamination
-        if (cid && cid !== _studioCharId) {
+        if (cid && cid !== ctx.studioCharId) {
             _resetStudioScene(true);  // skipNsfw=true so NSFW level is set below
-            _studioCharId = cid;
-        } else if (!_studioCharId) {
-            _studioCharId = cid;
+            ctx.studioCharId = cid;
+        } else if (!ctx.studioCharId) {
+            ctx.studioCharId = cid;
         }
 
         // Sync NSFW from reality config
@@ -4654,14 +4681,14 @@ export function initUI() {
         $studio.classList.add('img-studio--open');
 
         // Lazy-load + populate panels on first open
-        if (!_studioPresets) {
+        if (!ctx.studioPresets) {
             await _initStudioPanels();
         }
 
-        if (!_studioWired) {
+        if (!ctx.studioWired) {
             _wireStudioNav();
             _wireQuickCapture();
-            _studioWired = true;
+            ctx.studioWired = true;
         }
 
         // After panels exist, sync chip visual state to scene (needed after char-change reset)
@@ -4740,7 +4767,7 @@ export function initUI() {
         const origHtml = $btn?.innerHTML;
         if ($btn) { $btn.disabled = true; $btn.innerHTML = '<i data-lucide="loader-2" class="spin"></i> …'; lucideRefresh($btn); }
         try {
-            const charId     = _studioCharId || state.activeBotId;
+            const charId     = ctx.studioCharId || state.activeBotId;
             const nsfw       = _studioScene.nsfw !== 'sfw';
             const charWeight = parseFloat(qs('#studio-char-weight')?.value ?? '0.7');
             const sceneWeight= parseFloat(qs('#studio-scene-weight')?.value ?? '0.5');
@@ -4774,7 +4801,7 @@ export function initUI() {
     });
 
     qs('#studio-img-set-avatar')?.addEventListener('click', async () => {
-        if (!_studioDataUrl) return;
+        if (!ctx.studioDataUrl) return;
         const cid = state.activeBotId;
         if (!cid) { showToast('No active character', 'warn'); return; }
         const meta = state.characters.find(c => c.id === cid);
@@ -4782,9 +4809,9 @@ export function initUI() {
         if (!meta || !co) return;
         const gallery = co.extensions.underdark.gallery;
         if (meta.avatar_path && !gallery.includes(meta.avatar_path)) gallery.unshift(meta.avatar_path);
-        const stored = isDataUrl(_studioDataUrl)
-            ? await saveImageBlob(`avatar-gen-${cid}-${Date.now()}`, _studioDataUrl).catch(() => _studioDataUrl)
-            : _studioDataUrl;
+        const stored = isDataUrl(ctx.studioDataUrl)
+            ? await saveImageBlob(`avatar-gen-${cid}-${Date.now()}`, ctx.studioDataUrl).catch(() => ctx.studioDataUrl)
+            : ctx.studioDataUrl;
         meta.avatar_path = stored;
         if (!gallery.includes(stored)) gallery.push(stored);
         // Bust cache so next getAvatarUrl resolves the new ref
@@ -4798,31 +4825,31 @@ export function initUI() {
     });
 
     qs('#studio-img-save-gallery')?.addEventListener('click', async () => {
-        if (!_studioDataUrl) return;
+        if (!ctx.studioDataUrl) return;
         const cid = state.activeBotId;
         if (!cid) { showToast('No active character', 'warn'); return; }
-        await addToGallery(cid, _studioDataUrl);
+        await addToGallery(cid, ctx.studioDataUrl);
         renderGalleryStrip(cid);
         _renderStudioGalleryStrip(cid);
-        if ($feedArena && !$feedArena.hidden) {
-            if (_feedMode === 'hot') renderHotFeed();
-            else if (_feedMode === cid) renderSocialFeed(cid);
+        if (ctx.$feedArena && !ctx.$feedArena.hidden) {
+            if (ctx.feedMode === 'hot') renderHotFeed();
+            else if (ctx.feedMode === cid) renderSocialFeed(cid);
         }
         showToast('Saved to gallery', 'info', 1800);
     });
 
     qs('#studio-img-download')?.addEventListener('click', () => {
-        if (!_studioDataUrl) return;
+        if (!ctx.studioDataUrl) return;
         const a    = document.createElement('a');
-        a.href     = _studioDataUrl;
+        a.href     = ctx.studioDataUrl;
         a.download = `underdark-studio-${Date.now()}.png`;
         a.click();
     });
 
     qs('#studio-img-send-chat')?.addEventListener('click', () => {
-        if (!_studioDataUrl) return;
+        if (!ctx.studioDataUrl) return;
         const $ta = qs('#studio-prompt-ta');
-        _injectImageMessage(_studioDataUrl, $ta?.value.trim() || '', _studioModel);
+        _injectImageMessage(ctx.studioDataUrl, $ta?.value.trim() || '', ctx.studioModel);
         showToast('Sent to chat thread', 'info', 1600);
     });
 
@@ -4830,20 +4857,19 @@ export function initUI() {
     qs('#btn-img-studio')?.addEventListener('click', () => openImgStudio());
 
     // ── Social Feed ────────────────────────────────────────────────────────────
-    const $chatArena = qs('#chat-arena');
-    const $feedArena = qs('#feed-arena');
+    // ctx.feedMode and ctx.permanentFeedPosts declared in ctx above
+    ctx.$chatArena = qs('#chat-arena');
+    ctx.$feedArena = qs('#feed-arena');
+    const $chatArena = ctx.$chatArena;
+    const $feedArena = ctx.$feedArena;
     const $feedList  = qs('#social-feed-container');
-    let _feedMode = 'hot'; // 'hot' | charId
-
-    // Permanent posts loaded from data/feed.json (git-committed, universal)
-    let _permanentFeedPosts = [];
 
     qs('#feed-back-btn')?.addEventListener('click', () => {
         switchSidebarTab('chats');
     });
 
     qs('#feed-add-post-btn')?.addEventListener('click', () => {
-        const charId = (_feedMode !== 'hot') ? _feedMode : (galleryCharId || state.characters[0]?.id || null);
+        const charId = (ctx.feedMode !== 'hot') ? ctx.feedMode : (ctx.galleryCharId || state.characters[0]?.id || null);
         openComposeModal(charId);
     });
 
@@ -4861,7 +4887,7 @@ export function initUI() {
             const rawAv = c.avatar_path || state.loadedCharacters[c.id]?.avatar;
             const av = getAvatarUrlSync(c.id, rawAv) || rawAv;
             const postCount = getAllFeedPosts(c.id).length;
-            const isActive = _feedMode === c.id;
+            const isActive = ctx.feedMode === c.id;
             const avHtml = av && !isEmoji(av)
                 ? `<div class="social-char-item__avatar" style="background-image:url('${esc(av)}')"></div>`
                 : `<div class="social-char-item__avatar">${av || '👤'}</div>`;
@@ -4903,8 +4929,8 @@ export function initUI() {
     });
 
     function openHotFeed() {
-        _feedMode = 'hot';
-        galleryCharId = null;
+        ctx.feedMode = 'hot';
+        ctx.galleryCharId = null;
         // Update feed header
         const $name    = qs('#feed-user-name');
         const $tagline = qs('#feed-char-tagline');
@@ -4955,8 +4981,8 @@ export function initUI() {
     }
 
     function openSocialFeed(id) {
-        _feedMode = id;
-        galleryCharId = id;
+        ctx.feedMode = id;
+        ctx.galleryCharId = id;
         if ($chatArena) $chatArena.hidden = true;
         if ($feedArena) $feedArena.hidden = false;
         const char = state.loadedCharacters[id];
@@ -5474,8 +5500,8 @@ export function initUI() {
 
             cleanup();
             // Refresh feed
-            if (_feedMode === selCharId) renderSocialFeed(selCharId);
-            else if (_feedMode === 'hot') renderHotFeed();
+            if (ctx.feedMode === selCharId) renderSocialFeed(selCharId);
+            else if (ctx.feedMode === 'hot') renderHotFeed();
             renderSocialSidebar();
             showToast('Post saved locally.');
         };
@@ -5555,7 +5581,7 @@ export function initUI() {
 
     // ── Lightbox ──────────────────────────────────────────────────────────────
     async function openLightbox(charId, startIndex) {
-        galleryCharId = charId;
+        ctx.galleryCharId = charId;
         lbIndex       = startIndex;
         const $lb = qs('#lightbox');
         $lb.hidden = false;
@@ -5611,7 +5637,7 @@ export function initUI() {
     qs('#lb-download')?.addEventListener('click', () => {
         const src = lbImages[lbIndex];
         if (!src) return;
-        const meta = galleryCharId ? state.characters.find(c => c.id === galleryCharId) : null;
+        const meta = ctx.galleryCharId ? state.characters.find(c => c.id === ctx.galleryCharId) : null;
         const a = document.createElement('a');
         a.href = src;
         a.download = `${(meta?.name || 'image').toLowerCase().replace(/\s+/g, '-')}-${String(lbIndex + 1).padStart(3, '0')}.png`;
@@ -5619,10 +5645,10 @@ export function initUI() {
     });
 
     qs('#lb-set-avatar')?.addEventListener('click', async () => {
-        if (!galleryCharId || lbIndex === 0) return;
+        if (!ctx.galleryCharId || lbIndex === 0) return;
         const ref  = lbRefs[lbIndex];   // storage ref
-        const meta = state.characters.find(c => c.id === galleryCharId);
-        const char = ensureGalleryStore(galleryCharId);
+        const meta = state.characters.find(c => c.id === ctx.galleryCharId);
+        const char = ensureGalleryStore(ctx.galleryCharId);
         if (!meta || !char) return;
         const gallery = char.extensions.underdark.gallery;
         if (meta.avatar_path) gallery.unshift(meta.avatar_path);
@@ -5631,9 +5657,9 @@ export function initUI() {
         meta.avatar_path = ref;
         saveState();
         renderRoster();
-        renderGalleryStrip(galleryCharId);
-        renderGalleryModal(galleryCharId);
-        lbRefs   = getAllGalleryImages(galleryCharId);
+        renderGalleryStrip(ctx.galleryCharId);
+        renderGalleryModal(ctx.galleryCharId);
+        lbRefs   = getAllGalleryImages(ctx.galleryCharId);
         lbImages = await Promise.all(lbRefs.map(r => resolveImageUrl(r)));
         lbIndex  = 0;
         renderLightbox(0);
@@ -5641,17 +5667,17 @@ export function initUI() {
     });
 
     qs('#lb-remove')?.addEventListener('click', async () => {
-        if (!galleryCharId || lbIndex === 0) return;
-        const char = ensureGalleryStore(galleryCharId);
+        if (!ctx.galleryCharId || lbIndex === 0) return;
+        const char = ensureGalleryStore(ctx.galleryCharId);
         if (!char) return;
         const ref = char.extensions.underdark.gallery[lbIndex - 1];
         if (isIdbImageRef(ref)) await deleteImageBlob(idbImageRefId(ref)).catch(() => {});
         char.extensions.underdark.gallery.splice(lbIndex - 1, 1);
         saveState();
-        lbRefs   = getAllGalleryImages(galleryCharId);
+        lbRefs   = getAllGalleryImages(ctx.galleryCharId);
         lbImages = await Promise.all(lbRefs.map(r => resolveImageUrl(r)));
-        renderGalleryStrip(galleryCharId);
-        renderGalleryModal(galleryCharId);
+        renderGalleryStrip(ctx.galleryCharId);
+        renderGalleryModal(ctx.galleryCharId);
         if (!lbImages.filter(Boolean).length) { qs('#lightbox').hidden = true; return; }
         lbIndex = Math.min(lbIndex, lbImages.length - 1);
         renderLightbox(0);
@@ -5676,7 +5702,7 @@ export function initUI() {
     qs('#gallery-file-input')?.addEventListener('change', async e => {
         const files = [...e.target.files];
         e.target.value = '';
-        if (!galleryCharId) return;
+        if (!ctx.galleryCharId) return;
         let added = 0;
         for (const file of files) {
             if (file.size > 10 * 1024 * 1024) { showToast(`${file.name} exceeds 10 MB limit`, 'error'); continue; }
@@ -5687,12 +5713,12 @@ export function initUI() {
                 reader.readAsDataURL(file);
             }).catch(err => { showToast(err.message, 'error'); return null; });
             if (!dataUrl) continue;
-            await addToGallery(galleryCharId, dataUrl);
+            await addToGallery(ctx.galleryCharId, dataUrl);
             added++;
         }
         if (added) {
-            renderGalleryStrip(galleryCharId);
-            renderGalleryModal(galleryCharId);
+            renderGalleryStrip(ctx.galleryCharId);
+            renderGalleryModal(ctx.galleryCharId);
             showToast(`${added} image${added !== 1 ? 's' : ''} added`);
         }
     });
@@ -5703,11 +5729,11 @@ export function initUI() {
         const url = $input?.value.trim();
         if (!url) return;
         try { new URL(url); } catch { showToast('Invalid URL', 'error'); return; }
-        if (!galleryCharId) return;
-        await addToGallery(galleryCharId, url);
+        if (!ctx.galleryCharId) return;
+        await addToGallery(ctx.galleryCharId, url);
         $input.value = '';
-        renderGalleryStrip(galleryCharId);
-        renderGalleryModal(galleryCharId);
+        renderGalleryStrip(ctx.galleryCharId);
+        renderGalleryModal(ctx.galleryCharId);
         showToast('Image URL added');
     });
     qs('#gallery-url-input')?.addEventListener('keydown', e => {
@@ -5716,10 +5742,10 @@ export function initUI() {
 
     // Export all gallery images as individual downloads
     qs('#gallery-export-all')?.addEventListener('click', async () => {
-        if (!galleryCharId) return;
-        const allRefs = getAllGalleryImages(galleryCharId);
+        if (!ctx.galleryCharId) return;
+        const allRefs = getAllGalleryImages(ctx.galleryCharId);
         if (!allRefs.length) { showToast('No images to export', 'warn'); return; }
-        const meta = state.characters.find(c => c.id === galleryCharId);
+        const meta = state.characters.find(c => c.id === ctx.galleryCharId);
         const nameSlug = (meta?.name || 'gallery').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
         const allImages = await Promise.all(allRefs.map(ref => resolveImageUrl(ref)));
         let count = 0;
@@ -7312,9 +7338,9 @@ export function initUI() {
 
     function renderAll() {
         // Restore arena visibility based on active tab
-        const inSocial = _activeSidebarTab === 'social';
-        if ($chatArena) $chatArena.hidden = inSocial;
-        if ($feedArena) $feedArena.hidden = !inSocial;
+        const inSocial = ctx.activeSidebarTab === 'social';
+        if (ctx.$chatArena) ctx.$chatArena.hidden = inSocial;
+        if (ctx.$feedArena) ctx.$feedArena.hidden = !inSocial;
 
         renderRealities();
         renderChats();
@@ -8753,7 +8779,7 @@ export function initUI() {
             // Open the right terminal so the character dossier is immediately visible
             toggleTerminal(false);
             // Switch to profile tab so you see the character, not config
-            const $profileBtn = qs('.tab-btn[data-tab="character"]');
+            const $profileBtn = qs('.tab-btn[data-tab="profile"]');
             if ($profileBtn) $profileBtn.click();
             showToast('Focus mode — just you and the characters', 'info', 2200);
         } else {
@@ -9327,8 +9353,7 @@ export function initUI() {
     });
 
     // ── Sub-Thread Oracle ─────────────────────────────────────────────────────
-    let _oracleHistory = [];   // private history, never touches state
-    let _oracleStreaming = false;
+    // ctx.oracleHistory and ctx.oracleStreaming declared in ctx above
 
     const ORACLE_PRESETS = {
         uncensor: {
@@ -9378,7 +9403,7 @@ export function initUI() {
     }
 
     async function sendOracleQuery(text) {
-        if (_oracleStreaming || !text.trim()) return;
+        if (ctx.oracleStreaming || !text.trim()) return;
         const charId   = qs('#oracle-char-select')?.value || state.activeBotId;
         const char     = state.loadedCharacters[charId];
         if (!char) { showToast('No character selected for Oracle', 'error'); return; }
@@ -9397,7 +9422,7 @@ export function initUI() {
         $thread?.appendChild($userBubble);
         $thread.scrollTop = $thread.scrollHeight;
 
-        _oracleHistory.push({ role: 'user', content: resolvedText });
+        ctx.oracleHistory.push({ role: 'user', content: resolvedText });
 
         // Build payload using current character context + oracle history, never writing to state
         const _worldScenario = state.reality?.worldConfig?.scenario || '';
@@ -9409,7 +9434,7 @@ export function initUI() {
         };
         const fullPayload = buildPayload({
             character: { ...char, id: charId },
-            history:   _oracleHistory.slice(0, -1), // omit last user msg — it's in messages already
+            history:   ctx.oracleHistory.slice(0, -1), // omit last user msg — it's in messages already
             lore:      state.lorebooks,
             config:    oracleConfig,
             isGroup:   false,
@@ -9419,7 +9444,7 @@ export function initUI() {
         // Replace the payload's messages with oracle history so context is isolated
         fullPayload.messages = [
             fullPayload.messages[0], // keep system prompt
-            ..._oracleHistory.map(m => ({ role: m.role === 'bot' ? 'assistant' : m.role, content: m.content }))
+            ...ctx.oracleHistory.map(m => ({ role: m.role === 'bot' ? 'assistant' : m.role, content: m.content }))
         ];
 
         const $botBubble = document.createElement('div');
@@ -9428,7 +9453,7 @@ export function initUI() {
         $thread?.appendChild($botBubble);
         $thread.scrollTop = $thread.scrollHeight;
 
-        _oracleStreaming = true;
+        ctx.oracleStreaming = true;
         const $sendBtn = qs('#oracle-send-btn');
         if ($sendBtn) { $sendBtn.disabled = true; $sendBtn.innerHTML = '<i data-lucide="square"></i>'; lucideRefresh($sendBtn); }
 
@@ -9442,14 +9467,14 @@ export function initUI() {
             (text) => {
                 finalText = text;
                 $botBubble.innerHTML = renderMarkdown(finalText);
-                _oracleHistory.push({ role: 'assistant', content: finalText });
-                _oracleStreaming = false;
+                ctx.oracleHistory.push({ role: 'assistant', content: finalText });
+                ctx.oracleStreaming = false;
                 if ($sendBtn) { $sendBtn.disabled = false; $sendBtn.innerHTML = '<i data-lucide="send"></i>'; lucideRefresh($sendBtn); }
                 $thread.scrollTop = $thread.scrollHeight;
             },
             (err) => {
                 $botBubble.innerHTML = `<span class="msg-error">[Oracle error: ${esc(err.message)}]</span>`;
-                _oracleStreaming = false;
+                ctx.oracleStreaming = false;
                 if ($sendBtn) { $sendBtn.disabled = false; $sendBtn.innerHTML = '<i data-lucide="send"></i>'; lucideRefresh($sendBtn); }
             }
         );
@@ -9482,7 +9507,7 @@ export function initUI() {
 
     qs('#oracle-inject-to-chat')?.addEventListener('click', () => {
         // Grab last oracle bot response and inject as an author's note into the live chat
-        const lastBot = [..._oracleHistory].reverse().find(m => m.role === 'assistant');
+        const lastBot = [...ctx.oracleHistory].reverse().find(m => m.role === 'assistant');
         if (!lastBot) { showToast('No Oracle response to inject', 'warn'); return; }
         const truncated = lastBot.content.slice(0, 400);
         const existing = state.config.authorsNote || '';
@@ -9492,7 +9517,7 @@ export function initUI() {
     });
 
     qs('#oracle-clear')?.addEventListener('click', () => {
-        _oracleHistory = [];
+        ctx.oracleHistory = [];
         const $thread = qs('#oracle-thread');
         if ($thread) $thread.innerHTML = '';
         showToast('Oracle thread cleared', 'info', 1400);
@@ -9504,7 +9529,7 @@ export function initUI() {
     _loadScenarioCache();
     Promise.all([loadManifest(), loadFeedJson()]).then(() => {
         // Bring permanent feed posts into the closure scope
-        _permanentFeedPosts = _feedJsonCache;
+        ctx.permanentFeedPosts = _feedJsonCache;
         renderAll();
         initChatBackground();
         loadModels();
@@ -9539,7 +9564,7 @@ async function loadFeedJson() {
     try {
         const res  = await fetch('./data/feed.json');
         const data = await res.json();
-        // Exposed via the closure variable _permanentFeedPosts inside initUI
+        // Exposed via the closure variable ctx.permanentFeedPosts inside initUI
         // We store on the module level and initUI reads it before first render
         _feedJsonCache = data.posts || [];
     } catch (_) {

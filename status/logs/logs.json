@@ -1,8 +1,8 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.3.22",
-    "last_updated": "2026-05-14",
+    "schema_version": "1.3.23",
+    "last_updated": "2026-05-15",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
       "_protocol",
@@ -472,6 +472,22 @@
     ]
   },
   "commits": [
+    {
+      "hash": "PENDING",
+      "date": "2026-05-15",
+      "message": "refactor(underdark): Batch A+B — ctx object refactor + right sidebar Profile/Codex/Config tabs — ui.js v97",
+      "scope": "playground/characters — ui.js, index.html, main.js, terminal.css, style.css",
+      "impact": "high",
+      "files": [
+        "playground/characters/script/modules/ui.js",
+        "playground/characters/script/main.js",
+        "playground/characters/index.html",
+        "playground/characters/style/terminal.css",
+        "playground/characters/style/style.css",
+        "status/logs/logs.json"
+      ],
+      "why": "Batch A: introduced ctx object centralising all cross-section mutable state (galleryCharId, feedMode, permanentFeedPosts, activeSidebarTab, studioPresets/Wired/CharId/Model/DataUrl, oracleHistory/Streaming, $chatArena/$feedArena) — architectural foundation for future module splits. Batch B: renamed right sidebar tabs from Character/World/Settings to Profile/Codex/Config with icons, aligning labels with actual content semantics (Profile=character card, Codex=world+lorebooks, Config=settings+persona)."
+    },
     {
       "hash": "512c0d8",
       "date": "2026-05-14",
@@ -1468,6 +1484,22 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-15",
+      "agent": "Claude Sonnet 4.6",
+      "type": "refactor",
+      "summary": "Phase 7 begins. User answered 20 design questions defining 7 batches of work. Batch A executed: ctx object introduced at top of initUI() centralising all cross-section mutable state — galleryCharId, feedMode/permanentFeedPosts, activeSidebarTab, studio state, oracle state, $chatArena/$feedArena DOM refs. This is the architectural prerequisite for future module splits (social-feed.js, image-studio.js, thread-engine.js, codex.js). Batch B executed: right sidebar tabs renamed Character/World/Settings → Profile/Codex/Config with lucide icons; responsive.css was already written anticipating this rename. Tab buttons now support inline icons via flex display.",
+      "decisions": [
+        "ctx object pattern chosen over immediate physical file split — coupling is too deep to safely split without the ctx layer first; this pass is zero-behaviour-change refactor only.",
+        "Right sidebar tabs renamed semantically: Profile (character card), Codex (world+lorebooks), Config (settings+persona) — names match content purpose, not implementation detail.",
+        "Tab buttons given icons via data-lucide attributes — tab identity is now visual as well as textual, especially important on mobile where label space is tight.",
+        "Phase 7 batches defined: A (ctx refactor), B (sidebar), C (living social feed), D (immersion upgrades), E (world+characters), F (image+gallery), G (infrastructure) — each subsequent session executes one batch."
+      ],
+      "rules_reinforced": [
+        "Never split modules before establishing a shared context object — closure coupling will break call sites silently.",
+        "Semantic naming of UI sections reduces cognitive friction — 'Codex' is a better name than 'World' for a section containing lorebooks and world lore."
+      ]
+    },
     {
       "date": "2026-05-14",
       "agent": "Claude Sonnet 4.6",

@@ -16,13 +16,21 @@
     font-family: var(--font-mono);
     font-size: 0.65rem;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.06em;
     cursor: pointer;
     transition: var(--transition);
     white-space: nowrap;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
 }
+.tab-btn svg { width: 11px; height: 11px; flex-shrink: 0; }
 .tab-btn:hover  { color: var(--text-main); }
 .tab-btn.active { color: var(--theme-accent); border-bottom-color: var(--theme-accent); }
+.tab-btn.active svg { opacity: 1; }
+.tab-btn svg { opacity: 0.6; transition: opacity 0.15s; }
+.tab-btn:hover svg { opacity: 0.85; }
 
 .terminal-content { overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--glass-border-mute) transparent; }
 .tab-panel { display: none; padding: var(--space-md); }
