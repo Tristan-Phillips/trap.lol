@@ -5,7 +5,7 @@ import * as Settings from './llm-settings.js';
 import * as Sessions from './llm-sessions.js';
 import * as Chat from './llm-chat.js';
 
-export function initLLM({ base = "" } = {}) {
+export function initLLM() {
   const llm = config.llm;
   const $section = document.getElementById("playground-section") ?? document.getElementById("llm-section");
 
@@ -224,16 +224,16 @@ export function initLLM({ base = "" } = {}) {
     ui.syspromptInput.value = cfg.systemPrompt;
   };
 
-  fetchJSON(`${base}glass/data/llm-agents/default.json`).then(card => {
+  fetchJSON(`/glass/data/llm-agents/default.json`).then(card => {
     const data = card.spec ? card.data : card;
     agentMap.set("default", { id: "default", name: data.name || "Default", data });
     if (!cfg.selectedAgent) applyAgent(data);
   }).catch(() => {});
 
-  fetchJSON(`${base}glass/data/llm-agents/index.json`).then(files => {
+  fetchJSON(`/glass/data/llm-agents/index.json`).then(files => {
     if (!Array.isArray(files)) return;
     files.filter(f => !f.includes("default")).forEach(f => {
-      fetchJSON(`${base}glass/data/llm-agents/${f}`).then(card => {
+      fetchJSON(`/glass/data/llm-agents/${f}`).then(card => {
         const data = card.spec ? card.data : card;
         const id = f.replace(".json", "");
         agentMap.set(id, { id, name: data.name || id, data });

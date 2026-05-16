@@ -1,5 +1,5 @@
-import { loadCoreData } from '../../glass/script/modules/core.js';
-import { initLLM } from '../../glass/script/modules/llm.js';
+import { loadCoreData } from '/glass/script/modules/core.js';
+import { initLLM } from '/glass/script/modules/llm.js';
 
 // ── Prefill from hub launchpad ?q= / ?agent= ─────────────────────────────
 // Consumes the URL params and wipes them so reload doesn't re-trigger.
@@ -49,11 +49,11 @@ function applyInboundPrefill() {
 }
 
 async function boot() {
-  const success = await loadCoreData('../');
+  const success = await loadCoreData();
   if (!success) return;
 
   document.getElementById('playground-section')?.classList.remove('hidden');
-  initLLM({ base: '../' });
+  initLLM();
   if (typeof lucide !== 'undefined') lucide.createIcons();
   applyInboundPrefill();
 }

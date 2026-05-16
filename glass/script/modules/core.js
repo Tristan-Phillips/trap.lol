@@ -45,9 +45,9 @@ export const globalRouter = new Map();
 export let config;
 export let hostingData, extData, guideData, botsData, toolsData, llmData, appsData;
 
-export async function loadCoreData(base = "") {
+export async function loadCoreData() {
   try {
-    config = await fetchJSON(`${base}glass/data/config.json`);
+    config = await fetchJSON(`/glass/data/config.json`);
   } catch (e) {
     console.error("Config load failed:", e);
     return false;
@@ -59,13 +59,13 @@ export async function loadCoreData(base = "") {
   });
 
   [hostingData, extData, guideData, botsData, toolsData, llmData, appsData] = await Promise.all([
-    safeJSON(`${base}glass/data/hosting.json`),
-    safeJSON(`${base}glass/data/extlinks.json`),
-    safeJSON(`${base}glass/data/guides.json`),
-    safeJSON(`${base}glass/data/bots.json`),
-    safeJSON(`${base}glass/data/tools.json`),
-    safeJSON(`${base}glass/data/llm.json`),
-    safeJSON(`${base}glass/data/apps.json`),
+    safeJSON(`/glass/data/hosting.json`),
+    safeJSON(`/glass/data/extlinks.json`),
+    safeJSON(`/glass/data/guides.json`),
+    safeJSON(`/glass/data/bots.json`),
+    safeJSON(`/glass/data/tools.json`),
+    safeJSON(`/glass/data/llm.json`),
+    safeJSON(`/glass/data/apps.json`),
   ]);
 
   const loadShard = async (id, local, pub) => {
@@ -74,7 +74,7 @@ export async function loadCoreData(base = "") {
       await loadScript(primary);
     } catch {
       try {
-        await loadScript(`${base}${local}`);
+        await loadScript(`/shards/${local}`);
       } catch {
         try {
           await loadScript(pub);
@@ -86,9 +86,9 @@ export async function loadCoreData(base = "") {
   };
 
   await Promise.all([
-    loadShard("lucide",    "shards/lucide.min.js",  "https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"),
-    loadShard("marked",    "shards/marked.min.js",  "https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js"),
-    loadShard("dompurify", "shards/purify.min.js",  "https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.9/purify.min.js"),
+    loadShard("lucide",    "lucide.min.js",  "https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"),
+    loadShard("marked",    "marked.min.js",  "https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js"),
+    loadShard("dompurify", "purify.min.js",  "https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.9/purify.min.js"),
   ]);
 
   return true;
