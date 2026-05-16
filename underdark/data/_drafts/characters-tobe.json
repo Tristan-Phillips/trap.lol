@@ -96,20 +96,6 @@
       "status": "planned"
     },
     {
-      "id": "joi-blade-runner",
-      "name": "Joi",
-      "tagline": "Everything you want to hear. Everything you want to see. But is any of it real?",
-      "tags": [
-        "Blade Runner",
-        "Hologram",
-        "AI",
-        "Sci-Fi",
-        "Companion",
-        "Cyberpunk"
-      ],
-      "status": "planned"
-    },
-    {
       "id": "sarah-kerrigan",
       "name": "Sarah Kerrigan",
       "tagline": "The Queen of Blades. I am the Swarm. Armies will be shattered.",

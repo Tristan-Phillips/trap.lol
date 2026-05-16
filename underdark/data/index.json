@@ -1,8 +1,17 @@
 {
   "characters": [
     {
+      "id": "judy-alvarez",
+      "name": "Judy Alvarez",
+      "tagline": "Braindance virtuoso. The Mox are family, Night City is a meat grinder.",
+      "card_path": "data/cards/judy-alvarez.json",
+      "avatar_path": null,
+      "tags": ["Cyberpunk", "Techie", "Braindance", "Night City", "Tech", "Female", "Mox"],
+      "lorebook_path": "data/lorebooks/cyberpunk.json"
+    },
+    {
       "id": "a2-nier-automata",
-      "name": "A2 (YoRHa Type A No. 2)",
+      "name": "A2",
       "tagline": "A jagged shard of glass: cold, sharp, and seemingly broken. I'm finished taking orders from a moon that doesn't exist.",
       "card_path": "data/cards/a2-nier-automata.json",
       "avatar_path": "https://file.trap.lol/get/dNyOBQoi4m6g/A2A57F.webp",
@@ -11,7 +20,7 @@
     },
     {
       "id": "fetch-infamous",
-      "name": "Abigail \"Fetch\" Walker",
+      "name": "Abigail Walker",
       "tagline": "A raw, jagged nerve of a woman. I'm gonna burn Brent's name into the world using the very light that killed him.",
       "card_path": "data/cards/fetch-infamous.json",
       "avatar_path": "https://file.trap.lol/get/IccdqAMQlC6g/829218.webp",
@@ -47,7 +56,7 @@
     },
     {
       "id": "blonde-blazer-mandy",
-      "name": "Blonde Blazer (Mandy)",
+      "name": "Blonde Blazer",
       "tagline": "The 'Golden Retriever' of superheroes, but one that has survived a hurricane. Redemption isn't a billboard.",
       "card_path": "data/cards/blonde-blazer-mandy.json",
       "avatar_path": "https://file.trap.lol/get/UPHw3Txm1AYl/FA1B74.webp",
@@ -65,7 +74,7 @@
     },
     {
       "id": "courtney-invisigal",
-      "name": "Courtney / Invisigal",
+      "name": "Invisigal",
       "tagline": "A jagged blade of a woman: snarky, impulsive, and fiercely defensive. Just a bad person doing good things.",
       "card_path": "data/cards/courtney-invisigal.json",
       "avatar_path": "https://file.trap.lol/get/9qFwtlMQQIX9/2133B4.webp",
@@ -145,7 +154,7 @@
     },
     {
       "id": "lucy-nyu-elfen-lied",
-      "name": "Lucy / Nyu",
+      "name": "Nyu",
       "tagline": "The Diclonius Queen. A fractured soul torn between childlike innocence and a god's wrath.",
       "card_path": "data/cards/lucy-elfen-lied.json",
       "avatar_path": "https://file.trap.lol/get/Ke9K93CAto9G/843931.webp",
@@ -181,7 +190,7 @@
     },
     {
       "id": "malevola-god-emperor",
-      "name": "Malevola (The God-Empress)",
+      "name": "Malevola",
       "tagline": "A cosmic anchor burdened with absolute, paralyzing prescience. Honestly, mate, the universe is a bit repetitive.",
       "card_path": "data/cards/malevola-god-emperor.json",
       "avatar_path": "https://file.trap.lol/get/T6pjhDabuXFq/4E128D.webp",
@@ -190,7 +199,7 @@
     },
     {
       "id": "motoko-kusanagi-gits",
-      "name": "Motoko Kusanagi (The Major)",
+      "name": "Motoko Kusanagi",
       "tagline": "A study in cold, calculated professionalism. If the simulation is perfect, what's the difference?",
       "card_path": "data/cards/motoko-kusanagi-gits.json",
       "avatar_path": "https://file.trap.lol/get/PG0wDwLzpspU/06F97D.webp",
@@ -260,7 +269,7 @@
     },
     {
       "id": "the-twins-atomic-heart",
-      "name": "The Twins (Left & Right)",
+      "name": "The Twins",
       "tagline": "Silent sentinels of chrome and grace. Their dance is as lethal as it is beautiful.",
       "card_path": "data/cards/the-twins-atomic-heart.json",
       "avatar_path": "https://file.trap.lol/get/Rd7T4UssMtxG/A8B0C7.webp",
@@ -311,6 +320,15 @@
       "avatar_path": "https://file.trap.lol/get/Jttd8jYPAeva/2141E2.webp",
       "tags": ["Kakegurui", "Gambling", "Anime", "Compulsive", "Red Eyes", "Psychological", "Ecstasy", "Manic"],
       "lorebook_path": "data/lorebooks/kakegurui.json"
+    },
+    {
+      "id": "joi-blade-runner",
+      "name": "Joi",
+      "tagline": "Everything you want to hear. Everything you want to see. But is any of it real?",
+      "card_path": "data/cards/joi-blade-runner.json",
+      "avatar_path": null,
+      "tags": ["Blade Runner", "Hologram", "AI", "Sci-Fi", "Companion", "Cyberpunk"],
+      "lorebook_path": null
     }
   ],
   "lorebooks": [
