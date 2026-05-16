@@ -26,6 +26,7 @@
 @import './thread-config.css';
 @import './oracle.css';
 @import './gallery-modal.css';
+@import './char-editor.css';
 
 /* ── Supplemental UI ── */
 @import './reinject.css';
