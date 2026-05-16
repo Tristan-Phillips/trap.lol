@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.3.52",
+    "schema_version": "1.3.53",
     "last_updated": "2026-05-17",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -478,6 +478,20 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-17",
+      "message": "feat(dndm): STORY module — narrative decision tree builder with Oracle suggestions, NOW PLAYING, journey log",
+      "scope": "dndm/",
+      "impact": "high",
+      "files": [
+        "dndm/assets/script/app.js",
+        "dndm/assets/style/style.css",
+        "dndm/index.html",
+        "status/logs/logs.json"
+      ],
+      "why": "DM requested a campaign planning tool with a decision tree navigator, LLM suggestions, and live session tracking. Story module provides: pan/zoom canvas with 6 node types (Scene/Decision/Event/Revelation/Combat/Wildcard), bezier edge connections, node editor, Oracle context-aware suggestions and sub-tree expansion, NOW PLAYING session strip with Off-Script and Mark Done, path-taken journey log, drag-to-place/move, connect/delete modes, zoom/fit, all persisted to campaign.narrative in localStorage."
+    },
     {
       "hash": "93f6dda",
       "date": "2026-05-17",
@@ -1983,6 +1997,25 @@
       "date": "2026-05-17",
       "agent": "Claude Sonnet 4.6",
       "type": "feature_development",
+      "summary": "Built the STORY module — a full narrative decision tree builder for campaign planning and live session navigation. Pan/zoom SVG+HTML canvas with 6 node types (Scene gold, Decision crimson, Event bone, Revelation purple, Combat red, Wildcard teal), bezier curved edges with arrow markers, node drag-and-drop repositioning, connect mode (click-to-link), delete mode (click-to-remove), snap-to-grid, zoom/fit. Right panel has node editor (title/desc/notes/tags/status/monsters) and Oracle suggestions panel (streaming nano-gpt contextual suggestions + Expand Tree mode that generates 5 child nodes and adds them to canvas on click). During session mode a NOW PLAYING strip shows the active scene with Off-Script (spawns wildcard node) and Mark Done (auto-advances to next unplayed child). Journey log tracks the actual path taken with timestamps. All data stored in campaign.narrative sub-object.",
+      "decisions": [
+        "Nodes are HTML divs (not canvas) for easy DOM interaction and CSS styling; edges are SVG beziers in a transparent SVG layer behind",
+        "Canvas uses CSS transform (translate + scale) on a single stage div — no virtualisation needed at DnD scale (50-200 nodes)",
+        "Node types have dedicated CSS variables: --node-scene/decision/event/reveal/combat/wild",
+        "Oracle Expand mode generates [TYPE] Title — desc formatted nodes and creates real canvas nodes on suggestion click",
+        "NOW PLAYING strip only visible during session mode AND when a current node is set",
+        "Off-Script creates a Wildcard child, marks parent as altered, logs to journey — zero friction for mid-session improvisation",
+        "Mark Done auto-advances if exactly 1 unplayed child; shows toast if 0 or multiple — DM chooses the branch"
+      ],
+      "rules_reinforced": [
+        "async functions work fine inside DOMContentLoaded — already used for Oracle",
+        "CSS flex height propagation: height: 0 + flex-grow OR explicit height needed for nested flex containers to fill parent"
+      ]
+    },
+    {
+      "date": "2026-05-17",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
       "summary": "Continuation session (resumed after context compaction). Implemented four major Grimoire features: full 5e character sheet overlay per PC with localStorage persistence (ability scores, saves, skills with dot-cycling proficiency, spell slots, textareas for features/equipment/personality/backstory, live bonus recomputation); party status bar visible during session mode (sticky HP strip with condition dots and KO skull, click-to-jump to Party module); advanced compound filters for Bestiary (CR range, 14 type pills, 6 size pills) and Spellbook (level 0-9, 8 schools, concentration/ritual toggles, 8 class pills); Oracle Ask buttons on stat blocks and spell panels that pre-fill contextual D&D questions. Also fixed missing --purple-hi CSS variable, added +char-modal ability score fields, and wired renderPartyBar() into beginSession/endSession/refreshPCCard.",
       "decisions": [
         "party stored in localStorage (not sessionStorage) so character sheets survive tab close",
@@ -3306,6 +3339,16 @@
         "completed": "2026-05-17",
         "description": "Bestiary: CR min/max range inputs, 14 creature type pills, 6 size pills, all compound-stacking with name search. Spellbook: level 0-9 pills (cantrip + 1-9), 8 school pills, concentration/ritual toggles, 8 class pills. Clear button resets all filters. Filter state is module-scoped vars.",
         "notes": "Committed in pending (this session). Filters reset on source change because state.bestiary.monsters is replaced.",
+        "files_affected": ["dndm/index.html", "dndm/assets/script/app.js", "dndm/assets/style/style.css"]
+      },
+      {
+        "id": "dndm-story-module",
+        "title": "DM MATRIX — STORY module (narrative decision tree)",
+        "status": "done",
+        "requested": "2026-05-17",
+        "completed": "2026-05-17",
+        "description": "Full narrative decision tree builder with pan/zoom canvas, 6 node types, bezier SVG edges, drag-to-place/move, connect/delete modes, node editor, Oracle contextual suggestions + sub-tree expansion, NOW PLAYING session strip, Off-Script wildcard spawner, Mark Done auto-advance, path-taken journey log. Persisted to campaign.narrative.",
+        "notes": "Committed in pending (this session). Oracle Expand mode generates nodes and wires them directly to canvas on click.",
         "files_affected": ["dndm/index.html", "dndm/assets/script/app.js", "dndm/assets/style/style.css"]
       },
       {

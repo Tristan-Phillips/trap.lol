@@ -85,6 +85,12 @@
           </button>
         </li>
         <li>
+          <button class="sidebar__item" data-module="story" aria-label="Story Builder">
+            <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="5" cy="6" r="2"/><circle cx="19" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><line x1="7" y1="6" x2="17" y2="6"/><line x1="5" y1="8" x2="12" y2="16"/><line x1="19" y1="8" x2="12" y2="16"/></svg>
+            <span class="sidebar__label">STORY</span>
+          </button>
+        </li>
+        <li>
           <button class="sidebar__item" data-module="party" aria-label="Party Tracker">
             <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             <span class="sidebar__label">PARTY</span>
@@ -242,6 +248,136 @@
         <div class="module__body">
           <div class="session-list" id="session-list">
             <div class="session-empty">No sessions recorded. Begin your first session to start logging.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Story Builder ────────────────────────────────── -->
+      <section class="module module--hidden story-module" id="module-story" data-module="story">
+
+        <!-- NOW PLAYING strip — shown during session when a current node is set -->
+        <div class="story-now" id="story-now" hidden>
+          <span class="story-now__eyebrow">NOW PLAYING</span>
+          <div class="story-now__body">
+            <span class="story-now__type-dot" id="story-now-dot"></span>
+            <span class="story-now__title" id="story-now-title">—</span>
+            <span class="story-now__desc" id="story-now-desc"></span>
+          </div>
+          <div class="story-now__actions">
+            <button class="story-now__btn story-now__btn--offscript" id="story-offscript" title="Party went off-script — spawn an improvisation node">⚡ Off-Script</button>
+            <button class="story-now__btn story-now__btn--complete" id="story-mark-done" title="Mark this scene as played and advance">✓ Mark Done</button>
+          </div>
+        </div>
+
+        <!-- Main 3-pane layout -->
+        <div class="story-shell" id="story-shell">
+
+          <!-- Left: Tree canvas -->
+          <div class="story-canvas-wrap" id="story-canvas-wrap">
+            <!-- Toolbar -->
+            <div class="story-toolbar" id="story-toolbar">
+              <div class="story-toolbar__group">
+                <button class="story-tool story-tool--add" id="story-add-root" title="Add root node (start a new tree or branch)">+ Root</button>
+                <div class="story-node-type-picker" id="story-type-picker">
+                  <button class="story-type-btn story-type-btn--scene   story-type-btn--active" data-type="scene"       title="Scene">⬡ Scene</button>
+                  <button class="story-type-btn story-type-btn--decision" data-type="decision"  title="Decision fork">◈ Decision</button>
+                  <button class="story-type-btn story-type-btn--event"    data-type="event"     title="World event">⚡ Event</button>
+                  <button class="story-type-btn story-type-btn--reveal"   data-type="revelation" title="Revelation / clue">◎ Reveal</button>
+                  <button class="story-type-btn story-type-btn--combat"   data-type="combat"    title="Combat encounter">⚔ Combat</button>
+                  <button class="story-type-btn story-type-btn--wild"     data-type="wildcard"  title="Wildcard / improvisation">? Wild</button>
+                </div>
+              </div>
+              <div class="story-toolbar__group story-toolbar__group--right">
+                <button class="story-tool" id="story-zoom-in"  title="Zoom in">+</button>
+                <button class="story-tool" id="story-zoom-out" title="Zoom out">−</button>
+                <button class="story-tool" id="story-fit"      title="Fit all nodes in view">⊞ Fit</button>
+                <button class="story-tool story-tool--connect" id="story-connect-toggle" title="Connection mode: click source then target">⤳ Connect</button>
+                <button class="story-tool story-tool--delete-mode" id="story-delete-toggle" title="Delete mode: click node or edge to remove">✕ Delete</button>
+                <button class="story-tool" id="story-clear-all" title="Clear entire tree (with confirmation)">⊘ Clear</button>
+              </div>
+            </div>
+            <!-- Hint bar -->
+            <div class="story-hint" id="story-hint">Click canvas to place a node. Shift+drag to pan. Scroll to zoom.</div>
+            <!-- SVG edge layer + node layer (both inside the pan/zoom container) -->
+            <div class="story-viewport" id="story-viewport">
+              <div class="story-stage" id="story-stage">
+                <svg class="story-edges" id="story-edges" xmlns="http://www.w3.org/2000/svg"></svg>
+                <div class="story-nodes" id="story-nodes"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Node detail + Oracle suggestions -->
+          <div class="story-panel" id="story-panel">
+            <!-- Node editor -->
+            <div class="story-editor" id="story-editor">
+              <div class="story-editor__empty" id="story-editor-empty">
+                <span class="story-editor__empty-icon">◈</span>
+                <p>Select a node to edit it, or click canvas to place a new one.</p>
+              </div>
+              <div class="story-editor__form" id="story-editor-form" hidden>
+                <div class="story-editor__head">
+                  <span class="story-editor__type-badge" id="story-editor-type"></span>
+                  <button class="story-editor__close" id="story-editor-close" title="Deselect">✕</button>
+                </div>
+                <input class="story-editor__title" id="story-editor-title" placeholder="Node title…" maxlength="80" />
+                <textarea class="story-editor__desc" id="story-editor-desc" placeholder="Description — what happens here, what the DM needs to know…" rows="4"></textarea>
+                <textarea class="story-editor__notes" id="story-editor-notes" placeholder="Private notes — read-aloud text, boxed text, contingencies…" rows="3"></textarea>
+                <div class="story-editor__tags-row">
+                  <label class="story-editor__field-label">TAGS</label>
+                  <input class="story-editor__tags-inp" id="story-editor-tags" placeholder="e.g. Act 2, Boss, Optional…" />
+                </div>
+                <div class="story-editor__status-row">
+                  <label class="story-editor__field-label">STATUS</label>
+                  <select class="story-editor__status" id="story-editor-status">
+                    <option value="planned">Planned</option>
+                    <option value="current">Current</option>
+                    <option value="played">Played</option>
+                    <option value="skipped">Skipped</option>
+                    <option value="altered">Altered (went off-script)</option>
+                  </select>
+                </div>
+                <div class="story-editor__monster-row" id="story-editor-monster-row">
+                  <label class="story-editor__field-label">ENCOUNTER</label>
+                  <input class="story-editor__monster-inp" id="story-editor-monsters" placeholder="e.g. 3× Goblin, 1× Bugbear…" />
+                  <button class="story-editor__launch-combat" id="story-launch-combat" title="Send this encounter to the combat tracker">⚔ Launch Combat</button>
+                </div>
+                <div class="story-editor__actions">
+                  <button class="story-editor__btn story-editor__btn--primary" id="story-set-current" title="Set as the current active scene during session">◉ Set as Now Playing</button>
+                  <button class="story-editor__btn story-editor__btn--child" id="story-add-child" title="Add a child node branching from this one">+ Branch</button>
+                  <button class="story-editor__btn story-editor__btn--danger" id="story-delete-node" title="Delete this node (edges removed too)">✕ Delete Node</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Oracle suggestions -->
+            <div class="story-oracle" id="story-oracle">
+              <div class="story-oracle__head">
+                <span class="story-oracle__title">◈ ORACLE SUGGESTIONS</span>
+                <div class="story-oracle__controls">
+                  <button class="story-oracle__btn" id="story-oracle-suggest" title="Ask Oracle for what might happen next">⟳ Suggest</button>
+                  <button class="story-oracle__btn story-oracle__btn--expand" id="story-oracle-expand" title="Generate a full sub-tree of child nodes from this scene">⊕ Expand Tree</button>
+                </div>
+              </div>
+              <div class="story-oracle__body" id="story-oracle-body">
+                <div class="story-oracle__intro">Select a node then click Suggest for contextual ideas, or Expand Tree to auto-generate branches.</div>
+              </div>
+              <div class="story-oracle__key-row" id="story-oracle-key-row">
+                <input class="story-oracle__key-inp" id="story-oracle-key" placeholder="nano-gpt API key…" type="password" />
+                <button class="story-oracle__key-save" id="story-oracle-key-save">Save</button>
+              </div>
+            </div>
+
+            <!-- Journey log — breadcrumb of played path -->
+            <div class="story-journey" id="story-journey">
+              <div class="story-journey__head">
+                <span class="story-journey__title">PATH TAKEN</span>
+                <button class="story-journey__clear" id="story-journey-clear" title="Clear path history">✕</button>
+              </div>
+              <div class="story-journey__list" id="story-journey-list">
+                <div class="story-journey__empty">No scenes played yet. Begin session and mark scenes done to build the campaign's actual path.</div>
+              </div>
+            </div>
           </div>
         </div>
       </section>

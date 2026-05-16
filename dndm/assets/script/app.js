@@ -109,6 +109,7 @@ document.addEventListener('DOMContentLoaded', function () {
     bestiary: { monsters: [], loaded: false, activeSource: 'MM', page: 0, filtered: [] },
     spells:   { spells: [],   loaded: false, activeSource: 'PHB', filtered: [] },
     conditionsLoaded: false,
+    storyInited:      false,
     diceHistory: []
   };
 
@@ -182,6 +183,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (name === 'bestiary'   && !state.bestiary.loaded) initBestiary();
     if (name === 'spellbook'  && !state.spells.loaded)   initSpellbook();
     if (name === 'cheatsheet' && !state.conditionsLoaded) initCheatsheet();
+    if (name === 'story'      && !state.storyInited)     initStory();
   }
 
   $sidebarItems.forEach(function(btn) {
@@ -211,6 +213,7 @@ document.addEventListener('DOMContentLoaded', function () {
   function beginSession(title) {
     state.sessionActive = true;
     renderPartyBar();
+    if (state.storyInited) storyRenderNow();
     $sidebar.classList.add('sidebar--session');
     $toggleLabel.textContent = 'END SESSION';
     $modeLabel.textContent   = 'SESSION';
@@ -255,6 +258,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     state.sessionActive = false;
     renderPartyBar();
+    if (state.storyInited) storyRenderNow();
     $sidebar.classList.remove('sidebar--session');
     $toggleLabel.textContent = 'BEGIN SESSION';
     $modeLabel.textContent   = 'PREP';
@@ -349,7 +353,13 @@ document.addEventListener('DOMContentLoaded', function () {
     },
     sessions: [],    // { id, date, title, summary, xp }
     totalXP:  0,
-    partyLevel: 1
+    partyLevel: 1,
+    narrative: {     // story builder
+      nodes:         {},   // id → { id, type, title, desc, notes, tags, status, x, y, monsters, unplanned }
+      edges:         [],   // [ { id, from, to } ]
+      currentNodeId: null, // id of NOW PLAYING node
+      journey:       []    // [ { nodeId, timestamp, label } ]
+    }
   };
 
   function campaignLoad() {
@@ -367,6 +377,12 @@ document.addEventListener('DOMContentLoaded', function () {
       if (!Array.isArray(campaign.sessions)) campaign.sessions = [];
       if (typeof campaign.totalXP    !== 'number') campaign.totalXP    = 0;
       if (typeof campaign.partyLevel !== 'number') campaign.partyLevel = 1;
+      // Narrative tree
+      if (!campaign.narrative || typeof campaign.narrative !== 'object') campaign.narrative = {};
+      if (!campaign.narrative.nodes  || typeof campaign.narrative.nodes !== 'object') campaign.narrative.nodes = {};
+      if (!Array.isArray(campaign.narrative.edges))   campaign.narrative.edges   = [];
+      if (!Array.isArray(campaign.narrative.journey))  campaign.narrative.journey  = [];
+      if (typeof campaign.narrative.currentNodeId === 'undefined') campaign.narrative.currentNodeId = null;
     } catch(e) {}
   }
 
@@ -3271,6 +3287,896 @@ document.addEventListener('DOMContentLoaded', function () {
       soundPlay(key);
     });
   });
+
+  // ══════════════════════════════════════════════════════════
+  // ══════════════════════════════════════════════════════════
+  // STORY BUILDER — Narrative Decision Tree
+  // ══════════════════════════════════════════════════════════
+
+  var NODE_TYPES = {
+    scene:       { label: 'SCENE',       icon: '⬡', color: '#C4922A' },
+    decision:    { label: 'DECISION',    icon: '◈', color: '#C42B2B' },
+    event:       { label: 'EVENT',       icon: '⚡', color: '#9A8E7A' },
+    revelation:  { label: 'REVELATION', icon: '◎', color: '#9B59D0' },
+    combat:      { label: 'COMBAT',      icon: '⚔', color: '#C42B2B' },
+    wildcard:    { label: 'WILDCARD',    icon: '?',  color: '#2A8B8B' }
+  };
+
+  var storyNd  = campaign.narrative; // shorthand alias (live reference)
+  var _storySelectedId  = null;
+  var _storyConnectMode = false;
+  var _storyConnectFrom = null;
+  var _storyDeleteMode  = false;
+  var _storyActiveType  = 'scene';
+  var _storyTransform   = { x: 60, y: 60, scale: 1 };
+  var _storyDragging    = null; // { nodeId, startX, startY, origX, origY }
+  var _storyPanning     = null; // { startX, startY, origTX, origTY }
+  var _storyOracleBusy  = false;
+  var _storyOracleKey   = '';
+
+  var STORY_ORACLE_API    = 'https://nano-gpt.com/api/v1';
+  var STORY_ORACLE_MODEL  = 'gpt-4o-mini';
+  var STORY_GRID          = 20; // snap-to-grid size in canvas px
+
+  function storyUID() {
+    return 'sn_' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
+  }
+
+  function storyEdgeUID() {
+    return 'se_' + Date.now() + '_' + Math.random().toString(36).slice(2,5);
+  }
+
+  function storySave() {
+    // Persist via campaignSave — narrative is part of campaign object
+    storyNd = campaign.narrative; // keep alias fresh
+    campaignSave();
+  }
+
+  // ── Snap helper ──
+  function snap(v) { return Math.round(v / STORY_GRID) * STORY_GRID; }
+
+  // ── Build node ───────────────────────────────────────────
+  function storyMakeNode(type, x, y, opts) {
+    opts = opts || {};
+    var id = storyUID();
+    campaign.narrative.nodes[id] = {
+      id:        id,
+      type:      type,
+      title:     opts.title || (NODE_TYPES[type] ? NODE_TYPES[type].label : 'Node'),
+      desc:      opts.desc  || '',
+      notes:     opts.notes || '',
+      tags:      opts.tags  || '',
+      status:    opts.status || 'planned',
+      monsters:  opts.monsters || '',
+      unplanned: opts.unplanned || false,
+      x:         snap(x),
+      y:         snap(y)
+    };
+    storySave();
+    return id;
+  }
+
+  function storyMakeEdge(fromId, toId) {
+    // No duplicate edges
+    var exists = campaign.narrative.edges.some(function(e) { return e.from === fromId && e.to === toId; });
+    if (exists) return null;
+    var id = storyEdgeUID();
+    campaign.narrative.edges.push({ id: id, from: fromId, to: toId });
+    storySave();
+    return id;
+  }
+
+  // ── Full render ───────────────────────────────────────────
+  function initStory() {
+    if (state.storyInited) return;
+    state.storyInited = true;
+
+    storyNd = campaign.narrative;
+
+    // Oracle key
+    _storyOracleKey = localStorage.getItem('dndm_ng_key') || '';
+    var $keyInp = document.getElementById('story-oracle-key');
+    var $keySave= document.getElementById('story-oracle-key-save');
+    if ($keyInp) $keyInp.value = _storyOracleKey;
+    if ($keySave) $keySave.addEventListener('click', function() {
+      _storyOracleKey = $keyInp ? $keyInp.value.trim() : '';
+      localStorage.setItem('dndm_ng_key', _storyOracleKey);
+      showToast('Oracle key saved');
+    });
+
+    // Viewport setup
+    var $vp    = document.getElementById('story-viewport');
+    var $stage = document.getElementById('story-stage');
+    if (!$vp || !$stage) return;
+
+    storyApplyTransform();
+    storyRenderAll();
+
+    // ── Toolbar wiring ────────────────────────────────────
+
+    // Type picker
+    document.querySelectorAll('.story-type-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.story-type-btn').forEach(function(b) { b.classList.remove('story-type-btn--active'); });
+        btn.classList.add('story-type-btn--active');
+        _storyActiveType = btn.dataset.type;
+        storySetHint('Click canvas to place a ' + _storyActiveType + ' node. Double-click node to edit.');
+      });
+    });
+
+    // Add root
+    document.getElementById('story-add-root').addEventListener('click', function() {
+      var cx = Math.round(($vp.clientWidth  / 2 - _storyTransform.x) / _storyTransform.scale);
+      var cy = Math.round(($vp.clientHeight / 2 - _storyTransform.y) / _storyTransform.scale);
+      var id = storyMakeNode(_storyActiveType, cx, cy, { title: NODE_TYPES[_storyActiveType].label + ' ' + (Object.keys(campaign.narrative.nodes).length + 1) });
+      storyRenderAll();
+      storySelectNode(id);
+    });
+
+    // Zoom
+    document.getElementById('story-zoom-in').addEventListener('click',  function() { storyZoom(0.15); });
+    document.getElementById('story-zoom-out').addEventListener('click', function() { storyZoom(-0.15); });
+    document.getElementById('story-fit').addEventListener('click',       storyFitAll);
+
+    // Connect mode
+    var $connectToggle = document.getElementById('story-connect-toggle');
+    $connectToggle.addEventListener('click', function() {
+      _storyConnectMode = !_storyConnectMode;
+      _storyDeleteMode  = false;
+      _storyConnectFrom = null;
+      $connectToggle.classList.toggle('story-tool--active', _storyConnectMode);
+      document.getElementById('story-delete-toggle').classList.remove('story-tool--active');
+      $vp.classList.toggle('story-viewport--connect', _storyConnectMode);
+      $vp.classList.remove('story-viewport--delete');
+      storySetHint(_storyConnectMode ? 'Click a node to start a connection, then click another to link them.' : 'Click canvas to place a node.');
+    });
+
+    // Delete mode
+    var $delToggle = document.getElementById('story-delete-toggle');
+    $delToggle.addEventListener('click', function() {
+      _storyDeleteMode  = !_storyDeleteMode;
+      _storyConnectMode = false;
+      _storyConnectFrom = null;
+      $delToggle.classList.toggle('story-tool--active', _storyDeleteMode);
+      $connectToggle.classList.remove('story-tool--active');
+      $vp.classList.toggle('story-viewport--delete', _storyDeleteMode);
+      $vp.classList.remove('story-viewport--connect');
+      storySetHint(_storyDeleteMode ? 'Click a node or edge to delete it.' : 'Click canvas to place a node.');
+    });
+
+    // Clear all
+    document.getElementById('story-clear-all').addEventListener('click', function() {
+      if (!confirm('Clear the entire story tree? This cannot be undone.')) return;
+      campaign.narrative.nodes  = {};
+      campaign.narrative.edges  = [];
+      campaign.narrative.currentNodeId = null;
+      campaign.narrative.journey = [];
+      storyNd = campaign.narrative;
+      _storySelectedId = null;
+      storySave();
+      storyRenderAll();
+      storyCloseEditor();
+      storyRenderNow();
+      storyRenderJourney();
+    });
+
+    // ── Viewport: click to place node ───────────────────
+    $vp.addEventListener('click', function(e) {
+      if (e.target !== $vp && e.target !== $stage &&
+          !e.target.classList.contains('story-edges') &&
+          !e.target.classList.contains('story-nodes')) return;
+      if (_storyConnectMode || _storyDeleteMode) return;
+
+      var rect  = $vp.getBoundingClientRect();
+      var cx    = (e.clientX - rect.left - _storyTransform.x) / _storyTransform.scale;
+      var cy    = (e.clientY - rect.top  - _storyTransform.y) / _storyTransform.scale;
+      var id    = storyMakeNode(_storyActiveType, cx - 90, cy - 40, {
+        title: NODE_TYPES[_storyActiveType].label + ' ' + (Object.keys(campaign.narrative.nodes).length)
+      });
+      storyRenderAll();
+      storySelectNode(id);
+    });
+
+    // ── Viewport: pan (Shift+drag or middle-click drag) ─
+    $vp.addEventListener('mousedown', function(e) {
+      if (e.button === 1 || (e.button === 0 && e.shiftKey)) {
+        e.preventDefault();
+        _storyPanning = { startX: e.clientX, startY: e.clientY, origTX: _storyTransform.x, origTY: _storyTransform.y };
+        $vp.classList.add('story-viewport--panning');
+      }
+    });
+    document.addEventListener('mousemove', function(e) {
+      if (_storyPanning) {
+        _storyTransform.x = _storyPanning.origTX + (e.clientX - _storyPanning.startX);
+        _storyTransform.y = _storyPanning.origTY + (e.clientY - _storyPanning.startY);
+        storyApplyTransform();
+      }
+      if (_storyDragging) {
+        var d = _storyDragging;
+        var dx = (e.clientX - d.startX) / _storyTransform.scale;
+        var dy = (e.clientY - d.startY) / _storyTransform.scale;
+        campaign.narrative.nodes[d.nodeId].x = snap(d.origX + dx);
+        campaign.narrative.nodes[d.nodeId].y = snap(d.origY + dy);
+        storyRenderAll();
+      }
+    });
+    document.addEventListener('mouseup', function(e) {
+      if (_storyPanning) {
+        _storyPanning = null;
+        document.getElementById('story-viewport').classList.remove('story-viewport--panning');
+      }
+      if (_storyDragging) {
+        storySave();
+        _storyDragging = null;
+      }
+    });
+
+    // ── Scroll to zoom ───────────────────────────────────
+    $vp.addEventListener('wheel', function(e) {
+      e.preventDefault();
+      var delta = e.deltaY > 0 ? -0.08 : 0.08;
+      var rect  = $vp.getBoundingClientRect();
+      var mx    = e.clientX - rect.left;
+      var my    = e.clientY - rect.top;
+      storyZoomAt(delta, mx, my);
+    }, { passive: false });
+
+    // ── Keyboard shortcuts ────────────────────────────────
+    document.addEventListener('keydown', function(e) {
+      if (state.activeModule !== 'story') return;
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+      if ((e.key === 'Delete' || e.key === 'Backspace') && _storySelectedId) {
+        e.preventDefault();
+        storyDeleteNode(_storySelectedId);
+      }
+    });
+
+    // ── Node editor wiring ────────────────────────────────
+    var $titleInp   = document.getElementById('story-editor-title');
+    var $descInp    = document.getElementById('story-editor-desc');
+    var $notesInp   = document.getElementById('story-editor-notes');
+    var $tagsInp    = document.getElementById('story-editor-tags');
+    var $statusSel  = document.getElementById('story-editor-status');
+    var $monstersInp= document.getElementById('story-editor-monsters');
+
+    function storySyncEditor() {
+      if (!_storySelectedId) return;
+      var nd = campaign.narrative.nodes[_storySelectedId];
+      if (!nd) return;
+      nd.title    = $titleInp.value;
+      nd.desc     = $descInp.value;
+      nd.notes    = $notesInp.value;
+      nd.tags     = $tagsInp.value;
+      nd.status   = $statusSel.value;
+      nd.monsters = $monstersInp.value;
+      storySave();
+      storyRenderNodeEl(_storySelectedId);
+      if (campaign.narrative.currentNodeId === _storySelectedId) storyRenderNow();
+    }
+
+    [$titleInp, $descInp, $notesInp, $tagsInp].forEach(function(el) {
+      if (el) el.addEventListener('input', storySyncEditor);
+    });
+    if ($statusSel) $statusSel.addEventListener('change', function() {
+      storySyncEditor();
+      storyRenderEdges(); // played status changes edge style
+    });
+    if ($monstersInp) $monstersInp.addEventListener('input', storySyncEditor);
+
+    document.getElementById('story-editor-close').addEventListener('click', function() {
+      storyDeselectNode();
+    });
+
+    document.getElementById('story-set-current').addEventListener('click', function() {
+      if (!_storySelectedId) return;
+      campaign.narrative.currentNodeId = _storySelectedId;
+      var nd = campaign.narrative.nodes[_storySelectedId];
+      if (nd) nd.status = 'current';
+      storySave();
+      storyRenderAll();
+      storyRenderNow();
+      showToast('Now Playing: ' + (nd ? nd.title : ''));
+    });
+
+    document.getElementById('story-add-child').addEventListener('click', function() {
+      if (!_storySelectedId) return;
+      var parent = campaign.narrative.nodes[_storySelectedId];
+      if (!parent) return;
+      var childX = parent.x + 220;
+      var childY = parent.y + (Object.keys(campaign.narrative.nodes).length % 3) * 130;
+      var childId = storyMakeNode(_storyActiveType, childX, childY, {
+        title: NODE_TYPES[_storyActiveType].label + ' ' + (Object.keys(campaign.narrative.nodes).length)
+      });
+      storyMakeEdge(_storySelectedId, childId);
+      storyRenderAll();
+      storySelectNode(childId);
+    });
+
+    document.getElementById('story-delete-node').addEventListener('click', function() {
+      if (_storySelectedId) storyDeleteNode(_storySelectedId);
+    });
+
+    document.getElementById('story-launch-combat').addEventListener('click', function() {
+      if (!_storySelectedId) return;
+      var nd = campaign.narrative.nodes[_storySelectedId];
+      if (!nd || !nd.monsters.trim()) { showToast('Add encounter monsters first'); return; }
+      activateModule('combat');
+      showToast('Switch to Combat module — add monsters manually from Bestiary');
+    });
+
+    // ── NOW PLAYING controls ──────────────────────────────
+    document.getElementById('story-offscript').addEventListener('click', function() {
+      var currentId = campaign.narrative.currentNodeId;
+      var cx = 200, cy = 200;
+      if (currentId && campaign.narrative.nodes[currentId]) {
+        cx = campaign.narrative.nodes[currentId].x + 240;
+        cy = campaign.narrative.nodes[currentId].y + 80;
+      }
+      var wId = storyMakeNode('wildcard', cx, cy, {
+        title:     'Off-Script ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        status:    'current',
+        unplanned: true
+      });
+      if (currentId) storyMakeEdge(currentId, wId);
+      // Log old node as played
+      if (currentId && campaign.narrative.nodes[currentId]) {
+        var old = campaign.narrative.nodes[currentId];
+        if (old.status === 'current') old.status = 'altered';
+        storyJourneyLog(currentId, 'altered');
+      }
+      campaign.narrative.currentNodeId = wId;
+      storySave();
+      storyRenderAll();
+      storySelectNode(wId);
+      storyRenderNow();
+      storyRenderJourney();
+      storyFitNode(wId);
+      showToast('Off-Script node created — improvise!');
+    });
+
+    document.getElementById('story-mark-done').addEventListener('click', function() {
+      var currentId = campaign.narrative.currentNodeId;
+      if (!currentId || !campaign.narrative.nodes[currentId]) { showToast('No active scene'); return; }
+      var nd = campaign.narrative.nodes[currentId];
+      nd.status = 'played';
+      storyJourneyLog(currentId, 'played');
+
+      // Auto-advance: find first unplayed child
+      var children = campaign.narrative.edges
+        .filter(function(e) { return e.from === currentId; })
+        .map(function(e) { return campaign.narrative.nodes[e.to]; })
+        .filter(function(n) { return n && n.status === 'planned'; });
+
+      if (children.length === 1) {
+        campaign.narrative.currentNodeId = children[0].id;
+        children[0].status = 'current';
+        showToast('Advanced to: ' + children[0].title);
+      } else if (children.length > 1) {
+        campaign.narrative.currentNodeId = null;
+        showToast('Multiple branches — select the next scene and click ◉ Set as Now Playing');
+      } else {
+        campaign.narrative.currentNodeId = null;
+        showToast('Scene complete. No further branches planned.');
+      }
+
+      storySave();
+      storyRenderAll();
+      storyRenderNow();
+      storyRenderJourney();
+    });
+
+    // ── Oracle ────────────────────────────────────────────
+    document.getElementById('story-oracle-suggest').addEventListener('click', function() {
+      storyOracleSuggest(false);
+    });
+    document.getElementById('story-oracle-expand').addEventListener('click', function() {
+      storyOracleSuggest(true);
+    });
+
+    // ── Journey clear ─────────────────────────────────────
+    document.getElementById('story-journey-clear').addEventListener('click', function() {
+      if (!confirm('Clear the path history?')) return;
+      campaign.narrative.journey = [];
+      storySave();
+      storyRenderJourney();
+    });
+
+    // Initial render
+    storyRenderNow();
+    storyRenderJourney();
+    if (Object.keys(campaign.narrative.nodes).length > 0) {
+      storyFitAll();
+    }
+  }
+
+  // ── Rendering ─────────────────────────────────────────────
+
+  function storyApplyTransform() {
+    var $stage = document.getElementById('story-stage');
+    if ($stage) $stage.style.transform = 'translate(' + _storyTransform.x + 'px,' + _storyTransform.y + 'px) scale(' + _storyTransform.scale + ')';
+  }
+
+  function storyRenderAll() {
+    storyRenderNodes();
+    storyRenderEdges();
+  }
+
+  function storyRenderNodes() {
+    var $container = document.getElementById('story-nodes');
+    if (!$container) return;
+
+    var nodes = campaign.narrative.nodes;
+    var existing = {};
+    $container.querySelectorAll('.story-node').forEach(function(el) { existing[el.dataset.id] = el; });
+
+    // Add or update nodes
+    Object.keys(nodes).forEach(function(id) {
+      if (existing[id]) {
+        storyRenderNodeEl(id);
+        delete existing[id];
+      } else {
+        var el = storyCreateNodeEl(id);
+        $container.appendChild(el);
+      }
+    });
+
+    // Remove stale
+    Object.keys(existing).forEach(function(id) { if (existing[id]) existing[id].remove(); });
+  }
+
+  function storyCreateNodeEl(id) {
+    var nd  = campaign.narrative.nodes[id];
+    var nt  = NODE_TYPES[nd.type] || NODE_TYPES.scene;
+    var el  = document.createElement('div');
+    el.className = 'story-node story-node--' + nd.type;
+    el.dataset.id = id;
+    el.style.left = nd.x + 'px';
+    el.style.top  = nd.y + 'px';
+    el.innerHTML  = storyNodeInnerHTML(nd);
+
+    // Status classes
+    storyApplyNodeClasses(el, nd);
+
+    // Drag
+    el.addEventListener('mousedown', function(e) {
+      if (e.button !== 0) return;
+      if (_storyDeleteMode) { e.stopPropagation(); storyDeleteNode(id); return; }
+      if (_storyConnectMode) {
+        e.stopPropagation();
+        if (!_storyConnectFrom) {
+          _storyConnectFrom = id;
+          el.classList.add('story-node--selected');
+          storySetHint('Now click the destination node to create a connection.');
+        } else if (_storyConnectFrom !== id) {
+          storyMakeEdge(_storyConnectFrom, id);
+          _storyConnectFrom = null;
+          storyRenderEdges();
+          storySetHint('Connection made! Click another node to start a new connection.');
+        }
+        return;
+      }
+      // Normal drag
+      e.stopPropagation();
+      _storyDragging = { nodeId: id, startX: e.clientX, startY: e.clientY, origX: nd.x, origY: nd.y };
+    });
+
+    el.addEventListener('click', function(e) {
+      if (_storyConnectMode || _storyDeleteMode) return;
+      e.stopPropagation();
+      storySelectNode(id);
+    });
+
+    return el;
+  }
+
+  function storyNodeInnerHTML(nd) {
+    var nt = NODE_TYPES[nd.type] || NODE_TYPES.scene;
+    var statusLabel = nd.status === 'current' ? '◉ NOW PLAYING'
+                    : nd.status === 'played'  ? '✓ Played'
+                    : nd.status === 'skipped' ? '— Skipped'
+                    : nd.status === 'altered' ? '⚡ Altered'
+                    : '';
+    var statusClass = nd.status !== 'planned' ? 'story-node__status story-node__status--' + nd.status : '';
+    return '<div class="story-node__drag" title="Drag to move">⠿</div>'
+      + '<div class="story-node__badge">' + nt.icon + ' ' + nt.label + '</div>'
+      + '<div class="story-node__title">' + esc(nd.title) + '</div>'
+      + (nd.desc ? '<div class="story-node__desc">' + esc(nd.desc) + '</div>' : '')
+      + (statusLabel ? '<div class="' + statusClass + '">' + statusLabel + '</div>' : '')
+      + (nd.tags ? '<div class="story-node__tags">' + esc(nd.tags).split(',').map(function(t){return '<span class="story-node__tag">' + esc(t.trim()) + '</span>';}).join('') + '</div>' : '')
+      + '<div class="story-node__port" title="Drag from port to connect"></div>';
+  }
+
+  function storyApplyNodeClasses(el, nd) {
+    el.classList.toggle('story-node--selected', nd.id === _storySelectedId);
+    el.classList.toggle('story-node--current',  nd.id === campaign.narrative.currentNodeId);
+    el.classList.toggle('story-node--played',   nd.status === 'played');
+    el.classList.toggle('story-node--skipped',  nd.status === 'skipped');
+    el.classList.toggle('story-node--wildcard', nd.type === 'wildcard');
+  }
+
+  function storyRenderNodeEl(id) {
+    var el = document.querySelector('.story-node[data-id="' + id + '"]');
+    if (!el) return;
+    var nd = campaign.narrative.nodes[id];
+    if (!nd) { el.remove(); return; }
+    el.className = 'story-node story-node--' + nd.type;
+    el.style.left = nd.x + 'px';
+    el.style.top  = nd.y + 'px';
+    el.innerHTML  = storyNodeInnerHTML(nd);
+    storyApplyNodeClasses(el, nd);
+  }
+
+  function storyRenderEdges() {
+    var $svg = document.getElementById('story-edges');
+    if (!$svg) return;
+    $svg.innerHTML = '';
+
+    // Arrow marker definition
+    var defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+    defs.innerHTML = '<marker id="story-arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">'
+      + '<path d="M0,0 L0,6 L8,3 z" class="story-edge-arrow"/></marker>'
+      + '<marker id="story-arrow-played" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">'
+      + '<path d="M0,0 L0,6 L8,3 z" fill="rgba(196,146,42,0.7)"/></marker>';
+    $svg.appendChild(defs);
+
+    campaign.narrative.edges.forEach(function(edge) {
+      var fromNd = campaign.narrative.nodes[edge.from];
+      var toNd   = campaign.narrative.nodes[edge.to];
+      if (!fromNd || !toNd) return;
+
+      // Connect from bottom-centre of source to top-centre of target
+      var x1 = fromNd.x + 90;
+      var y1 = fromNd.y + 90; // approx bottom of node
+      var x2 = toNd.x  + 90;
+      var y2 = toNd.y;
+
+      // Cubic bezier
+      var cpY = (y1 + y2) / 2;
+      var d = 'M' + x1 + ',' + y1 + ' C' + x1 + ',' + cpY + ' ' + x2 + ',' + cpY + ' ' + x2 + ',' + y2;
+
+      var isPlayed = fromNd.status === 'played' || fromNd.status === 'altered';
+      var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', d);
+      path.setAttribute('class', 'story-edge' + (isPlayed ? ' story-edge--played' : ''));
+      path.setAttribute('marker-end', isPlayed ? 'url(#story-arrow-played)' : 'url(#story-arrow)');
+      path.dataset.edgeId = edge.id;
+
+      path.addEventListener('click', function(e) {
+        if (_storyDeleteMode) {
+          e.stopPropagation();
+          campaign.narrative.edges = campaign.narrative.edges.filter(function(ed) { return ed.id !== edge.id; });
+          storySave();
+          storyRenderEdges();
+        }
+      });
+      path.addEventListener('mouseenter', function() {
+        if (_storyDeleteMode) path.classList.add('story-edge--delete-hover');
+      });
+      path.addEventListener('mouseleave', function() {
+        path.classList.remove('story-edge--delete-hover');
+      });
+
+      $svg.appendChild(path);
+    });
+  }
+
+  // ── Select / deselect ─────────────────────────────────────
+
+  function storySelectNode(id) {
+    _storySelectedId = id;
+    storyRenderNodes(); // repaints all (updates selected class)
+    storyOpenEditor(id);
+  }
+
+  function storyDeselectNode() {
+    _storySelectedId = null;
+    storyRenderNodes();
+    storyCloseEditor();
+  }
+
+  function storyOpenEditor(id) {
+    var nd = campaign.narrative.nodes[id];
+    if (!nd) { storyCloseEditor(); return; }
+    var $empty = document.getElementById('story-editor-empty');
+    var $form  = document.getElementById('story-editor-form');
+    if ($empty) $empty.style.display = 'none';
+    if ($form)  $form.removeAttribute('hidden');
+
+    var nt = NODE_TYPES[nd.type] || NODE_TYPES.scene;
+    var $badge = document.getElementById('story-editor-type');
+    if ($badge) $badge.textContent = nt.icon + ' ' + nt.label;
+
+    document.getElementById('story-editor-title').value   = nd.title;
+    document.getElementById('story-editor-desc').value    = nd.desc;
+    document.getElementById('story-editor-notes').value   = nd.notes;
+    document.getElementById('story-editor-tags').value    = nd.tags;
+    document.getElementById('story-editor-status').value  = nd.status;
+    document.getElementById('story-editor-monsters').value= nd.monsters || '';
+
+    // Show/hide combat encounter row
+    var $monRow = document.getElementById('story-editor-monster-row');
+    if ($monRow) $monRow.classList.toggle('story-editor__monster-row--visible', nd.type === 'combat');
+  }
+
+  function storyCloseEditor() {
+    var $empty = document.getElementById('story-editor-empty');
+    var $form  = document.getElementById('story-editor-form');
+    if ($empty) $empty.style.display = '';
+    if ($form)  $form.setAttribute('hidden', '');
+  }
+
+  // ── Delete node ───────────────────────────────────────────
+  function storyDeleteNode(id) {
+    if (!confirm('Delete this node and all its connections?')) return;
+    delete campaign.narrative.nodes[id];
+    campaign.narrative.edges = campaign.narrative.edges.filter(function(e) { return e.from !== id && e.to !== id; });
+    if (campaign.narrative.currentNodeId === id) campaign.narrative.currentNodeId = null;
+    if (_storySelectedId === id) _storySelectedId = null;
+    storySave();
+    storyRenderAll();
+    storyCloseEditor();
+    storyRenderNow();
+  }
+
+  // ── Zoom helpers ──────────────────────────────────────────
+  function storyZoom(delta) {
+    var $vp = document.getElementById('story-viewport');
+    if (!$vp) return;
+    storyZoomAt(delta, $vp.clientWidth / 2, $vp.clientHeight / 2);
+  }
+
+  function storyZoomAt(delta, mx, my) {
+    var oldScale = _storyTransform.scale;
+    var newScale = Math.min(3, Math.max(0.2, oldScale + delta));
+    var ratio    = newScale / oldScale;
+    _storyTransform.x     = mx - ratio * (mx - _storyTransform.x);
+    _storyTransform.y     = my - ratio * (my - _storyTransform.y);
+    _storyTransform.scale = newScale;
+    storyApplyTransform();
+  }
+
+  function storyFitAll() {
+    var nodes = Object.values(campaign.narrative.nodes);
+    if (!nodes.length) return;
+    var $vp   = document.getElementById('story-viewport');
+    if (!$vp) return;
+    var minX  = Math.min.apply(null, nodes.map(function(n) { return n.x; }));
+    var minY  = Math.min.apply(null, nodes.map(function(n) { return n.y; }));
+    var maxX  = Math.max.apply(null, nodes.map(function(n) { return n.x + 180; }));
+    var maxY  = Math.max.apply(null, nodes.map(function(n) { return n.y + 100; }));
+    var W     = maxX - minX + 120;
+    var H     = maxY - minY + 120;
+    var scale = Math.min(1.2, Math.min($vp.clientWidth / W, $vp.clientHeight / H));
+    _storyTransform.scale = scale;
+    _storyTransform.x     = ($vp.clientWidth  - W * scale) / 2 - minX * scale + 60 * scale;
+    _storyTransform.y     = ($vp.clientHeight - H * scale) / 2 - minY * scale + 60 * scale;
+    storyApplyTransform();
+  }
+
+  function storyFitNode(id) {
+    var nd = campaign.narrative.nodes[id];
+    var $vp = document.getElementById('story-viewport');
+    if (!nd || !$vp) return;
+    _storyTransform.x = $vp.clientWidth  / 2 - (nd.x + 90) * _storyTransform.scale;
+    _storyTransform.y = $vp.clientHeight / 2 - (nd.y + 50) * _storyTransform.scale;
+    storyApplyTransform();
+  }
+
+  function storySetHint(msg) {
+    var $h = document.getElementById('story-hint');
+    if ($h) $h.textContent = msg;
+  }
+
+  // ── NOW PLAYING ───────────────────────────────────────────
+  function storyRenderNow() {
+    var $strip = document.getElementById('story-now');
+    if (!$strip) return;
+    var currentId = campaign.narrative.currentNodeId;
+    var nd = currentId ? campaign.narrative.nodes[currentId] : null;
+    var showStrip = !!(nd && state.sessionActive);
+    if (showStrip) {
+      $strip.removeAttribute('hidden');
+      var nt = NODE_TYPES[nd.type] || NODE_TYPES.scene;
+      var $dot   = document.getElementById('story-now-dot');
+      var $title = document.getElementById('story-now-title');
+      var $desc  = document.getElementById('story-now-desc');
+      if ($dot)   $dot.style.background = nt.color;
+      if ($title) $title.textContent = nd.title;
+      if ($desc)  $desc.textContent  = nd.desc ? nd.desc.slice(0, 80) + (nd.desc.length > 80 ? '…' : '') : '';
+    } else {
+      $strip.setAttribute('hidden', '');
+    }
+  }
+
+  // ── Journey log ───────────────────────────────────────────
+  function storyJourneyLog(nodeId, status) {
+    var nd = campaign.narrative.nodes[nodeId];
+    if (!nd) return;
+    campaign.narrative.journey.push({
+      nodeId:    nodeId,
+      title:     nd.title,
+      type:      nd.type,
+      status:    status,
+      timestamp: Date.now()
+    });
+  }
+
+  function storyRenderJourney() {
+    var $list = document.getElementById('story-journey-list');
+    if (!$list) return;
+    var j = campaign.narrative.journey;
+    if (!j.length) {
+      $list.innerHTML = '<div class="story-journey__empty">No scenes played yet. Begin session and mark scenes done to build the campaign\'s actual path.</div>';
+      return;
+    }
+    $list.innerHTML = j.map(function(entry, i) {
+      var nt   = NODE_TYPES[entry.type] || NODE_TYPES.scene;
+      var time = new Date(entry.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      var statusLabel = entry.status === 'played' ? '✓' : entry.status === 'altered' ? '⚡' : '◉';
+      return '<div class="story-journey__entry">'
+        + '<span class="story-journey__dot" style="background:' + nt.color + '"></span>'
+        + '<div>'
+          + '<div class="story-journey__text">' + statusLabel + ' ' + esc(entry.title) + '</div>'
+          + '<div class="story-journey__meta">' + nt.label + ' · ' + time + '</div>'
+        + '</div>'
+      + '</div>';
+    }).reverse().join('');
+  }
+
+  // ── Oracle suggestions ─────────────────────────────────────
+  async function storyOracleSuggest(expand) {
+    if (_storyOracleBusy) return;
+    var nd = _storySelectedId ? campaign.narrative.nodes[_storySelectedId] : null;
+
+    if (!_storyOracleKey) {
+      var $body = document.getElementById('story-oracle-body');
+      if ($body) $body.innerHTML = '<div class="story-oracle__error">Enter your nano-gpt API key below first.</div>';
+      return;
+    }
+
+    // Build context from selected node + parents
+    var contextLines = ['Campaign: ' + esc(campaign.name)];
+    if (nd) {
+      contextLines.push('Current node: [' + nd.type.toUpperCase() + '] ' + nd.title);
+      if (nd.desc)  contextLines.push('Description: ' + nd.desc);
+      if (nd.notes) contextLines.push('DM notes: ' + nd.notes);
+      if (nd.tags)  contextLines.push('Tags: ' + nd.tags);
+      // Parent nodes
+      var parentEdges = campaign.narrative.edges.filter(function(e) { return e.to === nd.id; });
+      parentEdges.forEach(function(e) {
+        var parent = campaign.narrative.nodes[e.from];
+        if (parent) contextLines.push('Precedes from: [' + parent.type.toUpperCase() + '] ' + parent.title);
+      });
+      // Child nodes
+      var childEdges = campaign.narrative.edges.filter(function(e) { return e.from === nd.id; });
+      childEdges.forEach(function(e) {
+        var child = campaign.narrative.nodes[e.to];
+        if (child) contextLines.push('Already branching to: [' + child.type.toUpperCase() + '] ' + child.title);
+      });
+    } else {
+      contextLines.push('No node selected — give general campaign story suggestions.');
+    }
+
+    var systemPrompt = 'You are a creative D&D 5e Dungeon Master assistant specialising in narrative design and campaign plotting. '
+      + 'You understand story structure, pacing, player agency, and the chaos of live tabletop games. '
+      + 'You give concise, creative, DM-ready suggestions. Format your response as a numbered list. '
+      + 'Each suggestion should be 1-2 sentences max. Focus on dramatic possibility, player agency, and unexpected twists.';
+
+    var userPrompt = expand
+      ? 'Based on this campaign node, generate a full sub-tree of 5 possible next scenes or events. '
+        + 'For each: give a title in [SCENE/DECISION/EVENT/REVELATION/COMBAT/WILDCARD] format, then one sentence description. '
+        + 'Include at least one unexpected complication and one player-driven branch.\n\n' + contextLines.join('\n')
+      : 'Suggest 5 possible things that could happen next from this story node. '
+        + 'Mix expected and unexpected outcomes. Include player choices, world events, and dramatic complications.\n\n' + contextLines.join('\n');
+
+    _storyOracleBusy = true;
+    var $sugBtn = document.getElementById('story-oracle-suggest');
+    var $expBtn = document.getElementById('story-oracle-expand');
+    if ($sugBtn) $sugBtn.disabled = true;
+    if ($expBtn) $expBtn.disabled = true;
+
+    var $body = document.getElementById('story-oracle-body');
+    if ($body) $body.innerHTML = '<div class="story-oracle__loading">◈ Oracle is weaving…</div>';
+
+    try {
+      var res = await fetch(STORY_ORACLE_API + '/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _storyOracleKey },
+        body: JSON.stringify({
+          model: STORY_ORACLE_MODEL,
+          stream: true,
+          messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }]
+        })
+      });
+
+      if (!res.ok) throw new Error('API error ' + res.status);
+
+      if ($body) $body.innerHTML = '';
+      var reader  = res.body.getReader();
+      var decoder = new TextDecoder();
+      var full    = '';
+
+      while (true) {
+        var _r = await reader.read();
+        if (_r.done) break;
+        var chunk = decoder.decode(_r.value, { stream: true });
+        chunk.split('\n').forEach(function(line) {
+          line = line.trim();
+          if (!line || line === 'data: [DONE]') return;
+          if (line.startsWith('data: ')) {
+            try {
+              var delta = JSON.parse(line.slice(6));
+              var token = (delta.choices[0].delta || {}).content || '';
+              full += token;
+            } catch(e) {}
+          }
+        });
+        if ($body) $body.innerHTML = '<div class="story-oracle__loading">◈ ' + esc(full.slice(-60)) + '</div>';
+      }
+
+      // Parse numbered suggestions from response
+      if ($body) {
+        var suggestions = full.split(/\n+/).filter(function(l) { return /^\d+[\.\)]\s/.test(l.trim()); });
+        if (!suggestions.length) suggestions = full.split(/\n+/).filter(function(l) { return l.trim().length > 10; });
+
+        if (expand && nd) {
+          // Parse [TYPE] Title — desc format and create actual nodes
+          $body.innerHTML = '<div style="font-family:var(--mono);font-size:0.58rem;color:var(--gold-hi);margin-bottom:0.5rem;">Generated ' + suggestions.length + ' nodes. Click to add to canvas:</div>';
+          suggestions.forEach(function(line, i) {
+            var typeMatch = line.match(/\[(SCENE|DECISION|EVENT|REVELATION|COMBAT|WILDCARD)\]/i);
+            var typeKey   = typeMatch ? typeMatch[1].toLowerCase() : 'scene';
+            var text      = line.replace(/^\d+[\.\)]\s*/, '').replace(/\[[^\]]+\]\s*/, '').trim();
+            var titleEnd  = text.indexOf('—');
+            var title     = titleEnd > 0 ? text.slice(0, titleEnd).trim() : text.slice(0, 50).trim();
+            var desc      = titleEnd > 0 ? text.slice(titleEnd + 1).trim() : '';
+            var $s        = document.createElement('div');
+            $s.className  = 'story-oracle__suggestion';
+            $s.innerHTML  = esc(line.replace(/^\d+[\.\)]\s*/, '')) + '<span class="story-oracle__suggestion-add">+ Add to canvas</span>';
+            $s.addEventListener('click', function() {
+              var parent = campaign.narrative.nodes[nd.id];
+              var childX = parent.x + 220 + i * 10;
+              var childY = parent.y + i * 140;
+              var childId = storyMakeNode(typeKey, childX, childY, { title: title || 'Generated Node', desc: desc });
+              storyMakeEdge(nd.id, childId);
+              storyRenderAll();
+              showToast('Node added: ' + title);
+              $s.style.opacity = '0.4';
+            });
+            $body.appendChild($s);
+          });
+        } else {
+          $body.innerHTML = '';
+          suggestions.forEach(function(line) {
+            var text = line.replace(/^\d+[\.\)]\s*/, '');
+            var $s   = document.createElement('div');
+            $s.className = 'story-oracle__suggestion';
+            $s.innerHTML = esc(text) + (nd ? '<span class="story-oracle__suggestion-add">+ Add as child node</span>' : '');
+            $s.addEventListener('click', function() {
+              if (!nd) return;
+              var childX = nd.x + 220;
+              var childY = nd.y + (Object.keys(campaign.narrative.nodes).length % 4) * 130;
+              var childId = storyMakeNode('scene', childX, childY, { title: text.slice(0, 60), desc: text });
+              storyMakeEdge(nd.id, childId);
+              storyRenderAll();
+              storySelectNode(childId);
+              showToast('Scene added from Oracle suggestion');
+              $s.style.opacity = '0.4';
+            });
+            $body.appendChild($s);
+          });
+        }
+      }
+
+    } catch(err) {
+      if ($body) $body.innerHTML = '<div class="story-oracle__error">Oracle error: ' + esc(err.message) + '</div>';
+    }
+
+    _storyOracleBusy = false;
+    if ($sugBtn) $sugBtn.disabled = false;
+    if ($expBtn) $expBtn.disabled = false;
+  }
+
+  // storyRenderNow() is called in beginSession/endSession directly (patched above).
 
   // ══════════════════════════════════════════════════════════
   // ORACLE — nano-gpt rules assistant
