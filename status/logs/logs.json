@@ -473,7 +473,7 @@
   },
   "commits": [
     {
-      "hash": "TBD_1",
+      "hash": "62d96e0",
       "date": "2026-05-16",
       "message": "feat(dndm): Phase 4 — Party Tracker + Combat Initiative Tracker",
       "scope": "dndm/",
@@ -486,7 +486,7 @@
       "why": "Phase 4 of DM MATRIX: fully functional Party Tracker (PC cards with HP bar, heal/damage controls, death saves, condition picker, sessionStorage persistence) and Combat Tracker (initiative order, NEXT TURN, per-combatant HP edit, dead state, Send-Party-to-Combat from party module) — the two most critical session-time tools the DM partner will use."
     },
     {
-      "hash": "TBD_2",
+      "hash": "242cfda",
       "date": "2026-05-16",
       "message": "feat(hub): sovereign nodes compact list, statstation+trap sections, social strip in footer, void/new editor",
       "scope": "index.html, glass/script/modules/core.js, glass/script/modules/ui.js, glass/style/modules/components.css, glass/style/modules/layout.css, void/new/index.html",
