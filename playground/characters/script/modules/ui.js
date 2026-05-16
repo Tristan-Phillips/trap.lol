@@ -2880,6 +2880,7 @@ export function initUI() {
                     qs('#profile-card').innerHTML = '<div class="profile-view__empty">No character selected</div>';
                     qs('#profile-actions').hidden = true;
                     if (qs('#gallery-strip')) qs('#gallery-strip').hidden = true;
+                    const $whr = qs('#profile-wh-row'); if ($whr) $whr.hidden = true;
                 }
             });
         });
@@ -3391,6 +3392,14 @@ export function initUI() {
         qs('#btn-add-to-thread').onclick = () => addCharacterToThread(id);
         qs('#btn-char-edit').onclick     = () => openCharEditor(id);
         qs('#btn-gallery-add').onclick   = () => { switchSidebarTab('social'); openSocialFeed(id); renderSocialSidebar(); };
+
+        const $whRow = qs('#profile-wh-row');
+        if ($whRow) $whRow.hidden = false;
+        qs('#btn-wh-profile')?.addEventListener('click', () => {
+            if (typeof window.openWallhavenGallery === 'function') {
+                window.openWallhavenGallery(char.name || '', id);
+            }
+        });
         qs('#btn-remove-char').onclick = () => {
             removeBotFromChat(id);
             delete _rrIndex[state.chat.id];
@@ -4313,15 +4322,16 @@ export function initUI() {
             const { negative } = buildImagePrompt({ charId, scene: { nsfw: nsfwLevel }, includeNsfw, nsfwLevel });
             const dataUrl = await generateImage({ model, prompt, negativePrompt: negative, size: '1024x1024' });
 
-            // Replace placeholder with real image
+            // Replace placeholder with real image — addMessage persists it to history/IDB
+            const persistedMsg = addMessage('image', dataUrl, null, { prompt, model });
             if ($placeholder && $placeholder.parentNode) {
                 const $real = document.createElement('div');
                 $real.className = 'message message--image';
                 $placeholder.parentNode.replaceChild($real, $placeholder);
-                _injectImageMessageInto($real, dataUrl, prompt, model);
+                _injectImageMessageInto($real, dataUrl, prompt, model, persistedMsg.id);
                 if ($thread) $thread.scrollTop = $thread.scrollHeight;
             } else {
-                _injectImageMessage(dataUrl, prompt, model);
+                _injectImageMessage(dataUrl, prompt, model, persistedMsg.id);
             }
 
             if (charId) {
