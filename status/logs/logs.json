@@ -473,7 +473,7 @@
   },
   "commits": [
     {
-      "hash": "PENDING",
+      "hash": "562fc23",
       "date": "2026-05-16",
       "message": "feat(underdark): auto-save + Ctrl+K command palette — ui.js v106",
       "scope": "playground/characters — ui.js, index.html, main.js, controls.css, style.css",
