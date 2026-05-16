@@ -76,35 +76,33 @@ function renderHosting() {
   if (!$wrap || !hostingData?.manifest) return;
 
   try {
-    const cards = Object.values(hostingData.manifest).map(node => {
+    const tiles = Object.values(hostingData.manifest).map(node => {
       if (node.shortcut) globalRouter.set(node.shortcut.toLowerCase(), { type: 'link', payload: node.url });
       const domain = node.url.replace(/^https?:\/\//, '');
-      const statusClass = (node.status || "online") === "online" ? "" : " offline";
-      const sourceBtn = node.source
-        ? `<a href="${esc(node.source)}" target="_blank" rel="noopener" class="sovereign-card__source" aria-label="View source" title="View source" tabindex="0"><i data-lucide="git-branch"></i></a>`
+      const isOffline = (node.status || "online") !== "online";
+      const srcBtn = node.source
+        ? `<a href="${esc(node.source)}" target="_blank" rel="noopener" class="node-tile__src" aria-label="View source" tabindex="0"><i data-lucide="git-branch"></i></a>`
         : "";
-      const shortcut = node.shortcut
-        ? `<span class="sovereign-card__shortcut">${esc(node.shortcut)}</span>`
+      const kbd = node.shortcut
+        ? `<kbd class="node-tile__kbd">${esc(node.shortcut)}</kbd>`
         : "";
       return `
-        <a href="${esc(node.url)}" target="_blank" rel="noopener" class="sovereign-card" aria-label="${esc(node.name)} — ${esc(node.hosting)}">
-          <div class="sovereign-card__head">
-            <i data-lucide="${esc(node.icon)}" class="sovereign-card__icon"></i>
-            <span class="sovereign-card__status${statusClass}"></span>
-          </div>
-          <span class="sovereign-card__name">${esc(node.name)}</span>
-          <span class="sovereign-card__hosting">${esc(node.hosting)}</span>
-          <div class="sovereign-card__footer">
-            <span class="sovereign-card__domain">${esc(domain)}</span>
-            <div style="display:flex;align-items:center;gap:0.35rem">
-              ${shortcut}
-              ${sourceBtn}
-            </div>
-          </div>
+        <a href="${esc(node.url)}" target="_blank" rel="noopener"
+           class="node-tile"
+           aria-label="${esc(node.name)} — ${esc(node.hosting)}">
+          <span class="node-tile__status${isOffline ? " offline" : ""}" aria-hidden="true"></span>
+          <i data-lucide="${esc(node.icon)}" class="node-tile__icon" aria-hidden="true"></i>
+          <span class="node-tile__name">${esc(node.name)}</span>
+          <span class="node-tile__sw">${esc(node.hosting)}</span>
+          <span class="node-tile__foot">
+            <span class="node-tile__domain">${esc(domain)}</span>
+            ${kbd}
+            ${srcBtn}
+          </span>
         </a>`;
     }).join("");
 
-    $wrap.innerHTML = `<div class="sovereign-grid">${cards}</div>`;
+    $wrap.innerHTML = `<div class="node-panel">${tiles}</div>`;
   } catch (e) {
     renderError($wrap, "Hosting nodes offline.");
   }
