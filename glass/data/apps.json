@@ -38,7 +38,7 @@
       "description": "Full Dungeon Master suite. Campaign manager, combat tracker, bestiary, atlas, oracle, and more.",
       "tags": ["dnd", "tabletop", "campaign", "tools"],
       "keyed": false,
-      "status": "live"
+      "status": "offline"
     }
   }
 }
