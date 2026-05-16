@@ -473,7 +473,7 @@
   },
   "commits": [
     {
-      "hash": "0000000",
+      "hash": "e9e7a60",
       "date": "2026-05-16",
       "message": "feat(underdark): taggable gallery with per-image tag chips + filter bar — ui.js v108",
       "scope": "playground/characters — ui.js, gallery-modal.css, main.js",
