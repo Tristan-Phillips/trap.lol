@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.3.35",
+    "schema_version": "1.3.36",
     "last_updated": "2026-05-16",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -472,6 +472,21 @@
     ]
   },
   "commits": [
+    {
+      "hash": "0000000",
+      "date": "2026-05-16",
+      "message": "fix(underdark): 6-bug batch — thread clip, persona undefined, create char, scenario timeout, image IDB persist, remove uplink node — ui.js v112",
+      "scope": "playground/characters — ui.js, main.js, index.html, arena.css",
+      "impact": "high",
+      "files": [
+        "playground/characters/script/modules/ui.js",
+        "playground/characters/script/main.js",
+        "playground/characters/index.html",
+        "playground/characters/style/arena.css",
+        "status/logs/logs.json"
+      ],
+      "why": "User-reported: thread top clipped by overflow:hidden stacking context; persona fields showed literal 'undefined'; no visible Create Character entry in roster panel; scenario finder spun forever on network hang; injected images lost on page reload; UPLINK floating button redundant since profile flyout has the same link."
+    },
     {
       "hash": "9e9c075",
       "date": "2026-05-16",
@@ -1674,6 +1689,24 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-16",
+      "agent": "Claude Sonnet 4.6",
+      "type": "bug_fix",
+      "summary": "Six-bug fix session from user-reported screenshot issues. (1) arena.css: overflow:hidden on .arena__content created scroll container that clipped thread top — changed to overflow:clip. (2) syncConfigUI persona fields used raw field access that returned undefined for uninitialised config keys — fixed with ?? ''. (3) #create-character button in Roster sidebar footer existed in HTML but had no event handler — wired to char-editor:open dispatch. (4) showPickerModal generateFn had no timeout — added 30s Promise.race timeout with user-friendly error message. (5) _injectImageMessage never called addMessage so images weren't persisted to history — fresh injects now call addMessage('image', dataUrl) which auto-promotes to IDB in state.js. (6) Standalone #uplink-node floating button and its inline click script removed — Uplink Home is already in the profile flyout.",
+      "decisions": [
+        "overflow:clip (not overflow:hidden) is correct for layout containers that need to contain children without creating a scroll context.",
+        "All config UI fields that might be unset must use ?? '' to avoid 'undefined' string in inputs.",
+        "#create-character was already in the HTML footer of the Roster view — just needed the event handler wired.",
+        "showPickerModal timeout set to 30s — long enough to not false-positive on slow connections but short enough to not look like a hang.",
+        "IDB promotion for injected images is handled in state.js addMessage — ui.js only needs to call addMessage and the persistence is automatic.",
+        "UPLINK floating button removed — no functionality lost since profile flyout has identical nav."
+      ],
+      "rules_reinforced": [
+        "overflow:clip prevents layout bleed without creating a scroll stacking context — prefer it over overflow:hidden for non-scroll containers.",
+        "Every async generateFn passed to showPickerModal must be guarded by the 30s timeout — never assume network will respond."
+      ]
+    },
     {
       "date": "2026-05-16",
       "agent": "Claude Sonnet 4.6",

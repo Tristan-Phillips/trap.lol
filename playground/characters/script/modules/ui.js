@@ -166,7 +166,8 @@ function showPickerModal(title, generateFn) {
         $close?.addEventListener('click', onCancel);
         $bd?.addEventListener('click', onCancel);
 
-        generateFn().then(options => {
+        const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 30000));
+        Promise.race([generateFn(), timeout]).then(options => {
             if (!modal.hidden) {
                 $options.innerHTML = options.map((opt, i) => `
                     <button class="choice-picker__option" data-idx="${i}">
@@ -193,7 +194,12 @@ function showPickerModal(title, generateFn) {
                 lucideRefresh(modal);
             }
         }).catch(err => {
-            $options.innerHTML = `<div class="choice-picker__loading">Generation failed — use the text field below.</div>`;
+            if (!modal.hidden) {
+                const msg = err?.message === 'timeout'
+                    ? 'Generation timed out — use the text field below or check your API key.'
+                    : 'Generation failed — use the text field below.';
+                $options.innerHTML = `<div class="choice-picker__loading">${msg}</div>`;
+            }
             console.warn('[picker] generateFn failed:', err);
         });
     });
@@ -6508,7 +6514,8 @@ export function initUI() {
         applyChatBackground();
     }
 
-    // ── Character Import ──────────────────────────────────────────────────────
+    // ── Character Create / Import ─────────────────────────────────────────────
+    qs('#create-character')?.addEventListener('click', () => document.dispatchEvent(new CustomEvent('char-editor:open')));
     qs('#import-card')?.addEventListener('click', () => qs('#card-input')?.click());
     qs('#card-input')?.addEventListener('change', async e => {
         const files = [...e.target.files];
@@ -7305,9 +7312,13 @@ export function initUI() {
         if (!$thread || !dataUrl) return;
         if (existingMsgId && $thread.querySelector(`[data-msg-id="${existingMsgId}"]`)) return;
 
+        // Fresh inject — persist to history so the image survives page reload.
+        // addMessage handles IDB promotion for data URLs automatically.
+        const msgId = existingMsgId || addMessage('image', dataUrl, null, { prompt, model }).id;
+
         const $el = document.createElement('div');
         $el.className = 'message message--image';
-        _injectImageMessageInto($el, dataUrl, prompt, model, existingMsgId || null);
+        _injectImageMessageInto($el, dataUrl, prompt, model, msgId);
         $thread.appendChild($el);
         $thread.scrollTop = $thread.scrollHeight;
         return $el;
@@ -9210,12 +9221,12 @@ export function initUI() {
         set('sys-directive',   c.sysDirective);
         set('authors-note',    c.authorsNote);
         set('nsfw-bypass',     c.nsfwBypass);
-        set('user-name-input',       c.userName);
-        set('user-persona-input',    c.userPersona);
-        set('player-appearance',     c.playerAppearance);
-        set('player-mood',           c.playerMood);
-        set('player-role',           c.playerRole);
-        set('player-status',         c.playerStatus);
+        set('user-name-input',       c.userName        ?? '');
+        set('user-persona-input',    c.userPersona     ?? '');
+        set('player-appearance',     c.playerAppearance ?? '');
+        set('player-mood',           c.playerMood      ?? '');
+        set('player-role',           c.playerRole      ?? '');
+        set('player-status',         c.playerStatus    ?? '');
         set('an-depth-input',  c.authorsNoteDepth);   setBadge('an-depth-val',  c.authorsNoteDepth);
         set('group-delay-input', c.groupAutoDelay);   setBadge('group-delay-val', `${c.groupAutoDelay}ms`);
         set('context-strategy', c.contextStrategy);

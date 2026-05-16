@@ -3587,18 +3587,6 @@
 <!-- ── Wallhaven Arena ── -->
 <script src="./script/modules/wallhaven.js"></script>
 
-<!-- ── Uplink Home Node ── -->
-<a id="uplink-node" href="../../" class="uplink-node" aria-label="Return to trap.lol hub">
-  <span class="uplink-node__sigil" aria-hidden="true">
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 2" opacity="0.45"/>
-      <circle cx="12" cy="12" r="3.5" fill="currentColor"/>
-    </svg>
-    <span class="uplink-node__drain" aria-hidden="true"></span>
-  </span>
-  <span class="uplink-node__label">uplink</span>
-</a>
-
 <!-- ── Profile Button + Flyout ── -->
 <button id="profile-btn" class="profile-btn" aria-label="Profile &amp; Settings" aria-haspopup="true" aria-expanded="false">
   <span id="profile-btn__avatar" class="profile-btn__avatar">
@@ -3629,16 +3617,5 @@
     <i data-lucide="log-out"></i> Uplink Home
   </a>
 </div>
-<script>
-  (function() {
-    const node = document.getElementById('uplink-node');
-    node.addEventListener('click', function(e) {
-      e.preventDefault();
-      const href = node.getAttribute('href');
-      node.classList.add('uplink-node--firing');
-      setTimeout(function() { window.location.href = href; }, 310);
-    });
-  })();
-</script>
 </body>
 </html>
