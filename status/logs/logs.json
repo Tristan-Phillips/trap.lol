@@ -473,9 +473,9 @@
   },
   "commits": [
     {
-      "hash": "0000000",
+      "hash": "7c6e241",
       "date": "2026-05-16",
-      "message": "fix(underdark): 6-bug batch — thread clip, persona undefined, create char, scenario timeout, image IDB persist, remove uplink node — ui.js v112",
+      "message": "fix(underdark): thread clip, persona undefined, create char, scenario timeout, image IDB persist, remove uplink node — ui.js v112",
       "scope": "playground/characters — ui.js, main.js, index.html, arena.css",
       "impact": "high",
       "files": [
