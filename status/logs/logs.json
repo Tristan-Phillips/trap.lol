@@ -479,7 +479,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "1cbe55e",
       "date": "2026-05-17",
       "message": "feat(dndm): STORY module — narrative decision tree builder with Oracle suggestions, NOW PLAYING, journey log",
       "scope": "dndm/",
