@@ -1,8 +1,8 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.3.28",
-    "last_updated": "2026-05-15",
+    "schema_version": "1.3.29",
+    "last_updated": "2026-05-16",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
       "_protocol",
@@ -472,6 +472,19 @@
     ]
   },
   "commits": [
+    {
+      "hash": "PENDING",
+      "date": "2026-05-16",
+      "message": "feat(underdark): auto entrance on character join + autoEntrance flag — ui.js v105",
+      "scope": "playground/characters — ui.js, index.html, main.js",
+      "impact": "low",
+      "files": [
+        "playground/characters/script/modules/ui.js",
+        "playground/characters/script/main.js",
+        "playground/characters/index.html"
+      ],
+      "why": "Phase 6 item 10 — when a character is added to a live session (history.length > 0), auto-fire an Overlord entrance narration to give the scene a cinematic arrival moment, rather than silently inserting the character; can be toggled off via the new autoEntrance narrative flag."
+    },
     {
       "hash": "dfb74cd",
       "date": "2026-05-15",
@@ -1573,6 +1586,36 @@
   ],
   "sessions": [
     {
+      "date": "2026-05-16",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Audited Phase 6 plan against live code and found all 20 items were already implemented except item 10 (auto entrance on character join). Implemented that final item: addCharacterToThread now auto-fires _fireOverlord('entrance') when a character joins a session with existing history, controlled by a new autoEntrance narrative flag (default on). FLAG_KEYS updated; HTML checkbox added to Narrative Flags grid.",
+      "decisions": [
+        "All 20 Phase 6 features confirmed done — no ghost items.",
+        "Auto entrance fires only when history.length > 0 so it never interferes with fresh thread first_mes flow.",
+        "autoEntrance defaults to true (opt-out model) since it's the desired-on case — checked in HTML, flag.?? true in syncConfigUI."
+      ],
+      "rules_reinforced": [
+        "Read live code before assuming prior sessions completed all stated intent — plan items can be stale.",
+        "Flags use ?? true default in syncConfigUI; new flags that default on need checked attribute in HTML."
+      ]
+    },
+    {
+      "date": "2026-05-15",
+      "agent": "Gemini CLI",
+      "type": "feature_development",
+      "summary": "Processed character generation and roster indexing for The Underdark. Created character card for GLaDOS (Portal) based on character requests from characters-tobe.json. The card was placed into playground/characters/data/cards/ and added alphabetically to the main index.json roster. Removed the character from the to-be queue.",
+      "decisions": [
+        "Implemented full Underdark extensions for GLaDOS according to chara_card_v2 spec.",
+        "Sorted characters alphabetically during insertion into the main roster index.",
+        "Set avatar_path to null to allow UI fallback rendering."
+      ],
+      "rules_reinforced": [
+        "Zero-build steps philosophy observed. Characters are pure JSON manifests.",
+        "Sovereign node aesthetic: characters must have deep traits, triggers, and psychological tags consistent with a mature setting."
+      ]
+    },
+    {
       "date": "2026-05-15",
       "agent": "Claude Sonnet 4.6",
       "type": "feature_development",
@@ -2568,6 +2611,16 @@
         "description": "updateCodexDigest rebuilt to show active char rows (avatar, name, last line), Overlord mode badge, scene number. _countScenes() counts overlordMode history entries. cstat-scene stat added.",
         "notes": "Done in 30c6c8b. _countScenes() added. updateCodexDigest: builds .codex-digest__char rows per activeBotId with avatar/name/line; .codex-digest__meta-row with mode + scene labels. scene-codex.css: new codex-digest__char/av/name/line/meta-row styles.",
         "files_affected": ["playground/characters/script/modules/ui.js", "playground/characters/style/scene-codex.css", "playground/characters/index.html"]
+      },
+      {
+        "id": "auto-entrance-on-join",
+        "title": "Auto Overlord entrance narration when character joins live session",
+        "status": "done",
+        "requested": "2026-05-14",
+        "completed": "2026-05-16",
+        "description": "When a character is added to a thread that already has message history, automatically fire an Overlord entrance narration describing their cinematic arrival. Controlled by autoEntrance narrative flag (default on).",
+        "notes": "Done in this session. addCharacterToThread: else-if branch when history.length > 0 calls _fireOverlord('entrance', ..., 300). Guard: state.config.flags?.autoEntrance !== false. FLAG_KEYS array updated; HTML flag-autoEntrance checkbox added to Narrative Flags grid with checked attribute.",
+        "files_affected": ["playground/characters/script/modules/ui.js", "playground/characters/index.html"]
       },
       {
         "id": "auto-overlord-transition",

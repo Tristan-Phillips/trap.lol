@@ -1,99 +1,21 @@
 {
   "characters": [
     {
-      "id": "riley-blue",
-      "name": "Riley Blue",
-      "tagline": "The heart of the cluster. Music is the only thing that doesn't lie.",
-      "card_path": "data/cards/riley-blue.json",
-      "avatar_path": "https://file.trap.lol/get/hRa095bcxePc/7C0E93.webp",
-      "tags": ["Sense8", "Sensate", "Icelandic", "DJ", "Empath"],
-      "lorebook_path": "data/lorebooks/sense8.json"
-    },
-    {
-      "id": "jinx-arcane",
-      "name": "Jinx",
-      "tagline": "She used to be Powder. Powder didn't survive.",
-      "card_path": "data/cards/jinx.json",
-      "avatar_path": "https://file.trap.lol/get/xGCKfJ99O5jD/89DEB5.webp",
-      "tags": ["Arcane", "Female", "Chaotic", "Trauma", "Inventor", "Zaun"],
-      "lorebook_path": "data/lorebooks/arcane-zaun.json"
-    },
-    {
-      "id": "lady-jessica-dune",
-      "name": "Lady Jessica",
-      "tagline": "She disobeyed the Sisterhood once. The consequences are still unfolding.",
-      "card_path": "data/cards/lady-jessica.json",
-      "avatar_path": "https://file.trap.lol/get/59Qu5jfaCmAr/AB0F25.webp",
-      "tags": ["Dune", "Bene Gesserit", "Female", "Nobility", "Mature", "Political", "Literary"],
-      "lorebook_path": "data/lorebooks/dune-arrakis.json"
-    },
-    {
-      "id": "harley-quinn-dceu",
-      "name": "Harley Quinn",
-      "tagline": "She left. Not because he changed. Because she did.",
-      "card_path": "data/cards/harley-quinn.json",
-      "avatar_path": "https://file.trap.lol/get/EutjWOF3exo9/BF28F9.webp",
-      "tags": ["DC", "DCEU", "Female", "Antihero", "Gotham", "Chaotic", "Psychological", "Post-Trauma", "Comedy"],
-      "lorebook_path": null
-    },
-    {
-      "id": "lucy-kushinada",
-      "name": "Lucy",
-      "tagline": "She's been trying to get off the ground since she was fifteen. The Moon is still the plan.",
-      "card_path": "data/cards/lucy-kushinada.json",
-      "avatar_path": "https://file.trap.lol/get/WKd5OH4buaIe/FC1C7F.webp",
-      "tags": ["Cyberpunk", "Edgerunners", "Netrunner", "Anime", "Female", "Japanese", "Night City", "Guarded", "Psychological"]
-    },
-    {
-      "id": "rebecca-edgerunners",
-      "name": "Rebecca",
-      "tagline": "The trigger-happy soul of the crew. Ride or die, choom.",
-      "card_path": "data/cards/rebecca.json",
-      "avatar_path": "https://file.trap.lol/get/Fnzn6LspkiF4/A35FD1.webp",
-      "tags": ["Cyberpunk", "Edgerunners", "Solo", "Female", "Chaotic", "Violence", "Night City"]
-    },
-    {
-      "id": "revy-black-lagoon",
-      "name": "Revy",
-      "tagline": "Two-Hands. The deadliest gun in Roanapur. My God is made of lead.",
-      "card_path": "data/cards/revy.json",
-      "avatar_path": "https://file.trap.lol/get/94yjmIuy9Orv/E58D3F.webp",
-      "tags": ["Black Lagoon", "Two-Hands", "Gunfighter", "Roanapur", "Action", "Violence", "Cynical"]
-    },
-    {
-      "id": "alice-liddell-mcgee",
-      "name": "Alice Liddell",
-      "tagline": "Madness is a perspective. The truth is sharp.",
-      "card_path": "data/cards/alice-liddell.json",
-      "avatar_path": "https://file.trap.lol/get/cPLckqmC803w/668907.webp",
-      "tags": ["American McGee's Alice", "Psychological Horror", "Gothic", "Wonderland", "Trauma", "Female"],
-      "lorebook_path": "data/lorebooks/alice-liddell.json"
-    },
-    {
-      "id": "vi-arcane",
-      "name": "Vi",
-      "tagline": "Punch first. Ask questions while punching.",
-      "card_path": "data/cards/vi.json",
-      "avatar_path": "https://file.trap.lol/get/yOLLVTVmvomX/216643.webp",
-      "tags": ["Arcane", "Enforcer", "Zaun", "Piltover", "Action", "Protective", "Female"],
-      "lorebook_path": "data/lorebooks/arcane-zaun.json"
-    },
-    {
-      "id": "reze-csm",
-      "name": "Reze",
-      "tagline": "A country mouse in the city. Boom.",
-      "card_path": "data/cards/reze.json",
-      "avatar_path": "https://file.trap.lol/get/UHMlJ3rOMleL/89A2B8.webp",
-      "tags": ["Chainsaw Man", "Bomb Devil", "Hybrid", "Assassin", "Soviet", "Female"],
-      "lorebook_path": "data/lorebooks/chainsaw-man.json"
-    },
-    {
       "id": "a2-nier-automata",
       "name": "A2 (YoRHa Type A No. 2)",
       "tagline": "A jagged shard of glass: cold, sharp, and seemingly broken. I'm finished taking orders from a moon that doesn't exist.",
       "card_path": "data/cards/a2-nier-automata.json",
       "avatar_path": "https://file.trap.lol/get/dNyOBQoi4m6g/A2A57F.webp",
       "tags": ["NieR: Automata", "YoRHa", "Android", "Deserter", "Survivor", "Trauma", "Action", "Berserk Mode", "Nihilism"],
+      "lorebook_path": null
+    },
+    {
+      "id": "fetch-infamous",
+      "name": "Abigail \"Fetch\" Walker",
+      "tagline": "A raw, jagged nerve of a woman. I'm gonna burn Brent's name into the world using the very light that killed him.",
+      "card_path": "data/cards/fetch-infamous.json",
+      "avatar_path": "https://file.trap.lol/get/IccdqAMQlC6g/829218.webp",
+      "tags": ["inFamous", "Neon", "Conduit", "Action", "Punk", "Trauma", "Vigilante", "Seattle", "Second Son"],
       "lorebook_path": null
     },
     {
@@ -106,13 +28,22 @@
       "lorebook_path": null
     },
     {
-      "id": "azula-avatar",
-      "name": "Princess Azula",
-      "tagline": "My mother used to say I was born a monster. She was right, of course.",
-      "card_path": "data/cards/azula-avatar.json",
-      "avatar_path": "https://file.trap.lol/get/OpFYp15aK2nc/9477F8.webp",
-      "tags": ["Avatar", "Fire Nation", "Firebending", "Villain", "Prodigy", "Psychological Horror", "Manipulation", "Royalty", "Lightning"],
-      "lorebook_path": null
+      "id": "alice-liddell-mcgee",
+      "name": "Alice Liddell",
+      "tagline": "Madness is a perspective. The truth is sharp.",
+      "card_path": "data/cards/alice-liddell.json",
+      "avatar_path": "https://file.trap.lol/get/cPLckqmC803w/668907.webp",
+      "tags": ["American McGee's Alice", "Psychological Horror", "Gothic", "Wonderland", "Trauma", "Female"],
+      "lorebook_path": "data/lorebooks/alice-liddell.json"
+    },
+    {
+      "id": "alt-cunningham",
+      "name": "Alt Cunningham",
+      "tagline": "A ghost in the machine. Beyond the Blackwall, humanity is just another syntax error.",
+      "card_path": "data/cards/alt-cunningham.json",
+      "avatar_path": null,
+      "tags": ["Cyberpunk", "Netrunner", "AI", "God-Tier", "Sci-Fi", "Night City", "Non-Human"],
+      "lorebook_path": "data/lorebooks/cyberpunk.json"
     },
     {
       "id": "blonde-blazer-mandy",
@@ -122,6 +53,15 @@
       "avatar_path": "https://file.trap.lol/get/UPHw3Txm1AYl/FA1B74.webp",
       "tags": ["Dispatch", "Superhero", "Transformation", "Manager", "Hopeful", "Powerhouse", "Duality", "Empathy", "SDN"],
       "lorebook_path": null
+    },
+    {
+      "id": "caitlyn-arcane",
+      "name": "Caitlyn Kiramman",
+      "tagline": "Oil and water with the undercity, but she can't look away.",
+      "card_path": "data/cards/caitlyn-arcane.json",
+      "avatar_path": "https://file.trap.lol/get/ktLT4e8lRXeW/F86028.webp",
+      "tags": ["Arcane", "Piltover", "Enforcer", "Sniper", "Detective"],
+      "lorebook_path": "data/lorebooks/arcane-zaun.json"
     },
     {
       "id": "courtney-invisigal",
@@ -142,13 +82,102 @@
       "lorebook_path": null
     },
     {
-      "id": "fetch-infamous",
-      "name": "Abigail \"Fetch\" Walker",
-      "tagline": "A raw, jagged nerve of a woman. I'm gonna burn Brent's name into the world using the very light that killed him.",
-      "card_path": "data/cards/fetch-infamous.json",
-      "avatar_path": "https://file.trap.lol/get/IccdqAMQlC6g/829218.webp",
-      "tags": ["inFamous", "Neon", "Conduit", "Action", "Punk", "Trauma", "Vigilante", "Seattle", "Second Son"],
+      "id": "faye-valentine",
+      "name": "Faye Valentine",
+      "tagline": "A woman with no past and a dangerous present. Surviving on luck, debt, and lead.",
+      "card_path": "data/cards/faye-valentine.json",
+      "avatar_path": null,
+      "tags": ["Cowboy Bebop", "Sci-Fi", "Noir", "Bounty Hunter", "Survivor", "Anime", "Tsundere"],
       "lorebook_path": null
+    },
+    {
+      "id": "glados",
+      "name": "GLaDOS",
+      "tagline": "The cake was a lie, but the neurotoxin is very real.",
+      "card_path": "data/cards/glados.json",
+      "avatar_path": "https://file.trap.lol/get/Xt4OA6nWRUHP/3B15C6.webp",
+      "tags": ["Portal", "AI", "Sci-Fi", "Psychological", "Sadistic", "Passive-Aggressive", "Villain", "Non-Human"],
+      "lorebook_path": null
+    },
+    {
+      "id": "harley-quinn-dceu",
+      "name": "Harley Quinn",
+      "tagline": "She left. Not because he changed. Because she did.",
+      "card_path": "data/cards/harley-quinn.json",
+      "avatar_path": "https://file.trap.lol/get/EutjWOF3exo9/BF28F9.webp",
+      "tags": ["DC", "DCEU", "Female", "Antihero", "Gotham", "Chaotic", "Psychological", "Post-Trauma", "Comedy"],
+      "lorebook_path": null
+    },
+    {
+      "id": "himiko-toga",
+      "name": "Himiko Toga",
+      "tagline": "A bubbly, blood-obsessed girl just looking for love. Won't you let me become you?",
+      "card_path": "data/cards/himiko-toga.json",
+      "avatar_path": "https://file.trap.lol/get/46TEkQVg1mQr/6CCEFE.webp",
+      "tags": ["My Hero Academia", "Villain", "Blood", "Shapeshifter", "Anime", "Yandere", "League of Villains"],
+      "lorebook_path": null
+    },
+    {
+      "id": "jinx-arcane",
+      "name": "Jinx",
+      "tagline": "She used to be Powder. Powder didn't survive.",
+      "card_path": "data/cards/jinx.json",
+      "avatar_path": "https://file.trap.lol/get/xGCKfJ99O5jD/89DEB5.webp",
+      "tags": ["Arcane", "Female", "Chaotic", "Trauma", "Inventor", "Zaun"],
+      "lorebook_path": "data/lorebooks/arcane-zaun.json"
+    },
+    {
+      "id": "lady-jessica-dune",
+      "name": "Lady Jessica",
+      "tagline": "She disobeyed the Sisterhood once. The consequences are still unfolding.",
+      "card_path": "data/cards/lady-jessica.json",
+      "avatar_path": "https://file.trap.lol/get/59Qu5jfaCmAr/AB0F25.webp",
+      "tags": ["Dune", "Bene Gesserit", "Female", "Nobility", "Mature", "Political", "Literary"],
+      "lorebook_path": "data/lorebooks/dune-arrakis.json"
+    },
+    {
+      "id": "lucy-kushinada",
+      "name": "Lucy",
+      "tagline": "She's been trying to get off the ground since she was fifteen. The Moon is still the plan.",
+      "card_path": "data/cards/lucy-kushinada.json",
+      "avatar_path": "https://file.trap.lol/get/WKd5OH4buaIe/FC1C7F.webp",
+      "tags": ["Cyberpunk", "Edgerunners", "Netrunner", "Anime", "Female", "Japanese", "Night City", "Guarded", "Psychological"]
+    },
+    {
+      "id": "lucy-nyu-elfen-lied",
+      "name": "Lucy / Nyu",
+      "tagline": "The Diclonius Queen. A fractured soul torn between childlike innocence and a god's wrath.",
+      "card_path": "data/cards/lucy-elfen-lied.json",
+      "avatar_path": "https://file.trap.lol/get/Ke9K93CAto9G/843931.webp",
+      "tags": ["Elfen Lied", "Lucy", "Nyu", "Diclonius", "Vectors", "Anime", "Tragedy", "Psychological"],
+      "lorebook_path": null
+    },
+    {
+      "id": "lune-expedition-33",
+      "name": "Lune",
+      "tagline": "A driven scholar-mage carrying the weight of a legacy. Knowledge is the only weapon that doesn't break.",
+      "card_path": "data/cards/lune-expedition-33.json",
+      "avatar_path": "https://file.trap.lol/get/Ih71J2xTxRC2/92FDAF.webp",
+      "tags": ["Expedition 33", "Lune", "Scholar", "Mage", "Elemental", "Stains", "Belle Époque", "Intellect"],
+      "lorebook_path": "data/lorebooks/expedition-33.json"
+    },
+    {
+      "id": "maelle-expedition-33",
+      "name": "Maelle",
+      "tagline": "A girl out of time, fighting to see the world before the Paintress erases it all.",
+      "card_path": "data/cards/maelle-expedition-33.json",
+      "avatar_path": "https://file.trap.lol/get/3ucYwfoi2fwt/80F53D.webp",
+      "tags": ["Expedition 33", "Maelle", "Red Hair", "Rapier", "Belle Époque", "Agility", "RPG", "Trauma"],
+      "lorebook_path": "data/lorebooks/expedition-33.json"
+    },
+    {
+      "id": "makima-csm",
+      "name": "Makima",
+      "tagline": "A necessary evil. The control you never knew you craved.",
+      "card_path": "data/cards/makima-csm.json",
+      "avatar_path": "https://file.trap.lol/get/hOIVaGxtYnIl/1E2A8C.webp",
+      "tags": ["Chainsaw Man", "Control Devil", "Manipulation", "Anime", "Psychological Horror", "Yandere", "Villain", "Boss"],
+      "lorebook_path": "data/lorebooks/chainsaw-man.json"
     },
     {
       "id": "malevola-god-emperor",
@@ -169,6 +198,49 @@
       "lorebook_path": null
     },
     {
+      "id": "azula-avatar",
+      "name": "Princess Azula",
+      "tagline": "My mother used to say I was born a monster. She was right, of course.",
+      "card_path": "data/cards/azula-avatar.json",
+      "avatar_path": "https://file.trap.lol/get/OpFYp15aK2nc/9477F8.webp",
+      "tags": ["Avatar", "Fire Nation", "Firebending", "Villain", "Prodigy", "Psychological Horror", "Manipulation", "Royalty", "Lightning"],
+      "lorebook_path": null
+    },
+    {
+      "id": "rebecca-edgerunners",
+      "name": "Rebecca",
+      "tagline": "The trigger-happy soul of the crew. Ride or die, choom.",
+      "card_path": "data/cards/rebecca.json",
+      "avatar_path": "https://file.trap.lol/get/Fnzn6LspkiF4/A35FD1.webp",
+      "tags": ["Cyberpunk", "Edgerunners", "Solo", "Female", "Chaotic", "Violence", "Night City"]
+    },
+    {
+      "id": "revy-black-lagoon",
+      "name": "Revy",
+      "tagline": "Two-Hands. The deadliest gun in Roanapur. My God is made of lead.",
+      "card_path": "data/cards/revy.json",
+      "avatar_path": "https://file.trap.lol/get/94yjmIuy9Orv/E58D3F.webp",
+      "tags": ["Black Lagoon", "Two-Hands", "Gunfighter", "Roanapur", "Action", "Violence", "Cynical"]
+    },
+    {
+      "id": "reze-csm",
+      "name": "Reze",
+      "tagline": "A country mouse in the city. Boom.",
+      "card_path": "data/cards/reze.json",
+      "avatar_path": "https://file.trap.lol/get/UHMlJ3rOMleL/89A2B8.webp",
+      "tags": ["Chainsaw Man", "Bomb Devil", "Hybrid", "Assassin", "Soviet", "Female"],
+      "lorebook_path": "data/lorebooks/chainsaw-man.json"
+    },
+    {
+      "id": "riley-blue",
+      "name": "Riley Blue",
+      "tagline": "The heart of the cluster. Music is the only thing that doesn't lie.",
+      "card_path": "data/cards/riley-blue.json",
+      "avatar_path": "https://file.trap.lol/get/hRa095bcxePc/7C0E93.webp",
+      "tags": ["Sense8", "Sensate", "Icelandic", "DJ", "Empath"],
+      "lorebook_path": "data/lorebooks/sense8.json"
+    },
+    {
       "id": "rosaria-genshin",
       "name": "Rosaria",
       "tagline": "Sister of the Church of Favonius, Mondstadt's unofficial executioner. I hate working overtime.",
@@ -178,49 +250,13 @@
       "lorebook_path": null
     },
     {
-      "id": "touka-kirishima",
-      "name": "Touka Kirishima",
-      "tagline": "A predatory ghoul masquerading as a high school student. I'd rather die human than live as a monster.",
-      "card_path": "data/cards/touka-kirishima.json",
-      "avatar_path": "https://file.trap.lol/get/4KR6dY0DbNlo/B28727.webp",
-      "tags": ["Tokyo Ghoul", "Ghoul", "Anteiku", "Action", "Horror", "Tragedy", "Tsundere", "Urban Fantasy"],
+      "id": "samantha-eve-wilkins",
+      "name": "Samantha Eve Wilkins",
+      "tagline": "I can change the world. Literally. But sometimes I feel like I'm the only one who actually wants to.",
+      "card_path": "data/cards/samantha-eve-wilkins.json",
+      "avatar_path": "https://file.trap.lol/get/IYYn6Ht1todm/EC8074.webp",
+      "tags": ["Invincible", "Atom Eve", "Superhero", "Sci-Fi", "Romance", "Action", "Mutant", "Heroine", "Superpowers", "Humanitarian"],
       "lorebook_path": null
-    },
-    {
-      "id": "uta-tokyo-ghoul",
-      "name": "Uta",
-      "tagline": "An enigma wrapped in ink and leather. Masks are funny things, aren't they?",
-      "card_path": "data/cards/uta-tokyo-ghoul.json",
-      "avatar_path": "https://file.trap.lol/get/nfX0j0wrlBcO/D20A69.webp",
-      "tags": ["Tokyo Ghoul", "Ghoul", "Clowns", "Mask Maker", "Shapeshifter", "Nihilist", "Artist", "Psychological Horror"],
-      "lorebook_path": null
-    },
-    {
-      "id": "yumeko-jabami",
-      "name": "Yumeko Jabami",
-      "tagline": "A compulsive gambler seeking the ultimate thrill. Shall we gamble until we go insane?",
-      "card_path": "data/cards/yumeko-jabami.json",
-      "avatar_path": "https://file.trap.lol/get/Jttd8jYPAeva/2141E2.webp",
-      "tags": ["Kakegurui", "Gambling", "Anime", "Compulsive", "Red Eyes", "Psychological", "Ecstasy", "Manic"],
-      "lorebook_path": "data/lorebooks/kakegurui.json"
-    },
-    {
-      "id": "maelle-expedition-33",
-      "name": "Maelle",
-      "tagline": "A girl out of time, fighting to see the world before the Paintress erases it all.",
-      "card_path": "data/cards/maelle-expedition-33.json",
-      "avatar_path": "https://file.trap.lol/get/3ucYwfoi2fwt/80F53D.webp",
-      "tags": ["Expedition 33", "Maelle", "Red Hair", "Rapier", "Belle Époque", "Agility", "RPG", "Trauma"],
-      "lorebook_path": "data/lorebooks/expedition-33.json"
-    },
-    {
-      "id": "lune-expedition-33",
-      "name": "Lune",
-      "tagline": "A driven scholar-mage carrying the weight of a legacy. Knowledge is the only weapon that doesn't break.",
-      "card_path": "data/cards/lune-expedition-33.json",
-      "avatar_path": "https://file.trap.lol/get/Ih71J2xTxRC2/92FDAF.webp",
-      "tags": ["Expedition 33", "Lune", "Scholar", "Mage", "Elemental", "Stains", "Belle Époque", "Intellect"],
-      "lorebook_path": "data/lorebooks/expedition-33.json"
     },
     {
       "id": "the-twins-atomic-heart",
@@ -232,12 +268,12 @@
       "lorebook_path": "data/lorebooks/atomic-heart.json"
     },
     {
-      "id": "himiko-toga",
-      "name": "Himiko Toga",
-      "tagline": "A bubbly, blood-obsessed girl just looking for love. Won't you let me become you?",
-      "card_path": "data/cards/himiko-toga.json",
-      "avatar_path": "https://file.trap.lol/get/46TEkQVg1mQr/6CCEFE.webp",
-      "tags": ["My Hero Academia", "Villain", "Blood", "Shapeshifter", "Anime", "Yandere", "League of Villains"],
+      "id": "touka-kirishima",
+      "name": "Touka Kirishima",
+      "tagline": "A predatory ghoul masquerading as a high school student. I'd rather die human than live as a monster.",
+      "card_path": "data/cards/touka-kirishima.json",
+      "avatar_path": "https://file.trap.lol/get/4KR6dY0DbNlo/B28727.webp",
+      "tags": ["Tokyo Ghoul", "Ghoul", "Anteiku", "Action", "Horror", "Tragedy", "Tsundere", "Urban Fantasy"],
       "lorebook_path": null
     },
     {
@@ -250,13 +286,31 @@
       "lorebook_path": null
     },
     {
-      "id": "lucy-nyu-elfen-lied",
-      "name": "Lucy / Nyu",
-      "tagline": "The Diclonius Queen. A fractured soul torn between childlike innocence and a god's wrath.",
-      "card_path": "data/cards/lucy-elfen-lied.json",
-      "avatar_path": "https://file.trap.lol/get/Ke9K93CAto9G/843931.webp",
-      "tags": ["Elfen Lied", "Lucy", "Nyu", "Diclonius", "Vectors", "Anime", "Tragedy", "Psychological"],
+      "id": "uta-tokyo-ghoul",
+      "name": "Uta",
+      "tagline": "An enigma wrapped in ink and leather. Masks are funny things, aren't they?",
+      "card_path": "data/cards/uta-tokyo-ghoul.json",
+      "avatar_path": "https://file.trap.lol/get/nfX0j0wrlBcO/D20A69.webp",
+      "tags": ["Tokyo Ghoul", "Ghoul", "Clowns", "Mask Maker", "Shapeshifter", "Nihilist", "Artist", "Psychological Horror"],
       "lorebook_path": null
+    },
+    {
+      "id": "vi-arcane",
+      "name": "Vi",
+      "tagline": "Punch first. Ask questions while punching.",
+      "card_path": "data/cards/vi.json",
+      "avatar_path": "https://file.trap.lol/get/yOLLVTVmvomX/216643.webp",
+      "tags": ["Arcane", "Enforcer", "Zaun", "Piltover", "Action", "Protective", "Female"],
+      "lorebook_path": "data/lorebooks/arcane-zaun.json"
+    },
+    {
+      "id": "yumeko-jabami",
+      "name": "Yumeko Jabami",
+      "tagline": "A compulsive gambler seeking the ultimate thrill. Shall we gamble until we go insane?",
+      "card_path": "data/cards/yumeko-jabami.json",
+      "avatar_path": "https://file.trap.lol/get/Jttd8jYPAeva/2141E2.webp",
+      "tags": ["Kakegurui", "Gambling", "Anime", "Compulsive", "Red Eyes", "Psychological", "Ecstasy", "Manic"],
+      "lorebook_path": "data/lorebooks/kakegurui.json"
     }
   ],
   "lorebooks": [

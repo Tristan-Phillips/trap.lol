@@ -379,7 +379,7 @@ const FLAG_KEYS = [
     'showThoughts', 'showSystemPrompt', 'injectConsistency', 'injectSliders',
     'injectAppearance', 'injectAdult', 'injectPersonality', 'injectVoice',
     'injectStyle', 'injectAIDirectives', 'impersonationBlock', 'povFirst',
-    'jailbreakResistance'
+    'jailbreakResistance', 'autoEntrance'
 ];
 
 // ── Main Init ─────────────────────────────────────────────────────────────────
@@ -2977,6 +2977,13 @@ export function initUI() {
         if (!state.history.length && char.first_mes) {
             const msg = addMessage('bot', char.first_mes, id);
             appendMessage(msg, char.name, meta.avatar_path || char.avatar);
+        } else if (state.history.length > 0 && state.config.flags?.autoEntrance !== false) {
+            // Auto entrance narration when a character joins a live session
+            const enteringChar = getCharOverride(id)?.nickname || char.name;
+            _fireOverlord('entrance', ({ scenario, histText }) =>
+                `Write a cinematic entrance narration for ${enteringChar}. Describe how they arrive, how they carry themselves, what their presence does to the air and the space. This is the moment the scene registers their existence. Do not write their dialogue. 1-2 vivid paragraphs.\n\n${scenario ? `Setting: ${scenario.slice(0, 200)}\n\n` : ''}${histText}`,
+                300
+            ).catch(() => {});
         }
     }
 
