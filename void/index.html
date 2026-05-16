@@ -3,57 +3,57 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>trap.lol // void</title>
+  <title>void</title>
   <meta name="robots" content="noindex" />
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23010003'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%23590020' stroke-width='1.5'/%3E%3Ccircle cx='16' cy='16' r='2.5' fill='%238B0033'/%3E%3C/svg%3E" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%23000'/%3E%3Ccircle cx='16' cy='16' r='5' fill='none' stroke='%23440018' stroke-width='1'/%3E%3C/svg%3E" />
   <link rel="stylesheet" href="/void/assets/style/style.css" />
 </head>
 <body class="void-body">
 
-  <!-- Depth layers — the nothing that breathes -->
-  <div class="void-depth" aria-hidden="true">
-    <div class="void-depth__abyss"></div>
-    <div class="void-depth__shape void-depth__shape--a"></div>
-    <div class="void-depth__shape void-depth__shape--b"></div>
-    <div class="void-depth__shape void-depth__shape--c"></div>
-    <div class="void-depth__grain"></div>
-    <div class="void-depth__vignette"></div>
-    <div class="void-depth__scan"></div>
+  <!-- The pressure layers — what lives in the deep -->
+  <div class="void-pressure" aria-hidden="true">
+    <div class="void-pressure__column void-pressure__column--a"></div>
+    <div class="void-pressure__column void-pressure__column--b"></div>
+    <div class="void-pressure__column void-pressure__column--c"></div>
+    <div class="void-pressure__grain"></div>
+    <div class="void-pressure__vignette"></div>
   </div>
 
+  <!-- The wrong thing — occasionally moves when it shouldn't -->
+  <div class="void-wrong" id="void-wrong" aria-hidden="true"></div>
+
   <!-- Custom cursor -->
-  <div id="v-cursor" class="v-cursor" aria-hidden="true"></div>
+  <div class="void-cursor" id="void-cursor" aria-hidden="true">
+    <div class="void-cursor__dot"></div>
+  </div>
 
   <!-- Feed -->
-  <main class="void-feed" id="void-feed" aria-label="Void entries">
-    <header class="void-header" aria-hidden="true">
-      <div class="void-header__letters">
-        <span class="void-header__word">V</span><span class="void-header__word">O</span><span class="void-header__word">I</span><span class="void-header__word">D</span>
-      </div>
-      <span class="void-header__sub">transmissions from the deep</span>
-    </header>
-    <div class="void-feed__entries" id="void-entries" role="list"></div>
+  <main class="void-feed" id="void-feed">
+
+    <div class="void-surface" aria-hidden="true">
+      <span class="void-surface__word">void</span>
+    </div>
+
+    <ol class="void-list" id="void-list" role="list"></ol>
+
   </main>
 
-  <!-- Spotlight overlay -->
-  <div id="void-spotlight" class="void-spotlight" role="dialog" aria-modal="true" aria-label="Entry" hidden>
-    <div class="void-spotlight__curtain" id="void-curtain"></div>
-    <div class="void-spotlight__panel" id="void-panel">
-      <button class="void-spotlight__esc" id="void-esc" aria-label="Close">
-        <span class="void-spotlight__esc-line"></span>
-        <span class="void-spotlight__esc-line"></span>
+  <!-- Submersion overlay — full entry -->
+  <div class="void-sub" id="void-sub" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="void-sub__water" id="void-sub-water"></div>
+    <div class="void-sub__panel" id="void-sub-panel">
+      <button class="void-sub__surface" id="void-sub-close" aria-label="Surface — close entry">
+        <span>surface</span>
       </button>
-      <div class="void-spotlight__scroll">
-        <div class="void-spotlight__content" id="void-spotlight-content"></div>
-      </div>
+      <div class="void-sub__body" id="void-sub-body"></div>
     </div>
   </div>
 
-  <!-- Uplink node — bottom left, same pattern as art/ -->
-  <a id="uplink-node" href="/" class="uplink-node" aria-label="Return to trap.lol hub">
+  <!-- Uplink — bottom left, same pattern as art/ -->
+  <a id="uplink-node" href="/" class="uplink-node" aria-label="Return to trap.lol">
     <span class="uplink-node__sigil" aria-hidden="true">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 2" opacity="0.45"/>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 2" opacity="0.4"/>
         <circle cx="12" cy="12" r="3.5" fill="currentColor"/>
       </svg>
       <span class="uplink-node__drain" aria-hidden="true"></span>
@@ -64,12 +64,11 @@
   <script src="/void/assets/script/app.js" type="module"></script>
   <script>
     (function() {
-      const node = document.getElementById('uplink-node');
+      var node = document.getElementById('uplink-node');
       node.addEventListener('click', function(e) {
         e.preventDefault();
-        const href = node.getAttribute('href');
         node.classList.add('uplink-node--firing');
-        setTimeout(function() { window.location.href = href; }, 310);
+        setTimeout(function() { window.location.href = '/'; }, 310);
       });
     })();
   </script>

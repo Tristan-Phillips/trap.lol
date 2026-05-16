@@ -1,28 +1,29 @@
 /**
- * trap.lol // void
- * Feed rendering, spotlight, cursor, scroll reveal.
+ * void — trap.lol
+ * Feed, submersion overlay, custom cursor, scroll reveal.
+ * The wrong thing glitches on its own schedule — don't touch it.
  */
 
 // ── Cursor ────────────────────────────────────────────────
-const $cursor = document.getElementById('v-cursor');
-let cx = -100, cy = -100;
+const $cur = document.getElementById('void-cursor');
+const $dot = $cur?.querySelector('.void-cursor__dot');
 
 document.addEventListener('mousemove', e => {
-  cx = e.clientX; cy = e.clientY;
-  $cursor.style.left = cx + 'px';
-  $cursor.style.top  = cy + 'px';
+  if (!$cur) return;
+  $cur.style.left = e.clientX + 'px';
+  $cur.style.top  = e.clientY + 'px';
 });
 
-document.addEventListener('mouseleave', () => { $cursor.style.opacity = '0'; });
-document.addEventListener('mouseenter', () => { $cursor.style.opacity = '1'; });
+document.addEventListener('mouseleave', () => { if ($cur) $cur.style.opacity = '0'; });
+document.addEventListener('mouseenter', () => { if ($cur) $cur.style.opacity = '1'; });
 
-function setCursorHover(on) {
-  $cursor.classList.toggle('is-hover', on);
+function cursorHover(on) {
+  $cur?.classList.toggle('is-hover', on);
 }
 
-// ── Data ──────────────────────────────────────────────────
-function esc(str) {
-  return String(str ?? '')
+// ── Safety ────────────────────────────────────────────────
+function esc(s) {
+  return String(s ?? '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
@@ -30,198 +31,179 @@ function esc(str) {
     .replace(/'/g, '&#39;');
 }
 
-function fmtDate(iso) {
+// ── Date formatting ───────────────────────────────────────
+function fmt(iso) {
   if (!iso) return '';
   const [y, m, d] = iso.split('-');
-  return `${y}.${m}.${d}`;
+  const months = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+  return `${months[parseInt(m, 10) - 1]} ${parseInt(d, 10)}, ${y}`;
 }
 
-function firstChars(text, max = 200) {
-  const clean = text
-    .replace(/^#+\s+.*/gm, '')   // strip markdown headings
-    .replace(/\n{2,}/g, '\n')
+// ── Get first real prose (strip headings, clamp chars) ────
+function scar(raw, limit = 200) {
+  const stripped = raw
+    .replace(/^#{1,6}\s+.*/gm, '')
+    .replace(/^\s*[-*]\s+/gm, '')
+    .replace(/\n{3,}/g, '\n\n')
     .trim();
-  if (clean.length <= max) return clean;
-  const cut = clean.lastIndexOf(' ', max);
-  return clean.slice(0, cut > 80 ? cut : max) + '…';
+  const first = stripped.split('\n\n')[0].replace(/\n/g, ' ').trim();
+  if (first.length <= limit) return first;
+  const cut = first.lastIndexOf(' ', limit);
+  return first.slice(0, cut > 80 ? cut : limit) + '…';
 }
 
-// Convert plain text (with optional leading # headings) to minimal HTML
-function textToHtml(raw) {
-  const lines = raw.split('\n');
-  const chunks = [];
-  let buf = [];
-
-  const flushBuf = () => {
-    if (buf.length) {
-      chunks.push(`<p>${esc(buf.join(' '))}</p>`);
-      buf = [];
-    }
-  };
-
-  for (const line of lines) {
-    const hm = line.match(/^(#{1,3})\s+(.+)/);
+// ── Text → HTML (minimal, preserves linebreaks as paragraphs) ──
+function prose(raw) {
+  const blocks = raw.split(/\n{2,}/);
+  return blocks.map(block => {
+    const b = block.trim();
+    if (!b) return '';
+    const hm = b.match(/^(#{1,4})\s+(.+)/);
     if (hm) {
-      flushBuf();
-      const tag = `h${hm[1].length + 1}`; // h1→h2, so it doesn't compete with .void-full__title
-      chunks.push(`<${tag}>${esc(hm[2])}</${tag}>`);
-      continue;
+      const lvl = Math.min(hm[1].length + 1, 6); // h2–h6 so it doesn't compete with title
+      return `<h${lvl}>${esc(hm[2])}</h${lvl}>`;
     }
-
-    if (line.trim() === '') {
-      flushBuf();
-    } else {
-      buf.push(line.trim());
-    }
-  }
-  flushBuf();
-  return chunks.join('\n');
+    const lines = b.split('\n').map(l => esc(l.trim())).join('<br>');
+    return `<p>${lines}</p>`;
+  }).filter(Boolean).join('\n');
 }
 
-// ── Feed builder ──────────────────────────────────────────
-function buildEntry(entry) {
-  const article = document.createElement('article');
-  article.className = 'void-echo';
-  article.setAttribute('role', 'listitem');
-  article.setAttribute('tabindex', '0');
-  article.setAttribute('aria-label', `Entry: ${entry.title}`);
-  article.dataset.id = entry.id;
+// ── Build one entry element ───────────────────────────────
+function mkEntry(entry) {
+  const li = document.createElement('li');
+  li.className = 'void-entry';
+  li.setAttribute('role', 'listitem');
+  li.setAttribute('tabindex', '0');
+  li.setAttribute('aria-label', entry.title);
 
-  const snippet = firstChars(entry.content, 220);
-
-  article.innerHTML = `
-    <div class="void-echo__tether" aria-hidden="true"></div>
-    <div class="void-echo__meta">
-      <span class="void-echo__meta-id">VOID-${esc(entry.id)}</span>
-      <span class="void-echo__meta-sep">///</span>
-      <span>${esc(fmtDate(entry.date))}</span>
-    </div>
-    <h2 class="void-echo__title">${esc(entry.title)}</h2>
-    <div class="void-echo__snippet">${esc(snippet)}</div>
-    <div class="void-echo__lure" aria-hidden="true">
-      descend into this
-      <span class="void-echo__lure-arrow">→</span>
+  li.innerHTML = `
+    <div class="void-entry__id" aria-hidden="true">void-${esc(entry.id)}</div>
+    <h2 class="void-entry__title">${esc(entry.title)}</h2>
+    <div class="void-entry__date" aria-hidden="true">${esc(fmt(entry.date))}</div>
+    <div class="void-entry__scar">${esc(scar(entry.content))}</div>
+    <div class="void-entry__pull" aria-hidden="true">
+      open this wound
+      <span aria-hidden="true">&#8594;</span>
     </div>
   `;
 
-  article.addEventListener('click', () => openSpotlight(entry));
-  article.addEventListener('keydown', e => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      openSpotlight(entry);
-    }
+  li.addEventListener('click', () => submerge(entry));
+  li.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); submerge(entry); }
   });
+  li.addEventListener('mouseenter', () => cursorHover(true));
+  li.addEventListener('mouseleave', () => cursorHover(false));
 
-  article.addEventListener('mouseenter', () => setCursorHover(true));
-  article.addEventListener('mouseleave', () => setCursorHover(false));
-
-  return article;
+  return li;
 }
 
-function renderFeed(entries) {
-  const $list = document.getElementById('void-entries');
-  // Newest first
-  const sorted = [...entries].sort((a, b) => {
-    if (a.date > b.date) return -1;
-    if (a.date < b.date) return 1;
+// ── Render feed ───────────────────────────────────────────
+function renderFeed(data) {
+  const $list = document.getElementById('void-list');
+  const sorted = [...data].sort((a, b) => {
+    if ((a.date ?? '') > (b.date ?? '')) return -1;
+    if ((a.date ?? '') < (b.date ?? '')) return 1;
     return (b.index ?? 0) - (a.index ?? 0);
   });
 
-  sorted.forEach(e => $list.appendChild(buildEntry(e)));
+  sorted.forEach(entry => $list.appendChild(mkEntry(entry)));
   initReveal();
 }
 
 // ── Scroll reveal ─────────────────────────────────────────
 function initReveal() {
-  const obs = new IntersectionObserver((entries, observer) => {
-    entries.forEach(entry => {
-      if (!entry.isIntersecting) return;
-      entry.target.classList.add('is-visible');
-      observer.unobserve(entry.target);
+  const io = new IntersectionObserver((entries, obs) => {
+    entries.forEach(e => {
+      if (!e.isIntersecting) return;
+      e.target.classList.add('is-visible');
+      obs.unobserve(e.target);
     });
-  }, { rootMargin: '0px 0px -8% 0px', threshold: 0.06 });
+  }, { rootMargin: '0px 0px -6% 0px', threshold: 0.05 });
 
-  document.querySelectorAll('.void-echo').forEach(el => obs.observe(el));
+  document.querySelectorAll('.void-entry').forEach(el => io.observe(el));
 }
 
-// ── Spotlight ─────────────────────────────────────────────
-const $spotlight = document.getElementById('void-spotlight');
-const $curtain   = document.getElementById('void-curtain');
-const $content   = document.getElementById('void-spotlight-content');
-const $esc       = document.getElementById('void-esc');
+// ── Submersion ────────────────────────────────────────────
+const $sub    = document.getElementById('void-sub');
+const $water  = document.getElementById('void-sub-water');
+const $panel  = document.getElementById('void-sub-panel');
+const $body   = document.getElementById('void-sub-body');
+const $close  = document.getElementById('void-sub-close');
 
-let _closing = false;
+let _sinking = false;
 
-function openSpotlight(entry) {
-  // Build content
-  const proseHtml = textToHtml(entry.content);
+function submerge(entry) {
+  if (_sinking) return;
 
-  $content.innerHTML = `
-    <span class="void-full__meta">${esc(fmtDate(entry.date))} // VOID-${esc(entry.id)}</span>
+  $body.innerHTML = `
+    <div class="void-full__id" aria-hidden="true">void-${esc(entry.id)} &nbsp;·&nbsp; ${esc(fmt(entry.date))}</div>
     <h1 class="void-full__title">${esc(entry.title)}</h1>
     <div class="void-full__rule" aria-hidden="true"></div>
-    <div class="void-full__prose">${proseHtml}</div>
+    <div class="void-full__prose">${prose(entry.content)}</div>
   `;
 
-  // Strip auto-appended sig line if already in content
-  if (!entry.content.includes(`- VOID-${entry.id}`)) {
-    const sig = document.createElement('span');
-    sig.className = 'void-full__sig';
-    sig.textContent = `— VOID-${entry.id}`;
-    $content.appendChild(sig);
-  }
-
-  $spotlight.hidden = false;
+  $sub.setAttribute('aria-hidden', 'false');
+  $sub.classList.add('is-open');
   document.body.style.overflow = 'hidden';
-  $spotlight.scrollTop = 0;
-  const scroll = $spotlight.querySelector('.void-spotlight__scroll');
-  if (scroll) scroll.scrollTop = 0;
+  $body.scrollTop = 0;
 
-  requestAnimationFrame(() => {
-    $spotlight.classList.add('is-open');
-    $esc.focus();
-  });
+  // Focus the close button after panel arrives
+  setTimeout(() => $close.focus(), 350);
 }
 
-function closeSpotlight() {
-  if (_closing) return;
-  _closing = true;
-  $spotlight.classList.remove('is-open');
-  $spotlight.classList.add('is-closing');
+function surface() {
+  if (_sinking) return;
+  _sinking = true;
+
+  $sub.classList.remove('is-open');
+  $sub.classList.add('is-closing');
 
   setTimeout(() => {
-    $spotlight.classList.remove('is-closing');
-    $spotlight.hidden = true;
-    $content.innerHTML = '';
+    $sub.classList.remove('is-closing');
+    $sub.setAttribute('aria-hidden', 'true');
     document.body.style.overflow = '';
-    _closing = false;
-  }, 420);
+    $body.innerHTML = '';
+    _sinking = false;
+  }, 500);
 }
 
-$curtain.addEventListener('click', closeSpotlight);
-$esc.addEventListener('click', closeSpotlight);
+// Close via water click (outside panel)
+$water.addEventListener('click', surface);
 
-$esc.addEventListener('mouseenter', () => setCursorHover(true));
-$esc.addEventListener('mouseleave', () => setCursorHover(false));
+// Close via surface button
+$close.addEventListener('click', surface);
+$close.addEventListener('mouseenter', () => cursorHover(true));
+$close.addEventListener('mouseleave', () => cursorHover(false));
 
+// Stop panel clicks from closing
+$panel.addEventListener('click', e => e.stopPropagation());
+
+// Escape key
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && !$spotlight.hidden) closeSpotlight();
+  if (e.key === 'Escape' && $sub.classList.contains('is-open')) surface();
 });
 
-// Prevent cursor bleed-through from panel clicks closing overlay
-$spotlight.querySelector('.void-spotlight__panel').addEventListener('click', e => {
-  e.stopPropagation();
-});
+// ── The wrong thing — additional random offset so it's never predictable ──
+(function seedWrong() {
+  const $w = document.getElementById('void-wrong');
+  if (!$w) return;
+  // Randomise its vertical position slightly so it never appears in the same spot twice
+  const topPct = 20 + Math.random() * 40;
+  $w.style.top = topPct + 'vh';
+  $w.style.right = (6 + Math.random() * 10) + 'vw';
+})();
 
 // ── Boot ──────────────────────────────────────────────────
 (async function boot() {
   try {
     const res = await fetch('/void/assets/content/void.json');
-    if (!res.ok) throw new Error(`${res.status}`);
-    const data = await res.json();
-    renderFeed(data);
-  } catch (e) {
-    const $list = document.getElementById('void-entries');
-    $list.innerHTML = `<p style="font-family:monospace;font-size:.75rem;color:rgba(139,0,51,.4);padding:4rem 0;text-align:center;letter-spacing:.15em;">SIGNAL LOST // ${esc(e.message)}</p>`;
+    if (!res.ok) throw new Error(`${res.status} — signal lost`);
+    renderFeed(await res.json());
+  } catch (err) {
+    const $list = document.getElementById('void-list');
+    const li = document.createElement('li');
+    li.style.cssText = 'padding:5rem 0;font-family:Courier New,monospace;font-size:.6rem;letter-spacing:.2em;color:rgba(107,0,32,.3);text-transform:uppercase;';
+    li.textContent = err.message;
+    $list.appendChild(li);
   }
 })();
