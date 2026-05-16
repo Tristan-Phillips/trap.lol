@@ -18,7 +18,7 @@
       "description": "A playground for experimenting with large language models",
       "tags": ["ai", "llm", "playground"],
       "keyed": true,
-      "status": "offline"
+      "status": "live"
     },
     "2": {
       "name": "The Underdark",
@@ -28,7 +28,7 @@
       "description": "Advanced LLM roleplay interface. Cinematic multi-bot layout and Lorebooks.",
       "tags": ["ai", "llm", "roleplay", "characters"],
       "keyed": true,
-      "status": "offline"
+      "status": "live"
     },
     "3": {
       "name": "Grimoire",
@@ -38,7 +38,7 @@
       "description": "Full Dungeon Master suite. Campaign manager, combat tracker, bestiary, atlas, oracle, and more.",
       "tags": ["dnd", "tabletop", "campaign", "tools"],
       "keyed": false,
-      "status": "offline"
+      "status": "live"
     }
   }
 }
