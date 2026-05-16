@@ -4386,6 +4386,7 @@ export function initUI() {
     };
 
     const _STUDIO_MULTI_GROUPS = new Set(['accessories','quality','skinEffects','fantasyFx']);
+    const _studioHistory = []; // session-local [{src, prompt, model, ts}], max 20
 
     ctx.studioModel = DEFAULT_MODEL;   // set after DEFAULT_MODEL import is resolved
 
@@ -5092,6 +5093,11 @@ export function initUI() {
             if ($cost)   $cost.textContent = `Model: ${ctx.studioModel}`;
             if ($regen)  $regen.hidden = false;
 
+            // Push to session history
+            _studioHistory.unshift({ src: dataUrl, prompt, model: ctx.studioModel, ts: Date.now() });
+            if (_studioHistory.length > 20) _studioHistory.pop();
+            _renderStudioHistory();
+
             // Auto-inject into chat thread
             _injectImageMessage(dataUrl, prompt, ctx.studioModel);
 
@@ -5160,6 +5166,35 @@ export function initUI() {
             });
             $strip.appendChild($img);
         }
+    }
+
+    // ── Studio generation history (session-local) ─────────────────────────────
+    function _renderStudioHistory() {
+        const $wrap = qs('#studio-history-wrap');
+        const $strip = qs('#studio-history-strip');
+        if (!$wrap || !$strip) return;
+        if (!_studioHistory.length) { $wrap.hidden = true; return; }
+        $wrap.hidden = false;
+        $strip.innerHTML = '';
+        _studioHistory.forEach((entry, i) => {
+            const $item = document.createElement('div');
+            $item.className = 'studio-history-item' + (i === 0 ? ' studio-history-item--current' : '');
+            $item.title = entry.prompt.slice(0, 100);
+            $item.innerHTML = `<img src="${esc(entry.src)}" class="studio-history-thumb" alt="">`;
+            $item.addEventListener('click', () => {
+                ctx.studioDataUrl = entry.src;
+                const $pImg = qs('#studio-preview-img');
+                const $wrap2 = qs('#studio-img-wrap');
+                const $ph = qs('#studio-placeholder');
+                if ($pImg) $pImg.src = entry.src;
+                if ($wrap2) $wrap2.hidden = false;
+                if ($ph) $ph.hidden = true;
+                qs('#studio-prompt-ta').value = entry.prompt;
+                $strip.querySelectorAll('.studio-history-item').forEach(t => t.classList.remove('studio-history-item--current'));
+                $item.classList.add('studio-history-item--current');
+            });
+            $strip.appendChild($item);
+        });
     }
 
     // ── Open/close studio ────────────────────────────────────────────────────
