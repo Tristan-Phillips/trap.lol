@@ -2563,10 +2563,16 @@ export function initUI() {
 
     function openProfileFlyout() {
         if (!$profileFlyout) return;
-        // Update display name from active continuity persona
         const nameEl = qs('#profile-flyout__name');
         if (nameEl) nameEl.textContent = state.config?.userName || 'Wanderer';
         $profileFlyout.hidden = false;
+        // Position above the button
+        if ($profileBtn) {
+            const r = $profileBtn.getBoundingClientRect();
+            $profileFlyout.style.left   = `${r.left}px`;
+            $profileFlyout.style.bottom = `${window.innerHeight - r.top + 6}px`;
+            $profileFlyout.style.top    = '';
+        }
         $profileBtn?.setAttribute('aria-expanded', 'true');
         lucideRefresh($profileFlyout);
     }

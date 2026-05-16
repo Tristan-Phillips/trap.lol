@@ -6,7 +6,7 @@
     <title>The Underdark // Reality Matrix</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2306040A'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%23ef4444' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23ef4444'/%3E%3C/svg%3E" />
     <link rel="stylesheet" href="../../glass/style/style.css">
-    <link rel="stylesheet" href="./style/style.css?v=78">
+    <link rel="stylesheet" href="./style/style.css?v=79">
     <link rel="stylesheet" href="./style/char-editor.css?v=16">
 </head>
 <body class="underdark-page">
@@ -239,7 +239,42 @@
             <div class="social-sidebar__section-label">Characters</div>
             <div id="social-char-list" class="social-char-list"></div>
         </div>
+
+        <!-- ── Profile Button (inside sidebar, hidden when collapsed) ── -->
+        <div class="sidebar__profile-row">
+            <button id="profile-btn" class="profile-btn" aria-label="Profile &amp; Settings" aria-haspopup="true" aria-expanded="false">
+              <span id="profile-btn__avatar" class="profile-btn__avatar">
+                <i data-lucide="user-round"></i>
+              </span>
+              <span class="profile-btn__label">Profile</span>
+            </button>
+        </div>
     </aside>
+
+    <!-- ── Profile Flyout (outside sidebar to escape overflow:hidden clip) ── -->
+    <div id="profile-flyout" class="profile-flyout" hidden role="menu">
+      <div class="profile-flyout__user">
+        <div id="profile-flyout__avatar" class="profile-flyout__avatar"><i data-lucide="user-round"></i></div>
+        <div class="profile-flyout__info">
+          <span id="profile-flyout__name" class="profile-flyout__name">Wanderer</span>
+          <span class="profile-flyout__sub">Active Continuity</span>
+        </div>
+      </div>
+      <div class="profile-flyout__divider"></div>
+      <button class="profile-flyout__item" id="profile-flyout-settings">
+        <i data-lucide="settings-2"></i> Settings
+      </button>
+      <button class="profile-flyout__item" id="profile-flyout-persona">
+        <i data-lucide="user-circle-2"></i> My Persona
+      </button>
+      <button class="profile-flyout__item" id="profile-flyout-backup">
+        <i data-lucide="database"></i> Backup &amp; Data
+      </button>
+      <div class="profile-flyout__divider"></div>
+      <a href="../../" class="profile-flyout__item profile-flyout__item--uplink" id="profile-flyout-uplink">
+        <i data-lucide="log-out"></i> Uplink Home
+      </a>
+    </div>
 
     <button id="roster-reveal-tab" class="sidebar-reveal-tab sidebar-reveal-tab--left"><i data-lucide="panel-left-open"></i></button>
 
@@ -3583,39 +3618,9 @@
 
 <div id="toast-container" class="toast-container"></div>
 <script src="https://cdn.trap.lol/shards/lucide.min.js"></script><script src="https://cdn.trap.lol/shards/marked.min.js"></script><script src="https://cdn.trap.lol/shards/purify.min.js"></script>
-<script type="module" src="./script/main.js?v=67"></script>
+<script type="module" src="./script/main.js?v=68"></script>
 <!-- ── Wallhaven Arena ── -->
 <script src="./script/modules/wallhaven.js"></script>
 
-<!-- ── Profile Button + Flyout ── -->
-<button id="profile-btn" class="profile-btn" aria-label="Profile &amp; Settings" aria-haspopup="true" aria-expanded="false">
-  <span id="profile-btn__avatar" class="profile-btn__avatar">
-    <i data-lucide="user-round"></i>
-  </span>
-</button>
-
-<div id="profile-flyout" class="profile-flyout" hidden role="menu">
-  <div class="profile-flyout__user">
-    <div id="profile-flyout__avatar" class="profile-flyout__avatar"><i data-lucide="user-round"></i></div>
-    <div class="profile-flyout__info">
-      <span id="profile-flyout__name" class="profile-flyout__name">Wanderer</span>
-      <span class="profile-flyout__sub">Active Continuity</span>
-    </div>
-  </div>
-  <div class="profile-flyout__divider"></div>
-  <button class="profile-flyout__item" id="profile-flyout-settings">
-    <i data-lucide="settings-2"></i> Settings
-  </button>
-  <button class="profile-flyout__item" id="profile-flyout-persona">
-    <i data-lucide="user-circle-2"></i> My Persona
-  </button>
-  <button class="profile-flyout__item" id="profile-flyout-backup">
-    <i data-lucide="database"></i> Backup &amp; Data
-  </button>
-  <div class="profile-flyout__divider"></div>
-  <a href="../../" class="profile-flyout__item profile-flyout__item--uplink" id="profile-flyout-uplink">
-    <i data-lucide="log-out"></i> Uplink Home
-  </a>
-</div>
 </body>
 </html>

@@ -303,24 +303,27 @@ body.roster-collapsed #roster-reveal-tab {
 
 /* ══ PROFILE BUTTON + FLYOUT ═════════════════════════════════════════════ */
 
+.sidebar__profile-row {
+    padding: 8px 10px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    flex-shrink: 0;
+    background: rgba(0,0,0,0.25);
+}
+
 .profile-btn {
-    position: fixed;
-    bottom: 1rem;
-    left: 3.6rem;
-    z-index: 3000;
-    width: 34px;
+    width: 100%;
     height: 34px;
     border-radius: 8px;
-    background: rgba(6, 4, 10, 0.8);
+    background: rgba(6, 4, 10, 0.6);
     border: 1px solid rgba(190, 41, 236, 0.18);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
     display: flex;
     align-items: center;
-    justify-content: center;
+    gap: 8px;
     cursor: pointer;
     color: var(--text-muted);
-    padding: 0;
+    padding: 0 10px;
+    white-space: nowrap;
+    overflow: hidden;
     transition: border-color 0.18s, background 0.18s, color 0.18s, box-shadow 0.18s;
 }
 .profile-btn:hover {
@@ -330,23 +333,32 @@ body.roster-collapsed #roster-reveal-tab {
     box-shadow: 0 0 12px rgba(190, 41, 236, 0.18);
 }
 .profile-btn__avatar {
-    width: 22px;
-    height: 22px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
     overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
 }
-.profile-btn__avatar svg { width: 16px; height: 16px; }
+.profile-btn__avatar svg { width: 14px; height: 14px; }
 .profile-btn__avatar img { width: 100%; height: 100%; object-fit: cover; }
+.profile-btn__label {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+    opacity: 0.7;
+    flex: 1;
+    text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 
 .profile-flyout {
     position: fixed;
-    bottom: 3.8rem;
-    left: 1rem;
     z-index: 3100;
-    width: 220px;
+    width: 260px;
     background: rgba(10, 7, 18, 0.96);
     border: 1px solid rgba(190, 41, 236, 0.22);
     border-radius: 12px;
