@@ -288,10 +288,25 @@ document.addEventListener('DOMContentLoaded', function () {
   ];
 
   document.addEventListener('keydown', function(e) {
-    if (e.key !== 'Escape') return;
-    // Also close condition pickers
-    document.querySelectorAll('.condition-picker').forEach(function(p) { p.remove(); });
-    ALL_MODALS.forEach(function($m) { if ($m && !$m.hidden) closeModal($m); });
+    // Escape — close modals and pickers
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.condition-picker').forEach(function(p) { p.remove(); });
+      ALL_MODALS.forEach(function($m) { if ($m && !$m.hidden) closeModal($m); });
+      return;
+    }
+
+    // Session-mode keyboard shortcuts — skip when typing in an input/textarea
+    var tag = (e.target.tagName || '').toLowerCase();
+    if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+
+    // Module navigation
+    if (e.ctrlKey && e.key === 'b') { e.preventDefault(); activateModule('bestiary');  return; }
+    if (e.ctrlKey && e.key === 'p') { e.preventDefault(); activateModule('party');     return; }
+    if (e.ctrlKey && e.key === 'd') { e.preventDefault(); activateModule('dice');      return; }
+    if (e.ctrlKey && e.key === 'o') { e.preventDefault(); activateModule('oracle');    return; }
+
+    // Combat shortcuts (session mode only — still usable in prep for testing)
+    if (e.key === 'n' || e.key === 'N') { advanceTurn(); return; }
   });
 
   ALL_MODALS.forEach(function($m) {
@@ -1964,5 +1979,205 @@ document.addEventListener('DOMContentLoaded', function () {
       if (e.key === 'Escape') $edit.remove();
     });
   }
+
+  // ══════════════════════════════════════════════════════════
+  // ORACLE — nano-gpt rules assistant
+  // ══════════════════════════════════════════════════════════
+
+  var ORACLE_API    = 'https://nano-gpt.com/api/v1';
+  var ORACLE_MODEL  = 'gpt-4o-mini';
+  var ORACLE_SYSTEM = 'You are a 5th Edition Dungeons & Dragons rules expert and Dungeon Master consultant. '
+    + 'You answer rules questions, adjudicate edge cases, suggest rulings, and reference the 5e SRD. '
+    + 'You speak with authority and clarity. You do not discuss topics unrelated to D&D 5e. '
+    + 'Keep responses concise and actionable. Format with markdown when helpful.';
+
+  var oracleHistory = []; // { role, content }[]
+  var oracleBusy    = false;
+
+  // API key — persisted to localStorage
+  var $apiKeyInput = document.getElementById('api-key-input');
+  var $apiKeySave  = document.getElementById('api-key-save');
+  var _oracleKey   = localStorage.getItem('dndm_ng_key') || '';
+  if ($apiKeyInput) $apiKeyInput.value = _oracleKey;
+  if ($apiKeySave) $apiKeySave.addEventListener('click', function() {
+    _oracleKey = ($apiKeyInput ? $apiKeyInput.value.trim() : '');
+    localStorage.setItem('dndm_ng_key', _oracleKey);
+    showToast('API key saved');
+  });
+
+  // Minimal markdown renderer — bold, italic, inline code, code blocks, lists, headings
+  function renderOracleMarkdown(text) {
+    var escaped = text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+
+    // Code blocks (``` ... ```)
+    escaped = escaped.replace(/```(\w*)\n?([\s\S]*?)```/g, function(_, lang, code) {
+      return '<pre class="oracle-code"><code>' + code.trim() + '</code></pre>';
+    });
+
+    // Process line by line for headings and lists
+    var lines   = escaped.split('\n');
+    var out     = [];
+    var inList  = false;
+
+    lines.forEach(function(line) {
+      // Headings
+      if (/^###\s/.test(line))      { if (inList) { out.push('</ul>'); inList = false; } out.push('<h4 class="oracle-h">' + line.replace(/^###\s/, '') + '</h4>'); return; }
+      if (/^##\s/.test(line))       { if (inList) { out.push('</ul>'); inList = false; } out.push('<h3 class="oracle-h">' + line.replace(/^##\s/, '')  + '</h3>'); return; }
+      if (/^#\s/.test(line))        { if (inList) { out.push('</ul>'); inList = false; } out.push('<h2 class="oracle-h">' + line.replace(/^#\s/, '')   + '</h2>'); return; }
+      // Lists
+      if (/^[-*]\s/.test(line))     { if (!inList) { out.push('<ul class="oracle-list">'); inList = true; } out.push('<li>' + inlineMd(line.replace(/^[-*]\s/, '')) + '</li>'); return; }
+      if (/^\d+\.\s/.test(line))    { if (!inList) { out.push('<ol class="oracle-list">'); inList = true; } out.push('<li>' + inlineMd(line.replace(/^\d+\.\s/, '')) + '</li>'); return; }
+      // Blank line closes list
+      if (line.trim() === '')       { if (inList) { out.push(inList ? '</ul>' : '</ol>'); inList = false; } out.push(''); return; }
+      // Normal paragraph line — close list if open
+      if (inList)                   { out.push('</ul>'); inList = false; }
+      out.push('<p>' + inlineMd(line) + '</p>');
+    });
+    if (inList) out.push('</ul>');
+
+    return out.join('');
+  }
+
+  function inlineMd(text) {
+    return text
+      .replace(/`([^`]+)`/g, '<code class="oracle-inline-code">$1</code>')
+      .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+      .replace(/__([^_]+)__/g, '<strong>$1</strong>')
+      .replace(/_([^_]+)_/g, '<em>$1</em>');
+  }
+
+  function oracleAppendMessage(role, html, isStreaming) {
+    var $history = document.getElementById('oracle-history');
+    if (!$history) return null;
+
+    // Hide intro on first message
+    var $intro = $history.querySelector('.oracle-intro');
+    if ($intro) $intro.style.display = 'none';
+
+    var $msg = document.createElement('div');
+    $msg.className = 'oracle-msg oracle-msg--' + role + (isStreaming ? ' oracle-msg--streaming' : '');
+
+    var $bubble = document.createElement('div');
+    $bubble.className = 'oracle-msg__bubble';
+    if (html) $bubble.innerHTML = html;
+    $msg.appendChild($bubble);
+    $history.appendChild($msg);
+    $msg.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    return $bubble;
+  }
+
+  function oracleSetStatus(busy) {
+    oracleBusy = busy;
+    var $btn = document.querySelector('#oracle-form .oracle-input__send');
+    if ($btn) $btn.disabled = busy;
+    var $field = document.getElementById('oracle-field');
+    if ($field) $field.disabled = busy;
+  }
+
+  function oracleShowTyping() {
+    var $history = document.getElementById('oracle-history');
+    if (!$history) return null;
+    var $intro = $history.querySelector('.oracle-intro');
+    if ($intro) $intro.style.display = 'none';
+    var $t = document.createElement('div');
+    $t.className = 'oracle-msg oracle-msg--assistant oracle-typing';
+    $t.innerHTML = '<div class="oracle-msg__bubble"><span class="oracle-dot"></span><span class="oracle-dot"></span><span class="oracle-dot"></span></div>';
+    $history.appendChild($t);
+    $t.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    return $t;
+  }
+
+  async function oracleSend(userText) {
+    if (oracleBusy || !userText.trim()) return;
+    if (!_oracleKey) {
+      showToast('Add your nano-gpt API key in Settings first');
+      return;
+    }
+
+    oracleSetStatus(true);
+    oracleAppendMessage('user', '<p>' + esc(userText) + '</p>', false);
+    oracleHistory.push({ role: 'user', content: userText });
+
+    var $typing = oracleShowTyping();
+
+    try {
+      var res = await fetch(ORACLE_API + '/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type':  'application/json',
+          'Authorization': 'Bearer ' + _oracleKey
+        },
+        body: JSON.stringify({
+          model:    ORACLE_MODEL,
+          stream:   true,
+          messages: [{ role: 'system', content: ORACLE_SYSTEM }].concat(oracleHistory)
+        })
+      });
+
+      if (!res.ok) {
+        var errText = await res.text();
+        throw new Error('API error ' + res.status + ': ' + errText.slice(0, 120));
+      }
+
+      if ($typing) $typing.remove();
+      var $bubble = oracleAppendMessage('assistant', '', true);
+      var $msg    = $bubble ? $bubble.closest('.oracle-msg') : null;
+
+      var reader  = res.body.getReader();
+      var decoder = new TextDecoder();
+      var full    = '';
+
+      while (true) {
+        var _ref = await reader.read();
+        if (_ref.done) break;
+        var chunk = decoder.decode(_ref.value, { stream: true });
+        chunk.split('\n').forEach(function(line) {
+          line = line.trim();
+          if (!line || line === 'data: [DONE]') return;
+          if (line.startsWith('data: ')) {
+            try {
+              var delta = JSON.parse(line.slice(6));
+              var token = (delta.choices[0].delta || {}).content || '';
+              full += token;
+              if ($bubble) $bubble.innerHTML = renderOracleMarkdown(full);
+              var $h = document.getElementById('oracle-history');
+              if ($h) $h.scrollTop = $h.scrollHeight;
+            } catch(e) {}
+          }
+        });
+      }
+
+      if ($msg) $msg.classList.remove('oracle-msg--streaming');
+      if ($bubble) $bubble.innerHTML = renderOracleMarkdown(full);
+      oracleHistory.push({ role: 'assistant', content: full });
+
+    } catch(err) {
+      if ($typing) $typing.remove();
+      oracleAppendMessage('assistant', '<p class="oracle-error">Error: ' + esc(err.message) + '</p>', false);
+    }
+
+    oracleSetStatus(false);
+    var $field = document.getElementById('oracle-field');
+    if ($field) { $field.focus(); }
+  }
+
+  var $oracleForm = document.getElementById('oracle-form');
+  if ($oracleForm) {
+    $oracleForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      var $field = document.getElementById('oracle-field');
+      var text   = $field ? $field.value.trim() : '';
+      if (!text) return;
+      if ($field) $field.value = '';
+      oracleSend(text);
+    });
+  }
+
+  // Clear oracle history when leaving the module (chips re-appear on fresh open)
+  // — intentionally NOT clearing on module switch; history persists for the session
 
 }); // end DOMContentLoaded

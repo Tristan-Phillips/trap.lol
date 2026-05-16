@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.3.46",
+    "schema_version": "1.3.49",
     "last_updated": "2026-05-17",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -478,6 +478,41 @@
     ]
   },
   "commits": [
+    {
+      "hash": "ba99cc1",
+      "date": "2026-05-17",
+      "message": "fix(dndm): campaign init safety — deep-merge guard, remove duplicate tab listener",
+      "scope": "dndm/",
+      "impact": "high",
+      "files": [
+        "dndm/assets/script/app.js"
+      ],
+      "why": "Phase 5 was non-interactive after deploy: Object.assign in campaignLoad() was corrupting campaign.lore when stale localStorage data predated the lore sub-object, causing a boot-time TypeError; also removed a duplicate .panel__tab listener from before Phase 5 that fired redundantly."
+    },
+    {
+      "hash": "62e8517",
+      "date": "2026-05-17",
+      "message": "feat(dndm): Phase 5 — Campaign data layer, Sessions log, NPCs, Lore Wiki",
+      "scope": "dndm/",
+      "impact": "high",
+      "files": [
+        "dndm/assets/script/app.js",
+        "dndm/assets/style/style.css"
+      ],
+      "why": "Phase 5 of DM MATRIX: full Campaign overview (editable name/setting/banner/scratch pad), NPC tracker (add/edit/remove with role, location, relationship, alive state), Lore Wiki (tabbed locations/factions/timeline entries), Session log (add/edit/remove sessions with XP and summary), all wired to localStorage persistence and export/import campaign JSON."
+    },
+    {
+      "hash": "c346b1f",
+      "date": "2026-05-17",
+      "message": "redesign(hub): sovereign nodes — instrument-panel tiles (final approved)",
+      "scope": "glass/",
+      "impact": "medium",
+      "files": [
+        "glass/script/modules/ui.js",
+        "glass/style/modules/components.css"
+      ],
+      "why": "Sixth and final sovereign nodes redesign — instrument-panel square tiles (148px, centred icon, animated status dot, mono typography) approved by trap after five rejected attempts; this design is visually distinct from Station (cyan HUD bars) and Transmissions (warm bloom cards)."
+    },
     {
       "hash": "a12bdb3",
       "date": "2026-05-16",
@@ -1907,6 +1942,21 @@
     {
       "date": "2026-05-17",
       "agent": "Claude Sonnet 4.6",
+      "type": "bug_fix",
+      "summary": "DM MATRIX Phase 5 deployed (62e8517) but immediately reported broken — nothing clickable or interactable. Root-cause investigation found two issues: (1) a duplicate .panel__tab event listener from pre-Phase-5 code still present at boot time, and (2) Object.assign in campaignLoad() was clobbering campaign.lore when stale localStorage data from a previous session predated the lore sub-object, causing a boot-time TypeError that silently killed all event binding. Fix committed as ba99cc1. Also caught up logs.json with three missing commits (c346b1f sovereign nodes approval, 62e8517 Phase 5, ba99cc1 fix).",
+      "decisions": [
+        "Object.assign is unsafe for nested state hydration — must always deep-merge validate after the assign when sub-keys could be absent in older saved data.",
+        "Duplicate event listeners at top-level scope are a fragile pattern — each module rewrite must audit for orphaned listeners from prior code.",
+        "Sidebar icon-only display at 985px viewport is correct responsive behaviour (max-width: 1199px collapses to icon strip), not a bug."
+      ],
+      "rules_reinforced": [
+        "After every localStorage hydration with Object.assign, explicitly validate and reinitialise any nested sub-keys that may be absent in stale saved data.",
+        "When adding a new section to app.js, grep for any existing event listeners targeting the same selectors before adding new ones."
+      ]
+    },
+    {
+      "date": "2026-05-17",
+      "agent": "Claude Sonnet 4.6",
       "type": "feature_development",
       "summary": "Sovereign nodes section on index.html went through five full redesign iterations this session before reaching an approved design. Final approved design: compact square instrument-panel tiles (.node-tile) — 148px wide, centred icon, service name, hosting software, domain/shortcut/source in a footer row, animated status dot top-right, magenta bloom lift on hover. All previous sovereign nodes CSS/JS fully replaced. Session ended with commit + logs update, then pivot to DM MATRIX Phase 5.",
       "decisions": [
@@ -3151,12 +3201,12 @@
     "features": [
       {
         "id": "dndm-phase-5",
-        "title": "DM MATRIX Phase 5 — Campaign, Sessions, Bestiary, Spellbook",
-        "status": "not_started",
+        "title": "DM MATRIX Phase 5 — Campaign, Sessions, NPCs, Lore Wiki, Export/Import",
+        "status": "done",
         "requested": "2026-05-16",
-        "completed": null,
-        "description": "Phase 5 of DM MATRIX (/dndm/): (1) Campaign module — world name, lore notes, active quest, session count; (2) Sessions log — date, title, summary, XP awarded, searchable list; (3) Bestiary — search 5etools monster index, load one source file at a time, display stat block; (4) Spellbook — search 5etools spell index, display spell details. All data persists in sessionStorage per session.",
-        "notes": "DM MATRIX is a gift for trap's partner. Phases 1-4 complete: Welcome screen, Dice, Apps tray, Party + Combat Tracker. Phase 5 next.",
+        "completed": "2026-05-17",
+        "description": "Phase 5 of DM MATRIX (/dndm/): Campaign module (editable name/setting/banner/scratch pad), NPC tracker (add/edit/remove, role/location/relationship/alive), Lore Wiki (tabbed locations/factions/timeline), Session log (sessions with XP and summary), Export/Import campaign JSON, all persisted to localStorage['dndm_campaign'].",
+        "notes": "Committed as 62e8517. Bug fix ba99cc1 followed immediately — Object.assign in campaignLoad() corrupted campaign.lore when stale localStorage data predated the lore sub-object; fixed with post-merge deep validation. Boot-time crash resolved.",
         "files_affected": ["dndm/index.html", "dndm/assets/script/app.js", "dndm/assets/style/style.css"]
       },
       {
