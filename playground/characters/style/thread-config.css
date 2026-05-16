@@ -920,3 +920,51 @@
     .tc-row-fields { flex-direction: column; }
     .tc-hdr__scope-tag { display: none; }
 }
+
+/* ── Lore pin section ── */
+.tc-lore-pin-section {
+    margin-top: 12px;
+}
+.tc-lore-pin-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin: 0 0 7px;
+}
+.tc-lore-pin-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.tc-lore-pin-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 8px;
+    border-radius: 5px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.05);
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.tc-lore-pin-row:hover { background: rgba(190,41,236,0.07); }
+.tc-lore-pin-row input[type="checkbox"] {
+    accent-color: var(--theme-accent);
+    width: 13px; height: 13px;
+    flex-shrink: 0;
+}
+.tc-lore-pin-name {
+    flex: 1;
+    font-size: 0.8rem;
+    color: var(--text-main);
+}
+.tc-lore-pin-count {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+}
+.tc-lore-pin-empty {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-style: italic;
+    padding: 4px 0;
+}

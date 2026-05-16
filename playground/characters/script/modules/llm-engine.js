@@ -895,8 +895,16 @@ export function buildPayload(ctx) {
         }
     }
 
-    // 3. Lorebook injection
-    const activeLore = scanLorebooks(history, lore, config.lorebookScanDepth || 5);
+    // 3. Lorebook injection — honour thread-pinned lorebooks (always inject regardless of keyword match)
+    const pinnedIds = new Set(ctx.threadConfig?.pinnedLoreBookIds || []);
+    const effectiveLore = pinnedIds.size
+        ? lore.map(book =>
+            pinnedIds.has(book.id)
+                ? { ...book, entries: book.entries.map(e => ({ ...e, alwaysOn: true })) }
+                : book
+          )
+        : lore;
+    const activeLore = scanLorebooks(history, effectiveLore, config.lorebookScanDepth || 5);
     if (activeLore.length) {
         const loreBlock = activeLore
             .map(e => `[World Info — ${e.name}]\n${e.content}`)

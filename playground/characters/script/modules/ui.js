@@ -18,7 +18,7 @@ import {
     exportFullInstance, importFullInstance
 } from './state.js?v=2';
 import { resolveImageUrl, saveImageBlob, deleteImageBlob, isIdbImageRef, idbImageRefId, isDataUrl } from './storage.js?v=3';
-import { buildPayload, streamCompletion, fetchCompletion, buildOverlordContext, summarizeDroppedMessages } from './llm-engine.js?v=5';
+import { buildPayload, streamCompletion, fetchCompletion, buildOverlordContext, summarizeDroppedMessages } from './llm-engine.js?v=6';
 import { parseCommand, executeCommand, filterCommands, COMMANDS } from './commands.js?v=3';
 import { IMAGE_MODELS, DEFAULT_MODEL, buildImagePrompt, generateImagePromptWithLLM, describeSceneWithLLM, generateImage, VIDEO_MODELS, generateVideo, generateVideoPromptWithLLM } from './image-engine.js?v=3';
 import { addBook, removeBook, addEntry, updateEntry, removeEntry, createBook, scanLorebooks } from './lorebook.js?v=3';
@@ -8047,6 +8047,7 @@ export function initUI() {
                 sessionId:           state.chat.id,
                 shareMemory:         state.chat.shareMemory,
                 groupConfig:         state.chat.groupConfig || null,
+                threadConfig:        tc,
                 pendingReinject:     pendingReinject || '',
                 threadModelOverride: tc.model || null,
                 meters:              _liveMeters,
@@ -8517,6 +8518,24 @@ export function initUI() {
         const $autoLore = qs('#tc-auto-attach-lorebooks');
         if ($autoLore) $autoLore.checked = tc.autoAttachLorebooks !== false;
 
+        // Pinned lorebook list
+        const $pinList = qs('#tc-lore-pin-list');
+        if ($pinList) {
+            const pinned = new Set(tc.pinnedLoreBookIds || []);
+            const books  = state.lorebooks || [];
+            if (!books.length) {
+                $pinList.innerHTML = '<span class="tc-lore-pin-empty">No lorebooks active in this continuity.</span>';
+            } else {
+                $pinList.innerHTML = books.map(b =>
+                    `<label class="tc-lore-pin-row">
+                        <input type="checkbox" class="tc-lore-pin-cb" data-book-id="${esc(b.id)}" ${pinned.has(b.id) ? 'checked' : ''}>
+                        <span class="tc-lore-pin-name">${esc(b.name || 'Unnamed lorebook')}</span>
+                        <span class="tc-lore-pin-count">${(b.entries || []).length} entries</span>
+                    </label>`
+                ).join('');
+            }
+        }
+
         // Populate model select if needed (mirrors loadModels logic)
         const $tcModel = qs('#tc-model-select');
         if ($tcModel && $tcModel.options.length <= 1) {
@@ -8672,6 +8691,7 @@ export function initUI() {
         tc.userName       = qs('#tc-user-name')?.value.trim()    || null;
         tc.userPersona    = qs('#tc-user-persona')?.value.trim() || null;
         tc.autoAttachLorebooks = qs('#tc-auto-attach-lorebooks')?.checked !== false;
+        tc.pinnedLoreBookIds   = [...qsa('.tc-lore-pin-cb:checked', qs('#tc-lore-pin-list'))].map(cb => cb.dataset.bookId).filter(Boolean);
 
         tc.temperature = qs('#tc-temp-inherit')?.checked ? null : parseFloat(qs('#tc-temp-input')?.value || 0.8);
         tc.maxOutput   = qs('#tc-maxout-inherit')?.checked ? null : parseInt(qs('#tc-maxout-input')?.value || 512, 10);
@@ -9702,6 +9722,173 @@ export function initUI() {
 
     $codexBtn?.addEventListener('click', toggleCodex);
     $codexClose?.addEventListener('click', closeCodex);
+
+    // ── Relationship Map ──────────────────────────────────────────────────────
+    const $relmapOverlay = qs('#codex-relmap');
+    const $relmapCanvas  = qs('#codex-relmap-canvas');
+    const $relmapEmpty   = qs('#codex-relmap-empty');
+    const $relmapBtn     = qs('#codex-relmap-btn');
+    let _relmapOpen      = false;
+
+    function _drawRelmap() {
+        if (!$relmapCanvas) return;
+        const gc   = state.chat?.groupConfig || {};
+        const rels = gc.relationships || {};
+        const botIds = state.chat?.botIds || (state.activeBotId ? [state.activeBotId] : []);
+
+        // Build edge list from relationships map
+        const edges = [];
+        Object.entries(rels).forEach(([idA, targets]) => {
+            if (typeof targets !== 'object') return;
+            Object.entries(targets).forEach(([idB, label]) => {
+                if (label && botIds.includes(idA) && botIds.includes(idB)) {
+                    edges.push({ a: idA, b: idB, label: String(label) });
+                }
+            });
+        });
+
+        const hasData = botIds.length >= 2 && edges.length > 0;
+        if ($relmapEmpty) $relmapEmpty.hidden = hasData || botIds.length < 2;
+
+        const W = $relmapCanvas.offsetWidth  || 600;
+        const H = $relmapCanvas.offsetHeight || 260;
+        $relmapCanvas.width  = W;
+        $relmapCanvas.height = H;
+
+        const ctx = $relmapCanvas.getContext('2d');
+        ctx.clearRect(0, 0, W, H);
+
+        if (!botIds.length) return;
+
+        // Circular layout — positions
+        const cx = W / 2, cy = H / 2;
+        const r  = Math.min(cx, cy) * 0.62;
+        const nodeR = 22;
+        const nodes = botIds.map((id, i) => {
+            const angle = (2 * Math.PI * i / botIds.length) - Math.PI / 2;
+            return {
+                id,
+                x: cx + r * Math.cos(angle),
+                y: cy + r * Math.sin(angle),
+                name: getCharOverride(id)?.nickname || state.loadedCharacters[id]?.name || '?',
+                av: getAvatarUrlSync(id, state.characters.find(c => c.id === id)?.avatar_path)
+            };
+        });
+
+        const nodeMap = Object.fromEntries(nodes.map(n => [n.id, n]));
+
+        // Draw edges
+        edges.forEach(({ a, b, label }) => {
+            const nA = nodeMap[a], nB = nodeMap[b];
+            if (!nA || !nB) return;
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.moveTo(nA.x, nA.y);
+            ctx.lineTo(nB.x, nB.y);
+            ctx.strokeStyle = 'rgba(190,41,236,0.22)';
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([4, 3]);
+            ctx.stroke();
+            ctx.restore();
+
+            // Edge label — midpoint
+            const mx = (nA.x + nB.x) / 2;
+            const my = (nA.y + nB.y) / 2;
+            const maxW = 120;
+            const words = label.split(' ');
+            let lines = [], line = '';
+            words.forEach(w => {
+                const test = line ? line + ' ' + w : w;
+                ctx.font = '10px sans-serif';
+                if (ctx.measureText(test).width > maxW && line) { lines.push(line); line = w; }
+                else line = test;
+            });
+            if (line) lines.push(line);
+
+            ctx.save();
+            lines.forEach((ln, i) => {
+                ctx.font = '10px sans-serif';
+                const tw = ctx.measureText(ln).width;
+                ctx.fillStyle = 'rgba(0,0,0,0.65)';
+                ctx.fillRect(mx - tw / 2 - 3, my - 6 + i * 13 - 3, tw + 6, 15);
+                ctx.fillStyle = 'rgba(220,200,255,0.75)';
+                ctx.textAlign = 'center';
+                ctx.fillText(ln, mx, my + 4 + i * 13);
+            });
+            ctx.restore();
+        });
+
+        // Draw nodes
+        nodes.forEach(n => {
+            ctx.save();
+            // Circle background
+            ctx.beginPath();
+            ctx.arc(n.x, n.y, nodeR, 0, 2 * Math.PI);
+            ctx.fillStyle = 'rgba(30,15,50,0.9)';
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(190,41,236,0.45)';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            // Avatar image or initials
+            if (n.av) {
+                try {
+                    const img = new Image();
+                    img.src = n.av;
+                    if (img.complete) {
+                        ctx.save();
+                        ctx.beginPath();
+                        ctx.arc(n.x, n.y, nodeR - 2, 0, 2 * Math.PI);
+                        ctx.clip();
+                        ctx.drawImage(img, n.x - nodeR + 2, n.y - nodeR + 2, (nodeR - 2) * 2, (nodeR - 2) * 2);
+                        ctx.restore();
+                    } else {
+                        _drawInitials(ctx, n);
+                    }
+                } catch (_) { _drawInitials(ctx, n); }
+            } else {
+                _drawInitials(ctx, n);
+            }
+
+            // Name label below
+            ctx.font = 'bold 10px sans-serif';
+            ctx.fillStyle = 'rgba(220,200,255,0.85)';
+            ctx.textAlign = 'center';
+            ctx.fillText(n.name.slice(0, 12) + (n.name.length > 12 ? '…' : ''), n.x, n.y + nodeR + 11);
+            ctx.restore();
+        });
+    }
+
+    function _drawInitials(ctx, n) {
+        const initial = (n.name || '?').trim().slice(0, 2).toUpperCase();
+        ctx.font = 'bold 13px sans-serif';
+        ctx.fillStyle = 'rgba(190,100,255,0.9)';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(initial, n.x, n.y);
+        ctx.textBaseline = 'alphabetic';
+    }
+
+    function _openRelmap() {
+        if (!$relmapOverlay) return;
+        _relmapOpen = true;
+        $relmapOverlay.hidden = false;
+        $relmapBtn?.classList.add('active');
+        requestAnimationFrame(_drawRelmap);
+    }
+
+    function _closeRelmap() {
+        if (!$relmapOverlay) return;
+        _relmapOpen = false;
+        $relmapOverlay.hidden = true;
+        $relmapBtn?.classList.remove('active');
+    }
+
+    $relmapBtn?.addEventListener('click', () => {
+        if (_relmapOpen) _closeRelmap();
+        else _openRelmap();
+    });
 
     // Helper: returns a character name string for directive targeting.
     // In group mode shows a quick inline picker; in DM mode returns activeBotId name.

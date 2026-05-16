@@ -459,6 +459,15 @@
 
                     </div><!-- /.scene-codex__body -->
 
+                    <!-- RELATIONSHIP MAP OVERLAY (hidden by default) -->
+                    <div id="codex-relmap" class="codex-relmap" hidden>
+                        <canvas id="codex-relmap-canvas" class="codex-relmap__canvas"></canvas>
+                        <div id="codex-relmap-empty" class="codex-relmap__empty" hidden>
+                            <i data-lucide="git-branch-plus"></i>
+                            <span>No relationships defined.<br>Set them in Thread Setup → Characters.</span>
+                        </div>
+                    </div>
+
                     <!-- FOOTER STRIP: session stats -->
                     <div class="codex-footer">
                         <div id="codex-session-stats" class="codex-session-stats">
@@ -468,6 +477,7 @@
                             <span class="codex-stat"><span class="codex-stat__k">Model</span><span id="cstat-model" class="codex-stat__v">—</span></span>
                             <span class="codex-stat"><span class="codex-stat__k">NSFW</span><span id="cstat-nsfw" class="codex-stat__v">—</span></span>
                         </div>
+                        <button id="codex-relmap-btn" class="codex-footer__map-btn" title="Relationship map"><i data-lucide="git-branch"></i></button>
                         <button id="scene-codex-close" class="codex-footer__close" title="Close Codex"><i data-lucide="chevron-up"></i></button>
                     </div>
 
@@ -1395,6 +1405,10 @@
                 <span class="tc-toggle-row__sub">Automatically include each character's lorebook in context</span>
               </div>
             </label>
+            <div class="tc-lore-pin-section">
+              <p class="tc-lore-pin-label">Pinned lorebooks <em class="tc-section__note">— always injected, no keyword match needed</em></p>
+              <div id="tc-lore-pin-list" class="tc-lore-pin-list"></div>
+            </div>
           </section>
 
         </div>
