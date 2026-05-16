@@ -210,6 +210,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   function beginSession(title) {
     state.sessionActive = true;
+    renderPartyBar();
     $sidebar.classList.add('sidebar--session');
     $toggleLabel.textContent = 'END SESSION';
     $modeLabel.textContent   = 'SESSION';
@@ -253,6 +254,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     state.sessionActive = false;
+    renderPartyBar();
     $sidebar.classList.remove('sidebar--session');
     $toggleLabel.textContent = 'BEGIN SESSION';
     $modeLabel.textContent   = 'PREP';
@@ -917,16 +919,122 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
+  // Bestiary filter state
+  var _bfCRMin  = 0;
+  var _bfCRMax  = 30;
+  var _bfTypes  = []; // empty = all
+  var _bfSizes  = []; // empty = all
+
+  var CREATURE_TYPES = ['aberration','beast','celestial','construct','dragon','elemental',
+                        'fey','fiend','giant','humanoid','monstrosity','ooze','plant','undead'];
+  var CREATURE_SIZES = ['Tiny','Small','Medium','Large','Huge','Gargantuan'];
+
+  function crToNum(cr) {
+    if (!cr) return 0;
+    if (typeof cr === 'object') cr = cr.cr || '0';
+    if (cr === '1/8') return 0.125;
+    if (cr === '1/4') return 0.25;
+    if (cr === '1/2') return 0.5;
+    return parseFloat(cr) || 0;
+  }
+
+  function applyBestiaryFilters() {
+    var q = (document.getElementById('bestiary-search') || {}).value || '';
+    q = q.toLowerCase().trim();
+    var filtered = state.bestiary.monsters.filter(function(m) {
+      if (q && !m.name.toLowerCase().includes(q)) return false;
+      var cr = crToNum(m.cr);
+      if (cr < _bfCRMin || cr > _bfCRMax) return false;
+      if (_bfTypes.length) {
+        var t = typeof m.type === 'string' ? m.type : (m.type && m.type.type) || '';
+        if (!_bfTypes.includes(t.toLowerCase())) return false;
+      }
+      if (_bfSizes.length) {
+        var sz = Array.isArray(m.size) ? m.size[0] : (m.size || '');
+        var sizeMap = { T:'Tiny', S:'Small', M:'Medium', L:'Large', H:'Huge', G:'Gargantuan' };
+        sz = sizeMap[sz] || sz;
+        if (!_bfSizes.includes(sz)) return false;
+      }
+      return true;
+    });
+    state.bestiary.filtered = filtered;
+    renderMonsterList(filtered);
+  }
+
   function initBestiarySearch() {
     var $search = document.getElementById('bestiary-search');
-    if (!$search) return;
-    $search.addEventListener('input', function() {
-      var q = $search.value.toLowerCase().trim();
-      var filtered = q
-        ? state.bestiary.monsters.filter(function(m) { return m.name.toLowerCase().includes(q); })
-        : state.bestiary.monsters;
-      state.bestiary.filtered = filtered;
-      renderMonsterList(filtered);
+    if ($search) {
+      $search.addEventListener('input', applyBestiaryFilters);
+    }
+
+    // Advanced filter panel — injected below source pills
+    var $advCont = document.getElementById('bestiary-adv-filters');
+    if (!$advCont) return;
+
+    // CR range
+    var crHTML = '<div class="bfilt-row">'
+      + '<label class="bfilt-label">CR</label>'
+      + '<input class="bfilt-range" type="number" id="bf-cr-min" min="0" max="30" value="0" placeholder="0" title="Min CR" />'
+      + '<span class="bfilt-sep">–</span>'
+      + '<input class="bfilt-range" type="number" id="bf-cr-max" min="0" max="30" value="30" placeholder="30" title="Max CR" />'
+      + '</div>';
+
+    // Type pills
+    var typeHTML = '<div class="bfilt-row bfilt-row--wrap">'
+      + '<label class="bfilt-label">Type</label>'
+      + CREATURE_TYPES.map(function(t) {
+          return '<button class="bfilt-pill" data-btype="' + t + '">' + t.charAt(0).toUpperCase() + t.slice(0,4) + '</button>';
+        }).join('')
+      + '</div>';
+
+    // Size pills
+    var sizeHTML = '<div class="bfilt-row bfilt-row--wrap">'
+      + '<label class="bfilt-label">Size</label>'
+      + CREATURE_SIZES.map(function(s) {
+          return '<button class="bfilt-pill" data-bsize="' + s + '">' + s.slice(0,3) + '</button>';
+        }).join('')
+      + '<button class="bfilt-clear">✕ Clear</button>'
+      + '</div>';
+
+    $advCont.innerHTML = crHTML + typeHTML + sizeHTML;
+
+    // CR range inputs
+    var $crMin = document.getElementById('bf-cr-min');
+    var $crMax = document.getElementById('bf-cr-max');
+    if ($crMin) $crMin.addEventListener('input', function() { _bfCRMin = parseFloat($crMin.value) || 0; applyBestiaryFilters(); });
+    if ($crMax) $crMax.addEventListener('input', function() { _bfCRMax = parseFloat($crMax.value) || 30; applyBestiaryFilters(); });
+
+    // Type toggle pills
+    $advCont.querySelectorAll('[data-btype]').forEach(function(pill) {
+      pill.addEventListener('click', function() {
+        var t = pill.dataset.btype;
+        var i = _bfTypes.indexOf(t);
+        if (i === -1) { _bfTypes.push(t); pill.classList.add('bfilt-pill--active'); }
+        else          { _bfTypes.splice(i,1); pill.classList.remove('bfilt-pill--active'); }
+        applyBestiaryFilters();
+      });
+    });
+
+    // Size toggle pills
+    $advCont.querySelectorAll('[data-bsize]').forEach(function(pill) {
+      pill.addEventListener('click', function() {
+        var s = pill.dataset.bsize;
+        var i = _bfSizes.indexOf(s);
+        if (i === -1) { _bfSizes.push(s); pill.classList.add('bfilt-pill--active'); }
+        else          { _bfSizes.splice(i,1); pill.classList.remove('bfilt-pill--active'); }
+        applyBestiaryFilters();
+      });
+    });
+
+    // Clear button
+    var $clr = $advCont.querySelector('.bfilt-clear');
+    if ($clr) $clr.addEventListener('click', function() {
+      _bfCRMin = 0; _bfCRMax = 30; _bfTypes = []; _bfSizes = [];
+      if ($crMin) $crMin.value = '0';
+      if ($crMax) $crMax.value = '30';
+      $advCont.querySelectorAll('.bfilt-pill--active').forEach(function(p) { p.classList.remove('bfilt-pill--active'); });
+      if ($search) $search.value = '';
+      applyBestiaryFilters();
     });
   }
 
@@ -1045,10 +1153,21 @@ document.addEventListener('DOMContentLoaded', function () {
       + '<div class="stat-block__actions">'
       + '<button class="stat-block__add-btn" data-monster="' + esc(m.name) + '">+ Add to Encounter</button>'
       + '<button class="stat-block__fav-btn">☆ Favourite</button>'
+      + '<button class="stat-block__ask-btn" data-monster="' + esc(m.name) + '" data-cr="' + esc(fmtCR(m.cr)) + '">◈ Ask Oracle</button>'
       + '</div></div>';
 
     $panel.querySelectorAll('.stat-block__roll-btn').forEach(function(btn) {
       btn.addEventListener('click', function() { rollFromAction(btn.dataset.action, m); });
+    });
+
+    var $askBtn = $panel.querySelector('.stat-block__ask-btn');
+    if ($askBtn) $askBtn.addEventListener('click', function() {
+      var name = $askBtn.dataset.monster;
+      var cr   = $askBtn.dataset.cr;
+      var prompt = 'What tactics should I use as a DM for ' + name + ' (CR ' + cr + ')? Include key abilities, action economy, and encounter tips.';
+      activateModule('oracle');
+      var $field = document.getElementById('oracle-field');
+      if ($field) { $field.value = prompt; $field.focus(); }
     });
   }
 
@@ -1170,15 +1289,139 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
+  var SPELL_SCHOOLS_LIST  = ['Abjuration','Conjuration','Divination','Enchantment','Evocation','Illusion','Necromancy','Transmutation'];
+  var SPELL_CLASSES_LIST  = ['Bard','Cleric','Druid','Paladin','Ranger','Sorcerer','Warlock','Wizard'];
+  var _sfLevels = []; // empty = all; 0=cantrip, 1-9
+  var _sfSchools= []; // empty = all (full name)
+  var _sfConc   = false;
+  var _sfRitual = false;
+  var _sfClasses= []; // empty = all
+
+  function applySpellFilters() {
+    var q = (document.getElementById('spell-search') || {}).value || '';
+    q = q.toLowerCase().trim();
+    var filtered = state.spells.spells.filter(function(s) {
+      if (q && !s.name.toLowerCase().includes(q)) return false;
+      if (_sfLevels.length && !_sfLevels.includes(s.level)) return false;
+      if (_sfSchools.length) {
+        var sn = SCHOOLS[s.school] || s.school || '';
+        if (!_sfSchools.includes(sn)) return false;
+      }
+      if (_sfConc) {
+        var isConc = (s.duration || []).some(function(d) { return d.concentration; });
+        if (!isConc) return false;
+      }
+      if (_sfRitual) {
+        if (!s.meta || !s.meta.ritual) return false;
+      }
+      if (_sfClasses.length) {
+        var classes = (s.classes && s.classes.fromClassList)
+          ? s.classes.fromClassList.map(function(c) { return c.name; })
+          : [];
+        if (!_sfClasses.some(function(cl) { return classes.includes(cl); })) return false;
+      }
+      return true;
+    });
+    state.spells.filtered = filtered;
+    renderSpellList(filtered);
+  }
+
   function initSpellSearch() {
     var $search = document.getElementById('spell-search');
-    if (!$search) return;
-    $search.addEventListener('input', function() {
-      var q = $search.value.toLowerCase().trim();
-      var filtered = q
-        ? state.spells.spells.filter(function(s) { return s.name.toLowerCase().includes(q); })
-        : state.spells.spells;
-      renderSpellList(filtered);
+    if ($search) $search.addEventListener('input', applySpellFilters);
+
+    var $advCont = document.getElementById('spell-adv-filters');
+    if (!$advCont) return;
+
+    // Level pills: C 1 2 3 4 5 6 7 8 9
+    var levelPills = '<div class="bfilt-row bfilt-row--wrap">'
+      + '<label class="bfilt-label">Level</label>'
+      + '<button class="bfilt-pill" data-slevel="0">Cantrip</button>'
+      + [1,2,3,4,5,6,7,8,9].map(function(l) {
+          return '<button class="bfilt-pill" data-slevel="' + l + '">' + l + '</button>';
+        }).join('')
+      + '</div>';
+
+    // School pills
+    var schoolPills = '<div class="bfilt-row bfilt-row--wrap">'
+      + '<label class="bfilt-label">School</label>'
+      + SPELL_SCHOOLS_LIST.map(function(sc) {
+          return '<button class="bfilt-pill" data-sschool="' + sc + '">' + sc.slice(0,4) + '</button>';
+        }).join('')
+      + '</div>';
+
+    // Toggle rows
+    var toggleRow = '<div class="bfilt-row">'
+      + '<label class="bfilt-label">Filter</label>'
+      + '<button class="bfilt-pill" id="sf-conc">Conc.</button>'
+      + '<button class="bfilt-pill" id="sf-ritual">Ritual</button>'
+      + '</div>';
+
+    // Class pills
+    var classPills = '<div class="bfilt-row bfilt-row--wrap">'
+      + '<label class="bfilt-label">Class</label>'
+      + SPELL_CLASSES_LIST.map(function(cl) {
+          return '<button class="bfilt-pill" data-sclass="' + cl + '">' + cl.slice(0,3) + '</button>';
+        }).join('')
+      + '<button class="bfilt-clear">✕ Clear</button>'
+      + '</div>';
+
+    $advCont.innerHTML = levelPills + schoolPills + toggleRow + classPills;
+
+    // Level pills
+    $advCont.querySelectorAll('[data-slevel]').forEach(function(pill) {
+      pill.addEventListener('click', function() {
+        var lv = parseInt(pill.dataset.slevel);
+        var i  = _sfLevels.indexOf(lv);
+        if (i === -1) { _sfLevels.push(lv); pill.classList.add('bfilt-pill--active'); }
+        else          { _sfLevels.splice(i,1); pill.classList.remove('bfilt-pill--active'); }
+        applySpellFilters();
+      });
+    });
+
+    // School pills
+    $advCont.querySelectorAll('[data-sschool]').forEach(function(pill) {
+      pill.addEventListener('click', function() {
+        var sc = pill.dataset.sschool;
+        var i  = _sfSchools.indexOf(sc);
+        if (i === -1) { _sfSchools.push(sc); pill.classList.add('bfilt-pill--active'); }
+        else          { _sfSchools.splice(i,1); pill.classList.remove('bfilt-pill--active'); }
+        applySpellFilters();
+      });
+    });
+
+    // Conc / Ritual toggles
+    var $sfConc = document.getElementById('sf-conc');
+    var $sfRit  = document.getElementById('sf-ritual');
+    if ($sfConc) $sfConc.addEventListener('click', function() {
+      _sfConc = !_sfConc;
+      $sfConc.classList.toggle('bfilt-pill--active', _sfConc);
+      applySpellFilters();
+    });
+    if ($sfRit) $sfRit.addEventListener('click', function() {
+      _sfRitual = !_sfRitual;
+      $sfRit.classList.toggle('bfilt-pill--active', _sfRitual);
+      applySpellFilters();
+    });
+
+    // Class pills
+    $advCont.querySelectorAll('[data-sclass]').forEach(function(pill) {
+      pill.addEventListener('click', function() {
+        var cl = pill.dataset.sclass;
+        var i  = _sfClasses.indexOf(cl);
+        if (i === -1) { _sfClasses.push(cl); pill.classList.add('bfilt-pill--active'); }
+        else          { _sfClasses.splice(i,1); pill.classList.remove('bfilt-pill--active'); }
+        applySpellFilters();
+      });
+    });
+
+    // Clear
+    var $clr = $advCont.querySelector('.bfilt-clear');
+    if ($clr) $clr.addEventListener('click', function() {
+      _sfLevels = []; _sfSchools = []; _sfConc = false; _sfRitual = false; _sfClasses = [];
+      $advCont.querySelectorAll('.bfilt-pill--active').forEach(function(p) { p.classList.remove('bfilt-pill--active'); });
+      if ($search) $search.value = '';
+      applySpellFilters();
     });
   }
 
@@ -1259,7 +1502,20 @@ document.addEventListener('DOMContentLoaded', function () {
       + '<hr class="stat-block__divider">'
       + '<div class="spell-entries">' + entries + '</div>'
       + higher
+      + '<div class="stat-block__actions">'
+      + '<button class="stat-block__ask-btn" data-spell="' + esc(s.name) + '" data-level="' + s.level + '">◈ Ask Oracle</button>'
+      + '</div>'
       + '</div>';
+
+    var $askSpell = $panel.querySelector('.stat-block__ask-btn');
+    if ($askSpell) $askSpell.addEventListener('click', function() {
+      var name  = $askSpell.dataset.spell;
+      var lvl   = parseInt($askSpell.dataset.level) === 0 ? 'cantrip' : $askSpell.dataset.level + ordinal(parseInt($askSpell.dataset.level)) + '-level spell';
+      var prompt = 'Explain ' + name + ' (' + lvl + ') — how it works, common rulings, creative uses, and things a DM should know.';
+      activateModule('oracle');
+      var $field = document.getElementById('oracle-field');
+      if ($field) { $field.value = prompt; $field.focus(); }
+    });
   }
 
   function ordinal(n) {
@@ -1468,18 +1724,43 @@ document.addEventListener('DOMContentLoaded', function () {
     'Poisoned','Prone','Restrained','Stunned','Unconscious','Concentrating'
   ];
 
-  // Party state persisted in sessionStorage (lost on tab close, not page refresh)
+  // Party state — localStorage (persistent; full sheets need to survive tab close)
   var party = [];
 
   function partyLoad() {
     try {
-      var raw = sessionStorage.getItem('dndm_party');
+      var raw = localStorage.getItem('dndm_party');
+      if (!raw) raw = sessionStorage.getItem('dndm_party'); // migrate old data
       if (raw) party = JSON.parse(raw);
+      // Ensure every PC has the full sheet fields
+      party.forEach(function(pc) {
+        if (!pc.str)         pc.str         = 10;
+        if (!pc.dex)         pc.dex         = 10;
+        if (!pc.con)         pc.con         = 10;
+        if (!pc.int)         pc.int         = 10;
+        if (!pc.wis)         pc.wis         = 10;
+        if (!pc.cha)         pc.cha         = 10;
+        if (!pc.profBonus)   pc.profBonus   = 2;
+        if (!pc.speed)       pc.speed       = 30;
+        if (!pc.alignment)   pc.alignment   = '';
+        if (!pc.languages)   pc.languages   = '';
+        if (!pc.saveProfMap) pc.saveProfMap = {};   // { str: true, dex: false, ... }
+        if (!pc.skillProfMap)pc.skillProfMap= {};   // { acrobatics: 1, ... }  1=prof 2=expert
+        if (!pc.slotsByLevel)pc.slotsByLevel= {};   // { 1: {max:4,used:1}, ... }
+        if (!pc.features)    pc.features    = '';
+        if (!pc.equipment)   pc.equipment   = '';
+        if (!pc.personality) pc.personality = '';
+        if (!pc.bonds)       pc.bonds       = '';
+        if (!pc.flaws)       pc.flaws       = '';
+        if (!pc.backstory)   pc.backstory   = '';
+        if (!pc.level)       pc.level       = 1;
+        if (typeof pc.deaths !== 'number') pc.deaths = 0;
+      });
     } catch(e) { party = []; }
   }
 
   function partySave() {
-    try { sessionStorage.setItem('dndm_party', JSON.stringify(party)); } catch(e) {}
+    try { localStorage.setItem('dndm_party', JSON.stringify(party)); } catch(e) {}
   }
 
   function partyUid() {
@@ -1531,6 +1812,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }).join('');
 
     return '<div class="pc-card' + (isKO ? ' pc-card--ko' : '') + '" id="pc-card-' + esc(pc.id) + '">'
+      + '<button class="pc-card__sheet-btn" data-pcid="' + esc(pc.id) + '" title="Open character sheet" aria-label="Character sheet">◈ SHEET</button>'
       + '<button class="pc-card__remove" data-pcid="' + esc(pc.id) + '" title="Remove character" aria-label="Remove ' + esc(pc.name) + '">×</button>'
       + '<div class="pc-card__header">'
         + '<div class="pc-card__avatar" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div>'
@@ -1577,6 +1859,10 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!$card) return;
     var pc = party.find(function(p) { return p.id === id; });
     if (!pc) return;
+
+    // Sheet button
+    var $sheetBtn = $card.querySelector('.pc-card__sheet-btn');
+    if ($sheetBtn) $sheetBtn.addEventListener('click', function() { openCharSheet(pc.id); });
 
     // Remove button
     var $rm = $card.querySelector('.pc-card__remove');
@@ -1666,6 +1952,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var newNode = $newCard.firstElementChild;
     $card.replaceWith(newNode);
     bindPCCard(pc.id);
+    renderPartyBar();
   }
 
   function showConditionPicker(pcId, anchor) {
@@ -1712,6 +1999,360 @@ document.addEventListener('DOMContentLoaded', function () {
     setTimeout(function() { document.addEventListener('click', close); }, 50);
   }
 
+  // ── Character Sheet ──────────────────────────────────────
+
+  var SKILLS = [
+    { key:'acrobatics',     label:'Acrobatics',      ab:'dex' },
+    { key:'animal',         label:'Animal Handling', ab:'wis' },
+    { key:'arcana',         label:'Arcana',           ab:'int' },
+    { key:'athletics',      label:'Athletics',        ab:'str' },
+    { key:'deception',      label:'Deception',        ab:'cha' },
+    { key:'history',        label:'History',          ab:'int' },
+    { key:'insight',        label:'Insight',          ab:'wis' },
+    { key:'intimidation',   label:'Intimidation',     ab:'cha' },
+    { key:'investigation',  label:'Investigation',    ab:'int' },
+    { key:'medicine',       label:'Medicine',         ab:'wis' },
+    { key:'nature',         label:'Nature',           ab:'int' },
+    { key:'perception',     label:'Perception',       ab:'wis' },
+    { key:'performance',    label:'Performance',      ab:'cha' },
+    { key:'persuasion',     label:'Persuasion',       ab:'cha' },
+    { key:'religion',       label:'Religion',         ab:'int' },
+    { key:'sleight',        label:'Sleight of Hand',  ab:'dex' },
+    { key:'stealth',        label:'Stealth',          ab:'dex' },
+    { key:'survival',       label:'Survival',         ab:'wis' }
+  ];
+
+  var SAVE_KEYS = ['str','dex','con','int','wis','cha'];
+  var AB_LABELS = { str:'STR', dex:'DEX', con:'CON', int:'INT', wis:'WIS', cha:'CHA' };
+
+  function abMod(score) {
+    var m = Math.floor(((score || 10) - 10) / 2);
+    return (m >= 0 ? '+' : '') + m;
+  }
+
+  function openCharSheet(pcId) {
+    var pc = party.find(function(p) { return p.id === pcId; });
+    if (!pc) return;
+
+    var existing = document.getElementById('char-sheet-overlay');
+    if (existing) existing.remove();
+
+    var $overlay = document.createElement('div');
+    $overlay.id = 'char-sheet-overlay';
+    $overlay.className = 'sheet-overlay';
+    $overlay.innerHTML = buildSheetHTML(pc);
+    document.body.appendChild($overlay);
+
+    bindSheet(pc);
+    requestAnimationFrame(function() { $overlay.classList.add('sheet-overlay--visible'); });
+  }
+
+  function buildSheetHTML(pc) {
+    var prof = pc.profBonus || 2;
+
+    // Ability scores block
+    var absHTML = ['str','dex','con','int','wis','cha'].map(function(ab) {
+      var score = pc[ab] || 10;
+      return '<div class="sheet-ab">'
+        + '<label class="sheet-ab__label" for="sheet-' + ab + '">' + AB_LABELS[ab] + '</label>'
+        + '<input class="sheet-ab__score" id="sheet-' + ab + '" type="number" min="1" max="30" value="' + score + '" data-field="' + ab + '" />'
+        + '<div class="sheet-ab__mod" id="sheet-mod-' + ab + '">' + abMod(score) + '</div>'
+        + '</div>';
+    }).join('');
+
+    // Saving throws
+    var savesHTML = SAVE_KEYS.map(function(ab) {
+      var score   = pc[ab] || 10;
+      var profOn  = pc.saveProfMap && pc.saveProfMap[ab];
+      var bonus   = Math.floor(((score) - 10) / 2) + (profOn ? prof : 0);
+      var bonusStr = (bonus >= 0 ? '+' : '') + bonus;
+      return '<label class="sheet-check-row" title="Toggle proficiency">'
+        + '<input type="checkbox" class="sheet-save-check" data-ab="' + ab + '"' + (profOn ? ' checked' : '') + ' />'
+        + '<span class="sheet-check-val" id="sheet-save-val-' + ab + '">' + bonusStr + '</span>'
+        + '<span class="sheet-check-label">' + AB_LABELS[ab] + '</span>'
+        + '</label>';
+    }).join('');
+
+    // Skills
+    var skillsHTML = SKILLS.map(function(sk) {
+      var score  = pc[sk.ab] || 10;
+      var level  = pc.skillProfMap && pc.skillProfMap[sk.key] || 0;
+      var bonus  = Math.floor((score - 10) / 2) + (level === 2 ? prof * 2 : level === 1 ? prof : 0);
+      var bonusStr = (bonus >= 0 ? '+' : '') + bonus;
+      var dotCls = level === 2 ? 'sheet-dot sheet-dot--expert' : level === 1 ? 'sheet-dot sheet-dot--prof' : 'sheet-dot';
+      return '<label class="sheet-check-row" title="Click to cycle: none → proficient → expert">'
+        + '<span class="' + dotCls + '" data-skill="' + sk.key + '" data-ab="' + sk.ab + '"></span>'
+        + '<span class="sheet-check-val" id="sheet-skill-val-' + sk.key + '">' + bonusStr + '</span>'
+        + '<span class="sheet-check-label">' + sk.label + ' <span class="sheet-check-ab">(' + AB_LABELS[sk.ab] + ')</span></span>'
+        + '</label>';
+    }).join('');
+
+    // Spell slots per level
+    var slotsHTML = [1,2,3,4,5,6,7,8,9].map(function(lvl) {
+      var sl  = (pc.slotsByLevel && pc.slotsByLevel[lvl]) || { max: 0, used: 0 };
+      return '<div class="sheet-slots-row">'
+        + '<span class="sheet-slots-lv">Lv ' + lvl + '</span>'
+        + '<input class="sheet-slots-inp" type="number" min="0" max="9" value="' + (sl.used||0) + '" data-slot-lvl="' + lvl + '" data-slot-type="used" title="Used" />'
+        + '<span class="sheet-slots-sep">/</span>'
+        + '<input class="sheet-slots-inp" type="number" min="0" max="9" value="' + (sl.max||0) + '" data-slot-lvl="' + lvl + '" data-slot-type="max" title="Max" />'
+        + '</div>';
+    }).join('');
+
+    // Computed values
+    var passivePerc = 10 + Math.floor(((pc.wis || 10) - 10) / 2) + (pc.skillProfMap && pc.skillProfMap['perception'] ? prof : 0);
+
+    return '<div class="sheet-panel">'
+      + '<div class="sheet-header">'
+        + '<div class="sheet-header__left">'
+          + '<input class="sheet-name-input" id="sheet-name" value="' + esc(pc.name) + '" placeholder="Character name" data-field="name" />'
+          + '<div class="sheet-meta-row">'
+            + '<input class="sheet-meta-inp" id="sheet-cls"   value="' + esc(pc.cls    || '') + '" placeholder="Class" data-field="cls" />'
+            + '<input class="sheet-meta-inp sheet-meta-inp--short" id="sheet-level" type="number" min="1" max="20" value="' + (pc.level||1) + '" data-field="level" />'
+            + '<input class="sheet-meta-inp" id="sheet-race"  value="' + esc(pc.race   || '') + '" placeholder="Race" data-field="race" />'
+            + '<input class="sheet-meta-inp" id="sheet-align" value="' + esc(pc.alignment || '') + '" placeholder="Alignment" data-field="alignment" />'
+          + '</div>'
+          + '<div class="sheet-meta-row">'
+            + '<label class="sheet-meta-label">Player</label>'
+            + '<input class="sheet-meta-inp" id="sheet-player" value="' + esc(pc.player || '') + '" placeholder="Player name" data-field="player" />'
+            + '<label class="sheet-meta-label">Languages</label>'
+            + '<input class="sheet-meta-inp sheet-meta-inp--wide" id="sheet-langs" value="' + esc(pc.languages || '') + '" placeholder="Common, Elvish…" data-field="languages" />'
+          + '</div>'
+        + '</div>'
+        + '<div class="sheet-header__right">'
+          + '<div class="sheet-stat-row">'
+            + '<div class="sheet-stat"><span class="sheet-stat__label">HP</span><input class="sheet-stat__val sheet-stat__val--hp" id="sheet-hp" type="number" min="0" value="' + (pc.hp||0) + '" data-field="hp" /><span class="sheet-stat__sep">/</span><input class="sheet-stat__val" id="sheet-hpmax" type="number" min="1" value="' + (pc.hpMax||10) + '" data-field="hpMax" /></div>'
+            + '<div class="sheet-stat"><span class="sheet-stat__label">AC</span><input class="sheet-stat__val" id="sheet-ac" type="number" min="1" max="99" value="' + (pc.ac||10) + '" data-field="ac" /></div>'
+            + '<div class="sheet-stat"><span class="sheet-stat__label">INIT</span><input class="sheet-stat__val" id="sheet-init" type="number" min="-5" max="20" value="' + (pc.initBonus||0) + '" data-field="initBonus" /></div>'
+            + '<div class="sheet-stat"><span class="sheet-stat__label">SPEED</span><input class="sheet-stat__val" id="sheet-speed" type="number" min="0" value="' + (pc.speed||30) + '" data-field="speed" /></div>'
+            + '<div class="sheet-stat"><span class="sheet-stat__label">PROF</span><input class="sheet-stat__val" id="sheet-prof" type="number" min="2" max="6" value="' + (pc.profBonus||2) + '" data-field="profBonus" /></div>'
+          + '</div>'
+          + '<div class="sheet-passive">Passive Perception: <strong id="sheet-passive-perc">' + passivePerc + '</strong></div>'
+        + '</div>'
+        + '<button class="sheet-close" id="sheet-close" aria-label="Close sheet">✕</button>'
+      + '</div>'
+
+      + '<div class="sheet-body">'
+
+        + '<div class="sheet-col sheet-col--narrow">'
+          + '<div class="sheet-section">'
+            + '<h3 class="sheet-section__title">ABILITY SCORES</h3>'
+            + '<div class="sheet-abs">' + absHTML + '</div>'
+          + '</div>'
+          + '<div class="sheet-section">'
+            + '<h3 class="sheet-section__title">SAVING THROWS</h3>'
+            + '<div class="sheet-checklist">' + savesHTML + '</div>'
+          + '</div>'
+          + '<div class="sheet-section">'
+            + '<h3 class="sheet-section__title">SPELL SLOTS</h3>'
+            + '<div class="sheet-slots">' + slotsHTML + '</div>'
+          + '</div>'
+        + '</div>'
+
+        + '<div class="sheet-col sheet-col--mid">'
+          + '<div class="sheet-section sheet-section--skills">'
+            + '<h3 class="sheet-section__title">SKILLS</h3>'
+            + '<div class="sheet-checklist sheet-checklist--skills">' + skillsHTML + '</div>'
+          + '</div>'
+        + '</div>'
+
+        + '<div class="sheet-col sheet-col--wide">'
+          + '<div class="sheet-section">'
+            + '<h3 class="sheet-section__title">FEATURES &amp; TRAITS</h3>'
+            + '<textarea class="sheet-textarea" id="sheet-features" placeholder="Class features, racial traits, feats…" data-field="features">' + esc(pc.features || '') + '</textarea>'
+          + '</div>'
+          + '<div class="sheet-section">'
+            + '<h3 class="sheet-section__title">EQUIPMENT</h3>'
+            + '<textarea class="sheet-textarea" id="sheet-equipment" placeholder="Weapons, armour, adventuring gear, currency…" data-field="equipment">' + esc(pc.equipment || '') + '</textarea>'
+          + '</div>'
+          + '<div class="sheet-section">'
+            + '<h3 class="sheet-section__title">PERSONALITY</h3>'
+            + '<textarea class="sheet-textarea sheet-textarea--short" id="sheet-personality" placeholder="Personality traits…" data-field="personality">' + esc(pc.personality || '') + '</textarea>'
+            + '<textarea class="sheet-textarea sheet-textarea--short" id="sheet-bonds" placeholder="Bonds…" data-field="bonds">' + esc(pc.bonds || '') + '</textarea>'
+            + '<textarea class="sheet-textarea sheet-textarea--short" id="sheet-flaws" placeholder="Flaws…" data-field="flaws">' + esc(pc.flaws || '') + '</textarea>'
+          + '</div>'
+          + '<div class="sheet-section">'
+            + '<h3 class="sheet-section__title">BACKSTORY</h3>'
+            + '<textarea class="sheet-textarea" id="sheet-backstory" placeholder="Background, history, motivation…" data-field="backstory">' + esc(pc.backstory || '') + '</textarea>'
+          + '</div>'
+        + '</div>'
+
+      + '</div>'
+    + '</div>';
+  }
+
+  function bindSheet(pc) {
+    var $overlay = document.getElementById('char-sheet-overlay');
+    if (!$overlay) return;
+
+    // Close
+    document.getElementById('sheet-close').addEventListener('click', closeCharSheet);
+    $overlay.addEventListener('click', function(e) { if (e.target === $overlay) closeCharSheet(); });
+
+    // Escape key
+    var escHandler = function(e) { if (e.key === 'Escape') { closeCharSheet(); document.removeEventListener('keydown', escHandler); } };
+    document.addEventListener('keydown', escHandler);
+
+    // Text/number inputs — live save
+    $overlay.querySelectorAll('input[data-field], textarea[data-field]').forEach(function(inp) {
+      inp.addEventListener('input', function() {
+        var field = inp.dataset.field;
+        var val   = inp.type === 'number' ? (parseInt(inp.value) || 0) : inp.value;
+        pc[field] = val;
+        // Update modifier display for ability scores
+        if (['str','dex','con','int','wis','cha'].includes(field)) {
+          var $modEl = document.getElementById('sheet-mod-' + field);
+          if ($modEl) $modEl.textContent = abMod(val);
+          recomputeSheetBonuses(pc);
+        }
+        if (field === 'profBonus') recomputeSheetBonuses(pc);
+        if (field === 'wis') updatePassivePerc(pc);
+        partySave();
+        renderPartyBar();
+      });
+    });
+
+    // Ability score inputs — also recompute modifiers on change
+    ['str','dex','con','int','wis','cha'].forEach(function(ab) {
+      var $inp = document.getElementById('sheet-' + ab);
+      if ($inp) $inp.addEventListener('change', function() {
+        pc[ab] = parseInt($inp.value) || 10;
+        var $mod = document.getElementById('sheet-mod-' + ab);
+        if ($mod) $mod.textContent = abMod(pc[ab]);
+        recomputeSheetBonuses(pc);
+        updatePassivePerc(pc);
+        partySave();
+      });
+    });
+
+    // Saving throw checkboxes
+    $overlay.querySelectorAll('.sheet-save-check').forEach(function(chk) {
+      chk.addEventListener('change', function() {
+        var ab = chk.dataset.ab;
+        if (!pc.saveProfMap) pc.saveProfMap = {};
+        pc.saveProfMap[ab] = chk.checked;
+        recomputeSheetBonuses(pc);
+        partySave();
+      });
+    });
+
+    // Skill dots — cycle none → prof → expert → none
+    $overlay.querySelectorAll('.sheet-dot').forEach(function(dot) {
+      dot.addEventListener('click', function() {
+        var sk  = dot.dataset.skill;
+        if (!pc.skillProfMap) pc.skillProfMap = {};
+        var cur = pc.skillProfMap[sk] || 0;
+        var next = (cur + 1) % 3;
+        pc.skillProfMap[sk] = next;
+        dot.className = next === 2 ? 'sheet-dot sheet-dot--expert' : next === 1 ? 'sheet-dot sheet-dot--prof' : 'sheet-dot';
+        recomputeSheetBonuses(pc);
+        if (sk === 'perception') updatePassivePerc(pc);
+        partySave();
+      });
+    });
+
+    // Spell slot inputs
+    $overlay.querySelectorAll('.sheet-slots-inp').forEach(function(inp) {
+      inp.addEventListener('change', function() {
+        var lvl  = parseInt(inp.dataset.slotLvl);
+        var type = inp.dataset.slotType;
+        if (!pc.slotsByLevel) pc.slotsByLevel = {};
+        if (!pc.slotsByLevel[lvl]) pc.slotsByLevel[lvl] = { max: 0, used: 0 };
+        pc.slotsByLevel[lvl][type] = parseInt(inp.value) || 0;
+        partySave();
+      });
+    });
+  }
+
+  function recomputeSheetBonuses(pc) {
+    var prof = pc.profBonus || 2;
+    // Saving throws
+    SAVE_KEYS.forEach(function(ab) {
+      var score  = pc[ab] || 10;
+      var profOn = pc.saveProfMap && pc.saveProfMap[ab];
+      var bonus  = Math.floor((score - 10) / 2) + (profOn ? prof : 0);
+      var $el    = document.getElementById('sheet-save-val-' + ab);
+      if ($el) $el.textContent = (bonus >= 0 ? '+' : '') + bonus;
+    });
+    // Skills
+    SKILLS.forEach(function(sk) {
+      var score  = pc[sk.ab] || 10;
+      var level  = pc.skillProfMap && pc.skillProfMap[sk.key] || 0;
+      var bonus  = Math.floor((score - 10) / 2) + (level === 2 ? prof * 2 : level === 1 ? prof : 0);
+      var $el    = document.getElementById('sheet-skill-val-' + sk.key);
+      if ($el) $el.textContent = (bonus >= 0 ? '+' : '') + bonus;
+    });
+  }
+
+  function updatePassivePerc(pc) {
+    var prof = pc.profBonus || 2;
+    var pp   = 10 + Math.floor(((pc.wis || 10) - 10) / 2) + (pc.skillProfMap && pc.skillProfMap['perception'] ? prof : 0);
+    var $el  = document.getElementById('sheet-passive-perc');
+    if ($el) $el.textContent = pp;
+  }
+
+  function closeCharSheet() {
+    var $o = document.getElementById('char-sheet-overlay');
+    if (!$o) return;
+    $o.classList.remove('sheet-overlay--visible');
+    setTimeout(function() { if ($o.parentNode) $o.remove(); }, 280);
+    renderParty(); // refresh card with any changed name etc.
+    renderPartyBar();
+  }
+
+  // ── Party Status Bar ─────────────────────────────────────
+
+  function renderPartyBar() {
+    var $bar = document.getElementById('party-bar');
+    if (!$bar) return;
+
+    // Only show when a session is active and we have party members
+    var sessionActive = !!(state && state.sessionActive);
+    if (!sessionActive || !party.length) {
+      $bar.classList.remove('party-bar--visible');
+      return;
+    }
+    $bar.classList.add('party-bar--visible');
+
+    $bar.innerHTML = '<span class="party-bar__label">PARTY</span>'
+      + party.map(function(pc) {
+          var pct    = pc.hpMax > 0 ? Math.max(0, Math.min(100, Math.round((pc.hp / pc.hpMax) * 100))) : 0;
+          var isKO   = pc.hp <= 0;
+          var isDead = pc.deaths >= 3;
+          var fillCls = isDead || isKO ? 'party-bar__hp-fill--ko'
+                      : pct <= 25     ? 'party-bar__hp-fill--crit'
+                      : pct <= 50     ? 'party-bar__hp-fill--low'
+                      : '';
+          var nameCls = isKO ? 'party-bar__name party-bar__name--ko' : 'party-bar__name';
+
+          var condHTML = (pc.conditions || []).length
+            ? '<div class="party-bar__conds">'
+                + pc.conditions.map(function(c) { return '<span class="party-bar__cond">' + esc(c.slice(0,4)) + '</span>'; }).join('')
+              + '</div>'
+            : '';
+
+          var hpLine = isDead
+            ? '<span class="party-bar__skull">☠</span>'
+            : '<div class="party-bar__hp-track"><div class="party-bar__hp-fill ' + fillCls + '" style="width:' + pct + '%"></div></div>'
+              + '<span class="party-bar__hp-text">' + (pc.hp||0) + '/' + (pc.hpMax||0) + '</span>';
+
+          return '<div class="party-bar__card" data-pcid="' + esc(pc.id) + '">'
+            + '<span class="' + nameCls + '">' + esc(pc.name) + '</span>'
+            + hpLine
+            + condHTML
+          + '</div>';
+        }).join('');
+
+    // Click card → jump to Party module and scroll to card
+    $bar.querySelectorAll('.party-bar__card').forEach(function(card) {
+      card.addEventListener('click', function() {
+        activateModule('party');
+        var pcId = card.dataset.pcid;
+        var $card = document.getElementById('pc-card-' + pcId);
+        if ($card) $card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      });
+    });
+  }
+
   // ── Add Character Modal ──────────────────────────────────
 
   var $charModal = document.getElementById('char-modal');
@@ -1726,28 +2367,52 @@ document.addEventListener('DOMContentLoaded', function () {
     var hpMax = parseInt(document.getElementById('char-hp-max').value) || 10;
 
     var pc = {
-      id:         partyUid(),
-      name:       name,
-      cls:        document.getElementById('char-class').value.trim(),
-      race:       document.getElementById('char-race').value.trim(),
-      player:     document.getElementById('char-player').value.trim(),
-      hp:         hpMax,
-      hpMax:      hpMax,
-      ac:         parseInt(document.getElementById('char-ac').value) || null,
-      initBonus:  parseInt(document.getElementById('char-init-bonus').value) || 0,
-      conditions: [],
-      dsSucc:     0,
-      dsFail:     0,
-      deaths:     0
+      id:          partyUid(),
+      name:        name,
+      cls:         document.getElementById('char-class').value.trim(),
+      race:        document.getElementById('char-race').value.trim(),
+      player:      document.getElementById('char-player').value.trim(),
+      level:       parseInt(document.getElementById('char-level').value) || 1,
+      hp:          hpMax,
+      hpMax:       hpMax,
+      ac:          parseInt(document.getElementById('char-ac').value) || null,
+      initBonus:   parseInt(document.getElementById('char-init-bonus').value) || 0,
+      profBonus:   parseInt(document.getElementById('char-prof-bonus').value) || 2,
+      speed:       parseInt(document.getElementById('char-speed').value) || 30,
+      str: parseInt(document.getElementById('char-str').value) || 10,
+      dex: parseInt(document.getElementById('char-dex').value) || 10,
+      con: parseInt(document.getElementById('char-con').value) || 10,
+      int: parseInt(document.getElementById('char-int').value) || 10,
+      wis: parseInt(document.getElementById('char-wis').value) || 10,
+      cha: parseInt(document.getElementById('char-cha').value) || 10,
+      alignment:    '',
+      languages:    '',
+      saveProfMap:  {},
+      skillProfMap: {},
+      slotsByLevel: {},
+      features:     '',
+      equipment:    '',
+      personality:  '',
+      bonds:        '',
+      flaws:        '',
+      backstory:    '',
+      conditions:   [],
+      dsSucc:       0,
+      dsFail:       0,
+      deaths:       0
     };
 
     party.push(pc);
     partySave();
     closeModal($charModal);
 
-    // Clear fields
-    ['char-name','char-class','char-race','char-player','char-hp-max','char-ac','char-init-bonus']
+    // Clear text fields; reset number fields to defaults
+    ['char-name','char-class','char-race','char-player']
       .forEach(function(id) { var el = document.getElementById(id); if (el) el.value = ''; });
+    ['char-hp-max','char-ac','char-init-bonus']
+      .forEach(function(id) { var el = document.getElementById(id); if (el) el.value = ''; });
+    var _dflt = { 'char-level':1, 'char-prof-bonus':2, 'char-speed':30, 'char-str':10, 'char-dex':10, 'char-con':10, 'char-int':10, 'char-wis':10, 'char-cha':10 };
+    Object.keys(_dflt).forEach(function(id) { var el = document.getElementById(id); if (el) el.value = _dflt[id]; });
 
     renderParty();
   });

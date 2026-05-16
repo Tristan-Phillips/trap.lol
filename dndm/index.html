@@ -154,6 +154,9 @@
     <!-- Main content area -->
     <div class="main" id="main-content" role="main">
 
+      <!-- ── Party Status Bar (visible during session) ────── -->
+      <div class="party-bar" id="party-bar" aria-label="Party status"></div>
+
       <!-- ── Campaign Overview ─────────────────────────────── -->
       <section class="module" id="module-campaign" data-module="campaign">
         <div class="module__banner" id="campaign-banner">
@@ -321,16 +324,8 @@
           </div>
         </div>
         <div class="module__body">
-          <div class="bestiary-filters" id="bestiary-filters">
-            <button class="filter-pill filter-pill--active" data-filter="all">All</button>
-            <button class="filter-pill" data-filter="beast">Beast</button>
-            <button class="filter-pill" data-filter="undead">Undead</button>
-            <button class="filter-pill" data-filter="humanoid">Humanoid</button>
-            <button class="filter-pill" data-filter="dragon">Dragon</button>
-            <button class="filter-pill" data-filter="fiend">Fiend</button>
-            <button class="filter-pill" data-filter="fey">Fey</button>
-            <button class="filter-pill" data-filter="celestial">Celestial</button>
-          </div>
+          <div class="bestiary-filters" id="bestiary-filters"></div>
+          <div class="bestiary-adv-filters" id="bestiary-adv-filters"></div>
           <div class="bestiary-shell">
             <div class="bestiary-list" id="bestiary-list">
               <div class="bestiary-loading">Loading SRD monsters…</div>
@@ -352,15 +347,8 @@
           </div>
         </div>
         <div class="module__body">
-          <div class="bestiary-filters" id="spell-filters">
-            <button class="filter-pill filter-pill--active" data-filter="all">All</button>
-            <button class="filter-pill" data-filter="0">Cantrip</button>
-            <button class="filter-pill" data-filter="1">1st</button>
-            <button class="filter-pill" data-filter="2">2nd</button>
-            <button class="filter-pill" data-filter="3">3rd</button>
-            <button class="filter-pill" data-filter="4">4th</button>
-            <button class="filter-pill" data-filter="5">5th+</button>
-          </div>
+          <div class="bestiary-filters" id="spell-filters"></div>
+          <div class="bestiary-adv-filters" id="spell-adv-filters"></div>
           <div class="bestiary-shell">
             <div class="bestiary-list" id="spell-list">
               <div class="bestiary-loading">Loading SRD spells…</div>
@@ -549,8 +537,11 @@
         <label class="modal__label" for="char-name">Name</label>
         <input class="modal__input" type="text" id="char-name" placeholder="Aelindra Brightmantle…" autocomplete="off" />
 
-        <label class="modal__label" for="char-class">Class &amp; Level</label>
-        <input class="modal__input" type="text" id="char-class" placeholder="Wizard 7…" autocomplete="off" />
+        <label class="modal__label" for="char-class">Class</label>
+        <input class="modal__input" type="text" id="char-class" placeholder="Wizard…" autocomplete="off" />
+
+        <label class="modal__label" for="char-level">Level</label>
+        <input class="modal__input modal__input--short" type="number" id="char-level" placeholder="7" min="1" max="20" value="1" />
 
         <label class="modal__label" for="char-race">Race</label>
         <input class="modal__input" type="text" id="char-race" placeholder="High Elf…" autocomplete="off" />
@@ -566,6 +557,31 @@
 
         <label class="modal__label" for="char-init-bonus">Initiative Bonus</label>
         <input class="modal__input modal__input--short" type="number" id="char-init-bonus" placeholder="+3" min="-5" max="20" />
+
+        <label class="modal__label" for="char-prof-bonus">Prof. Bonus</label>
+        <input class="modal__input modal__input--short" type="number" id="char-prof-bonus" placeholder="2" min="2" max="6" value="2" />
+
+        <label class="modal__label" for="char-speed">Speed (ft)</label>
+        <input class="modal__input modal__input--short" type="number" id="char-speed" placeholder="30" min="0" value="30" />
+      </div>
+      <div class="modal__fields modal__fields--grid" style="margin-top:0.75rem;border-top:1px solid rgba(196,146,42,0.1);padding-top:0.75rem;">
+        <label class="modal__label" for="char-str">STR</label>
+        <input class="modal__input modal__input--short" type="number" id="char-str" placeholder="10" min="1" max="30" value="10" />
+
+        <label class="modal__label" for="char-dex">DEX</label>
+        <input class="modal__input modal__input--short" type="number" id="char-dex" placeholder="10" min="1" max="30" value="10" />
+
+        <label class="modal__label" for="char-con">CON</label>
+        <input class="modal__input modal__input--short" type="number" id="char-con" placeholder="10" min="1" max="30" value="10" />
+
+        <label class="modal__label" for="char-int">INT</label>
+        <input class="modal__input modal__input--short" type="number" id="char-int" placeholder="10" min="1" max="30" value="10" />
+
+        <label class="modal__label" for="char-wis">WIS</label>
+        <input class="modal__input modal__input--short" type="number" id="char-wis" placeholder="10" min="1" max="30" value="10" />
+
+        <label class="modal__label" for="char-cha">CHA</label>
+        <input class="modal__input modal__input--short" type="number" id="char-cha" placeholder="10" min="1" max="30" value="10" />
       </div>
       <div class="modal__actions">
         <button class="modal__btn modal__btn--secondary" id="char-modal-cancel">Cancel</button>

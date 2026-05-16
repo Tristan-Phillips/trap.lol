@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.3.50",
+    "schema_version": "1.3.52",
     "last_updated": "2026-05-17",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -478,6 +478,33 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-17",
+      "message": "feat(dndm): Phase 8 — character sheet, party bar, bestiary/spellbook advanced filters, Oracle Ask buttons",
+      "scope": "dndm/",
+      "impact": "high",
+      "files": [
+        "dndm/assets/script/app.js",
+        "dndm/assets/style/style.css",
+        "dndm/index.html",
+        "status/logs/logs.json"
+      ],
+      "why": "Four major Grimoire UX upgrades: full 5e character sheet per PC (ability scores, saves, skills with proficiency cycling, spell slots per level, features/equipment/personality/backstory/alignment/languages, live localStorage persistence); party status bar sticky strip visible during session mode showing HP bars, conditions, and KO state with click-to-jump; bestiary advanced filters (CR range, 14 creature type pills, 6 size pills, compound-stacking with name search); spellbook advanced filters (level 0-9 pills, 8 school pills, concentration/ritual toggles, 8 class pills); Oracle Ask buttons on monster stat blocks and spell detail panels that pre-fill contextual questions."
+    },
+    {
+      "hash": "d718e69",
+      "date": "2026-05-17",
+      "message": "feat(dndm): Phase 6 — Atlas (fog of war), Soundscape, Player Screen",
+      "scope": "dndm/",
+      "impact": "high",
+      "files": [
+        "dndm/assets/script/app.js",
+        "dndm/assets/style/style.css",
+        "status/logs/logs.json"
+      ],
+      "why": "Phase 6 of Grimoire: Atlas with pan/zoom viewport, canvas fog-of-war grid (paint-to-reveal), DM markers, map upload/delete, and BroadcastChannel player screen push. Soundscape with scene preset cards, HTMLAudio playback, file upload via createObjectURL, volume/loop controls. Player Screen (?view=player) receives map+fog state and renders fullscreen canvas."
+    },
     {
       "hash": "4fdb988",
       "date": "2026-05-17",
@@ -1955,6 +1982,25 @@
     {
       "date": "2026-05-17",
       "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Continuation session (resumed after context compaction). Implemented four major Grimoire features: full 5e character sheet overlay per PC with localStorage persistence (ability scores, saves, skills with dot-cycling proficiency, spell slots, textareas for features/equipment/personality/backstory, live bonus recomputation); party status bar visible during session mode (sticky HP strip with condition dots and KO skull, click-to-jump to Party module); advanced compound filters for Bestiary (CR range, 14 type pills, 6 size pills) and Spellbook (level 0-9, 8 schools, concentration/ritual toggles, 8 class pills); Oracle Ask buttons on stat blocks and spell panels that pre-fill contextual D&D questions. Also fixed missing --purple-hi CSS variable, added +char-modal ability score fields, and wired renderPartyBar() into beginSession/endSession/refreshPCCard.",
+      "decisions": [
+        "party stored in localStorage (not sessionStorage) so character sheets survive tab close",
+        "Skill proficiency cycles none → proficient → expert via dot click (0→1→2→0)",
+        "Party bar only shown when session is active (state.sessionActive) AND party has members",
+        "Advanced filters stack — all active filters are AND-ed together",
+        "Oracle Ask buttons pre-fill the prompt field but don't auto-send — user reviews first",
+        "bfilt-pill components are self-contained with data-* attributes, no ID dependencies"
+      ],
+      "rules_reinforced": [
+        "renderPartyBar must be called any time HP, conditions, or session state changes",
+        "All new DOM containers must be in index.html; JS only renders into them",
+        "CSS variables referenced but not defined cause silent failures — always define in :root"
+      ]
+    },
+    {
+      "date": "2026-05-17",
+      "agent": "Claude Sonnet 4.6",
       "type": "bug_fix",
       "summary": "DM MATRIX Phase 5 deployed (62e8517) but immediately reported broken — nothing clickable or interactable. Root-cause investigation found two issues: (1) a duplicate .panel__tab event listener from pre-Phase-5 code still present at boot time, and (2) Object.assign in campaignLoad() was clobbering campaign.lore when stale localStorage data from a previous session predated the lore sub-object, causing a boot-time TypeError that silently killed all event binding. Fix committed as ba99cc1. Also caught up logs.json with three missing commits (c346b1f sovereign nodes approval, 62e8517 Phase 5, ba99cc1 fix).",
       "decisions": [
@@ -3225,12 +3271,52 @@
       {
         "id": "dndm-phase-6-atlas",
         "title": "DM MATRIX Phase 6 — Atlas, Soundscape, Player Screen",
-        "status": "not_started",
+        "status": "done",
         "requested": "2026-05-16",
-        "completed": null,
+        "completed": "2026-05-17",
         "description": "Atlas: map image upload with fog-of-war toggle. Soundscape: ambient audio controls with volume. Player Screen: BroadcastChannel to push content to a second tab/window the players can see.",
-        "notes": "Deferred until Phase 5 complete.",
+        "notes": "Committed as d718e69. Full canvas fog-of-war with reveal/hide brush tools, pan+zoom viewport, DM marker pins, BroadcastChannel player screen push to second tab, per-map localStorage persistence via LZ-style ID keys.",
         "files_affected": ["dndm/index.html", "dndm/assets/script/app.js", "dndm/assets/style/style.css"]
+      },
+      {
+        "id": "dndm-phase-8-sheet",
+        "title": "DM MATRIX Phase 8 — Full 5e character sheet per PC",
+        "status": "done",
+        "requested": "2026-05-17",
+        "completed": "2026-05-17",
+        "description": "Full 5e character sheet overlay per PC: 6 ability scores with live modifier display, saving throws with proficiency checkboxes, 18 skills with dot-cycling proficiency (none→prof→expert), spell slots per level 1-9 (used/max inputs), textareas for features/equipment/personality/bonds/flaws/backstory, meta fields (level, prof bonus, speed, alignment, languages, player name). Live localStorage persistence. ◈ SHEET button on each PC card.",
+        "notes": "Committed in pending (this session). Party migrated from sessionStorage to localStorage to survive tab close.",
+        "files_affected": ["dndm/index.html", "dndm/assets/script/app.js", "dndm/assets/style/style.css"]
+      },
+      {
+        "id": "dndm-phase-8-partybar",
+        "title": "DM MATRIX Phase 8 — Party status bar during session mode",
+        "status": "done",
+        "requested": "2026-05-17",
+        "completed": "2026-05-17",
+        "description": "Persistent sticky HP strip at top of .main visible only when session is active. Each PC card shows name, colour-coded HP bar (full/low/crit/ko), HP numbers, condition abbreviation badges. KO shown as skull. Click-to-jump to Party module and scroll to card.",
+        "notes": "Committed in pending (this session). Wired into beginSession/endSession/refreshPCCard calls.",
+        "files_affected": ["dndm/index.html", "dndm/assets/script/app.js", "dndm/assets/style/style.css"]
+      },
+      {
+        "id": "dndm-phase-8-filters",
+        "title": "DM MATRIX Phase 8 — Bestiary + Spellbook advanced filters",
+        "status": "done",
+        "requested": "2026-05-17",
+        "completed": "2026-05-17",
+        "description": "Bestiary: CR min/max range inputs, 14 creature type pills, 6 size pills, all compound-stacking with name search. Spellbook: level 0-9 pills (cantrip + 1-9), 8 school pills, concentration/ritual toggles, 8 class pills. Clear button resets all filters. Filter state is module-scoped vars.",
+        "notes": "Committed in pending (this session). Filters reset on source change because state.bestiary.monsters is replaced.",
+        "files_affected": ["dndm/index.html", "dndm/assets/script/app.js", "dndm/assets/style/style.css"]
+      },
+      {
+        "id": "dndm-phase-8-oracleask",
+        "title": "DM MATRIX Phase 8 — Oracle Ask buttons on stat blocks + spell panels",
+        "status": "done",
+        "requested": "2026-05-17",
+        "completed": "2026-05-17",
+        "description": "◈ Ask Oracle button on monster stat blocks (pre-fills tactics/CR question) and spell detail panels (pre-fills rules explanation question). Clicking switches to Oracle module and populates the prompt field — user reviews before sending.",
+        "notes": "Committed in pending (this session).",
+        "files_affected": ["dndm/assets/script/app.js"]
       },
       {
         "id": "player-bubble-ufr",
