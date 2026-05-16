@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.3.37",
+    "schema_version": "1.3.38",
     "last_updated": "2026-05-16",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -472,6 +472,21 @@
     ]
   },
   "commits": [
+    {
+      "hash": "f7583b0",
+      "date": "2026-05-16",
+      "message": "feat(underdark): image IDB persist fix, wallhaven in profile, terminal visual redesign — ui.js v114",
+      "scope": "playground/characters — ui.js, index.html, terminal.css, style.css, main.js",
+      "impact": "high",
+      "files": [
+        "playground/characters/index.html",
+        "playground/characters/script/main.js",
+        "playground/characters/script/modules/ui.js",
+        "playground/characters/style/style.css",
+        "playground/characters/style/terminal.css"
+      ],
+      "why": "Three user-reported issues: (1) images still vanished on reload — the placeholder→real swap path bypassed _injectImageMessage and never called addMessage; (2) Wallhaven gallery was only accessible via header overflow menu — added to Terminal Profile tab; (3) Terminal sidebar felt visually flat — redesigned with glowing tabs, avatar pulse ring, gradient name, accent edge dividers, shimmer action buttons."
+    },
     {
       "hash": "b5cc780",
       "date": "2026-05-16",
@@ -1713,6 +1728,20 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-16",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Three fixes + one feature. (1) Thread images still vanishing — the placeholder-swap codepath at line 4321 called _injectImageMessageInto directly (bypassing _injectImageMessage), so addMessage was never called and the image was never written to state/IDB. Fixed by calling addMessage first, passing the msg.id through. (2) Wallhaven Gallery was only reachable via header overflow menu — added #btn-wh-profile button to Terminal Profile tab, wired to window.openWallhavenGallery(char.name, id). (3) Terminal sidebar visual redesign: tab bar gets glowing pill tabs with active bottom scan-line; profile avatar gets pulsing outer ring + gradient name; pd-block labels get auto-extending accent divider lines; profile action buttons get shimmer overlay and enhanced glow on hover. (4) Confirmed 'Export Session' in overflow is a plain-text export distinct from the JSON export in Profile — both kept.",
+      "decisions": [
+        "Two export buttons are not redundant — overflow exports plain text (readable), Profile exports JSON (importable). Both kept.",
+        "Wallhaven was in overflow menu — moved/added to Profile tab so character context is already set when opened.",
+        "Terminal v2 focuses on depth through layered light — no extra DOM elements, all effect through CSS pseudo-elements and gradients."
+      ],
+      "rules_reinforced": [
+        "Every fresh image inject path must go through addMessage — _injectImageMessageInto is display-only, not a persistence path."
+      ]
+    },
     {
       "date": "2026-05-16",
       "agent": "Claude Sonnet 4.6",
