@@ -714,3 +714,113 @@ input:checked + .toggle-switch__slider::before        { transform: translateX(16
     background: rgba(239,68,68,0.08) !important;
     border-color: rgba(239,68,68,0.6) !important;
 }
+
+/* ── Command Palette (Ctrl+K) ── */
+.cmdpalette {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 12vh;
+}
+.cmdpalette[hidden] { display: none !important; }
+.cmdpalette__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.65);
+    backdrop-filter: blur(8px);
+}
+.cmdpalette__panel {
+    position: relative;
+    width: min(560px, 92vw);
+    background: rgba(14,10,24,0.97);
+    border: 1px solid rgba(190,41,236,0.25);
+    border-radius: 10px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.7), 0 0 0 1px rgba(190,41,236,0.08);
+    overflow: hidden;
+}
+.cmdpalette__search-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.cmdpalette__icon {
+    width: 16px; height: 16px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+.cmdpalette__input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text-main);
+    font-size: 0.95rem;
+    caret-color: var(--theme-accent);
+}
+.cmdpalette__input::placeholder { color: var(--text-muted); }
+.cmdpalette__esc {
+    font-size: 0.65rem;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 4px;
+    padding: 2px 5px;
+    color: var(--text-muted);
+    font-family: monospace;
+    user-select: none;
+}
+.cmdpalette__list {
+    list-style: none;
+    margin: 0;
+    padding: 6px 0;
+    max-height: 52vh;
+    overflow-y: auto;
+}
+.cmdpalette__item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: background 0.1s;
+}
+.cmdpalette__item:hover,
+.cmdpalette__item[aria-selected="true"] {
+    background: rgba(190,41,236,0.12);
+}
+.cmdpalette__item-icon {
+    width: 15px; height: 15px;
+    color: var(--theme-accent);
+    opacity: 0.7;
+    flex-shrink: 0;
+}
+.cmdpalette__item-label {
+    flex: 1;
+    font-size: 0.85rem;
+    color: var(--text-main);
+}
+.cmdpalette__item-label mark {
+    background: transparent;
+    color: var(--theme-accent);
+    font-weight: 600;
+}
+.cmdpalette__item-key {
+    font-size: 0.65rem;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 3px;
+    padding: 1px 5px;
+    color: var(--text-muted);
+    font-family: monospace;
+    flex-shrink: 0;
+}
+.cmdpalette__empty {
+    padding: 18px 14px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.82rem;
+}

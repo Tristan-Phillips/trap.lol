@@ -7450,6 +7450,26 @@ export function initUI() {
         } catch { /* silent */ }
     }
 
+    // ── Auto-save ─────────────────────────────────────────────────────────────
+    const _AS_KEY = 'underdark_autosave';
+    let _autoSaving = false;
+    async function _autoSaveInstance() {
+        if (_autoSaving) return;
+        const every = state.config.autoSaveEvery ?? 20;
+        if (every <= 0) return;
+        const turns = state.telemetry?.turns ?? 0;
+        if (turns <= 0 || turns % every !== 0) return;
+        _autoSaving = true;
+        try {
+            const json = await exportFullInstance();
+            const record = JSON.stringify({ ts: Date.now(), size: json.length, data: json });
+            localStorage.setItem(_AS_KEY, record);
+            showToast('Auto-saved', 'info', 1800);
+        } catch (_) { /* silent */ } finally {
+            _autoSaving = false;
+        }
+    }
+
     // ── Thread Search ─────────────────────────────────────────────────────────
     const $searchBar    = qs('#thread-search-bar');
     const $searchInput  = qs('#thread-search-input');
@@ -7746,6 +7766,29 @@ export function initUI() {
             btn.disabled = false;
             btn.innerHTML = orig;
             lucideRefresh(btn);
+        }
+    });
+
+    qs('#auto-save-every')?.addEventListener('change', e => {
+        setConfig({ autoSaveEvery: Math.max(0, parseInt(e.target.value) || 0) });
+    });
+
+    qs('#btn-download-autosave')?.addEventListener('click', () => {
+        try {
+            const raw = localStorage.getItem(_AS_KEY);
+            if (!raw) { showToast('No auto-save found yet', 'info', 2500); return; }
+            const record = JSON.parse(raw);
+            const ts = new Date(record.ts).toISOString().slice(0, 19).replace('T', '_').replace(/:/g, '-');
+            const blob = new Blob([record.data], { type: 'application/json' });
+            const url  = URL.createObjectURL(blob);
+            const a    = document.createElement('a');
+            a.href     = url;
+            a.download = `underdark-autosave-${ts}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Auto-save downloaded', 'success', 2000);
+        } catch (_) {
+            showToast('Failed to read auto-save', 'error', 3000);
         }
     });
 
@@ -8148,6 +8191,8 @@ export function initUI() {
                     _generateAIQuickReplies();
                     // Auto transition every N turns (default 8) if no Overlord block in last N messages
                     _maybeAutoTransition();
+                    // Auto-save every N turns to localStorage rolling backup
+                    _autoSaveInstance().catch(() => {});
                 },
                 (err) => {
                     $thinkingAside?.remove();
@@ -8917,6 +8962,9 @@ export function initUI() {
         if (qs('#lore-scan-input'))  qs('#lore-scan-input').value   = scanDepth;
         if (qs('#lore-scan-val'))    qs('#lore-scan-val').textContent = scanDepth;
 
+        // Auto-save interval
+        if (qs('#auto-save-every')) qs('#auto-save-every').value = c.autoSaveEvery ?? 20;
+
         // Sync narrative flags
         const flags = c.flags || {};
         FLAG_KEYS.forEach(key => {
@@ -9382,8 +9430,15 @@ export function initUI() {
 
     // ── Keyboard shortcuts ────────────────────────────────────────────────────
     document.addEventListener('keydown', e => {
+        // Ctrl+K / Cmd+K — command palette
+        if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+            e.preventDefault();
+            _openCmdPalette();
+            return;
+        }
         // Escape closes any open modal, lightbox, or reaction picker
         if (e.key === 'Escape') {
+            if (!qs('#cmdpalette')?.hidden) { _closeCmdPalette(); return; }
             const $picker = qs('#reaction-picker');
             if ($picker && !$picker.hidden) { $picker.hidden = true; return; }
             if (!qs('#lightbox')?.hidden) { qs('#lightbox').hidden = true; return; }
@@ -9408,6 +9463,114 @@ export function initUI() {
         if (e.key === 's' || e.key === 'S') openImgStudio();
         if (e.key === '/' ) { e.preventDefault(); qs('#search-toggle')?.click(); }
     });
+
+    // ── Command Palette ────────────────────────────────────────────────────────
+    const _CP_COMMANDS = [
+        { label: 'Toggle terminal / dossier',  icon: 'panel-right',       key: 'T',      action: () => toggleTerminal() },
+        { label: 'Toggle roster sidebar',       icon: 'users',             key: 'R',      action: () => setRosterCollapsed($rosterSidebar.dataset.collapsed !== 'true') },
+        { label: 'New character',               icon: 'user-plus',         key: 'N',      action: () => document.dispatchEvent(new CustomEvent('char-editor:open')) },
+        { label: 'Edit active character',       icon: 'sliders-horizontal',key: 'E',      action: () => { if (state.activeBotId) openCharEditor(state.activeBotId); } },
+        { label: 'Add character to thread',     icon: 'user-round-plus',   key: 'A',      action: () => openCharPicker() },
+        { label: 'Open character gallery',      icon: 'image',             key: 'G',      action: () => { if (state.activeBotId) openGalleryModal(state.activeBotId); } },
+        { label: 'Toggle focus / read mode',    icon: 'eye',               key: 'F',      action: () => toggleFocusMode() },
+        { label: 'Open Oracle',                 icon: 'sparkles',          key: 'O',      action: () => openOracle() },
+        { label: 'Toggle reinject tray',        icon: 'zap',               key: 'I',      action: () => qs('#reinject-toggle-btn')?.click() },
+        { label: 'Toggle Scene Codex',          icon: 'layout-dashboard',  key: 'C',      action: () => toggleCodex() },
+        { label: 'Open Image Studio',           icon: 'wand-sparkles',     key: 'S',      action: () => openImgStudio() },
+        { label: 'Thread search',               icon: 'search',            key: '/',      action: () => qs('#search-toggle')?.click() },
+        { label: 'Quick snapshot',              icon: 'camera',            key: null,     action: () => qs('#btn-quick-snapshot')?.click() },
+        { label: 'AI quick replies',            icon: 'message-circle',    key: null,     action: () => qs('#btn-quick-reply')?.click() },
+        { label: 'Open thread settings',        icon: 'settings-2',        key: null,     action: () => qs('#btn-thread-config')?.click() },
+        { label: 'Export all (full backup)',    icon: 'hard-drive-download',key: null,    action: () => qs('#btn-export-full')?.click() },
+        { label: 'Download last auto-save',     icon: 'clock-arrow-down',  key: null,     action: () => qs('#btn-download-autosave')?.click() },
+        { label: 'Force Overlord narration',    icon: 'crown',             key: null,     action: () => qs('#codex-force-overlord')?.click() },
+        { label: 'Overlord: recap scene',       icon: 'scroll-text',       key: null,     action: () => qs('#codex-recap')?.click() },
+        { label: 'Overlord: transition',        icon: 'arrow-right-circle',key: null,     action: () => qs('#codex-overlord-transition')?.click() },
+        { label: 'Overlord: entrance',          icon: 'door-open',         key: null,     action: () => qs('#codex-overlord-entrance')?.click() },
+        { label: 'Reset scene meters',          icon: 'gauge',             key: null,     action: () => qs('#codex-reset-meters')?.click() },
+        { label: 'Open settings',               icon: 'settings',          key: null,     action: () => qs('#btn-settings')?.click() },
+        { label: 'New thread',                  icon: 'plus-circle',       key: null,     action: () => qs('#chat-new-dm')?.click() },
+    ];
+
+    let _cpIdx = -1;
+
+    function _openCmdPalette() {
+        const $cp = qs('#cmdpalette');
+        const $input = qs('#cmdpalette-input');
+        if (!$cp) return;
+        $cp.hidden = false;
+        if ($input) { $input.value = ''; $input.focus(); }
+        _cpIdx = -1;
+        _renderCpList('');
+    }
+
+    function _closeCmdPalette() {
+        const $cp = qs('#cmdpalette');
+        if ($cp) $cp.hidden = true;
+    }
+
+    function _renderCpList(query) {
+        const $list = qs('#cmdpalette-list');
+        if (!$list) return;
+        const q = query.trim().toLowerCase();
+        const filtered = q
+            ? _CP_COMMANDS.map((c, origIdx) => ({ cmd: c, origIdx })).filter(({ cmd }) => cmd.label.toLowerCase().includes(q))
+            : _CP_COMMANDS.map((cmd, origIdx) => ({ cmd, origIdx }));
+
+        if (!filtered.length) {
+            $list.innerHTML = `<li class="cmdpalette__empty">No commands match "${esc(q)}"</li>`;
+            return;
+        }
+
+        $list.innerHTML = filtered.map(({ cmd, origIdx }, i) => {
+            const label = q
+                ? cmd.label.replace(new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'),
+                    (m) => `<mark>${esc(m)}</mark>`)
+                : esc(cmd.label);
+            const keyBadge = cmd.key ? `<span class="cmdpalette__item-key">${esc(cmd.key)}</span>` : '';
+            return `<li class="cmdpalette__item" role="option" data-cp-orig="${origIdx}" aria-selected="${i === _cpIdx}">
+                <i data-lucide="${esc(cmd.icon)}" class="cmdpalette__item-icon"></i>
+                <span class="cmdpalette__item-label">${label}</span>
+                ${keyBadge}
+            </li>`;
+        }).join('');
+
+        lucideRefresh($list);
+    }
+
+    qs('#cmdpalette-input')?.addEventListener('input', e => {
+        _cpIdx = -1;
+        _renderCpList(e.target.value);
+    });
+
+    qs('#cmdpalette-input')?.addEventListener('keydown', e => {
+        const $list = qs('#cmdpalette-list');
+        const items = qsa('.cmdpalette__item', $list);
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            _cpIdx = Math.min(_cpIdx + 1, items.length - 1);
+            items.forEach((el, i) => el.setAttribute('aria-selected', i === _cpIdx));
+            items[_cpIdx]?.scrollIntoView({ block: 'nearest' });
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            _cpIdx = Math.max(_cpIdx - 1, 0);
+            items.forEach((el, i) => el.setAttribute('aria-selected', i === _cpIdx));
+            items[_cpIdx]?.scrollIntoView({ block: 'nearest' });
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            const target = _cpIdx >= 0 ? items[_cpIdx] : items[0];
+            if (target) { _closeCmdPalette(); _CP_COMMANDS[parseInt(target.dataset.cpOrig)]?.action(); }
+        }
+    });
+
+    qs('#cmdpalette-list')?.addEventListener('click', e => {
+        const item = e.target.closest('.cmdpalette__item');
+        if (!item) return;
+        _closeCmdPalette();
+        _CP_COMMANDS[parseInt(item.dataset.cpOrig)]?.action();
+    });
+
+    qs('#cmdpalette')?.querySelector('.cmdpalette__backdrop')?.addEventListener('click', _closeCmdPalette);
 
     // ── Focus / Read Mode ─────────────────────────────────────────────────────
     const FOCUS_KEY = 'underdark_focus';
