@@ -473,7 +473,7 @@
   },
   "commits": [
     {
-      "hash": "0000000",
+      "hash": "b26a202",
       "date": "2026-05-16",
       "message": "feat(underdark): video gallery — persist generated videos, gallery modal, profile strip — ui.js v109",
       "scope": "playground/characters — ui.js, index.html, gallery-modal.css, main.js",
