@@ -48,26 +48,30 @@ function pickLine(raw) {
   return best.length > 110 ? best.slice(0, best.lastIndexOf(' ', 110)) + '…' : best;
 }
 
-// Convert plain text to HTML — preserve the writer's line breaks
+// Configure marked — breaks=true preserves the writer's intentional single-line breaks
+marked.use({
+  breaks: true,
+  gfm: true,
+  extensions: [{
+    name: 'voidSig',
+    level: 'block',
+    start(src) { return src.indexOf('- VOID-'); },
+    tokenizer(src) {
+      const m = src.match(/^- (VOID-[A-Z0-9]{6})\n?/);
+      if (m) return { type: 'voidSig', raw: m[0], id: m[1] };
+    },
+    renderer(token) {
+      return `<p class="w-void-sig">${esc(token.id)}</p>\n`;
+    },
+  }],
+});
+
 function toProse(raw) {
-  const blocks = raw.split(/\n{2,}/);
-  return blocks.map(block => {
-    const b = block.trim();
-    if (!b) return '';
-
-    // Heading
-    const hm = b.match(/^(#{1,4})\s+(.+)/);
-    if (hm) return `<h${Math.min(+hm[1].length + 1, 4)}>${esc(hm[2])}</h${Math.min(+hm[1].length + 1, 4)}>`;
-
-    // Blockquote — the > quote style he uses
-    if (b.startsWith('> ')) {
-      return `<blockquote><span class="w-quote-lead">&gt;</span> ${esc(b.slice(2))}</blockquote>`;
-    }
-
-    // Regular paragraph — preserve intentional single line breaks
-    const inner = b.split('\n').map(l => esc(l)).join('<br>');
-    return `<p>${inner}</p>`;
-  }).filter(Boolean).join('\n');
+  const dirty = marked.parse(raw);
+  return DOMPurify.sanitize(dirty, {
+    ALLOWED_TAGS: ['p','br','h1','h2','h3','h4','h5','strong','em','blockquote','ul','ol','li','code','pre','hr','span'],
+    ALLOWED_ATTR: ['class'],
+  });
 }
 
 // ── Particle field ────────────────────────────────────────

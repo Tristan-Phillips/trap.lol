@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.3.43",
+    "schema_version": "1.3.44",
     "last_updated": "2026-05-16",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -472,6 +472,22 @@
     ]
   },
   "commits": [
+    {
+      "hash": "PENDING",
+      "date": "2026-05-16",
+      "message": "feat(void): consolidate 86 .md files into void.json, add marked+DOMPurify rendering, markdown prose CSS",
+      "scope": "void/",
+      "impact": "high",
+      "files": [
+        "void/assets/content/void.json",
+        "void/assets/content/*.md (86 files deleted)",
+        "void/assets/script/app.js",
+        "void/assets/style/style.css",
+        "void/index.html",
+        "status/logs/logs.json"
+      ],
+      "why": "All 86 .md source files consolidated into a single authoritative void.json (48 entries after dedup), with marked.js + DOMPurify replacing the hand-rolled toProse() — enabling real markdown rendering with headings, blockquotes, bold, code, lists, and a custom VOID-sig extension; comprehensive markdown prose CSS added matching the hub's design vocabulary."
+    },
     {
       "hash": "2e9fcdf",
       "date": "2026-05-16",
@@ -1816,6 +1832,26 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-16",
+      "agent": "Claude Sonnet 4.6",
+      "type": "content",
+      "summary": "Consolidated all 86 .md source files in void/assets/content/ into a single void.json (48 entries after deduplication). Added marked.js v15 + DOMPurify rendering to replace the hand-rolled toProse() function. Added comprehensive markdown prose CSS: headings with violet border-left treatment matching the hub's section-title grammar, goldaccent blockquotes, custom list markers, VOID-signature styled as a watermark, inline code with violet tint, and responsive prose sizing.",
+      "decisions": [
+        "86 .md files had mixed formats: 39 ID-named (XXXXXX.md, no front matter), 47 slug-named (toml front matter with title/date). The slug files were the original CMS export; ID files were added later.",
+        "void.json had one duplicate ID entry (9V1IW3 appeared twice — A Lot on My Mind and Panic). The Panic entry was renamed to 9ZHWIT per its VOID signature. The orphan A Lot on My Mind variant was dropped (2P13K1 is the canonical entry).",
+        "RV9S5D.md content matched LEGACY entry — skipped as duplicate.",
+        "9V1IW3.md (extra A Lot on My Mind draft) dropped since 2P13K1 is canonical.",
+        "10 genuinely new entries added from slug-only files: Big Three, Education, Focus, Hello World, Identity, Intentions, Revive, Ruthless, Therapy, Trip Report 01.",
+        "marked v15 uses extension API for custom block tokens — VOID-XXXXXX signature lines handled via custom block extension, not renderer override.",
+        "Regular script tags for CDN shards load before type=module app.js — globals are available at parse time."
+      ],
+      "rules_reinforced": [
+        "All content sources (flat files, CMS exports) should be consolidated into the JSON data layer — no parallel flat-file sources",
+        "void/ is self-contained, no glass/ dependency — CDN shards loaded directly in void/index.html, not via config.json fetch",
+        "DOMPurify ALLOWED_ATTR must include 'class' for custom extension class names to survive sanitization"
+      ]
+    },
     {
       "date": "2026-05-16",
       "agent": "Claude Sonnet 4.6",

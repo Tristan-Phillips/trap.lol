@@ -412,36 +412,172 @@ body {
 .w-prose {
   font-family: var(--mono);
   font-size: 0.88rem;
-  line-height: 1.85;
+  line-height: 1.95;
   color: rgba(205, 190, 222, 0.78);
 }
 
-.w-prose p { margin-bottom: 1.3em; }
+/* Paragraphs */
+.w-prose p {
+  margin-bottom: 1.5em;
+}
 .w-prose p:last-child { margin-bottom: 0; }
 
-.w-prose h2, .w-prose h3 {
+/* Headings — use the site's exact section-title treatment.
+   The hub's section headings: monospace, uppercase, letter-spaced, violet left-border.
+   Same here. You're still inside the same universe. */
+.w-prose h1 {
   font-family: var(--mono);
-  font-weight: 600;
-  font-size: 0.85rem;
+  font-size: clamp(1.05rem, 2.2vw, 1.3rem);
+  font-weight: 700;
   color: var(--text-hi);
-  letter-spacing: 0.08em;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  margin: 2.2em 0 0.9em;
+  padding-left: 0.9rem;
+  border-left: 2px solid var(--violet);
+}
+
+.w-prose h2 {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--violet);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin: 2.4em 0 0.85em;
+  padding-left: 0.9rem;
+  border-left: 1px solid rgba(190, 41, 236, 0.35);
+}
+
+.w-prose h3, .w-prose h4 {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-lo);
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   margin: 2em 0 0.7em;
 }
 
-/* Blockquote — the site uses border-left everywhere. Consistent. */
-.w-prose blockquote {
-  border-left: 1px solid rgba(190, 41, 236, 0.3);
-  padding-left: 1.1rem;
-  margin: 1.4em 0;
-  color: rgba(165, 145, 190, 0.65);
-  font-style: normal;
+/* Emphasis */
+.w-prose strong {
+  color: var(--text-hi);
+  font-weight: 700;
 }
 
-/* The >quoted lines at entry start — keep them legible */
-.w-prose .w-quote-lead {
-  color: var(--gold);
-  opacity: 0.55;
+.w-prose em {
+  font-style: italic;
+  color: rgba(205, 190, 222, 0.9);
+}
+
+/* Blockquote — the site uses border-left everywhere.
+   This is for in-text quotes — different weight than h2.
+   Gold is reserved for the warm/emotional register. */
+.w-prose blockquote {
+  position: relative;
+  border-left: 1px solid rgba(244, 168, 48, 0.25);
+  padding: 0.3em 0 0.3em 1.2rem;
+  margin: 1.8em 0;
+  color: rgba(200, 178, 222, 0.58);
+  font-style: italic;
+}
+
+.w-prose blockquote::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(244, 168, 48, 0.5) 40%,
+    rgba(244, 168, 48, 0.5) 60%,
+    transparent
+  );
+}
+
+.w-prose blockquote p {
+  margin: 0;
+}
+
+/* Inline code */
+.w-prose code {
+  font-family: var(--mono);
+  font-size: 0.82em;
+  color: rgba(190, 41, 236, 0.85);
+  background: rgba(190, 41, 236, 0.07);
+  padding: 0.1em 0.38em;
+  border-radius: 2px;
+  border: 1px solid rgba(190, 41, 236, 0.12);
+}
+
+/* Code blocks */
+.w-prose pre {
+  background: rgba(3, 2, 6, 0.7);
+  border: 1px solid rgba(190, 41, 236, 0.1);
+  border-left: 2px solid rgba(190, 41, 236, 0.25);
+  padding: 1rem 1.2rem;
+  margin: 1.6em 0;
+  overflow-x: auto;
+  border-radius: 0;
+}
+
+.w-prose pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  color: rgba(205, 190, 222, 0.7);
+  font-size: 0.82rem;
+}
+
+/* Lists */
+.w-prose ul, .w-prose ol {
+  padding-left: 1.4rem;
+  margin: 1.2em 0;
+}
+
+.w-prose li {
+  margin-bottom: 0.45em;
+  padding-left: 0.3rem;
+  color: rgba(190, 165, 210, 0.72);
+}
+
+.w-prose ul li::marker {
+  color: rgba(190, 41, 236, 0.4);
+  content: '— ';
+}
+
+.w-prose ol li::marker {
+  color: rgba(190, 41, 236, 0.4);
+  font-size: 0.78em;
+  letter-spacing: 0.06em;
+}
+
+/* Horizontal rule — a breath. A beat. */
+.w-prose hr {
+  border: none;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(190, 41, 236, 0.2) 30%,
+    rgba(190, 41, 236, 0.2) 70%,
+    transparent
+  );
+  margin: 2.5em 0;
+}
+
+/* VOID signature lines — e.g. "- VOID-9ZHWIT"
+   These are the entry IDs embedded in the prose.
+   Dim. Small. A watermark, not a declaration. */
+.w-void-sig {
+  margin-top: 2.8rem !important;
+  font-size: 0.58rem !important;
+  letter-spacing: 0.18em !important;
+  color: var(--text-id) !important;
+  text-transform: uppercase;
 }
 
 .w-sig {
