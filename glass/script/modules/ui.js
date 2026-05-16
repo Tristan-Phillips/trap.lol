@@ -78,19 +78,20 @@ function renderHosting() {
   try {
     $grid.innerHTML = Object.values(hostingData.manifest).map(node => {
       if (node.shortcut) globalRouter.set(node.shortcut.toLowerCase(), { type: 'link', payload: node.url });
-      const sourceHref = node.source
-        ? `<a href="${esc(node.source)}" target="_blank" rel="noopener" class="node-row__source" aria-label="Source" title="View source"><i data-lucide="git-branch"></i></a>`
+      const sourceBtn = node.source
+        ? `<a href="${esc(node.source)}" target="_blank" rel="noopener" class="node-tile__source" aria-label="View source" title="View source" tabindex="0"><i data-lucide="git-branch"></i></a>`
         : "";
+      const shortcut = node.shortcut ? `<span class="card-primary__shortcut">[${esc(node.shortcut)}]</span>` : "";
       return `
-        <div class="node-row">
-          <span class="node-row__status-dot ${esc(node.status || "online")}"></span>
-          <i data-lucide="${esc(node.icon)}" class="node-row__icon"></i>
-          <a href="${esc(node.url)}" target="_blank" rel="noopener" class="node-row__name" aria-label="${esc(node.name)}">
-            ${esc(node.name)}${node.shortcut ? `<span class="card-primary__shortcut">[${esc(node.shortcut)}]</span>` : ""}
-          </a>
-          <span class="node-row__host">${esc(node.hosting)}</span>
-          ${sourceHref}
-        </div>`;
+        <a href="${esc(node.url)}" target="_blank" rel="noopener" class="node-tile" aria-label="${esc(node.name)} — ${esc(node.hosting)}">
+          <span class="node-tile__status ${esc(node.status || "online")}"></span>
+          <i data-lucide="${esc(node.icon)}" class="node-tile__icon"></i>
+          <div class="node-tile__body">
+            <span class="node-tile__name">${esc(node.name)}${shortcut}</span>
+            <span class="node-tile__sub">${esc(node.hosting)}</span>
+          </div>
+          ${sourceBtn}
+        </a>`;
     }).join("");
   } catch (e) {
     renderError($grid, "Hosting nodes offline.");
@@ -592,12 +593,15 @@ function renderStatstation() {
   try {
     $grid.innerHTML = Object.values(statstationData.manifest).map(item => {
       const status = item.status || "live";
+      const dot = status === "live" ? "online" : status;
       return `
-        <a href="${esc(item.path)}" class="node-row node-row--link" aria-label="${esc(item.name)}">
-          <span class="node-row__status-dot ${esc(status)}"></span>
-          <i data-lucide="${esc(item.icon)}" class="node-row__icon"></i>
-          <span class="node-row__name">${esc(item.name)}</span>
-          <span class="node-row__host">${esc(item.description)}</span>
+        <a href="${esc(item.path)}" class="node-tile node-tile--warm" aria-label="${esc(item.name)}">
+          <span class="node-tile__status ${esc(dot)}"></span>
+          <i data-lucide="${esc(item.icon)}" class="node-tile__icon"></i>
+          <div class="node-tile__body">
+            <span class="node-tile__name">${esc(item.name)}</span>
+            <span class="node-tile__sub">${esc(item.description)}</span>
+          </div>
         </a>`;
     }).join("");
   } catch (e) {
@@ -612,12 +616,15 @@ function renderTrapSection() {
   try {
     $grid.innerHTML = Object.values(trapData.manifest).map(item => {
       const status = item.status || "live";
+      const dot = status === "live" ? "online" : status;
       return `
-        <a href="${esc(item.path)}" class="node-row node-row--link" aria-label="${esc(item.name)}">
-          <span class="node-row__status-dot ${esc(status)}"></span>
-          <i data-lucide="${esc(item.icon)}" class="node-row__icon"></i>
-          <span class="node-row__name">${esc(item.name)}</span>
-          <span class="node-row__host">${esc(item.description)}</span>
+        <a href="${esc(item.path)}" class="node-tile node-tile--warm" aria-label="${esc(item.name)}">
+          <span class="node-tile__status ${esc(dot)}"></span>
+          <i data-lucide="${esc(item.icon)}" class="node-tile__icon"></i>
+          <div class="node-tile__body">
+            <span class="node-tile__name">${esc(item.name)}</span>
+            <span class="node-tile__sub">${esc(item.description)}</span>
+          </div>
         </a>`;
     }).join("");
   } catch (e) {
