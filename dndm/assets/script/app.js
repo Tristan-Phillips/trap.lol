@@ -307,15 +307,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // Lore wiki tabs
-  document.querySelectorAll('.panel__tab').forEach(function(tab) {
-    tab.addEventListener('click', function() {
-      tab.closest('.panel').querySelectorAll('.panel__tab')
-        .forEach(function(t) { t.classList.remove('panel__tab--active'); });
-      tab.classList.add('panel__tab--active');
-    });
-  });
-
   // Oracle chips
   document.querySelectorAll('.oracle-chip').forEach(function(chip) {
     chip.addEventListener('click', function() {
@@ -347,7 +338,18 @@ document.addEventListener('DOMContentLoaded', function () {
   function campaignLoad() {
     try {
       var raw = localStorage.getItem('dndm_campaign');
-      if (raw) campaign = Object.assign(campaign, JSON.parse(raw));
+      if (!raw) return;
+      var saved = JSON.parse(raw);
+      Object.assign(campaign, saved);
+      // Ensure lore sub-keys are always arrays
+      if (!campaign.lore || typeof campaign.lore !== 'object') campaign.lore = {};
+      ['locations','factions','timeline'].forEach(function(k) {
+        if (!Array.isArray(campaign.lore[k])) campaign.lore[k] = [];
+      });
+      if (!Array.isArray(campaign.npcs))    campaign.npcs    = [];
+      if (!Array.isArray(campaign.sessions)) campaign.sessions = [];
+      if (typeof campaign.totalXP    !== 'number') campaign.totalXP    = 0;
+      if (typeof campaign.partyLevel !== 'number') campaign.partyLevel = 1;
     } catch(e) {}
   }
 
