@@ -473,7 +473,7 @@
   },
   "commits": [
     {
-      "hash": "0000000",
+      "hash": "9e9c075",
       "date": "2026-05-16",
       "message": "fix(underdark): pass charMeta to buildAvatarHtml in appendMessage — ui.js v111",
       "scope": "playground/characters — ui.js, main.js",
