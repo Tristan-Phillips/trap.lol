@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.3.34",
+    "schema_version": "1.3.35",
     "last_updated": "2026-05-16",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -472,6 +472,19 @@
     ]
   },
   "commits": [
+    {
+      "hash": "0000000",
+      "date": "2026-05-16",
+      "message": "fix(underdark): pass charMeta to buildAvatarHtml in appendMessage — ui.js v111",
+      "scope": "playground/characters — ui.js, main.js",
+      "impact": "low",
+      "files": [
+        "playground/characters/script/modules/ui.js",
+        "playground/characters/script/main.js",
+        "status/logs/logs.json"
+      ],
+      "why": "Bot messages rendered with an empty avatar circle when avatar_path was an unresolvable IDB ref (getAvatarUrlSync returns null for async IDB refs). buildAvatarHtml falls back to emoji when avatar is null but needs charMeta to derive a character-appropriate emoji — previously null was passed, causing the default 👤 to render incorrectly in some conditions."
+    },
     {
       "hash": "7ca1095",
       "date": "2026-05-16",
@@ -1661,6 +1674,19 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-16",
+      "agent": "Claude Sonnet 4.6",
+      "type": "bug_fix",
+      "summary": "Fixed bot message avatar fallback in appendMessage: buildAvatarHtml was called without charMeta so _charEmoji(null) returned generic 👤 even for known characters whose IDB avatar hadn't resolved. Now passes meta || char so character-appropriate emoji derives from tags/name. Also noted: screenshot admin button visual discrepancy (Re-describe/Entrance/Irony appearing lighter) is a rendering artifact — class names in HTML confirmed correct (.codex-admin-btn on all). Third screenshot (mobile dot + user icon) appears to be native browser UI, not Underdark DOM.",
+      "decisions": [
+        "Avatar fallback should always use charMeta when available — even a default 👤 is better than an empty circle but a matching emoji is better still.",
+        "Admin button visual differences in screenshot are a contrast artifact of the mobile viewport, not a CSS bug — no change needed."
+      ],
+      "rules_reinforced": [
+        "Always pass charMeta to buildAvatarHtml when the character is known, even when avatar is expected to be present."
+      ]
+    },
     {
       "date": "2026-05-16",
       "agent": "Claude Sonnet 4.6",

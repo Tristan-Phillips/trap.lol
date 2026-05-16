@@ -6758,7 +6758,7 @@ export function initUI() {
             : null;
         const avatarHtml = isUser && !avatar
             ? `<div class="message__avatar message__avatar--monogram">${esc(playerInitial)}</div>`
-            : buildAvatarHtml(avatar, 'message__avatar');
+            : buildAvatarHtml(avatar, 'message__avatar', '', meta || char);
 
         const $msg = document.createElement('div');
         $msg.className = `message message--${role}`;
