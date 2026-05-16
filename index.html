@@ -83,7 +83,21 @@
       <h2 id="hosting-title" class="section-title">
         <i data-lucide="server"></i> Sovereign Nodes
       </h2>
-      <div id="hosting-grid" class="grid-primary"></div>
+      <div id="hosting-grid" class="node-list"></div>
+    </section>
+
+    <section id="statstation-section" aria-labelledby="statstation-title">
+      <h2 id="statstation-title" class="section-title">
+        <i data-lucide="activity"></i> Station
+      </h2>
+      <div id="statstation-grid" class="node-list"></div>
+    </section>
+
+    <section id="trap-section" aria-labelledby="trap-title">
+      <h2 id="trap-title" class="section-title">
+        <i data-lucide="user"></i> Transmissions
+      </h2>
+      <div id="trap-grid" class="node-list"></div>
     </section>
 
     <!-- <section id="extlinks-section" aria-labelledby="extlinks-title">
@@ -136,6 +150,7 @@
           <i data-lucide="activity"></i> Status
         </a>
       </nav>
+      <nav id="social-strip" class="social-strip" aria-label="Social links"></nav>
       <div class="site-footer__meta">
         <span class="site-footer__license">
           <i data-lucide="shield"></i> GPL-3.0
@@ -154,8 +169,8 @@
     <i data-lucide="chevron-up"></i>
   </button>
 
-  <!-- ── Social Signal Cluster — populated by renderSocialCluster() ── -->
-  <div id="social-cluster" class="social-cluster" role="navigation" aria-label="Social links"></div>
+  <!-- social-cluster div kept so any existing import references don't break -->
+  <div id="social-cluster" hidden aria-hidden="true"></div>
 
   <script type="module" src="glass/script/main.js"></script>
 </body>

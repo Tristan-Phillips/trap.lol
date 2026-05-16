@@ -1,4 +1,4 @@
-import { config, hostingData, toolsData, botsData, extData, guideData, appsData, llmData, fetchJSON, esc, renderError, globalRouter, IS_TOUCH } from './core.js';
+import { config, hostingData, toolsData, botsData, extData, guideData, appsData, llmData, statstationData, trapData, fetchJSON, esc, renderError, globalRouter, IS_TOUCH } from './core.js';
 import { initTunnelLight } from './tunnel-light.js';
 
 /**
@@ -14,8 +14,10 @@ export function renderUI() {
   renderSignalMesh();
   renderCodex();
   renderApps();
+  renderStatstation();
+  renderTrapSection();
   renderUplinkLaunchpad();
-  renderSocialCluster();
+  renderSocialStrip();
 
   // Global initializations
   if (typeof lucide !== "undefined") lucide.createIcons();
@@ -76,22 +78,18 @@ function renderHosting() {
   try {
     $grid.innerHTML = Object.values(hostingData.manifest).map(node => {
       if (node.shortcut) globalRouter.set(node.shortcut.toLowerCase(), { type: 'link', payload: node.url });
-      
-      const sourceLink = node.source
-        ? `<a href="${esc(node.source)}" target="_blank" rel="noopener" class="card-primary__source" aria-label="View ${esc(node.hosting)} source"><i data-lucide="git-branch"></i> Source</a>`
+      const sourceHref = node.source
+        ? `<a href="${esc(node.source)}" target="_blank" rel="noopener" class="node-row__source" aria-label="Source" title="View source"><i data-lucide="git-branch"></i></a>`
         : "";
-
       return `
-        <div class="card-primary-wrap">
-          <a href="${esc(node.url)}" target="_blank" rel="noopener" class="card-primary" aria-label="${esc(node.name)} — ${esc(node.hosting)}">
-            <i data-lucide="${esc(node.icon)}"></i>
-            <div class="card-primary__body">
-              <h3>${esc(node.name)}${node.shortcut ? `<span class="card-primary__shortcut">[${esc(node.shortcut)}]</span>` : ""}</h3>
-              <span class="card-primary__sub">${esc(node.hosting)}</span>
-            </div>
-            <div class="card-primary__status ${esc(node.status || "online")}"></div>
+        <div class="node-row">
+          <span class="node-row__status-dot ${esc(node.status || "online")}"></span>
+          <i data-lucide="${esc(node.icon)}" class="node-row__icon"></i>
+          <a href="${esc(node.url)}" target="_blank" rel="noopener" class="node-row__name" aria-label="${esc(node.name)}">
+            ${esc(node.name)}${node.shortcut ? `<span class="card-primary__shortcut">[${esc(node.shortcut)}]</span>` : ""}
           </a>
-          ${sourceLink}
+          <span class="node-row__host">${esc(node.hosting)}</span>
+          ${sourceHref}
         </div>`;
     }).join("");
   } catch (e) {
@@ -560,52 +558,69 @@ function initLaunchpadForm() {
   };
 }
 
-export function renderSocialCluster() {
-  const $root = document.getElementById("social-cluster");
-  if (!$root || !config?.socials) return;
+// Kept for external callers that may import this name
+export function renderSocialCluster() { renderSocialStrip(); }
+
+function renderSocialStrip() {
+  // Replace old radial cluster with a compact inline strip in the footer
+  const $cluster = document.getElementById("social-cluster");
+  if ($cluster) $cluster.remove();
+
+  const $strip = document.getElementById("social-strip");
+  if (!$strip || !config?.socials) return;
 
   const PLATFORMS = {
-    github: { icon: "github", label: "GITHUB" },
-    youtube: { icon: "youtube", label: "YOUTUBE" },
-    kick: { icon: "radio", label: "KICK" },
-    "ko-fi": { icon: "coffee", label: "KO-FI" },
-    telegram: { icon: "send", label: "TELEGRAM" }
+    github:   { icon: "github",   label: "GitHub" },
+    youtube:  { icon: "youtube",  label: "YouTube" },
+    kick:     { icon: "radio",    label: "Kick" },
+    "ko-fi":  { icon: "coffee",   label: "Ko-Fi" },
+    telegram: { icon: "send",     label: "Telegram" }
   };
 
-  const R = 144;
-  const nodes = Object.entries(config.socials).map(([key, url], i) => {
-    const p = PLATFORMS[key] || { icon: "external-link", label: key.toUpperCase() };
-    const rad = (90 - i * 22.5) * Math.PI / 180;
-    const x = Math.round(R * Math.cos(rad));
-    const y = -Math.round(R * Math.sin(rad));
-    
-    return `
-      <div class="social-node" style="--sc-x:${x}px;--sc-y:${y}px;--sc-delay:${i * 35}ms;--sc-node-accent:var(--social-${key}-accent, var(--accent));" data-platform="${esc(key)}">
-        <a href="${esc(url)}" target="_blank" rel="noopener" class="social-node__btn" aria-label="${p.label}" tabindex="-1">
-          <i data-lucide="${p.icon}"></i><span class="social-node__pip"></span>
-        </a>
-        <span class="social-node__label">${p.label}</span>
-      </div>`;
+  $strip.innerHTML = Object.entries(config.socials).map(([key, url]) => {
+    const p = PLATFORMS[key] || { icon: "external-link", label: key };
+    return `<a href="${esc(url)}" target="_blank" rel="noopener" class="social-strip__link" aria-label="${esc(p.label)}" title="${esc(p.label)}">
+      <i data-lucide="${esc(p.icon)}"></i>
+    </a>`;
   }).join("");
+}
 
-  $root.innerHTML = `
-    <button class="social-cluster__nucleus" aria-expanded="false" aria-controls="social-cluster-nodes">
-      <span class="social-cluster__grain"></span><span class="social-cluster__scan"></span>
-      <span class="social-cluster__burst"></span><span class="social-cluster__nucleus-glyph">//</span>
-    </button>
-    <div class="social-cluster__nodes" id="social-cluster-nodes" aria-hidden="true">${nodes}</div>`;
+function renderStatstation() {
+  const $grid = document.getElementById("statstation-grid");
+  if (!$grid || !statstationData?.manifest) return;
 
-  const $btn = $root.querySelector(".social-cluster__nucleus");
-  const $nodes = $root.querySelector(".social-cluster__nodes");
-  const toggle = (force) => {
-    const open = force ?? !$root.classList.contains("social-cluster--open");
-    $root.classList.toggle("social-cluster--open", open);
-    $btn.setAttribute("aria-expanded", open);
-    $nodes.setAttribute("aria-hidden", !open);
-    $nodes.querySelectorAll("a").forEach(a => a.tabIndex = open ? 0 : -1);
-  };
+  try {
+    $grid.innerHTML = Object.values(statstationData.manifest).map(item => {
+      const status = item.status || "live";
+      return `
+        <a href="${esc(item.path)}" class="node-row node-row--link" aria-label="${esc(item.name)}">
+          <span class="node-row__status-dot ${esc(status)}"></span>
+          <i data-lucide="${esc(item.icon)}" class="node-row__icon"></i>
+          <span class="node-row__name">${esc(item.name)}</span>
+          <span class="node-row__host">${esc(item.description)}</span>
+        </a>`;
+    }).join("");
+  } catch (e) {
+    renderError($grid, "Station offline.");
+  }
+}
 
-  $btn.onclick = e => { e.stopPropagation(); toggle(); };
-  document.addEventListener("click", e => { if (!$root.contains(e.target)) toggle(false); });
-  document.addEventListener("keydown", e => { if (e.key === "Escape") toggle(false); });
+function renderTrapSection() {
+  const $grid = document.getElementById("trap-grid");
+  if (!$grid || !trapData?.manifest) return;
+
+  try {
+    $grid.innerHTML = Object.values(trapData.manifest).map(item => {
+      const status = item.status || "live";
+      return `
+        <a href="${esc(item.path)}" class="node-row node-row--link" aria-label="${esc(item.name)}">
+          <span class="node-row__status-dot ${esc(status)}"></span>
+          <i data-lucide="${esc(item.icon)}" class="node-row__icon"></i>
+          <span class="node-row__name">${esc(item.name)}</span>
+          <span class="node-row__host">${esc(item.description)}</span>
+        </a>`;
+    }).join("");
+  } catch (e) {
+    renderError($grid, "Personal section offline.");
+  }
 }

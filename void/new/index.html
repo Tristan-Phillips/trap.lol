@@ -1,0 +1,654 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>void // new entry</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2306040A'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%23BE29EC' stroke-width='1' opacity='0.3'/%3E%3C/svg%3E" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #06040A;
+      --bg-panel: #0D0B12;
+      --bg-raise: #14111C;
+      --border:   rgba(190, 41, 236, 0.12);
+      --border-hi:rgba(190, 41, 236, 0.35);
+      --accent:   #BE29EC;
+      --accent-d: rgba(190, 41, 236, 0.15);
+      --text:     #E2D9F0;
+      --muted:    #7B6E8C;
+      --dim:      #3A3248;
+      --mono:     ui-monospace, 'Cascadia Code', Menlo, Consolas, monospace;
+      --serif:    Georgia, 'Times New Roman', serif;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    body {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: auto 1fr auto;
+      gap: 0;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ── Header ── */
+    header {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.75rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-panel);
+    }
+    .hdr-sigil { color: var(--accent); font-weight: 700; letter-spacing: 0.1em; }
+    .hdr-sub   { color: var(--muted); font-size: 0.75rem; }
+    .hdr-spacer { flex: 1; }
+    .hdr-link {
+      font-size: 0.7rem;
+      color: var(--muted);
+      text-decoration: none;
+      padding: 0.3rem 0.65rem;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .hdr-link:hover { color: var(--accent); border-color: var(--border-hi); }
+
+    /* ── Editor pane ── */
+    .editor-pane {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border-right: 1px solid var(--border);
+    }
+
+    .fields-row {
+      display: grid;
+      grid-template-columns: 1fr 160px 160px;
+      gap: 0.5rem;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-panel);
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+    .field-label {
+      font-size: 0.6rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    input[type="text"],
+    input[type="date"],
+    input[type="number"],
+    textarea {
+      background: var(--bg-raise);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      padding: 0.4rem 0.6rem;
+      transition: border-color 0.15s;
+      outline: none;
+    }
+    input:focus, textarea:focus {
+      border-color: var(--border-hi);
+      box-shadow: 0 0 0 2px rgba(190,41,236,0.08);
+    }
+    input[type="date"] { color-scheme: dark; }
+
+    .tags-field { width: 100%; }
+
+    #content-area {
+      flex: 1;
+      resize: none;
+      border: none;
+      border-radius: 0;
+      padding: 1.25rem 1.5rem;
+      font-size: 0.9rem;
+      font-family: var(--serif);
+      line-height: 1.9;
+      background: var(--bg);
+      color: var(--text);
+      overflow-y: auto;
+    }
+    #content-area:focus { box-shadow: none; }
+    #content-area::placeholder { color: var(--dim); font-family: var(--serif); font-style: italic; }
+
+    /* ── Preview pane ── */
+    .preview-pane {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--bg);
+    }
+
+    .pane-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.5rem 1rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-panel);
+      font-size: 0.65rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .pane-badge {
+      background: var(--accent-d);
+      border: 1px solid var(--border-hi);
+      color: var(--accent);
+      border-radius: 20px;
+      padding: 0.1rem 0.5rem;
+      font-size: 0.6rem;
+    }
+
+    #preview-body {
+      flex: 1;
+      padding: 1.5rem;
+      overflow-y: auto;
+    }
+
+    /* Preview typography — mirrors void's style */
+    .prev-title {
+      font-family: var(--serif);
+      font-size: 1.6rem;
+      font-weight: 400;
+      color: var(--text);
+      margin-bottom: 0.35rem;
+      line-height: 1.25;
+    }
+    .prev-meta {
+      font-size: 0.68rem;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .prev-tag {
+      background: var(--accent-d);
+      border: 1px solid var(--border);
+      color: var(--accent);
+      border-radius: 20px;
+      padding: 0.1rem 0.55rem;
+      font-size: 0.6rem;
+      letter-spacing: 0.06em;
+    }
+    .prev-content {
+      font-family: var(--serif);
+      font-size: 0.95rem;
+      line-height: 1.95;
+      color: var(--text);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .prev-sig {
+      margin-top: 2rem;
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--muted);
+    }
+
+    /* ── Footer / Output bar ── */
+    footer {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.65rem 1.25rem;
+      border-top: 1px solid var(--border);
+      background: var(--bg-panel);
+    }
+
+    .gen-id {
+      font-size: 0.68rem;
+      color: var(--muted);
+    }
+    .gen-id span { color: var(--accent); }
+    .id-regen {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      padding: 0.2rem 0.5rem;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .id-regen:hover { color: var(--accent); border-color: var(--border-hi); }
+
+    .foot-spacer { flex: 1; }
+
+    .word-count {
+      font-size: 0.68rem;
+      color: var(--dim);
+    }
+
+    .copy-btn {
+      padding: 0.45rem 1.1rem;
+      background: var(--accent-d);
+      border: 1px solid var(--border-hi);
+      border-radius: 4px;
+      color: var(--accent);
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      transition: background 0.15s, box-shadow 0.15s;
+      text-transform: uppercase;
+    }
+    .copy-btn:hover { background: rgba(190,41,236,0.25); box-shadow: 0 0 12px rgba(190,41,236,0.2); }
+    .copy-btn--copied { background: rgba(74,222,128,0.15) !important; border-color: rgba(74,222,128,0.4) !important; color: #4ade80 !important; }
+
+    /* ── Output modal ── */
+    .output-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(6,4,10,0.88);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      backdrop-filter: blur(4px);
+    }
+    .output-overlay.hidden { display: none; }
+    .output-box {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-hi);
+      border-radius: 8px;
+      padding: 1.5rem;
+      width: min(720px, 92vw);
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      box-shadow: 0 0 40px rgba(190,41,236,0.15);
+    }
+    .output-box__title {
+      font-size: 0.7rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+    .output-box__sub {
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin-top: -0.5rem;
+    }
+    #output-code {
+      flex: 1;
+      background: var(--bg-raise);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1rem;
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: #c9a8f0;
+      overflow-y: auto;
+      white-space: pre;
+      word-break: break-all;
+      max-height: 44vh;
+      cursor: text;
+      user-select: all;
+    }
+    .output-box__actions {
+      display: flex;
+      gap: 0.65rem;
+      justify-content: flex-end;
+    }
+    .out-btn {
+      padding: 0.45rem 1.1rem;
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      transition: background 0.15s;
+      text-transform: uppercase;
+    }
+    .out-btn--copy {
+      background: var(--accent-d);
+      border: 1px solid var(--border-hi);
+      color: var(--accent);
+    }
+    .out-btn--copy:hover { background: rgba(190,41,236,0.25); }
+    .out-btn--copy.copied { background: rgba(74,222,128,0.15); border-color: rgba(74,222,128,0.4); color: #4ade80; }
+    .out-btn--close {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+    .out-btn--close:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <span class="hdr-sigil">VOID //</span>
+    <span class="hdr-sub">new entry</span>
+    <span class="hdr-spacer"></span>
+    <a href="/void/" class="hdr-link">← Back to Void</a>
+  </header>
+
+  <!-- Left: editor -->
+  <div class="editor-pane">
+    <div class="fields-row">
+      <div class="field-group">
+        <label class="field-label" for="f-title">Title</label>
+        <input type="text" id="f-title" placeholder="Untitled transmission…" autocomplete="off" />
+      </div>
+      <div class="field-group">
+        <label class="field-label" for="f-date">Date</label>
+        <input type="date" id="f-date" />
+      </div>
+      <div class="field-group">
+        <label class="field-label" for="f-tags">Tags (comma-sep)</label>
+        <input type="text" id="f-tags" placeholder="personal, art…" class="tags-field" autocomplete="off" />
+      </div>
+    </div>
+    <textarea id="content-area" placeholder="Begin transmission…
+
+Markdown is supported — **bold**, *italic*, ## headings, > blockquotes, `code`.
+Blank lines between paragraphs become proper spacing.
+
+Write freely. The signal will hold."></textarea>
+  </div>
+
+  <!-- Right: preview -->
+  <div class="preview-pane">
+    <div class="pane-header">
+      Preview
+      <span class="pane-badge" id="prev-badge">DRAFT</span>
+    </div>
+    <div id="preview-body">
+      <p style="color:var(--dim);font-size:0.8rem;font-style:italic">Start writing to see a preview…</p>
+    </div>
+  </div>
+
+  <!-- Footer bar -->
+  <footer>
+    <span class="gen-id">ID: <span id="entry-id-display">—</span></span>
+    <button class="id-regen" id="regen-id" title="Generate new ID">↻ new id</button>
+    <span class="foot-spacer"></span>
+    <span class="word-count" id="word-count">0 words</span>
+    <button class="copy-btn" id="export-btn">Export JSON fragment</button>
+  </footer>
+
+  <!-- Output overlay -->
+  <div class="output-overlay hidden" id="output-overlay">
+    <div class="output-box">
+      <div class="output-box__title">JSON Fragment</div>
+      <p class="output-box__sub">Paste this object into the top of your <code>void.json</code> array (before the first <code>{</code>). Remember to add a comma after the closing <code>}</code> if it's not the only entry.</p>
+      <pre id="output-code"></pre>
+      <div class="output-box__actions">
+        <button class="out-btn out-btn--copy" id="out-copy-btn">Copy to clipboard</button>
+        <button class="out-btn out-btn--close" id="out-close-btn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ── Helpers ──────────────────────────────────────────────
+    function genId() {
+      var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      var id = '';
+      for (var i = 0; i < 6; i++) id += chars[Math.floor(Math.random() * chars.length)];
+      return id;
+    }
+
+    function today() {
+      var d = new Date();
+      var mm = String(d.getMonth() + 1).padStart(2, '0');
+      var dd = String(d.getDate()).padStart(2, '0');
+      return d.getFullYear() + '-' + mm + '-' + dd;
+    }
+
+    function escJson(str) {
+      return String(str)
+        .replace(/\\/g, '\\\\')
+        .replace(/"/g, '\\"')
+        .replace(/\n/g, '\\n')
+        .replace(/\r/g, '\\r')
+        .replace(/\t/g, '\\t');
+    }
+
+    function wordCount(str) {
+      var trimmed = str.trim();
+      if (!trimmed) return 0;
+      return trimmed.split(/\s+/).length;
+    }
+
+    // Simple markdown-to-HTML (subset) for preview
+    function mdToHtml(str) {
+      if (!str) return '';
+      var lines = str.split('\n');
+      var out = [];
+      var inBlock = false;
+
+      for (var i = 0; i < lines.length; i++) {
+        var line = lines[i];
+
+        // Headings
+        var h3 = line.match(/^### (.+)/);
+        var h2 = line.match(/^## (.+)/);
+        var h1 = line.match(/^# (.+)/);
+        if (h1) { out.push('<h1 style="font-family:var(--serif);font-size:1.5rem;margin:1.2em 0 0.3em;color:var(--text)">' + inlineFormat(h1[1]) + '</h1>'); continue; }
+        if (h2) { out.push('<h2 style="font-family:var(--serif);font-size:1.2rem;margin:1em 0 0.25em;color:var(--text)">' + inlineFormat(h2[1]) + '</h2>'); continue; }
+        if (h3) { out.push('<h3 style="font-family:var(--serif);font-size:1rem;margin:0.8em 0 0.2em;color:var(--muted)">' + inlineFormat(h3[1]) + '</h3>'); continue; }
+
+        // Blockquote
+        var bq = line.match(/^> (.+)/);
+        if (bq) {
+          out.push('<blockquote style="border-left:2px solid var(--accent);padding-left:0.75rem;color:var(--muted);margin:0.75em 0;font-style:italic">' + inlineFormat(bq[1]) + '</blockquote>');
+          continue;
+        }
+
+        // Horizontal rule
+        if (/^---+$/.test(line.trim())) { out.push('<hr style="border:none;border-top:1px solid var(--border);margin:1.5em 0" />'); continue; }
+
+        // Empty line — paragraph break
+        if (line.trim() === '') { out.push('<br />'); continue; }
+
+        out.push('<span class="prev-line">' + inlineFormat(line) + '</span><br />');
+      }
+
+      return out.join('');
+    }
+
+    function inlineFormat(str) {
+      // Escape HTML first
+      str = str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      // Bold + italic
+      str = str.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+      str = str.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      str = str.replace(/\*(.+?)\*/g, '<em>$1</em>');
+      str = str.replace(/_(.+?)_/g, '<em>$1</em>');
+      // Code
+      str = str.replace(/`(.+?)`/g, '<code style="font-family:var(--mono);font-size:0.8em;background:var(--bg-raise);border:1px solid var(--border);border-radius:2px;padding:0.05em 0.3em;color:var(--accent)">$1</code>');
+      // Links
+      str = str.replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" style="color:var(--accent);text-underline-offset:3px" target="_blank" rel="noopener">$1</a>');
+      return str;
+    }
+
+    // ── State ────────────────────────────────────────────────
+    var currentId = genId();
+
+    var $title    = document.getElementById('f-title');
+    var $date     = document.getElementById('f-date');
+    var $tags     = document.getElementById('f-tags');
+    var $content  = document.getElementById('content-area');
+    var $idDisp   = document.getElementById('entry-id-display');
+    var $wc       = document.getElementById('word-count');
+    var $prevBody = document.getElementById('preview-body');
+    var $prevBadge= document.getElementById('prev-badge');
+    var $overlay  = document.getElementById('output-overlay');
+    var $outputCode = document.getElementById('output-code');
+
+    // Init
+    $date.value = today();
+    $idDisp.textContent = currentId;
+
+    // ── Regen ID ─────────────────────────────────────────────
+    document.getElementById('regen-id').addEventListener('click', function() {
+      currentId = genId();
+      $idDisp.textContent = currentId;
+      updatePreview();
+    });
+
+    // ── Live update ──────────────────────────────────────────
+    function updatePreview() {
+      var title   = $title.value.trim() || 'Untitled';
+      var date    = $date.value || today();
+      var rawTags = $tags.value.split(',').map(function(t) { return t.trim(); }).filter(Boolean);
+      var content = $content.value;
+      var wc      = wordCount(content);
+
+      $wc.textContent = wc + (wc === 1 ? ' word' : ' words');
+      $prevBadge.textContent = wc > 0 ? wc + 'w' : 'DRAFT';
+
+      var tagsHtml = rawTags.map(function(t) {
+        return '<span class="prev-tag">' + t.replace(/[&<>"']/g, function(c) {
+          return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+        }) + '</span>';
+      }).join(' ');
+
+      var contentHtml = mdToHtml(content);
+      var sig = '- VOID-' + currentId;
+
+      $prevBody.innerHTML =
+        '<div class="prev-title">' + title.replace(/[&<>"']/g, function(c) {
+          return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+        }) + '</div>'
+        + '<div class="prev-meta"><span>' + date + '</span>' + tagsHtml + '</div>'
+        + '<div class="prev-content">' + (contentHtml || '<span style="color:var(--dim);font-style:italic">No content yet…</span>') + '</div>'
+        + '<div class="prev-sig">' + sig + '</div>';
+    }
+
+    [$title, $date, $tags, $content].forEach(function(el) {
+      el.addEventListener('input', updatePreview);
+    });
+
+    // ── Export ───────────────────────────────────────────────
+    document.getElementById('export-btn').addEventListener('click', showExport);
+
+    function buildFragment() {
+      var title   = $title.value.trim() || 'Untitled';
+      var date    = $date.value || today();
+      var rawTags = $tags.value.split(',').map(function(t) { return t.trim(); }).filter(Boolean);
+      if (!rawTags.length) rawTags = [''];
+      var content = $content.value;
+
+      // Next index hint: show "?" — user will need to set it based on current max
+      var fragment = {
+        id:      currentId,
+        index:   '???',
+        title:   title,
+        date:    date,
+        tags:    rawTags,
+        content: content
+      };
+
+      // Build pretty JSON manually so we can show a clean copy
+      var tagsJson = JSON.stringify(rawTags);
+      return '{\n'
+        + '  "id": "' + escJson(currentId) + '",\n'
+        + '  "index": ???,\n'
+        + '  "title": "' + escJson(title) + '",\n'
+        + '  "date": "' + escJson(date) + '",\n'
+        + '  "tags": ' + tagsJson + ',\n'
+        + '  "content": "' + escJson(content) + '"\n'
+        + '}';
+    }
+
+    function showExport() {
+      var frag = buildFragment();
+      $outputCode.textContent = frag;
+      $overlay.classList.remove('hidden');
+      // Select all text for easy copy
+      setTimeout(function() {
+        var range = document.createRange();
+        range.selectNodeContents($outputCode);
+        window.getSelection().removeAllRanges();
+        window.getSelection().addRange(range);
+      }, 60);
+    }
+
+    document.getElementById('out-close-btn').addEventListener('click', function() {
+      $overlay.classList.add('hidden');
+      window.getSelection().removeAllRanges();
+    });
+    $overlay.addEventListener('click', function(e) {
+      if (e.target === $overlay) {
+        $overlay.classList.add('hidden');
+        window.getSelection().removeAllRanges();
+      }
+    });
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        $overlay.classList.add('hidden');
+        window.getSelection().removeAllRanges();
+      }
+    });
+
+    var $outCopyBtn = document.getElementById('out-copy-btn');
+    $outCopyBtn.addEventListener('click', function() {
+      var text = $outputCode.textContent;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(function() {
+          $outCopyBtn.textContent = 'Copied ✓';
+          $outCopyBtn.classList.add('copied');
+          setTimeout(function() {
+            $outCopyBtn.textContent = 'Copy to clipboard';
+            $outCopyBtn.classList.remove('copied');
+          }, 2000);
+        });
+      } else {
+        // Fallback: select text
+        var range = document.createRange();
+        range.selectNodeContents($outputCode);
+        window.getSelection().removeAllRanges();
+        window.getSelection().addRange(range);
+        document.execCommand('copy');
+        $outCopyBtn.textContent = 'Copied ✓';
+        $outCopyBtn.classList.add('copied');
+        setTimeout(function() {
+          $outCopyBtn.textContent = 'Copy to clipboard';
+          $outCopyBtn.classList.remove('copied');
+        }, 2000);
+      }
+    });
+
+    // ── Keyboard shortcut: Ctrl/Cmd+Enter → export ───────────
+    document.addEventListener('keydown', function(e) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        showExport();
+      }
+    });
+
+    // Initial render
+    updatePreview();
+  </script>
+</body>
+</html>

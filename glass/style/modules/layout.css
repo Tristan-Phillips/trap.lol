@@ -71,9 +71,9 @@ header {
 
 .site-footer__grid {
   display: grid;
-  grid-template-columns: 1fr auto auto;
-  align-items: start;
-  gap: 3rem;
+  grid-template-columns: 1fr auto auto auto;
+  align-items: center;
+  gap: 2rem;
   margin-bottom: var(--space-md);
 }
 

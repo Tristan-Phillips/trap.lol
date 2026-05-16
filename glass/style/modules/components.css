@@ -153,6 +153,116 @@
   outline: none;
 }
 
+/* ─── Compact Node List (Sovereign Nodes, Statstation, Transmissions) ─── */
+.node-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 4rem;
+  max-width: 640px;
+}
+
+.node-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  background: transparent;
+  border: 1px solid transparent;
+  transition: background var(--transition), border-color var(--transition);
+  text-decoration: none;
+  color: inherit;
+}
+
+.node-row--link:hover,
+.node-row--link:focus-visible {
+  background: var(--glass-bg);
+  border-color: var(--glass-border-mute);
+  outline: none;
+}
+
+.node-row__status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--status-online);
+  flex-shrink: 0;
+}
+.node-row__status-dot.offline { background: var(--status-offline); }
+.node-row__status-dot.dev     { background: var(--accent-warm); }
+
+.node-row__icon {
+  width: 0.85rem;
+  height: 0.85rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.node-row__name {
+  font-size: var(--text-sm);
+  font-family: var(--font-mono);
+  color: var(--text-main);
+  font-weight: 500;
+  flex-shrink: 0;
+  text-decoration: none;
+  color: inherit;
+  transition: color var(--transition);
+}
+.node-row--link:hover .node-row__name,
+.node-row--link:focus-visible .node-row__name { color: var(--accent); }
+a.node-row__name:hover { color: var(--accent); }
+
+.node-row__host {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-left: auto;
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 260px;
+}
+
+.node-row__source {
+  margin-left: auto;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  padding: 0.2rem 0.4rem;
+  border-radius: 3px;
+  transition: color var(--transition), background var(--transition);
+  text-decoration: none;
+}
+.node-row__source:hover { color: var(--accent-warm); background: var(--accent-subtle-warm); }
+.node-row__source i { width: 0.75rem; height: 0.75rem; }
+
+/* ─── Social Strip (footer) ───────────────────── */
+.social-strip {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.social-strip__link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color var(--transition), background var(--transition);
+}
+.social-strip__link:hover,
+.social-strip__link:focus-visible {
+  color: var(--accent);
+  background: var(--glass-bg);
+  outline: none;
+}
+.social-strip__link i { width: 1rem; height: 1rem; }
+
 /* ─── Ordnance Depot ─────────────────────────── */
 .tools-details {
   margin-bottom: 4rem;
