@@ -1981,6 +1981,633 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // ══════════════════════════════════════════════════════════
+  // ATLAS — map upload, pan/zoom, fog of war, markers
+  // ══════════════════════════════════════════════════════════
+
+  var atlasState = {
+    maps:       [],          // [{ id, name, dataUrl, fog, markers }]
+    activeId:   null,
+    gridSize:   40,          // px per fog cell at 1× zoom
+    paintMode:  false,
+    markerMode: null,        // null | 'secret' | 'trap' | 'npc'
+    zoom:       1,
+    panX:       0,
+    panY:       0,
+    isPanning:  false,
+    panStart:   null,
+    isPainting: false
+  };
+
+  function atlasLoad() {
+    try {
+      var raw = localStorage.getItem('dndm_atlas');
+      if (raw) {
+        var saved = JSON.parse(raw);
+        // Don't store full dataUrls in state — they live in a separate key per map
+        atlasState.maps = (saved.maps || []).map(function(m) {
+          return { id: m.id, name: m.name, fog: m.fog || [], markers: m.markers || [] };
+        });
+        atlasState.activeId = saved.activeId || null;
+      }
+    } catch(e) {}
+  }
+
+  function atlasSave() {
+    try {
+      var slim = {
+        maps: atlasState.maps.map(function(m) {
+          return { id: m.id, name: m.name, fog: m.fog, markers: m.markers };
+        }),
+        activeId: atlasState.activeId
+      };
+      localStorage.setItem('dndm_atlas', JSON.stringify(slim));
+    } catch(e) {}
+  }
+
+  function atlasMapDataUrl(id) {
+    try { return localStorage.getItem('dndm_atlas_img_' + id); } catch(e) { return null; }
+  }
+
+  function atlasMapSaveImg(id, dataUrl) {
+    try { localStorage.setItem('dndm_atlas_img_' + id, dataUrl); } catch(e) {
+      showToast('Map image too large for local storage — try a smaller file');
+    }
+  }
+
+  function atlasMapRemoveImg(id) {
+    try { localStorage.removeItem('dndm_atlas_img_' + id); } catch(e) {}
+  }
+
+  function atlasUID() {
+    return 'map_' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
+  }
+
+  atlasLoad();
+
+  // ── Map list sidebar ──────────────────────────────────────
+  function renderAtlasMapList() {
+    var $list = document.getElementById('atlas-map-list');
+    if (!$list) return;
+    if (!atlasState.maps.length) {
+      $list.innerHTML = '<div class="atlas-empty">No maps uploaded.</div>';
+      return;
+    }
+    $list.innerHTML = atlasState.maps.map(function(m) {
+      var active = m.id === atlasState.activeId;
+      return '<div class="atlas-map-thumb' + (active ? ' atlas-map-thumb--active' : '') + '" data-mapid="' + esc(m.id) + '">'
+        + '<span class="atlas-map-thumb__name">' + esc(m.name) + '</span>'
+        + '<button class="atlas-map-thumb__del" data-mapid="' + esc(m.id) + '" title="Delete map" aria-label="Delete map">×</button>'
+        + '</div>';
+    }).join('');
+
+    $list.querySelectorAll('.atlas-map-thumb').forEach(function(el) {
+      el.addEventListener('click', function(e) {
+        if (e.target.classList.contains('atlas-map-thumb__del')) return;
+        atlasOpenMap(el.dataset.mapid);
+      });
+    });
+    $list.querySelectorAll('.atlas-map-thumb__del').forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var id = btn.dataset.mapid;
+        if (!confirm('Delete this map?')) return;
+        atlasMapRemoveImg(id);
+        atlasState.maps = atlasState.maps.filter(function(m) { return m.id !== id; });
+        if (atlasState.activeId === id) {
+          atlasState.activeId = atlasState.maps.length ? atlasState.maps[0].id : null;
+        }
+        atlasSave();
+        renderAtlasMapList();
+        if (atlasState.activeId) atlasOpenMap(atlasState.activeId);
+        else atlasShowPlaceholder();
+      });
+    });
+  }
+
+  function atlasShowPlaceholder() {
+    var $area = document.getElementById('atlas-canvas-area');
+    if (!$area) return;
+    $area.innerHTML = '<div class="atlas-placeholder">'
+      + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" opacity="0.2" width="64" height="64"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>'
+      + '<p>Upload a map to begin.</p>'
+      + '</div>';
+  }
+
+  // ── Open a map ────────────────────────────────────────────
+  function atlasOpenMap(id) {
+    var map = atlasState.maps.find(function(m) { return m.id === id; });
+    if (!map) return;
+    atlasState.activeId = id;
+    atlasState.zoom     = 1;
+    atlasState.panX     = 0;
+    atlasState.panY     = 0;
+    atlasSave();
+    renderAtlasMapList();
+
+    var dataUrl = atlasMapDataUrl(id);
+    var $area   = document.getElementById('atlas-canvas-area');
+    if (!$area) return;
+
+    $area.innerHTML =
+      '<div class="atlas-viewport" id="atlas-viewport">'
+      + '<div class="atlas-stage" id="atlas-stage" style="transform-origin:0 0">'
+        + '<img class="atlas-img" id="atlas-img" src="' + esc(dataUrl || '') + '" draggable="false" />'
+        + '<canvas class="atlas-fog" id="atlas-fog"></canvas>'
+        + '<div class="atlas-markers" id="atlas-markers"></div>'
+      + '</div>'
+      + '</div>'
+      + '<div class="atlas-toolbar" id="atlas-toolbar">'
+        + '<button class="atlas-tool" id="atl-pan"    title="Pan"     aria-label="Pan mode">✥</button>'
+        + '<button class="atlas-tool" id="atl-fog"    title="Fog"     aria-label="Toggle fog cells">◼</button>'
+        + '<button class="atlas-tool" id="atl-reveal" title="Reveal all" aria-label="Reveal all fog">☀</button>'
+        + '<button class="atlas-tool" id="atl-cover"  title="Cover all"  aria-label="Cover all fog">◼◼</button>'
+        + '<span class="atlas-tool-sep"></span>'
+        + '<button class="atlas-tool" id="atl-m-secret" title="Secret door marker" aria-label="Secret door">🔐</button>'
+        + '<button class="atlas-tool" id="atl-m-trap"   title="Trap marker"        aria-label="Trap">⚠</button>'
+        + '<button class="atlas-tool" id="atl-m-npc"    title="NPC marker"         aria-label="NPC">👤</button>'
+        + '<span class="atlas-tool-sep"></span>'
+        + '<button class="atlas-tool" id="atl-zoom-in"  title="Zoom in"  aria-label="Zoom in">+</button>'
+        + '<button class="atlas-tool" id="atl-zoom-out" title="Zoom out" aria-label="Zoom out">−</button>'
+        + '<button class="atlas-tool" id="atl-player"   title="Send to Player Screen" aria-label="Player screen">▶ PLAYER</button>'
+      + '</div>';
+
+    var $img = document.getElementById('atlas-img');
+    $img.onload = function() { atlasInitCanvas(map); };
+    if ($img.complete && $img.naturalWidth) atlasInitCanvas(map);
+  }
+
+  function atlasInitCanvas(map) {
+    var $img    = document.getElementById('atlas-img');
+    var $fog    = document.getElementById('atlas-fog');
+    var $stage  = document.getElementById('atlas-stage');
+    var $vp     = document.getElementById('atlas-viewport');
+    if (!$img || !$fog || !$stage || !$vp) return;
+
+    var W = $img.naturalWidth;
+    var H = $img.naturalHeight;
+    var cols = Math.ceil(W / atlasState.gridSize);
+    var rows = Math.ceil(H / atlasState.gridSize);
+
+    // Ensure fog array is right size — fill new cells as covered
+    var existing = map.fog || [];
+    map.fog = [];
+    for (var r = 0; r < rows; r++) {
+      for (var c = 0; c < cols; c++) {
+        var i = r * cols + c;
+        map.fog[i] = (existing[i] !== undefined) ? existing[i] : true; // true = fogged
+      }
+    }
+
+    $fog.width  = W;
+    $fog.height = H;
+    $stage.style.width  = W + 'px';
+    $stage.style.height = H + 'px';
+
+    atlasDrawFog(map, cols, rows, W, H);
+    atlasRenderMarkers(map);
+    atlasBindToolbar(map, cols, rows, W, H);
+    atlasBindViewport($vp, $stage);
+    atlasApplyTransform($stage);
+  }
+
+  function atlasDrawFog(map, cols, rows, W, H) {
+    var $fog = document.getElementById('atlas-fog');
+    if (!$fog) return;
+    var ctx = $fog.getContext('2d');
+    ctx.clearRect(0, 0, W, H);
+    var gs = atlasState.gridSize;
+    for (var r = 0; r < rows; r++) {
+      for (var c = 0; c < cols; c++) {
+        var i = r * cols + c;
+        if (map.fog[i]) {
+          ctx.fillStyle = 'rgba(10,7,5,0.88)';
+          ctx.fillRect(c * gs, r * gs, gs, gs);
+          ctx.strokeStyle = 'rgba(139,26,26,0.15)';
+          ctx.lineWidth   = 0.5;
+          ctx.strokeRect(c * gs + 0.25, r * gs + 0.25, gs - 0.5, gs - 0.5);
+        } else {
+          // Faint grid line on revealed cells
+          ctx.strokeStyle = 'rgba(196,146,42,0.07)';
+          ctx.lineWidth   = 0.5;
+          ctx.strokeRect(c * gs + 0.25, r * gs + 0.25, gs - 0.5, gs - 0.5);
+        }
+      }
+    }
+  }
+
+  function atlasRenderMarkers(map) {
+    var $markers = document.getElementById('atlas-markers');
+    if (!$markers) return;
+    var gs = atlasState.gridSize;
+    $markers.innerHTML = (map.markers || []).map(function(mk, idx) {
+      var icon = mk.type === 'secret' ? '🔐' : mk.type === 'trap' ? '⚠' : '👤';
+      return '<div class="atlas-marker" style="left:' + (mk.x * gs + gs/2) + 'px;top:' + (mk.y * gs + gs/2) + 'px" data-idx="' + idx + '" title="' + esc(mk.label || mk.type) + '">'
+        + icon
+        + '<button class="atlas-marker__del" data-idx="' + idx + '">×</button>'
+        + '</div>';
+    }).join('');
+
+    $markers.querySelectorAll('.atlas-marker__del').forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        map.markers.splice(parseInt(btn.dataset.idx), 1);
+        atlasSave();
+        atlasRenderMarkers(map);
+      });
+    });
+  }
+
+  function atlasBindToolbar(map, cols, rows, W, H) {
+    var activeToolBtn = null;
+
+    function setTool(mode, btn) {
+      atlasState.paintMode  = (mode === 'fog');
+      atlasState.markerMode = (mode === 'secret' || mode === 'trap' || mode === 'npc') ? mode : null;
+      if (activeToolBtn) activeToolBtn.classList.remove('atlas-tool--active');
+      activeToolBtn = btn;
+      if (btn) btn.classList.add('atlas-tool--active');
+      var $vp = document.getElementById('atlas-viewport');
+      if ($vp) $vp.style.cursor = mode === 'fog' ? 'crosshair' : (mode ? 'copy' : 'grab');
+    }
+
+    var $panBtn    = document.getElementById('atl-pan');
+    var $fogBtn    = document.getElementById('atl-fog');
+    var $revealBtn = document.getElementById('atl-reveal');
+    var $coverBtn  = document.getElementById('atl-cover');
+    var $mSecret   = document.getElementById('atl-m-secret');
+    var $mTrap     = document.getElementById('atl-m-trap');
+    var $mNPC      = document.getElementById('atl-m-npc');
+    var $zoomIn    = document.getElementById('atl-zoom-in');
+    var $zoomOut   = document.getElementById('atl-zoom-out');
+    var $playerBtn = document.getElementById('atl-player');
+
+    if ($panBtn)    $panBtn.addEventListener('click',    function() { setTool('pan',    $panBtn); });
+    if ($fogBtn)    $fogBtn.addEventListener('click',    function() { setTool('fog',    $fogBtn); });
+    if ($mSecret)   $mSecret.addEventListener('click',  function() { setTool('secret', $mSecret); });
+    if ($mTrap)     $mTrap.addEventListener('click',    function() { setTool('trap',   $mTrap); });
+    if ($mNPC)      $mNPC.addEventListener('click',     function() { setTool('npc',    $mNPC); });
+
+    if ($revealBtn) $revealBtn.addEventListener('click', function() {
+      map.fog = map.fog.map(function() { return false; });
+      atlasSave();
+      atlasDrawFog(map, cols, rows, W, H);
+    });
+    if ($coverBtn)  $coverBtn.addEventListener('click', function() {
+      map.fog = map.fog.map(function() { return true; });
+      atlasSave();
+      atlasDrawFog(map, cols, rows, W, H);
+    });
+
+    if ($zoomIn)  $zoomIn.addEventListener('click',  function() { atlasZoom(0.25); });
+    if ($zoomOut) $zoomOut.addEventListener('click', function() { atlasZoom(-0.25); });
+
+    if ($playerBtn) $playerBtn.addEventListener('click', function() { atlasBroadcastPlayer(map); });
+
+    // Fog paint / marker place on canvas
+    var $fog = document.getElementById('atlas-fog');
+    if ($fog) {
+      function fogCellAt(e) {
+        var rect = $fog.getBoundingClientRect();
+        var gs   = atlasState.gridSize * atlasState.zoom;
+        var c    = Math.floor((e.clientX - rect.left)  / gs);
+        var r    = Math.floor((e.clientY - rect.top)   / gs);
+        if (c < 0 || c >= cols || r < 0 || r >= rows) return null;
+        return { c: c, r: r, i: r * cols + c };
+      }
+
+      $fog.addEventListener('mousedown', function(e) {
+        if (e.button !== 0) return;
+        if (atlasState.markerMode) {
+          var cell = fogCellAt(e);
+          if (!cell) return;
+          var label = prompt('Marker label (optional):', '');
+          if (label === null) return;
+          map.markers.push({ type: atlasState.markerMode, x: cell.c, y: cell.r, label: label.trim() });
+          atlasSave();
+          atlasRenderMarkers(map);
+          return;
+        }
+        if (!atlasState.paintMode) return;
+        atlasState.isPainting = true;
+        var cell = fogCellAt(e);
+        if (cell) {
+          atlasState._paintVal = !map.fog[cell.i]; // toggle based on first cell
+          map.fog[cell.i] = atlasState._paintVal;
+          atlasDrawFog(map, cols, rows, W, H);
+        }
+      });
+
+      $fog.addEventListener('mousemove', function(e) {
+        if (!atlasState.isPainting || !atlasState.paintMode) return;
+        var cell = fogCellAt(e);
+        if (cell && map.fog[cell.i] !== atlasState._paintVal) {
+          map.fog[cell.i] = atlasState._paintVal;
+          atlasDrawFog(map, cols, rows, W, H);
+        }
+      });
+
+      document.addEventListener('mouseup', function() {
+        if (atlasState.isPainting) {
+          atlasState.isPainting = false;
+          atlasSave();
+        }
+      });
+    }
+
+    // Start with pan tool active
+    setTool('pan', $panBtn);
+  }
+
+  function atlasBindViewport($vp, $stage) {
+    // Pan via drag (when in pan mode or middle-mouse)
+    $vp.addEventListener('mousedown', function(e) {
+      if (atlasState.paintMode || atlasState.markerMode) return;
+      if (e.button === 1 || e.button === 0) {
+        atlasState.isPanning = true;
+        atlasState.panStart  = { x: e.clientX - atlasState.panX, y: e.clientY - atlasState.panY };
+        $vp.style.cursor = 'grabbing';
+        e.preventDefault();
+      }
+    });
+
+    document.addEventListener('mousemove', function(e) {
+      if (!atlasState.isPanning) return;
+      atlasState.panX = e.clientX - atlasState.panStart.x;
+      atlasState.panY = e.clientY - atlasState.panStart.y;
+      atlasApplyTransform($stage);
+    });
+
+    document.addEventListener('mouseup', function() {
+      if (atlasState.isPanning) {
+        atlasState.isPanning = false;
+        $vp.style.cursor = atlasState.paintMode ? 'crosshair' : 'grab';
+      }
+    });
+
+    // Scroll-to-zoom
+    $vp.addEventListener('wheel', function(e) {
+      e.preventDefault();
+      var delta = e.deltaY > 0 ? -0.1 : 0.1;
+      atlasZoom(delta);
+    }, { passive: false });
+  }
+
+  function atlasZoom(delta) {
+    atlasState.zoom = Math.max(0.2, Math.min(4, atlasState.zoom + delta));
+    var $stage = document.getElementById('atlas-stage');
+    if ($stage) atlasApplyTransform($stage);
+  }
+
+  function atlasApplyTransform($stage) {
+    if (!$stage) return;
+    $stage.style.transform = 'translate(' + atlasState.panX + 'px,' + atlasState.panY + 'px) scale(' + atlasState.zoom + ')';
+  }
+
+  // ── Map upload ────────────────────────────────────────────
+  var $uploadMapBtn = document.getElementById('upload-map');
+  var _mapFileInput = document.createElement('input');
+  _mapFileInput.type   = 'file';
+  _mapFileInput.accept = 'image/*';
+  _mapFileInput.hidden = true;
+  document.body.appendChild(_mapFileInput);
+
+  if ($uploadMapBtn) {
+    $uploadMapBtn.addEventListener('click', function() { _mapFileInput.click(); });
+  }
+  _mapFileInput.addEventListener('change', function() {
+    var file = _mapFileInput.files[0];
+    if (!file) return;
+    var name = prompt('Map name:', file.name.replace(/\.[^.]+$/, '') || 'Untitled Map');
+    if (name === null) return;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var id  = atlasUID();
+      var map = { id: id, name: name.trim() || 'Untitled Map', fog: [], markers: [] };
+      atlasMapSaveImg(id, e.target.result);
+      atlasState.maps.push(map);
+      atlasState.activeId = id;
+      atlasSave();
+      renderAtlasMapList();
+      atlasOpenMap(id);
+    };
+    reader.readAsDataURL(file);
+    _mapFileInput.value = '';
+  });
+
+  // Player Screen launch
+  var $launchPlayer = document.getElementById('launch-player-screen');
+  if ($launchPlayer) {
+    $launchPlayer.addEventListener('click', function() {
+      window.open('/dndm/?view=player', 'grimoire-player');
+    });
+  }
+
+  // ── BroadcastChannel — player screen ─────────────────────
+  var _playerChannel = null;
+  try { _playerChannel = new BroadcastChannel('dndm-player'); } catch(e) {}
+
+  function atlasBroadcastPlayer(map) {
+    if (!_playerChannel) { showToast('BroadcastChannel not supported in this browser'); return; }
+    var dataUrl = atlasMapDataUrl(map.id);
+    _playerChannel.postMessage({
+      type:      'map-update',
+      mapName:   map.name,
+      imageData: dataUrl,
+      fog:       map.fog,
+      cols:      Math.ceil(0 / atlasState.gridSize), // recalculated on player side
+      gridSize:  atlasState.gridSize
+    });
+    showToast('Map sent to player screen');
+  }
+
+  // ── Player view (second tab) ──────────────────────────────
+  if (new URLSearchParams(window.location.search).get('view') === 'player') {
+    document.getElementById('welcome').hidden = true;
+    document.getElementById('app').hidden     = true;
+    var $player = document.createElement('div');
+    $player.id  = 'player-screen';
+    $player.className = 'player-screen';
+    $player.innerHTML = '<div class="player-screen__title" id="player-title"></div>'
+      + '<canvas class="player-screen__canvas" id="player-canvas"></canvas>'
+      + '<div class="player-screen__waiting">Waiting for DM to send map…</div>';
+    document.body.appendChild($player);
+
+    try {
+      var _pc = new BroadcastChannel('dndm-player');
+      _pc.onmessage = function(e) {
+        var msg = e.data;
+        if (msg.type !== 'map-update') return;
+        var $waiting = $player.querySelector('.player-screen__waiting');
+        if ($waiting) $waiting.remove();
+        var $title = document.getElementById('player-title');
+        if ($title) { $title.textContent = msg.mapName || ''; }
+        var $canvas = document.getElementById('player-canvas');
+        if (!$canvas) return;
+        var img = new Image();
+        img.onload = function() {
+          $canvas.width  = img.naturalWidth;
+          $canvas.height = img.naturalHeight;
+          var ctx = $canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          // Apply fog
+          var gs   = msg.gridSize || 40;
+          var fog  = msg.fog || [];
+          var cols = Math.ceil(img.naturalWidth / gs);
+          fog.forEach(function(fogged, i) {
+            if (!fogged) return;
+            var c = i % cols, r = Math.floor(i / cols);
+            ctx.fillStyle = 'rgba(10,7,5,0.92)';
+            ctx.fillRect(c * gs, r * gs, gs, gs);
+          });
+        };
+        img.src = msg.imageData;
+      };
+    } catch(e) {}
+    return; // stop the rest of app init for player tab
+  }
+
+  renderAtlasMapList();
+  if (atlasState.activeId) atlasOpenMap(atlasState.activeId);
+  else atlasShowPlaceholder();
+
+  // ══════════════════════════════════════════════════════════
+  // SOUNDSCAPE — scene presets + audio playback
+  // ══════════════════════════════════════════════════════════
+
+  var soundState = {
+    activeScene: null,
+    audio:       null,   // active HTMLAudioElement
+    scenes:      {}      // { [sceneKey]: { src: objectUrl|null, vol: 0.7, loop: true } }
+  };
+
+  var SCENE_KEYS = ['tavern','dungeon','forest','combat','silence','custom'];
+
+  function soundLoad() {
+    try {
+      var raw = localStorage.getItem('dndm_sound');
+      if (raw) soundState.scenes = JSON.parse(raw);
+    } catch(e) {}
+    SCENE_KEYS.forEach(function(k) {
+      if (!soundState.scenes[k]) soundState.scenes[k] = { src: null, vol: 0.7, loop: true };
+    });
+  }
+
+  function soundSave() {
+    // Don't save object URLs (they die with the tab) — save only vol/loop
+    var slim = {};
+    SCENE_KEYS.forEach(function(k) {
+      slim[k] = { src: null, vol: soundState.scenes[k].vol, loop: soundState.scenes[k].loop };
+    });
+    try { localStorage.setItem('dndm_sound', JSON.stringify(slim)); } catch(e) {}
+  }
+
+  soundLoad();
+
+  function soundPlay(sceneKey) {
+    var scene = soundState.scenes[sceneKey];
+    if (!scene) return;
+
+    // Stop current
+    if (soundState.audio) {
+      soundState.audio.pause();
+      soundState.audio = null;
+    }
+
+    // Update active card
+    document.querySelectorAll('.scene-card').forEach(function(c) {
+      c.classList.toggle('scene-card--active', c.dataset.scene === sceneKey);
+    });
+    soundState.activeScene = sceneKey;
+
+    if (sceneKey === 'silence' || !scene.src) {
+      soundRenderMixer(sceneKey);
+      return;
+    }
+
+    var audio = new Audio(scene.src);
+    audio.loop   = scene.loop;
+    audio.volume = scene.vol;
+    audio.play().catch(function() { showToast('Audio playback blocked — interact with the page first'); });
+    soundState.audio = audio;
+    soundRenderMixer(sceneKey);
+  }
+
+  function soundRenderMixer(sceneKey) {
+    var $body = document.querySelector('.soundscape-mixer__body');
+    if (!$body) return;
+    var scene = soundState.scenes[sceneKey] || {};
+    var isPlaying = soundState.audio && !soundState.audio.paused;
+    var label = sceneKey.charAt(0).toUpperCase() + sceneKey.slice(1);
+
+    $body.innerHTML =
+      '<div class="mixer-scene-name">' + esc(label) + (isPlaying ? ' <span class="mixer-playing">▶ PLAYING</span>' : '') + '</div>'
+      + '<div class="mixer-row">'
+        + '<label class="mixer-label" for="mixer-vol">Volume</label>'
+        + '<input class="mixer-slider" type="range" id="mixer-vol" min="0" max="1" step="0.05" value="' + (scene.vol || 0.7) + '" />'
+      + '</div>'
+      + '<div class="mixer-row">'
+        + '<label class="mixer-label">'
+          + '<input type="checkbox" id="mixer-loop"' + (scene.loop !== false ? ' checked' : '') + ' /> Loop'
+        + '</label>'
+      + '</div>'
+      + (sceneKey !== 'silence'
+        ? '<div class="mixer-row">'
+            + '<button class="mixer-upload-btn" id="mixer-upload">Upload audio…</button>'
+            + (scene.src ? '<button class="mixer-stop-btn" id="mixer-stop">■ Stop</button>' : '')
+          + '</div>'
+        : '')
+      + (sceneKey !== 'silence' && !scene.src
+        ? '<p class="mixer-hint">No audio file loaded. Upload to enable this scene.</p>'
+        : '');
+
+    var $vol  = document.getElementById('mixer-vol');
+    var $loop = document.getElementById('mixer-loop');
+    var $stop = document.getElementById('mixer-stop');
+    var $uploadSnd = document.getElementById('mixer-upload');
+
+    if ($vol) $vol.addEventListener('input', function() {
+      scene.vol = parseFloat($vol.value);
+      if (soundState.audio) soundState.audio.volume = scene.vol;
+      soundSave();
+    });
+    if ($loop) $loop.addEventListener('change', function() {
+      scene.loop = $loop.checked;
+      if (soundState.audio) soundState.audio.loop = scene.loop;
+      soundSave();
+    });
+    if ($stop) $stop.addEventListener('click', function() {
+      if (soundState.audio) { soundState.audio.pause(); soundState.audio = null; }
+      soundState.activeScene = null;
+      document.querySelectorAll('.scene-card').forEach(function(c) { c.classList.remove('scene-card--active'); });
+      soundRenderMixer(sceneKey);
+    });
+    if ($uploadSnd) $uploadSnd.addEventListener('click', function() {
+      var inp = document.createElement('input');
+      inp.type   = 'file';
+      inp.accept = 'audio/*';
+      inp.addEventListener('change', function() {
+        var file = inp.files[0];
+        if (!file) return;
+        var url = URL.createObjectURL(file);
+        scene.src = url;
+        soundSave();
+        showToast('Audio loaded: ' + file.name);
+        soundPlay(sceneKey); // auto-play on upload
+      });
+      inp.click();
+    });
+  }
+
+  // Wire scene cards
+  document.querySelectorAll('.scene-card').forEach(function(card) {
+    card.addEventListener('click', function() {
+      var key = card.dataset.scene;
+      if (!key) return;
+      soundPlay(key);
+    });
+  });
+
+  // ══════════════════════════════════════════════════════════
   // ORACLE — nano-gpt rules assistant
   // ══════════════════════════════════════════════════════════
 

@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.3.49",
+    "schema_version": "1.3.50",
     "last_updated": "2026-05-17",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -478,6 +478,19 @@
     ]
   },
   "commits": [
+    {
+      "hash": "4fdb988",
+      "date": "2026-05-17",
+      "message": "fix(dndm): welcome screen overlay blocked all interaction after dismiss / feat(dndm): Phase 7 — Oracle (nano-gpt streaming rules assistant)",
+      "scope": "dndm/",
+      "impact": "high",
+      "files": [
+        "dndm/assets/script/app.js",
+        "dndm/assets/style/style.css",
+        "status/logs/logs.json"
+      ],
+      "why": "Root cause of 'nothing is clickable' was .welcome { display: flex } outranking the browser UA [hidden] rule, keeping the fixed overlay alive after dismissal — fixed with .welcome[hidden] { display: none !important }. Also ships Phase 7: Oracle streaming chat with inline markdown renderer, nano-gpt API key persistence, and Phase 8 keyboard shortcuts (Ctrl+B/P/D/O, N for next turn)."
+    },
     {
       "hash": "ba99cc1",
       "date": "2026-05-17",
