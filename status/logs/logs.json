@@ -473,7 +473,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "7bfad06",
       "date": "2026-05-16",
       "message": "refactor(repo): restructure — underdark/ top-level, art/assets, radar/assets, remove empty dirs",
       "scope": "entire repo — directory structure, all cross-references updated",
