@@ -28,7 +28,7 @@
       "description": "Advanced LLM roleplay interface. Cinematic multi-bot layout and Lorebooks.",
       "tags": ["ai", "llm", "roleplay", "characters"],
       "keyed": true,
-      "status": "live"
+      "status": "offline"
     },
     "3": {
       "name": "DM MATRIX",
