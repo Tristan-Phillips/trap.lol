@@ -3765,7 +3765,22 @@ export function initUI() {
         if (!char.extensions)                char.extensions = {};
         if (!char.extensions.underdark)      char.extensions.underdark = {};
         if (!char.extensions.underdark.gallery) char.extensions.underdark.gallery = [];
+        if (!char.extensions.underdark.galleryMeta) char.extensions.underdark.galleryMeta = {};
         return char;
+    }
+
+    function _getGalleryMeta(id, ref) {
+        const char = ensureGalleryStore(id);
+        if (!char) return { tags: [] };
+        return char.extensions.underdark.galleryMeta[ref] || { tags: [] };
+    }
+
+    function _setGalleryMeta(id, ref, patch) {
+        const char = ensureGalleryStore(id);
+        if (!char) return;
+        const existing = char.extensions.underdark.galleryMeta[ref] || { tags: [] };
+        char.extensions.underdark.galleryMeta[ref] = { ...existing, ...patch };
+        saveState();
     }
 
     // Push a data URL (or URL string) to a character's gallery, offloading
@@ -3854,17 +3869,44 @@ export function initUI() {
         lucideRefresh(qs('#modal-gallery'));
     }
 
-    async function renderGalleryModal(id) {
+    async function renderGalleryModal(id, tagFilter = null) {
         const $grid = qs('#gallery-grid');
         if (!$grid) return;
         const allRefs = getAllGalleryImages(id);
         const meta = state.characters.find(c => c.id === id);
+        const charObj = ensureGalleryStore(id);
 
         const $title = qs('#gallery-title');
         if ($title) $title.textContent = `${meta?.name || 'Character'}`;
 
         const $count = qs('#gallery-count');
         if ($count) $count.textContent = allRefs.length ? `${allRefs.length} image${allRefs.length !== 1 ? 's' : ''}` : '';
+
+        // Collect all unique tags across this gallery for the filter bar
+        const allTags = [...new Set(allRefs.flatMap(ref =>
+            charObj?.extensions?.underdark?.galleryMeta?.[ref]?.tags || []
+        ))].sort();
+
+        // Render filter bar (between header and grid)
+        let $filterBar = qs('#gallery-tag-filter');
+        if (!$filterBar) {
+            $filterBar = document.createElement('div');
+            $filterBar.id = 'gallery-tag-filter';
+            $filterBar.className = 'gallery-tag-filter';
+            $grid.parentElement.insertBefore($filterBar, $grid);
+        }
+        if (allTags.length) {
+            $filterBar.innerHTML = `
+                <span class="gallery-tag-filter__label">Filter:</span>
+                <button class="gallery-tag-chip gallery-tag-chip--filter${!tagFilter ? ' gallery-tag-chip--active' : ''}" data-filter="">All</button>
+                ${allTags.map(t => `<button class="gallery-tag-chip gallery-tag-chip--filter${tagFilter === t ? ' gallery-tag-chip--active' : ''}" data-filter="${esc(t)}">${esc(t)}</button>`).join('')}`;
+            $filterBar.hidden = false;
+            qsa('[data-filter]', $filterBar).forEach(btn => {
+                btn.onclick = () => renderGalleryModal(id, btn.dataset.filter || null);
+            });
+        } else {
+            $filterBar.hidden = true;
+        }
 
         if (!allRefs.length) {
             $grid.innerHTML = `
@@ -3877,21 +3919,48 @@ export function initUI() {
             return;
         }
 
+        // Apply tag filter before resolving URLs
+        const filteredRefs = tagFilter
+            ? allRefs.filter(ref => {
+                const tags = charObj?.extensions?.underdark?.galleryMeta?.[ref]?.tags || [];
+                return tags.includes(tagFilter);
+            })
+            : allRefs;
+
+        if (!filteredRefs.length) {
+            $grid.innerHTML = `
+                <div class="gallery-empty">
+                    <i data-lucide="tag"></i>
+                    <span>No images tagged "${esc(tagFilter)}"</span>
+                </div>`;
+            lucideRefresh($grid);
+            return;
+        }
+
         // Resolve all IDB refs to display URLs
-        const resolvedUrls = await Promise.all(allRefs.map(ref => resolveImageUrl(ref)));
+        const resolvedUrls = await Promise.all(filteredRefs.map(ref => resolveImageUrl(ref)));
 
         $grid.innerHTML = resolvedUrls.map((src, i) => {
             if (!src) return '';
-            const isCover = i === 0;
+            const ref = filteredRefs[i];
+            const origIdx = allRefs.indexOf(ref);
+            const isCover = origIdx === 0;
+            const tags = charObj?.extensions?.underdark?.galleryMeta?.[ref]?.tags || [];
+            const tagHtml = `
+                <div class="gallery-item__tags">
+                    ${tags.map(t => `<span class="gallery-tag-chip gallery-tag-chip--item" data-rmtag="${esc(t)}" data-ref="${esc(ref)}">${esc(t)}<span class="gallery-tag-chip__x">×</span></span>`).join('')}
+                    <button class="gallery-tag-chip gallery-tag-chip--add" data-addtag data-ref="${esc(ref)}" title="Add tag"><i data-lucide="plus" style="width:10px;height:10px;"></i></button>
+                </div>`;
             return `
-            <div class="gallery-item${isCover ? ' gallery-item--cover' : ''}" data-gi="${i}">
-                <img src="${esc(src)}" alt="Image ${i + 1}" loading="lazy" class="gallery-item__img">
+            <div class="gallery-item${isCover ? ' gallery-item--cover' : ''}" data-gi="${origIdx}" data-ref="${esc(ref)}">
+                <img src="${esc(src)}" alt="Image ${origIdx + 1}" loading="lazy" class="gallery-item__img">
                 ${isCover ? `<span class="gallery-item__badge">Avatar</span>` : ''}
+                ${tagHtml}
                 <div class="gallery-item__overlay">
-                    <button class="gallery-item__btn" data-lb="${i}" title="Expand"><i data-lucide="expand"></i></button>
+                    <button class="gallery-item__btn" data-lb="${origIdx}" title="Expand"><i data-lucide="expand"></i></button>
                     <button class="gallery-item__btn gallery-item__btn--dl" data-dl="${i}" title="Download"><i data-lucide="download"></i></button>
-                    ${isCover ? `<button class="gallery-item__btn gallery-item__btn--set" data-set-cover="-1" title="Already profile picture" disabled><i data-lucide="star"></i></button>` : `<button class="gallery-item__btn gallery-item__btn--set" data-set-cover="${i - 1}" title="Set as profile picture"><i data-lucide="user-check"></i></button>`}
-                    ${!isCover ? `<button class="gallery-item__btn gallery-item__btn--del" data-del="${i - 1}" title="Remove"><i data-lucide="trash-2"></i></button>` : ''}
+                    ${isCover ? `<button class="gallery-item__btn gallery-item__btn--set" data-set-cover="-1" title="Already profile picture" disabled><i data-lucide="star"></i></button>` : `<button class="gallery-item__btn gallery-item__btn--set" data-set-cover="${origIdx - 1}" title="Set as profile picture"><i data-lucide="user-check"></i></button>`}
+                    ${!isCover ? `<button class="gallery-item__btn gallery-item__btn--del" data-del="${origIdx - 1}" title="Remove"><i data-lucide="trash-2"></i></button>` : ''}
                 </div>
             </div>`;
         }).join('');
@@ -3899,14 +3968,12 @@ export function initUI() {
         qsa('[data-lb]', $grid).forEach(btn => btn.onclick = () => openLightbox(id, parseInt(btn.dataset.lb)));
         qsa('[data-set-cover]', $grid).forEach(btn => btn.onclick = () => {
             const idx = parseInt(btn.dataset.setCover);
-            const charObj = ensureGalleryStore(id);
             const gallery = charObj.extensions.underdark.gallery;
-            const ref = gallery[idx]; // may be idb:img: ref
+            const ref = gallery[idx];
             if (meta && ref) {
                 if (meta.avatar_path) gallery.unshift(meta.avatar_path);
                 gallery.splice(gallery.indexOf(ref), 1);
                 meta.avatar_path = ref;
-                // Bust cache so next getAvatarUrl resolves the new ref
                 delete _avatarCache[id];
                 saveState();
                 renderRoster();
@@ -3917,15 +3984,16 @@ export function initUI() {
         });
         qsa('[data-del]', $grid).forEach(btn => btn.onclick = async () => {
             const idx = parseInt(btn.dataset.del);
-            const charObj = ensureGalleryStore(id);
-            const ref = charObj.extensions.underdark.gallery[idx];
+            const gallery = charObj.extensions.underdark.gallery;
+            const ref = gallery[idx];
             if (isIdbImageRef(ref)) await deleteImageBlob(idbImageRefId(ref)).catch(() => {});
-            charObj.extensions.underdark.gallery.splice(idx, 1);
-            // Mirror removal into localPosts so feed stays in sync
+            // Also clean up meta
+            if (charObj.extensions.underdark.galleryMeta) delete charObj.extensions.underdark.galleryMeta[ref];
+            gallery.splice(idx, 1);
             _removeLocalPostBySrc(id, ref);
             saveState();
             renderGalleryStrip(id);
-            renderGalleryModal(id);
+            renderGalleryModal(id, tagFilter);
         });
         qsa('[data-dl]', $grid).forEach(btn => btn.onclick = async () => {
             const idx = parseInt(btn.dataset.dl);
@@ -3935,6 +4003,41 @@ export function initUI() {
             a.href = src;
             a.download = `${(meta?.name || 'image').toLowerCase().replace(/\s+/g, '-')}-${String(idx + 1).padStart(3, '0')}.png`;
             a.click();
+        });
+
+        // Tag remove
+        qsa('[data-rmtag]', $grid).forEach(chip => chip.onclick = e => {
+            e.stopPropagation();
+            const tag = chip.dataset.rmtag;
+            const ref = chip.dataset.ref;
+            const m = _getGalleryMeta(id, ref);
+            m.tags = m.tags.filter(t => t !== tag);
+            _setGalleryMeta(id, ref, m);
+            renderGalleryModal(id, tagFilter);
+        });
+
+        // Tag add — inline input
+        qsa('[data-addtag]', $grid).forEach(btn => btn.onclick = e => {
+            e.stopPropagation();
+            const ref = btn.dataset.ref;
+            const $tags = btn.closest('.gallery-item__tags');
+            if ($tags.querySelector('.gallery-tag-chip--input')) return;
+            const $inp = document.createElement('input');
+            $inp.className = 'gallery-tag-chip gallery-tag-chip--input';
+            $inp.placeholder = 'tag…';
+            $inp.maxLength = 20;
+            $tags.insertBefore($inp, btn);
+            $inp.focus();
+            const commit = () => {
+                const val = $inp.value.trim().toLowerCase().replace(/\s+/g, '-');
+                if (val) {
+                    const m = _getGalleryMeta(id, ref);
+                    if (!m.tags.includes(val)) { m.tags.push(val); _setGalleryMeta(id, ref, m); }
+                }
+                renderGalleryModal(id, tagFilter);
+            };
+            $inp.onkeydown = e2 => { if (e2.key === 'Enter') { e2.preventDefault(); commit(); } if (e2.key === 'Escape') renderGalleryModal(id, tagFilter); };
+            $inp.onblur = commit;
         });
 
         lucideRefresh($grid);

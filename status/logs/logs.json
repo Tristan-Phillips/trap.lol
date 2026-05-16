@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.3.31",
+    "schema_version": "1.3.32",
     "last_updated": "2026-05-16",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -472,6 +472,20 @@
     ]
   },
   "commits": [
+    {
+      "hash": "0000000",
+      "date": "2026-05-16",
+      "message": "feat(underdark): taggable gallery with per-image tag chips + filter bar — ui.js v108",
+      "scope": "playground/characters — ui.js, gallery-modal.css, main.js",
+      "impact": "medium",
+      "files": [
+        "playground/characters/script/modules/ui.js",
+        "playground/characters/script/main.js",
+        "playground/characters/style/gallery-modal.css",
+        "status/logs/logs.json"
+      ],
+      "why": "Gallery images had no metadata — flat ref array with no tagging, captioning, or filtering. Added galleryMeta parallel store (ref → {tags[]}) to ensureGalleryStore; gallery modal now renders tag chips per item, inline tag-add input, tag-remove click, and a filter bar above the grid showing all active tags."
+    },
     {
       "hash": "057a245",
       "date": "2026-05-16",
@@ -1617,6 +1631,22 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-16",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Taggable gallery: ensureGalleryStore now initialises galleryMeta ({} map from ref → {tags[]}) alongside gallery []. renderGalleryModal rebuilt to render tag chips on each item (hover-visible strip), inline tag-add input (Enter to commit, blur to commit, Escape to cancel), tag-remove click, and a filter bar above the grid. tagFilter param propagates through re-renders so filter state is preserved after add/remove. gallery-modal.css gains .gallery-tag-filter, .gallery-tag-chip + modifier variants (--filter, --item, --add, --input). Batch F item 1 of 3.",
+      "decisions": [
+        "galleryMeta stored as a ref-keyed object (not array) so lookups are O(1) and deletions clean up naturally with 'delete obj[ref]'.",
+        "Tag chips visible on hover only (same pattern as overlay buttons) to keep the grid clean at default zoom.",
+        "Filter bar only renders when at least one tag exists across the gallery — hidden otherwise to avoid empty UI chrome.",
+        "tagFilter param passed through all re-render calls so add/remove operations inside a filtered view don't reset to All."
+      ],
+      "rules_reinforced": [
+        "Parallel metadata stores (galleryMeta alongside gallery) are the right pattern for enriching flat arrays without breaking existing consumers.",
+        "Always propagate view state (tagFilter) through re-render calls so the UI doesn't lose context on mutation."
+      ]
+    },
     {
       "date": "2026-05-16",
       "agent": "Claude Sonnet 4.6",
@@ -2982,6 +3012,36 @@
         "description": "Move meter logic out of ui.js closure into a proper ES module for testability and code organisation.",
         "notes": "Done in 2a04432. codex-meters.js created with initCodexMeters() dependency injection. applyStatusTags, setMeterDOM, keywordMeterScore, llmScoreMeters, updateCodexMeters all moved. ui.js imports module and retains shim functions for backward-compatible call sites.",
         "files_affected": ["playground/characters/script/modules/codex-meters.js", "playground/characters/script/modules/ui.js"]
+      },
+      {
+        "id": "taggable-gallery",
+        "title": "Taggable gallery with per-image chips and filter bar",
+        "status": "done",
+        "requested": "2026-05-16",
+        "completed": "2026-05-16",
+        "description": "Gallery images had no metadata. Add per-image tag chips (hover overlay), inline tag-add input, tag-remove, and a filter bar that shows all tags across the character's gallery. Non-destructive — adds galleryMeta parallel store alongside flat gallery[].",
+        "notes": "Done this session. ensureGalleryStore now also initialises galleryMeta: {}. _getGalleryMeta/_setGalleryMeta helpers. renderGalleryModal(id, tagFilter?) rebuilt: filter bar above grid, tag chip strip on each item, inline input for tag-add, tag remove. gallery-modal.css: .gallery-tag-filter, .gallery-tag-chip + --filter/--item/--add/--input variants.",
+        "files_affected": ["playground/characters/script/modules/ui.js", "playground/characters/style/gallery-modal.css", "playground/characters/script/main.js"]
+      },
+      {
+        "id": "video-gallery",
+        "title": "Video on-demand: persist generated videos in a video gallery",
+        "status": "not_started",
+        "requested": "2026-05-16",
+        "completed": null,
+        "description": "Generated videos are injected into the thread via _injectVideoMessage() but not persisted. Add a videoGallery store analogous to gallery[], show in a lightbox player, allow download. Batch F item 2.",
+        "notes": "",
+        "files_affected": []
+      },
+      {
+        "id": "image-studio-overhaul",
+        "title": "Image Studio overhaul (gallery integration, history panel, or batch generation)",
+        "status": "not_started",
+        "requested": "2026-05-16",
+        "completed": null,
+        "description": "Image Studio has 7 tabs (Quick/Character/Outfit/Pose/Scene/Style/Model). Overhaul scope TBD — likely gallery integration (auto-save generated images to character gallery), history panel, or batch generation. Batch F item 3.",
+        "notes": "",
+        "files_affected": []
       },
       {
         "id": "hard-reset-button",
