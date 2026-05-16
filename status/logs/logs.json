@@ -473,7 +473,7 @@
   },
   "commits": [
     {
-      "hash": "PENDING",
+      "hash": "057a245",
       "date": "2026-05-16",
       "message": "feat(underdark): thread lore pins + relationship map canvas — ui.js v107",
       "scope": "playground/characters — ui.js, llm-engine.js, index.html, thread-config.css, scene-codex.css, style.css, main.js",
