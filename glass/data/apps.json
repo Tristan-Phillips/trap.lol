@@ -18,7 +18,7 @@
       "description": "A playground for experimenting with large language models",
       "tags": ["ai", "llm", "playground"],
       "keyed": true,
-      "status": "live"
+      "status": "offline"
     },
     "2": {
       "name": "The Underdark",
@@ -31,22 +31,12 @@
       "status": "live"
     },
     "3": {
-      "name": "ECHOES",
-      "slug": "art",
-      "path": "/art/",
-      "icon": "images",
-      "description": "Gacha-pull art gallery. Rarity tiers, lightbox with full zoom and rotation.",
-      "tags": ["art", "gallery", "visual"],
-      "keyed": false,
-      "status": "live"
-    },
-    "4": {
-      "name": "Uplink Sentinel",
-      "slug": "status",
-      "path": "/status/",
-      "icon": "activity",
-      "description": "Live infrastructure monitor. Sovereign nodes, app uplinks, and drone fleet.",
-      "tags": ["infra", "monitoring", "uptime"],
+      "name": "DM MATRIX",
+      "slug": "dndm",
+      "path": "/dndm/",
+      "icon": "swords",
+      "description": "Full Dungeon Master suite. Campaign manager, combat tracker, bestiary, atlas, oracle, and more.",
+      "tags": ["dnd", "tabletop", "campaign", "tools"],
       "keyed": false,
       "status": "live"
     }

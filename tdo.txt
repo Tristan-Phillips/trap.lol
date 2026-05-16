@@ -1,0 +1,24 @@
+1: Move the following into playground as subdirectories:
+-- dndm
+-- radar
+-- underdark
+
+2: the current llm page in playground/index.html should be moved into a subfolder of playground called aiagent
+
+3: then create a "roster" in playground/index.html that links to all the "apps" (its subfolders) 
+-- The info that this roster renders should be in a relevant .json such that it is easy to add / remove and change descriptions statuses locations dirs any related images etc etc)
+
+4: Creating the "roster" in playground/index.html does not mean we remove APP uplinks from /index.html though (however try using the same jsons as you can so that we do not have jsons with dupe data that need to be maintained)
+
+5: Style the sovereign nodes on /index.html more like the Drone Fleet
+-- (Basically im just asking to make its footprint a little smaller) 
+
+6: in /glass/data/ I created statsation.json and trap.json
+-- statstation.json now holds the things that are not really "Apps for the public" like those listed in apps.json so think about that and design a view section for it on the home page /index.html
+-- same goes for trap.json (these are things that are not really apps or anything they are just things like my rants and artworks) (We alway keep the main Echoes first like it is on the home page /index.html) 
+
+7: Remove the radial type hovering button for social links from /index.html , we must re-think that (keep the icons already assigned to each but subtly place them somewhere on the home page for now) 
+
+--
+
+8: in /void/ I need a /void/new/index.html that is a local only page in which I can type style and create an entire new "blog" void entry but then by "saving" it exports the code I can paste into the void.json file (even better, a button that then just shows the code for me to click copy then I can paste it into my void.json to make making new posts easier) 

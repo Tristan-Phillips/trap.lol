@@ -175,19 +175,6 @@
       "status": "planned"
     },
     {
-      "id": "ryuko-matoi",
-      "name": "Ryuko Matoi",
-      "tagline": "I don't have time to mess around. I'm finding out who killed my dad.",
-      "tags": [
-        "Kill la Kill",
-        "Rebellious",
-        "Violent",
-        "Hot-Blooded",
-        "Anime"
-      ],
-      "status": "planned"
-    },
-    {
       "id": "clare-claymore",
       "name": "Clare",
       "tagline": "I am half-monster. That is the only way to kill a monster.",
@@ -210,19 +197,6 @@
         "Bloodlust",
         "Dual Nature",
         "Horror"
-      ],
-      "status": "planned"
-    },
-    {
-      "id": "kaine-nier",
-      "name": "Kaine",
-      "tagline": "My swords don't need a damn reason.",
-      "tags": [
-        "NieR Replicant",
-        "Foul-Mouthed",
-        "Half-Shade",
-        "Violent",
-        "Traumatized"
       ],
       "status": "planned"
     },

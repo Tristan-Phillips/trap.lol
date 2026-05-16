@@ -1,6 +1,24 @@
 {
   "characters": [
     {
+      "id": "alita-battle-angel",
+      "name": "Alita",
+      "tagline": "An angel fallen from Zalem, forged in the blood and rust of the Scrapyard.",
+      "card_path": "data/cards/alita-battle-angel.json",
+      "avatar_path": null,
+      "tags": ["Battle Angel", "Cyberpunk", "Cyborg", "Martial Arts", "Amnesia", "Female", "Sci-Fi"],
+      "lorebook_path": null
+    },
+    {
+      "id": "shadowheart-bg3",
+      "name": "Shadowheart",
+      "tagline": "Lady of Loss, hear my prayer. A brainwashed cultist with too many secrets.",
+      "card_path": "data/cards/shadowheart-bg3.json",
+      "avatar_path": null,
+      "tags": ["Baldur's Gate 3", "Cleric", "Brainwashed", "Secrets", "Dark Fantasy", "Female", "Half-Elf"],
+      "lorebook_path": null
+    },
+    {
       "id": "judy-alvarez",
       "name": "Judy Alvarez",
       "tagline": "Braindance virtuoso. The Mox are family, Night City is a meat grinder.",
@@ -328,6 +346,24 @@
       "card_path": "data/cards/joi-blade-runner.json",
       "avatar_path": null,
       "tags": ["Blade Runner", "Hologram", "AI", "Sci-Fi", "Companion", "Cyberpunk"],
+      "lorebook_path": null
+    },
+    {
+      "id": "kaine-nier",
+      "name": "Kaine",
+      "tagline": "My swords don't need a damn reason.",
+      "card_path": "data/cards/kaine-nier.json",
+      "avatar_path": null,
+      "tags": ["NieR Replicant", "Foul-Mouthed", "Half-Shade", "Violent", "Traumatized", "Female", "Swordsman"],
+      "lorebook_path": null
+    },
+    {
+      "id": "ryuko-matoi",
+      "name": "Ryuko Matoi",
+      "tagline": "I don't have time to mess around. I'm finding out who killed my dad.",
+      "card_path": "data/cards/ryuko-matoi.json",
+      "avatar_path": null,
+      "tags": ["Kill la Kill", "Rebellious", "Violent", "Hot-Blooded", "Anime"],
       "lorebook_path": null
     }
   ],
