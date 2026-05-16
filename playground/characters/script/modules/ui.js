@@ -3356,6 +3356,8 @@ export function initUI() {
         if ($removeBtn) $removeBtn.hidden = !inThread;
         
         renderGalleryStrip(id);
+        renderVideoStrip(id);
+        qs('#btn-video-gallery').onclick = () => openVideoGalleryModal(id);
 
         // Alt greeting switcher
         qs('#alt-greeting-select')?.addEventListener('change', e => {
@@ -3766,6 +3768,7 @@ export function initUI() {
         if (!char.extensions.underdark)      char.extensions.underdark = {};
         if (!char.extensions.underdark.gallery) char.extensions.underdark.gallery = [];
         if (!char.extensions.underdark.galleryMeta) char.extensions.underdark.galleryMeta = {};
+        if (!char.extensions.underdark.videoGallery) char.extensions.underdark.videoGallery = [];
         return char;
     }
 
@@ -3809,6 +3812,121 @@ export function initUI() {
 
         saveState();
         return stored;
+    }
+
+    // ── Video gallery helpers ─────────────────────────────────────────────────
+    function addToVideoGallery(charId, videoUrl) {
+        if (!charId || !videoUrl) return;
+        const charObj = ensureGalleryStore(charId);
+        if (!charObj) return;
+        const vg = charObj.extensions.underdark.videoGallery;
+        if (!vg.includes(videoUrl)) {
+            vg.push(videoUrl);
+            saveState();
+        }
+    }
+
+    async function renderVideoStrip(id) {
+        const $wrap = qs('#video-strip-wrap');
+        const $strip = qs('#video-strip');
+        if (!$wrap || !$strip) return;
+        const charObj = ensureGalleryStore(id);
+        const vids = charObj?.extensions?.underdark?.videoGallery || [];
+        if (!vids.length) { $wrap.hidden = true; return; }
+        $wrap.hidden = false;
+        const last4 = vids.slice(-4).reverse();
+        $strip.innerHTML = last4.map((url, i) => `
+            <div class="video-strip-item" data-vi="${vids.length - 1 - i}" title="Play video">
+                <div class="video-strip-item__thumb">
+                    <i data-lucide="clapperboard"></i>
+                    <span class="video-strip-item__num">${vids.length - i}</span>
+                </div>
+            </div>`).join('');
+        qsa('.video-strip-item', $strip).forEach(el => {
+            el.onclick = () => openVideoGalleryModal(id, parseInt(el.dataset.vi));
+        });
+        lucideRefresh($strip);
+    }
+
+    function openVideoGalleryModal(id, startIdx = null) {
+        const meta = state.characters.find(c => c.id === id);
+        const $t = qs('#vgallery-title');
+        if ($t) $t.textContent = `${meta?.name || 'Character'}`;
+        renderVideoGalleryModal(id, startIdx);
+        qs('#modal-video-gallery').hidden = false;
+        lucideRefresh(qs('#modal-video-gallery'));
+    }
+
+    function renderVideoGalleryModal(id, playIdx = null) {
+        const charObj = ensureGalleryStore(id);
+        const vids = charObj?.extensions?.underdark?.videoGallery || [];
+        const $count = qs('#vgallery-count');
+        if ($count) $count.textContent = vids.length ? `${vids.length} video${vids.length !== 1 ? 's' : ''}` : '';
+
+        const $grid = qs('#vgallery-grid');
+        const $player = qs('#vgallery-player');
+        const $videoEl = qs('#vgallery-video-el');
+
+        if (!vids.length) {
+            if ($grid) $grid.innerHTML = `<div class="gallery-empty"><i data-lucide="clapperboard"></i><span>No videos saved yet</span><p>Generate a video then click "Save to Gallery".</p></div>`;
+            lucideRefresh($grid);
+            if ($player) $player.hidden = true;
+            return;
+        }
+
+        if (playIdx !== null && vids[playIdx]) {
+            if ($grid) $grid.hidden = true;
+            if ($player) $player.hidden = false;
+            if ($videoEl) { $videoEl.src = vids[playIdx]; $videoEl.play().catch(() => {}); }
+            qs('#vgallery-player-close')?.addEventListener('click', () => renderVideoGalleryModal(id), { once: true });
+            qs('#vgallery-player-dl')?.addEventListener('click', () => {
+                const a = document.createElement('a');
+                a.href = vids[playIdx];
+                a.download = `underdark-video-${playIdx + 1}.mp4`;
+                a.click();
+            }, { once: true });
+            qs('#vgallery-player-del')?.addEventListener('click', async () => {
+                const ok = await confirm('Delete Video', 'Remove this video from the gallery?');
+                if (!ok) return;
+                vids.splice(playIdx, 1);
+                saveState();
+                renderVideoStrip(id);
+                renderVideoGalleryModal(id);
+            }, { once: true });
+            return;
+        }
+
+        // Grid view
+        if ($player) $player.hidden = true;
+        if ($grid) $grid.hidden = false;
+        $grid.innerHTML = vids.map((url, i) => `
+            <div class="vgallery-item" data-vgi="${i}">
+                <div class="vgallery-item__thumb">
+                    <i data-lucide="clapperboard"></i>
+                    <span class="vgallery-item__num">${i + 1}</span>
+                </div>
+                <div class="gallery-item__overlay">
+                    <button class="gallery-item__btn" data-play="${i}" title="Play"><i data-lucide="play"></i></button>
+                    <button class="gallery-item__btn gallery-item__btn--dl" data-vdl="${i}" title="Download"><i data-lucide="download"></i></button>
+                    <button class="gallery-item__btn gallery-item__btn--del" data-vdel="${i}" title="Delete"><i data-lucide="trash-2"></i></button>
+                </div>
+            </div>`).join('');
+
+        qsa('[data-play]', $grid).forEach(btn => btn.onclick = () => renderVideoGalleryModal(id, parseInt(btn.dataset.play)));
+        qsa('[data-vdl]', $grid).forEach(btn => btn.onclick = () => {
+            const i = parseInt(btn.dataset.vdl);
+            const a = document.createElement('a'); a.href = vids[i]; a.download = `underdark-video-${i + 1}.mp4`; a.click();
+        });
+        qsa('[data-vdel]', $grid).forEach(btn => btn.onclick = async () => {
+            const i = parseInt(btn.dataset.vdel);
+            const ok = await confirm('Delete Video', 'Remove this video from the gallery?');
+            if (!ok) return;
+            vids.splice(i, 1);
+            saveState();
+            renderVideoStrip(id);
+            renderVideoGalleryModal(id);
+        });
+        lucideRefresh($grid);
     }
 
     // Resolve all gallery image refs to display URLs (for rendering)
@@ -10295,6 +10413,8 @@ export function initUI() {
 
     qs('#btn-video-gen')?.addEventListener('click', openVideoGenModal);
     qs('#video-gen-close')?.addEventListener('click', () => hideModal('modal-video-gen'));
+    qs('#vgallery-close')?.addEventListener('click', () => { qs('#modal-video-gallery').hidden = true; });
+    qs('#modal-video-gallery [data-close]')?.addEventListener('click', () => { qs('#modal-video-gallery').hidden = true; });
     qsa('[data-close]', $videoModal || document).forEach(el => {
         if ($videoModal?.contains(el)) el.addEventListener('click', () => hideModal('modal-video-gen'));
     });
@@ -10395,8 +10515,17 @@ export function initUI() {
                 a.click();
             }, { once: true });
 
+            // Save to video gallery
+            qs('#vg-save-gallery')?.addEventListener('click', () => {
+                const cid = state.activeBotId || (state.activeBotIds?.[0]);
+                if (cid) { addToVideoGallery(cid, videoUrl); renderVideoStrip(cid); showToast('Saved to video gallery', 'success', 2000); }
+                else showToast('No active character — open a profile first', 'warn', 3000);
+            }, { once: true });
+
             // Inject into chat
             qs('#vg-inject')?.addEventListener('click', () => {
+                const cid = state.activeBotId || (state.activeBotIds?.[0]);
+                if (cid) { addToVideoGallery(cid, videoUrl); renderVideoStrip(cid); }
                 addMessage('video', videoUrl, null, {});
                 renderMessageThread();
                 hideModal('modal-video-gen');

@@ -592,6 +592,10 @@
                     <button id="btn-delete-char" class="btn btn--ghost btn--full btn--danger-ghost">Delete Character</button>
                 </div>
                 <div id="gallery-strip" class="gallery-strip" hidden></div>
+                <div id="video-strip-wrap" hidden>
+                    <button id="btn-video-gallery" class="btn btn--ghost btn--full" style="margin-top:6px"><i data-lucide="film"></i> Video Gallery</button>
+                    <div id="video-strip" class="video-strip"></div>
+                </div>
             </div>
 
             <!-- Codex Tab — World scenario + Lorebooks -->
@@ -1055,6 +1059,7 @@
         <video id="vg-video-el" class="vg-video" controls loop></video>
         <div class="vg-result__actions">
           <button id="vg-download" class="btn btn--accent btn--sm"><i data-lucide="download"></i> Save</button>
+          <button id="vg-save-gallery" class="btn btn--ghost btn--sm"><i data-lucide="film"></i> Save to Gallery</button>
           <button id="vg-inject" class="btn btn--ghost btn--sm"><i data-lucide="message-square-plus"></i> Add to Chat</button>
         </div>
       </div>
@@ -2502,6 +2507,33 @@
     </div>
 
     <input type="file" id="gallery-file-input" hidden multiple>
+  </div>
+</div>
+
+<div id="modal-video-gallery" class="modal" hidden>
+  <div class="modal__backdrop" data-close></div>
+  <div class="modal__content modal__content--vgallery">
+    <header class="gallery-modal-header">
+      <div class="gallery-modal-header__identity">
+        <div class="gallery-modal-header__icon"><i data-lucide="film"></i></div>
+        <div>
+          <h3 id="vgallery-title" class="gallery-modal-header__title">Videos</h3>
+          <span id="vgallery-count" class="gallery-modal-header__count"></span>
+        </div>
+      </div>
+      <div class="gallery-modal-header__actions">
+        <button id="vgallery-close" class="btn-icon" title="Close"><i data-lucide="x"></i></button>
+      </div>
+    </header>
+    <div id="vgallery-grid" class="vgallery-grid"></div>
+    <div id="vgallery-player" class="vgallery-player" hidden>
+      <video id="vgallery-video-el" class="vgallery-player__video" controls loop playsinline></video>
+      <div class="vgallery-player__actions">
+        <button id="vgallery-player-close" class="btn btn--ghost btn--sm"><i data-lucide="chevron-left"></i> Back</button>
+        <button id="vgallery-player-dl" class="btn btn--accent btn--sm"><i data-lucide="download"></i> Download</button>
+        <button id="vgallery-player-del" class="btn btn--ghost btn--sm btn--danger-ghost"><i data-lucide="trash-2"></i> Delete</button>
+      </div>
+    </div>
   </div>
 </div>
 
