@@ -473,7 +473,7 @@
   },
   "commits": [
     {
-      "hash": "PENDING",
+      "hash": "08d96c4",
       "date": "2026-05-16",
       "message": "feat(void): consolidate 86 .md files into void.json, add marked+DOMPurify rendering, markdown prose CSS",
       "scope": "void/",
