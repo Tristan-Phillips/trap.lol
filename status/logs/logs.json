@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.3.39",
+    "schema_version": "1.3.40",
     "last_updated": "2026-05-16",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -116,7 +116,7 @@
       "guides.json": "Sacred Codex (currently commented out). Array of guide entries: title, description, icon, file (markdown filename), read_time.",
       "llm.json": "LLM routing table. Keys are model IDs. Each model has: label, provider, pay_per_token (bool). Also contains default_routing.",
       "apps.json": "App Uplinks section. Each app has: name, slug, path, icon, description, tags[], keyed (bool — requires API key), status (live|planned).",
-      "art/glass/data/detention.json": "ECHOES gallery data. Collections of artwork artifacts. Each artifact has: compositeId (collectionId::artifactId), src.small (thumbnail URL path), src.original (full URL path), uploadDate, tags[], type, metadata (medium, description, verse, mood, chaos). baseUrl in meta is prepended to all src paths.",
+      "art/assets/data/detention.json": "ECHOES gallery data. Collections of artwork artifacts. Each artifact has: compositeId (collectionId::artifactId), src.small (thumbnail URL path), src.original (full URL path), uploadDate, tags[], type, metadata (medium, description, verse, mood, chaos). baseUrl in meta is prepended to all src paths.",
       "status/logs/logs.json": "THIS FILE. The site intelligence record. Updated every session by the working LLM. See _protocol for update rules."
     },
     "shortcut_system": {
@@ -184,9 +184,9 @@
       "file": "art/index.html",
       "title": "trap.lol // echoes",
       "purpose": "ECHOES gallery. Gacha pull mechanic reveals artwork in rarity tiers. Lightbox with full zoom, pan, rotate, flip. Filter by medium (all / sketch / digital).",
-      "data": "art/glass/data/detention.json",
-      "script": "art/glass/script/app.js (type=module, self-contained — does NOT use glass/script/)",
-      "css": "art/glass/style/style.css (self-contained — does NOT use glass/style/)",
+      "data": "art/assets/data/detention.json",
+      "script": "art/assets/script/app.js (type=module, self-contained — does NOT use glass/script/)",
+      "css": "art/assets/style/style.css (self-contained — does NOT use glass/style/)",
       "rarity_tiers": [
         "TRACE (teal, weight 50)",
         "VEIL (blue, weight 28)",
@@ -205,8 +205,8 @@
       "models": "Defined in glass/data/llm.json routing_table. Includes DeepSeek, Claude, GPT, Llama, Qwen, Gemini, Mistral, GLM.",
       "agents": "JSON files in glass/data/llm-agents/. Loaded async. Default agent = default.json."
     },
-    "/playground/characters/": {
-      "file": "playground/characters/index.html",
+    "/underdark/": {
+      "file": "underdark/index.html",
       "title": "The Underdark // Reality Matrix",
       "purpose": "Advanced roleplay interface. Cinematic multi-bot layout. Character creation, lorebooks, scenario editor. The 'Underdark' is the deepest, most immersive LLM experience on the site."
     },
@@ -472,6 +472,29 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-16",
+      "message": "refactor(repo): restructure — underdark/ top-level, art/assets, radar/assets, remove empty dirs",
+      "scope": "entire repo — directory structure, all cross-references updated",
+      "impact": "medium",
+      "files": [
+        "underdark/index.html",
+        "underdark/script/modules/ui.js",
+        "underdark/script/modules/llm-engine.js",
+        "underdark/script/modules/image-engine.js",
+        "underdark/script/modules/commands.js",
+        "underdark/GEMINI.md",
+        "art/index.html",
+        "art/assets/script/app.js",
+        "radar/index.html",
+        "radar/assets/script/app.js",
+        "glass/data/apps.json",
+        "status/index.html",
+        "status/logs/logs.json"
+      ],
+      "why": "playground/characters was buried 2 levels deep with brittle ../../../../glass/ paths; art and radar each had a confusing inner 'glass/' folder despite being fully self-contained; shared/ and universe/ were empty stubs — restructured for clarity, shorter paths, and future app additions under playground/."
+    },
     {
       "hash": "94a1e21",
       "date": "2026-05-16",
@@ -1737,6 +1760,23 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-16",
+      "agent": "Claude Sonnet 4.6",
+      "type": "refactor",
+      "summary": "Full repository directory restructure. playground/characters/ promoted to top-level underdark/ (shorter URL /underdark/, cleaner ../../glass/ paths vs prior ../../../../glass/). art/glass/ renamed art/assets/ and radar/glass/ renamed radar/assets/ to eliminate confusing inner 'glass' namespace on self-contained apps. Empty placeholder directories shared/ and universe/ removed. All cross-references updated: index.html files, JS imports, fetch() paths, apps.json, status/index.html, logs.json architecture section.",
+      "decisions": [
+        "underdark/ lives at top level — /underdark/ URL, not /playground/characters/. This gives it the same status as /art/, /radar/, /status/.",
+        "playground/ remains for the Neural Uplink AI assistant at /playground/ and becomes the container for future app additions at /playground/<appname>/.",
+        "art/glass/ and radar/glass/ renamed to art/assets/ and radar/assets/ — these apps are fully self-contained and have no relation to the hub glass/ design system. The name 'glass' inside them was misleading.",
+        "shared/ and universe/ removed — both were empty with no content or wired-up code referencing them.",
+        "All JS import paths in underdark/script/modules/ updated from ../../../../glass/ to ../../glass/ — 4 levels to 2."
+      ],
+      "rules_reinforced": [
+        "URL cleanliness: prefer top-level slugs for fully-featured apps (no nesting unless it's truly a sub-feature of the parent route).",
+        "Folder naming: self-contained sub-apps should not inherit the hub's design system folder name — use 'assets/' for clarity."
+      ]
+    },
     {
       "date": "2026-05-16",
       "agent": "Claude Sonnet 4.6",

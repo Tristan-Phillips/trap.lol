@@ -244,7 +244,7 @@ function renderHistoryDropdown() {
 window.addEventListener('DOMContentLoaded', async () => {
   // Load config
   try {
-    const res = await fetch('glass/data/config.json');
+    const res = await fetch('assets/data/config.json');
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const cfg = await res.json();
     validateConfig(cfg);

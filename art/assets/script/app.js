@@ -2,7 +2,7 @@
    Gallery script. Data-driven. No frameworks.
    GPL-3.0 — trap.lol */
 
-const DATA_PATH = "glass/data/detention.json";
+const DATA_PATH = "assets/data/detention.json";
 
 const LUCIDE_CDN   = "https://cdn.trap.lol/shards/lucide.min.js";
 const LUCIDE_LOCAL = "/shards/lucide.min.js";

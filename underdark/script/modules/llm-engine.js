@@ -12,7 +12,7 @@
  *  - Anti-jailbreak post-history optional directive
  */
 
-import { getApiKey } from '../../../../glass/script/modules/llm-auth.js?v=3';
+import { getApiKey } from '../../glass/script/modules/llm-auth.js?v=3';
 import { scanLorebooks } from './lorebook.js?v=3';
 import { getCharOverride, getBotMemoriesFromReality } from './state.js?v=2';
 

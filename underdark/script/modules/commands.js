@@ -165,7 +165,7 @@ export async function executeCommand(raw, { triggerBotResponse, appendSystemMess
         const msgs = n > 0 ? history.slice(-n * 2) : history;
         if (!msgs.length) { showToast('No history to summarize', 'warn'); return { handled: true }; }
 
-        const apiKey = await import('../../../../glass/script/modules/llm-auth.js?v=3')
+        const apiKey = await import('../../glass/script/modules/llm-auth.js?v=3')
             .then(m => m.getApiKey()).catch(() => null);
         if (!apiKey) { showToast('API key required for /summary', 'warn'); return { handled: true }; }
 
@@ -215,7 +215,7 @@ export async function executeCommand(raw, { triggerBotResponse, appendSystemMess
         const history = state.history;
         if (history.length < 4) { showToast('Need at least 4 messages to compact', 'warn'); return { handled: true }; }
 
-        const apiKey = await import('../../../../glass/script/modules/llm-auth.js?v=3')
+        const apiKey = await import('../../glass/script/modules/llm-auth.js?v=3')
             .then(m => m.getApiKey()).catch(() => null);
         if (!apiKey) { showToast('API key required for /compact', 'warn'); return { handled: true }; }
 

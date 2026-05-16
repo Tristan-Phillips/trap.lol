@@ -23,7 +23,7 @@ import { parseCommand, executeCommand, filterCommands, COMMANDS } from './comman
 import { IMAGE_MODELS, DEFAULT_MODEL, buildImagePrompt, generateImagePromptWithLLM, describeSceneWithLLM, generateImage, VIDEO_MODELS, generateVideo, generateVideoPromptWithLLM } from './image-engine.js?v=3';
 import { addBook, removeBook, addEntry, updateEntry, removeEntry, createBook, scanLorebooks } from './lorebook.js?v=3';
 import { parseCharacterCard, buildCard, normalizeData } from './parser-v2.js?v=3';
-import { getApiKey, setApiKey, clearApiKey, isValidKeyFormat, restoreKeyFromCookie } from '../../../../glass/script/modules/llm-auth.js?v=3';
+import { getApiKey, setApiKey, clearApiKey, isValidKeyFormat, restoreKeyFromCookie } from '../../glass/script/modules/llm-auth.js?v=3';
 import { initCharEditor } from './char-editor.js?v=3';
 import { qs, qsa, esc, debounce, parseLLMArray, parseLLMJson, parseLLMLines } from './shared-utils.js?v=4';
 import { initCodexMeters, applyStatusTags, updateCodexMeters as _updateCodexMeters } from './codex-meters.js?v=2';
@@ -8822,7 +8822,7 @@ export function initUI() {
         // Populate model select if needed (mirrors loadModels logic)
         const $tcModel = qs('#tc-model-select');
         if ($tcModel && $tcModel.options.length <= 1) {
-            fetch('../../glass/data/llm.json').then(r => r.json()).then(data => {
+            fetch('../glass/data/llm.json').then(r => r.json()).then(data => {
                 const optHtml = data._index.map(group => `
                     <optgroup label="${esc(group.family)}">
                         ${group.models.map(id => {
@@ -9444,7 +9444,7 @@ export function initUI() {
     async function loadModels() {
         const selects = qsa('#model-select, #persona-model-select');
         try {
-            const res  = await fetch('../../glass/data/llm.json');
+            const res  = await fetch('../glass/data/llm.json');
             const data = await res.json();
 
             const optHtml = data._index.map(group => `

@@ -35,7 +35,7 @@
 ## Building and Running
 This is a **pure vanilla project** with no build steps.
 1. Serve the root directory using any static file server (e.g., `npx serve .` or `python -m http.server`).
-2. Access via `http://localhost:[port]/playground/characters/index.html`.
+2. Access via `http://localhost:[port]/underdark/index.html`.
 3. Requires a Nano-GPT API key for LLM functionality (configured via the in-app Terminal).
 
 ## Character Spec (V2)
