@@ -473,7 +473,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "4f09a1a",
       "date": "2026-05-16",
       "message": "refactor(paths): replace all relative traversals with absolute root paths",
       "scope": "glass/script/modules/core.js, llm.js, guide/index.html, playground/index.html, playground/script/main.js, radar/index.html, status/index.html, status/logs/index.html, underdark/index.html, underdark/script/modules/*",
