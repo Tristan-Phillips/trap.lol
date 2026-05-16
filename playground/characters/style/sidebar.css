@@ -23,9 +23,10 @@
 }
 .sidebar--right { border-left: 1px solid var(--glass-border-mute); width: 360px; }
 .sidebar--right .sidebar__header {
-    padding: 0 var(--space-md);
-    height: 50px;
-    border-bottom: 1px solid var(--glass-border-mute);
+    padding: 0 10px 0 var(--space-md);
+    height: 36px;
+    border-bottom: 1px solid rgba(var(--accent-rgb), 0.1);
+    background: rgba(0,0,0,0.3);
 }
 
 /* ── Reality Matrix Bar ── */

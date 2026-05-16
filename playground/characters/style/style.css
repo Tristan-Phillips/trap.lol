@@ -7,8 +7,8 @@
 @import './base.css';
 
 /* ── Layout Components ── */
-@import './sidebar.css';
-@import './arena.css?v=9';
+@import './sidebar.css?v=2';
+@import './arena.css?v=10';
 @import './terminal.css?v=2';
 @import './chat.css';
 
