@@ -153,138 +153,351 @@
   outline: none;
 }
 
-/* ─── Node Tiles (Sovereign Nodes, Statstation, Transmissions) ─── */
-.node-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 0.5rem;
-  margin-bottom: 4rem;
+/* ══════════════════════════════════════════════════════════════
+   SOVEREIGN NODES — terminal readout aesthetic
+   Each node = a server process line. Mono font, domain string,
+   pulsing uptime dot. Feels like htop / a live process table.
+   ══════════════════════════════════════════════════════════════ */
+#hosting-section { margin-bottom: 4rem; }
+
+.node-terminal {
+  background: rgba(0,0,0,0.45);
+  border: 1px solid rgba(var(--accent-rgb), 0.14);
+  border-radius: 8px;
+  overflow: hidden;
+  font-family: var(--font-mono);
 }
 
-.node-tile {
-  position: relative;
+.node-terminal__bar {
   display: flex;
   align-items: center;
-  gap: 0.9rem;
-  padding: 0.75rem 1rem 0.75rem 1.1rem;
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border-mute);
-  border-radius: 6px;
-  text-decoration: none;
-  color: inherit;
-  overflow: hidden;
-  transition: border-color var(--transition),
-              box-shadow var(--transition-med),
-              transform var(--transition-med);
+  gap: 0.45rem;
+  padding: 0.55rem 0.9rem;
+  background: rgba(var(--accent-rgb), 0.04);
+  border-bottom: 1px solid rgba(var(--accent-rgb), 0.08);
 }
-
-/* left accent bar */
-.node-tile::before {
-  content: '';
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 2px;
-  background: linear-gradient(180deg, var(--accent), transparent);
-  opacity: 0;
-  transition: opacity var(--transition);
-}
-
-.node-tile:hover,
-.node-tile:focus-visible {
-  border-color: var(--glass-border);
-  box-shadow: 0 6px 24px var(--accent-glow);
-  transform: translateY(-2px);
-  outline: none;
-}
-.node-tile:hover::before,
-.node-tile:focus-visible::before { opacity: 1; }
-
-/* warm accent variant for statstation / transmissions */
-.node-tile--warm::before { background: linear-gradient(180deg, var(--accent-warm), transparent); }
-.node-tile--warm:hover,
-.node-tile--warm:focus-visible {
-  border-color: var(--glass-border-warm);
-  box-shadow: 0 6px 24px var(--accent-glow-warm);
-}
-
-.node-tile__status {
-  width: 7px;
-  height: 7px;
+.node-terminal__dot {
+  width: 10px; height: 10px;
   border-radius: 50%;
-  background: var(--status-online);
-  flex-shrink: 0;
-  box-shadow: 0 0 5px var(--status-online);
 }
-.node-tile__status.offline { background: var(--status-offline); box-shadow: 0 0 5px var(--status-offline); }
-.node-tile__status.dev     { background: var(--accent-warm);    box-shadow: 0 0 5px var(--accent-warm); }
-
-.node-tile__icon {
-  width: 1rem;
-  height: 1rem;
+.node-terminal__dot:nth-child(1) { background: #ef4444; }
+.node-terminal__dot:nth-child(2) { background: var(--accent-warm); }
+.node-terminal__dot:nth-child(3) { background: var(--status-online); }
+.node-terminal__label {
+  font-size: 0.65rem;
   color: var(--text-muted);
-  flex-shrink: 0;
-  transition: color var(--transition), filter var(--transition);
-}
-.node-tile:hover .node-tile__icon,
-.node-tile:focus-visible .node-tile__icon {
-  color: var(--accent);
-  filter: drop-shadow(0 0 4px var(--accent-glow));
-}
-.node-tile--warm:hover .node-tile__icon,
-.node-tile--warm:focus-visible .node-tile__icon {
-  color: var(--accent-warm);
-  filter: drop-shadow(0 0 4px var(--accent-glow-warm));
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-left: auto;
+  opacity: 0.5;
 }
 
-.node-tile__body {
-  flex: 1;
-  min-width: 0;
+.node-terminal__body {
   display: flex;
   flex-direction: column;
-  gap: 0.1rem;
 }
 
-.node-tile__name {
-  font-family: var(--font-mono);
+.node-process {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  text-decoration: none;
+  color: inherit;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  position: relative;
+  transition: background var(--transition);
+}
+.node-process:last-child { border-bottom: none; }
+.node-process:hover { background: rgba(var(--accent-rgb), 0.05); }
+.node-process:focus-visible { outline: none; background: rgba(var(--accent-rgb), 0.07); }
+
+/* pulsing uptime indicator */
+.node-process__pulse {
+  position: relative;
+  width: 8px; height: 8px; flex-shrink: 0;
+}
+.node-process__pulse::before,
+.node-process__pulse::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--status-online);
+}
+.node-process__pulse::after {
+  animation: node-pulse 2.2s ease-out infinite;
+  opacity: 0;
+}
+.node-process__pulse.offline::before,
+.node-process__pulse.offline::after { background: var(--status-offline); animation: none; }
+
+@keyframes node-pulse {
+  0%   { transform: scale(1);   opacity: 0.7; }
+  100% { transform: scale(2.8); opacity: 0; }
+}
+
+.node-process__name {
   font-size: var(--text-sm);
   font-weight: 600;
   color: var(--text-main);
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  transition: color var(--transition);
+}
+.node-process:hover .node-process__name { color: var(--accent); }
+
+.node-process__domain {
+  font-size: var(--text-xs);
+  color: rgba(var(--accent-rgb), 0.45);
+  letter-spacing: 0.04em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  letter-spacing: 0.03em;
+  text-align: right;
+}
+
+.node-process__source {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px; height: 24px;
+  border-radius: 3px;
+  color: rgba(255,255,255,0.12);
+  text-decoration: none;
+  transition: color var(--transition), background var(--transition);
+  position: relative; z-index: 1;
+}
+.node-process__source:hover { color: var(--accent-warm); background: var(--accent-subtle-warm); }
+.node-process__source i { width: 0.7rem; height: 0.7rem; }
+
+/* ══════════════════════════════════════════════════════════════
+   STATION — HUD scan panel
+   Tight horizontal bars with a sweep scan animation.
+   Feels like uptime monitors / radar readouts.
+   ══════════════════════════════════════════════════════════════ */
+#statstation-section { margin-bottom: 4rem; }
+
+.station-hud {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 1px solid rgba(var(--cyan-rgb), 0.12);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.station-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 1rem;
+  background: rgba(0, 240, 255, 0.02);
+  border-bottom: 1px solid rgba(var(--cyan-rgb), 0.06);
+  text-decoration: none;
+  color: inherit;
+  position: relative;
+  overflow: hidden;
+  transition: background var(--transition);
+}
+.station-bar:last-child { border-bottom: none; }
+.station-bar:hover { background: rgba(var(--cyan-rgb), 0.06); }
+.station-bar:focus-visible { outline: none; background: rgba(var(--cyan-rgb), 0.08); }
+
+/* sweep scan line */
+.station-bar::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(var(--cyan-rgb), 0.06), transparent);
+  transition: none;
+}
+.station-bar:hover::after {
+  left: 150%;
+  transition: left 0.6s ease-out;
+}
+
+.station-bar__bracket {
+  font-size: 0.6rem;
+  color: rgba(var(--cyan-rgb), 0.3);
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+}
+
+.station-bar__icon {
+  width: 0.9rem; height: 0.9rem;
+  color: rgba(var(--cyan-rgb), 0.5);
+  flex-shrink: 0;
   transition: color var(--transition);
 }
-.node-tile:hover .node-tile__name    { color: var(--accent); }
-.node-tile--warm:hover .node-tile__name { color: var(--accent-warm); }
+.station-bar:hover .station-bar__icon { color: rgba(var(--cyan-rgb), 0.9); }
 
-.node-tile__sub {
+.station-bar__name {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-main);
+  flex: 1;
+  transition: color var(--transition);
+}
+.station-bar:hover .station-bar__name { color: #00f0ff; }
+
+.station-bar__desc {
   font-size: var(--text-xs);
   color: var(--text-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 280px;
+  opacity: 0.6;
 }
 
-.node-tile__source {
+.station-bar__ping {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: rgba(var(--cyan-rgb), 0.7);
   flex-shrink: 0;
+  box-shadow: 0 0 6px rgba(var(--cyan-rgb), 0.5);
+}
+.station-bar__ping.offline { background: var(--status-offline); box-shadow: 0 0 6px var(--status-offline); }
+
+/* ══════════════════════════════════════════════════════════════
+   TRANSMISSIONS — personal creative broadcast
+   Large icon, warm gradient bloom, wide cards. Feels like
+   a signal being sent out — creative, organic, warm.
+   ══════════════════════════════════════════════════════════════ */
+#trap-section { margin-bottom: 4rem; }
+
+.tx-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+.tx-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1.25rem 1.4rem;
+  border-radius: 10px;
+  text-decoration: none;
+  color: inherit;
+  overflow: hidden;
+  border: 1px solid rgba(var(--accent-warm-rgb), 0.14);
+  transition: border-color var(--transition-med),
+              box-shadow var(--transition-med),
+              transform var(--transition-med);
+}
+
+.tx-card__bloom {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 120% at -10% 50%, rgba(var(--accent-warm-rgb), 0.11) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 80% at 110% 60%, rgba(var(--accent-rgb), 0.07) 0%, transparent 55%),
+    linear-gradient(135deg, rgba(14,8,22,0.7) 0%, rgba(6,4,10,0.9) 100%);
+  z-index: 0;
+  transition: opacity var(--transition-med);
+}
+.tx-card:hover .tx-card__bloom {
+  background:
+    radial-gradient(ellipse 80% 120% at -10% 50%, rgba(var(--accent-warm-rgb), 0.18) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 80% at 110% 60%, rgba(var(--accent-rgb), 0.12) 0%, transparent 55%),
+    linear-gradient(135deg, rgba(14,8,22,0.7) 0%, rgba(6,4,10,0.9) 100%);
+}
+
+.tx-card:hover,
+.tx-card:focus-visible {
+  border-color: rgba(var(--accent-warm-rgb), 0.35);
+  box-shadow: 0 8px 32px rgba(var(--accent-warm-rgb), 0.15),
+              0 2px 8px rgba(0,0,0,0.4);
+  transform: translateY(-3px);
+  outline: none;
+}
+
+.tx-card__icon-wrap {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  width: 48px; height: 48px;
+  border-radius: 10px;
+  background: rgba(var(--accent-warm-rgb), 0.08);
+  border: 1px solid rgba(var(--accent-warm-rgb), 0.18);
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 4px;
-  color: rgba(255,255,255,0.18);
-  text-decoration: none;
-  transition: color var(--transition), background var(--transition);
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+.tx-card:hover .tx-card__icon-wrap {
+  border-color: rgba(var(--accent-warm-rgb), 0.4);
+  box-shadow: 0 0 16px rgba(var(--accent-warm-rgb), 0.2);
+}
+
+.tx-card__icon {
+  width: 1.3rem; height: 1.3rem;
+  color: var(--accent-warm);
+  opacity: 0.7;
+  transition: opacity var(--transition), filter var(--transition);
+}
+.tx-card:hover .tx-card__icon {
+  opacity: 1;
+  filter: drop-shadow(0 0 6px rgba(var(--accent-warm-rgb), 0.5));
+}
+
+.tx-card__body {
   position: relative;
   z-index: 1;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
-.node-tile__source:hover {
-  color: var(--accent-warm);
-  background: var(--accent-subtle-warm);
+
+.tx-card__name {
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: 0.04em;
+  transition: color var(--transition);
 }
-.node-tile__source i { width: 0.75rem; height: 0.75rem; }
+.tx-card:hover .tx-card__name { color: var(--accent-warm); }
+
+.tx-card__desc {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.tx-card__signal {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+.tx-card__signal-bar {
+  width: 3px;
+  border-radius: 2px;
+  background: rgba(var(--accent-warm-rgb), 0.25);
+  transition: background var(--transition), height var(--transition);
+}
+.tx-card__signal-bar:nth-child(1) { height: 8px; }
+.tx-card__signal-bar:nth-child(2) { height: 14px; }
+.tx-card__signal-bar:nth-child(3) { height: 20px; }
+.tx-card:hover .tx-card__signal-bar { background: rgba(var(--accent-warm-rgb), 0.7); }
 
 /* ─── Social Strip (footer) ───────────────────── */
 .social-strip {

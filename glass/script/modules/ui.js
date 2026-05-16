@@ -72,29 +72,39 @@ function renderFooter() {
 }
 
 function renderHosting() {
-  const $grid = document.getElementById("hosting-grid");
-  if (!$grid || !hostingData?.manifest) return;
+  const $wrap = document.getElementById("hosting-grid");
+  if (!$wrap || !hostingData?.manifest) return;
 
   try {
-    $grid.innerHTML = Object.values(hostingData.manifest).map(node => {
+    const rows = Object.values(hostingData.manifest).map(node => {
       if (node.shortcut) globalRouter.set(node.shortcut.toLowerCase(), { type: 'link', payload: node.url });
       const sourceBtn = node.source
-        ? `<a href="${esc(node.source)}" target="_blank" rel="noopener" class="node-tile__source" aria-label="View source" title="View source" tabindex="0"><i data-lucide="git-branch"></i></a>`
-        : "";
+        ? `<a href="${esc(node.source)}" target="_blank" rel="noopener" class="node-process__source" aria-label="View source" title="View source" tabindex="0"><i data-lucide="git-branch"></i></a>`
+        : `<span style="width:24px;flex-shrink:0"></span>`;
+      const domain = node.url.replace(/^https?:\/\//, '');
       const shortcut = node.shortcut ? `<span class="card-primary__shortcut">[${esc(node.shortcut)}]</span>` : "";
+      const pulseClass = (node.status || "online") === "online" ? "" : " offline";
       return `
-        <a href="${esc(node.url)}" target="_blank" rel="noopener" class="node-tile" aria-label="${esc(node.name)} — ${esc(node.hosting)}">
-          <span class="node-tile__status ${esc(node.status || "online")}"></span>
-          <i data-lucide="${esc(node.icon)}" class="node-tile__icon"></i>
-          <div class="node-tile__body">
-            <span class="node-tile__name">${esc(node.name)}${shortcut}</span>
-            <span class="node-tile__sub">${esc(node.hosting)}</span>
-          </div>
+        <a href="${esc(node.url)}" target="_blank" rel="noopener" class="node-process" aria-label="${esc(node.name)}">
+          <span class="node-process__pulse${pulseClass}"></span>
+          <span class="node-process__name">${esc(node.name)}${shortcut}</span>
+          <span class="node-process__domain">${esc(domain)}</span>
           ${sourceBtn}
         </a>`;
     }).join("");
+
+    $wrap.innerHTML = `
+      <div class="node-terminal">
+        <div class="node-terminal__bar">
+          <span class="node-terminal__dot"></span>
+          <span class="node-terminal__dot"></span>
+          <span class="node-terminal__dot"></span>
+          <span class="node-terminal__label">SOVEREIGN NODES // ${Object.keys(hostingData.manifest).length} ACTIVE</span>
+        </div>
+        <div class="node-terminal__body">${rows}</div>
+      </div>`;
   } catch (e) {
-    renderError($grid, "Hosting nodes offline.");
+    renderError($wrap, "Hosting nodes offline.");
   }
 }
 
@@ -587,47 +597,56 @@ function renderSocialStrip() {
 }
 
 function renderStatstation() {
-  const $grid = document.getElementById("statstation-grid");
-  if (!$grid || !statstationData?.manifest) return;
+  const $wrap = document.getElementById("statstation-grid");
+  if (!$wrap || !statstationData?.manifest) return;
 
   try {
-    $grid.innerHTML = Object.values(statstationData.manifest).map(item => {
-      const status = item.status || "live";
-      const dot = status === "live" ? "online" : status;
-      return `
-        <a href="${esc(item.path)}" class="node-tile node-tile--warm" aria-label="${esc(item.name)}">
-          <span class="node-tile__status ${esc(dot)}"></span>
-          <i data-lucide="${esc(item.icon)}" class="node-tile__icon"></i>
-          <div class="node-tile__body">
-            <span class="node-tile__name">${esc(item.name)}</span>
-            <span class="node-tile__sub">${esc(item.description)}</span>
-          </div>
-        </a>`;
-    }).join("");
+    $wrap.innerHTML = `<div class="station-hud">${
+      Object.values(statstationData.manifest).map((item, i) => {
+        const isOnline = (item.status || "live") === "live";
+        const pingClass = isOnline ? "" : " offline";
+        const idx = String(i).padStart(2, "0");
+        return `
+          <a href="${esc(item.path)}" class="station-bar" aria-label="${esc(item.name)}">
+            <span class="station-bar__bracket">[${idx}]</span>
+            <i data-lucide="${esc(item.icon)}" class="station-bar__icon"></i>
+            <span class="station-bar__name">${esc(item.name)}</span>
+            <span class="station-bar__desc">${esc(item.description)}</span>
+            <span class="station-bar__ping${pingClass}"></span>
+          </a>`;
+      }).join("")
+    }</div>`;
   } catch (e) {
-    renderError($grid, "Station offline.");
+    renderError($wrap, "Station offline.");
   }
 }
 
 function renderTrapSection() {
-  const $grid = document.getElementById("trap-grid");
-  if (!$grid || !trapData?.manifest) return;
+  const $wrap = document.getElementById("trap-grid");
+  if (!$wrap || !trapData?.manifest) return;
 
   try {
-    $grid.innerHTML = Object.values(trapData.manifest).map(item => {
-      const status = item.status || "live";
-      const dot = status === "live" ? "online" : status;
-      return `
-        <a href="${esc(item.path)}" class="node-tile node-tile--warm" aria-label="${esc(item.name)}">
-          <span class="node-tile__status ${esc(dot)}"></span>
-          <i data-lucide="${esc(item.icon)}" class="node-tile__icon"></i>
-          <div class="node-tile__body">
-            <span class="node-tile__name">${esc(item.name)}</span>
-            <span class="node-tile__sub">${esc(item.description)}</span>
-          </div>
-        </a>`;
-    }).join("");
+    $wrap.innerHTML = `<div class="tx-grid">${
+      Object.values(trapData.manifest).map(item => {
+        return `
+          <a href="${esc(item.path)}" class="tx-card" aria-label="${esc(item.name)}">
+            <div class="tx-card__bloom" aria-hidden="true"></div>
+            <div class="tx-card__icon-wrap">
+              <i data-lucide="${esc(item.icon)}" class="tx-card__icon"></i>
+            </div>
+            <div class="tx-card__body">
+              <span class="tx-card__name">${esc(item.name)}</span>
+              <span class="tx-card__desc">${esc(item.description)}</span>
+            </div>
+            <div class="tx-card__signal" aria-hidden="true">
+              <div class="tx-card__signal-bar"></div>
+              <div class="tx-card__signal-bar"></div>
+              <div class="tx-card__signal-bar"></div>
+            </div>
+          </a>`;
+      }).join("")
+    }</div>`;
   } catch (e) {
-    renderError($grid, "Personal section offline.");
+    renderError($wrap, "Personal section offline.");
   }
 }
