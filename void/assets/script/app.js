@@ -1,27 +1,7 @@
 /**
- * void — trap.lol
- * Feed, submersion overlay, custom cursor, scroll reveal.
- * The wrong thing glitches on its own schedule — don't touch it.
+ * void
  */
 
-// ── Cursor ────────────────────────────────────────────────
-const $cur = document.getElementById('void-cursor');
-const $dot = $cur?.querySelector('.void-cursor__dot');
-
-document.addEventListener('mousemove', e => {
-  if (!$cur) return;
-  $cur.style.left = e.clientX + 'px';
-  $cur.style.top  = e.clientY + 'px';
-});
-
-document.addEventListener('mouseleave', () => { if ($cur) $cur.style.opacity = '0'; });
-document.addEventListener('mouseenter', () => { if ($cur) $cur.style.opacity = '1'; });
-
-function cursorHover(on) {
-  $cur?.classList.toggle('is-hover', on);
-}
-
-// ── Safety ────────────────────────────────────────────────
 function esc(s) {
   return String(s ?? '')
     .replace(/&/g, '&amp;')
@@ -31,179 +11,183 @@ function esc(s) {
     .replace(/'/g, '&#39;');
 }
 
-// ── Date formatting ───────────────────────────────────────
-function fmt(iso) {
+function fmtDate(iso) {
   if (!iso) return '';
   const [y, m, d] = iso.split('-');
-  const months = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
-  return `${months[parseInt(m, 10) - 1]} ${parseInt(d, 10)}, ${y}`;
+  return `${y} · ${['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'][+m - 1]} ${+d}`;
 }
 
-// ── Get first real prose (strip headings, clamp chars) ────
-function scar(raw, limit = 200) {
-  const stripped = raw
+// Cut text mid-sentence — not at a clean paragraph break.
+// The fragment feels like the rest of it is just gone.
+function fragment(raw, chars = 160) {
+  const clean = raw
     .replace(/^#{1,6}\s+.*/gm, '')
-    .replace(/^\s*[-*]\s+/gm, '')
-    .replace(/\n{3,}/g, '\n\n')
+    .replace(/\n{2,}/g, ' ')
+    .replace(/\n/g, ' ')
     .trim();
-  const first = stripped.split('\n\n')[0].replace(/\n/g, ' ').trim();
-  if (first.length <= limit) return first;
-  const cut = first.lastIndexOf(' ', limit);
-  return first.slice(0, cut > 80 ? cut : limit) + '…';
+  if (clean.length <= chars) return clean;
+  // Find a word boundary after chars, not before — so it cuts INTO a thought
+  const after = clean.indexOf(' ', chars);
+  return after === -1 ? clean : clean.slice(0, after);
 }
 
-// ── Text → HTML (minimal, preserves linebreaks as paragraphs) ──
-function prose(raw) {
-  const blocks = raw.split(/\n{2,}/);
-  return blocks.map(block => {
-    const b = block.trim();
-    if (!b) return '';
-    const hm = b.match(/^(#{1,4})\s+(.+)/);
-    if (hm) {
-      const lvl = Math.min(hm[1].length + 1, 6); // h2–h6 so it doesn't compete with title
-      return `<h${lvl}>${esc(hm[2])}</h${lvl}>`;
-    }
-    const lines = b.split('\n').map(l => esc(l.trim())).join('<br>');
-    return `<p>${lines}</p>`;
-  }).filter(Boolean).join('\n');
+// Plain text → paragraphs, minimal
+function toProse(raw) {
+  return raw
+    .split(/\n{2,}/)
+    .map(block => {
+      const b = block.trim();
+      if (!b) return '';
+      const hm = b.match(/^(#{1,4})\s+(.+)/);
+      if (hm) return `<h${Math.min(+hm[1].length + 1, 4)}>${esc(hm[2])}</h${Math.min(+hm[1].length + 1, 4)}>`;
+      // Preserve single line breaks within a paragraph
+      const inner = b.split('\n').map(l => esc(l)).join('<br>');
+      return `<p>${inner}</p>`;
+    })
+    .filter(Boolean)
+    .join('\n');
 }
 
-// ── Build one entry element ───────────────────────────────
-function mkEntry(entry) {
-  const li = document.createElement('li');
-  li.className = 'void-entry';
-  li.setAttribute('role', 'listitem');
-  li.setAttribute('tabindex', '0');
-  li.setAttribute('aria-label', entry.title);
+// Entries are not all equally indented.
+// Some sit slightly right. Some flush. One or two further right still.
+// Not random — seeded by ID so it's stable, but varied enough to feel organic.
+function indent(id) {
+  const seed = id.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+  const steps = [0, 0, 0, 0.6, 0, 1.2, 0, 0, 0.3, 0];
+  return steps[seed % steps.length];
+}
 
-  li.innerHTML = `
-    <div class="void-entry__id" aria-hidden="true">void-${esc(entry.id)}</div>
-    <h2 class="void-entry__title">${esc(entry.title)}</h2>
-    <div class="void-entry__date" aria-hidden="true">${esc(fmt(entry.date))}</div>
-    <div class="void-entry__scar">${esc(scar(entry.content))}</div>
-    <div class="void-entry__pull" aria-hidden="true">
-      open this wound
-      <span aria-hidden="true">&#8594;</span>
-    </div>
+// ── Feed ─────────────────────────────────────────────────
+
+function buildEntry(entry) {
+  const el = document.createElement('div');
+  el.className = 'e';
+  el.setAttribute('tabindex', '0');
+  el.setAttribute('role', 'article');
+  el.setAttribute('aria-label', entry.title);
+  el.style.paddingLeft = indent(entry.id) + 'em';
+
+  const frag = fragment(entry.content);
+  // The fragment ends without … sometimes — the thought just stops
+  const hasEllipsis = frag.length < entry.content.replace(/^#{1,6}\s+.*/gm, '').trim().length;
+
+  el.innerHTML = `
+    <div class="e-title">${esc(entry.title)}</div>
+    <div class="e-fragment">${esc(frag)}${hasEllipsis ? '' : ''}</div>
+    <div class="e-id">${esc(entry.id)}</div>
   `;
 
-  li.addEventListener('click', () => submerge(entry));
-  li.addEventListener('keydown', e => {
-    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); submerge(entry); }
+  el.addEventListener('click', () => openWell(entry));
+  el.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openWell(entry); }
   });
-  li.addEventListener('mouseenter', () => cursorHover(true));
-  li.addEventListener('mouseleave', () => cursorHover(false));
 
-  return li;
+  return el;
 }
 
-// ── Render feed ───────────────────────────────────────────
 function renderFeed(data) {
-  const $list = document.getElementById('void-list');
+  const $feed = document.getElementById('feed');
   const sorted = [...data].sort((a, b) => {
-    if ((a.date ?? '') > (b.date ?? '')) return -1;
-    if ((a.date ?? '') < (b.date ?? '')) return 1;
+    const da = a.date ?? '', db = b.date ?? '';
+    if (da > db) return -1;
+    if (da < db) return 1;
     return (b.index ?? 0) - (a.index ?? 0);
   });
 
-  sorted.forEach(entry => $list.appendChild(mkEntry(entry)));
-  initReveal();
+  sorted.forEach(entry => $feed.appendChild(buildEntry(entry)));
+  revealEntries();
 }
 
-// ── Scroll reveal ─────────────────────────────────────────
-function initReveal() {
-  const io = new IntersectionObserver((entries, obs) => {
-    entries.forEach(e => {
-      if (!e.isIntersecting) return;
-      e.target.classList.add('is-visible');
-      obs.unobserve(e.target);
+// Reveal — entries don't announce themselves.
+// They just weren't there, and now they are.
+function revealEntries() {
+  const entries = document.querySelectorAll('.e');
+  const io = new IntersectionObserver((records, obs) => {
+    records.forEach(r => {
+      if (!r.isIntersecting) return;
+      // Delay is minimal — they don't march in one by one dramatically
+      setTimeout(() => r.target.classList.add('in'), Math.random() * 80);
+      obs.unobserve(r.target);
     });
-  }, { rootMargin: '0px 0px -6% 0px', threshold: 0.05 });
+  }, { threshold: 0.04, rootMargin: '0px 0px -4% 0px' });
 
-  document.querySelectorAll('.void-entry').forEach(el => io.observe(el));
+  entries.forEach(el => io.observe(el));
 }
 
-// ── Submersion ────────────────────────────────────────────
-const $sub    = document.getElementById('void-sub');
-const $water  = document.getElementById('void-sub-water');
-const $panel  = document.getElementById('void-sub-panel');
-const $body   = document.getElementById('void-sub-body');
-const $close  = document.getElementById('void-sub-close');
+// ── Well ─────────────────────────────────────────────────
 
-let _sinking = false;
+const $well      = document.getElementById('well');
+const $wellBg    = document.getElementById('well-bg');
+const $wellBody  = document.getElementById('well-body');
+const $wellClose = document.getElementById('well-close');
+const $content   = document.getElementById('well-content');
 
-function submerge(entry) {
-  if (_sinking) return;
+let _busy = false;
 
-  $body.innerHTML = `
-    <div class="void-full__id" aria-hidden="true">void-${esc(entry.id)} &nbsp;·&nbsp; ${esc(fmt(entry.date))}</div>
-    <h1 class="void-full__title">${esc(entry.title)}</h1>
-    <div class="void-full__rule" aria-hidden="true"></div>
-    <div class="void-full__prose">${prose(entry.content)}</div>
+function openWell(entry) {
+  if (_busy) return;
+
+  $content.innerHTML = `
+    <div class="w-title">${esc(entry.title)}</div>
+    <div class="w-date">${esc(fmtDate(entry.date))}</div>
+    ${toProse(entry.content)}
   `;
 
-  $sub.setAttribute('aria-hidden', 'false');
-  $sub.classList.add('is-open');
+  $well.hidden = false;
+  $well.removeAttribute('aria-hidden');
+  $well.scrollTop = 0;
   document.body.style.overflow = 'hidden';
-  $body.scrollTop = 0;
 
-  // Focus the close button after panel arrives
-  setTimeout(() => $close.focus(), 350);
+  requestAnimationFrame(() => {
+    $well.classList.add('open');
+    setTimeout(() => $wellClose.focus(), 500);
+  });
 }
 
-function surface() {
-  if (_sinking) return;
-  _sinking = true;
-
-  $sub.classList.remove('is-open');
-  $sub.classList.add('is-closing');
+function closeWell() {
+  if (_busy) return;
+  _busy = true;
+  $well.classList.remove('open');
+  $well.classList.add('closing');
 
   setTimeout(() => {
-    $sub.classList.remove('is-closing');
-    $sub.setAttribute('aria-hidden', 'true');
+    $well.classList.remove('closing');
+    $well.hidden = true;
+    $well.setAttribute('aria-hidden', 'true');
+    $content.innerHTML = '';
     document.body.style.overflow = '';
-    $body.innerHTML = '';
-    _sinking = false;
-  }, 500);
+    _busy = false;
+  }, 600);
 }
 
-// Close via water click (outside panel)
-$water.addEventListener('click', surface);
+$wellBg.addEventListener('click', closeWell);
+$wellClose.addEventListener('click', closeWell);
+$wellBody.addEventListener('click', e => e.stopPropagation());
 
-// Close via surface button
-$close.addEventListener('click', surface);
-$close.addEventListener('mouseenter', () => cursorHover(true));
-$close.addEventListener('mouseleave', () => cursorHover(false));
-
-// Stop panel clicks from closing
-$panel.addEventListener('click', e => e.stopPropagation());
-
-// Escape key
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && $sub.classList.contains('is-open')) surface();
+  if (e.key === 'Escape' && !$well.hidden) closeWell();
 });
 
-// ── The wrong thing — additional random offset so it's never predictable ──
-(function seedWrong() {
-  const $w = document.getElementById('void-wrong');
-  if (!$w) return;
-  // Randomise its vertical position slightly so it never appears in the same spot twice
-  const topPct = 20 + Math.random() * 40;
-  $w.style.top = topPct + 'vh';
-  $w.style.right = (6 + Math.random() * 10) + 'vw';
-})();
+// The out link — fire and navigate
+document.getElementById('out').addEventListener('click', function(e) {
+  e.preventDefault();
+  const href = this.getAttribute('href');
+  this.style.opacity = '0';
+  setTimeout(() => { window.location.href = href; }, 250);
+});
 
-// ── Boot ──────────────────────────────────────────────────
+// ── Boot ─────────────────────────────────────────────────
+
 (async function boot() {
   try {
     const res = await fetch('/void/assets/content/void.json');
-    if (!res.ok) throw new Error(`${res.status} — signal lost`);
+    if (!res.ok) throw new Error(res.status);
     renderFeed(await res.json());
   } catch (err) {
-    const $list = document.getElementById('void-list');
-    const li = document.createElement('li');
-    li.style.cssText = 'padding:5rem 0;font-family:Courier New,monospace;font-size:.6rem;letter-spacing:.2em;color:rgba(107,0,32,.3);text-transform:uppercase;';
-    li.textContent = err.message;
-    $list.appendChild(li);
+    const $feed = document.getElementById('feed');
+    const div = document.createElement('div');
+    div.style.cssText = 'color:rgba(90,0,24,.3);font-family:Courier New,monospace;font-size:.65em;letter-spacing:.15em;padding-top:4rem;';
+    div.textContent = String(err.message);
+    $feed.appendChild(div);
   }
 })();
