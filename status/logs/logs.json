@@ -479,7 +479,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "93f6dda",
       "date": "2026-05-17",
       "message": "feat(dndm): Phase 8 — character sheet, party bar, bestiary/spellbook advanced filters, Oracle Ask buttons",
       "scope": "dndm/",
