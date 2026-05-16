@@ -154,123 +154,165 @@
 }
 
 /* ══════════════════════════════════════════════════════════════
-   SOVEREIGN NODES — terminal readout aesthetic
-   Each node = a server process line. Mono font, domain string,
-   pulsing uptime dot. Feels like htop / a live process table.
+   SOVEREIGN NODES — infrastructure rack cards
+   Heavy, permanent, deployed. Each node is owned territory:
+   large icon, service name, software stack, URL footer.
    ══════════════════════════════════════════════════════════════ */
 #hosting-section { margin-bottom: 4rem; }
 
-.node-terminal {
-  background: rgba(0,0,0,0.45);
-  border: 1px solid rgba(var(--accent-rgb), 0.14);
-  border-radius: 8px;
-  overflow: hidden;
-  font-family: var(--font-mono);
+.sovereign-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.75rem;
 }
 
-.node-terminal__bar {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.55rem 0.9rem;
-  background: rgba(var(--accent-rgb), 0.04);
-  border-bottom: 1px solid rgba(var(--accent-rgb), 0.08);
-}
-.node-terminal__dot {
-  width: 10px; height: 10px;
-  border-radius: 50%;
-}
-.node-terminal__dot:nth-child(1) { background: #ef4444; }
-.node-terminal__dot:nth-child(2) { background: var(--accent-warm); }
-.node-terminal__dot:nth-child(3) { background: var(--status-online); }
-.node-terminal__label {
-  font-size: 0.65rem;
-  color: var(--text-muted);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  margin-left: auto;
-  opacity: 0.5;
-}
-
-.node-terminal__body {
+.sovereign-card {
+  position: relative;
   display: flex;
   flex-direction: column;
-}
-
-.node-process {
-  display: grid;
-  grid-template-columns: auto 1fr auto auto;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.75rem 1rem;
+  padding: 1.25rem 1.25rem 0.9rem;
+  background: var(--glass-bg);
+  border: 1px solid rgba(var(--accent-rgb), 0.15);
+  border-top: 2px solid rgba(var(--accent-rgb), 0.35);
+  border-radius: 0 0 6px 6px;
   text-decoration: none;
   color: inherit;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
-  position: relative;
-  transition: background var(--transition);
+  overflow: hidden;
+  transition: border-color var(--transition),
+              box-shadow var(--transition-med),
+              transform var(--transition-med);
+  gap: 0.6rem;
 }
-.node-process:last-child { border-bottom: none; }
-.node-process:hover { background: rgba(var(--accent-rgb), 0.05); }
-.node-process:focus-visible { outline: none; background: rgba(var(--accent-rgb), 0.07); }
 
-/* pulsing uptime indicator */
-.node-process__pulse {
-  position: relative;
-  width: 8px; height: 8px; flex-shrink: 0;
-}
-.node-process__pulse::before,
-.node-process__pulse::after {
+/* corner bracket — top left */
+.sovereign-card::before {
   content: '';
   position: absolute;
-  inset: 0;
+  top: -1px; left: -1px;
+  width: 18px; height: 18px;
+  border-top: 2px solid var(--accent);
+  border-left: 2px solid var(--accent);
+  opacity: 0.5;
+  transition: opacity var(--transition), width var(--transition), height var(--transition);
+}
+/* corner bracket — bottom right */
+.sovereign-card::after {
+  content: '';
+  position: absolute;
+  bottom: -1px; right: -1px;
+  width: 18px; height: 18px;
+  border-bottom: 1px solid rgba(var(--accent-rgb), 0.25);
+  border-right: 1px solid rgba(var(--accent-rgb), 0.25);
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+
+.sovereign-card:hover,
+.sovereign-card:focus-visible {
+  border-color: rgba(var(--accent-rgb), 0.4);
+  border-top-color: var(--accent);
+  box-shadow: 0 0 0 1px rgba(var(--accent-rgb), 0.08),
+              0 8px 32px rgba(var(--accent-rgb), 0.14);
+  transform: translateY(-3px);
+  outline: none;
+}
+.sovereign-card:hover::before { opacity: 1; width: 28px; height: 28px; }
+.sovereign-card:hover::after  { opacity: 1; }
+
+.sovereign-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.sovereign-card__icon {
+  width: 1.5rem; height: 1.5rem;
+  color: var(--accent);
+  opacity: 0.55;
+  transition: opacity var(--transition), filter var(--transition);
+  flex-shrink: 0;
+}
+.sovereign-card:hover .sovereign-card__icon {
+  opacity: 0.9;
+  filter: drop-shadow(0 0 6px rgba(var(--accent-rgb), 0.5));
+}
+
+.sovereign-card__status {
+  width: 7px; height: 7px;
   border-radius: 50%;
   background: var(--status-online);
+  flex-shrink: 0;
+  margin-top: 0.3rem;
+  box-shadow: 0 0 6px var(--status-online);
 }
-.node-process__pulse::after {
-  animation: node-pulse 2.2s ease-out infinite;
-  opacity: 0;
-}
-.node-process__pulse.offline::before,
-.node-process__pulse.offline::after { background: var(--status-offline); animation: none; }
+.sovereign-card__status.offline { background: var(--status-offline); box-shadow: 0 0 6px var(--status-offline); }
 
-@keyframes node-pulse {
-  0%   { transform: scale(1);   opacity: 0.7; }
-  100% { transform: scale(2.8); opacity: 0; }
-}
-
-.node-process__name {
-  font-size: var(--text-sm);
-  font-weight: 600;
+.sovereign-card__name {
+  font-family: var(--font-mono);
+  font-size: var(--text-base);
+  font-weight: 700;
   color: var(--text-main);
-  letter-spacing: 0.03em;
-  white-space: nowrap;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
   transition: color var(--transition);
 }
-.node-process:hover .node-process__name { color: var(--accent); }
+.sovereign-card:hover .sovereign-card__name { color: var(--accent); }
 
-.node-process__domain {
+.sovereign-card__hosting {
+  font-family: var(--font-mono);
   font-size: var(--text-xs);
-  color: rgba(var(--accent-rgb), 0.45);
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+}
+
+.sovereign-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: auto;
+  padding-top: 0.65rem;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+.sovereign-card__domain {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: rgba(var(--accent-rgb), 0.35);
   letter-spacing: 0.04em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  text-align: right;
+  transition: color var(--transition);
+}
+.sovereign-card:hover .sovereign-card__domain { color: rgba(var(--accent-rgb), 0.65); }
+
+.sovereign-card__shortcut {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  color: rgba(var(--accent-warm-rgb), 0.5);
+  border: 1px solid rgba(var(--accent-warm-rgb), 0.2);
+  border-radius: 3px;
+  padding: 0.1rem 0.35rem;
+  flex-shrink: 0;
 }
 
-.node-process__source {
+.sovereign-card__source {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 24px; height: 24px;
   border-radius: 3px;
-  color: rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.15);
   text-decoration: none;
   transition: color var(--transition), background var(--transition);
   position: relative; z-index: 1;
+  flex-shrink: 0;
 }
-.node-process__source:hover { color: var(--accent-warm); background: var(--accent-subtle-warm); }
-.node-process__source i { width: 0.7rem; height: 0.7rem; }
+.sovereign-card__source:hover { color: var(--accent-warm); background: var(--accent-subtle-warm); }
+.sovereign-card__source i { width: 0.7rem; height: 0.7rem; }
 
 /* ══════════════════════════════════════════════════════════════
    STATION — HUD scan panel
