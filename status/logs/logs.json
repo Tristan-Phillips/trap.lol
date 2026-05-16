@@ -473,7 +473,7 @@
   },
   "commits": [
     {
-      "hash": "0000000",
+      "hash": "7ca1095",
       "date": "2026-05-16",
       "message": "feat(underdark): image studio generation history strip — ui.js v110",
       "scope": "playground/characters — ui.js, index.html, img-studio.css, main.js",
