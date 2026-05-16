@@ -199,24 +199,70 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
   document.getElementById('session-modal-cancel').addEventListener('click',  function() { closeModal($sessionModal); });
-  document.getElementById('session-modal-confirm').addEventListener('click', function() { closeModal($sessionModal); beginSession(); });
+  document.getElementById('session-modal-confirm').addEventListener('click', function() {
+    var title = document.getElementById('session-title-input').value.trim();
+    closeModal($sessionModal);
+    beginSession(title);
+    document.getElementById('session-title-input').value = '';
+  });
 
-  function beginSession() {
+  var _currentSessionId = null;
+
+  function beginSession(title) {
     state.sessionActive = true;
     $sidebar.classList.add('sidebar--session');
     $toggleLabel.textContent = 'END SESSION';
     $modeLabel.textContent   = 'SESSION';
     var svg = document.querySelector('#session-toggle svg');
     if (svg) svg.innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
+
+    // Create session log entry (campaign object available after campaignLoad below)
+    _currentSessionId = typeof campaignUID === 'function' ? campaignUID() : 'c_' + Date.now();
+    if (typeof campaign !== 'undefined') {
+      campaign.sessions.push({
+        id:      _currentSessionId,
+        date:    new Date().toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' }),
+        title:   title || ('Session ' + (campaign.sessions.length + 1)),
+        summary: '',
+        xp:      0
+      });
+      campaignSave();
+      if (typeof renderSessions     === 'function') renderSessions();
+      if (typeof renderCampaignStats === 'function') renderCampaignStats();
+      var $sub = document.getElementById('session-modal-sub');
+      if ($sub) $sub.textContent = 'Session ' + campaign.sessions.length + ' commences.';
+    }
   }
 
   function endSession() {
+    if (_currentSessionId && typeof campaign !== 'undefined') {
+      var s = campaign.sessions.find(function(x) { return x.id === _currentSessionId; });
+      if (s) {
+        var summary = prompt('Session summary (optional):', s.summary || '') || '';
+        var xpStr   = prompt('XP awarded this session:', String(s.xp || 0));
+        var xp      = parseInt(xpStr) || 0;
+        var oldXP   = s.xp || 0;
+        s.summary   = summary.trim();
+        s.xp        = xp;
+        campaign.totalXP = Math.max(0, campaign.totalXP - oldXP + xp);
+        campaignSave();
+        if (typeof renderSessions      === 'function') renderSessions();
+        if (typeof renderCampaignStats === 'function') renderCampaignStats();
+      }
+      _currentSessionId = null;
+    }
+
     state.sessionActive = false;
     $sidebar.classList.remove('sidebar--session');
     $toggleLabel.textContent = 'BEGIN SESSION';
     $modeLabel.textContent   = 'PREP';
     var svg = document.querySelector('#session-toggle svg');
     if (svg) svg.innerHTML = '<polygon points="5 3 19 12 5 21 5 3"/>';
+
+    if (typeof campaign !== 'undefined') {
+      var $sub = document.getElementById('session-modal-sub');
+      if ($sub) $sub.textContent = 'Session ' + (campaign.sessions.length + 1) + ' commences.';
+    }
   }
 
   // ── Modals ─────────────────────────────────────────────────
@@ -276,6 +322,458 @@ document.addEventListener('DOMContentLoaded', function () {
       var $f = document.getElementById('oracle-field');
       if ($f) { $f.value = chip.textContent.trim(); $f.focus(); }
     });
+  });
+
+  // ══════════════════════════════════════════════════════════
+  // CAMPAIGN — persistent data layer (localStorage)
+  // ══════════════════════════════════════════════════════════
+
+  var campaign = {
+    name:     'Unnamed Campaign',
+    setting:  '',
+    banner:   null,  // base64 data URL
+    scratch:  '',
+    npcs:     [],    // { id, name, role, notes }
+    lore:     {      // keyed by tab
+      locations: [],   // { id, title, body }
+      factions:  [],
+      timeline:  []
+    },
+    sessions: [],    // { id, date, title, summary, xp }
+    totalXP:  0,
+    partyLevel: 1
+  };
+
+  function campaignLoad() {
+    try {
+      var raw = localStorage.getItem('dndm_campaign');
+      if (raw) campaign = Object.assign(campaign, JSON.parse(raw));
+    } catch(e) {}
+  }
+
+  function campaignSave() {
+    try { localStorage.setItem('dndm_campaign', JSON.stringify(campaign)); } catch(e) {}
+  }
+
+  function campaignUID() {
+    return 'c_' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
+  }
+
+  campaignLoad();
+
+  // ── Banner ────────────────────────────────────────────────
+
+  function renderBanner() {
+    var $name    = document.getElementById('campaign-name');
+    var $setting = document.getElementById('campaign-setting');
+    var $banner  = document.getElementById('campaign-banner');
+    if ($name)    $name.textContent    = campaign.name    || 'Unnamed Campaign';
+    if ($setting) $setting.textContent = campaign.setting || 'No setting defined.';
+    if ($banner && campaign.banner) {
+      $banner.style.backgroundImage  = 'url(' + campaign.banner + ')';
+      $banner.style.backgroundSize   = 'cover';
+      $banner.style.backgroundPosition = 'center';
+    }
+  }
+
+  renderBanner();
+
+  // Click campaign name / setting to edit inline
+  var $campName = document.getElementById('campaign-name');
+  if ($campName) {
+    $campName.title = 'Click to rename';
+    $campName.style.cursor = 'pointer';
+    $campName.addEventListener('click', function() {
+      var val = prompt('Campaign name:', campaign.name);
+      if (val !== null) {
+        campaign.name = val.trim() || 'Unnamed Campaign';
+        campaignSave();
+        renderBanner();
+      }
+    });
+  }
+
+  var $campSetting = document.getElementById('campaign-setting');
+  if ($campSetting) {
+    $campSetting.title = 'Click to edit setting';
+    $campSetting.style.cursor = 'pointer';
+    $campSetting.addEventListener('click', function() {
+      var val = prompt('Campaign setting:', campaign.setting);
+      if (val !== null) {
+        campaign.setting = val.trim();
+        campaignSave();
+        renderBanner();
+      }
+    });
+  }
+
+  // Banner image upload
+  var $bannerUpload = document.querySelector('.module__banner-upload');
+  if ($bannerUpload) {
+    var $bannerInput = document.createElement('input');
+    $bannerInput.type   = 'file';
+    $bannerInput.accept = 'image/*';
+    $bannerInput.hidden = true;
+    document.body.appendChild($bannerInput);
+    $bannerUpload.addEventListener('click', function() { $bannerInput.click(); });
+    $bannerInput.addEventListener('change', function() {
+      var file = $bannerInput.files[0];
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        campaign.banner = e.target.result;
+        campaignSave();
+        renderBanner();
+      };
+      reader.readAsDataURL(file);
+      $bannerInput.value = '';
+    });
+  }
+
+  // ── Campaign Stats ─────────────────────────────────────────
+
+  function renderCampaignStats() {
+    var $sessions = document.getElementById('stat-sessions');
+    var $xp       = document.getElementById('stat-xp');
+    var $level    = document.getElementById('stat-level');
+    var $npcs     = document.getElementById('stat-npcs');
+    if ($sessions) $sessions.textContent = campaign.sessions.length;
+    if ($xp)       $xp.textContent       = campaign.totalXP.toLocaleString();
+    if ($level)    $level.textContent    = campaign.partyLevel;
+    if ($npcs)     $npcs.textContent     = campaign.npcs.length;
+  }
+
+  renderCampaignStats();
+
+  // Click party level to edit
+  var $statLevel = document.getElementById('stat-level');
+  if ($statLevel) {
+    $statLevel.title = 'Click to edit';
+    $statLevel.style.cursor = 'pointer';
+    $statLevel.addEventListener('click', function() {
+      var val = prompt('Party level (1–20):', campaign.partyLevel);
+      var n   = parseInt(val);
+      if (!isNaN(n) && n >= 1 && n <= 20) {
+        campaign.partyLevel = n;
+        campaignSave();
+        renderCampaignStats();
+      }
+    });
+  }
+
+  // ── Scratch Pad ───────────────────────────────────────────
+
+  var $scratch = document.getElementById('scratch-pad');
+  if ($scratch) {
+    $scratch.value = campaign.scratch || '';
+    var _scratchTimer;
+    $scratch.addEventListener('input', function() {
+      clearTimeout(_scratchTimer);
+      _scratchTimer = setTimeout(function() {
+        campaign.scratch = $scratch.value;
+        campaignSave();
+      }, 600);
+    });
+  }
+
+  // ── NPCs ──────────────────────────────────────────────────
+
+  function renderNPCs() {
+    var $grid = document.getElementById('npc-grid');
+    if (!$grid) return;
+    if (!campaign.npcs.length) {
+      $grid.innerHTML = '<div class="npc-card npc-card--empty"><span class="npc-card__empty-text">No NPCs yet. Add your first character.</span></div>';
+      return;
+    }
+    $grid.innerHTML = campaign.npcs.map(function(npc) {
+      return '<div class="npc-card" data-npc-id="' + esc(npc.id) + '">'
+        + '<div class="npc-card__head">'
+          + '<span class="npc-card__name">' + esc(npc.name) + '</span>'
+          + '<span class="npc-card__role">' + esc(npc.role || '') + '</span>'
+        + '</div>'
+        + (npc.notes ? '<p class="npc-card__notes">' + esc(npc.notes) + '</p>' : '')
+        + '<div class="npc-card__actions">'
+          + '<button class="npc-card__btn npc-edit" data-npc-id="' + esc(npc.id) + '">Edit</button>'
+          + '<button class="npc-card__btn npc-card__btn--remove npc-remove" data-npc-id="' + esc(npc.id) + '">Remove</button>'
+        + '</div>'
+        + '</div>';
+    }).join('');
+
+    $grid.querySelectorAll('.npc-edit').forEach(function(btn) {
+      btn.addEventListener('click', function() { openNPCModal(btn.dataset.npcId); });
+    });
+    $grid.querySelectorAll('.npc-remove').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        campaign.npcs = campaign.npcs.filter(function(n) { return n.id !== btn.dataset.npcId; });
+        campaignSave();
+        renderNPCs();
+        renderCampaignStats();
+      });
+    });
+  }
+
+  function openNPCModal(editId) {
+    var existing = editId ? campaign.npcs.find(function(n) { return n.id === editId; }) : null;
+    var name  = prompt('NPC name:', existing ? existing.name : '');
+    if (name === null) return;
+    name = name.trim();
+    if (!name) return;
+    var role  = prompt('Role / title (optional):', existing ? existing.role  : '') || '';
+    var notes = prompt('Notes (optional):', existing ? existing.notes : '') || '';
+
+    if (existing) {
+      existing.name  = name;
+      existing.role  = role.trim();
+      existing.notes = notes.trim();
+    } else {
+      campaign.npcs.push({ id: campaignUID(), name: name, role: role.trim(), notes: notes.trim() });
+    }
+    campaignSave();
+    renderNPCs();
+    renderCampaignStats();
+  }
+
+  renderNPCs();
+
+  var $npcAddBtn = document.querySelector('#module-campaign .panel__head .panel__add');
+  if ($npcAddBtn) $npcAddBtn.addEventListener('click', function() { openNPCModal(null); });
+
+  // ── Lore Wiki ─────────────────────────────────────────────
+
+  var _activeTab = 'locations';
+
+  function renderLore() {
+    var $list = document.getElementById('lore-list');
+    if (!$list) return;
+    var entries = campaign.lore[_activeTab] || [];
+    if (!entries.length) {
+      $list.innerHTML = '<div class="lore-empty">No entries. The world is yet unwritten.</div>';
+      return;
+    }
+    $list.innerHTML = entries.map(function(e) {
+      return '<div class="lore-entry" data-lore-id="' + esc(e.id) + '">'
+        + '<div class="lore-entry__head">'
+          + '<span class="lore-entry__title">' + esc(e.title) + '</span>'
+          + '<div class="lore-entry__actions">'
+            + '<button class="lore-edit" data-lore-id="' + esc(e.id) + '">Edit</button>'
+            + '<button class="lore-remove" data-lore-id="' + esc(e.id) + '">✕</button>'
+          + '</div>'
+        + '</div>'
+        + (e.body ? '<p class="lore-entry__body">' + esc(e.body) + '</p>' : '')
+        + '</div>';
+    }).join('');
+
+    $list.querySelectorAll('.lore-edit').forEach(function(btn) {
+      btn.addEventListener('click', function() { openLoreModal(btn.dataset.loreId); });
+    });
+    $list.querySelectorAll('.lore-remove').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        campaign.lore[_activeTab] = campaign.lore[_activeTab].filter(function(e) { return e.id !== btn.dataset.loreId; });
+        campaignSave();
+        renderLore();
+      });
+    });
+  }
+
+  function openLoreModal(editId) {
+    var entries  = campaign.lore[_activeTab] || [];
+    var existing = editId ? entries.find(function(e) { return e.id === editId; }) : null;
+    var title = prompt('Entry title:', existing ? existing.title : '');
+    if (title === null) return;
+    title = title.trim();
+    if (!title) return;
+    var body = prompt('Description (optional):', existing ? existing.body : '') || '';
+
+    if (existing) {
+      existing.title = title;
+      existing.body  = body.trim();
+    } else {
+      if (!campaign.lore[_activeTab]) campaign.lore[_activeTab] = [];
+      campaign.lore[_activeTab].push({ id: campaignUID(), title: title, body: body.trim() });
+    }
+    campaignSave();
+    renderLore();
+  }
+
+  renderLore();
+
+  // Tab switching — also update _activeTab
+  document.querySelectorAll('.panel__tab').forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      var panel = tab.closest('.panel');
+      panel.querySelectorAll('.panel__tab').forEach(function(t) { t.classList.remove('panel__tab--active'); });
+      tab.classList.add('panel__tab--active');
+      _activeTab = tab.dataset.tab;
+      renderLore();
+    });
+  });
+
+  // Find lore Add Entry button (second panel__add button in campaign module)
+  var $loreAddBtn = document.querySelector('#module-campaign .lore-list ~ * .panel__add, #module-campaign .panel__add:last-of-type');
+  // Safer: find by panel title
+  document.querySelectorAll('#module-campaign .panel__head').forEach(function(head) {
+    var titleEl = head.querySelector('.panel__title');
+    if (titleEl && titleEl.textContent.trim() === 'LORE WIKI') {
+      var btn = head.querySelector('.panel__add');
+      if (btn) btn.addEventListener('click', function() { openLoreModal(null); });
+    }
+  });
+
+  // ══════════════════════════════════════════════════════════
+  // SESSIONS LOG
+  // ══════════════════════════════════════════════════════════
+
+  function renderSessions() {
+    var $list = document.getElementById('session-list');
+    if (!$list) return;
+    if (!campaign.sessions.length) {
+      $list.innerHTML = '<div class="session-empty">No sessions recorded. Begin your first session to start logging.</div>';
+      return;
+    }
+    $list.innerHTML = campaign.sessions.slice().reverse().map(function(s, revIdx) {
+      var idx = campaign.sessions.length - revIdx;
+      return '<div class="session-entry" data-session-id="' + esc(s.id) + '">'
+        + '<div class="session-entry__head">'
+          + '<span class="session-entry__num">Session ' + idx + '</span>'
+          + '<span class="session-entry__title">' + esc(s.title || '—') + '</span>'
+          + '<span class="session-entry__date">' + esc(s.date || '') + '</span>'
+          + '<div class="session-entry__actions">'
+            + '<button class="session-edit" data-session-id="' + esc(s.id) + '">Edit</button>'
+            + '<button class="session-remove" data-session-id="' + esc(s.id) + '">✕</button>'
+          + '</div>'
+        + '</div>'
+        + (s.summary ? '<p class="session-entry__summary">' + esc(s.summary) + '</p>' : '')
+        + (s.xp ? '<span class="session-entry__xp">+' + esc(String(s.xp)) + ' XP</span>' : '')
+        + '</div>';
+    }).join('');
+
+    $list.querySelectorAll('.session-edit').forEach(function(btn) {
+      btn.addEventListener('click', function() { openSessionEditModal(btn.dataset.sessionId); });
+    });
+    $list.querySelectorAll('.session-remove').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var s = campaign.sessions.find(function(x) { return x.id === btn.dataset.sessionId; });
+        if (s && s.xp) campaign.totalXP = Math.max(0, campaign.totalXP - s.xp);
+        campaign.sessions = campaign.sessions.filter(function(x) { return x.id !== btn.dataset.sessionId; });
+        campaignSave();
+        renderSessions();
+        renderCampaignStats();
+      });
+    });
+  }
+
+  function openSessionEditModal(editId) {
+    var existing = editId ? campaign.sessions.find(function(s) { return s.id === editId; }) : null;
+    var title   = prompt('Session title:', existing ? existing.title : '');
+    if (title === null) return;
+    var summary = prompt('Session summary:', existing ? existing.summary : '') || '';
+    var xpStr   = prompt('XP awarded:', existing ? String(existing.xp || 0) : '0');
+    var xp      = parseInt(xpStr) || 0;
+
+    if (existing) {
+      var oldXP = existing.xp || 0;
+      existing.title   = title.trim();
+      existing.summary = summary.trim();
+      existing.xp      = xp;
+      campaign.totalXP = Math.max(0, campaign.totalXP - oldXP + xp);
+    } else {
+      campaign.sessions.push({
+        id:      campaignUID(),
+        date:    new Date().toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' }),
+        title:   title.trim(),
+        summary: summary.trim(),
+        xp:      xp
+      });
+      campaign.totalXP += xp;
+    }
+    campaignSave();
+    renderSessions();
+    renderCampaignStats();
+  }
+
+  renderSessions();
+
+  // Wire up "New Session" button in sessions module header
+  var $newSessionBtn = document.querySelector('#module-sessions .module__action');
+  if ($newSessionBtn) $newSessionBtn.addEventListener('click', function() { openSessionEditModal(null); });
+
+  // ══════════════════════════════════════════════════════════
+  // EXPORT / IMPORT campaign JSON
+  // ══════════════════════════════════════════════════════════
+
+  var $exportBtn = document.getElementById('export-btn');
+  var $importBtn = document.getElementById('import-btn');
+  var $importFile= document.getElementById('import-file');
+
+  if ($exportBtn) {
+    $exportBtn.addEventListener('click', function() {
+      var blob = new Blob([JSON.stringify({ campaign: campaign, party: party }, null, 2)], { type: 'application/json' });
+      var url  = URL.createObjectURL(blob);
+      var a    = document.createElement('a');
+      a.href     = url;
+      a.download = (campaign.name || 'campaign').replace(/\s+/g, '_') + '_grimoire.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+  }
+
+  if ($importBtn && $importFile) {
+    $importBtn.addEventListener('click', function() { $importFile.click(); });
+    $importFile.addEventListener('change', function() {
+      var file = $importFile.files[0];
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          var data = JSON.parse(e.target.result);
+          if (!data.campaign) { showToast('Invalid file — no campaign data found'); return; }
+          if (!confirm('This will overwrite your current campaign. Continue?')) return;
+          campaign = Object.assign(campaign, data.campaign);
+          if (data.party) party = data.party;
+          campaignSave();
+          partySave();
+          renderBanner();
+          renderCampaignStats();
+          renderNPCs();
+          renderLore();
+          renderSessions();
+          renderParty();
+          showToast('Campaign imported successfully');
+          closeModal($settingsModal);
+        } catch(err) {
+          showToast('Import failed: ' + err.message);
+        }
+      };
+      reader.readAsText(file);
+      $importFile.value = '';
+    });
+  }
+
+  // Wire "Add to Encounter" from stat block
+  document.addEventListener('click', function(e) {
+    if (!e.target.matches('.stat-block__add-btn')) return;
+    var name = e.target.dataset.monster;
+    if (!name) return;
+    var roll = Math.floor(Math.random() * 20) + 1;
+    var hp   = 10;
+    combatants.push({
+      id:    'comb_' + Date.now() + '_' + Math.random().toString(36).slice(2,5),
+      name:  name,
+      init:  roll,
+      hp:    hp,
+      hpMax: hp,
+      ac:    '—',
+      type:  'enemy',
+      conditions: [],
+      dead:  false
+    });
+    combatants.sort(function(a,b) { return b.init - a.init; });
+    combatActive = true;
+    if ($roundNum)   $roundNum.textContent   = combatRound;
+    if ($combatNext) $combatNext.disabled    = false;
+    if ($endCombat)  $endCombat.disabled     = false;
+    renderCombat();
+    showToast(name + ' added to encounter (roll initiative: ' + roll + ')');
   });
 
   // ══════════════════════════════════════════════════════════

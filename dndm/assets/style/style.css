@@ -2862,6 +2862,110 @@ a { color: inherit; text-decoration: none; }
 }
 .condition-picker__option:hover { background: rgba(90,50,128,0.35); }
 
+/* ── NPC Cards ──────────────────────────────────────────────── */
+.npc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.75rem;
+}
+.npc-card {
+  background: var(--bg-raised);
+  border: 1px solid rgba(196,146,42,0.15);
+  border-radius: var(--radius);
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.npc-card--empty {
+  grid-column: 1 / -1;
+  border-style: dashed;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  opacity: 0.5;
+}
+.npc-card__empty-text { font-size: var(--text-sm); color: var(--bone-dim); }
+.npc-card__head { display: flex; flex-direction: column; gap: 0.15rem; }
+.npc-card__name { font-weight: 600; font-size: var(--text-base); color: var(--bone); }
+.npc-card__role { font-size: var(--text-xs); color: var(--gold-dim); letter-spacing: 0.05em; }
+.npc-card__notes { font-size: var(--text-xs); color: var(--bone-dim); line-height: 1.5; margin: 0; }
+.npc-card__actions { display: flex; gap: 0.4rem; margin-top: auto; padding-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.05); }
+.npc-card__btn {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: 1px solid rgba(90,50,128,0.3);
+  color: var(--purple-hi);
+  cursor: pointer;
+  transition: var(--transition);
+}
+.npc-card__btn:hover { background: rgba(90,50,128,0.25); }
+.npc-card__btn--remove { border-color: rgba(139,26,26,0.3); color: rgba(196,43,43,0.7); }
+.npc-card__btn--remove:hover { background: rgba(139,26,26,0.2); color: var(--crimson-hi); }
+
+/* ── Lore Wiki ───────────────────────────────────────────────── */
+.lore-list { display: flex; flex-direction: column; gap: 0.5rem; }
+.lore-empty { font-size: var(--text-sm); color: var(--bone-dim); opacity: 0.5; padding: 1rem 0; font-style: italic; }
+.lore-entry {
+  background: var(--bg-raised);
+  border: 1px solid rgba(196,146,42,0.1);
+  border-left: 2px solid rgba(196,146,42,0.35);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: 0.65rem 0.9rem;
+}
+.lore-entry__head { display: flex; align-items: center; gap: 0.5rem; }
+.lore-entry__title { flex: 1; font-weight: 600; font-size: var(--text-sm); color: var(--gold-dim); }
+.lore-entry__actions { display: flex; gap: 0.3rem; }
+.lore-edit, .lore-remove {
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: 1px solid rgba(90,50,128,0.25);
+  color: var(--bone-dim);
+  cursor: pointer;
+  transition: var(--transition);
+}
+.lore-edit:hover  { color: var(--purple-hi); border-color: rgba(90,50,128,0.5); }
+.lore-remove:hover { color: var(--crimson-hi); border-color: rgba(139,26,26,0.4); }
+.lore-entry__body { font-size: var(--text-xs); color: var(--bone-dim); line-height: 1.5; margin: 0.35rem 0 0; }
+
+/* ── Sessions Log ────────────────────────────────────────────── */
+.session-list { display: flex; flex-direction: column; gap: 0.6rem; }
+.session-empty { font-size: var(--text-sm); color: var(--bone-dim); opacity: 0.5; padding: 2rem 0; text-align: center; font-style: italic; }
+.session-entry {
+  background: var(--bg-raised);
+  border: 1px solid rgba(139,26,26,0.2);
+  border-left: 2px solid rgba(139,26,26,0.5);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: 0.75rem 1rem;
+}
+.session-entry__head { display: flex; align-items: center; gap: 0.65rem; flex-wrap: wrap; }
+.session-entry__num  { font-family: var(--mono); font-size: var(--text-xs); color: var(--crimson-hi); letter-spacing: 0.08em; flex-shrink: 0; }
+.session-entry__title { flex: 1; font-weight: 600; font-size: var(--text-base); color: var(--bone); }
+.session-entry__date { font-size: var(--text-xs); color: var(--bone-dim); opacity: 0.5; flex-shrink: 0; }
+.session-entry__actions { display: flex; gap: 0.3rem; margin-left: auto; }
+.session-edit, .session-remove {
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: 1px solid rgba(90,50,128,0.25);
+  color: var(--bone-dim);
+  cursor: pointer;
+  transition: var(--transition);
+}
+.session-edit:hover  { color: var(--purple-hi); border-color: rgba(90,50,128,0.5); }
+.session-remove:hover { color: var(--crimson-hi); border-color: rgba(139,26,26,0.4); }
+.session-entry__summary { font-size: var(--text-sm); color: var(--bone-dim); line-height: 1.5; margin: 0.4rem 0 0; }
+.session-entry__xp { display: inline-block; margin-top: 0.35rem; font-family: var(--mono); font-size: var(--text-xs); color: var(--gold-hi); letter-spacing: 0.06em; }
+
 /* ── Reduced motion ──────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
