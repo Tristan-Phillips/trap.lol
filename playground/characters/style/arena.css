@@ -160,9 +160,8 @@
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
-    padding: var(--space-lg) var(--space-md) var(--space-lg);
-    padding-top: max(var(--space-lg), 16px);
-    scroll-padding-top: 60px;
+    padding: var(--space-sm) var(--space-md) var(--space-lg);
+    scroll-padding-top: 8px;
     display: flex;
     flex-direction: column;
     gap: var(--space-sm);
