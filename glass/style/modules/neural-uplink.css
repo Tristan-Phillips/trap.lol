@@ -3900,6 +3900,13 @@
   .playground-page__scanlines { animation: none; }
 }
 
+/* Zero out the hub body padding/margin when the playground page is present */
+body:has(.playground-page) {
+  padding: 0 !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+}
+
 .playground-page {
   min-height: 100dvh;
   max-height: 100dvh;
