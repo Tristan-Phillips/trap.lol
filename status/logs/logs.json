@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.3.53",
+    "schema_version": "1.3.54",
     "last_updated": "2026-05-17",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -478,6 +478,15 @@
     ]
   },
   "commits": [
+    {
+      "hash": "e45f69d",
+      "date": "2026-05-17",
+      "message": "Changes",
+      "scope": "glass/",
+      "impact": "low",
+      "files": ["glass/data/apps.json"],
+      "why": "Set Playground, Underdark, and Grimoire status from 'offline' to 'live' in the hub app manifest so the apps appear live on the hub."
+    },
     {
       "hash": "1cbe55e",
       "date": "2026-05-17",
@@ -1996,6 +2005,21 @@
     {
       "date": "2026-05-17",
       "agent": "Claude Sonnet 4.6",
+      "type": "maintenance",
+      "summary": "Phase 9 polish pass on Grimoire. Added coarse-pointer media query for touch-target compliance (≥44px min-height on toolbar buttons, type-picker pills, Oracle buttons, NOW PLAYING strip actions). Extended prefers-reduced-motion block to cover STORY canvas node transitions, Oracle loading animation, NOW PLAYING strip transitions, HP bar fill transitions, and character sheet overlay fade. Minor CSS visual improvements: NOW PLAYING strip box-shadow, node title font-size confirmed at 0.8rem. Updated logs.json to record the manually-made e45f69d commit (apps.json live status for Playground, Underdark, Grimoire).",
+      "decisions": [
+        "@media (pointer: coarse) preferred over touch-action for min-height enforcement — more targeted than screen width breakpoints, correctly targets iPad/phone without affecting desktop",
+        "story-tool min-height 44px only on coarse-pointer — desktop retains compact 0.22rem padding aesthetic",
+        "prefers-reduced-motion: story-node transition disabled, oracle __loading animation disabled, party-bar HP fill transition disabled"
+      ],
+      "rules_reinforced": [
+        "Touch target minimum 44px applies to all interactive elements — implement via pointer: coarse media query not viewport breakpoints",
+        "prefers-reduced-motion must cover all new feature animations each session — not just the welcome splash"
+      ]
+    },
+    {
+      "date": "2026-05-17",
+      "agent": "Claude Sonnet 4.6",
       "type": "feature_development",
       "summary": "Built the STORY module — a full narrative decision tree builder for campaign planning and live session navigation. Pan/zoom SVG+HTML canvas with 6 node types (Scene gold, Decision crimson, Event bone, Revelation purple, Combat red, Wildcard teal), bezier curved edges with arrow markers, node drag-and-drop repositioning, connect mode (click-to-link), delete mode (click-to-remove), snap-to-grid, zoom/fit. Right panel has node editor (title/desc/notes/tags/status/monsters) and Oracle suggestions panel (streaming nano-gpt contextual suggestions + Expand Tree mode that generates 5 child nodes and adds them to canvas on click). During session mode a NOW PLAYING strip shows the active scene with Off-Script (spawns wildcard node) and Mark Done (auto-advances to next unplayed child). Journey log tracks the actual path taken with timestamps. All data stored in campaign.narrative sub-object.",
       "decisions": [
@@ -3350,6 +3374,16 @@
         "description": "Full narrative decision tree builder with pan/zoom canvas, 6 node types, bezier SVG edges, drag-to-place/move, connect/delete modes, node editor, Oracle contextual suggestions + sub-tree expansion, NOW PLAYING session strip, Off-Script wildcard spawner, Mark Done auto-advance, path-taken journey log. Persisted to campaign.narrative.",
         "notes": "Committed in pending (this session). Oracle Expand mode generates nodes and wires them directly to canvas on click.",
         "files_affected": ["dndm/index.html", "dndm/assets/script/app.js", "dndm/assets/style/style.css"]
+      },
+      {
+        "id": "dndm-phase-9-polish",
+        "title": "Grimoire Phase 9 — Touch targets, reduced motion, visual polish",
+        "status": "done",
+        "requested": "2026-05-17",
+        "completed": "2026-05-17",
+        "description": "Touch target compliance (pointer: coarse media query, ≥44px min-height on all STORY/filter interactive elements). prefers-reduced-motion extended to STORY canvas nodes, Oracle loading animation, HP bar fill transitions, character sheet overlay fade. NOW PLAYING strip shadow polish.",
+        "notes": "CSS-only changes — no JS modified. Committed as part of this session.",
+        "files_affected": ["dndm/assets/style/style.css", "status/logs/logs.json"]
       },
       {
         "id": "dndm-phase-8-oracleask",
