@@ -479,6 +479,15 @@
   },
   "commits": [
     {
+      "hash": "7e2a85c",
+      "date": "2026-05-17",
+      "message": "fix(playground): remove ::before flex spacer — causes large gap on fresh shell",
+      "scope": "playground/",
+      "impact": "low",
+      "files": ["glass/style/modules/neural-uplink.css"],
+      "why": "The flex spacer created a large empty block on a fresh shell with only 1-2 messages. Bottom-anchoring adds no real value in this interface — messages flow naturally from the top and the shell fills available height."
+    },
+    {
       "hash": "2fcd08f",
       "date": "2026-05-17",
       "message": "fix(playground): gap above shell — body.pg-body direct selector + zero top padding",
