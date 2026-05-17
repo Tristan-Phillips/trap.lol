@@ -240,7 +240,7 @@ function applyFilter(filter) {
   renderGrid();
 }
 
-function renderGrid() {
+async function renderGrid() {
   const old = qs("#pull-zone");
   if (old) old.remove();
 
@@ -255,8 +255,13 @@ function renderGrid() {
   /* Initial load: 18 fixed, no tier, no fanfare */
   visibleCount = Math.min(18, filtered.length);
 
+  /* Probe orientations before injecting so grid placement is correct from the start */
+  const orientations = await Promise.all(
+    filtered.slice(0, visibleCount).map(p => probeOrientation(p.thumb || p.src || ""))
+  );
+
   const frag = document.createDocumentFragment();
-  for (let i = 0; i < visibleCount; i++) frag.appendChild(makeCard(filtered[i], i));
+  for (let i = 0; i < visibleCount; i++) frag.appendChild(makeCard(filtered[i], i, orientations[i]));
   $grid.appendChild(frag);
 
   if (typeof lucide !== "undefined") lucide.createIcons();
@@ -375,14 +380,19 @@ function executePull() {
     /* Flash the rarity colour across the zone */
     flashRarity($zone, tier.color);
 
-    /* Inject cards after reading the reveal */
-    setTimeout(() => {
+    /* Inject cards after reading the reveal — probe orientations first so
+       grid-column spans are set before insertion (no reflow after paint) */
+    setTimeout(async () => {
       const $grid = qs("#art-grid");
       const start = visibleCount;
       const end   = start + count;
-      const frag  = document.createDocumentFragment();
 
-      for (let i = start; i < end; i++) frag.appendChild(makeCard(filtered[i], i));
+      const orientations = await Promise.all(
+        filtered.slice(start, end).map(p => probeOrientation(p.thumb || p.src || ""))
+      );
+
+      const frag = document.createDocumentFragment();
+      for (let i = start; i < end; i++) frag.appendChild(makeCard(filtered[i], i, orientations[i - start]));
       $grid.appendChild(frag);
 
       visibleCount = end;
@@ -410,9 +420,21 @@ function flashRarity($zone, color) {
   $flash.addEventListener("animationend", () => $flash.remove());
 }
 
-function makeCard(piece, idx) {
+/* Probe image dimensions without inserting into DOM.
+   Resolves immediately if the browser already has the image cached. */
+function probeOrientation(url) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload  = () => resolve(img.naturalWidth >= img.naturalHeight ? "landscape" : "portrait");
+    img.onerror = () => resolve("portrait");
+    img.src = url;
+  });
+}
+
+function makeCard(piece, idx, orientation = "portrait") {
   const $card = document.createElement("div");
   $card.className = "art-card";
+  if (orientation === "landscape") $card.classList.add("art-card--landscape");
   $card.setAttribute("tabindex", "0");
   $card.setAttribute("role", "button");
   $card.setAttribute("aria-label", piece._id ? `View ${piece._id}` : "View artwork");
@@ -424,10 +446,6 @@ function makeCard(piece, idx) {
   $thumb.decoding = "async";
   $thumb.alt = "";
   $thumb.src = piece.thumb || piece.src || "";
-  /* Tag portrait images once dimensions are known — CSS uses this on single-column only */
-  $thumb.addEventListener("load", () => {
-    if ($thumb.naturalHeight > $thumb.naturalWidth) $card.classList.add("art-card--portrait");
-  }, { once: true });
 
   const $medIcon = document.createElement("div");
   $medIcon.className = "art-card__medium-icon";
