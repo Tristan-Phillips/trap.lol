@@ -327,13 +327,13 @@ body {
 
   /* entrance animation */
   opacity: 0;
-  translate: 0 16px;
+  translate: 0 12px;
 }
 .art-card.visible {
   opacity: 1;
   translate: 0 0;
   transition: border-color var(--t-med), box-shadow var(--t-med), transform var(--t-med),
-              opacity 0.4s var(--ease-out), translate 0.4s var(--ease-out);
+              opacity 0.55s var(--ease-out), translate 0.55s var(--ease-out);
 }
 
 @media (prefers-reduced-motion: reduce) {

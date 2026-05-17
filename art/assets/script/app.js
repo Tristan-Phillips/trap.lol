@@ -462,7 +462,9 @@ function makeCard(piece, idx) {
   return $card;
 }
 
-/* Staggered entrance via IntersectionObserver */
+/* Staggered entrance via IntersectionObserver
+   Delay is relative to batch position, not global idx, so large pulls
+   don't all fire at the same huge offset. */
 function initCardEntrance() {
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (reduced) {
@@ -470,17 +472,23 @@ function initCardEntrance() {
     return;
   }
 
+  const pending = qsa(".art-card:not(.visible)");
+  let batchIdx = 0;
+
   const obs = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (!entry.isIntersecting) return;
       const $card = entry.target;
-      const delay = Number($card.dataset.idx) * 45;
-      setTimeout(() => $card.classList.add("visible"), Math.min(delay, 400));
+      const delay = Number($card.dataset.batchIdx ?? 0) * 55;
+      setTimeout(() => $card.classList.add("visible"), Math.min(delay, 500));
       obs.unobserve($card);
     });
-  }, { threshold: 0.08 });
+  }, { threshold: 0.05 });
 
-  qsa(".art-card:not(.visible)").forEach($c => obs.observe($c));
+  pending.forEach($c => {
+    $c.dataset.batchIdx = batchIdx++;
+    obs.observe($c);
+  });
 }
 
 /* ══════════════════════════════════════════════════
