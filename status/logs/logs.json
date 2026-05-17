@@ -479,6 +479,15 @@
   },
   "commits": [
     {
+      "hash": "8fcd4a9",
+      "date": "2026-05-17",
+      "message": "polish(dndm): Phase 9 — touch targets, reduced-motion, visual polish",
+      "scope": "dndm/",
+      "impact": "low",
+      "files": ["dndm/assets/style/style.css", "status/logs/logs.json"],
+      "why": "Touch target compliance (≥44px on coarse-pointer devices for all STORY/filter buttons) and prefers-reduced-motion extension to all new Phase 8/STORY animations — accessibility polish pass after major feature delivery."
+    },
+    {
       "hash": "e45f69d",
       "date": "2026-05-17",
       "message": "Changes",
@@ -3382,7 +3391,7 @@
         "requested": "2026-05-17",
         "completed": "2026-05-17",
         "description": "Touch target compliance (pointer: coarse media query, ≥44px min-height on all STORY/filter interactive elements). prefers-reduced-motion extended to STORY canvas nodes, Oracle loading animation, HP bar fill transitions, character sheet overlay fade. NOW PLAYING strip shadow polish.",
-        "notes": "CSS-only changes — no JS modified. Committed as part of this session.",
+        "notes": "CSS-only changes — no JS modified. Committed as 8fcd4a9.",
         "files_affected": ["dndm/assets/style/style.css", "status/logs/logs.json"]
       },
       {
