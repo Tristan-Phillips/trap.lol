@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.3.60",
+    "schema_version": "1.3.61",
     "last_updated": "2026-05-17",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -478,6 +478,15 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-17",
+      "message": "feat(grimoire): full D&D character sheet modal — sections, ability boxes, new fields",
+      "scope": "dndm/",
+      "impact": "medium",
+      "files": ["dndm/assets/script/app.js", "dndm/assets/style/style.css", "dndm/index.html", "status/logs/logs.json"],
+      "why": "Add Character modal was a flat label/input grid with no structure, no ability score display, and missing standard D&D fields (subclass, background, XP, ideals). Replaced with a sectioned char-sheet-modal layout: Identity (name, class, subclass, race, background, alignment, player, level, XP), Ability Scores (6 hexagonal stat boxes with live modifier calculation and passive perception), Combat Stats (HP, AC, initiative, speed, prof bonus, passive perception), Languages & Traits (personality, bonds, ideals, flaws), and Backstory. All new fields persisted to the pc object; migration guards added for existing saved characters."
+    },
     {
       "hash": "eddbed8",
       "date": "2026-05-17",
@@ -2205,6 +2214,23 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-17",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Redesigned the Add Character modal into a proper D&D character sheet form. Five named sections with distinct visual treatment: Identity grid (name*, class, subclass, race/species, background, alignment dropdown, player name, level, XP), Ability Scores (6 boxes with score input + live modifier display + auto-calculated passive perception), Combat Stats (6 stat boxes for HP/AC/initiative/speed/prof bonus/passive perc), Languages & Traits (personality, bonds, ideals, flaws as textareas), and Backstory. All new fields (subclass, background, xp, ideals) added to the pc object and migration-guarded. Modifier live-updates on input; passive perception auto-derives from WIS. Responsive: collapses to 1-col identity/traits and 3-col ability/combat at 560px.",
+      "decisions": [
+        "Used a custom .char-sheet-modal component instead of extending .modal — the old modal was too narrow and text-centric; char sheet needs 700px width and box-based stat layout",
+        "Ability scores use borderless inputs with only a bottom border — gives the classic D&D 'score in a box' feel without heavy borders everywhere",
+        "Passive perception derived automatically from WIS modifier (read-only .csm__stat-derived) — prevents typos and keeps it in sync",
+        "Alignment uses a <select> dropdown rather than freetext — prevents inconsistent values across party members",
+        "Ideals added as a new field alongside personality/bonds/flaws — completes the standard 5e trait quartet; stored on pc.ideals"
+      ],
+      "rules_reinforced": [
+        "Complex forms get their own BEM component (csm__*) rather than forcing into modal__* — the modal system is for simple confirm dialogs",
+        "New pc fields always need migration guards in the party load code"
+      ]
+    },
     {
       "date": "2026-05-17",
       "agent": "Claude Sonnet 4.6",

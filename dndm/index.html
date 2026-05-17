@@ -679,63 +679,174 @@
 
   <!-- ── Add Character Modal ───────────────────────────────── -->
   <div id="char-modal" class="modal-overlay" hidden aria-modal="true" role="dialog" aria-labelledby="char-modal-title">
-    <div class="modal modal--wide">
-      <div class="modal__rune" aria-hidden="true">ᚹ</div>
-      <h2 class="modal__title" id="char-modal-title">ADD CHARACTER</h2>
-      <div class="modal__fields modal__fields--grid">
-        <label class="modal__label" for="char-name">Name</label>
-        <input class="modal__input" type="text" id="char-name" placeholder="Aelindra Brightmantle…" autocomplete="off" />
+    <div class="char-sheet-modal">
 
-        <label class="modal__label" for="char-class">Class</label>
-        <input class="modal__input" type="text" id="char-class" placeholder="Wizard…" autocomplete="off" />
-
-        <label class="modal__label" for="char-level">Level</label>
-        <input class="modal__input modal__input--short" type="number" id="char-level" placeholder="7" min="1" max="20" value="1" />
-
-        <label class="modal__label" for="char-race">Race</label>
-        <input class="modal__input" type="text" id="char-race" placeholder="High Elf…" autocomplete="off" />
-
-        <label class="modal__label" for="char-player">Player</label>
-        <input class="modal__input" type="text" id="char-player" placeholder="Sarah…" autocomplete="off" />
-
-        <label class="modal__label" for="char-hp-max">Max HP</label>
-        <input class="modal__input modal__input--short" type="number" id="char-hp-max" placeholder="52" min="1" max="999" />
-
-        <label class="modal__label" for="char-ac">Armour Class</label>
-        <input class="modal__input modal__input--short" type="number" id="char-ac" placeholder="15" min="1" max="99" />
-
-        <label class="modal__label" for="char-init-bonus">Initiative Bonus</label>
-        <input class="modal__input modal__input--short" type="number" id="char-init-bonus" placeholder="+3" min="-5" max="20" />
-
-        <label class="modal__label" for="char-prof-bonus">Prof. Bonus</label>
-        <input class="modal__input modal__input--short" type="number" id="char-prof-bonus" placeholder="2" min="2" max="6" value="2" />
-
-        <label class="modal__label" for="char-speed">Speed (ft)</label>
-        <input class="modal__input modal__input--short" type="number" id="char-speed" placeholder="30" min="0" value="30" />
+      <!-- Header -->
+      <div class="csm__header">
+        <div class="csm__rune" aria-hidden="true">ᚹ</div>
+        <div class="csm__header-text">
+          <h2 class="csm__title" id="char-modal-title">CHARACTER SHEET</h2>
+          <p class="csm__subtitle">New party member</p>
+        </div>
       </div>
-      <div class="modal__fields modal__fields--grid" style="margin-top:0.75rem;border-top:1px solid rgba(196,146,42,0.1);padding-top:0.75rem;">
-        <label class="modal__label" for="char-str">STR</label>
-        <input class="modal__input modal__input--short" type="number" id="char-str" placeholder="10" min="1" max="30" value="10" />
 
-        <label class="modal__label" for="char-dex">DEX</label>
-        <input class="modal__input modal__input--short" type="number" id="char-dex" placeholder="10" min="1" max="30" value="10" />
-
-        <label class="modal__label" for="char-con">CON</label>
-        <input class="modal__input modal__input--short" type="number" id="char-con" placeholder="10" min="1" max="30" value="10" />
-
-        <label class="modal__label" for="char-int">INT</label>
-        <input class="modal__input modal__input--short" type="number" id="char-int" placeholder="10" min="1" max="30" value="10" />
-
-        <label class="modal__label" for="char-wis">WIS</label>
-        <input class="modal__input modal__input--short" type="number" id="char-wis" placeholder="10" min="1" max="30" value="10" />
-
-        <label class="modal__label" for="char-cha">CHA</label>
-        <input class="modal__input modal__input--short" type="number" id="char-cha" placeholder="10" min="1" max="30" value="10" />
+      <!-- ── Section 1: Identity ── -->
+      <div class="csm__section">
+        <div class="csm__section-label">IDENTITY</div>
+        <div class="csm__identity-grid">
+          <div class="csm__field csm__field--span2">
+            <label class="csm__label" for="char-name">Character Name <span class="csm__req">*</span></label>
+            <input class="csm__input" type="text" id="char-name" placeholder="Aelindra Brightmantle…" autocomplete="off" />
+          </div>
+          <div class="csm__field">
+            <label class="csm__label" for="char-class">Class</label>
+            <input class="csm__input" type="text" id="char-class" placeholder="Wizard…" autocomplete="off" />
+          </div>
+          <div class="csm__field">
+            <label class="csm__label" for="char-subclass">Subclass</label>
+            <input class="csm__input" type="text" id="char-subclass" placeholder="School of Evocation…" autocomplete="off" />
+          </div>
+          <div class="csm__field">
+            <label class="csm__label" for="char-race">Race / Species</label>
+            <input class="csm__input" type="text" id="char-race" placeholder="High Elf…" autocomplete="off" />
+          </div>
+          <div class="csm__field">
+            <label class="csm__label" for="char-background">Background</label>
+            <input class="csm__input" type="text" id="char-background" placeholder="Sage…" autocomplete="off" />
+          </div>
+          <div class="csm__field">
+            <label class="csm__label" for="char-align">Alignment</label>
+            <select class="csm__input csm__input--select" id="char-align">
+              <option value="">— Select —</option>
+              <option>Lawful Good</option><option>Neutral Good</option><option>Chaotic Good</option>
+              <option>Lawful Neutral</option><option>True Neutral</option><option>Chaotic Neutral</option>
+              <option>Lawful Evil</option><option>Neutral Evil</option><option>Chaotic Evil</option>
+            </select>
+          </div>
+          <div class="csm__field">
+            <label class="csm__label" for="char-player">Player Name</label>
+            <input class="csm__input" type="text" id="char-player" placeholder="Sarah…" autocomplete="off" />
+          </div>
+          <div class="csm__field csm__field--narrow">
+            <label class="csm__label" for="char-level">Level</label>
+            <input class="csm__input" type="number" id="char-level" min="1" max="20" value="1" />
+          </div>
+          <div class="csm__field csm__field--narrow">
+            <label class="csm__label" for="char-xp">Experience</label>
+            <input class="csm__input" type="number" id="char-xp" placeholder="0" min="0" value="0" />
+          </div>
+        </div>
       </div>
-      <div class="modal__actions">
-        <button class="modal__btn modal__btn--secondary" id="char-modal-cancel">Cancel</button>
-        <button class="modal__btn modal__btn--primary" id="char-modal-confirm">Add to Party</button>
+
+      <!-- ── Section 2: Ability Scores ── -->
+      <div class="csm__section">
+        <div class="csm__section-label">ABILITY SCORES</div>
+        <div class="csm__ability-grid">
+          <div class="csm__ability-box" data-stat="str">
+            <div class="csm__ability-name">STR</div>
+            <input class="csm__ability-score" type="number" id="char-str" min="1" max="30" value="10" />
+            <div class="csm__ability-mod" id="mod-str">+0</div>
+          </div>
+          <div class="csm__ability-box" data-stat="dex">
+            <div class="csm__ability-name">DEX</div>
+            <input class="csm__ability-score" type="number" id="char-dex" min="1" max="30" value="10" />
+            <div class="csm__ability-mod" id="mod-dex">+0</div>
+          </div>
+          <div class="csm__ability-box" data-stat="con">
+            <div class="csm__ability-name">CON</div>
+            <input class="csm__ability-score" type="number" id="char-con" min="1" max="30" value="10" />
+            <div class="csm__ability-mod" id="mod-con">+0</div>
+          </div>
+          <div class="csm__ability-box" data-stat="int">
+            <div class="csm__ability-name">INT</div>
+            <input class="csm__ability-score" type="number" id="char-int" min="1" max="30" value="10" />
+            <div class="csm__ability-mod" id="mod-int">+0</div>
+          </div>
+          <div class="csm__ability-box" data-stat="wis">
+            <div class="csm__ability-name">WIS</div>
+            <input class="csm__ability-score" type="number" id="char-wis" min="1" max="30" value="10" />
+            <div class="csm__ability-mod" id="mod-wis">+0</div>
+          </div>
+          <div class="csm__ability-box" data-stat="cha">
+            <div class="csm__ability-name">CHA</div>
+            <input class="csm__ability-score" type="number" id="char-cha" min="1" max="30" value="10" />
+            <div class="csm__ability-mod" id="mod-cha">+0</div>
+          </div>
+        </div>
       </div>
+
+      <!-- ── Section 3: Combat Stats ── -->
+      <div class="csm__section">
+        <div class="csm__section-label">COMBAT</div>
+        <div class="csm__combat-grid">
+          <div class="csm__stat-box">
+            <div class="csm__stat-label">Max HP</div>
+            <input class="csm__stat-input" type="number" id="char-hp-max" placeholder="52" min="1" max="999" />
+          </div>
+          <div class="csm__stat-box">
+            <div class="csm__stat-label">Armour Class</div>
+            <input class="csm__stat-input" type="number" id="char-ac" placeholder="15" min="1" max="99" />
+          </div>
+          <div class="csm__stat-box">
+            <div class="csm__stat-label">Initiative</div>
+            <input class="csm__stat-input" type="number" id="char-init-bonus" placeholder="+0" min="-5" max="20" />
+          </div>
+          <div class="csm__stat-box">
+            <div class="csm__stat-label">Speed (ft)</div>
+            <input class="csm__stat-input" type="number" id="char-speed" placeholder="30" min="0" value="30" />
+          </div>
+          <div class="csm__stat-box">
+            <div class="csm__stat-label">Prof. Bonus</div>
+            <input class="csm__stat-input" type="number" id="char-prof-bonus" placeholder="+2" min="2" max="6" value="2" />
+          </div>
+          <div class="csm__stat-box">
+            <div class="csm__stat-label">Passive Perc.</div>
+            <div class="csm__stat-derived" id="char-passive-perc">10</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Section 4: Languages & Traits ── -->
+      <div class="csm__section">
+        <div class="csm__section-label">LANGUAGES &amp; TRAITS</div>
+        <div class="csm__traits-grid">
+          <div class="csm__field csm__field--span2">
+            <label class="csm__label" for="char-languages">Languages</label>
+            <input class="csm__input" type="text" id="char-languages" placeholder="Common, Elvish, Draconic…" autocomplete="off" />
+          </div>
+          <div class="csm__field">
+            <label class="csm__label" for="char-personality">Personality Traits</label>
+            <textarea class="csm__textarea" id="char-personality" rows="2" placeholder="I speak eloquently and prefer books over people…"></textarea>
+          </div>
+          <div class="csm__field">
+            <label class="csm__label" for="char-bonds">Bonds</label>
+            <textarea class="csm__textarea" id="char-bonds" rows="2" placeholder="I seek the lost tome of Ioun…"></textarea>
+          </div>
+          <div class="csm__field">
+            <label class="csm__label" for="char-ideals">Ideals</label>
+            <textarea class="csm__textarea" id="char-ideals" rows="2" placeholder="Knowledge is the greatest treasure…"></textarea>
+          </div>
+          <div class="csm__field">
+            <label class="csm__label" for="char-flaws">Flaws</label>
+            <textarea class="csm__textarea" id="char-flaws" rows="2" placeholder="I overlook obvious solutions in favour of complex ones…"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Section 5: Backstory ── -->
+      <div class="csm__section">
+        <div class="csm__section-label">BACKSTORY</div>
+        <div class="csm__field">
+          <textarea class="csm__textarea csm__textarea--tall" id="char-backstory" rows="4" placeholder="History, motivation, secrets…"></textarea>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="csm__actions">
+        <button class="csm__btn csm__btn--cancel" id="char-modal-cancel" type="button">Cancel</button>
+        <button class="csm__btn csm__btn--confirm" id="char-modal-confirm" type="button">Add to Party</button>
+      </div>
+
     </div>
   </div>
 

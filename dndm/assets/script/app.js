@@ -1777,6 +1777,10 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!pc.speed)       pc.speed       = 30;
         if (!pc.alignment)   pc.alignment   = '';
         if (!pc.languages)   pc.languages   = '';
+        if (!pc.subclass)    pc.subclass    = '';
+        if (!pc.background)  pc.background  = '';
+        if (typeof pc.xp !== 'number') pc.xp = 0;
+        if (!pc.ideals)      pc.ideals      = '';
         if (!pc.saveProfMap) pc.saveProfMap = {};   // { str: true, dex: false, ... }
         if (!pc.skillProfMap)pc.skillProfMap= {};   // { acrobatics: 1, ... }  1=prof 2=expert
         if (!pc.slotsByLevel)pc.slotsByLevel= {};   // { 1: {max:4,used:1}, ... }
@@ -2391,6 +2395,29 @@ document.addEventListener('DOMContentLoaded', function () {
 
   var $charModal = document.getElementById('char-modal');
 
+  // Ability modifier helper
+  function abilityMod(score) {
+    var m = Math.floor((score - 10) / 2);
+    return (m >= 0 ? '+' : '') + m;
+  }
+
+  // Wire ability score inputs → live modifier display + passive perception
+  ['str','dex','con','int','wis','cha'].forEach(function(stat) {
+    var $inp = document.getElementById('char-' + stat);
+    var $mod = document.getElementById('mod-' + stat);
+    if (!$inp || !$mod) return;
+    function update() {
+      var v = parseInt($inp.value) || 10;
+      $mod.textContent = abilityMod(v);
+      if (stat === 'wis') {
+        var $pp = document.getElementById('char-passive-perc');
+        if ($pp) $pp.textContent = 10 + Math.floor((v - 10) / 2);
+      }
+    }
+    $inp.addEventListener('input', update);
+    update();
+  });
+
   function openCharModal() { openModal($charModal); }
 
   document.getElementById('add-character').addEventListener('click', openCharModal);
@@ -2404,9 +2431,12 @@ document.addEventListener('DOMContentLoaded', function () {
       id:          partyUid(),
       name:        name,
       cls:         document.getElementById('char-class').value.trim(),
+      subclass:    document.getElementById('char-subclass').value.trim(),
       race:        document.getElementById('char-race').value.trim(),
+      background:  document.getElementById('char-background').value.trim(),
       player:      document.getElementById('char-player').value.trim(),
       level:       parseInt(document.getElementById('char-level').value) || 1,
+      xp:          parseInt(document.getElementById('char-xp').value) || 0,
       hp:          hpMax,
       hpMax:       hpMax,
       ac:          parseInt(document.getElementById('char-ac').value) || null,
@@ -2419,17 +2449,18 @@ document.addEventListener('DOMContentLoaded', function () {
       int: parseInt(document.getElementById('char-int').value) || 10,
       wis: parseInt(document.getElementById('char-wis').value) || 10,
       cha: parseInt(document.getElementById('char-cha').value) || 10,
-      alignment:    '',
-      languages:    '',
+      alignment:    document.getElementById('char-align').value,
+      languages:    document.getElementById('char-languages').value.trim(),
       saveProfMap:  {},
       skillProfMap: {},
       slotsByLevel: {},
       features:     '',
       equipment:    '',
-      personality:  '',
-      bonds:        '',
-      flaws:        '',
-      backstory:    '',
+      personality:  document.getElementById('char-personality').value.trim(),
+      ideals:       document.getElementById('char-ideals').value.trim(),
+      bonds:        document.getElementById('char-bonds').value.trim(),
+      flaws:        document.getElementById('char-flaws').value.trim(),
+      backstory:    document.getElementById('char-backstory').value.trim(),
       conditions:   [],
       dsSucc:       0,
       dsFail:       0,
@@ -2440,18 +2471,24 @@ document.addEventListener('DOMContentLoaded', function () {
     partySave();
     closeModal($charModal);
 
-    // Clear text fields; reset number fields to defaults
-    ['char-name','char-class','char-race','char-player']
+    // Reset form
+    ['char-name','char-class','char-subclass','char-race','char-background','char-player','char-languages',
+     'char-personality','char-ideals','char-bonds','char-flaws','char-backstory']
       .forEach(function(id) { var el = document.getElementById(id); if (el) el.value = ''; });
     ['char-hp-max','char-ac','char-init-bonus']
       .forEach(function(id) { var el = document.getElementById(id); if (el) el.value = ''; });
-    var _dflt = { 'char-level':1, 'char-prof-bonus':2, 'char-speed':30, 'char-str':10, 'char-dex':10, 'char-con':10, 'char-int':10, 'char-wis':10, 'char-cha':10 };
-    Object.keys(_dflt).forEach(function(id) { var el = document.getElementById(id); if (el) el.value = _dflt[id]; });
+    document.getElementById('char-align').value = '';
+    var _dflt = { 'char-level':1, 'char-prof-bonus':2, 'char-speed':30, 'char-xp':0,
+                  'char-str':10, 'char-dex':10, 'char-con':10, 'char-int':10, 'char-wis':10, 'char-cha':10 };
+    Object.keys(_dflt).forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) { el.value = _dflt[id]; el.dispatchEvent(new Event('input')); }
+    });
 
     renderParty();
   });
 
-  // Allow Enter to confirm
+  // Allow Enter to confirm (skip textarea)
   $charModal.addEventListener('keydown', function(e) {
     if (e.key === 'Enter' && e.target.tagName === 'INPUT') {
       document.getElementById('char-modal-confirm').click();
