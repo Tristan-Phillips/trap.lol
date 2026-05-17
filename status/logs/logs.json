@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.3.56",
+    "schema_version": "1.3.57",
     "last_updated": "2026-05-17",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -478,6 +478,15 @@
     ]
   },
   "commits": [
+    {
+      "hash": "a3f84b1",
+      "date": "2026-05-17",
+      "message": "feat(grimoire): Composer — full-screen distraction-free editor for campaign text",
+      "scope": "dndm/",
+      "impact": "high",
+      "files": ["dndm/assets/script/app.js", "dndm/assets/style/style.css", "dndm/index.html"],
+      "why": "All text-heavy campaign edits (NPC notes, lore entries, campaign meta, scratch pad) were using browser prompt() dialogs — a single-line blocking UI unsuitable for long-form writing. Composer replaces every prompt() with a full-screen overlay editor (position:fixed, inset:0) with proper multi-line textareas, serif body font, word count, Ctrl+S save, Esc discard, and dirty-tracking confirmation. Expands campaign data model with hook, tone, secrets fields; NPC model with location, relationship, status, portrait; Oracle context now includes all campaign meta so LLM suggestions are scenario-aware."
+    },
     {
       "hash": "187213b",
       "date": "2026-05-17",
@@ -2142,6 +2151,25 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-17",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Built the Grimoire Composer — a full-screen distraction-free writing overlay replacing all browser prompt() dialogs. The Composer has 4 modes: campaign-meta (name, setting, hook, tone guide, master secrets), npc (name, role, location, relationship, status dropdown, portrait URL, full notes textarea), lore (title + full body textarea with tab-aware hints), and scratch (full-height monospace scratchpad). Ctrl+S saves, Esc discards with dirty-check confirmation. Topbar shows mode label, word count, and 'saved' flash. Expanded campaign data model: hook/tone/secrets at campaign level; NPC gets location/relationship/status/portrait/notes. Oracle context now injects campaign premise, tone guide, secrets, and NPC roster so suggestions are scenario-aware. API key removed from Settings panel (still exists in the Story Oracle key row). Banner gets an 'Edit' button that opens campaign-meta Composer.",
+      "decisions": [
+        "Full-screen fixed overlay (inset:0) with dark background — no modal frame, no backdrop click-to-close — forces intentional Save or Discard action",
+        "Serif font (Georgia) for prose textareas — satisfying to write in, distinct from the mono UI chrome",
+        "Dirty flag tracked on any input event — discard requires confirm() only when changes exist",
+        "Campaign secrets injected into Oracle system prompt as [DM ONLY] context — LLM sees the full picture for suggestions without ever showing players",
+        "NPC status uses colored dot (green/red/grey/amber/purple) in card view — immediate visual scan of who is alive/dead/missing",
+        "API key removed from Settings — it's already in the Oracle panel key row; duplicate was confusing"
+      ],
+      "rules_reinforced": [
+        "prompt() is never acceptable for multi-line content — Composer pattern is the answer for any text-heavy edit in this codebase",
+        "Full-screen overlays at z-index:12000 are safe in dndm/ (below no other layer except welcome screen at 9000)",
+        "Campaign data model should be expanded proactively when adding LLM features — richer data = better suggestions"
+      ]
+    },
     {
       "date": "2026-05-17",
       "agent": "Claude Sonnet 4.6",
