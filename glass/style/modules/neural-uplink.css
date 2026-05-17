@@ -1344,7 +1344,9 @@
 }
 
 .llm-panel[hidden] { display: none; }
-.llm-keybar[hidden] { display: none; }
+.llm-keybar[hidden]           { display: none; }
+.llm-keybar__input-wrap[hidden] { display: none; }
+.llm-keybar__locked[hidden]     { display: none; }
 
 .llm-panel__grid {
   display: grid;
