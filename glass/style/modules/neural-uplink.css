@@ -4075,11 +4075,12 @@
     0 -4px 40px rgba(190, 41, 236, 0.06);
 }
 
-/* Messages fill the shell */
+/* Messages fill the shell — anchor to bottom like a real terminal */
 .playground-page__main .llm-shell__messages {
   flex: 1;
   min-height: 0;
   max-height: none;
+  justify-content: flex-end;
 }
 
 /* ── Playground-scoped component overrides ────
