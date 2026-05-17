@@ -3330,6 +3330,7 @@ document.addEventListener('DOMContentLoaded', function () {
   var _storyDragging    = null; // { nodeId, startX, startY, origX, origY }
   var _storyPanning     = null; // { startX, startY, origTX, origTY }
   var _storyWiring      = null; // { fromId, $wire } — live port-drag connection
+  var _storyEdgePopup   = null; // currently open edge popup edge id
   var _storyOracleBusy  = false;
   var _storyOracleKey   = '';
 
@@ -3381,7 +3382,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var exists = campaign.narrative.edges.some(function(e) { return e.from === fromId && e.to === toId; });
     if (exists) return null;
     var id = storyEdgeUID();
-    campaign.narrative.edges.push({ id: id, from: fromId, to: toId });
+    campaign.narrative.edges.push({ id: id, from: fromId, to: toId, fromHead: 'none', toHead: 'arrow', label: '' });
     storySave();
     return id;
   }
@@ -3544,13 +3545,18 @@ document.addEventListener('DOMContentLoaded', function () {
       _ctxWasOpen = false;
     });
 
-    // Dismiss context menu on Escape or outside click
+    // Dismiss context menu / edge popup on Escape or outside click
     document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape' && $ctxMenu && !$ctxMenu.hidden) { storyCtxHide(); }
+      if (e.key === 'Escape') {
+        if ($ctxMenu && !$ctxMenu.hidden) storyCtxHide();
+        storyEdgePopupHide();
+      }
     });
-    // Outside-click dismiss is handled by the viewport click above; for other elements:
+    // Outside-click dismiss for ctx menu (viewport click already handled above)
     document.addEventListener('click', function(e) {
       if ($ctxMenu && !$ctxMenu.hidden && !$ctxMenu.contains(e.target) && !$vp.contains(e.target)) storyCtxHide();
+      var $ep = document.getElementById('story-edge-popup');
+      if ($ep && !$ep.hidden && !$ep.contains(e.target)) storyEdgePopupHide();
     });
 
     // ── Viewport: pan (Shift+drag or middle-click drag) ─
@@ -4005,13 +4011,58 @@ document.addEventListener('DOMContentLoaded', function () {
     var $liveWire = _storyWiring ? _storyWiring.$wire : null;
     $svg.innerHTML = '';
 
-    // Arrow marker definition
+    // SVG marker defs — arrow + crow's foot notation
     var defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
-    defs.innerHTML = '<marker id="story-arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">'
-      + '<path d="M0,0 L0,6 L8,3 z" class="story-edge-arrow"/></marker>'
-      + '<marker id="story-arrow-played" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">'
-      + '<path d="M0,0 L0,6 L8,3 z" fill="rgba(196,146,42,0.7)"/></marker>';
+    // Colours
+    var C  = 'rgba(196,146,42,0.55)';  // default stroke colour
+    var CP = 'rgba(196,146,42,0.8)';   // played colour
+    // marker(id, refX, svgContent, color)
+    function mk(id, refX, body, col) {
+      return '<marker id="' + id + '" markerWidth="14" markerHeight="10" refX="' + refX + '" refY="5" orient="auto" markerUnits="userSpaceOnUse">'
+        + '<g stroke="' + col + '" fill="none" stroke-width="1.5">' + body + '</g></marker>';
+    }
+    // Shapes (drawn left-to-right; marker-end is right side, marker-start is left side)
+    var ARROW  = '<path d="M0,1 L6,5 L0,9"/>';
+    var MANY   = '<path d="M0,1 L6,5 L0,9"/> <line x1="0" y1="1" x2="0" y2="9"/>'; // crow foot + bar
+    var ONE    = '<line x1="2" y1="1" x2="2" y2="9"/> <line x1="5" y1="1" x2="5" y2="9"/>'; // two vertical bars (exactly-one)
+    var ONEBAR = '<line x1="3" y1="1" x2="3" y2="9"/>'; // single bar (one)
+    var CIRCLE = '<circle cx="4" cy="5" r="3.5" fill="none"/>'; // open circle (zero side)
+    // Build all markers for both colours
+    [['', C], ['-p', CP]].forEach(function(pair) {
+      var sfx = pair[0], col = pair[1];
+      defs.innerHTML +=
+        mk('e-arrow'        + sfx, 6,  ARROW,                   col) +
+        mk('e-many'         + sfx, 8,  MANY,                    col) +
+        mk('e-one'          + sfx, 7,  ONE,                     col) +
+        mk('e-onebar'       + sfx, 5,  ONEBAR,                  col) +
+        mk('e-circle'       + sfx, 9,  CIRCLE,                  col) +
+        mk('e-zero-or-one'  + sfx, 11, CIRCLE + ONEBAR,         col) +
+        mk('e-zero-or-many' + sfx, 11, CIRCLE + MANY,           col) +
+        mk('e-one-or-many'  + sfx, 11, ONEBAR + MANY,           col) +
+        // Start markers need to be mirrored — use transform on the group
+        mk('es-arrow'       + sfx, 8,  '<g transform="scale(-1,1) translate(-14,0)">' + ARROW  + '</g>', col) +
+        mk('es-many'        + sfx, 8,  '<g transform="scale(-1,1) translate(-14,0)">' + MANY   + '</g>', col) +
+        mk('es-one'         + sfx, 7,  '<g transform="scale(-1,1) translate(-14,0)">' + ONE    + '</g>', col) +
+        mk('es-onebar'      + sfx, 9,  '<g transform="scale(-1,1) translate(-14,0)">' + ONEBAR + '</g>', col) +
+        mk('es-circle'      + sfx, 5,  '<g transform="scale(-1,1) translate(-14,0)">' + CIRCLE + '</g>', col) +
+        mk('es-zero-or-one' + sfx, 3,  '<g transform="scale(-1,1) translate(-14,0)">' + CIRCLE + ONEBAR + '</g>', col) +
+        mk('es-zero-or-many'+ sfx, 3,  '<g transform="scale(-1,1) translate(-14,0)">' + CIRCLE + MANY   + '</g>', col) +
+        mk('es-one-or-many' + sfx, 3,  '<g transform="scale(-1,1) translate(-14,0)">' + ONEBAR + MANY   + '</g>', col);
+    });
     $svg.appendChild(defs);
+
+    function markerEndId(head, played) {
+      var sfx = played ? '-p' : '';
+      if (!head || head === 'none') return '';
+      if (head === 'arrow') return 'url(#e-arrow' + sfx + ')';
+      return 'url(#e-' + head + sfx + ')';
+    }
+    function markerStartId(head, played) {
+      var sfx = played ? '-p' : '';
+      if (!head || head === 'none') return '';
+      if (head === 'arrow') return 'url(#es-arrow' + sfx + ')';
+      return 'url(#es-' + head + sfx + ')';
+    }
 
     campaign.narrative.edges.forEach(function(edge) {
       var fromNd = campaign.narrative.nodes[edge.from];
@@ -4029,19 +4080,43 @@ document.addEventListener('DOMContentLoaded', function () {
       var d  = 'M' + x1 + ',' + y1 + ' C' + (x1 + cp) + ',' + y1 + ' ' + (x2 - cp) + ',' + y2 + ' ' + x2 + ',' + y2;
 
       var isPlayed = fromNd.status === 'played' || fromNd.status === 'altered';
+      var toHead   = edge.toHead   || 'arrow';
+      var fromHead = edge.fromHead || 'none';
+
       var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       path.setAttribute('d', d);
-      path.setAttribute('class', 'story-edge' + (isPlayed ? ' story-edge--played' : ''));
-      path.setAttribute('marker-end', isPlayed ? 'url(#story-arrow-played)' : 'url(#story-arrow)');
+      path.setAttribute('class', 'story-edge'
+        + (isPlayed ? ' story-edge--played' : '')
+        + (_storyEdgePopup === edge.id ? ' story-edge--selected' : ''));
+      var mEnd   = markerEndId(toHead, isPlayed);
+      var mStart = markerStartId(fromHead, isPlayed);
+      if (mEnd)   path.setAttribute('marker-end',   mEnd);
+      if (mStart) path.setAttribute('marker-start', mStart);
       path.dataset.edgeId = edge.id;
 
+      // Edge label
+      if (edge.label) {
+        var midX = (x1 + x2) / 2;
+        var midY = (y1 + y2) / 2 - 8;
+        var text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('x', midX);
+        text.setAttribute('y', midY);
+        text.setAttribute('class', 'story-edge-label');
+        text.setAttribute('text-anchor', 'middle');
+        text.textContent = edge.label;
+        $svg.appendChild(text);
+      }
+
       path.addEventListener('click', function(e) {
+        e.stopPropagation();
         if (_storyDeleteMode) {
-          e.stopPropagation();
           campaign.narrative.edges = campaign.narrative.edges.filter(function(ed) { return ed.id !== edge.id; });
           storySave();
+          storyEdgePopupHide();
           storyRenderEdges();
+          return;
         }
+        storyEdgePopupShow(edge.id, e.clientX, e.clientY);
       });
       path.addEventListener('mouseenter', function() {
         if (_storyDeleteMode) path.classList.add('story-edge--delete-hover');
@@ -4055,6 +4130,114 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Re-append live wire on top so it's not buried under edge paths
     if ($liveWire) $svg.appendChild($liveWire);
+  }
+
+  // ── Edge popup ────────────────────────────────────────────
+
+  var EDGE_HEADS = [
+    { value: 'none',         label: '—',   title: 'None'             },
+    { value: 'arrow',        label: '→',   title: 'Arrow'            },
+    { value: 'many',         label: '≫',   title: 'Many (crow)'      },
+    { value: 'one',          label: '|',   title: 'One (single bar)' },
+    { value: 'zero-or-one',  label: '○|',  title: 'Zero-or-one'      },
+    { value: 'zero-or-many', label: '○≫',  title: 'Zero-or-many'     },
+    { value: 'one-or-many',  label: '|≫',  title: 'One-or-many'      },
+  ];
+
+  function storyEdgePopupHide() {
+    var $p = document.getElementById('story-edge-popup');
+    if ($p) $p.hidden = true;
+    _storyEdgePopup = null;
+  }
+
+  function storyEdgePopupShow(edgeId, screenX, screenY) {
+    var $p = document.getElementById('story-edge-popup');
+    if (!$p) return;
+    var edge = campaign.narrative.edges.find(function(e) { return e.id === edgeId; });
+    if (!edge) return;
+    _storyEdgePopup = edgeId;
+
+    // Ensure fields exist on legacy edges
+    edge.fromHead = edge.fromHead || 'none';
+    edge.toHead   = edge.toHead   || 'arrow';
+    edge.label    = edge.label    || '';
+
+    var fromNd = campaign.narrative.nodes[edge.from];
+    var toNd   = campaign.narrative.nodes[edge.to];
+
+    function headBtns(field, current) {
+      return EDGE_HEADS.map(function(h) {
+        return '<button class="edge-popup__head-btn' + (current === h.value ? ' edge-popup__head-btn--active' : '') + '"'
+          + ' data-field="' + field + '" data-value="' + h.value + '" title="' + h.title + '">'
+          + h.label + '</button>';
+      }).join('');
+    }
+
+    $p.innerHTML =
+      '<div class="edge-popup__header">'
+      + '<span class="edge-popup__title">CONNECTION</span>'
+      + '<button class="edge-popup__close" id="edge-popup-close" title="Close">✕</button>'
+      + '</div>'
+      + '<div class="edge-popup__row">'
+      + '<span class="edge-popup__side-label">SOURCE</span>'
+      + '<span class="edge-popup__node-name">' + esc((fromNd ? fromNd.title : '?').slice(0, 18)) + '</span>'
+      + '</div>'
+      + '<div class="edge-popup__head-row">'
+      + '<span class="edge-popup__field-label">FROM HEAD</span>'
+      + '<div class="edge-popup__heads">' + headBtns('fromHead', edge.fromHead) + '</div>'
+      + '</div>'
+      + '<div class="edge-popup__head-row">'
+      + '<span class="edge-popup__field-label">TO HEAD</span>'
+      + '<div class="edge-popup__heads">' + headBtns('toHead', edge.toHead) + '</div>'
+      + '</div>'
+      + '<div class="edge-popup__row">'
+      + '<span class="edge-popup__side-label">TARGET</span>'
+      + '<span class="edge-popup__node-name">' + esc((toNd ? toNd.title : '?').slice(0, 18)) + '</span>'
+      + '</div>'
+      + '<div class="edge-popup__label-row">'
+      + '<input class="edge-popup__label-inp" id="edge-popup-label" type="text" value="' + esc(edge.label) + '" placeholder="Edge label (optional)…" maxlength="40" />'
+      + '</div>'
+      + '<div class="edge-popup__footer">'
+      + '<button class="edge-popup__delete" id="edge-popup-delete">Delete Connection</button>'
+      + '</div>';
+
+    // Position — clamp to viewport
+    $p.hidden = false;
+    var pw = $p.offsetWidth  || 240;
+    var ph = $p.offsetHeight || 260;
+    $p.style.left = Math.min(screenX + 12, window.innerWidth  - pw - 8) + 'px';
+    $p.style.top  = Math.min(screenY - 20, window.innerHeight - ph - 8) + 'px';
+
+    // Head button clicks
+    $p.querySelectorAll('.edge-popup__head-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        edge[btn.dataset.field] = btn.dataset.value;
+        storySave();
+        storyRenderEdges();
+        // Update active state
+        $p.querySelectorAll('.edge-popup__head-btn[data-field="' + btn.dataset.field + '"]').forEach(function(b) {
+          b.classList.toggle('edge-popup__head-btn--active', b.dataset.value === btn.dataset.value);
+        });
+      });
+    });
+
+    // Label input
+    var $lbl = document.getElementById('edge-popup-label');
+    if ($lbl) {
+      $lbl.addEventListener('input', function() {
+        edge.label = $lbl.value;
+        storySave();
+        storyRenderEdges();
+      });
+    }
+
+    document.getElementById('edge-popup-close').addEventListener('click', storyEdgePopupHide);
+    document.getElementById('edge-popup-delete').addEventListener('click', function() {
+      campaign.narrative.edges = campaign.narrative.edges.filter(function(ed) { return ed.id !== edgeId; });
+      storySave();
+      storyEdgePopupHide();
+      storyRenderEdges();
+    });
   }
 
   // ── Select / deselect ─────────────────────────────────────
