@@ -2234,11 +2234,13 @@ a { color: inherit; text-decoration: none; }
   inset: 0;
   background: rgba(5,3,2,0.88);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   z-index: 200;
   backdrop-filter: blur(4px);
   animation: fade-in 0.2s ease-out;
+  overflow-y: auto;
+  padding: 2rem 0;
 }
 
 .modal-overlay[hidden] { display: none; }
@@ -2257,6 +2259,7 @@ a { color: inherit; text-decoration: none; }
   box-shadow: 0 8px 48px rgba(0,0,0,0.7), 0 0 80px rgba(139,26,26,0.1);
   animation: modal-in 0.3s cubic-bezier(0.25,0,0,1);
   text-align: center;
+  align-self: flex-start;
 }
 
 .modal--wide { width: min(600px, 90vw); text-align: left; }
