@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.3.59",
+    "schema_version": "1.3.60",
     "last_updated": "2026-05-17",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -478,6 +478,15 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-17",
+      "message": "fix(grimoire): node ctx menu scope + SVG marker namespace",
+      "scope": "dndm/",
+      "impact": "medium",
+      "files": ["dndm/assets/script/app.js", "status/logs/logs.json"],
+      "why": "Node right-click menu never appeared because storyNodeCtxShow/Hide were defined inside initStory() (inner scope) but called from storyCreateNodeEl (outer scope) — function was undefined at call time. Crow's foot arrow heads didn't render because defs.innerHTML += on a detached SVG element loses namespace context on each += iteration; fixed by building the full string and doing a single $svg.innerHTML assignment so the parser uses SVG namespace for all children at once."
+    },
     {
       "hash": "4e96c3e",
       "date": "2026-05-17",
@@ -2196,6 +2205,21 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-17",
+      "agent": "Claude Sonnet 4.6",
+      "type": "bug_fix",
+      "summary": "Two bugs fixed in Grimoire Story canvas. (1) Node right-click context menu never appeared: root cause was JavaScript closure scope — storyNodeCtxShow/Hide were defined inside initStory() but called from storyCreateNodeEl which is at the outer DOMContentLoaded scope; fix was to move both functions and the $nodeCtxMenu variable to outer scope. (2) Crow's foot marker heads never visually rendered after being changed in the edge popup: root cause was defs.innerHTML += on a detached SVG element — each += re-parses the accumulated string as HTML (not SVG namespace), losing marker functionality; fix was to build the full defs string in a JS variable and do one $svg.innerHTML = '<defs>...' assignment so the browser parser sees all markers in SVG namespace context.",
+      "decisions": [
+        "storyNodeCtxShow/Hide moved to top-level scope alongside storyRenderEdges, storyEdgePopupShow etc — all story helpers that are called from storyCreateNodeEl must live at outer scope",
+        "$nodeCtxMenu declared as null at outer scope alongside other _story* vars, assigned inside initStory() after DOM is ready",
+        "SVG defs injection changed from defs.innerHTML += (loop) to $svg.innerHTML = '<defs>' + fullString + '</defs>' (single write) — this is the only safe way to inject SVG marker markup from JS strings"
+      ],
+      "rules_reinforced": [
+        "Functions called from outer-scope handlers must not be defined in inner scopes — storyCreateNodeEl is at DOMContentLoaded level, so its callees must be too",
+        "Never use innerHTML += on SVG/MathML elements — build the full string and assign once"
+      ]
+    },
     {
       "date": "2026-05-17",
       "agent": "Claude Sonnet 4.6",

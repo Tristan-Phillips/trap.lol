@@ -3331,6 +3331,7 @@ document.addEventListener('DOMContentLoaded', function () {
   var _storyPanning     = null; // { startX, startY, origTX, origTY }
   var _storyWiring      = null; // { fromId, $wire } — live port-drag connection
   var _storyEdgePopup   = null; // currently open edge popup edge id
+  var $nodeCtxMenu      = null; // node right-click menu DOM reference
   var _storyOracleBusy  = false;
   var _storyOracleKey   = '';
 
@@ -3475,7 +3476,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // ── Context menu ─────────────────────────────────────
     var $ctxMenu    = document.getElementById('story-ctx-menu');
-    var $nodeCtxMenu = document.getElementById('story-node-ctx-menu');
+    $nodeCtxMenu    = document.getElementById('story-node-ctx-menu'); // assign outer var
     var _ctxPos  = { cx: 0, cy: 0 }; // canvas-space coords where menu was opened
 
     function storyCtxHide() {
@@ -3518,91 +3519,6 @@ document.addEventListener('DOMContentLoaded', function () {
           storyRenderAll();
           storySelectNode(id);
           storyCtxHide();
-        });
-      });
-    }
-
-    function storyNodeCtxHide() {
-      if ($nodeCtxMenu) $nodeCtxMenu.hidden = true;
-    }
-
-    function storyNodeCtxShow(nodeId, screenX, screenY) {
-      if (!$nodeCtxMenu) return;
-      var nd = campaign.narrative.nodes[nodeId];
-      if (!nd) return;
-
-      var isNowPlaying = campaign.narrative.currentNodeId === nodeId;
-
-      var items = [
-        {
-          icon: '✏️',
-          label: 'Edit in Composer',
-          action: function() { storySelectNode(nodeId); openComposer('story-node', nodeId); }
-        },
-        {
-          icon: '◉',
-          label: isNowPlaying ? 'Now Playing (active)' : 'Set as Now Playing',
-          disabled: isNowPlaying,
-          action: function() {
-            campaign.narrative.currentNodeId = nodeId;
-            var n = campaign.narrative.nodes[nodeId];
-            if (n) n.status = 'current';
-            storySave();
-            storyRenderAll();
-            storyRenderNow();
-            showToast('Now Playing: ' + (n ? n.title : ''));
-          }
-        },
-        {
-          icon: '⤷',
-          label: 'Add Branch',
-          action: function() {
-            var parent = campaign.narrative.nodes[nodeId];
-            if (!parent) return;
-            var childX = parent.x + 220;
-            var childY = parent.y + (Object.keys(campaign.narrative.nodes).length % 3) * 130;
-            var childId = storyMakeNode(_storyActiveType, childX, childY, {
-              title: NODE_TYPES[_storyActiveType].label + ' ' + (Object.keys(campaign.narrative.nodes).length)
-            });
-            storyMakeEdge(nodeId, childId);
-            storyRenderAll();
-            storySelectNode(childId);
-          }
-        },
-        { separator: true },
-        {
-          icon: '🗑',
-          label: 'Delete Node',
-          danger: true,
-          action: function() { storyDeleteNode(nodeId); }
-        }
-      ];
-
-      $nodeCtxMenu.innerHTML = items.map(function(item, i) {
-        if (item.separator) return '<div class="story-ctx-menu__sep" role="separator"></div>';
-        return '<button class="story-ctx-menu__item'
-          + (item.danger    ? ' story-ctx-menu__item--danger' : '')
-          + (item.disabled  ? ' story-ctx-menu__item--disabled' : '')
-          + '" data-idx="' + i + '" role="menuitem"'
-          + (item.disabled ? ' disabled' : '') + '>'
-          + '<span class="story-ctx-menu__icon">' + item.icon + '</span>'
-          + '<span class="story-ctx-menu__label">' + esc(item.label) + '</span>'
-          + '</button>';
-      }).join('');
-
-      $nodeCtxMenu.hidden = false;
-      var mw = $nodeCtxMenu.offsetWidth  || 180;
-      var mh = $nodeCtxMenu.offsetHeight || 160;
-      var vw = window.innerWidth;
-      var vh = window.innerHeight;
-      $nodeCtxMenu.style.left = Math.min(screenX, vw - mw - 8) + 'px';
-      $nodeCtxMenu.style.top  = Math.min(screenY, vh - mh - 8) + 'px';
-
-      $nodeCtxMenu.querySelectorAll('.story-ctx-menu__item:not([disabled])').forEach(function(btn) {
-        var idx = parseInt(btn.dataset.idx, 10);
-        btn.addEventListener('click', function() {
-          storyNodeCtxHide();
-          items[idx].action();
         });
       });
     }
@@ -4102,30 +4018,26 @@ document.addEventListener('DOMContentLoaded', function () {
   function storyRenderEdges() {
     var $svg = document.getElementById('story-edges');
     if (!$svg) return;
-    // Preserve live wire during drag
+    // Preserve live wire during drag (captured before innerHTML wipe)
     var $liveWire = _storyWiring ? _storyWiring.$wire : null;
-    $svg.innerHTML = '';
 
     // SVG marker defs — arrow + crow's foot notation
-    var defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
-    // Colours
-    var C  = 'rgba(196,146,42,0.55)';  // default stroke colour
-    var CP = 'rgba(196,146,42,0.8)';   // played colour
-    // marker(id, refX, svgContent, color)
+    // Build the full defs string once then set innerHTML once (avoids SVG namespace loss from +=)
+    var C  = 'rgba(196,146,42,0.55)';
+    var CP = 'rgba(196,146,42,0.8)';
     function mk(id, refX, body, col) {
       return '<marker id="' + id + '" markerWidth="14" markerHeight="10" refX="' + refX + '" refY="5" orient="auto" markerUnits="userSpaceOnUse">'
         + '<g stroke="' + col + '" fill="none" stroke-width="1.5">' + body + '</g></marker>';
     }
-    // Shapes (drawn left-to-right; marker-end is right side, marker-start is left side)
     var ARROW  = '<path d="M0,1 L6,5 L0,9"/>';
-    var MANY   = '<path d="M0,1 L6,5 L0,9"/> <line x1="0" y1="1" x2="0" y2="9"/>'; // crow foot + bar
-    var ONE    = '<line x1="2" y1="1" x2="2" y2="9"/> <line x1="5" y1="1" x2="5" y2="9"/>'; // two vertical bars (exactly-one)
-    var ONEBAR = '<line x1="3" y1="1" x2="3" y2="9"/>'; // single bar (one)
-    var CIRCLE = '<circle cx="4" cy="5" r="3.5" fill="none"/>'; // open circle (zero side)
-    // Build all markers for both colours
+    var MANY   = '<path d="M0,1 L6,5 L0,9"/> <line x1="0" y1="1" x2="0" y2="9"/>';
+    var ONE    = '<line x1="2" y1="1" x2="2" y2="9"/> <line x1="5" y1="1" x2="5" y2="9"/>';
+    var ONEBAR = '<line x1="3" y1="1" x2="3" y2="9"/>';
+    var CIRCLE = '<circle cx="4" cy="5" r="3.5" fill="none"/>';
+    var defsHtml = '';
     [['', C], ['-p', CP]].forEach(function(pair) {
       var sfx = pair[0], col = pair[1];
-      defs.innerHTML +=
+      defsHtml +=
         mk('e-arrow'        + sfx, 6,  ARROW,                   col) +
         mk('e-many'         + sfx, 8,  MANY,                    col) +
         mk('e-one'          + sfx, 7,  ONE,                     col) +
@@ -4134,7 +4046,6 @@ document.addEventListener('DOMContentLoaded', function () {
         mk('e-zero-or-one'  + sfx, 11, CIRCLE + ONEBAR,         col) +
         mk('e-zero-or-many' + sfx, 11, CIRCLE + MANY,           col) +
         mk('e-one-or-many'  + sfx, 11, ONEBAR + MANY,           col) +
-        // Start markers need to be mirrored — use transform on the group
         mk('es-arrow'       + sfx, 8,  '<g transform="scale(-1,1) translate(-14,0)">' + ARROW  + '</g>', col) +
         mk('es-many'        + sfx, 8,  '<g transform="scale(-1,1) translate(-14,0)">' + MANY   + '</g>', col) +
         mk('es-one'         + sfx, 7,  '<g transform="scale(-1,1) translate(-14,0)">' + ONE    + '</g>', col) +
@@ -4144,7 +4055,8 @@ document.addEventListener('DOMContentLoaded', function () {
         mk('es-zero-or-many'+ sfx, 3,  '<g transform="scale(-1,1) translate(-14,0)">' + CIRCLE + MANY   + '</g>', col) +
         mk('es-one-or-many' + sfx, 3,  '<g transform="scale(-1,1) translate(-14,0)">' + ONEBAR + MANY   + '</g>', col);
     });
-    $svg.appendChild(defs);
+    // Inject via $svg.innerHTML so the parser uses SVG namespace context correctly
+    $svg.innerHTML = '<defs>' + defsHtml + '</defs>';
 
     function markerEndId(head, played) {
       var sfx = played ? '-p' : '';
@@ -4238,6 +4150,91 @@ document.addEventListener('DOMContentLoaded', function () {
     { value: 'zero-or-many', label: '○≫',  title: 'Zero-or-many'     },
     { value: 'one-or-many',  label: '|≫',  title: 'One-or-many'      },
   ];
+
+  function storyNodeCtxHide() {
+    if ($nodeCtxMenu) $nodeCtxMenu.hidden = true;
+  }
+
+  function storyNodeCtxShow(nodeId, screenX, screenY) {
+    if (!$nodeCtxMenu) return;
+    var nd = campaign.narrative.nodes[nodeId];
+    if (!nd) return;
+
+    var isNowPlaying = campaign.narrative.currentNodeId === nodeId;
+
+    var items = [
+      {
+        icon: '✏️',
+        label: 'Edit in Composer',
+        action: function() { storySelectNode(nodeId); openComposer('story-node', nodeId); }
+      },
+      {
+        icon: '◉',
+        label: isNowPlaying ? 'Now Playing (active)' : 'Set as Now Playing',
+        disabled: isNowPlaying,
+        action: function() {
+          campaign.narrative.currentNodeId = nodeId;
+          var n = campaign.narrative.nodes[nodeId];
+          if (n) n.status = 'current';
+          storySave();
+          storyRenderAll();
+          storyRenderNow();
+          showToast('Now Playing: ' + (n ? n.title : ''));
+        }
+      },
+      {
+        icon: '⤷',
+        label: 'Add Branch',
+        action: function() {
+          var parent = campaign.narrative.nodes[nodeId];
+          if (!parent) return;
+          var childX = parent.x + 220;
+          var childY = parent.y + (Object.keys(campaign.narrative.nodes).length % 3) * 130;
+          var childId = storyMakeNode(_storyActiveType, childX, childY, {
+            title: NODE_TYPES[_storyActiveType].label + ' ' + (Object.keys(campaign.narrative.nodes).length)
+          });
+          storyMakeEdge(nodeId, childId);
+          storyRenderAll();
+          storySelectNode(childId);
+        }
+      },
+      { separator: true },
+      {
+        icon: '🗑',
+        label: 'Delete Node',
+        danger: true,
+        action: function() { storyDeleteNode(nodeId); }
+      }
+    ];
+
+    $nodeCtxMenu.innerHTML = items.map(function(item, i) {
+      if (item.separator) return '<div class="story-ctx-menu__sep" role="separator"></div>';
+      return '<button class="story-ctx-menu__item'
+        + (item.danger    ? ' story-ctx-menu__item--danger' : '')
+        + (item.disabled  ? ' story-ctx-menu__item--disabled' : '')
+        + '" data-idx="' + i + '" role="menuitem"'
+        + (item.disabled ? ' disabled' : '') + '>'
+        + '<span class="story-ctx-menu__icon">' + item.icon + '</span>'
+        + '<span class="story-ctx-menu__label">' + esc(item.label) + '</span>'
+        + '</button>';
+    }).join('');
+
+    $nodeCtxMenu.hidden = false;
+    var mw = $nodeCtxMenu.offsetWidth  || 180;
+    var mh = $nodeCtxMenu.offsetHeight || 160;
+    var vw = window.innerWidth;
+    var vh = window.innerHeight;
+    $nodeCtxMenu.style.left = Math.min(screenX, vw - mw - 8) + 'px';
+    $nodeCtxMenu.style.top  = Math.min(screenY, vh - mh - 8) + 'px';
+
+    $nodeCtxMenu.querySelectorAll('.story-ctx-menu__item:not([disabled])').forEach(function(btn) {
+      var idx = parseInt(btn.dataset.idx, 10);
+      btn.addEventListener('click', function() {
+        storyNodeCtxHide();
+        items[idx].action();
+      });
+    });
+  }
 
   function storyEdgePopupHide() {
     var $p = document.getElementById('story-edge-popup');
