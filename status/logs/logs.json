@@ -479,6 +479,15 @@
   },
   "commits": [
     {
+      "hash": "a4352b7",
+      "date": "2026-05-17",
+      "message": "feat(grimoire): port drag-to-connect, horizontal bezier edges, ctx menu click-to-dismiss",
+      "scope": "dndm/",
+      "impact": "high",
+      "files": ["dndm/assets/script/app.js", "dndm/assets/style/style.css", "dndm/index.html"],
+      "why": "Canvas left-click was placing nodes when user just wanted to dismiss the context menu. Story nodes needed visual output/input ports like n8n/Lucide Charts — drag from right port draws a live animated bezier wire; drop on node connects them, drop on canvas creates a new node at that position. All edges now horizontal right-to-left bezier curves instead of vertical top-to-bottom, matching the new port positions."
+    },
+    {
       "hash": "5822f02",
       "date": "2026-05-17",
       "message": "feat(grimoire): canvas right-click menu, per-node colors, remove oracle key row",
