@@ -479,7 +479,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "4e96c3e",
       "date": "2026-05-17",
       "message": "feat(grimoire): node right-click context menu — edit, set now playing, add branch, delete",
       "scope": "dndm/",
