@@ -18,6 +18,9 @@ let activeFilter = "all";
 /* ── Selection state ── */
 const selected = new Map(); /* _id → piece */
 
+/* ── NSFW state ── */
+let nsfwUnlocked = false;
+
 /* ── Image viewer transform state ── */
 const VIEW = {
   scale:   1,
@@ -202,7 +205,8 @@ async function loadData() {
           uploadDate:  a.uploadDate  || null,
           collection:  col.name      || col.id,
           /* metadata fields */
-          medium:      m.medium      || null,
+          medium:      a.type || m.medium || null,
+          nsfw:        m.nsfw === true || a.nsfw === true,
           description: m.description || null,
           verse:       m.verse       || null,
           stats: (m.mood != null || m.chaos != null) ? {
@@ -233,10 +237,13 @@ function shuffle(arr) {
 }
 
 function applyFilter(filter) {
-  activeFilter = filter;
-  filtered = shuffle(filter === "all"
-    ? [...manifest]
-    : manifest.filter(p => p.medium === filter));
+  activeFilter  = filter;
+  nsfwUnlocked  = filter === "nsfw";
+  filtered = shuffle(
+    filter === "all"   ? [...manifest] :
+    filter === "nsfw"  ? manifest.filter(p => p.nsfw) :
+    manifest.filter(p => p.medium === filter)
+  );
   visibleCount  = 0;
   pullCount     = 0;
   sinceGeCipher = 0;
@@ -329,7 +336,52 @@ function renderPullZone() {
   qs("#pull-btn").addEventListener("click", executePull);
 }
 
-function executePull() {
+async function executeFloodPull() {
+  const $btn  = qs("#pull-btn");
+  const $zone = qs("#pull-zone");
+  if (!$btn || $btn.disabled) return;
+
+  const remaining = filtered.length - visibleCount;
+  if (remaining <= 0) return;
+
+  $btn.disabled = true;
+
+  const FLOOD_TIER = {
+    id: "abyss", icon: "skull", color: "#c41a1a",
+    copy: ["everything"], reveal: ["total dissolution"],
+  };
+
+  const $grid = qs("#art-grid");
+  const start = visibleCount;
+  const end   = filtered.length;
+
+  const orientations = await Promise.all(
+    filtered.slice(start, end).map(p => probeOrientation(p.thumb || p.src || ""))
+  );
+  const spans = resolveSpans(orientations);
+
+  const frag = document.createDocumentFragment();
+  const $divider = makePullDivider(FLOOD_TIER, end);
+  frag.appendChild($divider);
+
+  for (let i = start; i < end; i++) frag.appendChild(makeCard(filtered[i], i, spans[i - start]));
+  $grid.appendChild(frag);
+
+  visibleCount = end;
+  pullCount++;
+
+  if (typeof lucide !== "undefined") lucide.createIcons({ nodes: [$divider] });
+  if (typeof lucide !== "undefined") lucide.createIcons();
+  initCardEntrance();
+
+  $divider.scrollIntoView({ behavior: "smooth", block: "start" });
+
+  if ($zone) $zone.remove();
+}
+
+function executePull(e) {
+  if (e && e.shiftKey) { executeFloodPull(); return; }
+
   const $btn     = qs("#pull-btn");
   const $zone    = qs("#pull-zone");
   const $whisper = qs("#pull-whisper");
@@ -466,10 +518,10 @@ function probeOrientation(url) {
 /* Tracks column cursor across all batches so pulls continue correctly */
 let _gridColCursor = 0;
 
-/* Given an array of orientations, return column spans (1, 2, or 3).
-   A landscape card gets span 2 only if the very next card is portrait
-   (which will fill the leftover 1-col slot). Otherwise it is promoted to
-   span 3 (full row) so no cell is ever left empty. */
+/* Given an array of orientations, return column spans (1 or 2 max).
+   Landscape gets span 2 when ≥2 cols remain in the row.
+   When only 1 col remains it falls back to span 1 — cropped cover,
+   no empty cells, never stretches to 3. */
 function resolveSpans(orientations, cols = 3) {
   const spans = [];
 
@@ -477,30 +529,12 @@ function resolveSpans(orientations, cols = 3) {
     const isLand = orientations[i] === "landscape";
     const remaining = cols - (_gridColCursor % cols);
 
-    if (!isLand) {
+    if (!isLand || remaining === 1) {
       spans.push(1);
       _gridColCursor += 1;
     } else {
-      if (remaining === 1) {
-        /* Only 1 col left — must start fresh row; promote to full row */
-        spans.push(cols);
-        _gridColCursor += cols;
-      } else if (remaining === 2) {
-        /* Exactly 2 left — span 2 fills the row perfectly, no orphan possible */
-        spans.push(2);
-        _gridColCursor += 2;
-      } else {
-        /* remaining === 3 (start of row): span 2 leaves 1 col — only safe if
-           the next card is portrait to fill it. Otherwise promote to span 3. */
-        const nextIsPortrait = orientations[i + 1] === "portrait";
-        if (nextIsPortrait) {
-          spans.push(2);
-          _gridColCursor += 2;
-        } else {
-          spans.push(cols);
-          _gridColCursor += cols;
-        }
-      }
+      spans.push(2);
+      _gridColCursor += 2;
     }
   }
   return spans;
@@ -549,12 +583,29 @@ function makeCard(piece, idx, span = 1) {
 
   $card.append($thumb, $medIcon, $overlay);
 
+  /* NSFW veil — injected when piece is marked nsfw and unlock is off */
+  if (piece.nsfw) {
+    $card.dataset.nsfw = "1";
+    if (!nsfwUnlocked) {
+      const $veil = makeVeil();
+      $card.appendChild($veil);
+    }
+  }
+
   $card.addEventListener("click", e => {
     if (e.shiftKey) { e.preventDefault(); toggleSelect(piece, $card); return; }
+    /* If veil is present, first click reveals — second click opens lightbox */
+    const $v = $card.querySelector(".art-card__veil");
+    if ($v) { e.preventDefault(); revealVeil($card, $v); return; }
     openLightbox(idx);
   });
   $card.addEventListener("keydown", e => {
-    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openLightbox(idx); }
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      const $v = $card.querySelector(".art-card__veil");
+      if ($v) { revealVeil($card, $v); return; }
+      openLightbox(idx);
+    }
   });
 
   return $card;
@@ -1341,6 +1392,34 @@ function renderSelPanel() {
     $list.appendChild($li);
   });
 }
+
+/* ── NSFW Veil ──────────────────────────────── */
+function makeVeil() {
+  const $veil = document.createElement("div");
+  $veil.className = "art-card__veil";
+  $veil.setAttribute("aria-label", "Sensitive content — click to reveal");
+  $veil.innerHTML = `
+    <span class="art-card__veil-ribbon" aria-hidden="true">
+      <span class="art-card__veil-sigil">✦</span>
+      <span class="art-card__veil-text">SENSITIVE</span>
+      <span class="art-card__veil-sigil">✦</span>
+    </span>
+    <span class="art-card__veil-hint" aria-hidden="true">click to unveil</span>
+    <span class="art-card__veil-particles" aria-hidden="true"></span>
+  `;
+  return $veil;
+}
+
+function revealVeil($card, $veil) {
+  $veil.classList.add("art-card__veil--unwrapping");
+  $veil.addEventListener("animationend", () => {
+    $veil.remove();
+    /* Not auto — user explicitly clicked, so survives re-lock */
+    $card.classList.add("art-card--nsfw-revealed");
+    $card.classList.remove("art-card--nsfw-auto");
+  }, { once: true });
+}
+
 
 function initSelPanel() {
   qs("#sel-clear").addEventListener("click", () => {

@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.3.55",
+    "schema_version": "1.3.56",
     "last_updated": "2026-05-17",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -183,7 +183,7 @@
     "/art/": {
       "file": "art/index.html",
       "title": "trap.lol // echoes",
-      "purpose": "ECHOES gallery. Gacha pull mechanic reveals artwork in rarity tiers. Lightbox with full zoom, pan, rotate, flip. Filter by medium (all / sketch / digital).",
+      "purpose": "ECHOES gallery. Gacha pull mechanic reveals artwork in rarity tiers. Lightbox with full zoom, pan, rotate, flip. Filter by medium (all / digital / traditional / nsfw). NSFW artifacts require click-to-reveal veil; NSFW filter shows all NSFW without veils. Shift+click pull loads all remaining (ABYSS tier). Shift+click cards for multi-select panel with clipboard copy.",
       "data": "art/assets/data/detention.json",
       "script": "art/assets/script/app.js (type=module, self-contained — does NOT use glass/script/)",
       "css": "art/assets/style/style.css (self-contained — does NOT use glass/style/)",
@@ -478,6 +478,60 @@
     ]
   },
   "commits": [
+    {
+      "hash": "187213b",
+      "date": "2026-05-17",
+      "message": "feat(art): shift-select panel + immersive card reveal",
+      "scope": "art/",
+      "impact": "medium",
+      "files": ["art/assets/script/app.js", "art/assets/style/style.css", "art/index.html"],
+      "why": "Added shift+click multi-select with a slide-in right panel showing thumbnails, composite IDs, and clipboard copy of all selected IDs. Card reveal upgraded to blur(4px)→blur(0) desaturate→saturate entrance with a one-shot chromatic shimmer (purple→white→gold diagonal sweep) that self-removes on animationend."
+    },
+    {
+      "hash": "42f2da5",
+      "date": "2026-05-17",
+      "message": "feat(art): pull divider + lookahead span promotion",
+      "scope": "art/",
+      "impact": "medium",
+      "files": ["art/assets/script/app.js", "art/assets/style/style.css"],
+      "why": "Each executePull now injects a full-width grid divider above the new batch showing tier icon, running total count, and expanding lines in the tier colour. Lookahead span logic: landscape at start of row checks if the next card is portrait before committing to span 2 — if not, promotes to span 3 immediately rather than leaving a gap that no portrait is coming to backfill."
+    },
+    {
+      "hash": "9bd35d1",
+      "date": "2026-05-17",
+      "message": "fix(art): square images classified as portrait, row height 300→380px",
+      "scope": "art/",
+      "impact": "low",
+      "files": ["art/assets/script/app.js", "art/assets/style/style.css"],
+      "why": "Landscape threshold was >= 1.15x — squares and near-squares were incorrectly classified as landscape and given span 2. Changed to > 1.15x so squares go portrait (span 1). Row height bumped 300→380px so portrait cells are taller than wide at typical viewport widths."
+    },
+    {
+      "hash": "c7bf569",
+      "date": "2026-05-17",
+      "message": "fix(art): eliminate orphaned grid cells — resolveSpans + full-row promotion",
+      "scope": "art/",
+      "impact": "medium",
+      "files": ["art/assets/script/app.js", "art/assets/style/style.css"],
+      "why": "Landscape cards landing in the last 1-col slot of a row (remaining===1) are promoted to span 3 (full row) instead of span 2, which would leave an empty orphan cell that no portrait card can backfill. _gridColCursor tracked across all batches so resolveSpans stays coherent across pulls. Row height 280→300px desktop, 200→220px mobile."
+    },
+    {
+      "hash": "1bd7040",
+      "date": "2026-05-17",
+      "message": "feat(art): stable grid — portrait 1-col, landscape 2-col, no reflow on pull",
+      "scope": "art/",
+      "impact": "high",
+      "files": ["art/assets/script/app.js", "art/assets/style/style.css"],
+      "why": "Replaced CSS columns (rebalances on append) with CSS grid + fixed grid-auto-rows. Orientation probed via Image() before DOM insertion so grid-column:span is set before placement — existing cards never reflow when a pull adds new ones. New _gridColCursor module state tracks column position across batches. Added NSFW support: metadata.nsfw boolean, frosted veil requiring click-to-reveal, NSFW filter button (4th filter, shows NSFW without veils in other filters keeps veils)."
+    },
+    {
+      "hash": "2e52ab4",
+      "date": "2026-05-17",
+      "message": "fix(art): stagger pull cards by batch position, not global index",
+      "scope": "art/",
+      "impact": "low",
+      "files": ["art/assets/script/app.js", "art/assets/style/style.css"],
+      "why": "Cards were staggering by global filtered[] index — cards 18-28 all had 810-1260ms base delays and fired near-simultaneously as a screen flash. Now each batch staggers from 0 relative to batch position (dataset.batchIdx) so every pull animates cleanly regardless of where in the manifest it starts."
+    },
     {
       "hash": "b6f836a",
       "date": "2026-05-17",
@@ -2088,6 +2142,28 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-17",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Major ECHOES gallery (/art/) overhaul across 6 commits. (1) Architecture: replaced CSS columns with CSS grid + fixed grid-auto-rows; orientation probed via Image() before DOM insertion so grid never reflows on pull. (2) Filtering: fixed broken filters — detention.json uses type:'digital'/'traditional' but filter was reading metadata.medium (always empty); fixed by reading a.type at normalization. New 4th filter 'nsfw' shows NSFW-tagged artifacts without veils. (3) NSFW support: metadata.nsfw boolean flag; frosted glass veil (backdrop-filter blur+saturate+brightness) with 'SENSITIVE' ribbon + click-to-reveal; opacity+scale dissolve on reveal (clip-path rejected — clipped by overflow:hidden). 4 DEE7A4 artifacts marked nsfw. (4) Grid stability: _gridColCursor tracks column position across batches; landscape cards cap at span 2 (never span 3); landscape in last 1-col slot promoted to span 3 full row to prevent orphaned cells. (5) Shift+click pull: executeFloodPull() loads all remaining at once (ABYSS tier divider). (6) Multi-select: shift+click card toggles selection in slide-in panel with thumbnails, IDs, clipboard copy. (7) Card borders: animated border-color breathe (purple→bright purple→amber) with nth-child offsets for out-of-phase pulsing, hover flares to amber. (8) Pull button: enlarged, sensual copy, animated orb with rotating conic gradient ring. (9) 23 artifacts removed from DBDBF9 collection. (10) Card reveal: blur+desaturate entrance with chromatic shimmer.",
+      "decisions": [
+        "CSS grid with fixed grid-auto-rows preferred over CSS columns — columns rebalance on append causing reflow; grid with pre-probed spans is stable",
+        "NSFW veil uses opacity+scale dissolve (not clip-path) — clip-path is clipped by card's overflow:hidden",
+        "NSFW filter is a 4th filter button not a toggle — aligns with the existing filter pattern, removes need for a separate UI element",
+        "Landscape cards capped at span 2 max — span 3 was stretching low-res landscape thumbnails unacceptably",
+        "Landscape in last 1-col slot promoted to span 3 full row — avoids orphaned empty cells that dense flow cannot backfill without a following portrait",
+        "Shift+click reveal secret (flood pull) kept undocumented — surprise mechanic, not telegraphed",
+        "border-color animation (card-edge-breathe) used instead of box-shadow outline tricks — browsers interpolate border-color reliably; box-shadow at low opacity is imperceptible against dark backgrounds",
+        "Removed 23 artifacts from DBDBF9 collection at trap's explicit request"
+      ],
+      "rules_reinforced": [
+        "art/ is self-contained — never reference glass/ from art/assets/",
+        "NSFW veil cannot use clip-path — overflow:hidden on the card clips it; use opacity/transform instead",
+        "CSS columns rebalance on DOM append — use CSS grid for galleries where cards are added incrementally",
+        "Card borders at low box-shadow opacity are invisible on near-black backgrounds — use actual border property"
+      ]
+    },
     {
       "date": "2026-05-17",
       "agent": "Claude Sonnet 4.6",
@@ -3902,6 +3978,56 @@
         "description": "Image Studio has 7 tabs (Quick/Character/Outfit/Pose/Scene/Style/Model). Overhaul scope: generation history panel. Session-local _studioHistory[] records each successful generation; horizontal thumbnail strip #studio-history-strip renders between gallery strip and preview. Click restores image + prompt. Batch F item 3.",
         "notes": "Done this session. _studioHistory[] (max 20). _renderStudioHistory() called after each gen. #studio-history-wrap + #studio-history-strip HTML added to canvas section. img-studio.css: .studio-history-wrap/.strip/.item/.thumb. Gallery auto-save was already in place from prior session.",
         "files_affected": ["playground/characters/script/modules/ui.js", "playground/characters/index.html", "playground/characters/style/img-studio.css", "playground/characters/script/main.js"]
+      },
+      {
+        "id": "echoes-nsfw-support",
+        "title": "ECHOES — NSFW veil, filter, and metadata support",
+        "status": "done",
+        "requested": "2026-05-17",
+        "completed": "2026-05-17",
+        "description": "metadata.nsfw boolean on detention.json artifacts. Frosted glass veil (backdrop-filter blur+saturate+brightness) with 'SENSITIVE' ribbon and click-to-reveal. Opacity+scale dissolve animation on reveal. 4th filter button 'nsfw' shows NSFW artifacts without veils; other filters keep veils intact. 4 DEE7A4 artifacts marked nsfw. Standalone toggle removed — replaced by filter button.",
+        "notes": "Done across commits 1bd7040 and prior. Veil unwrap uses opacity+scale (not clip-path — clipped by overflow:hidden). NSFW filter sets nsfwUnlocked=true so makeCard() skips veil injection.",
+        "files_affected": ["art/assets/script/app.js", "art/assets/style/style.css", "art/index.html", "art/assets/data/detention.json"]
+      },
+      {
+        "id": "echoes-grid-stability",
+        "title": "ECHOES — CSS grid, stable spans, no reflow on pull",
+        "status": "done",
+        "requested": "2026-05-17",
+        "completed": "2026-05-17",
+        "description": "Replaced CSS columns with CSS grid + fixed grid-auto-rows. Orientation probed via Image() before DOM insertion. _gridColCursor tracks column position across batches. Landscape cards cap at span 2 max; promoted to span 3 only when landing in the last 1-col slot of a row (orphan prevention). Existing cards never reflow on pull.",
+        "notes": "Done in commits 1bd7040, c7bf569, 9bd35d1. Landscape threshold > 1.15 (not >=) so squares go portrait.",
+        "files_affected": ["art/assets/script/app.js", "art/assets/style/style.css"]
+      },
+      {
+        "id": "echoes-filter-fix",
+        "title": "ECHOES — Fix broken filter buttons (medium type)",
+        "status": "done",
+        "requested": "2026-05-17",
+        "completed": "2026-05-17",
+        "description": "Filter buttons were reading metadata.medium (always empty) instead of a.type. detention.json uses type:'digital' or 'traditional' at the artifact level. Fixed normalization to read a.type at loadData() flatMap.",
+        "notes": "Done in 1bd7040. Filter values: all, digital, traditional, nsfw.",
+        "files_affected": ["art/assets/script/app.js"]
+      },
+      {
+        "id": "echoes-flood-pull",
+        "title": "ECHOES — Shift+click pull loads all remaining (flood pull)",
+        "status": "done",
+        "requested": "2026-05-17",
+        "completed": "2026-05-17",
+        "description": "Holding shift while clicking the gacha pull button triggers executeFloodPull() — loads all remaining unseen artifacts at once under an ABYSS tier divider, no roll animation. Undocumented secret mechanic.",
+        "notes": "Done in 1bd7040. executePull checks e.shiftKey before rolling.",
+        "files_affected": ["art/assets/script/app.js"]
+      },
+      {
+        "id": "echoes-multiselect-panel",
+        "title": "ECHOES — Shift+click multi-select panel with clipboard copy",
+        "status": "done",
+        "requested": "2026-05-17",
+        "completed": "2026-05-17",
+        "description": "Shift+click any revealed card toggles it into a fixed right-side selection panel. Panel shows thumbnail + composite ID per item with per-item remove. Copy button writes all IDs newline-separated to clipboard with 'Copied!' confirm flash. Cards show accent border+glow when selected plus spring-scale pulse on toggle.",
+        "notes": "Done in 187213b. Selection state is a Map keyed by _id. Panel slides in from right edge.",
+        "files_affected": ["art/assets/script/app.js", "art/assets/style/style.css", "art/index.html"]
       },
       {
         "id": "hard-reset-button",

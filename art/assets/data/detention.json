@@ -39,7 +39,9 @@
           "uploadDate": "2026/05/14",
           "tags": [],
           "type": "digital",
-          "metadata": {}
+          "metadata": {
+            "nsfw": true
+          }
         },
         {
           "id": "96EC7A",
@@ -51,7 +53,9 @@
           "uploadDate": "2026/05/14",
           "tags": [],
           "type": "digital",
-          "metadata": {}
+          "metadata": {
+            "nsfw": true
+          }
         },
         {
           "id": "293998",
@@ -63,7 +67,9 @@
           "uploadDate": "2026/05/14",
           "tags": [],
           "type": "digital",
-          "metadata": {}
+          "metadata": {
+            "nsfw": true
+          }
         },
         {
           "id": "5EA648",
@@ -75,7 +81,9 @@
           "uploadDate": "2026/05/14",
           "tags": [],
           "type": "digital",
-          "metadata": {}
+          "metadata": {
+            "nsfw": true
+          }
         },
         {
           "id": "E535E6",
@@ -531,18 +539,6 @@
       },
       "artifacts": [
         {
-          "id": "A90F16",
-          "compositeId": "DBDBF9::A90F16",
-          "src": {
-            "small": "dpsTlY9pH5p5/A90F16_t.webp",
-            "original": "tcF8GjjJ9GAh/A90F16.webp"
-          },
-          "uploadDate": "2026/05/16",
-          "tags": [],
-          "type": "traditional",
-          "metadata": {}
-        },
-        {
           "id": "A9A52E",
           "compositeId": "DBDBF9::A9A52E",
           "src": {
@@ -555,35 +551,11 @@
           "metadata": {}
         },
         {
-          "id": "6D42D7",
-          "compositeId": "DBDBF9::6D42D7",
-          "src": {
-            "small": "YTIFH2qL8y2D/6D42D7_t.webp",
-            "original": "1vEbeezQeC5l/6D42D7.webp"
-          },
-          "uploadDate": "2026/05/16",
-          "tags": [],
-          "type": "traditional",
-          "metadata": {}
-        },
-        {
           "id": "EA7D08",
           "compositeId": "DBDBF9::EA7D08",
           "src": {
             "small": "bgqXEexKTdv1/EA7D08_t.webp",
             "original": "JA0UGdlR33IN/EA7D08.webp"
-          },
-          "uploadDate": "2026/05/16",
-          "tags": [],
-          "type": "traditional",
-          "metadata": {}
-        },
-        {
-          "id": "B39E6E",
-          "compositeId": "DBDBF9::B39E6E",
-          "src": {
-            "small": "HJjXCQXLf2dA/B39E6E_t.webp",
-            "original": "1GQ37c6gmEqh/B39E6E.webp"
           },
           "uploadDate": "2026/05/16",
           "tags": [],
@@ -615,18 +587,6 @@
           "metadata": {}
         },
         {
-          "id": "9E067E",
-          "compositeId": "DBDBF9::9E067E",
-          "src": {
-            "small": "CYYNFD2jDDwT/9E067E_t.webp",
-            "original": "Nls1VWPFAdQa/9E067E.webp"
-          },
-          "uploadDate": "2026/05/16",
-          "tags": [],
-          "type": "traditional",
-          "metadata": {}
-        },
-        {
           "id": "809F8A",
           "compositeId": "DBDBF9::809F8A",
           "src": {
@@ -651,18 +611,6 @@
           "metadata": {}
         },
         {
-          "id": "C4C0C4",
-          "compositeId": "DBDBF9::C4C0C4",
-          "src": {
-            "small": "QqRuOxcXIkuK/C4C0C4_t.webp",
-            "original": "eLNwAHIiutMB/C4C0C4.webp"
-          },
-          "uploadDate": "2026/05/16",
-          "tags": [],
-          "type": "traditional",
-          "metadata": {}
-        },
-        {
           "id": "451DB0",
           "compositeId": "DBDBF9::451DB0",
           "src": {
@@ -675,35 +623,11 @@
           "metadata": {}
         },
         {
-          "id": "048E8A",
-          "compositeId": "DBDBF9::048E8A",
-          "src": {
-            "small": "ycbpHzyVFKV2/048E8A_t.webp",
-            "original": "K9boQocxswYv/048E8A.webp"
-          },
-          "uploadDate": "2026/05/16",
-          "tags": [],
-          "type": "traditional",
-          "metadata": {}
-        },
-        {
           "id": "770F11",
           "compositeId": "DBDBF9::770F11",
           "src": {
             "small": "AQglu3nl3k2o/770F11_t.webp",
             "original": "3G3cIEGVAnQY/770F11.webp"
-          },
-          "uploadDate": "2026/05/16",
-          "tags": [],
-          "type": "traditional",
-          "metadata": {}
-        },
-        {
-          "id": "114C09",
-          "compositeId": "DBDBF9::114C09",
-          "src": {
-            "small": "j4OHOtegec2G/114C09_t.webp",
-            "original": "GlbTMEdVlGTa/114C09.webp"
           },
           "uploadDate": "2026/05/16",
           "tags": [],
@@ -735,35 +659,11 @@
           "metadata": {}
         },
         {
-          "id": "9F023A",
-          "compositeId": "DBDBF9::9F023A",
-          "src": {
-            "small": "QHuqaceSm5rf/9F023A_t.webp",
-            "original": "6veMtdA1h5FI/9F023A.webp"
-          },
-          "uploadDate": "2026/05/16",
-          "tags": [],
-          "type": "traditional",
-          "metadata": {}
-        },
-        {
           "id": "DECA73",
           "compositeId": "DBDBF9::DECA73",
           "src": {
             "small": "sx17V6eOgMhQ/DECA73_t.webp",
             "original": "nefUxrfP0krA/DECA73.webp"
-          },
-          "uploadDate": "2026/05/16",
-          "tags": [],
-          "type": "traditional",
-          "metadata": {}
-        },
-        {
-          "id": "B7225B",
-          "compositeId": "DBDBF9::B7225B",
-          "src": {
-            "small": "PR5jPVgvCjuy/B7225B_t.webp",
-            "original": "TFqFsC6KXc0H/B7225B.webp"
           },
           "uploadDate": "2026/05/16",
           "tags": [],
@@ -795,71 +695,11 @@
           "metadata": {}
         },
         {
-          "id": "472ECE",
-          "compositeId": "DBDBF9::472ECE",
-          "src": {
-            "small": "VATLdRjdrdtu/472ECE_t.webp",
-            "original": "Cj1SSEMmkHJd/472ECE.webp"
-          },
-          "uploadDate": "2026/05/16",
-          "tags": [],
-          "type": "traditional",
-          "metadata": {}
-        },
-        {
           "id": "4944D3",
           "compositeId": "DBDBF9::4944D3",
           "src": {
             "small": "SHUSzkEQmWRH/4944D3_t.webp",
             "original": "IR3sKC7RQapD/4944D3.webp"
-          },
-          "uploadDate": "2026/05/16",
-          "tags": [],
-          "type": "traditional",
-          "metadata": {}
-        },
-        {
-          "id": "EB299E",
-          "compositeId": "DBDBF9::EB299E",
-          "src": {
-            "small": "1lIh73W7EfH7/EB299E_t.webp",
-            "original": "PxUz4C1Hike6/EB299E.webp"
-          },
-          "uploadDate": "2026/05/16",
-          "tags": [],
-          "type": "traditional",
-          "metadata": {}
-        },
-        {
-          "id": "CE296C",
-          "compositeId": "DBDBF9::CE296C",
-          "src": {
-            "small": "Ihj0x5J4hFdt/CE296C_t.webp",
-            "original": "IaBrmWrGkfrs/CE296C.webp"
-          },
-          "uploadDate": "2026/05/16",
-          "tags": [],
-          "type": "traditional",
-          "metadata": {}
-        },
-        {
-          "id": "52C625",
-          "compositeId": "DBDBF9::52C625",
-          "src": {
-            "small": "xzh14MaQt9Yl/52C625_t.webp",
-            "original": "XAv7A1SNNizB/52C625.webp"
-          },
-          "uploadDate": "2026/05/16",
-          "tags": [],
-          "type": "traditional",
-          "metadata": {}
-        },
-        {
-          "id": "5B0ED5",
-          "compositeId": "DBDBF9::5B0ED5",
-          "src": {
-            "small": "i90I5CqgQOQm/5B0ED5_t.webp",
-            "original": "2qRHhuqHCGnL/5B0ED5.webp"
           },
           "uploadDate": "2026/05/16",
           "tags": [],
@@ -884,18 +724,6 @@
           "src": {
             "small": "T9LOSVPzSbQe/3CB0D0_t.webp",
             "original": "gI5xdCW7TqYG/3CB0D0.webp"
-          },
-          "uploadDate": "2026/05/16",
-          "tags": [],
-          "type": "traditional",
-          "metadata": {}
-        },
-        {
-          "id": "300707",
-          "compositeId": "DBDBF9::300707",
-          "src": {
-            "small": "9Kfcqdu3LMzr/300707_t.webp",
-            "original": "aRgmg9OFoRds/300707.webp"
           },
           "uploadDate": "2026/05/16",
           "tags": [],
@@ -932,30 +760,6 @@
           "src": {
             "small": "TqYcfGFxGTgt/A25A03_t.webp",
             "original": "yztDryuMSfQq/A25A03.webp"
-          },
-          "uploadDate": "2026/05/16",
-          "tags": [],
-          "type": "traditional",
-          "metadata": {}
-        },
-        {
-          "id": "6DB834",
-          "compositeId": "DBDBF9::6DB834",
-          "src": {
-            "small": "M1YpR2sgiAEE/6DB834_t.webp",
-            "original": "joo3wtzf78uY/6DB834.webp"
-          },
-          "uploadDate": "2026/05/16",
-          "tags": [],
-          "type": "traditional",
-          "metadata": {}
-        },
-        {
-          "id": "74F18A",
-          "compositeId": "DBDBF9::74F18A",
-          "src": {
-            "small": "OfjhHCobKaTj/74F18A_t.webp",
-            "original": "IUnE5BhM5wKK/74F18A.webp"
           },
           "uploadDate": "2026/05/16",
           "tags": [],
@@ -1071,30 +875,6 @@
           "metadata": {}
         },
         {
-          "id": "420E94",
-          "compositeId": "DBDBF9::420E94",
-          "src": {
-            "small": "GtvqIUGh2lG9/420E94_t.webp",
-            "original": "FQPJxv2FF7FC/420E94.webp"
-          },
-          "uploadDate": "2026/05/16",
-          "tags": [],
-          "type": "traditional",
-          "metadata": {}
-        },
-        {
-          "id": "22D4A5",
-          "compositeId": "DBDBF9::22D4A5",
-          "src": {
-            "small": "QooNmIH3rs0y/22D4A5_t.webp",
-            "original": "w2qUHR2r8Xpw/22D4A5.webp"
-          },
-          "uploadDate": "2026/05/16",
-          "tags": [],
-          "type": "traditional",
-          "metadata": {}
-        },
-        {
           "id": "2E05BB",
           "compositeId": "DBDBF9::2E05BB",
           "src": {
@@ -1131,35 +911,11 @@
           "metadata": {}
         },
         {
-          "id": "433404",
-          "compositeId": "DBDBF9::433404",
-          "src": {
-            "small": "sU8BQQXstqMo/433404_t.webp",
-            "original": "6ASAQuC4PVkh/433404.webp"
-          },
-          "uploadDate": "2026/05/16",
-          "tags": [],
-          "type": "traditional",
-          "metadata": {}
-        },
-        {
           "id": "E4B66C",
           "compositeId": "DBDBF9::E4B66C",
           "src": {
             "small": "IHbGGXq2bXCH/E4B66C_t.webp",
             "original": "WnwpBfNe3QR0/E4B66C.webp"
-          },
-          "uploadDate": "2026/05/16",
-          "tags": [],
-          "type": "traditional",
-          "metadata": {}
-        },
-        {
-          "id": "6F1B9B",
-          "compositeId": "DBDBF9::6F1B9B",
-          "src": {
-            "small": "gJvNx2KLLnkV/6F1B9B_t.webp",
-            "original": "iGWu0mvvvvY9/6F1B9B.webp"
           },
           "uploadDate": "2026/05/16",
           "tags": [],
@@ -1239,18 +995,6 @@
           "metadata": {}
         },
         {
-          "id": "520F5E",
-          "compositeId": "DBDBF9::520F5E",
-          "src": {
-            "small": "hhoTMgwdxEN2/520F5E_t.webp",
-            "original": "w1JBiHFDLqch/520F5E.webp"
-          },
-          "uploadDate": "2026/05/16",
-          "tags": [],
-          "type": "traditional",
-          "metadata": {}
-        },
-        {
           "id": "350320",
           "compositeId": "DBDBF9::350320",
           "src": {
@@ -1316,18 +1060,6 @@
           "src": {
             "small": "uBBobqm38f8B/F350DF_t.webp",
             "original": "N7L9OGVU2isF/F350DF.webp"
-          },
-          "uploadDate": "2026/05/16",
-          "tags": [],
-          "type": "traditional",
-          "metadata": {}
-        },
-        {
-          "id": "4524CE",
-          "compositeId": "DBDBF9::4524CE",
-          "src": {
-            "small": "in9IVaJUK7VA/4524CE_t.webp",
-            "original": "E2zsRvWAHJp4/4524CE.webp"
           },
           "uploadDate": "2026/05/16",
           "tags": [],
