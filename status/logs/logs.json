@@ -479,7 +479,7 @@
   },
   "commits": [
     {
-      "hash": "PENDING",
+      "hash": "4499548",
       "date": "2026-05-17",
       "message": "feat(grimoire): campaign slot system, Load Campaign modal, API key in Settings",
       "scope": "dndm/",
