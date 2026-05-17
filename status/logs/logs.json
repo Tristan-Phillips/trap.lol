@@ -479,6 +479,15 @@
   },
   "commits": [
     {
+      "hash": "PENDING",
+      "date": "2026-05-17",
+      "message": "fix(art): respect natural image aspect ratios in gallery grid — landscape cards no longer forced to portrait",
+      "scope": "art/",
+      "impact": "medium",
+      "files": ["art/assets/style/style.css"],
+      "why": "All gallery thumbnails were rendered in a fixed 3/4 aspect-ratio container, squashing landscape images into portrait frames. Removing the aspect-ratio constraint and letting each card's height be driven by the image's natural dimensions (width:100%; height:auto) means portrait images appear tall and landscape images appear wide — no forced cropping."
+    },
+    {
       "hash": "7e2a85c",
       "date": "2026-05-17",
       "message": "fix(playground): remove ::before flex spacer — causes large gap on fresh shell",
@@ -2079,6 +2088,21 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-17",
+      "agent": "Claude Sonnet 4.6",
+      "type": "bug_fix",
+      "summary": "Fixed ECHOES gallery thumbnails forcing all images into a 3/4 portrait aspect ratio, making landscape images appear incorrectly cropped. Removed the fixed aspect-ratio from .art-card and changed .art-card__thumb to width:100%; height:auto so each card's height is determined by the image's natural dimensions. Removed the mobile aspect-ratio overrides (4/3 landscape + 3/4 portrait) that are no longer needed. The .art-card--portrait class logic in app.js remains harmlessly.",
+      "decisions": [
+        "Natural image sizing (height:auto) preferred over a fixed aspect-ratio container — galleries with mixed orientations should respect each image's native proportions",
+        "Removed the mobile 4/3 → 3/4 portrait override since it was compensating for the now-removed fixed ratio",
+        "object-fit:cover retained for hover zoom scale (transform:scale) to clip correctly at the overflow:hidden boundary"
+      ],
+      "rules_reinforced": [
+        "CSS-only fix — no JS required, no data changes",
+        "art/ is self-contained, does not reference glass/"
+      ]
+    },
     {
       "date": "2026-05-17",
       "agent": "Claude Sonnet 4.6",
