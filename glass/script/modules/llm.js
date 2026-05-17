@@ -141,6 +141,7 @@ export function initLLM() {
 
   const ctx = {
     ui, state, cfg, llm,
+    history: state.history,
     auth: {
       PROXY_MODE,
       getApiKey: Auth.getApiKey,

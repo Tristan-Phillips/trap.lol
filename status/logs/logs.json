@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.3.54",
+    "schema_version": "1.3.55",
     "last_updated": "2026-05-17",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -478,6 +478,20 @@
     ]
   },
   "commits": [
+    {
+      "hash": "0000000",
+      "date": "2026-05-17",
+      "message": "fix(playground): history bug in ctx + redesign index.html with scanline ambient and elevated identity header",
+      "scope": "playground/",
+      "impact": "high",
+      "files": [
+        "playground/index.html",
+        "glass/script/modules/llm.js",
+        "glass/style/modules/neural-uplink.css",
+        "status/logs/logs.json"
+      ],
+      "why": "history was missing from the ctx object passed to Chat.sendMessage causing a silent TypeError on every send — messages appeared to submit but no response was ever displayed. Simultaneously redesigned playground/index.html with scanline ambient overlay, eyebrow sub-label, elevated topbar identity, and improved icon markup; added .playground-page__scanlines CSS, .playground-page__eyebrow--sub and eyebrow-sep variants."
+    },
     {
       "hash": "8fcd4a9",
       "date": "2026-05-17",
@@ -2014,6 +2028,23 @@
     {
       "date": "2026-05-17",
       "agent": "Claude Sonnet 4.6",
+      "type": "bug_fix",
+      "summary": "Diagnosed and fixed a silent crash in the Neural Uplink playground that caused all message sends to fail without any feedback. The root cause was a missing `history: state.history` property in the `ctx` object passed to `Chat.sendMessage` — the function destructured `history` from ctx but ctx only contained `state`, so history was undefined and `history.push()` threw a TypeError silently caught by the generic error handler before any DOM feedback was shown. Fixed by adding `history: state.history` to the ctx definition in llm.js. Simultaneously redesigned playground/index.html to elevate the visual identity: scanline ambient overlay (.playground-page__scanlines with a scrolling repeating-linear-gradient), inline SVG back arrow replacing the lucide icon dependency in the topbar, improved eyebrow identity block with NEURAL UPLINK // SOVEREIGN INFERENCE and a sub-label variant, boot message copy updated.",
+      "decisions": [
+        "history: state.history added directly to ctx at definition — cleaner than passing via callbacks, matches how the function signature expects it",
+        "Scanlines use a CSS repeating-linear-gradient at 4px pitch, 4% opacity, animated with background-position — atmospheric without adding texture noise",
+        "prefers-reduced-motion kills the scanline animation (background-position 0 0 static)",
+        "playground-page__layout gets z-index: 1 so it renders above the fixed scanline layer",
+        "Topbar back arrow uses inline SVG polyline instead of data-lucide to avoid the lucide init dependency before boot completes"
+      ],
+      "rules_reinforced": [
+        "Always verify that objects passed as ctx to imported functions contain ALL destructured keys — missing keys fail silently as undefined, not as missing-property errors",
+        "CSS atmospheric effects (scanlines, grain) belong on a fixed position overlay with pointer-events: none and z-index: 0 — content always z-index: 1 above"
+      ]
+    },
+    {
+      "date": "2026-05-17",
+      "agent": "Claude Sonnet 4.6",
       "type": "maintenance",
       "summary": "Phase 9 polish pass on Grimoire. Added coarse-pointer media query for touch-target compliance (≥44px min-height on toolbar buttons, type-picker pills, Oracle buttons, NOW PLAYING strip actions). Extended prefers-reduced-motion block to cover STORY canvas node transitions, Oracle loading animation, NOW PLAYING strip transitions, HP bar fill transitions, and character sheet overlay fade. Minor CSS visual improvements: NOW PLAYING strip box-shadow, node title font-size confirmed at 0.8rem. Updated logs.json to record the manually-made e45f69d commit (apps.json live status for Playground, Underdark, Grimoire).",
       "decisions": [
@@ -3324,6 +3355,16 @@
   "pending_work": {
     "_note": "This section tracks features requested by trap that are partially or fully unimplemented. An LLM reading this file must check this section before asking what to do. Status values: 'not_started' | 'in_progress' | 'done' | 'deferred' | 'wont_do'. Update status and notes after each session. Never remove entries — only update them.",
     "features": [
+      {
+        "id": "playground-history-bug",
+        "title": "Neural Uplink — fix silent send failure + playground redesign",
+        "status": "done",
+        "requested": "2026-05-17",
+        "completed": "2026-05-17",
+        "description": "playground/index.html sends messages but gets no response. Root cause: history missing from ctx in llm.js. Also: redesign the playground page to match evolved site aesthetic.",
+        "notes": "Fixed in pending commit (0000000). history: state.history added to ctx in llm.js:142. HTML redesigned with scanline overlay, SVG back arrow, NEURAL UPLINK // SOVEREIGN INFERENCE identity, updated boot message.",
+        "files_affected": ["playground/index.html", "glass/script/modules/llm.js", "glass/style/modules/neural-uplink.css"]
+      },
       {
         "id": "dndm-phase-5",
         "title": "DM MATRIX Phase 5 — Campaign, Sessions, NPCs, Lore Wiki, Export/Import",
