@@ -5011,6 +5011,24 @@ a { color: inherit; text-decoration: none; }
   font-size: 0.68rem;
   letter-spacing: 0.1em;
 }
+.story-ctx-menu__item--danger {
+  color: rgba(220, 80, 80, 0.8);
+}
+.story-ctx-menu__item--danger:hover {
+  background: rgba(139, 26, 26, 0.28);
+  color: var(--crimson-hi);
+}
+.story-ctx-menu__item--disabled,
+.story-ctx-menu__item[disabled] {
+  opacity: 0.38;
+  cursor: default;
+  pointer-events: none;
+}
+.story-ctx-menu__sep {
+  height: 1px;
+  background: rgba(196,146,42,0.12);
+  margin: 0.2rem 0.3rem;
+}
 
 /* ── Story node color swatches ────────────────────────────────── */
 .story-editor__color-row {

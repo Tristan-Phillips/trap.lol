@@ -3474,7 +3474,8 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // ── Context menu ─────────────────────────────────────
-    var $ctxMenu = document.getElementById('story-ctx-menu');
+    var $ctxMenu    = document.getElementById('story-ctx-menu');
+    var $nodeCtxMenu = document.getElementById('story-node-ctx-menu');
     var _ctxPos  = { cx: 0, cy: 0 }; // canvas-space coords where menu was opened
 
     function storyCtxHide() {
@@ -3521,6 +3522,91 @@ document.addEventListener('DOMContentLoaded', function () {
       });
     }
 
+    function storyNodeCtxHide() {
+      if ($nodeCtxMenu) $nodeCtxMenu.hidden = true;
+    }
+
+    function storyNodeCtxShow(nodeId, screenX, screenY) {
+      if (!$nodeCtxMenu) return;
+      var nd = campaign.narrative.nodes[nodeId];
+      if (!nd) return;
+
+      var isNowPlaying = campaign.narrative.currentNodeId === nodeId;
+
+      var items = [
+        {
+          icon: '✏️',
+          label: 'Edit in Composer',
+          action: function() { storySelectNode(nodeId); openComposer('story-node', nodeId); }
+        },
+        {
+          icon: '◉',
+          label: isNowPlaying ? 'Now Playing (active)' : 'Set as Now Playing',
+          disabled: isNowPlaying,
+          action: function() {
+            campaign.narrative.currentNodeId = nodeId;
+            var n = campaign.narrative.nodes[nodeId];
+            if (n) n.status = 'current';
+            storySave();
+            storyRenderAll();
+            storyRenderNow();
+            showToast('Now Playing: ' + (n ? n.title : ''));
+          }
+        },
+        {
+          icon: '⤷',
+          label: 'Add Branch',
+          action: function() {
+            var parent = campaign.narrative.nodes[nodeId];
+            if (!parent) return;
+            var childX = parent.x + 220;
+            var childY = parent.y + (Object.keys(campaign.narrative.nodes).length % 3) * 130;
+            var childId = storyMakeNode(_storyActiveType, childX, childY, {
+              title: NODE_TYPES[_storyActiveType].label + ' ' + (Object.keys(campaign.narrative.nodes).length)
+            });
+            storyMakeEdge(nodeId, childId);
+            storyRenderAll();
+            storySelectNode(childId);
+          }
+        },
+        { separator: true },
+        {
+          icon: '🗑',
+          label: 'Delete Node',
+          danger: true,
+          action: function() { storyDeleteNode(nodeId); }
+        }
+      ];
+
+      $nodeCtxMenu.innerHTML = items.map(function(item, i) {
+        if (item.separator) return '<div class="story-ctx-menu__sep" role="separator"></div>';
+        return '<button class="story-ctx-menu__item'
+          + (item.danger    ? ' story-ctx-menu__item--danger' : '')
+          + (item.disabled  ? ' story-ctx-menu__item--disabled' : '')
+          + '" data-idx="' + i + '" role="menuitem"'
+          + (item.disabled ? ' disabled' : '') + '>'
+          + '<span class="story-ctx-menu__icon">' + item.icon + '</span>'
+          + '<span class="story-ctx-menu__label">' + esc(item.label) + '</span>'
+          + '</button>';
+      }).join('');
+
+      $nodeCtxMenu.hidden = false;
+      var mw = $nodeCtxMenu.offsetWidth  || 180;
+      var mh = $nodeCtxMenu.offsetHeight || 160;
+      var vw = window.innerWidth;
+      var vh = window.innerHeight;
+      $nodeCtxMenu.style.left = Math.min(screenX, vw - mw - 8) + 'px';
+      $nodeCtxMenu.style.top  = Math.min(screenY, vh - mh - 8) + 'px';
+
+      $nodeCtxMenu.querySelectorAll('.story-ctx-menu__item:not([disabled])').forEach(function(btn) {
+        var idx = parseInt(btn.dataset.idx, 10);
+        btn.addEventListener('click', function() {
+          storyNodeCtxHide();
+          items[idx].action();
+        });
+      });
+    }
+
     // Right-click on canvas → context menu
     $vp.addEventListener('contextmenu', function(e) {
       if (e.target !== $vp && e.target !== $stage &&
@@ -3549,12 +3635,14 @@ document.addEventListener('DOMContentLoaded', function () {
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape') {
         if ($ctxMenu && !$ctxMenu.hidden) storyCtxHide();
+        if ($nodeCtxMenu && !$nodeCtxMenu.hidden) storyNodeCtxHide();
         storyEdgePopupHide();
       }
     });
     // Outside-click dismiss for ctx menu (viewport click already handled above)
     document.addEventListener('click', function(e) {
       if ($ctxMenu && !$ctxMenu.hidden && !$ctxMenu.contains(e.target) && !$vp.contains(e.target)) storyCtxHide();
+      if ($nodeCtxMenu && !$nodeCtxMenu.hidden && !$nodeCtxMenu.contains(e.target)) storyNodeCtxHide();
       var $ep = document.getElementById('story-edge-popup');
       if ($ep && !$ep.hidden && !$ep.contains(e.target)) storyEdgePopupHide();
     });
@@ -3960,6 +4048,13 @@ document.addEventListener('DOMContentLoaded', function () {
       if (_storyConnectMode || _storyDeleteMode) return;
       e.stopPropagation();
       storySelectNode(id);
+    });
+
+    el.addEventListener('contextmenu', function(e) {
+      e.preventDefault();
+      e.stopPropagation(); // prevent canvas contextmenu from firing
+      storyCtxHide();      // close canvas add-node menu if open
+      storyNodeCtxShow(id, e.clientX, e.clientY);
     });
 
     return el;

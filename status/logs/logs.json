@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.3.58",
+    "schema_version": "1.3.59",
     "last_updated": "2026-05-17",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -478,6 +478,15 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-17",
+      "message": "feat(grimoire): node right-click context menu — edit, set now playing, add branch, delete",
+      "scope": "dndm/",
+      "impact": "medium",
+      "files": ["dndm/assets/script/app.js", "dndm/assets/style/style.css", "dndm/index.html", "status/logs/logs.json"],
+      "why": "Nodes had no quick-action affordance — right-clicking did nothing; all edits required selecting the node and using the right panel. Node context menu brings the most common actions inline: Edit in Composer, Set as Now Playing (greyed if already active), Add Branch, and Delete Node with a visual separator before the danger item."
+    },
     {
       "hash": "a51b0c5",
       "date": "2026-05-17",
@@ -2187,6 +2196,22 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-17",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Grimoire continuation (resumed from compaction after context limit). Added node right-click context menu: right-clicking any story canvas node now shows a 4-item quick-action menu — Edit in Composer, Set as Now Playing (disabled if already active), Add Branch (creates child node + edge), and Delete Node (in danger style, separated by a visual divider). The node contextmenu event prevents canvas contextmenu propagation; both menus dismiss on Escape, outside-click, or when a menu item is actioned. CSS extended with .story-ctx-menu__item--danger, --disabled, and .story-ctx-menu__sep.",
+      "decisions": [
+        "Node ctx menu reuses the same .story-ctx-menu BEM block with a --node modifier; no separate component needed",
+        "Set as Now Playing is shown but disabled (not hidden) when the node is already active — gives visual feedback that the action exists",
+        "Separator before Delete is a deliberate UX pattern — destructive actions need visual breathing room from non-destructive ones",
+        "e.stopPropagation() on node contextmenu prevents the canvas add-node menu from appearing simultaneously"
+      ],
+      "rules_reinforced": [
+        "Context menus should show disabled state rather than hide unavailable items — preserves discoverability",
+        "Destructive actions get a visual separator and danger color — never inline with safe actions"
+      ]
+    },
     {
       "date": "2026-05-17",
       "agent": "Claude Sonnet 4.6",
