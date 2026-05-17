@@ -2420,6 +2420,48 @@ document.addEventListener('DOMContentLoaded', function () {
 
   function openCharModal() { openModal($charModal); }
 
+  document.getElementById('char-randomize-stats').addEventListener('click', function() {
+    ['str','dex','con','int','wis','cha'].forEach(function(stat) {
+      var rolls = [];
+      for (var i = 0; i < 4; i++) rolls.push(Math.floor(Math.random() * 6) + 1);
+      rolls.sort(function(a,b) { return a - b; });
+      var total = rolls[1] + rolls[2] + rolls[3];
+      var $inp = document.getElementById('char-' + stat);
+      if ($inp) {
+        $inp.value = total;
+        $inp.dispatchEvent(new Event('input'));
+      }
+    });
+  });
+
+  document.getElementById('char-race').addEventListener('change', function(e) {
+    var val = e.target.value;
+    var $lang = document.getElementById('char-languages');
+    var $speed = document.getElementById('char-speed');
+    var $backstory = document.getElementById('char-backstory');
+
+    var defaults = {
+      'Dwarf':      { speed: 25, lang: 'Common, Dwarvish', traits: 'Darkvision 60ft, Dwarven Resilience' },
+      'Elf':        { speed: 30, lang: 'Common, Elvish', traits: 'Darkvision 60ft, Keen Senses, Fey Ancestry, Trance' },
+      'Halfling':   { speed: 25, lang: 'Common, Halfling', traits: 'Lucky, Brave, Halfling Nimbleness' },
+      'Human':      { speed: 30, lang: 'Common, +1 Extra Language', traits: '' },
+      'Dragonborn': { speed: 30, lang: 'Common, Draconic', traits: 'Draconic Ancestry, Breath Weapon, Damage Resistance' },
+      'Gnome':      { speed: 25, lang: 'Common, Gnomish', traits: 'Darkvision 60ft, Gnome Cunning' },
+      'Half-Elf':   { speed: 30, lang: 'Common, Elvish, +1 Extra Language', traits: 'Darkvision 60ft, Fey Ancestry, Skill Versatility' },
+      'Half-Orc':   { speed: 30, lang: 'Common, Orc', traits: 'Darkvision 60ft, Menacing, Relentless Endurance, Savage Attacks' },
+      'Tiefling':   { speed: 30, lang: 'Common, Infernal', traits: 'Darkvision 60ft, Hellish Resistance, Infernal Legacy' }
+    };
+
+    var info = defaults[val];
+    if (info) {
+      if ($speed) $speed.value = info.speed;
+      if ($lang && !$lang.value) $lang.value = info.lang;
+      if ($backstory && info.traits && $backstory.value.indexOf(info.traits) === -1) {
+        $backstory.value = $backstory.value + ($backstory.value ? '\n\n' : '') + '[Racial Traits: ' + info.traits + ']';
+      }
+    }
+  });
+
   document.getElementById('add-character').addEventListener('click', openCharModal);
   document.getElementById('char-modal-cancel').addEventListener('click', function() { closeModal($charModal); });
   document.getElementById('char-modal-confirm').addEventListener('click', function() {

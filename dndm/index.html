@@ -700,15 +700,70 @@
           </div>
           <div class="csm__field">
             <label class="csm__label" for="char-class">Class</label>
-            <input class="csm__input" type="text" id="char-class" placeholder="Wizard…" autocomplete="off" />
+            <select class="csm__input csm__input--select" id="char-class">
+              <option value="">— Select —</option>
+              <option value="Barbarian">Barbarian</option>
+              <option value="Bard">Bard</option>
+              <option value="Cleric">Cleric</option>
+              <option value="Druid">Druid</option>
+              <option value="Fighter">Fighter</option>
+              <option value="Monk">Monk</option>
+              <option value="Paladin">Paladin</option>
+              <option value="Ranger">Ranger</option>
+              <option value="Rogue">Rogue</option>
+              <option value="Sorcerer">Sorcerer</option>
+              <option value="Warlock">Warlock</option>
+              <option value="Wizard">Wizard</option>
+              <option value="Artificer">Artificer</option>
+            </select>
           </div>
           <div class="csm__field">
             <label class="csm__label" for="char-subclass">Subclass</label>
-            <input class="csm__input" type="text" id="char-subclass" placeholder="School of Evocation…" autocomplete="off" />
+            <select class="csm__input csm__input--select" id="char-subclass">
+              <option value="">— Select —</option>
+              <!-- Populated dynamically via JS or kept generic -->
+              <option value="Path of the Berserker">Path of the Berserker (Barbarian)</option>
+              <option value="Path of the Totem Warrior">Path of the Totem Warrior (Barbarian)</option>
+              <option value="College of Lore">College of Lore (Bard)</option>
+              <option value="College of Valor">College of Valor (Bard)</option>
+              <option value="Life Domain">Life Domain (Cleric)</option>
+              <option value="Light Domain">Light Domain (Cleric)</option>
+              <option value="Circle of the Land">Circle of the Land (Druid)</option>
+              <option value="Circle of the Moon">Circle of the Moon (Druid)</option>
+              <option value="Champion">Champion (Fighter)</option>
+              <option value="Battle Master">Battle Master (Fighter)</option>
+              <option value="Way of the Open Hand">Way of the Open Hand (Monk)</option>
+              <option value="Way of Shadow">Way of Shadow (Monk)</option>
+              <option value="Oath of Devotion">Oath of Devotion (Paladin)</option>
+              <option value="Oath of the Ancients">Oath of the Ancients (Paladin)</option>
+              <option value="Hunter">Hunter (Ranger)</option>
+              <option value="Beast Master">Beast Master (Ranger)</option>
+              <option value="Thief">Thief (Rogue)</option>
+              <option value="Assassin">Assassin (Rogue)</option>
+              <option value="Draconic Bloodline">Draconic Bloodline (Sorcerer)</option>
+              <option value="Wild Magic">Wild Magic (Sorcerer)</option>
+              <option value="The Fiend">The Fiend (Warlock)</option>
+              <option value="The Archfey">The Archfey (Warlock)</option>
+              <option value="School of Evocation">School of Evocation (Wizard)</option>
+              <option value="School of Abjuration">School of Abjuration (Wizard)</option>
+              <option value="Alchemist">Alchemist (Artificer)</option>
+              <option value="Artillerist">Artillerist (Artificer)</option>
+            </select>
           </div>
           <div class="csm__field">
             <label class="csm__label" for="char-race">Race / Species</label>
-            <input class="csm__input" type="text" id="char-race" placeholder="High Elf…" autocomplete="off" />
+            <select class="csm__input csm__input--select" id="char-race">
+              <option value="">— Select —</option>
+              <option value="Dragonborn">Dragonborn</option>
+              <option value="Dwarf">Dwarf</option>
+              <option value="Elf">Elf</option>
+              <option value="Gnome">Gnome</option>
+              <option value="Half-Elf">Half-Elf</option>
+              <option value="Halfling">Halfling</option>
+              <option value="Half-Orc">Half-Orc</option>
+              <option value="Human">Human</option>
+              <option value="Tiefling">Tiefling</option>
+            </select>
           </div>
           <div class="csm__field">
             <label class="csm__label" for="char-background">Background</label>
@@ -740,7 +795,10 @@
 
       <!-- ── Section 2: Ability Scores ── -->
       <div class="csm__section">
-        <div class="csm__section-label">ABILITY SCORES</div>
+        <div class="csm__section-label" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>ABILITY SCORES</span>
+          <button type="button" id="char-randomize-stats" style="background:transparent;border:1px solid #8B1A1A;color:#8B1A1A;cursor:pointer;padding:2px 8px;border-radius:4px;font-size:0.8rem;text-transform:uppercase;letter-spacing:1px;" title="Roll 4d6 drop lowest for all stats">⚄ Randomize</button>
+        </div>
         <div class="csm__ability-grid">
           <div class="csm__ability-box" data-stat="str">
             <div class="csm__ability-name">STR</div>
