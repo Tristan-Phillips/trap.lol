@@ -479,7 +479,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "eddbed8",
       "date": "2026-05-17",
       "message": "fix(grimoire): node ctx menu scope + SVG marker namespace",
       "scope": "dndm/",
