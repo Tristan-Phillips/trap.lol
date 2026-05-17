@@ -479,6 +479,15 @@
   },
   "commits": [
     {
+      "hash": "6f7189e",
+      "date": "2026-05-17",
+      "message": "fix(playground): keybar child states both visible — [hidden] overridden by display:flex",
+      "scope": "playground/",
+      "impact": "low",
+      "files": ["glass/style/modules/neural-uplink.css"],
+      "why": "Both the input-wrap and locked-state divs were rendering simultaneously because their display:flex declarations beat the browser UA [hidden]=display:none — added explicit [hidden]{display:none} rules for both child elements."
+    },
+    {
       "hash": "a801bb2",
       "date": "2026-05-17",
       "message": "fix(playground): anchor messages to bottom of shell (justify-content: flex-end)",
