@@ -479,6 +479,15 @@
   },
   "commits": [
     {
+      "hash": "5822f02",
+      "date": "2026-05-17",
+      "message": "feat(grimoire): canvas right-click menu, per-node colors, remove oracle key row",
+      "scope": "dndm/",
+      "impact": "medium",
+      "files": ["dndm/assets/script/app.js", "dndm/assets/style/style.css", "dndm/index.html"],
+      "why": "Three UX improvements: (1) canvas right-click shows a type picker context menu so users don't need to pre-select a node type before clicking; (2) each node can have its own border/accent color from a 9-swatch palette via --node-custom-color CSS var; (3) Oracle key row (the ...Save bar at the bottom of the Story panel) removed permanently since the key is already in Settings."
+    },
+    {
       "hash": "4499548",
       "date": "2026-05-17",
       "message": "feat(grimoire): campaign slot system, Load Campaign modal, API key in Settings",
