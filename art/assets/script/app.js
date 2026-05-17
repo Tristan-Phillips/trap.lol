@@ -429,7 +429,7 @@ function flashRarity($zone, color) {
 function probeOrientation(url) {
   return new Promise(resolve => {
     const img = new Image();
-    img.onload  = () => resolve(img.naturalWidth >= img.naturalHeight ? "landscape" : "portrait");
+    img.onload  = () => resolve(img.naturalWidth > img.naturalHeight * 1.15 ? "landscape" : "portrait");
     img.onerror = () => resolve("portrait");
     img.src = url;
   });
