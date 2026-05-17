@@ -172,6 +172,10 @@
             <h1 class="module__campaign-name" id="campaign-name">Unnamed Campaign</h1>
             <p class="module__campaign-setting" id="campaign-setting">No setting defined.</p>
           </div>
+          <button class="module__banner-edit" type="button" id="campaign-meta-btn" aria-label="Edit campaign details" title="Edit campaign details">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Edit
+          </button>
           <button class="module__banner-upload" type="button" aria-label="Upload campaign banner">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
           </button>
@@ -211,8 +215,11 @@
 
             <div class="module__col module__col--narrow">
               <div class="panel">
-                <div class="panel__head"><span class="panel__title">SCRATCH PAD</span></div>
-                <textarea class="scratch-pad" id="scratch-pad" placeholder="In-session notes, loose thoughts, reminders…" rows="12"></textarea>
+                <div class="panel__head">
+                  <span class="panel__title">SCRATCH PAD</span>
+                  <button class="panel__add" type="button" id="scratch-expand" title="Open in full composer">⤢ Expand</button>
+                </div>
+                <textarea class="scratch-pad" id="scratch-pad" placeholder="In-session notes, loose thoughts, reminders…" rows="6"></textarea>
               </div>
 
               <div class="panel panel--stats">
@@ -782,11 +789,6 @@
       <h2 class="modal__title" id="settings-modal-title">SETTINGS</h2>
       <div class="settings-grid">
         <div class="settings-section">
-          <h3 class="settings-section__title">Oracle API Key</h3>
-          <input class="modal__input" type="password" id="api-key-input" placeholder="nano-gpt API key…" />
-          <button class="modal__btn modal__btn--secondary" id="api-key-save">Save Key</button>
-        </div>
-        <div class="settings-section">
           <h3 class="settings-section__title">Campaign Data</h3>
           <button class="modal__btn modal__btn--secondary" id="export-btn">Export Campaign JSON</button>
           <button class="modal__btn modal__btn--secondary" id="import-btn">Import Campaign JSON</button>
@@ -804,6 +806,36 @@
         <button class="modal__btn modal__btn--primary" id="settings-modal-close">Done</button>
       </div>
     </div>
+  </div>
+
+  <!-- ── Composer Overlay ──────────────────────────────────── -->
+  <div id="composer" class="composer" hidden aria-modal="true" role="dialog" aria-label="Composer">
+
+    <!-- Top bar -->
+    <div class="composer__bar">
+      <div class="composer__bar-left">
+        <span class="composer__context-icon" id="composer-icon" aria-hidden="true">◈</span>
+        <span class="composer__context-label" id="composer-label">ENTRY</span>
+        <span class="composer__sep" aria-hidden="true">//</span>
+        <span class="composer__context-sub" id="composer-sub"></span>
+      </div>
+      <div class="composer__bar-right">
+        <span class="composer__wordcount" id="composer-wordcount" aria-live="polite"></span>
+        <span class="composer__autosave" id="composer-autosave" aria-live="polite"></span>
+        <button class="composer__bar-btn composer__bar-btn--save" id="composer-save" title="Save (Ctrl+S)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Save
+        </button>
+        <button class="composer__bar-btn composer__bar-btn--discard" id="composer-discard" title="Discard changes (Esc)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          Discard
+        </button>
+      </div>
+    </div>
+
+    <!-- Body — fields injected by JS per mode -->
+    <div class="composer__body" id="composer-body"></div>
+
   </div>
 
   <script src="/dndm/assets/script/app.js" defer></script>

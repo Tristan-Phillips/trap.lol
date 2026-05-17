@@ -728,6 +728,30 @@ a { color: inherit; text-decoration: none; }
 .module__banner-upload svg { width: 14px; height: 14px; }
 .module__banner-upload:hover { color: var(--gold-hi); border-color: rgba(196,146,42,0.4); }
 
+.module__banner-edit {
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  background: rgba(10,7,5,0.75);
+  border: 1px solid rgba(196,146,42,0.25);
+  border-radius: var(--radius);
+  color: rgba(196,146,42,0.7);
+  font: 700 0.62rem/1 ui-monospace, monospace;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: var(--transition);
+  cursor: pointer;
+}
+.module__banner-edit:hover {
+  background: rgba(139,26,26,0.5);
+  border-color: rgba(196,146,42,0.55);
+  color: var(--gold-hi);
+}
+
 /* ── Two-column layout ──────────────────────────────────────── */
 .module__cols {
   display: flex;
@@ -3193,10 +3217,12 @@ a { color: inherit; text-decoration: none; }
   opacity: 0.5;
 }
 .npc-card__empty-text { font-size: var(--text-sm); color: var(--bone-dim); }
-.npc-card__head { display: flex; flex-direction: column; gap: 0.15rem; }
+.npc-card__head { display: flex; flex-direction: row; align-items: center; gap: 0.45rem; flex-wrap: wrap; }
+.npc-card__status-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
 .npc-card__name { font-weight: 600; font-size: var(--text-base); color: var(--bone); }
-.npc-card__role { font-size: var(--text-xs); color: var(--gold-dim); letter-spacing: 0.05em; }
-.npc-card__notes { font-size: var(--text-xs); color: var(--bone-dim); line-height: 1.5; margin: 0; }
+.npc-card__role { font-size: var(--text-xs); color: var(--gold-dim); letter-spacing: 0.05em; margin-left: auto; }
+.npc-card__meta { font-size: var(--text-xs); color: rgba(196,146,42,0.45); margin: 0.25rem 0 0; font-style: italic; }
+.npc-card__notes { font-size: var(--text-xs); color: var(--bone-dim); line-height: 1.5; margin: 0.3rem 0 0; }
 .npc-card__actions { display: flex; gap: 0.4rem; margin-top: auto; padding-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.05); }
 .npc-card__btn {
   font-family: var(--mono);
@@ -4513,4 +4539,250 @@ a { color: inherit; text-decoration: none; }
   .story-now { transition: none; }
   .party-bar__hp-fill { transition: none; }
   .sheet-overlay { transition: none; }
+  .composer { animation: none; }
+  .composer__body { animation: none; }
+}
+
+/* ══ COMPOSER OVERLAY ══════════════════════════════════════════ */
+
+.composer {
+  position: fixed;
+  inset: 0;
+  z-index: 12000;
+  background: #0A0705;
+  display: flex;
+  flex-direction: column;
+  animation: composer-in 0.22s ease-out;
+}
+.composer[hidden] { display: none; }
+
+@keyframes composer-in {
+  from { opacity: 0; transform: scale(0.985); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* ── Top bar ── */
+.composer__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 1.5rem;
+  border-bottom: 1px solid rgba(139,26,26,0.3);
+  background: rgba(10,7,5,0.96);
+  flex-shrink: 0;
+  gap: 1rem;
+}
+.composer__bar-left {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+}
+.composer__context-icon {
+  font-size: 0.95rem;
+  color: var(--col-gold, #C4922A);
+  opacity: 0.8;
+}
+.composer__context-label {
+  font: 700 0.65rem/1 ui-monospace, 'Cascadia Code', monospace;
+  letter-spacing: 0.12em;
+  color: var(--col-gold, #C4922A);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.composer__sep {
+  color: rgba(196,146,42,0.3);
+  font-size: 0.75rem;
+}
+.composer__context-sub {
+  font: 0.72rem/1 ui-monospace, 'Cascadia Code', monospace;
+  color: rgba(237,232,245,0.45);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 280px;
+}
+.composer__bar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+.composer__wordcount {
+  font: 0.65rem/1 ui-monospace, monospace;
+  color: rgba(237,232,245,0.3);
+  min-width: 4ch;
+  text-align: right;
+}
+.composer__autosave {
+  font: 0.65rem/1 ui-monospace, monospace;
+  color: rgba(74,222,128,0.5);
+  transition: opacity 0.5s;
+  min-width: 7ch;
+  text-align: right;
+}
+.composer__bar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.38rem 0.85rem;
+  border-radius: 4px;
+  font: 0.68rem/1 ui-monospace, monospace;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.composer__bar-btn--save {
+  background: rgba(139,26,26,0.25);
+  border-color: rgba(139,26,26,0.5);
+  color: #e8c89a;
+}
+.composer__bar-btn--save:hover {
+  background: rgba(139,26,26,0.45);
+  border-color: rgba(196,146,42,0.6);
+  color: #f0d8b0;
+}
+.composer__bar-btn--discard {
+  background: transparent;
+  border-color: rgba(237,232,245,0.1);
+  color: rgba(237,232,245,0.35);
+}
+.composer__bar-btn--discard:hover {
+  border-color: rgba(237,232,245,0.25);
+  color: rgba(237,232,245,0.6);
+}
+
+/* ── Body ── */
+.composer__body {
+  flex: 1 1 0;
+  overflow-y: auto;
+  padding: 2.5rem 3rem;
+  max-width: 860px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+.composer__body::-webkit-scrollbar { width: 4px; }
+.composer__body::-webkit-scrollbar-track { background: transparent; }
+.composer__body::-webkit-scrollbar-thumb { background: rgba(139,26,26,0.3); border-radius: 2px; }
+
+/* ── Field group ── */
+.cfield {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.cfield__label {
+  font: 700 0.6rem/1 ui-monospace, monospace;
+  letter-spacing: 0.14em;
+  color: rgba(196,146,42,0.7);
+  text-transform: uppercase;
+}
+.cfield__hint {
+  font: 0.62rem/1.4 ui-monospace, monospace;
+  color: rgba(237,232,245,0.28);
+  margin-top: -0.2rem;
+}
+.cfield__input {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(139,26,26,0.22);
+  border-radius: 5px;
+  padding: 0.65rem 0.85rem;
+  color: #ede8f5;
+  font: 0.88rem/1.5 system-ui, sans-serif;
+  outline: none;
+  transition: border-color 0.18s, background 0.18s;
+  width: 100%;
+  box-sizing: border-box;
+  resize: none;
+}
+.cfield__input:focus {
+  border-color: rgba(139,26,26,0.6);
+  background: rgba(139,26,26,0.05);
+}
+.cfield__input::placeholder { color: rgba(237,232,245,0.22); }
+
+/* Main prose textarea — the heart of the composer */
+.cfield__prose {
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(139,26,26,0.18);
+  border-radius: 6px;
+  padding: 1.1rem 1.25rem;
+  color: #ede8f5;
+  font: 0.95rem/1.8 Georgia, 'Times New Roman', serif;
+  outline: none;
+  resize: vertical;
+  min-height: 220px;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.18s, background 0.18s;
+  letter-spacing: 0.01em;
+}
+.cfield__prose:focus {
+  border-color: rgba(139,26,26,0.5);
+  background: rgba(139,26,26,0.04);
+}
+.cfield__prose::placeholder { color: rgba(237,232,245,0.18); font-style: italic; }
+
+/* Inline two-col row */
+.cfield-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+.cfield-row--3 { grid-template-columns: 1fr 1fr 1fr; }
+
+/* Status select */
+.cfield__select {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(139,26,26,0.22);
+  border-radius: 5px;
+  padding: 0.65rem 0.85rem;
+  color: #ede8f5;
+  font: 0.85rem/1 ui-monospace, monospace;
+  outline: none;
+  cursor: pointer;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.18s;
+}
+.cfield__select:focus { border-color: rgba(139,26,26,0.6); }
+.cfield__select option { background: #1a0f0a; }
+
+/* Section divider within body */
+.composer__section-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0.5rem 0 0;
+}
+.composer__section-head::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, rgba(139,26,26,0.25), transparent);
+}
+.composer__section-title {
+  font: 700 0.58rem/1 ui-monospace, monospace;
+  letter-spacing: 0.18em;
+  color: rgba(196,146,42,0.45);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Scratch-pad variant — full height, looser line spacing */
+.cfield__prose--scratch {
+  min-height: 360px;
+  font: 0.9rem/1.85 ui-monospace, 'Cascadia Code', monospace;
+}
+
+@media (max-width: 640px) {
+  .composer__body { padding: 1.25rem 1rem; gap: 1.1rem; }
+  .cfield-row, .cfield-row--3 { grid-template-columns: 1fr; }
+  .composer__bar { padding: 0.5rem 0.75rem; }
+  .composer__context-sub { display: none; }
 }

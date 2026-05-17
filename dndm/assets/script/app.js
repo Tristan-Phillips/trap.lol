@@ -341,24 +341,27 @@ document.addEventListener('DOMContentLoaded', function () {
   // ══════════════════════════════════════════════════════════
 
   var campaign = {
-    name:     'Unnamed Campaign',
-    setting:  '',
-    banner:   null,  // base64 data URL
-    scratch:  '',
-    npcs:     [],    // { id, name, role, notes }
-    lore:     {      // keyed by tab
+    name:      'Unnamed Campaign',
+    setting:   '',
+    hook:      '',   // one-line premise / inciting incident
+    tone:      '',   // mood/tone guide for the DM
+    secrets:   '',   // master secrets list (hidden from players)
+    banner:    null, // base64 data URL
+    scratch:   '',
+    npcs:      [],   // { id, name, role, location, relationship, status, portrait, notes }
+    lore:      {     // keyed by tab
       locations: [],   // { id, title, body }
       factions:  [],
       timeline:  []
     },
-    sessions: [],    // { id, date, title, summary, xp }
-    totalXP:  0,
+    sessions:  [],   // { id, date, title, summary, xp }
+    totalXP:   0,
     partyLevel: 1,
-    narrative: {     // story builder
-      nodes:         {},   // id → { id, type, title, desc, notes, tags, status, x, y, monsters, unplanned }
-      edges:         [],   // [ { id, from, to } ]
-      currentNodeId: null, // id of NOW PLAYING node
-      journey:       []    // [ { nodeId, timestamp, label } ]
+    narrative: {
+      nodes:         {},
+      edges:         [],
+      currentNodeId: null,
+      journey:       []
     }
   };
 
@@ -377,6 +380,9 @@ document.addEventListener('DOMContentLoaded', function () {
       if (!Array.isArray(campaign.sessions)) campaign.sessions = [];
       if (typeof campaign.totalXP    !== 'number') campaign.totalXP    = 0;
       if (typeof campaign.partyLevel !== 'number') campaign.partyLevel = 1;
+      if (typeof campaign.hook    !== 'string') campaign.hook    = '';
+      if (typeof campaign.tone    !== 'string') campaign.tone    = '';
+      if (typeof campaign.secrets !== 'string') campaign.secrets = '';
       // Narrative tree
       if (!campaign.narrative || typeof campaign.narrative !== 'object') campaign.narrative = {};
       if (!campaign.narrative.nodes  || typeof campaign.narrative.nodes !== 'object') campaign.narrative.nodes = {};
@@ -413,33 +419,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
   renderBanner();
 
-  // Click campaign name / setting to edit inline
+  var $metaBtn = document.getElementById('campaign-meta-btn');
+  if ($metaBtn) $metaBtn.addEventListener('click', openCampaignMeta);
+
+  // Click campaign name / setting / banner — open Composer in campaign-meta mode
   var $campName = document.getElementById('campaign-name');
   if ($campName) {
-    $campName.title = 'Click to rename';
+    $campName.title = 'Click to edit campaign details';
     $campName.style.cursor = 'pointer';
-    $campName.addEventListener('click', function() {
-      var val = prompt('Campaign name:', campaign.name);
-      if (val !== null) {
-        campaign.name = val.trim() || 'Unnamed Campaign';
-        campaignSave();
-        renderBanner();
-      }
-    });
+    $campName.addEventListener('click', openCampaignMeta);
   }
-
   var $campSetting = document.getElementById('campaign-setting');
   if ($campSetting) {
-    $campSetting.title = 'Click to edit setting';
+    $campSetting.title = 'Click to edit campaign details';
     $campSetting.style.cursor = 'pointer';
-    $campSetting.addEventListener('click', function() {
-      var val = prompt('Campaign setting:', campaign.setting);
-      if (val !== null) {
-        campaign.setting = val.trim();
-        campaignSave();
-        renderBanner();
-      }
-    });
+    $campSetting.addEventListener('click', openCampaignMeta);
   }
 
   // Banner image upload
@@ -510,6 +504,8 @@ document.addEventListener('DOMContentLoaded', function () {
       }, 600);
     });
   }
+  var $scratchExpand = document.getElementById('scratch-expand');
+  if ($scratchExpand) $scratchExpand.addEventListener('click', function() { openComposer('scratch', null); });
 
   // ── NPCs ──────────────────────────────────────────────────
 
@@ -520,13 +516,19 @@ document.addEventListener('DOMContentLoaded', function () {
       $grid.innerHTML = '<div class="npc-card npc-card--empty"><span class="npc-card__empty-text">No NPCs yet. Add your first character.</span></div>';
       return;
     }
+    var statusDot = { alive: '#4ade80', dead: '#ef4444', unknown: '#6b7280', missing: '#f59e0b', exiled: '#8b5cf6' };
     $grid.innerHTML = campaign.npcs.map(function(npc) {
+      var dot = statusDot[npc.status || 'alive'] || '#6b7280';
+      var meta = [npc.location, npc.relationship].filter(Boolean).join(' · ');
+      var excerpt = npc.notes ? npc.notes.slice(0, 120) + (npc.notes.length > 120 ? '…' : '') : '';
       return '<div class="npc-card" data-npc-id="' + esc(npc.id) + '">'
         + '<div class="npc-card__head">'
+          + '<span class="npc-card__status-dot" style="background:' + dot + '" title="' + esc(npc.status || 'alive') + '"></span>'
           + '<span class="npc-card__name">' + esc(npc.name) + '</span>'
           + '<span class="npc-card__role">' + esc(npc.role || '') + '</span>'
         + '</div>'
-        + (npc.notes ? '<p class="npc-card__notes">' + esc(npc.notes) + '</p>' : '')
+        + (meta ? '<p class="npc-card__meta">' + esc(meta) + '</p>' : '')
+        + (excerpt ? '<p class="npc-card__notes">' + esc(excerpt) + '</p>' : '')
         + '<div class="npc-card__actions">'
           + '<button class="npc-card__btn npc-edit" data-npc-id="' + esc(npc.id) + '">Edit</button>'
           + '<button class="npc-card__btn npc-card__btn--remove npc-remove" data-npc-id="' + esc(npc.id) + '">Remove</button>'
@@ -548,24 +550,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function openNPCModal(editId) {
-    var existing = editId ? campaign.npcs.find(function(n) { return n.id === editId; }) : null;
-    var name  = prompt('NPC name:', existing ? existing.name : '');
-    if (name === null) return;
-    name = name.trim();
-    if (!name) return;
-    var role  = prompt('Role / title (optional):', existing ? existing.role  : '') || '';
-    var notes = prompt('Notes (optional):', existing ? existing.notes : '') || '';
-
-    if (existing) {
-      existing.name  = name;
-      existing.role  = role.trim();
-      existing.notes = notes.trim();
-    } else {
-      campaign.npcs.push({ id: campaignUID(), name: name, role: role.trim(), notes: notes.trim() });
-    }
-    campaignSave();
-    renderNPCs();
-    renderCampaignStats();
+    openComposer('npc', editId);
   }
 
   renderNPCs();
@@ -594,7 +579,7 @@ document.addEventListener('DOMContentLoaded', function () {
             + '<button class="lore-remove" data-lore-id="' + esc(e.id) + '">✕</button>'
           + '</div>'
         + '</div>'
-        + (e.body ? '<p class="lore-entry__body">' + esc(e.body) + '</p>' : '')
+        + (e.body ? '<p class="lore-entry__body">' + esc(e.body.slice(0, 180) + (e.body.length > 180 ? '…' : '')) + '</p>' : '')
         + '</div>';
     }).join('');
 
@@ -611,23 +596,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function openLoreModal(editId) {
-    var entries  = campaign.lore[_activeTab] || [];
-    var existing = editId ? entries.find(function(e) { return e.id === editId; }) : null;
-    var title = prompt('Entry title:', existing ? existing.title : '');
-    if (title === null) return;
-    title = title.trim();
-    if (!title) return;
-    var body = prompt('Description (optional):', existing ? existing.body : '') || '';
-
-    if (existing) {
-      existing.title = title;
-      existing.body  = body.trim();
-    } else {
-      if (!campaign.lore[_activeTab]) campaign.lore[_activeTab] = [];
-      campaign.lore[_activeTab].push({ id: campaignUID(), title: title, body: body.trim() });
-    }
-    campaignSave();
-    renderLore();
+    openComposer('lore', editId);
   }
 
   renderLore();
@@ -4034,8 +4003,21 @@ document.addEventListener('DOMContentLoaded', function () {
       return;
     }
 
-    // Build context from selected node + parents
-    var contextLines = ['Campaign: ' + esc(campaign.name)];
+    // Build context from selected node + parents + campaign meta
+    var contextLines = ['Campaign: ' + campaign.name];
+    if (campaign.setting)  contextLines.push('Setting: ' + campaign.setting);
+    if (campaign.hook)     contextLines.push('Premise: ' + campaign.hook);
+    if (campaign.tone)     contextLines.push('Tone guide: ' + campaign.tone);
+    if (campaign.secrets)  contextLines.push('[DM ONLY — not known to players] ' + campaign.secrets);
+    // Active NPCs as context
+    if (campaign.npcs.length) {
+      contextLines.push('Key NPCs: ' + campaign.npcs.map(function(n) {
+        var parts = [n.name + (n.role ? ' (' + n.role + ')' : '')];
+        if (n.status && n.status !== 'alive') parts.push('status: ' + n.status);
+        if (n.relationship) parts.push('party relationship: ' + n.relationship);
+        return parts.join(', ');
+      }).join('; '));
+    }
     if (nd) {
       contextLines.push('Current node: [' + nd.type.toUpperCase() + '] ' + nd.title);
       if (nd.desc)  contextLines.push('Description: ' + nd.desc);
@@ -4377,5 +4359,220 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Clear oracle history when leaving the module (chips re-appear on fresh open)
   // — intentionally NOT clearing on module switch; history persists for the session
+
+  // ══ COMPOSER ══════════════════════════════════════════════════
+  // Full-screen distraction-free overlay for all text-heavy edits.
+  // Modes: 'campaign-meta' | 'npc' | 'lore' | 'scratch'
+
+  var _composerMode   = null;  // current mode string
+  var _composerEditId = null;  // id of entity being edited (null = new)
+  var _composerDirty  = false; // unsaved changes flag
+  var _composerSaveTimer = null;
+
+  var $composer     = document.getElementById('composer');
+  var $compBody     = document.getElementById('composer-body');
+  var $compLabel    = document.getElementById('composer-label');
+  var $compSub      = document.getElementById('composer-sub');
+  var $compIcon     = document.getElementById('composer-icon');
+  var $compWC       = document.getElementById('composer-wordcount');
+  var $compAS       = document.getElementById('composer-autosave');
+  var $compSaveBtn  = document.getElementById('composer-save');
+  var $compDiscard  = document.getElementById('composer-discard');
+
+  function composerOpen() { $composer.hidden = false; document.body.style.overflow = 'hidden'; }
+  function composerClose() { $composer.hidden = true; document.body.style.overflow = ''; }
+
+  function composerWordCount() {
+    if (!$compBody) return;
+    var texts = Array.from($compBody.querySelectorAll('textarea, input[type="text"]'))
+      .map(function(el) { return el.value; }).join(' ');
+    var words = texts.trim().split(/\s+/).filter(Boolean).length;
+    if ($compWC) $compWC.textContent = words + ' w';
+  }
+
+  function composerFlashSaved() {
+    if (!$compAS) return;
+    $compAS.textContent = 'saved';
+    clearTimeout(_composerSaveTimer);
+    _composerSaveTimer = setTimeout(function() { $compAS.textContent = ''; }, 2500);
+  }
+
+  // ── Collect values from current body fields and save ──────────
+
+  function composerCommit() {
+    if (!_composerMode) return;
+    if (_composerMode === 'campaign-meta') {
+      campaign.name    = ($compBody.querySelector('#c-name')    || {}).value || 'Unnamed Campaign';
+      campaign.setting = ($compBody.querySelector('#c-setting') || {}).value || '';
+      campaign.hook    = ($compBody.querySelector('#c-hook')    || {}).value || '';
+      campaign.tone    = ($compBody.querySelector('#c-tone')    || {}).value || '';
+      campaign.secrets = ($compBody.querySelector('#c-secrets') || {}).value || '';
+      campaignSave();
+      renderBanner();
+    } else if (_composerMode === 'npc') {
+      var name     = (($compBody.querySelector('#c-npc-name')    || {}).value || '').trim();
+      var role     = (($compBody.querySelector('#c-npc-role')    || {}).value || '').trim();
+      var location = (($compBody.querySelector('#c-npc-loc')     || {}).value || '').trim();
+      var relation = (($compBody.querySelector('#c-npc-rel')     || {}).value || '').trim();
+      var status   = (($compBody.querySelector('#c-npc-status')  || {}).value || 'alive');
+      var portrait = (($compBody.querySelector('#c-npc-portrait')|| {}).value || '').trim();
+      var notes    = (($compBody.querySelector('#c-npc-notes')   || {}).value || '').trim();
+      if (!name) return;
+      var existing = _composerEditId ? campaign.npcs.find(function(n) { return n.id === _composerEditId; }) : null;
+      if (existing) {
+        existing.name = name; existing.role = role; existing.location = location;
+        existing.relationship = relation; existing.status = status;
+        existing.portrait = portrait; existing.notes = notes;
+      } else {
+        campaign.npcs.push({ id: campaignUID(), name: name, role: role, location: location,
+          relationship: relation, status: status, portrait: portrait, notes: notes });
+      }
+      campaignSave();
+      renderNPCs();
+      renderCampaignStats();
+    } else if (_composerMode === 'lore') {
+      var title = (($compBody.querySelector('#c-lore-title') || {}).value || '').trim();
+      var body  = (($compBody.querySelector('#c-lore-body')  || {}).value || '').trim();
+      if (!title) return;
+      var tab = _activeTab;
+      if (!campaign.lore[tab]) campaign.lore[tab] = [];
+      var ex = _composerEditId ? campaign.lore[tab].find(function(e) { return e.id === _composerEditId; }) : null;
+      if (ex) { ex.title = title; ex.body = body; }
+      else { campaign.lore[tab].push({ id: campaignUID(), title: title, body: body }); }
+      campaignSave();
+      renderLore();
+    } else if (_composerMode === 'scratch') {
+      var val = ($compBody.querySelector('#c-scratch') || {}).value || '';
+      campaign.scratch = val;
+      campaignSave();
+      if ($scratch) $scratch.value = val;
+    }
+    _composerDirty = false;
+    composerFlashSaved();
+  }
+
+  // ── Build body HTML per mode ──────────────────────────────────
+
+  function openComposer(mode, editId) {
+    _composerMode   = mode;
+    _composerEditId = editId;
+    _composerDirty  = false;
+
+    if (mode === 'campaign-meta') {
+      $compIcon.textContent  = '᛭';
+      $compLabel.textContent = 'CAMPAIGN';
+      $compSub.textContent   = campaign.name;
+      $compBody.innerHTML =
+        '<div class="cfield"><label class="cfield__label" for="c-name">Campaign Name</label>'
+        + '<input class="cfield__input" id="c-name" type="text" value="' + esc(campaign.name) + '" placeholder="Name your campaign…" /></div>'
+        + '<div class="cfield"><label class="cfield__label" for="c-setting">World / Setting</label>'
+        + '<input class="cfield__input" id="c-setting" type="text" value="' + esc(campaign.setting) + '" placeholder="e.g. Forgotten Realms, homebrew…" /></div>'
+        + '<div class="cfield"><label class="cfield__label" for="c-hook">Campaign Hook</label>'
+        + '<span class="cfield__hint">One-line premise. The inciting incident. What dragged the party into this?</span>'
+        + '<input class="cfield__input" id="c-hook" type="text" value="' + esc(campaign.hook || '') + '" placeholder="An ancient seal fractures and the dead begin to walk…" /></div>'
+        + '<div class="composer__section-head"><span class="composer__section-title">Tone &amp; Direction</span></div>'
+        + '<div class="cfield"><label class="cfield__label" for="c-tone">Tone / Mood Guide</label>'
+        + '<span class="cfield__hint">Notes for yourself on atmosphere — grim, political, swashbuckling, horror, etc. The LLM reads this for Oracle suggestions.</span>'
+        + '<textarea class="cfield__prose" id="c-tone" rows="5" placeholder="This campaign should feel like a slow burn political thriller with moments of visceral horror. The players are powerful but the world is indifferent…">' + esc(campaign.tone || '') + '</textarea></div>'
+        + '<div class="composer__section-head"><span class="composer__section-title">Master Secrets</span></div>'
+        + '<div class="cfield"><label class="cfield__label" for="c-secrets">Secrets &amp; Hidden Truths</label>'
+        + '<span class="cfield__hint">What the players don\'t know yet. The LLM uses this when you ask for Oracle suggestions to give context-aware hints.</span>'
+        + '<textarea class="cfield__prose" id="c-secrets" rows="8" placeholder="The duke is actually a vampire who has ruled under different names for 400 years. The party\'s rogue is his biological descendant. The holy sword is cursed…">' + esc(campaign.secrets || '') + '</textarea></div>';
+
+    } else if (mode === 'npc') {
+      var npc = editId ? campaign.npcs.find(function(n) { return n.id === editId; }) : null;
+      $compIcon.textContent  = '◉';
+      $compLabel.textContent = 'NPC';
+      $compSub.textContent   = npc ? npc.name : 'New Character';
+      $compBody.innerHTML =
+        '<div class="cfield"><label class="cfield__label" for="c-npc-name">Name <span style="color:rgba(196,146,42,0.5);font-weight:400">*</span></label>'
+        + '<input class="cfield__input" id="c-npc-name" type="text" value="' + esc(npc ? npc.name : '') + '" placeholder="Character name…" autocomplete="off" /></div>'
+        + '<div class="cfield-row">'
+        + '<div class="cfield"><label class="cfield__label" for="c-npc-role">Role / Title</label>'
+        + '<input class="cfield__input" id="c-npc-role" type="text" value="' + esc(npc ? (npc.role || '') : '') + '" placeholder="e.g. Innkeeper, City Watch Captain…" /></div>'
+        + '<div class="cfield"><label class="cfield__label" for="c-npc-status">Status</label>'
+        + '<select class="cfield__select" id="c-npc-status">'
+        + ['alive','dead','unknown','missing','exiled'].map(function(s) {
+            return '<option value="' + s + '"' + (npc && npc.status === s ? ' selected' : (!npc && s === 'alive' ? ' selected' : '')) + '>' + s.charAt(0).toUpperCase() + s.slice(1) + '</option>';
+          }).join('')
+        + '</select></div></div>'
+        + '<div class="cfield-row">'
+        + '<div class="cfield"><label class="cfield__label" for="c-npc-loc">Location</label>'
+        + '<input class="cfield__input" id="c-npc-loc" type="text" value="' + esc(npc ? (npc.location || '') : '') + '" placeholder="e.g. Waterdeep, The Iron Fortress…" /></div>'
+        + '<div class="cfield"><label class="cfield__label" for="c-npc-rel">Relationship to Party</label>'
+        + '<input class="cfield__input" id="c-npc-rel" type="text" value="' + esc(npc ? (npc.relationship || '') : '') + '" placeholder="e.g. Ally, Rival, Employer, Unknown…" /></div></div>'
+        + '<div class="cfield"><label class="cfield__label" for="c-npc-portrait">Portrait URL</label>'
+        + '<span class="cfield__hint">Optional link to a character image.</span>'
+        + '<input class="cfield__input" id="c-npc-portrait" type="text" value="' + esc(npc ? (npc.portrait || '') : '') + '" placeholder="https://…" /></div>'
+        + '<div class="composer__section-head"><span class="composer__section-title">Notes &amp; Description</span></div>'
+        + '<div class="cfield"><label class="cfield__label" for="c-npc-notes">Full Notes</label>'
+        + '<span class="cfield__hint">Backstory, personality, secrets, mannerisms, motivations. The more detail here, the better the Oracle\'s suggestions.</span>'
+        + '<textarea class="cfield__prose" id="c-npc-notes" rows="12" placeholder="Personality: gruff on the outside but deeply loyal to those who earn his trust. Speaks in clipped sentences.\n\nBackstory: Lost his family in the Siege of Northhaven. Blames the current Baron.\n\nSecrets: Currently passing information to the Resistance. Has a ledger of the Baron\'s crimes hidden beneath the floorboards of his shop.\n\nMotivation: Revenge, and eventually, peace.">' + esc(npc ? (npc.notes || '') : '') + '</textarea></div>';
+
+    } else if (mode === 'lore') {
+      var tab     = _activeTab;
+      var tabLabel = { locations: 'LOCATION', factions: 'FACTION', timeline: 'EVENT' }[tab] || 'LORE';
+      var entry   = editId ? (campaign.lore[tab] || []).find(function(e) { return e.id === editId; }) : null;
+      $compIcon.textContent  = '◎';
+      $compLabel.textContent = tabLabel;
+      $compSub.textContent   = entry ? entry.title : 'New Entry';
+      $compBody.innerHTML =
+        '<div class="cfield"><label class="cfield__label" for="c-lore-title">Title <span style="color:rgba(196,146,42,0.5);font-weight:400">*</span></label>'
+        + '<input class="cfield__input" id="c-lore-title" type="text" value="' + esc(entry ? entry.title : '') + '" placeholder="'
+        + (tab === 'locations' ? 'e.g. The Sunken Archives, Irongate…' : tab === 'factions' ? 'e.g. The Crimson Compact, Church of Lathander…' : 'e.g. The Fall of Northhaven, Session 3 revelation…')
+        + '" autocomplete="off" /></div>'
+        + '<div class="cfield"><label class="cfield__label" for="c-lore-body">Description</label>'
+        + '<span class="cfield__hint">'
+        + (tab === 'locations' ? 'Geography, atmosphere, key NPCs present, history, rumours, hooks.' : tab === 'factions' ? 'Goals, leadership, membership, resources, relationships to other factions, secrets.' : 'What happened, who was involved, consequences, secrets revealed or deepened.')
+        + '</span>'
+        + '<textarea class="cfield__prose" id="c-lore-body" rows="18" placeholder="'
+        + (tab === 'locations' ? 'A vast underground library flooded by an ancient cataclysm. The upper stacks remain above the waterline — crumbling, salt-crusted, inhabited by warped scholars who refused to leave…' : tab === 'factions' ? 'A merchant consortium that controls the spice trade across the northern reaches. Publicly philanthropic. Secretly funding a mercenary army and acquiring ancient weapons…' : 'The party discovered that the mayor had been replaced by a doppelganger three months prior. The original is imprisoned beneath the inn. This changes the political calculus of the entire region…')
+        + '">' + esc(entry ? (entry.body || '') : '') + '</textarea></div>';
+
+    } else if (mode === 'scratch') {
+      $compIcon.textContent  = '⟁';
+      $compLabel.textContent = 'SCRATCH PAD';
+      $compSub.textContent   = 'In-session notes';
+      $compBody.innerHTML =
+        '<div class="cfield"><label class="cfield__label" for="c-scratch">Notes</label>'
+        + '<span class="cfield__hint">Freeform — loose thoughts, reminders, real-time tracking, anything.</span>'
+        + '<textarea class="cfield__prose cfield__prose--scratch" id="c-scratch" rows="24" placeholder="Party entered the vault at 18:40 game-time. They have 6 hours before the tide rises.\n\nRoller has Misty Step prepared — remember this for the ambush.\n\nNeed to introduce the spy next session.">' + esc(campaign.scratch || '') + '</textarea></div>';
+    }
+
+    composerOpen();
+    // Focus first meaningful input
+    var $first = $compBody.querySelector('textarea, input[type="text"]');
+    if ($first) setTimeout(function() { $first.focus(); }, 80);
+
+    // Live word count + dirty flag on input
+    $compBody.addEventListener('input', function() {
+      _composerDirty = true;
+      composerWordCount();
+      if ($compAS) $compAS.textContent = '';
+    });
+
+    composerWordCount();
+  }
+
+  function openCampaignMeta() { openComposer('campaign-meta', null); }
+
+  // Save / Discard buttons
+  if ($compSaveBtn)  $compSaveBtn.addEventListener('click',  function() { composerCommit(); composerClose(); });
+  if ($compDiscard)  $compDiscard.addEventListener('click',  function() {
+    if (!_composerDirty || confirm('Discard changes?')) { _composerDirty = false; composerClose(); }
+  });
+
+  // Keyboard: Ctrl+S saves, Escape discards
+  document.addEventListener('keydown', function(e) {
+    if ($composer.hidden) return;
+    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+      e.preventDefault();
+      composerCommit();
+    } else if (e.key === 'Escape') {
+      if (!_composerDirty || confirm('Discard changes?')) { _composerDirty = false; composerClose(); }
+    }
+  });
+
+  // ── Oracle key row in story panel — keep existing API key save ──
 
 }); // end DOMContentLoaded
