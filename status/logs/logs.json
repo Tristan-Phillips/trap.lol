@@ -479,6 +479,15 @@
   },
   "commits": [
     {
+      "hash": "0e12303",
+      "date": "2026-05-17",
+      "message": "fix(playground): body padding from hub styles creates gap above shell",
+      "scope": "playground/",
+      "impact": "low",
+      "files": ["glass/style/modules/neural-uplink.css"],
+      "why": "base.css sets padding: 1.5rem 2.5rem on body for the hub layout — this leaked into the playground page as a visible gap above the topbar. body:has(.playground-page) now zeros body padding/margin/max-width when the playground is mounted."
+    },
+    {
       "hash": "fae2ec9",
       "date": "2026-05-17",
       "message": "fix(playground): replace justify-content:flex-end with ::before flex spacer",
