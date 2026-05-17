@@ -15,6 +15,9 @@ let currentIdx  = 0;
 let _lb_open    = false;
 let activeFilter = "all";
 
+/* ── Selection state ── */
+const selected = new Map(); /* _id → piece */
+
 /* ── Image viewer transform state ── */
 const VIEW = {
   scale:   1,
@@ -154,6 +157,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   initPan();
   initWheel();
   initPinch();
+  initSelPanel();
 });
 
 /* ── Shard loader ── */
@@ -511,6 +515,7 @@ function makeCard(piece, idx, span = 1) {
   $card.setAttribute("role", "button");
   $card.setAttribute("aria-label", piece._id ? `View ${piece._id}` : "View artwork");
   $card.dataset.idx = idx;
+  $card.dataset.id  = piece._id || "";
 
   const $thumb = document.createElement("img");
   $thumb.className = "art-card__thumb";
@@ -544,7 +549,10 @@ function makeCard(piece, idx, span = 1) {
 
   $card.append($thumb, $medIcon, $overlay);
 
-  $card.addEventListener("click", () => openLightbox(idx));
+  $card.addEventListener("click", e => {
+    if (e.shiftKey) { e.preventDefault(); toggleSelect(piece, $card); return; }
+    openLightbox(idx);
+  });
   $card.addEventListener("keydown", e => {
     if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openLightbox(idx); }
   });
@@ -552,9 +560,8 @@ function makeCard(piece, idx, span = 1) {
   return $card;
 }
 
-/* Staggered entrance via IntersectionObserver
-   Delay is relative to batch position, not global idx, so large pulls
-   don't all fire at the same huge offset. */
+/* Immersive card entrance — staggered reveal with a chromatic shimmer sweep.
+   Each card fades + rises, then a diagonal light streak passes over it once. */
 function initCardEntrance() {
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (reduced) {
@@ -569,11 +576,22 @@ function initCardEntrance() {
     entries.forEach(entry => {
       if (!entry.isIntersecting) return;
       const $card = entry.target;
-      const delay = Number($card.dataset.batchIdx ?? 0) * 55;
-      setTimeout(() => $card.classList.add("visible"), Math.min(delay, 500));
+      const delay = Number($card.dataset.batchIdx ?? 0) * 70;
+      const capped = Math.min(delay, 560);
+
+      setTimeout(() => {
+        $card.classList.add("visible");
+        /* Inject a one-shot shimmer element that self-removes */
+        const $shimmer = document.createElement("span");
+        $shimmer.className = "art-card__shimmer";
+        $shimmer.setAttribute("aria-hidden", "true");
+        $card.appendChild($shimmer);
+        $shimmer.addEventListener("animationend", () => $shimmer.remove(), { once: true });
+      }, capped);
+
       obs.unobserve($card);
     });
-  }, { threshold: 0.05 });
+  }, { threshold: 0.04 });
 
   pending.forEach($c => {
     $c.dataset.batchIdx = batchIdx++;
@@ -1259,6 +1277,86 @@ function initParticles() {
   }
 
   raf = requestAnimationFrame(draw);
+}
+
+/* ══════════════════════════════════════════════════
+   SELECTION PANEL
+══════════════════════════════════════════════════ */
+function toggleSelect(piece, $card) {
+  const id = piece._id;
+  if (selected.has(id)) {
+    selected.delete(id);
+    $card.classList.remove("art-card--selected");
+  } else {
+    selected.set(id, piece);
+    $card.classList.add("art-card--selected");
+    /* Micro-pulse on the card to confirm selection */
+    $card.classList.add("art-card--select-pulse");
+    $card.addEventListener("animationend", () => $card.classList.remove("art-card--select-pulse"), { once: true });
+  }
+  renderSelPanel();
+}
+
+function renderSelPanel() {
+  const $panel = qs("#sel-panel");
+  const $list  = qs("#sel-list");
+  const $count = qs("#sel-count");
+
+  if (selected.size === 0) {
+    $panel.hidden = true;
+    return;
+  }
+
+  $panel.hidden = false;
+  $count.textContent = selected.size;
+  $list.innerHTML = "";
+
+  selected.forEach((piece, id) => {
+    const $li = document.createElement("li");
+    $li.className = "sel-item";
+
+    const $thumb = document.createElement("img");
+    $thumb.className = "sel-item__thumb";
+    $thumb.src = piece.thumb || piece.src || "";
+    $thumb.alt = "";
+    $thumb.loading = "lazy";
+
+    const $id = document.createElement("span");
+    $id.className = "sel-item__id";
+    $id.textContent = id;
+
+    const $rm = document.createElement("button");
+    $rm.className = "sel-item__remove";
+    $rm.setAttribute("aria-label", `Remove ${id}`);
+    $rm.innerHTML = `<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+    $rm.addEventListener("click", () => {
+      selected.delete(id);
+      /* deselect the card in the grid */
+      const $card = qs(`.art-card[data-id="${CSS.escape(id)}"]`);
+      if ($card) $card.classList.remove("art-card--selected");
+      renderSelPanel();
+    });
+
+    $li.append($thumb, $id, $rm);
+    $list.appendChild($li);
+  });
+}
+
+function initSelPanel() {
+  qs("#sel-clear").addEventListener("click", () => {
+    selected.clear();
+    qsa(".art-card--selected").forEach($c => $c.classList.remove("art-card--selected"));
+    renderSelPanel();
+  });
+
+  qs("#sel-copy").addEventListener("click", () => {
+    const ids = [...selected.keys()].join("\n");
+    navigator.clipboard.writeText(ids).then(() => {
+      const $lbl = qs("#sel-copy-label");
+      $lbl.textContent = "Copied!";
+      setTimeout(() => { $lbl.textContent = "Copy IDs"; }, 1800);
+    });
+  });
 }
 
 /* ══════════════════════════════════════════════════

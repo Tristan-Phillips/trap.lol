@@ -37,6 +37,24 @@
 
     <main id="art-grid" class="art-grid" aria-label="Art gallery"></main>
 
+    <!-- ── Selection Panel ── -->
+    <aside id="sel-panel" class="sel-panel" aria-label="Selected artworks" hidden>
+      <div class="sel-panel__header">
+        <span class="sel-panel__title">SELECTED</span>
+        <span class="sel-panel__count" id="sel-count">0</span>
+        <button class="sel-panel__clear" id="sel-clear" title="Clear selection" aria-label="Clear all">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <ul class="sel-panel__list" id="sel-list"></ul>
+      <div class="sel-panel__footer">
+        <button class="sel-panel__copy" id="sel-copy" aria-label="Copy all IDs">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+          <span id="sel-copy-label">Copy IDs</span>
+        </button>
+      </div>
+    </aside>
+
     <div id="lightbox" class="lightbox hidden" role="dialog" aria-modal="true" aria-label="Artwork viewer" aria-hidden="true">
       <div class="lightbox__inner">
         <button class="lightbox__close" id="lb-close" aria-label="Close viewer">

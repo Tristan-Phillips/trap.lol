@@ -329,7 +329,65 @@ body {
 
   /* entrance animation */
   opacity: 0;
-  translate: 0 12px;
+  translate: 0 18px;
+  filter: blur(4px) saturate(0.4);
+}
+
+.art-card.visible {
+  opacity: 1;
+  translate: 0 0;
+  filter: blur(0) saturate(1);
+  transition:
+    border-color var(--t-med),
+    box-shadow var(--t-med),
+    transform var(--t-med),
+    opacity 0.65s cubic-bezier(0.25, 0, 0, 1),
+    translate 0.65s cubic-bezier(0.25, 0, 0, 1),
+    filter 0.7s cubic-bezier(0.25, 0, 0, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .art-card { opacity: 1; translate: 0 0; filter: none; }
+}
+
+/* One-shot shimmer sweep injected by JS on reveal */
+.art-card__shimmer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  background: linear-gradient(
+    118deg,
+    transparent 15%,
+    rgba(190, 41, 236, 0.07) 30%,
+    rgba(255, 255, 255, 0.13) 42%,
+    rgba(244, 168, 48, 0.07) 54%,
+    transparent 70%
+  );
+  transform: translateX(-110%);
+  animation: card-shimmer 0.9s cubic-bezier(0.25, 0, 0, 1) forwards;
+}
+@keyframes card-shimmer {
+  from { transform: translateX(-110%); opacity: 1; }
+  to   { transform: translateX(110%);  opacity: 0.6; }
+}
+
+/* Selected state */
+.art-card--selected {
+  border-color: rgba(190, 41, 236, 0.7) !important;
+  box-shadow: 0 0 0 2px rgba(190, 41, 236, 0.35),
+              0 0 24px rgba(190, 41, 236, 0.2) !important;
+}
+.art-card--selected::before { opacity: 1 !important; }
+
+/* Shift-click confirm pulse */
+.art-card--select-pulse {
+  animation: select-pulse 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes select-pulse {
+  0%   { transform: scale(1); }
+  45%  { transform: scale(0.96); }
+  100% { transform: scale(1); }
 }
 
 /* Landscape images span 2 columns — set before DOM insertion by JS */
@@ -342,16 +400,6 @@ body {
 }
 @media (min-width: 1400px) {
   .art-card--full { grid-column: span 4; }
-}
-.art-card.visible {
-  opacity: 1;
-  translate: 0 0;
-  transition: border-color var(--t-med), box-shadow var(--t-med), transform var(--t-med),
-              opacity 0.55s var(--ease-out), translate 0.55s var(--ease-out);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .art-card { opacity: 1; translate: 0 0; }
 }
 
 .art-card::before {
@@ -1888,6 +1936,170 @@ body.lb-open .pull-zone {
   }
   .lightbox__inner.lb-panel-collapsed .lb-panel-toggle svg {
     transform: rotate(90deg);
+  }
+}
+
+/* ══ SELECTION PANEL ═══════════════════════════════════════════════════════ */
+
+.sel-panel {
+  position: fixed;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%) translateX(100%);
+  z-index: 8500;
+  width: 220px;
+  max-height: 70dvh;
+  display: flex;
+  flex-direction: column;
+  background: rgba(8, 5, 14, 0.92);
+  border: 1px solid rgba(190, 41, 236, 0.35);
+  border-right: none;
+  border-radius: 10px 0 0 10px;
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  box-shadow: -6px 0 40px rgba(190, 41, 236, 0.12),
+              -2px 0 12px rgba(0, 0, 0, 0.5);
+  transition: transform 0.38s cubic-bezier(0.25, 0, 0, 1);
+  overflow: hidden;
+}
+.sel-panel:not([hidden]) {
+  transform: translateY(-50%) translateX(0);
+}
+/* Accent hairline top */
+.sel-panel::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-warm) 60%, transparent);
+  opacity: 0.5;
+}
+
+.sel-panel__header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 0.85rem 0.6rem;
+  border-bottom: 1px solid rgba(190, 41, 236, 0.12);
+  flex-shrink: 0;
+}
+.sel-panel__title {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.2em;
+  color: var(--text-muted);
+  flex: 1;
+}
+.sel-panel__count {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--accent);
+  min-width: 1.4ch;
+  text-align: right;
+}
+.sel-panel__clear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px; height: 20px;
+  border: 1px solid rgba(190, 41, 236, 0.18);
+  border-radius: 4px;
+  background: none;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  transition: color var(--t-fast), border-color var(--t-fast);
+}
+.sel-panel__clear:hover { color: var(--accent); border-color: rgba(190, 41, 236, 0.45); }
+
+.sel-panel__list {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(190, 41, 236, 0.15) transparent;
+  padding: 0.4rem 0;
+  list-style: none;
+}
+
+.sel-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.85rem;
+  transition: background var(--t-fast);
+  animation: sel-item-in 0.28s cubic-bezier(0.25, 0, 0, 1) both;
+}
+@keyframes sel-item-in {
+  from { opacity: 0; transform: translateX(10px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.sel-item:hover { background: rgba(190, 41, 236, 0.05); }
+
+.sel-item__thumb {
+  width: 32px; height: 32px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid rgba(190, 41, 236, 0.18);
+  flex-shrink: 0;
+}
+.sel-item__id {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sel-item__remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px; height: 16px;
+  background: none;
+  border: none;
+  color: rgba(190, 41, 236, 0.3);
+  flex-shrink: 0;
+  transition: color var(--t-fast);
+  opacity: 0;
+}
+.sel-item:hover .sel-item__remove { opacity: 1; }
+.sel-item__remove:hover { color: var(--accent); }
+
+.sel-panel__footer {
+  padding: 0.55rem 0.85rem 0.65rem;
+  border-top: 1px solid rgba(190, 41, 236, 0.12);
+  flex-shrink: 0;
+}
+.sel-panel__copy {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  width: 100%;
+  padding: 0.45rem 0.75rem;
+  background: rgba(190, 41, 236, 0.08);
+  border: 1px solid rgba(190, 41, 236, 0.28);
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  transition: background var(--t-fast), box-shadow var(--t-fast), border-color var(--t-fast);
+}
+.sel-panel__copy:hover {
+  background: rgba(190, 41, 236, 0.15);
+  box-shadow: 0 0 16px rgba(190, 41, 236, 0.18);
+  border-color: rgba(190, 41, 236, 0.5);
+}
+
+/* Shift-key hint on cards — shown when hovering if shift is held */
+@media (hover: hover) and (pointer: fine) {
+  .art-card:hover::after {
+    /* existing top sweep still fires */
   }
 }
 
