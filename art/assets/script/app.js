@@ -244,6 +244,8 @@ async function renderGrid() {
   const old = qs("#pull-zone");
   if (old) old.remove();
 
+  _gridColCursor = 0;
+
   const $grid = qs("#art-grid");
   $grid.innerHTML = "";
 
@@ -255,13 +257,14 @@ async function renderGrid() {
   /* Initial load: 18 fixed, no tier, no fanfare */
   visibleCount = Math.min(18, filtered.length);
 
-  /* Probe orientations before injecting so grid placement is correct from the start */
+  /* Probe orientations before injecting so spans are set before DOM placement */
   const orientations = await Promise.all(
     filtered.slice(0, visibleCount).map(p => probeOrientation(p.thumb || p.src || ""))
   );
+  const spans = resolveSpans(orientations);
 
   const frag = document.createDocumentFragment();
-  for (let i = 0; i < visibleCount; i++) frag.appendChild(makeCard(filtered[i], i, orientations[i]));
+  for (let i = 0; i < visibleCount; i++) frag.appendChild(makeCard(filtered[i], i, spans[i]));
   $grid.appendChild(frag);
 
   if (typeof lucide !== "undefined") lucide.createIcons();
@@ -390,9 +393,10 @@ function executePull() {
       const orientations = await Promise.all(
         filtered.slice(start, end).map(p => probeOrientation(p.thumb || p.src || ""))
       );
+      const spans = resolveSpans(orientations);
 
       const frag = document.createDocumentFragment();
-      for (let i = start; i < end; i++) frag.appendChild(makeCard(filtered[i], i, orientations[i - start]));
+      for (let i = start; i < end; i++) frag.appendChild(makeCard(filtered[i], i, spans[i - start]));
       $grid.appendChild(frag);
 
       visibleCount = end;
@@ -431,10 +435,51 @@ function probeOrientation(url) {
   });
 }
 
-function makeCard(piece, idx, orientation = "portrait") {
+/* Given an array of orientations, return column spans so no cell is ever
+   left orphaned in a 3-column grid.
+   Rules:
+   - portrait  → span 1
+   - landscape → span 2
+   - if placing a landscape would leave exactly 1 orphaned col at end of row,
+     either bump it to span 3 (fills the row) or keep span 2 and track that
+     the leftover col will be filled by the next portrait via dense flow.
+   - if two consecutive landscapes would both be span 2 in a 3-col row
+     (col cursor at 1 → after first: cursor 3, only 1 left → gap),
+     promote the second to span 3 instead. */
+/* Tracks column cursor across all batches so pulls continue correctly */
+let _gridColCursor = 0;
+
+function resolveSpans(orientations, cols = 3) {
+  const spans = [];
+
+  for (let i = 0; i < orientations.length; i++) {
+    const isLand = orientations[i] === "landscape";
+    const remaining = cols - (_gridColCursor % cols);
+
+    if (!isLand) {
+      spans.push(1);
+      _gridColCursor += 1;
+    } else {
+      if (remaining === 1) {
+        /* Only 1 col left in row — promote to full-row span to avoid orphan */
+        spans.push(cols);
+        _gridColCursor += cols;
+      } else {
+        /* remaining is 2 or 3 — span 2 always fits without creating an orphan
+           (remaining 2 → fills row; remaining 3 → leaves 1 for next portrait) */
+        spans.push(2);
+        _gridColCursor += 2;
+      }
+    }
+  }
+  return spans;
+}
+
+function makeCard(piece, idx, span = 1) {
   const $card = document.createElement("div");
   $card.className = "art-card";
-  if (orientation === "landscape") $card.classList.add("art-card--landscape");
+  if (span === 2) $card.classList.add("art-card--landscape");
+  if (span === 3) $card.classList.add("art-card--full");
   $card.setAttribute("tabindex", "0");
   $card.setAttribute("role", "button");
   $card.setAttribute("aria-label", piece._id ? `View ${piece._id}` : "View artwork");
