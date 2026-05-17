@@ -479,6 +479,15 @@
   },
   "commits": [
     {
+      "hash": "fae2ec9",
+      "date": "2026-05-17",
+      "message": "fix(playground): replace justify-content:flex-end with ::before flex spacer",
+      "scope": "playground/",
+      "impact": "low",
+      "files": ["glass/style/modules/neural-uplink.css"],
+      "why": "justify-content:flex-end caused a large empty block at the top of the shell on short conversations. The ::before flex:1 spacer achieves the same bottom-anchor effect but collapses naturally as messages fill the space, so there is never a visible empty gap."
+    },
+    {
       "hash": "6f7189e",
       "date": "2026-05-17",
       "message": "fix(playground): keybar child states both visible — [hidden] overridden by display:flex",
