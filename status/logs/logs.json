@@ -479,6 +479,15 @@
   },
   "commits": [
     {
+      "hash": "2fcd08f",
+      "date": "2026-05-17",
+      "message": "fix(playground): gap above shell — body.pg-body direct selector + zero top padding",
+      "scope": "playground/",
+      "impact": "low",
+      "files": ["playground/index.html", "glass/style/modules/neural-uplink.css"],
+      "why": "body:has() selector may not fire reliably in all contexts — added body.pg-body direct class selector (matching Underdark pattern) as a fallback. Also zeroed 0.75rem top padding on .playground-page__main which was adding a visible gap between the topbar and shell."
+    },
+    {
       "hash": "0e12303",
       "date": "2026-05-17",
       "message": "fix(playground): body padding from hub styles creates gap above shell",
