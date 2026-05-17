@@ -3901,7 +3901,8 @@
 }
 
 /* Zero out the hub body padding/margin when the playground page is present */
-body:has(.playground-page) {
+body:has(.playground-page),
+body.pg-body {
   padding: 0 !important;
   max-width: 100% !important;
   margin: 0 !important;
@@ -4068,7 +4069,7 @@ body:has(.playground-page) {
   max-width: 960px;
   width: 100%;
   margin: 0 auto;
-  padding: 0.75rem 0.75rem 0;
+  padding: 0 0.75rem 0;
 }
 
 /* Shell fills all remaining height */
