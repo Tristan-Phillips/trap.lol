@@ -479,9 +479,9 @@
   },
   "commits": [
     {
-      "hash": "0000000",
+      "hash": "2c58076",
       "date": "2026-05-17",
-      "message": "fix(playground): history bug in ctx + redesign index.html with scanline ambient and elevated identity header",
+      "message": "fix(playground): history missing from ctx — silent send failure + elevated redesign",
       "scope": "playground/",
       "impact": "high",
       "files": [
@@ -3362,7 +3362,7 @@
         "requested": "2026-05-17",
         "completed": "2026-05-17",
         "description": "playground/index.html sends messages but gets no response. Root cause: history missing from ctx in llm.js. Also: redesign the playground page to match evolved site aesthetic.",
-        "notes": "Fixed in pending commit (0000000). history: state.history added to ctx in llm.js:142. HTML redesigned with scanline overlay, SVG back arrow, NEURAL UPLINK // SOVEREIGN INFERENCE identity, updated boot message.",
+        "notes": "Fixed in 2c58076. history: state.history added to ctx in llm.js:142. HTML redesigned with scanline overlay, SVG back arrow, NEURAL UPLINK // SOVEREIGN INFERENCE identity, updated boot message.",
         "files_affected": ["playground/index.html", "glass/script/modules/llm.js", "glass/style/modules/neural-uplink.css"]
       },
       {
