@@ -3329,6 +3329,7 @@ document.addEventListener('DOMContentLoaded', function () {
   var _storyTransform   = { x: 60, y: 60, scale: 1 };
   var _storyDragging    = null; // { nodeId, startX, startY, origX, origY }
   var _storyPanning     = null; // { startX, startY, origTX, origTY }
+  var _storyWiring      = null; // { fromId, $wire } — live port-drag connection
   var _storyOracleBusy  = false;
   var _storyOracleKey   = '';
 
@@ -3532,32 +3533,24 @@ document.addEventListener('DOMContentLoaded', function () {
       storyCtxShow(e.clientX, e.clientY, cx, cy);
     });
 
-    // Left-click on canvas → place active type immediately
+    // Left-click on canvas — only dismiss ctx menu; do NOT auto-place nodes
+    var _ctxWasOpen = false; // flag: context menu was open when this click fired
     $vp.addEventListener('click', function(e) {
-      // Hide context menu on any canvas click
-      storyCtxHide();
-
-      if (e.target !== $vp && e.target !== $stage &&
-          !e.target.classList.contains('story-edges') &&
-          !e.target.classList.contains('story-nodes')) return;
-      if (_storyConnectMode || _storyDeleteMode) return;
-
-      var rect  = $vp.getBoundingClientRect();
-      var cx    = (e.clientX - rect.left - _storyTransform.x) / _storyTransform.scale;
-      var cy    = (e.clientY - rect.top  - _storyTransform.y) / _storyTransform.scale;
-      var id    = storyMakeNode(_storyActiveType, cx - 90, cy - 40, {
-        title: NODE_TYPES[_storyActiveType].label + ' ' + (Object.keys(campaign.narrative.nodes).length)
-      });
-      storyRenderAll();
-      storySelectNode(id);
+      if (!$ctxMenu.hidden) {
+        _ctxWasOpen = true;
+        storyCtxHide();
+        return;
+      }
+      _ctxWasOpen = false;
     });
 
     // Dismiss context menu on Escape or outside click
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape' && $ctxMenu && !$ctxMenu.hidden) { storyCtxHide(); }
     });
+    // Outside-click dismiss is handled by the viewport click above; for other elements:
     document.addEventListener('click', function(e) {
-      if ($ctxMenu && !$ctxMenu.hidden && !$ctxMenu.contains(e.target)) storyCtxHide();
+      if ($ctxMenu && !$ctxMenu.hidden && !$ctxMenu.contains(e.target) && !$vp.contains(e.target)) storyCtxHide();
     });
 
     // ── Viewport: pan (Shift+drag or middle-click drag) ─
@@ -3568,6 +3561,43 @@ document.addEventListener('DOMContentLoaded', function () {
         $vp.classList.add('story-viewport--panning');
       }
     });
+    // ── Live wire helpers ─────────────────────────────────
+    function storyNodeOutputCenter(id) {
+      // Returns canvas-space {x, y} of the right-center port of a node
+      var nd = campaign.narrative.nodes[id];
+      if (!nd) return null;
+      return { x: nd.x + 180, y: nd.y + 44 };
+    }
+    function storyNodeInputCenter(id) {
+      // Returns canvas-space {x, y} of the left-center port
+      var nd = campaign.narrative.nodes[id];
+      if (!nd) return null;
+      return { x: nd.x, y: nd.y + 44 };
+    }
+    function storyWirePath(x1, y1, x2, y2) {
+      var cp = Math.max(80, Math.abs(x2 - x1) * 0.5);
+      return 'M' + x1 + ',' + y1
+        + ' C' + (x1 + cp) + ',' + y1
+        + ' '  + (x2 - cp) + ',' + y2
+        + ' '  + x2 + ',' + y2;
+    }
+    function storyWireScreenToCanvas(screenX, screenY) {
+      var rect = document.getElementById('story-viewport').getBoundingClientRect();
+      return {
+        x: (screenX - rect.left  - _storyTransform.x) / _storyTransform.scale,
+        y: (screenY - rect.top   - _storyTransform.y) / _storyTransform.scale
+      };
+    }
+    function storyHoveredNode(screenX, screenY) {
+      // Returns id of node under screen coords, or null
+      var els = document.elementsFromPoint(screenX, screenY);
+      for (var i = 0; i < els.length; i++) {
+        if (els[i].classList.contains('story-node')) return els[i].dataset.id;
+        if (els[i].closest && els[i].closest('.story-node')) return els[i].closest('.story-node').dataset.id;
+      }
+      return null;
+    }
+
     document.addEventListener('mousemove', function(e) {
       if (_storyPanning) {
         _storyTransform.x = _storyPanning.origTX + (e.clientX - _storyPanning.startX);
@@ -3582,6 +3612,29 @@ document.addEventListener('DOMContentLoaded', function () {
         campaign.narrative.nodes[d.nodeId].y = snap(d.origY + dy);
         storyRenderAll();
       }
+      if (_storyWiring) {
+        var w = _storyWiring;
+        var src = storyNodeOutputCenter(w.fromId);
+        if (!src) return;
+        var mouse = storyWireScreenToCanvas(e.clientX, e.clientY);
+        // Snap to input port if hovering a target node
+        var hovId = storyHoveredNode(e.clientX, e.clientY);
+        var tx = mouse.x, ty = mouse.y;
+        if (hovId && hovId !== w.fromId) {
+          var inp = storyNodeInputCenter(hovId);
+          if (inp) { tx = inp.x; ty = inp.y; }
+          document.querySelector('.story-node[data-id="' + hovId + '"]').classList.add('story-node--wire-target');
+          w.hoverTargetId = hovId;
+        } else {
+          // Remove highlight from previous target
+          if (w.hoverTargetId) {
+            var prev = document.querySelector('.story-node[data-id="' + w.hoverTargetId + '"]');
+            if (prev) prev.classList.remove('story-node--wire-target');
+            w.hoverTargetId = null;
+          }
+        }
+        w.$wire.setAttribute('d', storyWirePath(src.x, src.y, tx, ty));
+      }
     });
     document.addEventListener('mouseup', function(e) {
       if (_storyPanning) {
@@ -3591,6 +3644,31 @@ document.addEventListener('DOMContentLoaded', function () {
       if (_storyDragging) {
         storySave();
         _storyDragging = null;
+      }
+      if (_storyWiring) {
+        var w = _storyWiring;
+        // Remove live wire
+        if (w.$wire && w.$wire.parentNode) w.$wire.parentNode.removeChild(w.$wire);
+        // Remove target highlight
+        document.querySelectorAll('.story-node--wire-target').forEach(function(el) { el.classList.remove('story-node--wire-target'); });
+
+        var targetId = w.hoverTargetId || storyHoveredNode(e.clientX, e.clientY);
+        if (targetId && targetId !== w.fromId) {
+          // Connect to existing node
+          storyMakeEdge(w.fromId, targetId);
+          storyRenderEdges();
+          storySelectNode(targetId);
+        } else if (!targetId) {
+          // Dropped on empty canvas — create a new node and connect
+          var pos = storyWireScreenToCanvas(e.clientX, e.clientY);
+          var newId = storyMakeNode(_storyActiveType, pos.x - 90, pos.y - 44, {
+            title: NODE_TYPES[_storyActiveType].label + ' ' + (Object.keys(campaign.narrative.nodes).length)
+          });
+          storyMakeEdge(w.fromId, newId);
+          storyRenderAll();
+          storySelectNode(newId);
+        }
+        _storyWiring = null;
       }
     });
 
@@ -3836,9 +3914,22 @@ document.addEventListener('DOMContentLoaded', function () {
     // Status classes
     storyApplyNodeClasses(el, nd);
 
-    // Drag
+    // Port-out: drag-to-wire
     el.addEventListener('mousedown', function(e) {
       if (e.button !== 0) return;
+      var portOut = e.target.classList.contains('story-node__port-out');
+      if (portOut) {
+        e.stopPropagation();
+        e.preventDefault();
+        // Create live wire path in the edges SVG
+        var $svg = document.getElementById('story-edges');
+        var $wire = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        $wire.setAttribute('class', 'story-edge story-edge--wiring');
+        $wire.setAttribute('d', 'M0,0');
+        if ($svg) $svg.appendChild($wire);
+        _storyWiring = { fromId: id, $wire: $wire, hoverTargetId: null };
+        return;
+      }
       if (_storyDeleteMode) { e.stopPropagation(); storyDeleteNode(id); return; }
       if (_storyConnectMode) {
         e.stopPropagation();
@@ -3854,7 +3945,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         return;
       }
-      // Normal drag
+      // Normal drag (body only — not port)
       e.stopPropagation();
       _storyDragging = { nodeId: id, startX: e.clientX, startY: e.clientY, origX: nd.x, origY: nd.y };
     });
@@ -3876,13 +3967,14 @@ document.addEventListener('DOMContentLoaded', function () {
                     : nd.status === 'altered' ? '⚡ Altered'
                     : '';
     var statusClass = nd.status !== 'planned' ? 'story-node__status story-node__status--' + nd.status : '';
-    return '<div class="story-node__drag" title="Drag to move">⠿</div>'
+    return '<div class="story-node__port-in"  title="Input"></div>'
+      + '<div class="story-node__port-out" title="Drag to connect"></div>'
+      + '<div class="story-node__drag" title="Drag to move">⠿</div>'
       + '<div class="story-node__badge">' + nt.icon + ' ' + nt.label + '</div>'
       + '<div class="story-node__title">' + esc(nd.title) + '</div>'
       + (nd.desc ? '<div class="story-node__desc">' + esc(nd.desc) + '</div>' : '')
       + (statusLabel ? '<div class="' + statusClass + '">' + statusLabel + '</div>' : '')
-      + (nd.tags ? '<div class="story-node__tags">' + esc(nd.tags).split(',').map(function(t){return '<span class="story-node__tag">' + esc(t.trim()) + '</span>';}).join('') + '</div>' : '')
-      + '<div class="story-node__port" title="Drag from port to connect"></div>';
+      + (nd.tags ? '<div class="story-node__tags">' + esc(nd.tags).split(',').map(function(t){return '<span class="story-node__tag">' + esc(t.trim()) + '</span>';}).join('') + '</div>' : '');
   }
 
   function storyApplyNodeClasses(el, nd) {
@@ -3909,6 +4001,8 @@ document.addEventListener('DOMContentLoaded', function () {
   function storyRenderEdges() {
     var $svg = document.getElementById('story-edges');
     if (!$svg) return;
+    // Preserve live wire during drag
+    var $liveWire = _storyWiring ? _storyWiring.$wire : null;
     $svg.innerHTML = '';
 
     // Arrow marker definition
@@ -3924,15 +4018,15 @@ document.addEventListener('DOMContentLoaded', function () {
       var toNd   = campaign.narrative.nodes[edge.to];
       if (!fromNd || !toNd) return;
 
-      // Connect from bottom-centre of source to top-centre of target
-      var x1 = fromNd.x + 90;
-      var y1 = fromNd.y + 90; // approx bottom of node
-      var x2 = toNd.x  + 90;
-      var y2 = toNd.y;
+      // Right-center output → Left-center input (n8n style horizontal bezier)
+      var x1 = fromNd.x + 180;
+      var y1 = fromNd.y + 44;
+      var x2 = toNd.x;
+      var y2 = toNd.y + 44;
 
-      // Cubic bezier
-      var cpY = (y1 + y2) / 2;
-      var d = 'M' + x1 + ',' + y1 + ' C' + x1 + ',' + cpY + ' ' + x2 + ',' + cpY + ' ' + x2 + ',' + y2;
+      // Horizontal cubic bezier with adaptive control-point distance
+      var cp = Math.max(80, Math.abs(x2 - x1) * 0.5);
+      var d  = 'M' + x1 + ',' + y1 + ' C' + (x1 + cp) + ',' + y1 + ' ' + (x2 - cp) + ',' + y2 + ' ' + x2 + ',' + y2;
 
       var isPlayed = fromNd.status === 'played' || fromNd.status === 'altered';
       var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
@@ -3958,6 +4052,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
       $svg.appendChild(path);
     });
+
+    // Re-append live wire on top so it's not buried under edge paths
+    if ($liveWire) $svg.appendChild($liveWire);
   }
 
   // ── Select / deselect ─────────────────────────────────────

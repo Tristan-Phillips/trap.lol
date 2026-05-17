@@ -3650,22 +3650,55 @@ a { color: inherit; text-decoration: none; }
 .story-node:hover .story-node__drag { opacity: 1; }
 
 /* Connect port dots */
-.story-node__port {
+/* ── Node ports (n8n style) ───────────────────────────────── */
+.story-node__port-in,
+.story-node__port-out {
   position: absolute;
-  bottom: -6px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 50%;
   width: 12px;
   height: 12px;
   border-radius: 50%;
+  border: 2px solid rgba(196,146,42,0.35);
   background: var(--bg-raised);
-  border: 2px solid rgba(196,146,42,0.3);
-  transition: border-color var(--transition), transform var(--transition);
-  display: none;
+  transition: border-color 0.15s, transform 0.15s, opacity 0.15s, box-shadow 0.15s;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 10;
 }
-.story-node:hover .story-node__port { display: block; }
-.story-node__port:hover { border-color: var(--gold-hi); transform: translateX(-50%) scale(1.3); }
-.story-viewport--connect .story-node__port { display: block; }
+.story-node__port-in  { left:  -7px; transform: translateY(-50%); cursor: default; }
+.story-node__port-out { right: -7px; transform: translateY(-50%); cursor: crosshair; pointer-events: auto; }
+
+.story-node:hover .story-node__port-in,
+.story-node:hover .story-node__port-out { opacity: 1; }
+
+.story-node__port-out:hover {
+  border-color: var(--gold-hi);
+  box-shadow: 0 0 0 3px rgba(196,146,42,0.2);
+  transform: translateY(-50%) scale(1.25);
+}
+/* Input port — highlight when wire is being dragged over this node */
+.story-node--wire-target .story-node__port-in {
+  opacity: 1;
+  border-color: var(--gold-hi);
+  box-shadow: 0 0 0 4px rgba(196,146,42,0.25);
+  transform: translateY(-50%) scale(1.3);
+}
+.story-node--wire-target {
+  border-color: rgba(196,146,42,0.6) !important;
+  box-shadow: 0 0 0 2px rgba(196,146,42,0.3), 0 4px 24px rgba(0,0,0,0.7) !important;
+}
+
+/* Live wire being drawn */
+.story-edge--wiring {
+  stroke: rgba(196,146,42,0.7);
+  stroke-width: 2;
+  stroke-dasharray: 6 4;
+  animation: wire-march 0.4s linear infinite;
+  pointer-events: none;
+}
+@keyframes wire-march {
+  to { stroke-dashoffset: -10; }
+}
 
 /* ── Right panel ──────────────────────────────────────────── */
 .story-panel {
