@@ -3366,6 +3366,7 @@ document.addEventListener('DOMContentLoaded', function () {
       tags:      opts.tags  || '',
       status:    opts.status || 'planned',
       monsters:  opts.monsters || '',
+      color:     opts.color  || '',
       unplanned: opts.unplanned || false,
       x:         snap(x),
       y:         snap(y)
@@ -3391,16 +3392,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     storyNd = campaign.narrative;
 
-    // Oracle key
+    // Oracle key — read from Settings (no dedicated row in story panel)
     _storyOracleKey = localStorage.getItem('dndm_ng_key') || '';
-    var $keyInp = document.getElementById('story-oracle-key');
-    var $keySave= document.getElementById('story-oracle-key-save');
-    if ($keyInp) $keyInp.value = _storyOracleKey;
-    if ($keySave) $keySave.addEventListener('click', function() {
-      _storyOracleKey = $keyInp ? $keyInp.value.trim() : '';
-      localStorage.setItem('dndm_ng_key', _storyOracleKey);
-      showToast('Oracle key saved');
-    });
 
     // Viewport setup
     var $vp    = document.getElementById('story-viewport');
@@ -3478,8 +3471,72 @@ document.addEventListener('DOMContentLoaded', function () {
       storyRenderJourney();
     });
 
-    // ── Viewport: click to place node ───────────────────
+    // ── Context menu ─────────────────────────────────────
+    var $ctxMenu = document.getElementById('story-ctx-menu');
+    var _ctxPos  = { cx: 0, cy: 0 }; // canvas-space coords where menu was opened
+
+    function storyCtxHide() {
+      if ($ctxMenu) $ctxMenu.hidden = true;
+    }
+
+    function storyCtxShow(screenX, screenY, canvasX, canvasY) {
+      if (!$ctxMenu) return;
+      _ctxPos.cx = canvasX;
+      _ctxPos.cy = canvasY;
+
+      $ctxMenu.innerHTML = Object.keys(NODE_TYPES).map(function(key) {
+        var nt = NODE_TYPES[key];
+        return '<button class="story-ctx-menu__item" data-type="' + key + '" role="menuitem">'
+          + '<span class="story-ctx-menu__icon">' + nt.icon + '</span>'
+          + '<span class="story-ctx-menu__label">' + nt.label + '</span>'
+          + '</button>';
+      }).join('');
+
+      // Position — clamp to viewport
+      $ctxMenu.hidden = false;
+      var mw = $ctxMenu.offsetWidth  || 160;
+      var mh = $ctxMenu.offsetHeight || 200;
+      var vw = window.innerWidth;
+      var vh = window.innerHeight;
+      $ctxMenu.style.left = Math.min(screenX, vw - mw - 8) + 'px';
+      $ctxMenu.style.top  = Math.min(screenY, vh - mh - 8) + 'px';
+
+      $ctxMenu.querySelectorAll('.story-ctx-menu__item').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var type = btn.dataset.type;
+          var id   = storyMakeNode(type, _ctxPos.cx - 90, _ctxPos.cy - 40, {
+            title: NODE_TYPES[type].label + ' ' + (Object.keys(campaign.narrative.nodes).length)
+          });
+          // Switch toolbar to this type
+          _storyActiveType = type;
+          document.querySelectorAll('.story-type-btn').forEach(function(b) {
+            b.classList.toggle('story-type-btn--active', b.dataset.type === type);
+          });
+          storyRenderAll();
+          storySelectNode(id);
+          storyCtxHide();
+        });
+      });
+    }
+
+    // Right-click on canvas → context menu
+    $vp.addEventListener('contextmenu', function(e) {
+      if (e.target !== $vp && e.target !== $stage &&
+          !e.target.classList.contains('story-edges') &&
+          !e.target.classList.contains('story-nodes')) return;
+      e.preventDefault();
+      if (_storyConnectMode || _storyDeleteMode) return;
+      var rect = $vp.getBoundingClientRect();
+      var cx   = (e.clientX - rect.left - _storyTransform.x) / _storyTransform.scale;
+      var cy   = (e.clientY - rect.top  - _storyTransform.y) / _storyTransform.scale;
+      storyCtxShow(e.clientX, e.clientY, cx, cy);
+    });
+
+    // Left-click on canvas → place active type immediately
     $vp.addEventListener('click', function(e) {
+      // Hide context menu on any canvas click
+      storyCtxHide();
+
       if (e.target !== $vp && e.target !== $stage &&
           !e.target.classList.contains('story-edges') &&
           !e.target.classList.contains('story-nodes')) return;
@@ -3493,6 +3550,14 @@ document.addEventListener('DOMContentLoaded', function () {
       });
       storyRenderAll();
       storySelectNode(id);
+    });
+
+    // Dismiss context menu on Escape or outside click
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && $ctxMenu && !$ctxMenu.hidden) { storyCtxHide(); }
+    });
+    document.addEventListener('click', function(e) {
+      if ($ctxMenu && !$ctxMenu.hidden && !$ctxMenu.contains(e.target)) storyCtxHide();
     });
 
     // ── Viewport: pan (Shift+drag or middle-click drag) ─
@@ -3765,6 +3830,7 @@ document.addEventListener('DOMContentLoaded', function () {
     el.dataset.id = id;
     el.style.left = nd.x + 'px';
     el.style.top  = nd.y + 'px';
+    el.style.setProperty('--node-custom-color', nd.color || '');
     el.innerHTML  = storyNodeInnerHTML(nd);
 
     // Status classes
@@ -3835,6 +3901,7 @@ document.addEventListener('DOMContentLoaded', function () {
     el.className = 'story-node story-node--' + nd.type;
     el.style.left = nd.x + 'px';
     el.style.top  = nd.y + 'px';
+    el.style.setProperty('--node-custom-color', nd.color || '');
     el.innerHTML  = storyNodeInnerHTML(nd);
     storyApplyNodeClasses(el, nd);
   }
@@ -3925,6 +3992,43 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('story-editor-tags').value    = nd.tags;
     document.getElementById('story-editor-status').value  = nd.status;
     document.getElementById('story-editor-monsters').value= nd.monsters || '';
+
+    // Color swatches
+    var NODE_COLORS = [
+      { label: 'Default',  value: '' },
+      { label: 'Crimson',  value: '#8B1A1A' },
+      { label: 'Amber',    value: '#C4922A' },
+      { label: 'Violet',   value: '#7B3FA0' },
+      { label: 'Teal',     value: '#1A7A6E' },
+      { label: 'Steel',    value: '#2E5A8E' },
+      { label: 'Sage',     value: '#3D7A4E' },
+      { label: 'Rose',     value: '#8E3D5A' },
+      { label: 'Slate',    value: '#4A5568' },
+    ];
+    var $swatches = document.getElementById('story-editor-swatches');
+    if ($swatches) {
+      $swatches.innerHTML = NODE_COLORS.map(function(c) {
+        var active = (nd.color || '') === c.value;
+        return '<button class="story-swatch' + (active ? ' story-swatch--active' : '') + '"'
+          + ' data-color="' + c.value + '" title="' + c.label + '"'
+          + ' style="' + (c.value ? 'background:' + c.value + ';border-color:' + c.value + ';' : '') + '">'
+          + (c.value ? '' : '×')
+          + '</button>';
+      }).join('');
+      $swatches.addEventListener('click', function(e) {
+        var btn = e.target.closest('.story-swatch');
+        if (!btn || !_storySelectedId) return;
+        var nd2 = campaign.narrative.nodes[_storySelectedId];
+        if (!nd2) return;
+        nd2.color = btn.dataset.color;
+        storySave();
+        storyRenderNodeEl(_storySelectedId);
+        // Update active state
+        $swatches.querySelectorAll('.story-swatch').forEach(function(b) {
+          b.classList.toggle('story-swatch--active', b.dataset.color === nd2.color);
+        });
+      });
+    }
 
     // Show/hide combat encounter row
     var $monRow = document.getElementById('story-editor-monster-row');
