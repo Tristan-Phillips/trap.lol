@@ -479,7 +479,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "91008bb",
       "date": "2026-05-17",
       "message": "feat(grimoire): full D&D character sheet modal — sections, ability boxes, new fields",
       "scope": "dndm/",
