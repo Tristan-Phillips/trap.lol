@@ -479,6 +479,15 @@
   },
   "commits": [
     {
+      "hash": "a801bb2",
+      "date": "2026-05-17",
+      "message": "fix(playground): anchor messages to bottom of shell (justify-content: flex-end)",
+      "scope": "playground/",
+      "impact": "low",
+      "files": ["glass/style/modules/neural-uplink.css"],
+      "why": "Messages were top-aligned in the flex-1 container, leaving dead space below the last message. justify-content: flex-end on the playground-scoped messages rule pins content to the bottom so the shell reads like a terminal — messages grow upward as conversation fills."
+    },
+    {
       "hash": "2c58076",
       "date": "2026-05-17",
       "message": "fix(playground): history missing from ctx — silent send failure + elevated redesign",
