@@ -479,6 +479,15 @@
   },
   "commits": [
     {
+      "hash": "a51b0c5",
+      "date": "2026-05-17",
+      "message": "feat(grimoire): edge click popup — crow's foot heads, label, delete",
+      "scope": "dndm/",
+      "impact": "medium",
+      "files": ["dndm/assets/script/app.js", "dndm/assets/style/style.css", "dndm/index.html"],
+      "why": "Edges were uneditable after creation — no way to change notation style or delete without entering delete mode. Popup gives direct access: 7 crow's foot head options per end (arrow/many/one/zero-or-one/zero-or-many/one-or-many/none), optional label shown on the bezier, delete button. Full SVG marker defs in defs block with mirrored start-marker variants."
+    },
+    {
       "hash": "a4352b7",
       "date": "2026-05-17",
       "message": "feat(grimoire): port drag-to-connect, horizontal bezier edges, ctx menu click-to-dismiss",
