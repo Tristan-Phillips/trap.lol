@@ -4085,18 +4085,11 @@ body.pg-body {
     0 -4px 40px rgba(190, 41, 236, 0.06);
 }
 
-/* Messages fill the shell — spacer pushes content to bottom on short conversations */
+/* Messages fill the shell */
 .playground-page__main .llm-shell__messages {
   flex: 1;
   min-height: 0;
   max-height: none;
-}
-
-/* Auto-spacer: fills the gap above messages when conversation is short,
-   collapses to nothing once messages exceed the viewport height */
-.playground-page__main .llm-shell__messages::before {
-  content: '';
-  flex: 1;
 }
 
 /* ── Playground-scoped component overrides ────
