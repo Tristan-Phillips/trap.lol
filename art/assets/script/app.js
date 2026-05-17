@@ -396,22 +396,46 @@ function executePull() {
       const spans = resolveSpans(orientations);
 
       const frag = document.createDocumentFragment();
+
+      /* Divider spans the full grid width, sits above the new batch */
+      const $divider = makePullDivider(tier, end);
+      frag.appendChild($divider);
+
       for (let i = start; i < end; i++) frag.appendChild(makeCard(filtered[i], i, spans[i - start]));
       $grid.appendChild(frag);
 
       visibleCount = end;
       pullCount++;
 
+      if (typeof lucide !== "undefined") lucide.createIcons({ nodes: [$divider] });
       if (typeof lucide !== "undefined") lucide.createIcons();
       initCardEntrance();
 
-      /* Scroll so first new card just enters view */
-      const firstNew = $grid.querySelectorAll(".art-card")[start];
-      if (firstNew) firstNew.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      /* Scroll to the divider so the user sees the boundary clearly */
+      $divider.scrollIntoView({ behavior: "smooth", block: "start" });
 
       renderPullZone();
     }, 480);
   }, 780);
+}
+
+/* Pull divider — spans full grid row, shows tier color + running total */
+function makePullDivider(tier, totalRevealed) {
+  const $div = document.createElement("div");
+  $div.className = `pull-divider pull-divider--${tier.id}`;
+  $div.setAttribute("aria-hidden", "true");
+  $div.style.setProperty("--divider-color", tier.color);
+
+  $div.innerHTML = `
+    <span class="pull-divider__line pull-divider__line--left"></span>
+    <span class="pull-divider__label">
+      <span class="pull-divider__icon"><i data-lucide="${tier.icon}"></i></span>
+      <span class="pull-divider__count">${totalRevealed}</span>
+      <span class="pull-divider__word">fragments</span>
+    </span>
+    <span class="pull-divider__line pull-divider__line--right"></span>
+  `;
+  return $div;
 }
 
 /* Brief colour flash behind the zone on reveal */
@@ -435,20 +459,13 @@ function probeOrientation(url) {
   });
 }
 
-/* Given an array of orientations, return column spans so no cell is ever
-   left orphaned in a 3-column grid.
-   Rules:
-   - portrait  → span 1
-   - landscape → span 2
-   - if placing a landscape would leave exactly 1 orphaned col at end of row,
-     either bump it to span 3 (fills the row) or keep span 2 and track that
-     the leftover col will be filled by the next portrait via dense flow.
-   - if two consecutive landscapes would both be span 2 in a 3-col row
-     (col cursor at 1 → after first: cursor 3, only 1 left → gap),
-     promote the second to span 3 instead. */
 /* Tracks column cursor across all batches so pulls continue correctly */
 let _gridColCursor = 0;
 
+/* Given an array of orientations, return column spans (1, 2, or 3).
+   A landscape card gets span 2 only if the very next card is portrait
+   (which will fill the leftover 1-col slot). Otherwise it is promoted to
+   span 3 (full row) so no cell is ever left empty. */
 function resolveSpans(orientations, cols = 3) {
   const spans = [];
 
@@ -461,14 +478,24 @@ function resolveSpans(orientations, cols = 3) {
       _gridColCursor += 1;
     } else {
       if (remaining === 1) {
-        /* Only 1 col left in row — promote to full-row span to avoid orphan */
+        /* Only 1 col left — must start fresh row; promote to full row */
         spans.push(cols);
         _gridColCursor += cols;
-      } else {
-        /* remaining is 2 or 3 — span 2 always fits without creating an orphan
-           (remaining 2 → fills row; remaining 3 → leaves 1 for next portrait) */
+      } else if (remaining === 2) {
+        /* Exactly 2 left — span 2 fills the row perfectly, no orphan possible */
         spans.push(2);
         _gridColCursor += 2;
+      } else {
+        /* remaining === 3 (start of row): span 2 leaves 1 col — only safe if
+           the next card is portrait to fill it. Otherwise promote to span 3. */
+        const nextIsPortrait = orientations[i + 1] === "portrait";
+        if (nextIsPortrait) {
+          spans.push(2);
+          _gridColCursor += 2;
+        } else {
+          spans.push(cols);
+          _gridColCursor += cols;
+        }
       }
     }
   }
