@@ -161,8 +161,11 @@ document.addEventListener('DOMContentLoaded', function () {
     }, 480);
   }
 
-  $btnNew.addEventListener('click',  dismissWelcome);
-  $btnLoad.addEventListener('click', dismissWelcome);
+  $btnNew.addEventListener('click', function() {
+    openComposer('new-campaign', null);
+  });
+
+  $btnLoad.addEventListener('click', openLoadModal);
 
   // ── Navigation ─────────────────────────────────────────────
 
@@ -285,7 +288,10 @@ document.addEventListener('DOMContentLoaded', function () {
     document.body.style.overflow = '';
   }
 
-  document.getElementById('settings-btn').addEventListener('click',   function() { openModal($settingsModal); });
+  document.getElementById('settings-btn').addEventListener('click', function() {
+    if ($apiKeyInput) $apiKeyInput.value = localStorage.getItem('dndm_ng_key') || '';
+    openModal($settingsModal);
+  });
   document.getElementById('settings-modal-close').addEventListener('click', function() { closeModal($settingsModal); });
 
   var ALL_MODALS = [$sessionModal, $settingsModal,
@@ -365,9 +371,45 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   };
 
+  // ── Slot helpers ───────────────────────────────────────────
+  var _activeCampaignId = localStorage.getItem('dndm_active_campaign') || null;
+
+  function slotsRead() {
+    try { return JSON.parse(localStorage.getItem('dndm_campaigns') || '[]'); } catch(e) { return []; }
+  }
+  function slotsWrite(list) {
+    try { localStorage.setItem('dndm_campaigns', JSON.stringify(list)); } catch(e) {}
+  }
+  function slotKey(id)      { return 'dndm_campaign_' + id; }
+  function slotPartyKey(id) { return 'dndm_party_'    + id; }
+
+  function slotUpsertIndex(id, c) {
+    var list = slotsRead();
+    var idx  = list.findIndex(function(s) { return s.id === id; });
+    var entry = { id: id, name: c.name || 'Unnamed', setting: c.setting || '', hook: c.hook || '', date: new Date().toISOString() };
+    if (idx >= 0) list[idx] = entry; else list.unshift(entry);
+    slotsWrite(list);
+  }
+
+  // One-time migration of legacy single-slot data
+  (function migrateLegacy() {
+    var legacy = localStorage.getItem('dndm_campaign');
+    if (!legacy) return;
+    if (slotsRead().length > 0) return; // already migrated
+    try {
+      var data = JSON.parse(legacy);
+      var id   = 'camp_legacy';
+      localStorage.setItem(slotKey(id), legacy);
+      slotUpsertIndex(id, data);
+      _activeCampaignId = id;
+      localStorage.setItem('dndm_active_campaign', id);
+    } catch(e) {}
+  })();
+
   function campaignLoad() {
     try {
-      var raw = localStorage.getItem('dndm_campaign');
+      var key = _activeCampaignId ? slotKey(_activeCampaignId) : null;
+      var raw = key ? localStorage.getItem(key) : null;
       if (!raw) return;
       var saved = JSON.parse(raw);
       Object.assign(campaign, saved);
@@ -393,7 +435,11 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function campaignSave() {
-    try { localStorage.setItem('dndm_campaign', JSON.stringify(campaign)); } catch(e) {}
+    if (!_activeCampaignId) return;
+    try {
+      localStorage.setItem(slotKey(_activeCampaignId), JSON.stringify(campaign));
+      slotUpsertIndex(_activeCampaignId, campaign);
+    } catch(e) {}
   }
 
   function campaignUID() {
@@ -1714,7 +1760,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
   function partyLoad() {
     try {
-      var raw = localStorage.getItem('dndm_party');
+      var pKey = _activeCampaignId ? slotPartyKey(_activeCampaignId) : 'dndm_party';
+      var raw  = localStorage.getItem(pKey);
+      if (!raw && _activeCampaignId === 'camp_legacy') raw = localStorage.getItem('dndm_party');
       if (!raw) raw = sessionStorage.getItem('dndm_party'); // migrate old data
       if (raw) party = JSON.parse(raw);
       // Ensure every PC has the full sheet fields
@@ -1745,7 +1793,8 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function partySave() {
-    try { localStorage.setItem('dndm_party', JSON.stringify(party)); } catch(e) {}
+    var pKey = _activeCampaignId ? slotPartyKey(_activeCampaignId) : 'dndm_party';
+    try { localStorage.setItem(pKey, JSON.stringify(party)); } catch(e) {}
   }
 
   function partyUid() {
@@ -3523,7 +3572,22 @@ document.addEventListener('DOMContentLoaded', function () {
       if (campaign.narrative.currentNodeId === _storySelectedId) storyRenderNow();
     }
 
-    [$titleInp, $descInp, $notesInp, $tagsInp].forEach(function(el) {
+    // Desc and notes open the full Composer instead of inline editing
+    [$descInp, $notesInp].forEach(function(el) {
+      if (!el) return;
+      el.addEventListener('mousedown', function(e) {
+        e.preventDefault();
+        if (_storySelectedId) openComposer('story-node', _storySelectedId);
+      });
+      el.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          if (_storySelectedId) openComposer('story-node', _storySelectedId);
+        }
+      });
+    });
+
+    [$titleInp, $tagsInp].forEach(function(el) {
       if (el) el.addEventListener('input', storySyncEditor);
     });
     if ($statusSel) $statusSel.addEventListener('change', function() {
@@ -4180,8 +4244,10 @@ document.addEventListener('DOMContentLoaded', function () {
   var _oracleKey   = localStorage.getItem('dndm_ng_key') || '';
   if ($apiKeyInput) $apiKeyInput.value = _oracleKey;
   if ($apiKeySave) $apiKeySave.addEventListener('click', function() {
-    _oracleKey = ($apiKeyInput ? $apiKeyInput.value.trim() : '');
-    localStorage.setItem('dndm_ng_key', _oracleKey);
+    var k = ($apiKeyInput ? $apiKeyInput.value.trim() : '');
+    _oracleKey = k;
+    _storyOracleKey = k;
+    localStorage.setItem('dndm_ng_key', k);
     showToast('API key saved');
   });
 
@@ -4401,7 +4467,37 @@ document.addEventListener('DOMContentLoaded', function () {
 
   function composerCommit() {
     if (!_composerMode) return;
-    if (_composerMode === 'campaign-meta') {
+    if (_composerMode === 'new-campaign') {
+      var ncName = (($compBody.querySelector('#c-name') || {}).value || '').trim() || 'Unnamed Campaign';
+      var ncId   = 'camp_' + Date.now();
+      campaign.name     = ncName;
+      campaign.setting  = ($compBody.querySelector('#c-setting') || {}).value || '';
+      campaign.hook     = ($compBody.querySelector('#c-hook')    || {}).value || '';
+      campaign.tone     = ($compBody.querySelector('#c-tone')    || {}).value || '';
+      campaign.secrets  = ($compBody.querySelector('#c-secrets') || {}).value || '';
+      campaign.banner   = null;
+      campaign.scratch  = '';
+      campaign.npcs     = [];
+      campaign.lore     = { locations: [], factions: [], timeline: [] };
+      campaign.sessions = [];
+      campaign.totalXP  = 0;
+      campaign.partyLevel = 1;
+      campaign.narrative = { nodes: {}, edges: [], currentNodeId: null, journey: [] };
+      party = [];
+      _activeCampaignId = ncId;
+      localStorage.setItem('dndm_active_campaign', ncId);
+      campaignSave();
+      partySave();
+      _composerDirty = false;
+      composerClose();
+      renderBanner();
+      renderCampaignStats();
+      renderNPCs();
+      renderLore();
+      renderSessions();
+      dismissWelcome();
+      return;
+    } else if (_composerMode === 'campaign-meta') {
       campaign.name    = ($compBody.querySelector('#c-name')    || {}).value || 'Unnamed Campaign';
       campaign.setting = ($compBody.querySelector('#c-setting') || {}).value || '';
       campaign.hook    = ($compBody.querySelector('#c-hook')    || {}).value || '';
@@ -4446,6 +4542,24 @@ document.addEventListener('DOMContentLoaded', function () {
       campaign.scratch = val;
       campaignSave();
       if ($scratch) $scratch.value = val;
+    } else if (_composerMode === 'story-node') {
+      var snId = _composerEditId;
+      var snNd = snId ? campaign.narrative.nodes[snId] : null;
+      if (snNd) {
+        snNd.title = (($compBody.querySelector('#c-sn-title') || {}).value || '').trim() || snNd.title;
+        snNd.desc  = ($compBody.querySelector('#c-sn-desc')  || {}).value || '';
+        snNd.notes = ($compBody.querySelector('#c-sn-notes') || {}).value || '';
+        // Sync back to the inline editor panel if it's open for the same node
+        var $ed = document.getElementById('story-editor-desc');
+        var $en = document.getElementById('story-editor-notes');
+        var $et = document.getElementById('story-editor-title');
+        if ($ed) $ed.value = snNd.desc;
+        if ($en) $en.value = snNd.notes;
+        if ($et) $et.value = snNd.title;
+        storySave();
+        if (typeof storyRenderNodeEl === 'function') storyRenderNodeEl(snId);
+        if (campaign.narrative.currentNodeId === snId && typeof storyRenderNow === 'function') storyRenderNow();
+      }
     }
     _composerDirty = false;
     composerFlashSaved();
@@ -4458,7 +4572,28 @@ document.addEventListener('DOMContentLoaded', function () {
     _composerEditId = editId;
     _composerDirty  = false;
 
-    if (mode === 'campaign-meta') {
+    if (mode === 'new-campaign') {
+      $compIcon.textContent  = '᛭';
+      $compLabel.textContent = 'NEW CAMPAIGN';
+      $compSub.textContent   = 'Create campaign';
+      $compBody.innerHTML =
+        '<div class="cfield"><label class="cfield__label" for="c-name">Campaign Name <span style="color:rgba(196,146,42,0.5);font-weight:400">*</span></label>'
+        + '<input class="cfield__input" id="c-name" type="text" value="" placeholder="Name your campaign…" autocomplete="off" /></div>'
+        + '<div class="cfield"><label class="cfield__label" for="c-setting">World / Setting</label>'
+        + '<input class="cfield__input" id="c-setting" type="text" value="" placeholder="e.g. Forgotten Realms, homebrew…" /></div>'
+        + '<div class="cfield"><label class="cfield__label" for="c-hook">Campaign Hook</label>'
+        + '<span class="cfield__hint">One-line premise. The inciting incident. What dragged the party into this?</span>'
+        + '<input class="cfield__input" id="c-hook" type="text" value="" placeholder="An ancient seal fractures and the dead begin to walk…" /></div>'
+        + '<div class="composer__section-head"><span class="composer__section-title">Tone &amp; Direction</span></div>'
+        + '<div class="cfield"><label class="cfield__label" for="c-tone">Tone / Mood Guide</label>'
+        + '<span class="cfield__hint">Notes for yourself on atmosphere — grim, political, swashbuckling, horror, etc. The LLM reads this for Oracle suggestions.</span>'
+        + '<textarea class="cfield__prose" id="c-tone" rows="5" placeholder="This campaign should feel like a slow burn political thriller with moments of visceral horror…"></textarea></div>'
+        + '<div class="composer__section-head"><span class="composer__section-title">Master Secrets</span></div>'
+        + '<div class="cfield"><label class="cfield__label" for="c-secrets">Secrets &amp; Hidden Truths</label>'
+        + '<span class="cfield__hint">What the players don\'t know yet. The LLM uses this for context-aware Oracle suggestions.</span>'
+        + '<textarea class="cfield__prose" id="c-secrets" rows="8" placeholder="The duke is actually a vampire who has ruled under different names for 400 years…"></textarea></div>';
+
+    } else if (mode === 'campaign-meta') {
       $compIcon.textContent  = '᛭';
       $compLabel.textContent = 'CAMPAIGN';
       $compSub.textContent   = campaign.name;
@@ -4537,7 +4672,27 @@ document.addEventListener('DOMContentLoaded', function () {
         '<div class="cfield"><label class="cfield__label" for="c-scratch">Notes</label>'
         + '<span class="cfield__hint">Freeform — loose thoughts, reminders, real-time tracking, anything.</span>'
         + '<textarea class="cfield__prose cfield__prose--scratch" id="c-scratch" rows="24" placeholder="Party entered the vault at 18:40 game-time. They have 6 hours before the tide rises.\n\nRoller has Misty Step prepared — remember this for the ambush.\n\nNeed to introduce the spy next session.">' + esc(campaign.scratch || '') + '</textarea></div>';
+
+    } else if (mode === 'story-node') {
+      var nd = editId ? campaign.narrative.nodes[editId] : null;
+      var ndTypeKey = nd ? nd.type : 'scene';
+      var ndTypeLabel = (typeof NODE_TYPES !== 'undefined' && NODE_TYPES[ndTypeKey]) ? NODE_TYPES[ndTypeKey].label : ndTypeKey.toUpperCase();
+      $compIcon.textContent  = '◈';
+      $compLabel.textContent = ndTypeLabel;
+      $compSub.textContent   = nd ? (nd.title || 'Unnamed Node') : 'Node';
+      $compBody.innerHTML =
+        '<div class="cfield"><label class="cfield__label" for="c-sn-title">Node Title</label>'
+        + '<input class="cfield__input" id="c-sn-title" type="text" value="' + esc(nd ? (nd.title || '') : '') + '" placeholder="Scene name…" autocomplete="off" /></div>'
+        + '<div class="cfield"><label class="cfield__label" for="c-sn-desc">Description</label>'
+        + '<span class="cfield__hint">What happens here. What the DM needs to know — setup, atmosphere, objectives, triggers.</span>'
+        + '<textarea class="cfield__prose" id="c-sn-desc" rows="12" placeholder="The party arrives at the crumbling monastery at dusk. The gates are sealed — they can hear chanting from within. Three cultists are visible on the battlements. The real threat is the cleric inside who has already begun the ritual…">' + esc(nd ? (nd.desc || '') : '') + '</textarea></div>'
+        + '<div class="cfield"><label class="cfield__label" for="c-sn-notes">Private DM Notes</label>'
+        + '<span class="cfield__hint">Read-aloud text, boxed text, contingencies, secrets, things to remember at the table.</span>'
+        + '<textarea class="cfield__prose" id="c-sn-notes" rows="10" placeholder="Read-aloud: \'As you crest the hill, the ancient monastery looms against a blood-red sky…\'\n\nIf the party alerts the cultists early — trigger reinforcements from the north wing.\nIf the rogue scouts ahead — they find the hidden passage at DC 15 Perception.\nThe cleric is Mira Ashford — the party met her in Session 2 under a false name.">' + esc(nd ? (nd.notes || '') : '') + '</textarea></div>';
     }
+
+    // Contextual Save label
+    if ($compSaveBtn) $compSaveBtn.textContent = (mode === 'new-campaign') ? 'Create Campaign' : 'Save';
 
     composerOpen();
     // Focus first meaningful input
@@ -4572,6 +4727,146 @@ document.addEventListener('DOMContentLoaded', function () {
       if (!_composerDirty || confirm('Discard changes?')) { _composerDirty = false; composerClose(); }
     }
   });
+
+  // ── Load Campaign Modal ──────────────────────────────────────
+
+  var $loadModal       = document.getElementById('load-campaign-modal');
+  var $loadModalList   = document.getElementById('load-modal-list');
+  var $loadImportFile  = document.getElementById('load-import-file');
+  var $loadModalCancel = document.getElementById('load-modal-cancel');
+
+  if ($loadModal) ALL_MODALS.push($loadModal);
+
+  function renderLoadModalSlots() {
+    var slots = slotsRead();
+    if (!slots.length) {
+      $loadModalList.innerHTML = '<p class="load-modal__empty">No saved campaigns found.<br>Create a new one or import a file.</p>';
+      return;
+    }
+    $loadModalList.innerHTML = slots.map(function(s) {
+      var date = s.date ? new Date(s.date).toLocaleDateString(undefined, { year:'numeric', month:'short', day:'numeric' }) : '';
+      return '<div class="load-slot" data-slot-id="' + esc(s.id) + '">'
+        + '<div class="load-slot__body">'
+        + '<span class="load-slot__name">' + esc(s.name || 'Unnamed Campaign') + '</span>'
+        + (s.setting ? '<span class="load-slot__setting">' + esc(s.setting) + '</span>' : '')
+        + (s.hook    ? '<span class="load-slot__hook">'    + esc(s.hook)    + '</span>' : '')
+        + '</div>'
+        + '<div class="load-slot__meta">'
+        + (date ? '<span class="load-slot__date">' + esc(date) + '</span>' : '')
+        + '<button class="load-slot__delete" data-delete-id="' + esc(s.id) + '" title="Delete campaign" aria-label="Delete ' + esc(s.name) + '">✕</button>'
+        + '</div>'
+        + '</div>';
+    }).join('');
+  }
+
+  function loadSlotById(id) {
+    try {
+      var raw = localStorage.getItem(slotKey(id));
+      if (!raw) { showToast('Campaign data not found'); return; }
+      var data = JSON.parse(raw);
+      Object.assign(campaign, data);
+      // Normalise fields same as campaignLoad
+      if (!campaign.lore || typeof campaign.lore !== 'object') campaign.lore = {};
+      ['locations','factions','timeline'].forEach(function(k) {
+        if (!Array.isArray(campaign.lore[k])) campaign.lore[k] = [];
+      });
+      if (!Array.isArray(campaign.npcs))     campaign.npcs     = [];
+      if (!Array.isArray(campaign.sessions))  campaign.sessions  = [];
+      if (typeof campaign.totalXP    !== 'number') campaign.totalXP    = 0;
+      if (typeof campaign.partyLevel !== 'number') campaign.partyLevel = 1;
+      if (typeof campaign.hook    !== 'string') campaign.hook    = '';
+      if (typeof campaign.tone    !== 'string') campaign.tone    = '';
+      if (typeof campaign.secrets !== 'string') campaign.secrets = '';
+      if (!campaign.narrative || typeof campaign.narrative !== 'object') campaign.narrative = {};
+      if (!campaign.narrative.nodes  || typeof campaign.narrative.nodes !== 'object') campaign.narrative.nodes = {};
+      if (!Array.isArray(campaign.narrative.edges))  campaign.narrative.edges  = [];
+      if (!Array.isArray(campaign.narrative.journey)) campaign.narrative.journey = [];
+      if (typeof campaign.narrative.currentNodeId === 'undefined') campaign.narrative.currentNodeId = null;
+
+      // Load party
+      try {
+        var pRaw = localStorage.getItem(slotPartyKey(id));
+        if (!pRaw && id === 'camp_legacy') pRaw = localStorage.getItem('dndm_party');
+        party = pRaw ? JSON.parse(pRaw) : [];
+      } catch(e) { party = []; }
+
+      _activeCampaignId = id;
+      localStorage.setItem('dndm_active_campaign', id);
+
+      renderBanner();
+      renderCampaignStats();
+      renderNPCs();
+      renderLore();
+      renderSessions();
+      renderParty();
+      closeModal($loadModal);
+      dismissWelcome();
+    } catch(err) {
+      showToast('Failed to load campaign: ' + err.message);
+    }
+  }
+
+  function openLoadModal() {
+    renderLoadModalSlots();
+    openModal($loadModal);
+  }
+
+  if ($loadModal) {
+    // Slot click — load or delete
+    $loadModalList.addEventListener('click', function(e) {
+      // Delete button
+      var delBtn = e.target.closest('[data-delete-id]');
+      if (delBtn) {
+        e.stopPropagation();
+        var delId = delBtn.dataset.deleteId;
+        var slots = slotsRead();
+        var name  = (slots.find(function(s) { return s.id === delId; }) || {}).name || 'this campaign';
+        if (!confirm('Delete "' + name + '"? This cannot be undone.')) return;
+        slotsWrite(slots.filter(function(s) { return s.id !== delId; }));
+        try { localStorage.removeItem(slotKey(delId)); } catch(e) {}
+        try { localStorage.removeItem(slotPartyKey(delId)); } catch(e) {}
+        if (_activeCampaignId === delId) {
+          _activeCampaignId = null;
+          localStorage.removeItem('dndm_active_campaign');
+        }
+        renderLoadModalSlots();
+        return;
+      }
+      // Slot card click — load
+      var card = e.target.closest('[data-slot-id]');
+      if (card) loadSlotById(card.dataset.slotId);
+    });
+
+    // Import from file
+    if ($loadImportFile) {
+      $loadImportFile.addEventListener('change', function() {
+        var file = $loadImportFile.files[0];
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function(ev) {
+          try {
+            var data = JSON.parse(ev.target.result);
+            if (!data.campaign) { showToast('Invalid file — no campaign data found'); return; }
+            var id = 'camp_' + Date.now();
+            localStorage.setItem(slotKey(id), JSON.stringify(data.campaign));
+            if (data.party) localStorage.setItem(slotPartyKey(id), JSON.stringify(data.party));
+            slotUpsertIndex(id, data.campaign);
+            showToast('Campaign imported — loading…');
+            loadSlotById(id);
+          } catch(err) {
+            showToast('Import failed: ' + err.message);
+          }
+        };
+        reader.readAsText(file);
+        $loadImportFile.value = '';
+      });
+    }
+
+    // Cancel
+    if ($loadModalCancel) {
+      $loadModalCancel.addEventListener('click', function() { closeModal($loadModal); });
+    }
+  }
 
   // ── Oracle key row in story panel — keep existing API key save ──
 

@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.3.57",
+    "schema_version": "1.3.58",
     "last_updated": "2026-05-17",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -478,6 +478,15 @@
     ]
   },
   "commits": [
+    {
+      "hash": "PENDING",
+      "date": "2026-05-17",
+      "message": "feat(grimoire): campaign slot system, Load Campaign modal, API key in Settings",
+      "scope": "dndm/",
+      "impact": "high",
+      "files": ["dndm/assets/script/app.js", "dndm/assets/style/style.css", "dndm/index.html", "status/logs/logs.json"],
+      "why": "New Campaign and Load Campaign buttons were functionally identical — both just dismissed the welcome screen with the same single localStorage slot. Slot system adds named multi-campaign support: dndm_campaigns index array, per-slot keys dndm_campaign_<id>, legacy auto-migration, new campaign prompt, Load Campaign modal listing all saved slots with delete and import-from-file. API key restored to Settings modal per user feedback."
+    },
     {
       "hash": "a3f84b1",
       "date": "2026-05-17",
@@ -2151,6 +2160,24 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-17",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Grimoire continuation session (resumed from compaction). Implemented campaign slot system: multi-campaign named saves with dndm_campaigns index array and per-slot dndm_campaign_<id> keys; auto-migration of legacy single-slot data to 'camp_legacy'. New Campaign replaced prompt() with Composer — a new 'new-campaign' mode that collects name, setting, hook, tone, and secrets upfront before creating the slot. Load Campaign modal lists all saved slots as clickable cards (name, setting, hook preview, date, delete button) plus Import from File (JSON) and Cancel. API key restored to Settings modal per user feedback. Story node desc/notes textareas converted to Composer triggers — clicking opens a 'story-node' Composer mode with full-height prose textareas; inline textareas now show preview value as readonly with cursor:pointer affordance and expand hint labels. storySyncEditor title and tags still update inline; Composer commits write back to the node object and sync inline fields. Save button label becomes 'Create Campaign' in new-campaign mode.",
+      "decisions": [
+        "New Campaign uses Composer instead of prompt() — gathers full campaign context (name/setting/hook/tone/secrets) at creation time, not just a name",
+        "Load Campaign modal uses card-per-slot layout with delete-in-place; slot index stored separately from slot data for fast listing without parsing every campaign",
+        "Story node textareas use mousedown+preventDefault to intercept click before browser focuses the readonly field, preventing cursor flash",
+        "story-node Composer mode syncs inline editor panel values on save so sidebar stays consistent without a full re-render",
+        "API key was deliberately restored to Settings after initial removal — user confirmed they want it in both Settings and Oracle panel"
+      ],
+      "rules_reinforced": [
+        "prompt() is never acceptable in Grimoire — Composer is the answer for any text-heavy new-entity flow",
+        "readonly textarea + mousedown intercept is the correct pattern for 'click to expand' fields that show preview text",
+        "All slot index entries must store name/setting/hook/date for the Load modal to render without parsing per-campaign data"
+      ]
+    },
     {
       "date": "2026-05-17",
       "agent": "Claude Sonnet 4.6",

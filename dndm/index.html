@@ -328,8 +328,14 @@
                   <button class="story-editor__close" id="story-editor-close" title="Deselect">✕</button>
                 </div>
                 <input class="story-editor__title" id="story-editor-title" placeholder="Node title…" maxlength="80" />
-                <textarea class="story-editor__desc" id="story-editor-desc" placeholder="Description — what happens here, what the DM needs to know…" rows="4"></textarea>
-                <textarea class="story-editor__notes" id="story-editor-notes" placeholder="Private notes — read-aloud text, boxed text, contingencies…" rows="3"></textarea>
+                <div class="story-editor__expand-wrap">
+                  <div class="story-editor__expand-label">DESCRIPTION <span class="story-editor__expand-hint">⤢ click to expand</span></div>
+                  <textarea class="story-editor__desc" id="story-editor-desc" placeholder="Click to write in Composer…" rows="3" title="Click to open full-screen editor" readonly></textarea>
+                </div>
+                <div class="story-editor__expand-wrap">
+                  <div class="story-editor__expand-label">PRIVATE NOTES <span class="story-editor__expand-hint">⤢ click to expand</span></div>
+                  <textarea class="story-editor__notes" id="story-editor-notes" placeholder="Click to write in Composer…" rows="2" title="Click to open full-screen editor" readonly></textarea>
+                </div>
                 <div class="story-editor__tags-row">
                   <label class="story-editor__field-label">TAGS</label>
                   <input class="story-editor__tags-inp" id="story-editor-tags" placeholder="e.g. Act 2, Boss, Optional…" />
@@ -789,6 +795,12 @@
       <h2 class="modal__title" id="settings-modal-title">SETTINGS</h2>
       <div class="settings-grid">
         <div class="settings-section">
+          <h3 class="settings-section__title">Oracle API Key</h3>
+          <p class="settings-section__hint">nano-gpt key — used by the Oracle for story suggestions.</p>
+          <input class="modal__input" type="password" id="api-key-input" placeholder="nano-gpt API key…" autocomplete="off" />
+          <button class="modal__btn modal__btn--secondary" id="api-key-save">Save Key</button>
+        </div>
+        <div class="settings-section">
           <h3 class="settings-section__title">Campaign Data</h3>
           <button class="modal__btn modal__btn--secondary" id="export-btn">Export Campaign JSON</button>
           <button class="modal__btn modal__btn--secondary" id="import-btn">Import Campaign JSON</button>
@@ -804,6 +816,24 @@
       </div>
       <div class="modal__actions">
         <button class="modal__btn modal__btn--primary" id="settings-modal-close">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Load Campaign Modal ───────────────────────────────── -->
+  <div id="load-campaign-modal" class="modal-overlay" hidden aria-modal="true" role="dialog" aria-labelledby="load-modal-title">
+    <div class="modal modal--wide">
+      <div class="modal__rune" aria-hidden="true">᛭</div>
+      <h2 class="modal__title" id="load-modal-title">LOAD CAMPAIGN</h2>
+      <div class="load-modal__list" id="load-modal-list">
+        <!-- slots injected by JS -->
+      </div>
+      <div class="load-modal__footer">
+        <label class="modal__btn modal__btn--secondary load-modal__import-label" title="Import a saved .json file">
+          ↑ Import from File
+          <input type="file" id="load-import-file" accept=".json" hidden />
+        </label>
+        <button class="modal__btn modal__btn--secondary" id="load-modal-cancel">Cancel</button>
       </div>
     </div>
   </div>
