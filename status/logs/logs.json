@@ -479,7 +479,7 @@
   },
   "commits": [
     {
-      "hash": "PENDING",
+      "hash": "b6f836a",
       "date": "2026-05-17",
       "message": "fix(art): respect natural image aspect ratios in gallery grid — landscape cards no longer forced to portrait",
       "scope": "art/",
