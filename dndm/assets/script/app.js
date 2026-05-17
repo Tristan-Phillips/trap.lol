@@ -1156,10 +1156,18 @@ document.addEventListener('DOMContentLoaded', function () {
       return val ? '<p class="stat-block__stat-line"><strong>' + label + '</strong> ' + esc(val) + '</p>' : '';
     }
 
+    var tokenImg = m.hasToken
+      ? '<img class="stat-block__token" src="https://5e.tools/img/bestiary/tokens/' + encodeURIComponent(m.source) + '/' + esc(m.name.replace(/"/g, '')) + '.webp" alt="Token for ' + esc(m.name) + '" onerror="this.style.display=\'none\'" />'
+      : '';
+
     $panel.innerHTML =
       '<div class="stat-block">'
+      + '<div class="stat-block__header">'
+      + tokenImg
+      + '<div class="stat-block__title-group">'
       + '<div class="stat-block__name">' + esc(m.name) + '</div>'
       + '<div class="stat-block__meta">' + esc((m.size || '') + ' ' + fmtType(m.type) + ', ' + align) + '</div>'
+      + '</div></div>'
       + '<hr class="stat-block__divider">'
       + propLine('Armor Class', ac)
       + propLine('Hit Points', hp)
