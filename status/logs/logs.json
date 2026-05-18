@@ -583,7 +583,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "4099b62",
       "date": "2026-05-18",
       "message": "feat(archive): archive/ directory + uplink-sentinel, status/ hub page",
       "scope": "archive/, status/",

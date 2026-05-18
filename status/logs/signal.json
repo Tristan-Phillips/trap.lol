@@ -52,7 +52,7 @@
       "closed": "2026-05-18",
       "closed_by": "trap",
       "description": "Create archive/index.html roster page for retired artifacts. Move Uplink Sentinel from status/index.html to archive/uplink-sentinel/index.html as a static preserved artifact (no probing, unknown status for dynamic nodes). Replace status/index.html with a minimal extensible hub page listing sub-sections under status/.",
-      "notes": "Committed as pending. archive/uplink-sentinel/ is a static snapshot — no polling, no countdown. status/index.html is now a plain hub with no JS, extensible as new sub-pages are added.",
+      "notes": "Committed as 4099b62. archive/uplink-sentinel/ is a static snapshot — no polling, no countdown. status/index.html is now a plain hub with no JS, extensible as new sub-pages are added.",
       "tags": ["archive", "status", "structure"],
       "files_affected": [
         "archive/index.html",
