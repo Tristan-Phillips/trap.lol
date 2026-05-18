@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.19",
+    "schema_version": "1.5.20",
     "last_updated": "2026-05-18",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -597,6 +597,18 @@
     ]
   },
   "commits": [
+    {
+      "hash": "1f3d4bf",
+      "date": "2026-05-18",
+      "message": "fix(underdark): action chips inject as hidden directives, not textarea text",
+      "scope": "playground/underdark/",
+      "impact": "medium",
+      "files": [
+        "playground/underdark/script/main.js",
+        "playground/underdark/script/modules/ui.js"
+      ],
+      "why": "Action chips (Continue, Narrate, Slow burn, etc.) were writing their parenthesised directive text directly into the textarea as visible user input — they should inject silently as pendingReinject so the chat input stays clean. Only the [OOC] chip legitimately edits the textarea."
+    },
     {
       "hash": "366deed",
       "date": "2026-05-18",
@@ -2728,6 +2740,16 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-18",
+      "agent": "Claude Sonnet 4.6",
+      "type": "bug_fix",
+      "summary": "Fixed action chips writing visible text into the textarea. Pacing/Voice/Format chips were appending their directive strings (e.g. '(Continue the scene from where we left off.)') as visible textarea content — they now inject silently via pendingReinject on the textarea dataset, identical to how tone directives and scene inject work. The [OOC] chip is the sole exception and still edits the textarea directly since the user must fill in its content.",
+      "decisions": [
+        "OOC chip stays as textarea-editor — it's a scaffolded template the user completes, not a hidden directive.",
+        "All other action chips now follow the pendingReinject path: directive stored in $ta.dataset.pendingReinject, consumed and cleared at submit time alongside tone and scene inject."
+      ]
+    },
     {
       "date": "2026-05-18",
       "agent": "Claude Sonnet 4.6",
