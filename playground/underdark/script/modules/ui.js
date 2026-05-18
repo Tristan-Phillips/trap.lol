@@ -8027,27 +8027,30 @@ export function initUI() {
     //             Overlord (scene narration calls)
 
     // ── Actions tab — chips that append text to the textarea ─────────────────
-    const DIR_ACTIONS = [
-        { grp: 'Pacing', key: 'continue',   label: '▶ Continue',      text: '(Continue the scene from where we left off.)',                              overlordBeat: true  },
-        { grp: 'Pacing', key: 'narrate',     label: '✦ Narrate',        text: '(Narrate what happens next — no dialogue, pure action and atmosphere.)',    overlordBeat: true  },
-        { grp: 'Pacing', key: 'slow',        label: '◌ Slow burn',      text: '(Slow the pace. Linger on the moment — the senses, the silence, the feeling.)', overlordBeat: false },
-        { grp: 'Pacing', key: 'timeskip',    label: '⟳ Time skip',      text: '(Move the story forward in time to the next meaningful moment.)',            overlordBeat: true  },
-        { grp: 'Voice',  key: 'introspect',  label: '⦿ Inner world',    text: '(Open up. Share your inner thoughts, fears, or desires in this moment.)'   },
-        { grp: 'Voice',  key: 'describe',    label: '◈ Describe scene', text: '(Paint the scene — what do you see, hear, feel, smell right now?)'          },
-        { grp: 'Voice',  key: 'react',       label: '⊞ React to me',    text: '(React honestly to what I just said or did. How does it land for you?)'     },
-        { grp: 'Voice',  key: 'whisper',     label: '⌁ Whisper',        text: '(Lean in and whisper something — something you wouldn\'t say out loud.)'   },
-        { grp: 'Format', key: 'shorter',     label: '← Shorter',        text: '(Keep your response brief and punchy this time.)'                           },
-        { grp: 'Format', key: 'longer',      label: '→ Longer',         text: '(Give me a longer, more detailed response this time — paint it fully.)'     },
-        { grp: 'Format', key: 'poetry',      label: '~ Prose',          text: '(Write this next beat as lyrical prose — slow, sensory, literary.)'         },
-        { grp: 'Format', key: 'ooc',         label: '[ OOC ]',          text: '[OOC: ]'                                                                    },
+    // DIRECT tab — chips that fire the character immediately (no player message needed).
+    // Each triggers triggerBotResponse with the directive as reinject.
+    // overlordBeat: true = also fire an Overlord beat before the character responds.
+    const DIR_DIRECT = [
+        { grp: 'Scene',   key: 'continue',   label: '▶ Continue',       directive: '(Continue the scene from where we left off.)',                                   overlordBeat: true  },
+        { grp: 'Scene',   key: 'timeskip',   label: '⟳ Time skip',       directive: '(Move the story forward in time to the next meaningful moment.)',               overlordBeat: true  },
+        { grp: 'Scene',   key: 'slow',       label: '◌ Linger',          directive: '(Slow the pace. Linger on this moment — the senses, the silence, the feeling.)', overlordBeat: false },
+        { grp: 'Voice',   key: 'introspect', label: '⦿ Inner world',     directive: '(Open up your inner world right now. Thoughts, fears, desires — let them surface.)' },
+        { grp: 'Voice',   key: 'describe',   label: '◈ Describe',        directive: '(Paint the scene around you — what do you see, hear, feel, smell right now?)'   },
+        { grp: 'Voice',   key: 'react',      label: '⊞ React',           directive: '(React honestly to what just happened. How does it land for you?)'              },
+        { grp: 'Voice',   key: 'whisper',    label: '⌁ Whisper',         directive: '(Lean in close and whisper something — something you would not say out loud.)'  },
+        { grp: 'Shape',   key: 'shorter',    label: '← Shorter',         directive: '(Keep this response brief and punchy.)'                                         },
+        { grp: 'Shape',   key: 'longer',     label: '→ Longer',          directive: '(Give a longer, fully painted response this time.)'                             },
+        { grp: 'Shape',   key: 'prose',      label: '~ Prose',           directive: '(Write this beat as lyrical prose — slow, sensory, literary.)'                  },
     ];
-    const _dirActionLookup = {};
-    DIR_ACTIONS.forEach(e => { _dirActionLookup[e.key] = e; });
+    const _dirDirectLookup = {};
+    DIR_DIRECT.forEach(e => { _dirDirectLookup[e.key] = e; });
 
-    // ── Tone tab — persistent toggles that inject a directive each turn ───────
-    // Only one tone active at a time. Cleared when clicked again or manually.
-    // The directive is injected as pendingReinject at send time (same path as
-    // the reinject tray) so it arrives right before the model generates.
+    // Keep _dirActionLookup as an alias so the pendingBeat path in the submit handler still works
+    const _dirActionLookup = _dirDirectLookup;
+
+    // ── Mood tab — persistent toggles that colour every response until cleared ──
+    // Only one mood active at a time. Cleared when clicked again or via Clear btn.
+    // The directive is injected as pendingReinject at send time.
     let _activeTone = null; // { key, directive }
     const DIR_TONES = [
         { key: 'lust',      label: '♦ Lust',       directive: '[TONE SHIFT — ACTIVE]\nLet desire bleed through every word. {C}\'s body language, word choice, and attention are tuned to attraction right now. Let it show — in what they notice, what they linger on, what they don\'t say.' },
@@ -8077,59 +8080,47 @@ export function initUI() {
 
     // ── Build Director panel HTML ─────────────────────────────────────────────
     function _buildDirectorPanel($bar) {
-        // Group DIR_ACTIONS by grp label
-        const actionGroups = {};
-        DIR_ACTIONS.forEach(e => {
-            if (!actionGroups[e.grp]) actionGroups[e.grp] = [];
-            actionGroups[e.grp].push(e);
+        // Group DIR_DIRECT by grp label
+        const directGroups = {};
+        DIR_DIRECT.forEach(e => {
+            if (!directGroups[e.grp]) directGroups[e.grp] = [];
+            directGroups[e.grp].push(e);
         });
 
-        const actionsHtml = Object.entries(actionGroups).map(([grp, entries]) =>
+        const directHtml = Object.entries(directGroups).map(([grp, entries]) =>
             `<div class="dir-group">
                 <span class="dir-group__label">${esc(grp)}</span>
-                ${entries.map(e => `<button class="dir-btn dir-btn--action" data-dir-action="${esc(e.key)}">${esc(e.label)}</button>`).join('')}
+                ${entries.map(e => `<button class="dir-btn dir-btn--direct" data-dir-direct="${esc(e.key)}">${esc(e.label)}</button>`).join('')}
             </div>`
         ).join('');
 
-        const toneHtml = DIR_TONES.map(t =>
+        const moodHtml = DIR_TONES.map(t =>
             `<button class="dir-btn dir-btn--tone${_activeTone?.key === t.key ? ' dir-btn--tone-active' : ''}" data-dir-tone="${esc(t.key)}" title="${esc(t.directive.split('\n')[1] || '')}">${esc(t.label)}</button>`
         ).join('');
 
-        const overlordHtml = DIR_OVERLORD.map(o =>
+        const worldHtml = DIR_OVERLORD.map(o =>
             `<button class="dir-btn dir-btn--overlord" data-dir-overlord="${esc(o.key)}" title="${esc(o.title)}">${esc(o.label)}</button>`
         ).join('');
 
-        // AI suggested replies section
-        const aiHtml = _aiQRCache?.replies?.length
-            ? `<div class="dir-tab-pane dir-tab-pane--suggestions" data-tab-pane="suggestions">
-                <div class="dir-group dir-group--ai">
-                    <span class="dir-group__label dir-group__label--ai"><i data-lucide="sparkles"></i> Suggested</span>
-                    ${_aiQRCache.replies.map((r, i) =>
-                        `<button class="dir-btn dir-btn--ai" data-qr-ai="${i}">${esc(r)}</button>`
-                    ).join('')}
-                </div>
-               </div>`
-            : '';
-
         $bar.innerHTML = `
             <div class="dir-tabs">
-                <button class="dir-tab dir-tab--active" data-tab="actions">Actions</button>
-                <button class="dir-tab" data-tab="tone">Tone${_activeTone ? ' ●' : ''}</button>
-                <button class="dir-tab" data-tab="overlord">Overlord</button>
+                <button class="dir-tab dir-tab--active" data-tab="direct">Direct</button>
+                <button class="dir-tab" data-tab="mood">Mood${_activeTone ? ' ●' : ''}</button>
+                <button class="dir-tab" data-tab="world">World</button>
             </div>
-            <div class="dir-tab-pane dir-tab-pane--active" data-tab-pane="actions">
-                ${actionsHtml}
-                ${aiHtml}
+            <div class="dir-tab-pane dir-tab-pane--active" data-tab-pane="direct">
+                <div class="dir-direct-hint">Fires the character immediately — no message needed.</div>
+                ${directHtml}
             </div>
-            <div class="dir-tab-pane" data-tab-pane="tone">
+            <div class="dir-tab-pane" data-tab-pane="mood">
                 <div class="dir-group dir-group--tone">
-                    ${toneHtml}
+                    ${moodHtml}
                 </div>
                 ${_activeTone ? `<div class="dir-tone-active-row"><span class="dir-tone-active-label">Active: ${esc(_dirToneLookup[_activeTone.key]?.label || '')}</span><button class="dir-tone-clear" id="dir-tone-clear-btn">× Clear</button></div>` : ''}
             </div>
-            <div class="dir-tab-pane" data-tab-pane="overlord">
+            <div class="dir-tab-pane" data-tab-pane="world">
                 <div class="dir-group">
-                    ${overlordHtml}
+                    ${worldHtml}
                 </div>
             </div>`;
         lucideRefresh($bar);
@@ -8155,33 +8146,27 @@ export function initUI() {
         qsa('.dir-tab-pane', $bar).forEach(p => p.classList.toggle('dir-tab-pane--active', p.dataset.tabPane === target));
     });
 
-    // ── Action chip click ─────────────────────────────────────────────────────
-    document.addEventListener('click', e => {
-        const btn = e.target.closest('.dir-btn--action');
+    // ── Direct chip click — fires character immediately, no player message ──────
+    document.addEventListener('click', async e => {
+        const btn = e.target.closest('.dir-btn--direct');
         if (!btn) return;
-        const entry = _dirActionLookup[btn.dataset.dirAction];
+        const entry = _dirDirectLookup[btn.dataset.dirDirect];
         if (!entry) return;
-        const $ta = qs('#rp-input');
-        if (!$ta) return;
-        if (entry.key === 'ooc') {
-            // OOC is the only chip that edits the textarea — user fills in the content
-            const before = '[OOC: ', after = ']';
-            const cur = $ta.value;
-            const full = cur ? `${cur}\n${before}${after}` : `${before}${after}`;
-            $ta.value = full;
-            $ta.setSelectionRange(full.length - after.length, full.length - after.length);
-            $ta.dispatchEvent(new Event('input'));
-            $ta.focus();
-        } else {
-            // All other action chips inject as a hidden directive — not visible user text
-            const existing = ($ta.dataset.pendingReinject || '').trim();
-            $ta.dataset.pendingReinject = existing ? `${existing}\n\n${entry.text}` : entry.text;
-        }
-        if (entry.overlordBeat) {
-            $ta.dataset.pendingBeat = entry.key;
-            qs('#btn-overlord-beat')?.classList.add('overlord-armed');
-        }
         qs('#quick-reply-bar')?.setAttribute('hidden', '');
+
+        // Compose reinject: directive + any active tone
+        let reinject = entry.directive;
+        if (_activeTone?.directive) {
+            const charName = state.bots?.find(b => b.id === state.activeBotId)?.name || 'the character';
+            reinject += '\n\n' + _activeTone.directive.replace(/\{C\}/g, charName);
+        }
+
+        // Optionally fire Overlord beat first, then character
+        if (entry.overlordBeat) {
+            await _fireOverlordBeat({ force: false, context: entry.directive });
+        }
+
+        triggerBotResponse(state.activeBotId, reinject);
     });
 
     // ── Tone toggle click ─────────────────────────────────────────────────────
@@ -8197,21 +8182,21 @@ export function initUI() {
         const $bar = qs('#quick-reply-bar');
         if ($bar && !$bar.hidden) {
             _buildDirectorPanel($bar);
-            // Restore tone tab
-            qsa('.dir-tab', $bar).forEach(t => t.classList.toggle('dir-tab--active', t.dataset.tab === 'tone'));
-            qsa('.dir-tab-pane', $bar).forEach(p => p.classList.toggle('dir-tab-pane--active', p.dataset.tabPane === 'tone'));
+            // Restore mood tab
+            qsa('.dir-tab', $bar).forEach(t => t.classList.toggle('dir-tab--active', t.dataset.tab === 'mood'));
+            qsa('.dir-tab-pane', $bar).forEach(p => p.classList.toggle('dir-tab-pane--active', p.dataset.tabPane === 'mood'));
         }
     });
 
-    // Clear tone button
+    // Clear tone/mood button
     document.addEventListener('click', e => {
         if (!e.target.closest('#dir-tone-clear-btn')) return;
         _activeTone = null;
         const $bar = qs('#quick-reply-bar');
         if ($bar && !$bar.hidden) {
             _buildDirectorPanel($bar);
-            qsa('.dir-tab', $bar).forEach(t => t.classList.toggle('dir-tab--active', t.dataset.tab === 'tone'));
-            qsa('.dir-tab-pane', $bar).forEach(p => p.classList.toggle('dir-tab-pane--active', p.dataset.tabPane === 'tone'));
+            qsa('.dir-tab', $bar).forEach(t => t.classList.toggle('dir-tab--active', t.dataset.tab === 'mood'));
+            qsa('.dir-tab-pane', $bar).forEach(p => p.classList.toggle('dir-tab-pane--active', p.dataset.tabPane === 'mood'));
         }
     });
 
