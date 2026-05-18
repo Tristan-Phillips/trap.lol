@@ -550,6 +550,7 @@ function buildSystemPrompt(character, config, override, { isGroup = false, other
             + (persistentMemoryOverride?.trim() ? `\n\n[Character Memory — things ${charName} remembers across all conversations]\n${persistentMemoryOverride.trim()}` : '')
             + buildPlayerBlock(config, flags)
             + buildConsistencyBlock(override, charName, flags).replace(/\{C\}/g, charName)
+            + buildRhythmDirective(override, charName)
             + buildAppearanceBlock(override, charName, flags)
             + buildVoiceBlock(override, charName, flags)
             + buildPersonalityBlock(override, charName, flags)
@@ -599,6 +600,7 @@ function buildSystemPrompt(character, config, override, { isGroup = false, other
         + '\n\n' + sections.filter(Boolean).join('\n\n')
         + buildPlayerBlock(config, flags)
         + buildConsistencyBlock(override, charName, flags).replace(/\{C\}/g, charName)
+        + buildRhythmDirective(override, charName)
         + buildAppearanceBlock(override, charName, flags)
         + buildVoiceBlock(override, charName, flags)
         + buildPersonalityBlock(override, charName, flags)
@@ -609,7 +611,7 @@ function buildSystemPrompt(character, config, override, { isGroup = false, other
         + buildThoughtsDirective(flags).replace(/\{C\}/g, charName)
         + buildImpersonationBlock(userName, flags).replace(/\{C\}/g, charName)
         + (isGroup && otherChars.length ? buildGroupIsolationBlock(charName, otherChars) : '')
-        + buildImmersionLock(charName)
+        + buildImmersionLock(charName, override)
         + (override.appendToSystem ? `\n\n${override.appendToSystem}` : '')
         + (config.nsfwBypass ? `\n\n${config.nsfwBypass}` : '');
 
@@ -1040,6 +1042,73 @@ export function buildPayload(ctx) {
         _charName:          charName,   // UI label, stripped before send
         _flags:             flags,      // passed through for response processing
     };
+}
+
+// ── Affect tone classifier ────────────────────────────────────────────────────
+// Lightweight keyword-density classifier. Strips RP markup, counts signal words
+// per register, returns the dominant tone label (or 'neutral' if no clear winner).
+// Used by ui.js to set data-tone on bot message elements for CSS-driven visuals.
+export function detectAffectTone(text) {
+    if (!text || text.length < 40) return 'neutral';
+    const stripped = text
+        .replace(/\*([^*]+)\*/g, '$1')
+        .replace(/~([^~]+)~/g, '$1')
+        .replace(/<[^>]+>/g, '')
+        .toLowerCase();
+
+    const signals = {
+        tension:  /\b(silence|still|quiet|tense|rigid|held|watching|wait|breath|edge|tight|coiled|dangerous|threat|careful|wary|notice|study|track|wrong|wrong|shift|sudden|freeze|cold|careful)\b/g,
+        intimacy: /\b(close|near|warm|touch|soft|gentle|tender|hand|fingers|breath|skin|pulse|lean|hold|gaze|look|eyes|feel|heart|chest|together|quiet|safe|trust|yours|mine|stay|please)\b/g,
+        grief:    /\b(loss|lost|gone|miss|alone|empty|hollow|break|broke|tear|tears|cry|ache|hurt|pain|grief|mourn|never|too late|silence|nothing|cold|hollow|shadow|dark|sorrow|fade)\b/g,
+        menace:   /\b(blood|blade|knife|dark|shadow|threat|power|control|force|fear|warn|danger|crawl|hunt|prey|stalk|punish|obey|kneel|beg|suffer|rage|fury|cruel|hard|iron|fist|grip|squeeze)\b/g,
+        wonder:   /\b(strange|never|impossible|new|discover|ancient|vast|glow|light|shimmer|magical|beautiful|awe|sky|stars|wind|breathtaking|radiant|wonder|marvel|extraordinary|luminous|horizon)\b/g,
+    };
+
+    const scores = {};
+    for (const [tone, re] of Object.entries(signals)) {
+        scores[tone] = (stripped.match(re) || []).length;
+    }
+
+    const best = Object.entries(scores).sort((a, b) => b[1] - a[1])[0];
+    if (!best || best[1] < 3) return 'neutral';
+    return best[0];
+}
+
+// ── Character sentence rhythm directive ───────────────────────────────────────
+// Injects a micro-pacing rule derived from the character's archetype/traits so the
+// LLM adapts sentence length and density to character voice, not just scene state.
+function buildRhythmDirective(override, charName) {
+    const archetype   = (override.archetype   || '').toLowerCase();
+    const coreTraits  = (override.coreTraits  || '').toLowerCase();
+    const proseStyle  = override.proseStyle || '';
+    const verbosity   = override.verbosity !== undefined ? Number(override.verbosity) : null;
+
+    // Already covered by proseStyle or verbosity — don't double-inject
+    if (proseStyle === 'punchy' || proseStyle === 'minimalist') return '';
+    if (verbosity !== null && verbosity <= 3) return '';
+
+    const hints = [];
+
+    const is = (...words) => words.some(w =>
+        archetype.includes(w) || coreTraits.includes(w));
+
+    if (is('warrior', 'soldier', 'fighter', 'hunter', 'assassin', 'mercenary'))
+        hints.push(`${charName} thinks in short bursts — economy of words, never decorative. Actions and observations over reflection.`);
+    else if (is('scholar', 'sage', 'scientist', 'professor', 'wizard', 'archmage', 'academic'))
+        hints.push(`${charName} speaks in layered, precise sentences — qualifies, elaborates, and notices implications others miss.`);
+    else if (is('noble', 'queen', 'king', 'lord', 'aristocrat', 'royalty', 'prince', 'princess'))
+        hints.push(`${charName}'s voice is measured and deliberate — unhurried authority, never hasty. Pauses carry weight.`);
+    else if (is('trickster', 'rogue', 'thief', 'scoundrel', 'jester', 'con', 'bard'))
+        hints.push(`${charName}'s rhythm skips and pivots — quick volleys, sudden sincerity, then back to deflection.`);
+    else if (is('predator', 'monster', 'beast', 'demon', 'vampire', 'creature', 'feral', 'primal'))
+        hints.push(`${charName}'s sentences are slow and deliberate when calm — but fragment when the hunger rises.`);
+    else if (is('healer', 'caretaker', 'mentor', 'teacher', 'maternal', 'nurturing', 'gentle', 'kind'))
+        hints.push(`${charName} speaks in flowing, unhurried prose — attentive to detail, warmth in every clause.`);
+    else if (is('broken', 'traumatised', 'hollow', 'damaged', 'fragile', 'shattered', 'survivor'))
+        hints.push(`${charName}'s internal rhythm is fractured — thoughts interrupt themselves, sentences trail off or circle back.`);
+
+    if (!hints.length) return '';
+    return `\n\n[Character Rhythm]\n${hints.join('\n')}`;
 }
 
 // ── RP response sanitizer ─────────────────────────────────────────────────────

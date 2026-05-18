@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.11",
+    "schema_version": "1.5.12",
     "last_updated": "2026-05-18",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -597,6 +597,21 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-18",
+      "message": "feat(underdark): immersion pass 4 — affect tone glyphs, input breathing pulse, auto-recap, rhythm directive",
+      "scope": "playground/underdark/",
+      "impact": "high",
+      "files": [
+        "playground/underdark/script/main.js",
+        "playground/underdark/script/modules/ui.js",
+        "playground/underdark/script/modules/llm-engine.js",
+        "playground/underdark/style/arena.css",
+        "status/logs/data/logs.json"
+      ],
+      "why": "Fourth immersion pass: affect-tone system classifies each bot response into one of 5 emotional registers and tints the message bubble + injects a tiny glyph on the speaker name; input container breathes with a soft glow while the model generates; Overlord auto-recap fires every ~20 turns to anchor long sessions; sentence rhythm micro-directive derives from character archetype and injects pacing guidance into the system prompt."
+    },
     {
       "hash": "pending",
       "date": "2026-05-18",
@@ -2618,6 +2633,20 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-18",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Fourth immersion pass for the Underdark. New affect-tone system: detectAffectTone() in llm-engine.js classifies each bot response into one of 5 emotional registers (tension, intimacy, grief, menace, wonder) using keyword-density scoring, and stamps data-tone on the message element so CSS drives a per-tone left-bar colour and a tiny unicode glyph indicator on the speaker name. Input container breathing pulse: .input-container--streaming toggled during generation adds a slow glow animation so the UI feels alive while the model writes. Overlord auto-recap: _maybeAutoRecap() fires at every 20-turn multiple if no recap Overlord appeared recently — generates an in-world atmospheric recap paragraph anchoring long sessions. Character sentence rhythm directive: buildRhythmDirective() derives a micro-pacing rule from archetype/coreTraits and injects it into the system prompt — warriors write in short bursts, scholars layer and qualify, nobles deliberate, tricksters pivot.",
+      "decisions": [
+        "Tone classifier uses keyword density with a minimum threshold of 3 signal-word matches before assigning a tone — below threshold returns 'neutral' and no data-tone is set, preventing noise on short or ambiguous responses.",
+        "Tone glyphs are tiny unicode symbols (◈ ◉ ◌ ◆ ◇) on the .message__name::after pseudo-element, not an icon or label — visible enough to read atmospherically, invisible enough to not distract from prose.",
+        "Input breathing pulse uses the existing --accent-rgb variable so it inherits any future theme changes automatically.",
+        "Auto-recap produces in-world atmospheric prose (like an Overlord block), not a list summary — it is a living paragraph that captures the emotional texture of where the scene stands, not a sequence of events.",
+        "Rhythm directive checks for proseStyle and verbosity overrides first — if those are already set for the character, no rhythm directive is injected to avoid redundancy.",
+        "The second buildSystemPrompt path (base template) previously called buildImmersionLock(charName) without the override arg — now corrected to buildImmersionLock(charName, override) so voice fingerprint is injected on both paths."
+      ]
+    },
     {
       "date": "2026-05-18",
       "agent": "Claude Sonnet 4.6",

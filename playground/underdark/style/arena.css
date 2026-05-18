@@ -466,6 +466,91 @@
     50%       { opacity: 1.0; box-shadow: 2px 0 8px rgba(var(--accent-rgb), 0.4); }
 }
 
+/* ── Affect tone system — data-tone attribute drives left-bar colour tinting ──
+   Each tone overrides the default accent-rgb border with a signature hue.
+   The ::after pseudo-element on .message__name renders a tiny glyph indicator.
+   Transitions are intentionally slow so the shift reads as atmosphere, not alert. */
+
+/* tension — cold silver-blue, razor stillness */
+.message--bot[data-tone="tension"] .message__bubble {
+    border-left-color: rgba(140, 180, 220, 0.55);
+}
+.message--bot[data-tone="tension"] .message__bubble::before {
+    background: linear-gradient(to bottom, transparent, rgba(140, 180, 220, 0.6), transparent);
+}
+.message--bot[data-tone="tension"] .message__name::after {
+    content: '◈';
+    font-size: 0.55em;
+    opacity: 0.45;
+    margin-left: 5px;
+    color: rgba(180, 210, 240, 0.8);
+    vertical-align: middle;
+}
+
+/* intimacy — warm rose-gold, close and low */
+.message--bot[data-tone="intimacy"] .message__bubble {
+    border-left-color: rgba(220, 140, 150, 0.55);
+}
+.message--bot[data-tone="intimacy"] .message__bubble::before {
+    background: linear-gradient(to bottom, transparent, rgba(220, 140, 150, 0.55), transparent);
+}
+.message--bot[data-tone="intimacy"] .message__name::after {
+    content: '◉';
+    font-size: 0.5em;
+    opacity: 0.4;
+    margin-left: 5px;
+    color: rgba(240, 170, 170, 0.85);
+    vertical-align: middle;
+}
+
+/* grief — muted violet-grey, cold hollow */
+.message--bot[data-tone="grief"] .message__bubble {
+    border-left-color: rgba(160, 140, 190, 0.45);
+}
+.message--bot[data-tone="grief"] .message__bubble::before {
+    background: linear-gradient(to bottom, transparent, rgba(160, 140, 190, 0.45), transparent);
+}
+.message--bot[data-tone="grief"] .message__name::after {
+    content: '◌';
+    font-size: 0.55em;
+    opacity: 0.38;
+    margin-left: 5px;
+    color: rgba(190, 175, 215, 0.75);
+    vertical-align: middle;
+}
+
+/* menace — deep crimson, controlled danger */
+.message--bot[data-tone="menace"] .message__bubble {
+    border-left-color: rgba(200, 70, 70, 0.55);
+}
+.message--bot[data-tone="menace"] .message__bubble::before {
+    background: linear-gradient(to bottom, transparent, rgba(200, 70, 70, 0.5), transparent);
+}
+.message--bot[data-tone="menace"] .message__name::after {
+    content: '◆';
+    font-size: 0.5em;
+    opacity: 0.4;
+    margin-left: 5px;
+    color: rgba(220, 100, 100, 0.8);
+    vertical-align: middle;
+}
+
+/* wonder — luminous teal-gold, something rare */
+.message--bot[data-tone="wonder"] .message__bubble {
+    border-left-color: rgba(120, 200, 180, 0.5);
+}
+.message--bot[data-tone="wonder"] .message__bubble::before {
+    background: linear-gradient(to bottom, transparent, rgba(120, 200, 180, 0.48), transparent);
+}
+.message--bot[data-tone="wonder"] .message__name::after {
+    content: '◇';
+    font-size: 0.55em;
+    opacity: 0.42;
+    margin-left: 5px;
+    color: rgba(150, 220, 200, 0.8);
+    vertical-align: middle;
+}
+
 /* Subtle reveal animation on new bot messages */
 .message--bot .message__bubble {
     animation: bubble-in 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -1061,6 +1146,17 @@
     border-radius: 14px;
     box-shadow: 0 8px 40px rgba(0,0,0,0.5);
     overflow: hidden;
+    transition: border-color 0.5s ease, box-shadow 0.5s ease;
+}
+/* Input zone breathing pulse — active while character is generating */
+.input-container--streaming {
+    border-color: rgba(var(--accent-rgb), 0.38);
+    box-shadow: 0 8px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(var(--accent-rgb), 0.12), 0 0 20px rgba(var(--accent-rgb), 0.06);
+    animation: input-breathe 2.6s ease-in-out infinite;
+}
+@keyframes input-breathe {
+    0%, 100% { box-shadow: 0 8px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(var(--accent-rgb), 0.10), 0 0 18px rgba(var(--accent-rgb), 0.05); }
+    50%       { box-shadow: 0 8px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(var(--accent-rgb), 0.22), 0 0 28px rgba(var(--accent-rgb), 0.10); }
 }
 .input-container__toolbar {
     display: flex;

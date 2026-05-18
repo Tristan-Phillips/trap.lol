@@ -18,7 +18,7 @@ import {
     exportFullInstance, importFullInstance
 } from './state.js?v=2';
 import { resolveImageUrl, saveImageBlob, deleteImageBlob, isIdbImageRef, idbImageRefId, isDataUrl } from './storage.js?v=3';
-import { buildPayload, streamCompletion, fetchCompletion, buildOverlordContext, summarizeDroppedMessages, sanitizeRpResponse } from './llm-engine.js?v=10';
+import { buildPayload, streamCompletion, fetchCompletion, buildOverlordContext, summarizeDroppedMessages, sanitizeRpResponse, detectAffectTone } from './llm-engine.js?v=11';
 import { parseCommand, executeCommand, filterCommands, COMMANDS } from './commands.js?v=3';
 import { IMAGE_MODELS, DEFAULT_MODEL, buildImagePrompt, generateImagePromptWithLLM, describeSceneWithLLM, generateImage, VIDEO_MODELS, generateVideo, generateVideoPromptWithLLM } from './image-engine.js?v=3';
 import { addBook, removeBook, addEntry, updateEntry, removeEntry, createBook, scanLorebooks } from './lorebook.js?v=3';
@@ -7795,6 +7795,35 @@ export function initUI() {
         } catch { /* silent */ }
     }
 
+    // ── Overlord auto-recap every ~20 turns ───────────────────────────────────
+    // Fires a recap Overlord block at turn multiples of 20 if no recap has
+    // appeared in the last 20 messages. Anchors long sessions with a story beat
+    // drawn from the scene ledger and meter state.
+    async function _maybeAutoRecap() {
+        if (!getApiKey()) return;
+        const turns = state.telemetry?.turns ?? 0;
+        const n = state.config.autoRecapEvery ?? 20;
+        if (n <= 0 || turns <= 0 || turns % n !== 0) return;
+
+        // Skip if any recap Overlord appeared in the last 20 messages
+        const recent = state.history.slice(-n);
+        const hasRecentRecap = recent.some(m => m.role === 'system' && m.overlordMode === 'recap');
+        if (hasRecentRecap) return;
+
+        try {
+            await _fireOverlord('recap', ({ charNames, histText, meters, scenario, playerName }) => {
+                const mStr = meters
+                    ? [
+                        meters.tension  != null ? `tension ${meters.tension}%`  : '',
+                        meters.intimacy != null ? `intimacy ${meters.intimacy}%` : '',
+                        meters.danger   != null ? `danger ${meters.danger}%`     : '',
+                      ].filter(Boolean).join(', ')
+                    : '';
+                return `You are writing a brief story anchor — a vivid, in-world recap of what has just passed, rendered as atmospheric narrative prose. This is NOT a list or summary. It is a living paragraph that captures where the scene stands now: the texture of the moment, the unresolved weight between ${playerName} and ${charNames.join(', ')}, what has shifted and what is still unresolved.\n\nDo NOT describe past events as "earlier" or "just now" — write from inside the current moment, as if looking back is part of the scene itself. 1-2 paragraphs maximum.${mStr ? `\n\nCurrent scene state: ${mStr}` : ''}${scenario ? `\nSetting: ${scenario.slice(0, 180)}` : ''}\n\n${histText}`;
+            }, 320);
+        } catch { /* silent */ }
+    }
+
     // ── Auto-save ─────────────────────────────────────────────────────────────
     const _AS_KEY = 'underdark_autosave';
     let _autoSaving = false;
@@ -8528,6 +8557,11 @@ export function initUI() {
                     $botMsg.dataset.msgId = msg.id;
                     $content.innerHTML   = renderMarkdown(finalText);
 
+                    // Classify emotional register and stamp data-tone for CSS-driven message tinting
+                    const _tone = detectAffectTone(finalText);
+                    if (_tone && _tone !== 'neutral') $botMsg.dataset.tone = _tone;
+                    else delete $botMsg.dataset.tone;
+
                     // Auto-log: 1-sentence message summary (first 120 chars, stripped of markdown)
                     const _logSummary = finalText.replace(/\*{1,3}([^*]+)\*{1,3}/g, '$1').replace(/\s+/g, ' ').trim().slice(0, 120);
                     tcLogPush('message', `${char?.name || 'Character'}: ${_logSummary}${finalText.length > 120 ? '…' : ''}`);
@@ -8581,6 +8615,8 @@ export function initUI() {
                     _generateAIQuickReplies();
                     // Auto transition every N turns (default 8) if no Overlord block in last N messages
                     _maybeAutoTransition();
+                    // Auto recap every ~20 turns — story anchor for long sessions
+                    _maybeAutoRecap();
                     // Auto-save every N turns to localStorage rolling backup
                     _autoSaveInstance().catch(() => {});
                 },
@@ -8621,6 +8657,7 @@ export function initUI() {
                 $label.innerHTML = `<span class="bot-label--streaming">${esc(botName)}</span> <span class="bot-label-dots"><span></span><span></span><span></span></span>`;
             }
             $bg?.classList.add('streaming-pulse');
+            qs('.input-container')?.classList.add('input-container--streaming');
         } else {
             $btn.innerHTML = '<i data-lucide="send"></i>';
             $btn.title = 'Send';
@@ -8633,6 +8670,7 @@ export function initUI() {
                 : '';
             if ($label) $label.textContent = displayName ? `→ ${displayName}` : '';
             $bg?.classList.remove('streaming-pulse');
+            qs('.input-container')?.classList.remove('input-container--streaming');
         }
         lucideRefresh($btn);
     }
