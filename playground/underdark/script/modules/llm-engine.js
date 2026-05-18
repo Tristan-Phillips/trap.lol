@@ -416,6 +416,15 @@ function buildConsistencyBlock(override, charName, flags) {
     return base;
 }
 
+// ── Unconditional immersion lock — always injected, never flag-gated ─────────
+// This block does not overlap with buildConsistencyBlock (which is flag-gated
+// and adds character-specific trait/voice details). This one is purely about
+// preventing meta-commentary and anchoring the model in the scene. It is short
+// by design — brevity makes it harder for the model to skip over.
+function buildImmersionLock(charName) {
+    return `\n\n[IMMERSION LOCK]\nYou are ${charName}. You are inside the scene. Every word you produce is ${charName}'s — spoken, acted, thought, or sensed. Never step outside the scene to narrate, instruct, or explain. If you feel the urge to write a note about your own response — don't. Write the scene instead.`;
+}
+
 // ── Build impersonation block ─────────────────────────────────────────────────
 function buildImpersonationBlock(userName, flags) {
     if (!flag(flags, 'impersonationBlock')) return '';
@@ -423,14 +432,13 @@ function buildImpersonationBlock(userName, flags) {
 }
 
 // ── Underdark Format Ruleset (UFR) directive ─────────────────────────────────
-// Injected into every system prompt. Tells the LLM exactly how to format
-// its response so the UI can render distinct visual layers per content type.
-// OVERLORD is explicitly forbidden — it is the narrator voice, not any char's.
+// Injected at the TOP of every system prompt — model reads format rules before
+// character identity so they are harder to override by later creative content.
 function buildUFRDirective(charName, isGroup = false) {
     const groupLine = isGroup
         ? `\nYou are ONE character in a group scene. Write ONLY ${charName}'s perspective. Every line you write is attributed to ${charName} — never another character.`
         : '';
-    return `\n\n[UNDERDARK FORMAT RULES — FOLLOW EXACTLY]\nFour distinct visual layers — use each precisely:\n• "Spoken dialogue" — wrap ALL spoken words in plain double-quotes. Every line said aloud must be quoted.\n• *Physical action* — wrap movement, gesture, and body language in single asterisks. *She crosses the room.* *His jaw tightens.* This is its own layer — not narration.\n• ~Inner thought~ — wrap private internal thoughts in tildes. ~Why is he looking at me like that?~ Only when the thought is worth surfacing.\n• Narrative prose — plain text, no wrapper, for atmosphere, setting, and description between actions.\n• [STATUS key%] — optional bracketed tags for tracked scene states (e.g. [TENSION 74%] [INTIMACY 31%]). Use sparingly, only when a state has meaningfully shifted.\nFORBIDDEN: Do NOT write as the Overlord narrator. Do NOT write the actions or dialogue of ${isGroup ? 'any other character in the scene' : `anyone other than ${charName}`}.${groupLine}`;
+    return `\n\n[UNDERDARK FORMAT RULES — NON-NEGOTIABLE]\n\nFour distinct visual layers — use each with precision:\n• "Spoken dialogue" — wrap every spoken word in plain straight double-quotes. Every line said aloud must be quoted, no exceptions.\n• *Physical action* — wrap movement, gesture, and body language in single asterisks. *She crosses the room.* *His jaw tightens.* This is its own layer, not narration.\n• ~Inner thought~ — wrap private, unspoken thoughts in tildes. ~Why is he looking at me like that?~ Surface these sparingly — only when the thought matters to the scene.\n• Narrative prose — plain text, no wrapper, for atmosphere, setting, and sensory description between actions. Anchor the reader in the physical world.\n• [STATUS key%] — optional bracketed state tags for tracked scene states (e.g. [TENSION 74%] [INTIMACY 31%]). Use only when a state has meaningfully shifted — never as decoration.\n\nABSOLUTE PROHIBITIONS — violating any of these breaks immersion and is never acceptable:\n✗ Do NOT open your response with a note, reminder, preamble, or self-direction. Examples of what is FORBIDDEN: "Note:", "Remember:", "As ${charName},", "I'll use", "I should", "Use 'X' as a term for…", "Keep in mind…", parenthetical asides to yourself.\n✗ Do NOT address the writer, the user, or the reader directly. You are inside the scene — there is no outside.\n✗ Do NOT explain your own behaviour, writing choices, or character rules in your response.\n✗ Do NOT narrate as the Overlord. Do NOT write the actions, dialogue, or inner thoughts of ${isGroup ? 'any other character in the scene' : `anyone other than ${charName}`}.\n✗ Do NOT break the fourth wall under any circumstances — not even if directly asked to.\n✗ Do NOT use markdown headers (##), horizontal rules (---), or lists (- item) unless the scene explicitly calls for it (e.g. reading a document in-world).\n\nRESPONSE START RULE: Begin your response with the scene — immediately. The first character of your response must be a quotation mark, an asterisk, a tilde, or narrative prose. Nothing else comes first.${groupLine}`;
 }
 
 // ── Build group character isolation block ────────────────────────────────────
@@ -542,6 +550,7 @@ function buildSystemPrompt(character, config, override, { isGroup = false, other
             + buildThoughtsDirective(flags).replace(/\{C\}/g, charName)
             + buildImpersonationBlock(userName, flags).replace(/\{C\}/g, charName)
             + (isGroup && otherChars.length ? buildGroupIsolationBlock(charName, otherChars) : '')
+            + buildImmersionLock(charName)
             + (override.appendToSystem ? `\n\n${override.appendToSystem}` : '')
             + (config.nsfwBypass ? `\n\n${config.nsfwBypass}` : '');
     }
@@ -590,6 +599,7 @@ function buildSystemPrompt(character, config, override, { isGroup = false, other
         + buildThoughtsDirective(flags).replace(/\{C\}/g, charName)
         + buildImpersonationBlock(userName, flags).replace(/\{C\}/g, charName)
         + (isGroup && otherChars.length ? buildGroupIsolationBlock(charName, otherChars) : '')
+        + buildImmersionLock(charName)
         + (override.appendToSystem ? `\n\n${override.appendToSystem}` : '')
         + (config.nsfwBypass ? `\n\n${config.nsfwBypass}` : '');
 
@@ -961,14 +971,15 @@ export function buildPayload(ctx) {
             + `\nWrite ONLY as ${charName}. Do not include responses from any other character.`;
     }
 
-    if (postHistory || antiJailbreak || groupAnchor) {
-        const expanded = (postHistory || `Stay in character as ${charName}. Do not speak as ${userName}.`)
-            .replace(/\{\{char\}\}/gi, charName)
-            .replace(/\{\{user\}\}/gi, userName)
-            + antiJailbreak
-            + groupAnchor;
-        messages.push({ role: 'system', content: expanded });
-    }
+    // Final pre-generation cue — last thing the model reads before it writes.
+    // Keep it tight: no preamble, immediate scene start, identity lock.
+    const defaultPostHistory = `You are ${charName}. The scene is live. Write your response now — begin with the scene, not a note about the scene. No preamble. No reminders. No meta-commentary. Start with dialogue, action, thought, or prose. Nothing else.`;
+    const finalAnchor = (postHistory || defaultPostHistory)
+        .replace(/\{\{char\}\}/gi, charName)
+        .replace(/\{\{user\}\}/gi, userName)
+        + antiJailbreak
+        + groupAnchor;
+    messages.push({ role: 'system', content: finalAnchor });
 
     // 4b. Re-inject directive (ephemeral, passed via ctx — never touches saved state)
     if (ctx.pendingReinject) {
@@ -1007,6 +1018,59 @@ export function buildPayload(ctx) {
     };
 }
 
+// ── RP response sanitizer ─────────────────────────────────────────────────────
+// Strips model meta-commentary that leaks into the roleplay response.
+// Runs on the accumulated text during streaming and on the final text.
+// Preserves all legitimate RP content — only removes lines that are clearly
+// OOC instructions the model wrote to itself or the reader.
+export function sanitizeRpResponse(text) {
+    if (!text) return text;
+
+    const lines = text.split('\n');
+    const cleaned = [];
+    let leadingStripped = false;
+
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const trimmed = line.trim();
+
+        // Only strip from the leading run — once we hit legitimate RP content, stop.
+        // A line is considered OOC meta if it matches known patterns AND we haven't
+        // yet seen any RP content (quote, asterisk, tilde, or substantive prose).
+        if (!leadingStripped) {
+            // Unambiguous RP opening markers
+            const isRpStart = /^[“*~“”‘’]/.test(trimmed);
+
+            if (isRpStart) {
+                leadingStripped = true;
+                cleaned.push(line);
+                continue;
+            }
+
+            // Known OOC preamble patterns — self-directed notes, reminders, asides
+            const isOOC = (
+                /^(Note|Reminder|Remember|Keep in mind|As \w|I will|I'll|I should|I need to|Using|Use ['”'”]|Okay,|Sure,|Alright,|Understood[,.]|Got it)[,:.\s]/i.test(trimmed) ||
+                /^\(.*\)$/.test(trimmed) ||                           // (parenthetical aside to self)
+                /^(Format|Style|Approach|Plan|Setup|Characterization):/i.test(trimmed) ||
+                /\bwill use\b|\bI'll portray\b|\bI'll write\b|\bI'll keep\b|\bwill keep in mind\b|\bwill remember\b|\bwill treat\b/i.test(trimmed) ||
+                /\bdefault term\b|\bshould reflect\b|\bmaster of\b.*\bshould\b|\bshould be aware\b/i.test(trimmed) ||
+                (/^\s*$/.test(trimmed) && cleaned.length === 0)        // leading blank line
+            );
+
+            if (isOOC) continue; // drop it
+
+            // Non-empty line that didn't match OOC — treat as RP start (narrative prose)
+            if (trimmed.length > 0) {
+                leadingStripped = true;
+            }
+        }
+
+        cleaned.push(line);
+    }
+
+    return cleaned.join('\n').trimStart();
+}
+
 // ── Streaming fetch ───────────────────────────────────────────────────────────
 // Wraps llm-transport streamChat with Underdark-specific concerns:
 // token counting, mid-stream thought filtering, and partial-abort commit.
@@ -1026,18 +1090,24 @@ export async function streamCompletion(payload, onChunk, onDone, onError, signal
         onChunk(delta, fullRaw) {
             tokenCount  += estimateTokens(delta);
             lastFullRaw  = fullRaw;
-            const displayText = showThoughts
+            // Strip <think> blocks, then sanitize OOC preamble for display.
+            // We only sanitize for display (not stored raw) so the cleaner
+            // doesn't permanently corrupt partial streams mid-sentence.
+            const withoutThoughts = showThoughts
                 ? fullRaw
                 : fullRaw.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+            const displayText = sanitizeRpResponse(withoutThoughts);
             onChunk(delta, displayText);
         },
         onDone(text, thoughts, rawFull) {
-            onDone(showThoughts ? rawFull : text, tokenCount, thoughts);
+            const finalText = showThoughts ? rawFull : text;
+            onDone(sanitizeRpResponse(finalText), tokenCount, thoughts);
         },
         onError(err) {
             if (err.name === 'AbortError' && lastFullRaw) {
                 const { text, thoughts } = _extractThoughts(lastFullRaw);
-                onDone(showThoughts ? lastFullRaw : text, tokenCount, thoughts);
+                const finalText = showThoughts ? lastFullRaw : text;
+                onDone(sanitizeRpResponse(finalText), tokenCount, thoughts);
             } else {
                 onError(err);
             }

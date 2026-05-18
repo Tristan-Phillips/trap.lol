@@ -18,7 +18,7 @@ import {
     exportFullInstance, importFullInstance
 } from './state.js?v=2';
 import { resolveImageUrl, saveImageBlob, deleteImageBlob, isIdbImageRef, idbImageRefId, isDataUrl } from './storage.js?v=3';
-import { buildPayload, streamCompletion, fetchCompletion, buildOverlordContext, summarizeDroppedMessages } from './llm-engine.js?v=7';
+import { buildPayload, streamCompletion, fetchCompletion, buildOverlordContext, summarizeDroppedMessages, sanitizeRpResponse } from './llm-engine.js?v=8';
 import { parseCommand, executeCommand, filterCommands, COMMANDS } from './commands.js?v=3';
 import { IMAGE_MODELS, DEFAULT_MODEL, buildImagePrompt, generateImagePromptWithLLM, describeSceneWithLLM, generateImage, VIDEO_MODELS, generateVideo, generateVideoPromptWithLLM } from './image-engine.js?v=3';
 import { addBook, removeBook, addEntry, updateEntry, removeEntry, createBook, scanLorebooks } from './lorebook.js?v=3';
@@ -359,8 +359,10 @@ function renderMarkdown(text) {
         // Must run before the rp-narration pass so the presence check sees rp-action, not <em>.
         html = html.replace(/<em>([\s\S]+?)<\/em>/g, (_, inner) => '<span class=”rp-action”>' + inner + '</span>');
 
-        // Narration paragraphs — no speech/thought/action inside → dim lavender class
-        html = html.replace(/<p>((?!.*rp-speech|.*rp-thought|.*rp-action)[^<]{20,})<\/p>/g,
+        // Narration paragraphs — paragraphs with no rp-* spans → dim lavender class.
+        // Threshold lowered to 6 chars so short atmospheric lines are also styled.
+        // Paragraphs with mixed rp-speech/thought/action inside keep their natural styling.
+        html = html.replace(/<p>((?!.*class=”rp-)[^<]{6,})<\/p>/g,
             (_, inner) => '<p class=”rp-narration”>' + inner + '</p>');
 
         return html;
@@ -6811,7 +6813,7 @@ export function initUI() {
                 </div>
                 ${thoughtsHtml}
                 <div class="message__bubble">
-                    <div class="message__content">${renderMarkdown(content)}</div>
+                    <div class="message__content">${renderMarkdown(isBot ? sanitizeRpResponse(content) : content)}</div>
                 </div>
                 ${msgObj.edited ? '<span class="message__meta-tag">edited</span>' : ''}
                 ${(isBot && msgObj.variants?.length) ? (() => {
@@ -6855,7 +6857,7 @@ export function initUI() {
         qs('[data-action="edit"]', $msg).addEventListener('click', () => {
             openMsgEditModal(id, content, isBot, name, (newContent, retrigger) => {
                 editMessage(id, newContent);
-                qs('.message__content', $msg).innerHTML = renderMarkdown(newContent);
+                qs('.message__content', $msg).innerHTML = renderMarkdown(isBot ? sanitizeRpResponse(newContent) : newContent);
                 let $tag = qs('.message__meta-tag', $msg);
                 if (!$tag) {
                     $tag = document.createElement('span');
@@ -7033,7 +7035,7 @@ export function initUI() {
 
                 // Update DOM
                 const $content = qs('.message__content', $msg);
-                if ($content) $content.innerHTML = renderMarkdown(msgObj.content);
+                if ($content) $content.innerHTML = renderMarkdown(isBot ? sanitizeRpResponse(msgObj.content) : msgObj.content);
                 const $count = qs('.msg-variant-count', $msg);
                 if ($count) $count.textContent = `${newIdx + 1} / ${total}`;
                 const [$prev, $next] = qsa('.msg-variant-btn', $msg);
@@ -8399,6 +8401,13 @@ export function initUI() {
                     }
 
                     $content.innerHTML = renderMarkdown(full);
+                    // Inject blinking cursor at end of last text node
+                    const $lastEl = $content.lastElementChild || $content;
+                    if (!$lastEl.querySelector('.stream-cursor')) {
+                        const $cur = document.createElement('span');
+                        $cur.className = 'stream-cursor';
+                        $lastEl.appendChild($cur);
+                    }
                     $thread.scrollTop  = $thread.scrollHeight;
                 },
                 (finalText, tokens, thoughts) => {

@@ -971,6 +971,49 @@ body.focus-mode #toggle-terminal { display: flex; }
 body.focus-mode .arena__bg.streaming-pulse { animation: ambient-pulse 2s ease-in-out infinite; }
 @keyframes ambient-pulse { 0%, 100% { opacity: 0.45; } 50% { opacity: 0.6; } }
 
+/* Focus mode — deepen RP text layer colours for full cinematic read */
+body.focus-mode .message--bot .message__content p:not(.rp-narration) {
+    color: rgba(235, 228, 252, 0.94);
+    font-size: 1.01rem;
+    line-height: 1.92;
+    letter-spacing: 0.014em;
+}
+body.focus-mode .message--bot .message__content p.rp-narration {
+    color: rgba(208, 200, 232, 0.85);
+    font-size: 0.97rem;
+    line-height: 1.96;
+}
+body.focus-mode .message__content .rp-speech {
+    font-size: 1.02em;
+    text-shadow: 0 0 18px rgba(242,203,126,0.55), 0 0 40px rgba(242,203,126,0.18);
+}
+body.focus-mode .message__content .rp-action {
+    font-size: 0.98em;
+    color: rgba(165, 210, 255, 0.95);
+    text-shadow: 0 0 14px rgba(96,165,250,0.45), 0 0 30px rgba(96,165,250,0.18);
+}
+body.focus-mode .message__content .rp-thought {
+    color: rgba(210, 182, 255, 0.96);
+    text-shadow: 0 0 16px rgba(180,145,255,0.48), 0 0 36px rgba(160,120,255,0.2);
+}
+/* Focus mode — message header fades out at rest, only visible on hover */
+body.focus-mode .message__header {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+body.focus-mode .message:hover .message__header { opacity: 0.7; }
+/* Bot messages in focus mode get wider max-width for richer prose lines */
+body.focus-mode .message--bot { max-width: 80%; }
+body.focus-mode .message__bubble {
+    padding: 16px 22px;
+}
+/* Streaming cursor more prominent in focus mode */
+body.focus-mode .message__content .stream-cursor::after {
+    color: rgba(190, 41, 236, 0.9);
+    font-size: 0.9em;
+    text-shadow: 0 0 8px rgba(190, 41, 236, 0.6);
+}
+
 /* ════════════════════════════════════════════════════════════════
    Responsive
    ════════════════════════════════════════════════════════════════ */
