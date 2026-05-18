@@ -10085,6 +10085,10 @@ export function initUI() {
         if (!$picker.hidden) { $picker.hidden = true; return; }
         _buildModelPicker();
         $picker.hidden = false;
+        // Position above the button using its viewport rect
+        const rect = e.currentTarget.getBoundingClientRect();
+        $picker.style.bottom = (window.innerHeight - rect.top + 6) + 'px';
+        $picker.style.right  = (window.innerWidth - rect.right) + 'px';
     });
 
     document.addEventListener('click', e => {

@@ -197,10 +197,8 @@
 
 /* ── Model quick-picker popover ── */
 .model-quick-picker {
-    position: absolute;
-    bottom: calc(100% + 6px);
-    right: 0;
-    z-index: 200;
+    position: fixed;
+    z-index: 500;
     background: rgba(6,4,10,0.97);
     border: 1px solid rgba(var(--accent-rgb), 0.22);
     border-radius: 8px;
