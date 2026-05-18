@@ -597,7 +597,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "f15a8de",
       "date": "2026-05-18",
       "message": "fix(underdark): source API base from config.json via glass/core.js instead of hardcoding nano-gpt URL",
       "scope": "playground/underdark/",
