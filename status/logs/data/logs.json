@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.8",
+    "schema_version": "1.5.9",
     "last_updated": "2026-05-18",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -597,6 +597,30 @@
     ]
   },
   "commits": [
+    {
+      "hash": "f423416",
+      "date": "2026-05-18",
+      "message": "feat(underdark): sanitize history before context injection; Overlord no-preamble",
+      "scope": "playground/underdark/",
+      "impact": "medium",
+      "files": ["playground/underdark/script/modules/llm-engine.js", "playground/underdark/script/modules/ui.js"],
+      "why": "Old history messages stored before the sanitizer was introduced could condition the model to repeat OOC preamble patterns. Also Overlord can produce 'Here is the narration:' type openers — banned explicitly."
+    },
+    {
+      "hash": "437d188",
+      "date": "2026-05-18",
+      "message": "feat(underdark): deep immersion overhaul — OOC prevention, sanitizer, styling",
+      "scope": "playground/underdark/",
+      "impact": "high",
+      "files": [
+        "playground/underdark/script/main.js",
+        "playground/underdark/script/modules/llm-engine.js",
+        "playground/underdark/script/modules/ui.js",
+        "playground/underdark/style/arena.css",
+        "playground/underdark/style/scene-codex.css"
+      ],
+      "why": "Model leaked meta-commentary into responses (self-directed notes about character behaviour). Multi-layer fix: UFR rewritten with absolute prohibitions, new buildImmersionLock() always-injected block, new sanitizeRpResponse() strips OOC preamble pre-render, streaming cursor wired up, base paragraph CSS fixed, focus mode deepened."
+    },
     {
       "hash": "afbbbe3",
       "date": "2026-05-18",
@@ -2564,6 +2588,22 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-18",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Deep immersion overhaul for the Underdark roleplay interface. Fixed model meta-commentary leaking into responses by rewriting the UFR directive with explicit ABSOLUTE PROHIBITIONS, adding an unconditional IMMERSION LOCK block, rewriting the post-history anchor as a terse start-now cue, and introducing sanitizeRpResponse() which strips OOC preamble lines pre-render across all render paths (streaming, history load, edit, variant switch). Also sanitizes history fed back to the model so legacy OOC preamble doesn't condition future responses. CSS: unstyled paragraphs now have explicit base treatment, rp-narration threshold lowered, streaming cursor wired up, focus mode deepened with higher-contrast RP text layers and fading message headers.",
+      "decisions": [
+        "sanitizeRpResponse only strips LEADING OOC lines — mid-response content that happens to match a pattern is preserved (conservative approach to avoid false positives)",
+        "buildImmersionLock() is unconditional — it fires on every system prompt regardless of flags. The meta-commentary prevention must not be opt-in.",
+        "History fed back to the model is also sanitized — prevents old OOC preambles stored before this fix from conditioning future model behaviour",
+        "Overlord narration gets a no-preamble rule too — Overlord can produce 'Here is the narration:' openers just as character models can",
+        "rp-narration CSS is now separate from bot paragraph base style — bot paragraphs without any rp-* class get rgba(225,218,240,0.88) as a conscious default, not an inherited fallthrough"
+      ],
+      "rules_reinforced": [
+        "Multi-layer defence is necessary for OOC prevention: system prompt instruction + post-history cue + post-processing sanitizer + history sanitization on re-injection. No single layer is sufficient."
+      ]
+    },
     {
       "date": "2026-05-18",
       "agent": "Claude Sonnet 4.6",
