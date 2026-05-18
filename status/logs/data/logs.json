@@ -583,7 +583,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "c526401",
       "date": "2026-05-18",
       "message": "refactor(logs): move logs.json, signal.json, structure-ruleset.md into status/logs/data/",
       "scope": "status/logs/",
