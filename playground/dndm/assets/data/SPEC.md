@@ -12,7 +12,7 @@
 | Field | Value |
 |---|---|
 | App name | DM MATRIX |
-| URL path | /dndm/ |
+| URL path | /playground/dndm/ |
 | Tab title | DM MATRIX // Campaign Suite |
 | Favicon | Rune circle, crimson on near-black |
 | Edition | D&D 5th Edition (2014 PHB / SRD) |
@@ -277,7 +277,7 @@ The app holds one active campaign in memory at a time. All mutations go through 
 Uses the Web `BroadcastChannel` API. No network required.
 
 - DM tab posts messages to channel `dndm-player`
-- Player tab (`/dndm/?view=player`) listens and renders the current scene
+- Player tab (`/playground/dndm/?view=player`) listens and renders the current scene
 - Player screen shows: current map (with fog applied), scene title, ambient mode label
 - Player screen never shows: HP, conditions, DM notes, secret markers
 - DM has an `Atlas` panel to control what the player screen shows
@@ -339,7 +339,7 @@ Uses the Web `BroadcastChannel` API. No network required.
 
 ### 6.1 Welcome Screen
 
-Shown on first load if no campaign is saved. Also shown if user navigates to `/dndm/` with no localStorage data.
+Shown on first load if no campaign is saved. Also shown if user navigates to `/playground/dndm/` with no localStorage data.
 
 **Sequence:**
 1. Black screen
@@ -563,7 +563,7 @@ Sections:
 
 ## 7. Second Display (Player Screen)
 
-URL: `/dndm/?view=player`
+URL: `/playground/dndm/?view=player`
 
 When this URL is opened in a second tab or window on the same device:
 - It connects to `BroadcastChannel('dndm-player')`
@@ -572,7 +572,7 @@ When this URL is opened in a second tab or window on the same device:
 - No UI chrome — full immersive display
 
 DM-side controls (in Atlas module):
-- "Launch Player Screen" button opens `window.open('/dndm/?view=player', 'dndm-player')`
+- "Launch Player Screen" button opens `window.open('/playground/dndm/?view=player', 'dndm-player')`
 - "Send to Player Screen" button broadcasts current map state
 - DM markers (secrets, traps) are stripped before broadcasting
 

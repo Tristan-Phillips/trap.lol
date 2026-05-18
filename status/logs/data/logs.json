@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.0",
+    "schema_version": "1.5.1",
     "last_updated": "2026-05-18",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -596,6 +596,20 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-18",
+      "message": "docs: fix remaining stale /dndm/ and /underdark/ path references in SPEC.md, signal.json, GEMINI-underdark.md",
+      "scope": "playground/dndm/, status/logs/, .ai/",
+      "impact": "low",
+      "files": [
+        "playground/dndm/assets/data/SPEC.md",
+        "status/logs/data/signal.json",
+        ".ai/GEMINI-underdark.md",
+        "status/logs/data/logs.json"
+      ],
+      "why": "Verification pass after playground restructure found four remaining verbal/documentation references to old /dndm/ and /underdark/ URLs across spec, signal tasks, and Gemini context file."
+    },
     {
       "hash": "691b02d",
       "date": "2026-05-18",
@@ -2484,6 +2498,18 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-18",
+      "agent": "Claude Sonnet 4.6",
+      "type": "maintenance",
+      "summary": "Continuation of the playground restructure verification pass. Fixed four remaining stale path references that survived the previous session: SPEC.md lines 280/342/566/575 (/dndm/ → /playground/dndm/), signal.json task description for void-new-authoring (/void/new/ → /playground/void/new/), and GEMINI-underdark.md dev URL (/underdark/ → /playground/underdark/). All verbal and documentation references now consistent with the restructured layout.",
+      "decisions": [
+        "signal.json task descriptions are treated as live documentation and must be kept accurate, not just historical records — update them when URLs change"
+      ],
+      "rules_reinforced": [
+        "Verification passes must cover all file types including .md specs, .ai/ context docs, and signal.json task descriptions — not just HTML/JS/CSS functional paths"
+      ]
+    },
     {
       "date": "2026-05-18",
       "agent": "Claude Sonnet 4.6",

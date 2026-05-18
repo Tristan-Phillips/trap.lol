@@ -134,7 +134,7 @@
       "requested": "2026-05-18",
       "closed": null,
       "closed_by": null,
-      "description": "From tdo.txt: a local-only authoring tool at /void/new/ for creating new VOID transmission entries. Sub-page pattern: void/new/index.html.",
+      "description": "From tdo.txt: a local-only authoring tool at /playground/void/new/ for creating new VOID transmission entries. Sub-page pattern: playground/void/new/index.html.",
       "notes": "Not yet scoped or designed.",
       "tags": ["void", "authoring"],
       "files_affected": ["void/"]

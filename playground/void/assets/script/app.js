@@ -269,7 +269,7 @@ initField();
 
 (async function boot() {
   try {
-    const res = await fetch('/void/assets/content/void.json');
+    const res = await fetch('/playground/void/assets/data/void.json');
     if (!res.ok) throw new Error(res.status);
     renderFeed(await res.json());
   } catch (err) {
