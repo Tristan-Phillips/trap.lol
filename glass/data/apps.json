@@ -11,12 +11,12 @@
       "status": "live"
     },
     "1": {
-      "name": "LLM Playground",
-      "slug": "playground",
-      "path": "/playground/",
-      "icon": "boom-box",
-      "description": "A playground for experimenting with large language models",
-      "tags": ["ai", "llm", "playground"],
+      "name": "Neural Uplink",
+      "slug": "neural-uplink",
+      "path": "/playground/neural-uplink/",
+      "icon": "brain-circuit",
+      "description": "Multi-model LLM chat interface. Session management, agent personas, and streaming.",
+      "tags": ["ai", "llm", "chat"],
       "keyed": true,
       "status": "live"
     },
