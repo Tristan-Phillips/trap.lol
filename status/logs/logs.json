@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.4.0",
+    "schema_version": "1.4.1",
     "last_updated": "2026-05-18",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -101,11 +101,12 @@
     "boot_sequence": {
       "description": "The app boots in a strict sequence. Breaking the sequence breaks the app.",
       "steps": [
-        "1. Fetch glass/data/config.json (BLOCKING — contains CDN shard URLs needed for step 2)",
-        "2. Parallel: fetch all data JSONs + inject lucide shard script tag into head",
-        "3. Render each section by calling render*() functions which write innerHTML into pre-existing container divs",
-        "4. lucide.createIcons() called ONCE after ALL HTML injection is complete",
-        "5. requestAnimationFrame: initTunnelLight(), updateCarouselArrows(), initGlobalListeners()"
+        "1. glass/script/main.js: fetch glass/data/config.json (BLOCKING — contains CDN shard URLs needed for step 2)",
+        "2. core.js loadCoreData(): parallel fetch of all data JSONs (hosting, ext, guides, bots, tools, llm, apps, statstation, trap) + inject lucide shard script tag into head",
+        "3. main.js calls renderUI() in ui.js after loadCoreData() resolves",
+        "4. ui.js renderUI(): calls all render*() functions which write innerHTML into pre-existing container divs",
+        "5. lucide.createIcons() called ONCE at end of renderUI(), after ALL HTML injection is complete",
+        "6. requestAnimationFrame: initTunnelLight(), updateCarouselArrows(), initGlobalListeners()"
       ],
       "critical_rule": "lucide.createIcons() must only be called AFTER all HTML is injected. Calling it mid-render leaves unprocessed <i data-lucide> tags. Exception: clipboard icon swap and pull zone tier icon — these use lucide.createIcons({ nodes: [...] }) scoped to specific elements."
     },
@@ -115,10 +116,20 @@
       "bots.json": "Drone Fleet section. Telegram bots. Each entry has: name, shortcut, icon, chat_url (nullable), repo_url, status, description.",
       "tools.json": "Ordnance Depot section. CLI tools/payloads. Each entry has: name, shortcut, icon, description, target (OS), repo_url, install_cmd (the thing the shortcut copies).",
       "extlinks.json": "Signal Mesh section. External links grouped by category. Each category has: domain, category, visual_class (neon-*), manifest of links with: name, shortcut, url, trust_level (Vetted|High), info.",
-      "guides.json": "Sacred Codex (currently commented out). Array of guide entries: title, description, icon, file (markdown filename), read_time.",
-      "llm.json": "LLM routing table. Keys are model IDs. Each model has: label, provider, pay_per_token (bool). Also contains default_routing.",
-      "apps.json": "App Uplinks section. Each app has: name, slug, path, icon, description, tags[], keyed (bool — requires API key), status (live|planned).",
-      "art/assets/data/detention.json": "ECHOES gallery data. Collections of artwork artifacts. Each artifact has: compositeId (collectionId::artifactId), src.small (thumbnail URL path), src.original (full URL path), uploadDate, tags[], type, metadata (medium, description, verse, mood, chaos). baseUrl in meta is prepended to all src paths.",
+      "guides.json": "Sacred Codex (currently commented out in index.html). Array of guide entries: title, description, icon, file (markdown filename), read_time. Logic and data maintained for when the section returns.",
+      "llm.json": "LLM routing table and model catalog. _index array for UI ordering by family. routing_table keyed by model ID. Each entry: label, provider, pay_per_token, context_k, cost_weight, scores (intelligence/coding/speed), recommended_inference, optional fallback_id, description. default_routing sets the boot-time selected model.",
+      "statstation.json": "Station section on home page. Manifest of internal trap.lol tools/status pages rendered as HUD scan bars. Each entry: name, slug, path, icon, description, tags[], keyed, status (live|planned).",
+      "trap.json": "Transmissions section on home page. Manifest of personal/creative apps rendered as warm bloom cards (tx-card). Each entry: name, slug, path, icon, description, tags[], keyed, status (live|planned).",
+      "apps.json": "App Uplinks section. Full app manifest across all sub-apps. Each app: name, slug, path, icon, description, tags[], keyed (bool — requires API key), status (live|planned).",
+      "art/assets/data/detention.json": "ECHOES gallery data. Collections of artwork artifacts. Each artifact: compositeId (collectionId::artifactId), src.small, src.original, uploadDate, tags[], type (digital|traditional), metadata (medium, description, verse, mood, chaos, nsfw bool). _meta.baseUrl prepended to all src paths.",
+      "void/assets/content/void.json": "VOID personal transmission log entries. Array under 'entries' (or root array). Each entry: id, date, title, body (markdown), tags[]. Rendered via marked.js + DOMPurify. New entries authored via void/new/index.html then pasted in.",
+      "underdark/data/index.json": "Underdark character roster. characters[] array — each entry is a character card (id, name, etc.) plus lorebooks[]. The authoritative list of available RP characters.",
+      "underdark/data/personas.json": "Underdark persona templates. personas[] array — 52 pre-built RP persona definitions with id, name, userName, userPersona fields. Used to seed character creation.",
+      "underdark/data/scenarios.json": "Underdark scenario library. scenarios[] array — 32 pre-built RP scenario starters with id, name, scenario fields.",
+      "underdark/data/scenario-index.json": "Underdark scenario finder index. Structured preset arrays for image/scene generation: scenes, relationships, mood_presets, outfit_presets, clothing, accessories, poses, camera, environments, lighting, art_styles, quality_tags, etc.",
+      "underdark/data/feed.json": "Underdark social feed. Permanent git-committed posts in posts[] that appear on all instances. Local session posts live in state.socialData.localPosts (not persisted here). type: image|text. charId must match index.json character id.",
+      "underdark/data/rp-gen-presets.json": "Underdark RP generator presets. Large structured object of image generation prompt building blocks (scenes, outfits, poses, styles, etc.) used by the RP generator panel.",
+      "underdark/data/persona-builder.json": "Underdark persona builder question set. questions[] array used to drive the persona creation wizard UI.",
       "status/logs/logs.json": "THIS FILE. The site intelligence record. Updated every session by the working LLM. See _protocol for update rules."
     },
     "shortcut_system": {
@@ -158,9 +169,15 @@
       "glass/script/modules/llm-auth.js": "API key storage (localStorage), keybar UI.",
       "glass/script/modules/llm-sessions.js": "Session save/load/export (JSON + MD), bulk delete, import.",
       "glass/script/modules/llm-settings.js": "Model selector, system prompt override, temperature, context window, streaming toggle, enter-to-send toggle.",
-      "glass/script/modules/tunnel-light.js": "The animated tunnel light effect on the home page header.",
-      "glass/data/llm-agents/": "Per-agent JSON files. index.json lists filenames. Each agent file has spec + data (name, tags, system_prompt, temperature, model override).",
-      "status/logs/index.html": "The intelligence terminal viewer. Reads logs.json and renders it. Contains a chat widget that accepts a nano-gpt API key (localStorage) and lets you query the knowledge base in natural language.",
+      "glass/script/modules/tunnel-light.js": "The animated tunnel light perspective-corridor effect on the home page header. Only initialised on non-touch devices.",
+      "glass/data/llm-agents/": "Per-agent JSON files. index.json lists all filenames. Each agent file: name, tags, system_prompt, temperature, optional model override. Active agents: default.json, opsec-dev.json, sovereign-architect.json.",
+      "glass/style/modules/": "CSS module system loaded via @import in glass/style/style.css. Modules: variables.css (all --custom-props), base.css (body/page reset), layout.css (page structure, section spacing), typography.css (headings, prose), components.css (cards, badges, tooltips, node-tiles, station bars, tx-cards, flip-cards), border-life.css (animated border effect), social-cluster.css (footer social strip), tunnel-light.css (header animation), neural-uplink.css (playground-specific overrides), responsive.css (breakpoint overrides).",
+      "underdark/script/modules/ui.js": "The Underdark's sole large module (~11k lines). Handles all UI rendering, state management, character loading, persona system, scenario finder, image studio, social feed, RP generator, and event wiring for the Underdark.",
+      "underdark/script/modules/llm-engine.js": "Underdark LLM call orchestration. Manages API requests to nano-gpt, model selection, streaming, sliding context window, and recursive summary injection.",
+      "underdark/script/modules/image-engine.js": "Underdark image/video generation. Wraps nano-gpt image API. Handles async polling for video generation, IDB persistence of generated images.",
+      "underdark/script/modules/codex-meters.js": "Renders LLM capability meter bars (intelligence, coding, speed) in the model info panel. Reads scores from glass/data/llm.json.",
+      "underdark/script/modules/commands.js": "Handles /slash commands in the Underdark chat input. Supported commands include /model, /clear, /persona, and others.",
+      "status/logs/index.html": "The intelligence terminal viewer. Reads logs.json and renders it across 12 tabs: Briefing, Protocol, Philosophy, Pages, Design, Rules, Language, Evolution, Commits, Architecture, Sessions, Sources. Contains a chat widget (nano-gpt API key, localStorage) to query the full knowledge base in natural language.",
       "status/logs/logs.json": "The knowledge base itself. See _protocol for schema and update obligations."
     }
   },
@@ -170,15 +187,16 @@
       "title": "trap.lol // uplink",
       "purpose": "The hub. Everything starts here. Renders all sections from JSON data.",
       "sections_in_order": [
-        "ECHOES portal (static HTML link to /art/)",
         "Sovereign Nodes (hosting.json)",
-        "Signal Mesh (extlinks.json)",
+        "Station (statstation.json) — status/logs links rendered as HUD scan bars",
+        "Transmissions (trap.json) — personal/creative apps rendered as bloom cards",
+        "[ Signal Mesh (extlinks.json) — COMMENTED OUT in index.html ]",
+        "Ordnance Depot (tools.json)",
         "Drone Fleet (bots.json)",
         "App Uplinks (apps.json)",
-        "Ordnance Depot (tools.json)",
-        "[ GUIDES / Sacred Codex — COMMENTED OUT ]",
+        "[ Guides / Sacred Codex (guides.json) — COMMENTED OUT in index.html ]",
         "Uplink Launchpad (LLM quick-launch, llm.json + llm-agents/)",
-        "Social Cluster (config.json socials)"
+        "Social strip (config.json socials)"
       ],
       "script": "glass/script/main.js (type=module)"
     },
@@ -210,7 +228,28 @@
     "/underdark/": {
       "file": "underdark/index.html",
       "title": "The Underdark // Reality Matrix",
-      "purpose": "Advanced roleplay interface. Cinematic multi-bot layout. Character creation, lorebooks, scenario editor. The 'Underdark' is the deepest, most immersive LLM experience on the site."
+      "purpose": "Advanced roleplay interface. Cinematic multi-bot layout with character roster, persona system, scenario editor, lorebook, image studio, social feed, and RP generator. The deepest, most immersive LLM experience on the site.",
+      "data": "underdark/data/ (index.json, personas.json, scenarios.json, scenario-index.json, feed.json, rp-gen-presets.json, persona-builder.json)",
+      "script": "underdark/script/modules/ui.js — sole large module (~11k lines). Shares glass/data/llm.json for model routing.",
+      "note": "Self-contained — has its own underdark/data/ for character/persona/scenario data. Does NOT use glass/data/ except for llm.json and llm-agents/."
+    },
+    "/void/": {
+      "file": "void/index.html",
+      "title": "void // trap.lol",
+      "purpose": "Personal transmission log. Data-driven feed of raw personal entries rendered from void.json via marked.js + DOMPurify. Spotlight overlay for full entry reading. Deep-water dark aesthetic, fully self-contained.",
+      "data": "void/assets/content/void.json",
+      "script": "void/assets/script/app.js (type=module, self-contained — does NOT use glass/script/)",
+      "css": "void/assets/style/style.css (self-contained — does NOT use glass/style/)",
+      "note": "void/new/index.html is a local-only entry editor (live markdown preview, ID generator, JSON fragment export) for authoring new void.json entries. Not linked publicly."
+    },
+    "/dndm/": {
+      "file": "dndm/index.html",
+      "title": "Grimoire // Campaign Suite",
+      "purpose": "DM campaign management tool. Tabbed single-page app with: Party Tracker (5e character sheets, HP bars, conditions, death saves, combat initiative), Atlas (fog-of-war map canvas, pan/zoom, marker pins, player screen push via BroadcastChannel), Soundscape (ambient audio with volume/loop), Oracle (nano-gpt streaming rules assistant), Bestiary (D&D 5e monsters with advanced filters), Spellbook (D&D 5e spells with advanced filters), Campaign overview (NPCs, Lore Wiki, Session log, export/import), and Story (narrative decision tree canvas with node types, bezier edges, Oracle suggestions, journey log).",
+      "data": "No external JSON data files — all campaign state persists to localStorage (dndm_campaigns index + per-slot dndm_campaign_<id> keys). Bestiary and Spellbook data is bundled inline in app.js.",
+      "script": "dndm/assets/script/app.js (self-contained vanilla JS, single DOMContentLoaded closure)",
+      "css": "dndm/assets/style/style.css (self-contained)",
+      "note": "Multi-campaign slot system: dndm_campaigns[] index array, individual slots at dndm_campaign_<uuid>. Legacy single-slot data auto-migrates to 'camp_legacy' on first load. Oracle uses nano-gpt API key stored in localStorage."
     },
     "/radar/": {
       "file": "radar/index.html",
@@ -465,21 +504,44 @@
           "Add site intelligence terminal at /status/logs/",
           "Logs protocol, chat widget, and CLAUDE.md enforcement"
         ]
+      },
+      {
+        "phase": "6 — Expansion",
+        "dates": "2026-05-16 to 2026-05-18",
+        "description": "Rapid multi-app expansion. Hub restructured: Station (statstation.json) and Transmissions (trap.json) sections added, Signal Mesh commented out, social radial replaced with flat strip. VOID page redesigned from 86 loose .md files into a single void.json data-driven feed with marked.js rendering. ECHOES gallery overhauled: stable CSS grid, gacha dividers, shift+click multi-select, NSFW veil+filter, shift-to-flood-pull. Neural Uplink playground redesigned, history bug fixed, streaming fully functional. Grimoire (/dndm/) built from scratch as a full D&D DM campaign suite across 9 phases: Party Tracker, Atlas fog-of-war, Soundscape, Oracle LLM assistant, Bestiary, Spellbook, Campaign+NPC+Lore management, Story decision tree canvas with node/edge editing and crow's foot notation, full 5e character sheet modal. Underdark continued expanding with persona builder, scenario finder, RP generator, image studio history, social feed. Sources of truth section added to logs — canonical data file registry for all future LLM context windows.",
+        "key_commits": [
+          "feat(void): consolidate 86 .md files into void.json",
+          "feat(hub): statstation+trap sections, social strip, sovereign nodes redesign",
+          "feat(dndm): Phases 1-9 — full Grimoire campaign suite",
+          "feat(art): stable grid, gacha dividers, shift-select, NSFW support",
+          "fix(playground): history bug, elevated redesign",
+          "feat(logs): sources_of_truth section + Sources tab"
+        ]
       }
     ],
-    "current_state": "Production-ready but rapidly expanding. The core hub is stable. The Underdark (roleplay) has evolved into a massive, complex sub-application with its own state management, image/video generation, and growing lore matrices. The project successfully maintains its 'zero-build' philosophy but is approaching the limits of vanilla DOM management complexity.",
+    "current_state": "Production — eight distinct pages live. Core hub stable with Sovereign Nodes, Station (status links), Transmissions (personal apps), Ordnance Depot, Drone Fleet, App Uplinks, Uplink Launchpad, and social strip. Signal Mesh (extlinks) is currently commented out. The Underdark is the most actively developed sub-app — a massive vanilla-JS roleplay system (~11k lines) with character creation, personas, scenarios, image/video studio, social feed, and RP generator. Grimoire (/dndm/) is a full DM campaign suite with Story canvas, Party Tracker, Atlas fog-of-war, Oracle LLM assistant, Bestiary, and Spellbook. ECHOES (/art/) and VOID (/void/) are stable. The project maintains its zero-build philosophy while managing significant per-app complexity through careful module isolation.",
     "intended_future": [
       "Sacred Codex (guides section) reactivation when enough .md content exists",
       "More ECHOES collections as artwork is created/curated",
       "ECHOES metadata enrichment (descriptions, verses, mood/chaos values populated)",
-      "Underdark refinement — lorebooks, multi-character orchestration",
-      "Possible: RSS/activity feed section on home page",
+      "Underdark: Phase 6 features — rp-action class, LLM meters, scene markers, message variants, structured digest, auto Overlord triggers, memory horizon, narrative tone, scene ledger, prompt inspector, targeted directives, AI quick replies",
+      "Grimoire: inline sheet view showing new fields (subclass, background, XP, ideals) added in Phase 9",
+      "Signal Mesh reactivation or permanent removal — currently commented out in index.html",
       "Possible: More sovereign nodes as self-hosting expands",
       "Possible: Status page historical uptime tracking (persistent data)",
       "Never: A backend. Never: A framework. Never: A CMS."
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-18",
+      "message": "docs(logs): full accuracy audit — missing pages, data files, modules, stale evolution",
+      "scope": "status/logs/",
+      "impact": "medium",
+      "files": ["status/logs/logs.json"],
+      "why": "Comprehensive codebase scan revealed logs.json had drifted significantly from reality: /void/ and /dndm/ pages missing from pages manifest; statstation.json, trap.json, void.json, and 7 underdark data files missing from architecture.data_layer; glass/style/modules/ CSS system and all underdark script modules absent from module_structure; home page sections_in_order wrong (Signal Mesh commented out, Station/Transmissions sections not listed); evolution.current_state and intended_future stale (no Grimoire, VOID, or Phase 6 context); boot_sequence steps mis-attributed to main.js vs ui.js. All corrected. sources_of_truth.files expanded with statstation.json, trap.json, void.json, feed.json, and index.json entries. Phase 6 Expansion added to evolution.phases."
+    },
     {
       "hash": "6b26c6f",
       "date": "2026-05-18",
@@ -2225,6 +2287,23 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-18",
+      "agent": "Claude Sonnet 4.6",
+      "type": "maintenance",
+      "summary": "Full accuracy audit of status/logs/ against actual codebase state. Scanned all HTML pages, JSON data files, and JS modules. Found and corrected: /void/ and /dndm/ missing from pages manifest; 10 data files missing from architecture.data_layer (statstation.json, trap.json, void.json, 7 underdark data files); glass/style/modules/ CSS system and underdark script modules absent from module_structure; home page sections_in_order wrong (Signal Mesh still listed as active, Station/Transmissions missing); evolution.current_state stale; boot_sequence steps mis-attributed. Also expanded sources_of_truth with 5 new canonical file entries and added Phase 6 Expansion to evolution.phases.",
+      "decisions": [
+        "sections_in_order updated to reflect actual live state — Signal Mesh marked COMMENTED OUT, Station and Transmissions added in correct position",
+        "underdark data files documented in both data_layer and sources_of_truth despite being Underdark-internal — future LLMs need to know they exist and what they own",
+        "evolution.phases got a new Phase 6 entry summarising the 2026-05-16 to 2026-05-18 expansion burst rather than back-filling 30+ individual commits",
+        "boot_sequence now correctly attributes lucide.createIcons() to ui.js renderUI(), not to main.js directly",
+        "void/new/index.html documented as a local-only authoring tool in both the void page entry and void.json sources_of_truth entry"
+      ],
+      "rules_reinforced": [
+        "logs.json must be audited against actual file state periodically — not just updated incrementally — because incremental updates accumulate drift",
+        "Every live page needs a pages[] entry. Every fetched JSON needs a data_layer entry. Every script module needs a module_structure entry."
+      ]
+    },
     {
       "date": "2026-05-18",
       "agent": "Claude Sonnet 4.6",
@@ -4396,6 +4475,89 @@
         ],
         "used_by": [
           { "file": "art/assets/script/app.js", "how": "The sole consumer — fetches detention.json, flattens collections, drives the entire gallery experience" }
+        ]
+      },
+      "glass/data/statstation.json": {
+        "domain": "Station section — internal trap.lol tool links",
+        "owns": [
+          "All Station section entries: name, slug, path, icon, description, tags, keyed, status",
+          "The HUD scan bar layout driven by this data (renderStatstation in ui.js)"
+        ],
+        "do_not": [
+          "Do NOT add external links here — external links go in extlinks.json",
+          "Do NOT add creative/personal apps here — those go in trap.json",
+          "status must be 'live' or 'planned' only"
+        ],
+        "used_by": [
+          { "file": "glass/script/modules/core.js", "how": "Fetched in parallel with other data JSONs during boot" },
+          { "file": "glass/script/modules/ui.js", "how": "renderStatstation() reads manifest and renders Station section as .station-bar HUD rows" }
+        ]
+      },
+      "glass/data/trap.json": {
+        "domain": "Transmissions section — personal and creative apps",
+        "owns": [
+          "All Transmissions section entries: name, slug, path, icon, description, tags, keyed, status",
+          "The tx-card bloom layout driven by this data (renderTrapSection in ui.js)"
+        ],
+        "do_not": [
+          "Do NOT add infrastructure/tool links here — those go in statstation.json",
+          "Do NOT add full app manifest entries here — apps.json is the full app catalog",
+          "status must be 'live' or 'planned' only"
+        ],
+        "used_by": [
+          { "file": "glass/script/modules/core.js", "how": "Fetched in parallel with other data JSONs during boot" },
+          { "file": "glass/script/modules/ui.js", "how": "renderTrapSection() reads manifest and renders Transmissions section as .tx-card bloom cards" }
+        ]
+      },
+      "void/assets/content/void.json": {
+        "domain": "VOID personal transmission log entries",
+        "owns": [
+          "All VOID entries: id, date, title, body (markdown), tags",
+          "The definitive personal writing/journal archive for trap.lol"
+        ],
+        "how_to_add_an_entry": [
+          "1. Open void/new/index.html locally (not deployed — local authoring tool only)",
+          "2. Write the entry with live markdown preview",
+          "3. Copy the generated JSON fragment",
+          "4. Paste into void/assets/content/void.json entries array",
+          "5. Commit and push — entry is immediately live"
+        ],
+        "do_not": [
+          "Do NOT create separate .md files — the 86 original .md files were already consolidated into void.json",
+          "Do NOT add void entries to any other JSON file"
+        ],
+        "used_by": [
+          { "file": "void/assets/script/app.js", "how": "The sole consumer — fetches void.json, renders entries via marked.js + DOMPurify, drives the full VOID page experience" }
+        ]
+      },
+      "underdark/data/index.json": {
+        "domain": "Underdark character roster",
+        "owns": [
+          "characters[] array — all available RP characters (id, name, and character card data)",
+          "lorebooks[] array — lorebook definitions available in the Underdark",
+          "The authoritative character list; charId in feed.json must match ids here"
+        ],
+        "do_not": [
+          "Do NOT define characters anywhere outside this file",
+          "Do NOT reference character IDs in other files unless they exist in this index"
+        ],
+        "used_by": [
+          { "file": "underdark/script/modules/ui.js", "how": "loadCharacters() fetches index.json to build the character roster; charId in feed posts is resolved against this list" }
+        ]
+      },
+      "underdark/data/feed.json": {
+        "domain": "Underdark social feed — permanent git-committed posts",
+        "owns": [
+          "posts[] — permanent posts visible on all instances (type: image|text, charId, src for images, caption, permanent: true flag)",
+          "Only git-committed posts live here; locally-generated posts live in state.socialData.localPosts"
+        ],
+        "do_not": [
+          "Do NOT add posts with idb: src refs — only public URLs work as permanent posts",
+          "Do NOT set permanent:false on posts in this file — all entries here are permanent by definition",
+          "charId must match an id in underdark/data/index.json"
+        ],
+        "used_by": [
+          { "file": "underdark/script/modules/ui.js", "how": "loadFeedPosts() fetches feed.json and merges with locally-generated posts for the social feed display" }
         ]
       },
       "glass/data/llm-agents/": {
