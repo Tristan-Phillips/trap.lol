@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.5",
+    "schema_version": "1.5.6",
     "last_updated": "2026-05-18",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -597,6 +597,15 @@
     ]
   },
   "commits": [
+    {
+      "hash": "dcf7a16",
+      "date": "2026-05-18",
+      "message": "fix: correct recommended_inference crash, 402 message, and subscription glyph",
+      "scope": "glass/script/modules/, playground/underdark/",
+      "impact": "high",
+      "files": ["glass/script/modules/llm-chat.js", "glass/script/modules/llm-transport.js", "playground/underdark/script/modules/ui.js"],
+      "why": "Neural Uplink silently failed on send because m.recommended_inference was undefined (field doesn't exist in llm.json routing_table), causing a TypeError before the try block that left the UI frozen. Also corrected inverted subscription glyph labels and 402 error message."
+    },
     {
       "hash": "dbfc324",
       "date": "2026-05-18",
