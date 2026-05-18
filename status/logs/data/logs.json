@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.1",
+    "schema_version": "1.5.2",
     "last_updated": "2026-05-18",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -144,14 +144,14 @@
       "trap.json": "Transmissions section on home page. Manifest of personal/creative apps rendered as warm bloom cards (tx-card). Each entry: name, slug, path, icon, description, tags[], keyed, status (live|planned).",
       "apps.json": "App Uplinks section. Full app manifest across all sub-apps. Each app: name, slug, path, icon, description, tags[], keyed (bool — requires API key), status (live|planned).",
       "art/assets/data/detention.json": "ECHOES gallery data. Collections of artwork artifacts. Each artifact: compositeId (collectionId::artifactId), src.small, src.original, uploadDate, tags[], type (digital|traditional), metadata (medium, description, verse, mood, chaos, nsfw bool). _meta.baseUrl prepended to all src paths.",
-      "void/assets/content/void.json": "VOID personal transmission log entries. Array under 'entries' (or root array). Each entry: id, date, title, body (markdown), tags[]. Rendered via marked.js + DOMPurify. New entries authored via void/new/index.html (local-only authoring tool, not publicly linked). NOTE: this file lives in assets/content/ — a known structural anomaly (§11 of structure-ruleset.md); correct target path is void/assets/data/void.json.",
-      "underdark/data/index.json": "Underdark character roster. characters[] array — each entry is a character card (id, name, etc.) plus lorebooks[]. The authoritative list of available RP characters.",
-      "underdark/data/personas.json": "Underdark persona templates. personas[] array — 52 pre-built RP persona definitions with id, name, userName, userPersona fields. Used to seed character creation.",
-      "underdark/data/scenarios.json": "Underdark scenario library. scenarios[] array — 32 pre-built RP scenario starters with id, name, scenario fields.",
-      "underdark/data/scenario-index.json": "Underdark scenario finder index. Structured preset arrays for image/scene generation: scenes, relationships, mood_presets, outfit_presets, clothing, accessories, poses, camera, environments, lighting, art_styles, quality_tags, etc.",
-      "underdark/data/feed.json": "Underdark social feed. Permanent git-committed posts in posts[] that appear on all instances. Local session posts live in state.socialData.localPosts (not persisted here). type: image|text. charId must match index.json character id.",
-      "underdark/data/rp-gen-presets.json": "Underdark RP generator presets. Large structured object of image generation prompt building blocks (scenes, outfits, poses, styles, etc.) used by the RP generator panel.",
-      "underdark/data/persona-builder.json": "Underdark persona builder question set. questions[] array used to drive the persona creation wizard UI.",
+      "playground/void/assets/data/void.json": "VOID personal transmission log entries. Array under 'entries' (or root array). Each entry: id, date, title, body (markdown), tags[]. Rendered via marked.js + DOMPurify. New entries authored via playground/void/new/index.html (local-only authoring tool, not publicly linked). Moved from void/assets/content/ to this location 2026-05-18 (§11 anomaly resolved).",
+      "playground/underdark/data/index.json": "Underdark character roster. characters[] array — each entry is a character card (id, name, etc.) plus lorebooks[]. The authoritative list of available RP characters.",
+      "playground/underdark/data/personas.json": "Underdark persona templates. personas[] array — 52 pre-built RP persona definitions with id, name, userName, userPersona fields. Used to seed character creation.",
+      "playground/underdark/data/scenarios.json": "Underdark scenario library. scenarios[] array — 32 pre-built RP scenario starters with id, name, scenario fields.",
+      "playground/underdark/data/scenario-index.json": "Underdark scenario finder index. Structured preset arrays for image/scene generation: scenes, relationships, mood_presets, outfit_presets, clothing, accessories, poses, camera, environments, lighting, art_styles, quality_tags, etc.",
+      "playground/underdark/data/feed.json": "Underdark social feed. Permanent git-committed posts in posts[] that appear on all instances. Local session posts live in state.socialData.localPosts (not persisted here). type: image|text. charId must match index.json character id.",
+      "playground/underdark/data/rp-gen-presets.json": "Underdark RP generator presets. Large structured object of image generation prompt building blocks (scenes, outfits, poses, styles, etc.) used by the RP generator panel.",
+      "playground/underdark/data/persona-builder.json": "Underdark persona builder question set. questions[] array used to drive the persona creation wizard UI.",
       "status/logs/data/logs.json": "THIS FILE. The site intelligence record. Updated every session by the working LLM. See _protocol for update rules.",
       "status/observations/data/observations.json": "Living LLM cognitive profile of trap (Tristan Phillips). entries[] array accumulates across sessions and models. Has its own _protocol block with absolute_rules and strong_preferences governing future LLM writes. Schema v1.0.0. Read by status/observations/index.html."
     },
@@ -4878,17 +4878,17 @@
           { "file": "glass/script/modules/ui.js", "how": "renderTrapSection() reads manifest and renders Transmissions section as .tx-card bloom cards" }
         ]
       },
-      "void/assets/content/void.json": {
+      "playground/void/assets/data/void.json": {
         "domain": "VOID personal transmission log entries",
         "owns": [
           "All VOID entries: id, date, title, body (markdown), tags",
           "The definitive personal writing/journal archive for trap.lol"
         ],
         "how_to_add_an_entry": [
-          "1. Open void/new/index.html locally (not deployed — local authoring tool only)",
+          "1. Open playground/void/new/index.html locally (not deployed — local authoring tool only)",
           "2. Write the entry with live markdown preview",
           "3. Copy the generated JSON fragment",
-          "4. Paste into void/assets/content/void.json entries array",
+          "4. Paste into playground/void/assets/data/void.json entries array",
           "5. Commit and push — entry is immediately live"
         ],
         "do_not": [
@@ -4896,10 +4896,10 @@
           "Do NOT add void entries to any other JSON file"
         ],
         "used_by": [
-          { "file": "void/assets/script/app.js", "how": "The sole consumer — fetches void.json, renders entries via marked.js + DOMPurify, drives the full VOID page experience" }
+          { "file": "playground/void/assets/script/app.js", "how": "The sole consumer — fetches void.json, renders entries via marked.js + DOMPurify, drives the full VOID page experience" }
         ]
       },
-      "underdark/data/index.json": {
+      "playground/underdark/data/index.json": {
         "domain": "Underdark character roster",
         "owns": [
           "characters[] array — all available RP characters (id, name, and character card data)",
@@ -4911,10 +4911,10 @@
           "Do NOT reference character IDs in other files unless they exist in this index"
         ],
         "used_by": [
-          { "file": "underdark/script/modules/ui.js", "how": "loadCharacters() fetches index.json to build the character roster; charId in feed posts is resolved against this list" }
+          { "file": "playground/underdark/script/modules/ui.js", "how": "loadCharacters() fetches index.json to build the character roster; charId in feed posts is resolved against this list" }
         ]
       },
-      "underdark/data/feed.json": {
+      "playground/underdark/data/feed.json": {
         "domain": "Underdark social feed — permanent git-committed posts",
         "owns": [
           "posts[] — permanent posts visible on all instances (type: image|text, charId, src for images, caption, permanent: true flag)",
@@ -4923,10 +4923,10 @@
         "do_not": [
           "Do NOT add posts with idb: src refs — only public URLs work as permanent posts",
           "Do NOT set permanent:false on posts in this file — all entries here are permanent by definition",
-          "charId must match an id in underdark/data/index.json"
+          "charId must match an id in playground/underdark/data/index.json"
         ],
         "used_by": [
-          { "file": "underdark/script/modules/ui.js", "how": "loadFeedPosts() fetches feed.json and merges with locally-generated posts for the social feed display" }
+          { "file": "playground/underdark/script/modules/ui.js", "how": "loadFeedPosts() fetches feed.json and merges with locally-generated posts for the social feed display" }
         ]
       },
       "glass/data/llm-agents/": {
