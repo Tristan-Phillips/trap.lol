@@ -598,7 +598,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "80fae37",
       "date": "2026-05-18",
       "message": "feat(underdark): immersion pass 5 — tension escalation, player resonance, deep focus mode",
       "scope": "playground/underdark/",
