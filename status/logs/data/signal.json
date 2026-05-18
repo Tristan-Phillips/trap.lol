@@ -2,7 +2,7 @@
   "_meta": {
     "schema_version": "1.0.0",
     "last_updated": "2026-05-18",
-    "companion_to": "status/logs/logs.json",
+    "companion_to": "status/logs/data/logs.json",
     "viewer": "status/logs/index.html — Signal tab"
   },
   "_protocol": {

@@ -1084,6 +1084,481 @@
         .sot-dep-row { grid-template-columns: 1fr; }
       }
 
+      /* ── Ruleset markdown renderer ── */
+      .ruleset-body { max-width: 72ch; }
+      .ruleset-body h1 {
+        font-family: var(--font-mono);
+        font-size: 1rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin: 2rem 0 0.5rem;
+        padding-bottom: 0.4rem;
+        border-bottom: 1px solid var(--glass-border-mute);
+      }
+      .ruleset-body h1:first-child { margin-top: 0; }
+      .ruleset-body h2 {
+        font-family: var(--font-mono);
+        font-size: 0.82rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--accent-warm);
+        opacity: 0.8;
+        margin: 1.5rem 0 0.4rem;
+      }
+      .ruleset-body h3 {
+        font-family: var(--font-mono);
+        font-size: 0.76rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin: 1.25rem 0 0.35rem;
+      }
+      .ruleset-body p {
+        font-family: var(--font-sans);
+        font-size: var(--text-sm);
+        color: var(--text-main);
+        line-height: 1.75;
+        opacity: 0.87;
+        margin: 0 0 0.6rem;
+      }
+      .ruleset-body ul, .ruleset-body ol {
+        font-family: var(--font-mono);
+        font-size: 0.78rem;
+        color: var(--text-muted);
+        line-height: 1.6;
+        padding-left: 1.5rem;
+        margin: 0.35rem 0 0.75rem;
+      }
+      .ruleset-body li { margin-bottom: 0.25rem; }
+      .ruleset-body code {
+        font-family: var(--font-mono);
+        font-size: 0.76rem;
+        background: rgba(190,41,236,0.08);
+        border: 1px solid rgba(190,41,236,0.15);
+        border-radius: 3px;
+        padding: 0.1em 0.4em;
+        color: var(--accent);
+      }
+      .ruleset-body pre {
+        background: rgba(0,0,0,0.5);
+        border: 1px solid rgba(190,41,236,0.12);
+        border-radius: 6px;
+        padding: 1rem 1.25rem;
+        overflow-x: auto;
+        margin: 0.75rem 0;
+      }
+      .ruleset-body pre code {
+        background: none;
+        border: none;
+        padding: 0;
+        font-size: 0.75rem;
+        color: var(--text-main);
+      }
+      .ruleset-body blockquote {
+        border-left: 2px solid rgba(190,41,236,0.35);
+        margin: 0.75rem 0;
+        padding: 0.5rem 1rem;
+        background: rgba(190,41,236,0.03);
+        border-radius: 0 5px 5px 0;
+        font-family: var(--font-sans);
+        font-size: var(--text-sm);
+        color: var(--text-muted);
+        line-height: 1.7;
+        font-style: italic;
+      }
+      .ruleset-body hr {
+        border: none;
+        border-top: 1px solid var(--glass-border-mute);
+        margin: 1.5rem 0;
+        opacity: 0.5;
+      }
+      .ruleset-body table {
+        width: 100%;
+        border-collapse: collapse;
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        margin: 0.75rem 0 1rem;
+      }
+      .ruleset-body th {
+        text-align: left;
+        color: var(--accent-warm);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 0.4rem 0.75rem;
+        border-bottom: 1px solid rgba(190,41,236,0.25);
+        font-size: 0.68rem;
+        opacity: 0.8;
+      }
+      .ruleset-body td {
+        padding: 0.4rem 0.75rem;
+        border-bottom: 1px solid var(--glass-border-mute);
+        color: var(--text-muted);
+        vertical-align: top;
+        line-height: 1.5;
+      }
+      .ruleset-body tr:hover td { color: var(--text-main); background: rgba(190,41,236,0.03); }
+
+      /* ════════════════════════════════════════════════════
+         SIGNAL — Mutable / Provisional Companion Layer
+         Distinct from log tabs: teal accent, dashed borders,
+         "flux" visual language to signal provisional state.
+         ════════════════════════════════════════════════════ */
+
+      /* Signal tab gets teal active state */
+      .log-tab[data-tab="signal"].active { color: #00e5cc; }
+      .log-tab[data-tab="signal"].active::after {
+        background: linear-gradient(90deg, #00e5cc, #00b8a0);
+      }
+
+      /* Panel-level signal banner */
+      .signal-banner {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+        padding: 0.75rem 1.25rem;
+        background: rgba(0,229,204,0.04);
+        border: 1px dashed rgba(0,229,204,0.25);
+        border-radius: 6px;
+        margin-bottom: var(--space-lg);
+      }
+      .signal-banner__dot {
+        width: 7px; height: 7px;
+        border-radius: 50%;
+        background: #00e5cc;
+        box-shadow: 0 0 8px rgba(0,229,204,0.6);
+        flex-shrink: 0;
+        animation: signal-pulse 2s ease-in-out infinite;
+      }
+      @keyframes signal-pulse {
+        0%, 100% { opacity: 1; box-shadow: 0 0 8px rgba(0,229,204,0.6); }
+        50%       { opacity: 0.5; box-shadow: 0 0 3px rgba(0,229,204,0.2); }
+      }
+      .signal-banner__text {
+        font-family: var(--font-mono);
+        font-size: 0.68rem;
+        color: rgba(0,229,204,0.7);
+        letter-spacing: 0.1em;
+        line-height: 1.6;
+      }
+      .signal-banner__text strong { color: #00e5cc; font-weight: 600; }
+
+      /* Section titles inside signal panel */
+      .signal-title {
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: #00e5cc;
+        opacity: 0.65;
+        margin: var(--space-lg) 0 var(--space-sm);
+      }
+      .signal-title:first-of-type { margin-top: 0; }
+
+      /* Task cards */
+      .signal-task {
+        background: var(--glass-bg);
+        border: 1px dashed var(--glass-border-mute);
+        border-radius: 8px;
+        padding: 1.1rem 1.4rem;
+        margin-bottom: 0.45rem;
+        position: relative;
+        overflow: hidden;
+        animation: card-rise 0.35s cubic-bezier(0.25, 0, 0, 1) both;
+        transition: border-color var(--transition), background var(--transition);
+      }
+      .signal-task:hover { border-color: rgba(0,229,204,0.22); background: rgba(0,229,204,0.02); }
+      .signal-task--done, .signal-task--decided-against, .signal-task--irrelevant, .signal-task--no-longer-relevant {
+        opacity: 0.45;
+      }
+      .signal-task--done:hover, .signal-task--decided-against:hover,
+      .signal-task--irrelevant:hover, .signal-task--no-longer-relevant:hover { opacity: 0.7; }
+
+      .signal-task__header {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        margin-bottom: 0.4rem;
+        flex-wrap: wrap;
+      }
+      .signal-task__title {
+        font-family: var(--font-mono);
+        font-size: var(--text-sm);
+        color: var(--text-main);
+        font-weight: 600;
+        flex: 1;
+        min-width: 0;
+      }
+      .signal-task--done .signal-task__title { text-decoration: line-through; color: var(--text-muted); }
+
+      .signal-status {
+        font-family: var(--font-mono);
+        font-size: 0.6rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        padding: 0.12rem 0.4rem;
+        border-radius: 3px;
+        border: 1px solid transparent;
+        flex-shrink: 0;
+        white-space: nowrap;
+      }
+      .status-scratch        { color: #7a7aaa; border-color: rgba(122,122,170,0.25); background: rgba(122,122,170,0.07); }
+      .status-brainstorm     { color: #b8a0f0; border-color: rgba(184,160,240,0.25); background: rgba(184,160,240,0.07); }
+      .status-to-consider    { color: #F4A830; border-color: rgba(244,168,48,0.25);  background: rgba(244,168,48,0.06); }
+      .status-agreed         { color: #00e5cc; border-color: rgba(0,229,204,0.3);    background: rgba(0,229,204,0.06); }
+      .status-in-progress    { color: #00e5cc; border-color: rgba(0,229,204,0.5);    background: rgba(0,229,204,0.1); box-shadow: 0 0 6px rgba(0,229,204,0.15); }
+      .status-done           { color: #4ade80; border-color: rgba(74,222,128,0.25);  background: rgba(74,222,128,0.05); }
+      .status-deferred       { color: #F4A830; border-color: rgba(244,168,48,0.2);   background: rgba(244,168,48,0.04); }
+      .status-decided-against{ color: #ef4444; border-color: rgba(239,68,68,0.25);   background: rgba(239,68,68,0.05); }
+      .status-no-longer-relevant { color: var(--text-muted); border-color: var(--glass-border-mute); background: rgba(0,0,0,0.2); }
+      .status-irrelevant     { color: var(--text-muted); border-color: var(--glass-border-mute); background: rgba(0,0,0,0.15); opacity: 0.6; }
+
+      .signal-task__desc {
+        font-family: var(--font-sans);
+        font-size: var(--text-sm);
+        color: var(--text-main);
+        line-height: 1.65;
+        opacity: 0.78;
+        margin-bottom: 0.4rem;
+      }
+      .signal-task__note {
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        line-height: 1.5;
+        padding: 0.35rem 0.65rem;
+        background: rgba(0,0,0,0.25);
+        border-left: 2px solid rgba(0,229,204,0.2);
+        border-radius: 0 3px 3px 0;
+        margin-top: 0.35rem;
+      }
+      .signal-task__footer {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        margin-top: 0.55rem;
+        flex-wrap: wrap;
+      }
+      .signal-tag {
+        font-family: var(--font-mono);
+        font-size: 0.6rem;
+        letter-spacing: 0.06em;
+        color: rgba(0,229,204,0.55);
+        padding: 0.08rem 0.35rem;
+        border: 1px solid rgba(0,229,204,0.15);
+        border-radius: 3px;
+        background: rgba(0,229,204,0.03);
+      }
+      .signal-closed-by {
+        font-family: var(--font-mono);
+        font-size: 0.6rem;
+        color: var(--text-muted);
+        margin-left: auto;
+        opacity: 0.6;
+      }
+      /* LLM-auto-closed vs trap-closed */
+      .signal-task[data-closed-by="llm"] .signal-closed-by { color: rgba(184,160,240,0.7); }
+      .signal-task[data-closed-by="trap"] .signal-closed-by { color: rgba(0,229,204,0.6); }
+
+      /* Issue cards */
+      .signal-issue {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border-mute);
+        border-radius: 8px;
+        padding: 1.1rem 1.4rem;
+        margin-bottom: 0.45rem;
+        position: relative;
+        overflow: hidden;
+        animation: card-rise 0.35s cubic-bezier(0.25, 0, 0, 1) both;
+        transition: border-color var(--transition);
+      }
+      .signal-issue--critical { border-left: 3px solid #ef4444; }
+      .signal-issue--warning  { border-left: 3px solid #F4A830; }
+      .signal-issue--note     { border-left: 3px solid rgba(190,41,236,0.5); }
+
+      .signal-issue__header {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        margin-bottom: 0.4rem;
+        flex-wrap: wrap;
+      }
+      .signal-issue__title {
+        font-family: var(--font-mono);
+        font-size: var(--text-sm);
+        color: var(--text-main);
+        font-weight: 600;
+        flex: 1;
+        min-width: 0;
+      }
+      .signal-severity {
+        font-family: var(--font-mono);
+        font-size: 0.6rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        padding: 0.12rem 0.4rem;
+        border-radius: 3px;
+        border: 1px solid transparent;
+        flex-shrink: 0;
+      }
+      .sev-critical { color: #ef4444; border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.07); }
+      .sev-warning  { color: #F4A830; border-color: rgba(244,168,48,0.3); background: rgba(244,168,48,0.07); }
+      .sev-note     { color: var(--accent); border-color: rgba(190,41,236,0.25); background: rgba(190,41,236,0.05); }
+
+      .signal-issue__scope {
+        font-family: var(--font-mono);
+        font-size: 0.68rem;
+        color: var(--text-muted);
+        margin-bottom: 0.45rem;
+        opacity: 0.7;
+      }
+      .signal-issue__desc {
+        font-family: var(--font-sans);
+        font-size: var(--text-sm);
+        color: var(--text-main);
+        line-height: 1.65;
+        opacity: 0.82;
+        margin-bottom: 0.5rem;
+      }
+
+      /* Resolved issues — collapsed behind toggle */
+      .signal-resolved-toggle {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+        color: var(--text-muted);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        background: none;
+        border: 1px solid var(--glass-border-mute);
+        border-radius: 4px;
+        padding: 0.4rem 0.85rem;
+        cursor: pointer;
+        margin: 0.75rem 0 0.25rem;
+        transition: color var(--transition), border-color var(--transition);
+      }
+      .signal-resolved-toggle:hover { color: #00e5cc; border-color: rgba(0,229,204,0.25); }
+      .signal-resolved-toggle .rtoggle-arrow {
+        transition: transform var(--transition);
+        font-size: 0.55rem;
+        margin-left: auto;
+      }
+      .signal-resolved-toggle.open .rtoggle-arrow { transform: rotate(90deg); }
+      .signal-resolved-list { display: none; margin-top: 0.5rem; }
+      .signal-resolved-list.open { display: block; }
+
+      .signal-issue--resolved {
+        opacity: 0.5;
+        border-left-color: rgba(74,222,128,0.4) !important;
+      }
+      .signal-issue--resolved:hover { opacity: 0.75; }
+      .signal-issue__fix {
+        padding: 0.5rem 0.75rem;
+        background: rgba(74,222,128,0.04);
+        border: 1px solid rgba(74,222,128,0.15);
+        border-radius: 4px;
+        margin-top: 0.35rem;
+      }
+      .signal-issue__fix-label {
+        font-family: var(--font-mono);
+        font-size: 0.62rem;
+        color: #4ade80;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        margin-bottom: 0.25rem;
+      }
+      .signal-issue__fix-text {
+        font-family: var(--font-sans);
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        line-height: 1.6;
+      }
+
+      /* Proposal cards */
+      .signal-proposal {
+        background: var(--glass-bg);
+        border: 1px dashed var(--glass-border-mute);
+        border-radius: 8px;
+        padding: 1rem 1.4rem;
+        margin-bottom: 0.45rem;
+        position: relative;
+        overflow: hidden;
+        animation: card-rise 0.35s cubic-bezier(0.25, 0, 0, 1) both;
+        transition: border-color var(--transition), opacity var(--transition);
+      }
+      .signal-proposal--not-chosen { opacity: 0.55; }
+      .signal-proposal--not-chosen:hover { opacity: 0.82; }
+      .signal-proposal__header {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.65rem;
+        margin-bottom: 0.35rem;
+        flex-wrap: wrap;
+      }
+      .signal-proposal__context {
+        font-family: var(--font-mono);
+        font-size: 0.68rem;
+        color: var(--text-muted);
+        flex: 1;
+        min-width: 0;
+        line-height: 1.5;
+      }
+      .signal-chosen {
+        font-family: var(--font-mono);
+        font-size: 0.6rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        padding: 0.1rem 0.4rem;
+        border-radius: 3px;
+        flex-shrink: 0;
+      }
+      .signal-chosen--yes { color: #4ade80; border: 1px solid rgba(74,222,128,0.3); background: rgba(74,222,128,0.06); }
+      .signal-chosen--no  { color: var(--text-muted); border: 1px solid var(--glass-border-mute); background: rgba(0,0,0,0.2); }
+      .signal-chosen--pending { color: #F4A830; border: 1px solid rgba(244,168,48,0.25); background: rgba(244,168,48,0.05); }
+
+      .signal-proposal__summary {
+        font-family: var(--font-sans);
+        font-size: var(--text-sm);
+        color: var(--text-main);
+        line-height: 1.65;
+        opacity: 0.85;
+        margin-bottom: 0.35rem;
+      }
+      .signal-proposal__why {
+        font-family: var(--font-mono);
+        font-size: 0.68rem;
+        color: var(--text-muted);
+        font-style: italic;
+        opacity: 0.7;
+        margin-bottom: 0.35rem;
+      }
+      .signal-proposal__footer {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        margin-top: 0.4rem;
+        flex-wrap: wrap;
+      }
+      .signal-proposal__chars {
+        font-family: var(--font-mono);
+        font-size: 0.58rem;
+        color: var(--text-muted);
+        margin-left: auto;
+        opacity: 0.5;
+      }
+
+      /* Empty state */
+      .signal-empty {
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+        color: var(--text-muted);
+        opacity: 0.5;
+        padding: 1.25rem 0;
+        letter-spacing: 0.08em;
+      }
+
       /* ── Hidden utility ── */
       .hidden { display: none !important; }
 
@@ -1213,7 +1688,7 @@
          GPL-3.0 — trap.lol
          ══════════════════════════════════════════════════ */
 
-      const DATA_PATH = './logs.json';
+      const DATA_PATH = './data/logs.json';
 
       /* ── Utils ── */
       function esc(s) {
@@ -1234,10 +1709,23 @@
         const lines = raw.split('\n');
         const out = [];
         let inPre = false, preLines = [], inUl = false, inOl = false;
+        let inTable = false, tableHead = null;
 
         function flushList() {
           if (inUl) { out.push('</ul>'); inUl = false; }
           if (inOl) { out.push('</ol>'); inOl = false; }
+        }
+
+        function flushTable() {
+          if (inTable) { out.push('</tbody></table>'); inTable = false; tableHead = null; }
+        }
+
+        function parseTableRow(line) {
+          return line.replace(/^\||\|$/g, '').split('|').map(c => c.trim());
+        }
+
+        function isTableSep(line) {
+          return /^\|?[\s\-:|]+\|/.test(line) && /^[\s\-:|]+$/.test(line.replace(/\|/g, '').trim() || '-');
         }
 
         function inlineEsc(s) {
@@ -1260,7 +1748,7 @@
               out.push('<pre><code>' + preLines.map(l => esc(l)).join('\n') + '</code></pre>');
               preLines = []; inPre = false;
             } else {
-              flushList(); inPre = true;
+              flushList(); flushTable(); inPre = true;
             }
             continue;
           }
@@ -1268,13 +1756,32 @@
 
           /* headings */
           const h = line.match(/^(#{1,6})\s+(.+)/);
-          if (h) { flushList(); out.push(`<h${h[1].length}>${inlineEsc(h[2])}</h${h[1].length}>`); continue; }
+          if (h) { flushList(); flushTable(); out.push(`<h${h[1].length}>${inlineEsc(h[2])}</h${h[1].length}>`); continue; }
 
           /* hr */
-          if (/^[-*_]{3,}$/.test(line.trim())) { flushList(); out.push('<hr>'); continue; }
+          if (/^[-*_]{3,}$/.test(line.trim())) { flushList(); flushTable(); out.push('<hr>'); continue; }
 
           /* blockquote */
-          if (line.startsWith('> ')) { flushList(); out.push(`<blockquote>${inlineEsc(line.slice(2))}</blockquote>`); continue; }
+          if (line.startsWith('> ')) { flushList(); flushTable(); out.push(`<blockquote>${inlineEsc(line.slice(2))}</blockquote>`); continue; }
+
+          /* GFM table — detect header row followed by separator row */
+          if (!inTable && line.trim().startsWith('|')) {
+            const next = lines[i + 1] || '';
+            if (isTableSep(next)) {
+              flushList();
+              tableHead = parseTableRow(line);
+              out.push('<table><thead><tr>' + tableHead.map(c => `<th>${inlineEsc(c)}</th>`).join('') + '</tr></thead><tbody>');
+              inTable = true;
+              i++; /* skip separator row */
+              continue;
+            }
+          }
+          if (inTable && line.trim().startsWith('|')) {
+            const cells = parseTableRow(line);
+            out.push('<tr>' + cells.map(c => `<td>${inlineEsc(c)}</td>`).join('') + '</tr>');
+            continue;
+          }
+          if (inTable) { flushTable(); }
 
           /* unordered list */
           const ul = line.match(/^[\s]*[-*+]\s+(.*)/);
@@ -1304,6 +1811,7 @@
 
         if (inPre) out.push('<pre><code>' + preLines.map(l => esc(l)).join('\n') + '</code></pre>');
         flushList();
+        flushTable();
 
         /* collapse consecutive <br> to one */
         return out.join('').replace(/(<br>){2,}/g, '<br>');
@@ -1852,6 +2360,207 @@
         });
       }
 
+      async function buildRuleset() {
+        const panel = addTab('ruleset', 'Ruleset');
+        panel.innerHTML = `<div class="log-loading" style="padding:2rem 0"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div><span>loading ruleset…</span></div>`;
+
+        try {
+          const res = await fetch('./data/structure-ruleset.md');
+          if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+          const md = await res.text();
+          panel.innerHTML = `<div class="ruleset-body">${renderMd(md)}</div>`;
+        } catch (e) {
+          panel.innerHTML = `<p class="log-error" style="padding:1rem 0">ERR: Could not load structure-ruleset.md — ${esc(e.message)}</p>`;
+        }
+      }
+
+      /* ─────────────────────────────────────────────────
+         SIGNAL — MUTABLE COMPANION TAB
+         ───────────────────────────────────────────────── */
+
+      const STATUS_CLASS = {
+        scratch: 'status-scratch', brainstorm: 'status-brainstorm',
+        to_consider: 'status-to-consider', agreed: 'status-agreed',
+        in_progress: 'status-in-progress', done: 'status-done',
+        deferred: 'status-deferred', decided_against: 'status-decided-against',
+        no_longer_relevant: 'status-no-longer-relevant', irrelevant: 'status-irrelevant'
+      };
+      const STATUS_LABEL = {
+        scratch: 'Scratch', brainstorm: 'Brainstorm', to_consider: 'To Consider',
+        agreed: 'Agreed', in_progress: 'In Progress', done: 'Done',
+        deferred: 'Deferred', decided_against: 'Decided Against',
+        no_longer_relevant: 'No Longer Relevant', irrelevant: 'Irrelevant'
+      };
+      const SEV_CLASS = { critical: 'sev-critical', warning: 'sev-warning', note: 'sev-note' };
+
+      async function buildSignal() {
+        const panel = addTab('signal', '~ Signal');
+        panel.innerHTML = `<div class="log-loading" style="padding:2rem 0"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div><span>loading signal…</span></div>`;
+
+        let sig;
+        try {
+          const res = await fetch('./data/signal.json');
+          if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+          sig = await res.json();
+        } catch (e) {
+          panel.innerHTML = `<p class="log-error" style="padding:1rem 0">ERR: Could not load signal.json — ${esc(e.message)}</p>`;
+          return;
+        }
+
+        const tasks    = sig.tasks    || [];
+        const issues   = sig.issues   || [];
+        const proposals= sig.proposals|| [];
+
+        // ── Banner ──
+        const openIssues  = issues.filter(i => i.status === 'open').length;
+        const activeTasks = tasks.filter(t => ['agreed','in_progress','to_consider'].includes(t.status)).length;
+        let bannerNote = 'Contents are provisional and debatable. Laws in logs.json still govern.';
+        if (openIssues) bannerNote = `${openIssues} open issue${openIssues > 1 ? 's' : ''} · ${bannerNote}`;
+
+        let html = `
+          <div class="signal-banner">
+            <div class="signal-banner__dot"></div>
+            <div class="signal-banner__text"><strong>SIGNAL // FLUX LAYER</strong> — ${esc(bannerNote)}</div>
+          </div>`;
+
+        // ── Tasks ──
+        html += `<div class="signal-title">Tasks &amp; Features</div>`;
+
+        const activeStatuses = ['in_progress','agreed','to_consider','brainstorm','scratch','deferred'];
+        const closedStatuses = ['done','decided_against','no_longer_relevant','irrelevant'];
+        const activeTsk = tasks.filter(t => activeStatuses.includes(t.status));
+        const closedTsk = tasks.filter(t => closedStatuses.includes(t.status));
+
+        if (!activeTsk.length && !closedTsk.length) {
+          html += `<p class="signal-empty">No tasks logged yet.</p>`;
+        }
+
+        activeTsk.forEach(t => { html += renderTask(t); });
+
+        if (closedTsk.length) {
+          html += `<button class="signal-resolved-toggle" id="tasks-closed-toggle" aria-expanded="false">
+            Show closed tasks (${closedTsk.length}) <span class="rtoggle-arrow">▶</span>
+          </button>
+          <div class="signal-resolved-list" id="tasks-closed-list">
+            ${closedTsk.map(t => renderTask(t)).join('')}
+          </div>`;
+        }
+
+        // ── Issues ──
+        html += `<div class="signal-title" style="margin-top:var(--space-xl)">Issues &amp; Flags</div>`;
+
+        const openIss   = issues.filter(i => i.status === 'open');
+        const resolvedIss = issues.filter(i => i.status === 'resolved');
+
+        if (!openIss.length && !resolvedIss.length) {
+          html += `<p class="signal-empty">No issues logged yet.</p>`;
+        }
+
+        openIss.forEach(i => { html += renderIssue(i, false); });
+
+        if (resolvedIss.length) {
+          html += `<button class="signal-resolved-toggle" id="issues-resolved-toggle" aria-expanded="false">
+            Show resolved issues (${resolvedIss.length}) <span class="rtoggle-arrow">▶</span>
+          </button>
+          <div class="signal-resolved-list" id="issues-resolved-list">
+            ${resolvedIss.map(i => renderIssue(i, true)).join('')}
+          </div>`;
+        }
+
+        // ── Proposals ──
+        html += `<div class="signal-title" style="margin-top:var(--space-xl)">Proposals &amp; Unchosen Ideas</div>`;
+        if (!proposals.length) {
+          html += `<p class="signal-empty">No proposals recorded yet.</p>`;
+        } else {
+          proposals.forEach(p => { html += renderProposal(p); });
+        }
+
+        panel.innerHTML = html;
+
+        // Toggle handlers
+        ['tasks-closed-toggle', 'issues-resolved-toggle'].forEach(id => {
+          const btn = panel.querySelector(`#${id}`);
+          if (!btn) return;
+          const listId = id.replace('-toggle', '-list');
+          btn.addEventListener('click', () => {
+            const list = panel.querySelector(`#${listId}`);
+            const open = list.classList.toggle('open');
+            btn.classList.toggle('open', open);
+            btn.setAttribute('aria-expanded', open);
+          });
+        });
+      }
+
+      function renderTask(t) {
+        const statusKey = (t.status || 'scratch').replace(/_/g, '-').replace(/ /g, '-');
+        const statusClass = STATUS_CLASS[t.status] || 'status-scratch';
+        const statusLabel = STATUS_LABEL[t.status] || t.status;
+        const tags = (t.tags || []).map(tag => `<span class="signal-tag">${esc(tag)}</span>`).join('');
+        const closedBy = t.closed_by ? `<span class="signal-closed-by">closed by ${esc(t.closed_by)}${t.closed ? ' · ' + esc(t.closed) : ''}</span>` : '';
+        const note = t.notes ? `<div class="signal-task__note">${esc(t.notes)}</div>` : '';
+        return `
+          <div class="signal-task signal-task--${statusKey}" data-closed-by="${esc(t.closed_by || '')}">
+            <div class="signal-task__header">
+              <span class="signal-task__title">${esc(t.title)}</span>
+              <span class="signal-status ${statusClass}">${statusLabel}</span>
+            </div>
+            ${t.description ? `<div class="signal-task__desc">${esc(t.description)}</div>` : ''}
+            ${note}
+            <div class="signal-task__footer">${tags}${closedBy}</div>
+          </div>`;
+      }
+
+      function renderIssue(issue, isResolved) {
+        const sevClass = SEV_CLASS[issue.severity] || 'sev-note';
+        const resolvedClass = isResolved ? ' signal-issue--resolved' : '';
+        const sevLabel = issue.severity ? (issue.severity.charAt(0).toUpperCase() + issue.severity.slice(1)) : 'Note';
+        const scope = issue.scope ? `<div class="signal-issue__scope">${esc(issue.scope)}</div>` : '';
+        let fixHtml = '';
+        if (isResolved && issue.fix_summary) {
+          fixHtml = `<div class="signal-issue__fix">
+            <div class="signal-issue__fix-label">✓ Fixed · ${esc(issue.resolved || '')}${issue.commit && issue.commit !== 'pending' ? ' · ' + esc(issue.commit) : ''}</div>
+            <div class="signal-issue__fix-text">${esc(issue.fix_summary)}</div>
+            ${issue.prevention ? `<div class="signal-issue__fix-text" style="margin-top:0.25rem;opacity:0.75">Prevention: ${esc(issue.prevention)}</div>` : ''}
+          </div>`;
+        }
+        return `
+          <div class="signal-issue signal-issue--${esc(issue.severity || 'note')}${resolvedClass}">
+            <div class="signal-issue__header">
+              <span class="signal-issue__title">${esc(issue.title)}</span>
+              <span class="signal-severity ${sevClass}">${sevLabel}</span>
+            </div>
+            ${scope}
+            <div class="signal-issue__desc">${esc(issue.description || '')}</div>
+            ${issue.reproduction_note ? `<div class="signal-task__note" style="border-left-color:rgba(244,168,48,0.3);margin-bottom:0.35rem"><span style="color:#F4A830;font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;margin-right:0.5rem">Repro</span>${esc(issue.reproduction_note)}</div>` : ''}
+            ${fixHtml}
+          </div>`;
+      }
+
+      function renderProposal(p) {
+        const chosenClass = p.chosen === true ? 'signal-proposal--chosen' : p.chosen === false ? 'signal-proposal--not-chosen' : '';
+        const chosenBadge = p.chosen === true
+          ? `<span class="signal-chosen signal-chosen--yes">Chosen</span>`
+          : p.chosen === false
+          ? `<span class="signal-chosen signal-chosen--no">Not Chosen</span>`
+          : `<span class="signal-chosen signal-chosen--pending">Pending</span>`;
+        const tags = (p.tags || []).map(tag => `<span class="signal-tag">${esc(tag)}</span>`).join('');
+        const charsUsed = [(p.context||''), (p.summary||''), (p.why_guess||'')].join('').replace(/ /g,'').length;
+        return `
+          <div class="signal-proposal ${chosenClass}">
+            <div class="signal-proposal__header">
+              <span class="signal-proposal__context">${esc(p.context || '')}</span>
+              ${chosenBadge}
+            </div>
+            ${p.summary ? `<div class="signal-proposal__summary">${esc(p.summary)}</div>` : ''}
+            ${p.why_guess ? `<div class="signal-proposal__why">${esc(p.why_guess)}</div>` : ''}
+            <div class="signal-proposal__footer">
+              ${tags}
+              ${p.session_date ? `<span class="signal-tag" style="color:var(--text-muted);border-color:var(--glass-border-mute)">${esc(p.session_date)}</span>` : ''}
+              <span class="signal-proposal__chars">${charsUsed}/256</span>
+            </div>
+          </div>`;
+      }
+
       /* ─────────────────────────────────────────────────
          CHAT WIDGET
          ───────────────────────────────────────────────── */
@@ -2041,6 +2750,8 @@
           buildArchitecture(data);
           buildSessions(data);
           buildSourcesOfTruth(data);
+          buildRuleset();
+          buildSignal();
 
           const hash = window.location.hash.replace('#', '');
           const firstTab = $tabs.querySelector('.log-tab');

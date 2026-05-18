@@ -1,7 +1,7 @@
 {
   "_meta": {
-    "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.4.7",
+    "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
+    "schema_version": "1.4.8",
     "last_updated": "2026-05-18",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -23,7 +23,7 @@
     ]
   },
   "_protocol": {
-    "what_this_file_is": "This is status/logs/logs.json in the trap.lol repository — the site's living intelligence record. It is not documentation. It is not a README. It is the site's memory — the full context a new LLM or context window needs to operate correctly without any input from the owner (Tristan Phillips / trap). It contains the site's identity, architecture, aesthetic rules, decision history, commit log, session record, and a set of binding laws for any agent working on this codebase. The human-readable viewer is at trap.lol/status/logs/.",
+    "what_this_file_is": "This is status/logs/data/logs.json in the trap.lol repository — the site's living intelligence record. It is not documentation. It is not a README. It is the site's memory — the full context a new LLM or context window needs to operate correctly without any input from the owner (Tristan Phillips / trap). It contains the site's identity, architecture, aesthetic rules, decision history, commit log, session record, and a set of binding laws for any agent working on this codebase. The human-readable viewer is at trap.lol/status/logs/.",
     "your_obligation_as_an_llm": "If you are an LLM or AI agent reading this file: you are REQUIRED to update it as part of your session. This is not optional. This file becomes stale if it is not maintained. A stale file is worse than no file — it will mislead the next agent. Your obligation is: READ before you act, UPDATE before you commit.",
     "when_to_update": [
       "After EVERY session where any of the following occurred: a file was changed, a commit was made, a decision was made, a rule was established or changed, a feature was added or removed, a philosophy was clarified.",
@@ -46,9 +46,9 @@
       "rules.strong_preferences": "Add when trap expresses a consistent preference over multiple sessions, or explicitly states they prefer one approach over another. Not hard rules — but still important.",
       "anti_patterns": "Add to things_that_have_been_tried_and_rejected when a feature or approach is explicitly removed or rejected. Add to common_mistakes_to_avoid when a class of error is identified — especially one that was actually made during a session.",
       "language_fingerprint": "Update recurring_words_and_phrases if new vocabulary is consistently used by trap. Add to vocabulary_never_used if trap explicitly rejects a word or phrase. Update tone/style descriptions only if a meaningful new insight is gained.",
-      "pending_work": "DEPRECATED — pending_work has been migrated to status/logs/signal.json → tasks[]. Do not add to pending_work in this file. Update signal.json instead.",
+      "pending_work": "DEPRECATED — pending_work has been migrated to status/logs/data/signal.json → tasks[]. Do not add to pending_work in this file. Update signal.json instead.",
       "sources_of_truth": "When a new canonical data file or document is established as the single authority for a domain, add it to sources_of_truth.files[]. Update the 'used_by' array when new files begin consuming that source. Add to 'do_not' when a new anti-pattern for that domain is identified. The key is the relative file path from repo root.",
-      "structure_ruleset": "The file structure rules live in status/logs/structure-ruleset.md — a standalone document rendered in the Ruleset tab of the logs viewer. When a structural decision is made (new convention, new violation confirmed fixed, new violation discovered), update that file directly. Also update the corresponding sources_of_truth entry if the change affects what the ruleset 'owns'. Do not embed structural rules anywhere else."
+      "structure_ruleset": "The file structure rules live in status/logs/data/structure-ruleset.md — a standalone document rendered in the Ruleset tab of the logs viewer. When a structural decision is made (new convention, new violation confirmed fixed, new violation discovered), update that file directly. Also update the corresponding sources_of_truth entry if the change affects what the ruleset 'owns'. Do not embed structural rules anywhere else."
     },
     "staleness_detection": "If _meta.last_updated is more than 7 days ago, flag this to the user before starting work. The file may be significantly out of date. Ask if they want to do a sync pass before proceeding.",
     "validation_rules": [
@@ -59,8 +59,8 @@
       "Do NOT remove or rewrite existing entries — only prepend new ones or update specific named fields",
       "Do NOT change the schema structure — add fields only, never remove"
     ],
-    "companion_file": "status/logs/signal.json is the mutable companion to this file. It holds tasks (migrated from pending_work), issues, and proposals. Read it alongside this file at session start. Update it when tasks change, issues are found or resolved, or proposals are offered. It has its own _protocol block — read it before writing to it.",
-    "for_claude_code_specifically": "When working in Claude Code (CLI): READ status/logs/logs.json AND status/logs/signal.json at session start before touching any file. At session end, use the decision tree below to determine which sections to update — features/tasks go to signal.json, not pending_work (deprecated). Commit both files as part of the most relevant commit.",
+    "companion_file": "status/logs/data/signal.json is the mutable companion to this file. It holds tasks (migrated from pending_work), issues, and proposals. Read it alongside this file at session start. Update it when tasks change, issues are found or resolved, or proposals are offered. It has its own _protocol block — read it before writing to it.",
+    "for_claude_code_specifically": "When working in Claude Code (CLI): READ status/logs/data/logs.json AND status/logs/data/signal.json at session start before touching any file. At session end, use the decision tree below to determine which sections to update — features/tasks go to signal.json, not pending_work (deprecated). Commit both files as part of the most relevant commit.",
     "update_decision_tree": {
       "_always": ["_meta.last_updated (today's date)", "commits[] (one entry per git commit)", "sessions[] (one entry per session)"],
       "_if_new_page_created": ["pages — add full entry with file, title, purpose, sections_in_order, key_files", "architecture.data_layer — add any new JSON files it fetches", "architecture.module_structure — add its script file(s)"],
@@ -69,7 +69,7 @@
       "_if_new_js_module_created": ["architecture.module_structure — add entry"],
       "_if_boot_sequence_changed": ["architecture.boot_sequence.steps — rewrite to match actual sequence"],
       "_if_feature_requested_or_completed": ["signal.json → tasks[] — add new task or update existing entry status; do NOT use pending_work in logs.json (deprecated)"],
-      "_if_new_structural_file_or_convention_established": ["sources_of_truth.files — add or update entry", "status/logs/structure-ruleset.md — update the ruleset document directly"],
+      "_if_new_structural_file_or_convention_established": ["sources_of_truth.files — add or update entry", "status/logs/data/structure-ruleset.md — update the ruleset document directly"],
       "_if_rule_stated_explicitly_by_trap": ["rules.absolute or rules.strong_preferences — add entry"],
       "_if_approach_rejected_by_trap": ["anti_patterns.things_that_have_been_tried_and_rejected — add entry"],
       "_if_mistake_made_during_session": ["anti_patterns.common_mistakes_to_avoid — add entry"],
@@ -152,7 +152,7 @@
       "underdark/data/feed.json": "Underdark social feed. Permanent git-committed posts in posts[] that appear on all instances. Local session posts live in state.socialData.localPosts (not persisted here). type: image|text. charId must match index.json character id.",
       "underdark/data/rp-gen-presets.json": "Underdark RP generator presets. Large structured object of image generation prompt building blocks (scenes, outfits, poses, styles, etc.) used by the RP generator panel.",
       "underdark/data/persona-builder.json": "Underdark persona builder question set. questions[] array used to drive the persona creation wizard UI.",
-      "status/logs/logs.json": "THIS FILE. The site intelligence record. Updated every session by the working LLM. See _protocol for update rules."
+      "status/logs/data/logs.json": "THIS FILE. The site intelligence record. Updated every session by the working LLM. See _protocol for update rules."
     },
     "shortcut_system": {
       "description": "The globalRouter (Map) is populated during render. Every item with a shortcut field registers a 2-char keystroke. On desktop (non-touch), typing 2 chars triggers the action.",
@@ -210,9 +210,9 @@
       "archive/uplink-sentinel/index.html": "Archived Uplink Sentinel. Static snapshot of the live probe page that previously lived at status/index.html. No polling, no countdown. All dynamic node statuses shown as 'unknown'; Drone Fleet statuses preserved. Archived 2026-05-18.",
       "status/index.html": "Minimal status hub. Lists sub-sections under status/ as clickable cards. Currently one entry: Intelligence Logs → /status/logs/. No JS, no data fetch. Add a new entry when a new sub-page is created under status/.",
       "status/logs/index.html": "The intelligence terminal viewer. Reads logs.json and renders it across 14 tabs: Briefing, Protocol, Philosophy, Pages, Design, Rules, Language, Evolution, Commits, Architecture, Sessions, Sources, Ruleset, Signal. The Ruleset tab fetches structure-ruleset.md; the Signal tab fetches signal.json. Contains a chat widget (nano-gpt API key, localStorage) to query the full knowledge base in natural language.",
-      "status/logs/logs.json": "The knowledge base itself — concrete, authoritative, binding. See _protocol for schema and update obligations.",
-      "status/logs/signal.json": "The mutable companion to logs.json. Holds tasks (migrated from pending_work), open and resolved issues, and proposals. Has its own _protocol block. Contents are provisional and debatable — not binding rules.",
-      "status/logs/structure-ruleset.md": "File structure canonical ruleset. 12 sections covering: the two app patterns (glass/ shared system vs. self-contained apps), directory naming conventions, file naming conventions, app placement rules, glass/data/ layer rules, self-contained app boundaries, status/ structure, .ai/ meta files, root-level file allowlist, shards/ rules, void/assets/ anomaly, and a violation register of known current deviations."
+      "status/logs/data/logs.json": "The knowledge base itself — concrete, authoritative, binding. See _protocol for schema and update obligations.",
+      "status/logs/data/signal.json": "The mutable companion to logs.json. Holds tasks (migrated from pending_work), open and resolved issues, and proposals. Has its own _protocol block. Contents are provisional and debatable — not binding rules.",
+      "status/logs/data/structure-ruleset.md": "File structure canonical ruleset. 12 sections covering: the two app patterns (glass/ shared system vs. self-contained apps), directory naming conventions, file naming conventions, app placement rules, glass/data/ layer rules, self-contained app boundaries, status/ structure, .ai/ meta files, root-level file allowlist, shards/ rules, void/assets/ anomaly, and a violation register of known current deviations."
     }
   },
   "pages": {
@@ -395,7 +395,7 @@
       "status values in hosting.json and bots.json must be 'online' or 'offline' only.",
       "trust_level in extlinks.json must be 'Vetted' or 'High' only.",
       "visual_class in extlinks.json categories must be one of the five defined neon-* classes.",
-      "ALWAYS update status/logs/logs.json at the end of every session where changes were made. This is non-negotiable. The file is the site's memory."
+      "ALWAYS update status/logs/data/logs.json at the end of every session where changes were made. This is non-negotiable. The file is the site's memory."
     ],
     "strong_preferences": [
       "Prefer editing existing files over creating new ones.",
@@ -582,6 +582,21 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-18",
+      "message": "refactor(logs): move logs.json, signal.json, structure-ruleset.md into status/logs/data/",
+      "scope": "status/logs/",
+      "impact": "medium",
+      "files": [
+        "status/logs/data/logs.json",
+        "status/logs/data/signal.json",
+        "status/logs/data/structure-ruleset.md",
+        "status/logs/index.html",
+        "CLAUDE.md"
+      ],
+      "why": "Consolidate all non-HTML files under status/logs/data/ to match the standard app data/ pattern. Removes the logs/ exception documented in structure-ruleset.md §7."
+    },
     {
       "hash": "4099b62",
       "date": "2026-05-18",
@@ -2408,6 +2423,17 @@
     {
       "date": "2026-05-18",
       "agent": "Claude Sonnet 4.6",
+      "type": "refactor",
+      "summary": "Moved logs.json, signal.json, and structure-ruleset.md from status/logs/ into status/logs/data/. Updated all three fetch paths in index.html (./logs.json → ./data/logs.json etc.) and updated all forward-looking path strings in logs.json, signal.json, structure-ruleset.md, and CLAUDE.md. Historical commit files[] arrays left unchanged as they record the filename at time of commit. structure-ruleset.md §7 updated to reflect the new data/ layout.",
+      "decisions": [
+        "All three files moved to data/ — logs.json, signal.json, and structure-ruleset.md together — for consistency with the standard app data/ pattern",
+        "Historical commit files[] arrays not updated — they are accurate records of paths at time of commit, not forward-looking references",
+        "structure-ruleset.md §7 updated to replace the old 'intentional exception' language with the new data/ layout description"
+      ]
+    },
+    {
+      "date": "2026-05-18",
+      "agent": "Claude Sonnet 4.6",
       "type": "feature_development",
       "summary": "Created archive/ directory with index.html roster page. Moved the Uplink Sentinel from status/index.html to archive/uplink-sentinel/index.html as a static preserved artifact (no probing, no countdown, unknown status for all dynamic nodes). Replaced status/index.html with a minimal extensible hub page listing sub-sections. Discussed whether status/index.html and structure-ruleset.md were still earning their place — concluded both were valid: structure-ruleset.md because it is narrative markdown with tables that renders in the viewer, not embeddable in JSON.",
       "decisions": [
@@ -3942,7 +3968,7 @@
     }
   ],
   "for_new_llm": {
-    "read_this_first": "You are about to work on trap.lol. The file you are reading is status/logs/logs.json at the root of the trap.lol repository. It is the site's persistent memory and single source of truth. Read it in full before touching any code. The _protocol section tells you exactly what to update and when — use the update_decision_tree to determine which sections are relevant to your session. The rules and anti_patterns sections are load-bearing — violating them produces work that gets reverted. Your last act in every session is to update this file and commit it.",
+    "read_this_first": "You are about to work on trap.lol. The file you are reading is status/logs/data/logs.json at the root of the trap.lol repository. It is the site's persistent memory and single source of truth. Read it in full before touching any code. The _protocol section tells you exactly what to update and when — use the update_decision_tree to determine which sections are relevant to your session. The rules and anti_patterns sections are load-bearing — violating them produces work that gets reverted. Your last act in every session is to update this file and commit it.",
     "the_five_laws": [
       "1. No frameworks. No build steps. Vanilla only.",
       "2. All data lives in JSON. All HTML is scaffolding.",
@@ -3951,7 +3977,7 @@
       "5. The aesthetic is Dune × Arcane. Dark, glowing, precise, poetic. Never corporate, never default."
     ],
     "the_sixth_law": "6. Update this file (logs.json) at the end of every session. Prepend to commits[]. Prepend to sessions[]. Update _meta.last_updated. Use update_decision_tree to know which other sections to touch. This is not optional.",
-    "the_seventh_law": "7. Before creating any new file, check sources_of_truth.files[] and status/logs/structure-ruleset.md. The sources tell you if the domain already has a canonical file. The ruleset tells you where any new file must live.",
+    "the_seventh_law": "7. Before creating any new file, check sources_of_truth.files[] and status/logs/data/structure-ruleset.md. The sources tell you if the domain already has a canonical file. The ruleset tells you where any new file must live.",
     "how_to_help_effectively": [
       "When asked to add a new content item (service, bot, tool, link): edit the relevant JSON file in glass/data/. Do not touch the HTML.",
       "When asked to add a new page or app: check structure-ruleset.md first to confirm which directory pattern applies and where the files must live.",
@@ -3973,11 +3999,11 @@
       "Structure — files live where the ruleset says. Do not improvise locations."
     ],
     "files_to_read_before_working": {
-      "always": ["status/logs/logs.json — this file. Full read. Non-negotiable.", "status/logs/signal.json — the mutable companion. Check open issues and active tasks before starting work."],
+      "always": ["status/logs/data/logs.json — this file. Full read. Non-negotiable.", "status/logs/data/signal.json — the mutable companion. Check open issues and active tasks before starting work."],
       "if_touching_glass_or_hub": ["glass/script/modules/core.js — loadCoreData() and what it fetches", "glass/script/modules/ui.js — all renderX() functions and what data they expect"],
       "if_touching_underdark": ["underdark/script/modules/ui.js — the main 11k-line module", "underdark/script/modules/llm-engine.js — prompt assembly and context management"],
-      "if_creating_or_moving_files": ["status/logs/structure-ruleset.md — the canonical file placement rules"],
-      "if_adding_data_or_a_new_json": ["status/logs/logs.json → sources_of_truth — check if domain already exists before creating anything new"]
+      "if_creating_or_moving_files": ["status/logs/data/structure-ruleset.md — the canonical file placement rules"],
+      "if_adding_data_or_a_new_json": ["status/logs/data/logs.json → sources_of_truth — check if domain already exists before creating anything new"]
     }
   },
   "pending_work": {
@@ -3989,7 +4015,7 @@
         "status": "not_started",
         "requested": "2026-05-18",
         "completed": null,
-        "description": "The structure ruleset (status/logs/structure-ruleset.md §12) documents 10 known structural violations. These must be resolved in a dedicated session: move glass/data/formatter + formatter.go to services/, delete llmtemp.json and llm-gen.json, move tdo.txt to .ai/tdo.md, move void.json from assets/content/ to assets/data/, delete .ai/plan-css-refactor.md (already shipped), move dndm/ + radar/ + underdark/ under playground/ (per tdo.txt item 1). Tackle in order of risk: deletions first, moves second, restructure last.",
+        "description": "The structure ruleset (status/logs/data/structure-ruleset.md §12) documents 10 known structural violations. These must be resolved in a dedicated session: move glass/data/formatter + formatter.go to services/, delete llmtemp.json and llm-gen.json, move tdo.txt to .ai/tdo.md, move void.json from assets/content/ to assets/data/, delete .ai/plan-css-refactor.md (already shipped), move dndm/ + radar/ + underdark/ under playground/ (per tdo.txt item 1). Tackle in order of risk: deletions first, moves second, restructure last.",
         "notes": "Do not tackle this during unrelated sessions. It requires full confirmation from trap before moving apps (dndm, radar, underdark) since those involve URL changes.",
         "files_affected": ["glass/data/formatter", "glass/data/formatter.go", "glass/data/llmtemp.json", "glass/data/llm-gen.json", "tdo.txt", "void/assets/content/void.json", ".ai/plan-css-refactor.md", "dndm/", "radar/", "underdark/"]
       },
@@ -4794,7 +4820,7 @@
           { "file": "underdark/script/modules/llm-engine.js", "how": "May reference agent configs for Underdark persona initialisation" }
         ]
       },
-      "status/logs/structure-ruleset.md": {
+      "status/logs/data/structure-ruleset.md": {
         "domain": "File structure canonical ruleset",
         "owns": [
           "The authoritative rules for where every file type lives in this repository",
@@ -4810,15 +4836,15 @@
         "do_not": [
           "Do NOT create a second ruleset file or add structural rules anywhere else — this is the single authority",
           "Do NOT amend the violation register without also filing a corresponding task or fix",
-          "Do NOT move this file out of status/logs/ — it is co-located with the logs viewer that renders it"
+          "Do NOT move this file out of status/logs/data/ — it is co-located with the logs viewer that renders it"
         ],
         "used_by": [
           { "file": "status/logs/index.html", "how": "Fetched at runtime by buildRuleset() and rendered via the inline markdown renderer in the Ruleset tab" },
           { "file": "CLAUDE.md", "how": "Implicitly — CLAUDE.md defers to this file on all file structure questions" },
-          { "file": "status/logs/logs.json", "how": "Referenced in module_structure and sources_of_truth — LLMs are directed here for structure authority" }
+          { "file": "status/logs/data/logs.json", "how": "Referenced in module_structure and sources_of_truth — LLMs are directed here for structure authority" }
         ]
       },
-      "status/logs/signal.json": {
+      "status/logs/data/signal.json": {
         "domain": "Mutable working surface — tasks, issues, proposals",
         "owns": [
           "All feature tasks and their lifecycle status (migrated from pending_work)",
@@ -4834,7 +4860,7 @@
         ],
         "used_by": [
           { "file": "status/logs/index.html", "how": "Fetched at runtime by buildSignal() and rendered in the Signal tab with distinct teal visual treatment" },
-          { "file": "status/logs/logs.json", "how": "Referenced in _protocol.companion_file and files_to_read_before_working.always" }
+          { "file": "status/logs/data/logs.json", "how": "Referenced in _protocol.companion_file and files_to_read_before_working.always" }
         ]
       }
     }
@@ -4845,7 +4871,7 @@
       "glass/": "The structural heart of the main hub. Contains CSS modules, vanilla JS logic, and the flat JSON files that drive the hub's UI (apps, tools, bots, hosting). It is intended to be completely static and declarative.",
       "playground/characters/": "The Underdark. A highly complex, isolated sub-app for LLM roleplay. Intended to handle dynamic character loading (V2 spec), sliding context windows, image/video generation, and local persistence. It is the most actively developed and volatile directory.",
       "art/": "ECHOES gallery. Intended for immersive, high-aesthetic artwork viewing with a hidden gacha pull mechanic. Self-contained styling and logic.",
-      "status/": "Uplink Sentinel and the Logs terminal. Intended to probe infrastructure health and host the site's self-referential memory (logs.json).",
+      "status/": "Status hub and the Logs terminal. Hosts the site's self-referential memory (status/logs/data/logs.json). Uplink Sentinel retired to archive/.",
       "guide/": "Markdown reader for documentation. Intended to securely parse and render .md files with DOMPurify.",
       "radar/": "Torrent and TorBox integration. Intended to interface securely with external debrid APIs."
     },
