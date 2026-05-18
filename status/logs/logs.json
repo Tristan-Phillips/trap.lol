@@ -534,7 +534,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "26e91bb",
       "date": "2026-05-18",
       "message": "docs(logs): full accuracy audit — missing pages, data files, modules, stale evolution",
       "scope": "status/logs/",
