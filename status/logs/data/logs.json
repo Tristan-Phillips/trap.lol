@@ -598,7 +598,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "27f7f96",
       "date": "2026-05-18",
       "message": "fix(underdark): fix 402 by decoupling llm-transport from llm-auth module instance",
       "scope": "glass/script/modules/, playground/underdark/",
