@@ -18,7 +18,7 @@ import {
     exportFullInstance, importFullInstance
 } from './state.js?v=2';
 import { resolveImageUrl, saveImageBlob, deleteImageBlob, isIdbImageRef, idbImageRefId, isDataUrl } from './storage.js?v=3';
-import { buildPayload, streamCompletion, fetchCompletion, buildOverlordContext, summarizeDroppedMessages, sanitizeRpResponse } from './llm-engine.js?v=8';
+import { buildPayload, streamCompletion, fetchCompletion, buildOverlordContext, summarizeDroppedMessages, sanitizeRpResponse } from './llm-engine.js?v=9';
 import { parseCommand, executeCommand, filterCommands, COMMANDS } from './commands.js?v=3';
 import { IMAGE_MODELS, DEFAULT_MODEL, buildImagePrompt, generateImagePromptWithLLM, describeSceneWithLLM, generateImage, VIDEO_MODELS, generateVideo, generateVideoPromptWithLLM } from './image-engine.js?v=3';
 import { addBook, removeBook, addEntry, updateEntry, removeEntry, createBook, scanLorebooks } from './lorebook.js?v=3';
@@ -359,11 +359,32 @@ function renderMarkdown(text) {
         // Must run before the rp-narration pass so the presence check sees rp-action, not <em>.
         html = html.replace(/<em>([\s\S]+?)<\/em>/g, (_, inner) => '<span class=”rp-action”>' + inner + '</span>');
 
-        // Narration paragraphs — paragraphs with no rp-* spans → dim lavender class.
-        // Threshold lowered to 6 chars so short atmospheric lines are also styled.
-        // Paragraphs with mixed rp-speech/thought/action inside keep their natural styling.
-        html = html.replace(/<p>((?!.*class=”rp-)[^<]{6,})<\/p>/g,
-            (_, inner) => '<p class=”rp-narration”>' + inner + '</p>');
+        // Classify paragraphs by their dominant RP layer.
+        // A paragraph that consists entirely (or nearly) of a single rp-* layer gets a matching
+        // para class so it inherits that layer's colour instead of the generic prose colour.
+        // Must run AFTER action conversion so <span class=”rp-action”> is already present.
+        html = html.replace(/<p>([\s\S]*?)<\/p>/g, (fullMatch, inner) => {
+            // Skip paragraphs already classified
+            if (/^<p\s/.test(fullMatch)) return fullMatch;
+            const stripped = inner.replace(/<[^>]+>/g, '').trim();
+            // Pure action paragraph — all non-whitespace content is inside rp-action spans
+            const actionContent = (inner.match(/<span class=”rp-action”>([\s\S]*?)<\/span>/g) || [])
+                .map(s => s.replace(/<[^>]+>/g, '')).join('');
+            if (actionContent.length > 0 && actionContent.trim().length >= stripped.length * 0.85) {
+                return '<p class=”rp-action-para”>' + inner + '</p>';
+            }
+            // Pure thought paragraph
+            const thoughtContent = (inner.match(/<span class=”rp-thought”>([\s\S]*?)<\/span>/g) || [])
+                .map(s => s.replace(/<[^>]+>/g, '')).join('');
+            if (thoughtContent.length > 0 && thoughtContent.trim().length >= stripped.length * 0.85) {
+                return '<p class=”rp-thought-para”>' + inner + '</p>';
+            }
+            // Narration: no rp-* spans at all, and has meaningful text (or only <br>/<strong>/<em>)
+            if (!inner.includes('class=”rp-') && stripped.length >= 6) {
+                return '<p class=”rp-narration”>' + inner + '</p>';
+            }
+            return fullMatch;
+        });
 
         return html;
     } catch (e) {
@@ -2201,7 +2222,11 @@ export function initUI() {
                 const char = state.loadedCharacters[botId];
                 const meta = state.characters.find(c => c.id === botId);
                 if (char?.first_mes) {
-                    const msg = addMessage('bot', char.first_mes, botId);
+                    const charName = getCharOverride(botId)?.nickname || char.name;
+                    const resolvedFirst = char.first_mes
+                        .replace(/\{\{char\}\}/gi, charName)
+                        .replace(/\{\{user\}\}/gi, state.config.userName || 'User');
+                    const msg = addMessage('bot', resolvedFirst, botId);
                     appendMessage(msg, char.name, meta?.avatar_path || char.avatar);
                 }
             }
@@ -2990,7 +3015,11 @@ export function initUI() {
 
         // First message only if thread is currently empty
         if (!state.history.length && char.first_mes) {
-            const msg = addMessage('bot', char.first_mes, id);
+            const charName = getCharOverride(id)?.nickname || char.name;
+            const resolvedFirstMes = char.first_mes
+                .replace(/\{\{char\}\}/gi, charName)
+                .replace(/\{\{user\}\}/gi, state.config.userName || 'User');
+            const msg = addMessage('bot', resolvedFirstMes, id);
             appendMessage(msg, char.name, meta.avatar_path || char.avatar);
         } else if (state.history.length > 0 && state.config.flags?.autoEntrance !== false) {
             // Auto entrance narration when a character joins a live session
@@ -3384,7 +3413,11 @@ export function initUI() {
                 e.target.value = '';
                 return;
             }
-            const msg = addMessage('bot', greeting, id);
+            const charName = getCharOverride(id)?.nickname || char.name;
+            const resolvedGreeting = greeting
+                .replace(/\{\{char\}\}/gi, charName)
+                .replace(/\{\{user\}\}/gi, state.config.userName || 'User');
+            const msg = addMessage('bot', resolvedGreeting, id);
             appendMessage(msg, char.name, meta?.avatar_path || char.avatar);
         });
 
@@ -7908,21 +7941,58 @@ export function initUI() {
             const { text } = await fetchCompletion({
                 model: state.config.model || 'deepseek-r1',
                 messages: [
-                    { role: 'system', content: 'You generate short reply starters for a player in a collaborative roleplay. Output ONLY a JSON array of exactly 4 strings, each 4-12 words. Each string is a complete first-person reply starter that the player can build on. Vary the tone: one bold/assertive, one curious, one emotional, one playful. No quotes around the full output — just raw JSON array.' },
-                    { role: 'user', content: `Recent exchange:\n${snippet}\n\nGenerate 4 reply starters.` }
+                    { role: 'system', content: 'You generate short reply starters for a player in a collaborative roleplay. Output ONLY a JSON array of exactly 3 strings, each 4-10 words. Each string is a complete first-person reply starter that the player can build on. Vary the emotional register: one confident/direct, one vulnerable/emotional, one intrigued/questioning. No quotes around the full output — just raw JSON array.' },
+                    { role: 'user', content: `Recent exchange:\n${snippet}\n\nGenerate 3 reply starters.` }
                 ],
-                max_tokens: 120,
+                max_tokens: 100,
                 temperature: 0.9
             });
-            const replies = parseLLMArray(text).slice(0, 4).filter(r => typeof r === 'string' && r.trim());
+            const replies = parseLLMArray(text).slice(0, 3).filter(r => typeof r === 'string' && r.trim());
             if (replies.length) {
                 _aiQRCache = { histLen, replies };
                 // Invalidate built flag so next bar open shows new suggestions
                 const $bar = qs('#quick-reply-bar');
                 if ($bar) delete $bar.dataset.built;
+                // Inject inline reply chips at the bottom of the thread
+                _injectInlineReplyChips(replies);
             }
         } catch { /* silent — AI suggestions are optional */ }
     }
+
+    function _injectInlineReplyChips(replies) {
+        const $thread = qs('#arena-thread');
+        if (!$thread) return;
+        // Remove any existing chip row
+        qs('.inline-reply-chips', $thread)?.remove();
+        const $chips = document.createElement('div');
+        $chips.className = 'inline-reply-chips';
+        $chips.setAttribute('aria-label', 'Suggested replies');
+        $chips.innerHTML = replies.map((r, i) =>
+            `<button class="inline-reply-chip" data-reply-idx="${i}">${esc(r)}</button>`
+        ).join('');
+        $thread.appendChild($chips);
+        // Smooth scroll so chips are visible
+        requestAnimationFrame(() => {
+            $thread.scrollTop = $thread.scrollHeight;
+        });
+    }
+
+    // Inline chip click: populate input, dismiss chips
+    document.addEventListener('click', e => {
+        const chip = e.target.closest('.inline-reply-chip');
+        if (!chip) return;
+        const idx  = parseInt(chip.dataset.replyIdx, 10);
+        const text = _aiQRCache?.replies?.[idx];
+        if (!text) return;
+        const $ta = qs('#rp-input');
+        if ($ta) {
+            $ta.value = $ta.value ? `${$ta.value}\n${text}` : text;
+            $ta.dispatchEvent(new Event('input'));
+            $ta.focus();
+        }
+        // Remove chip row — user has made a choice
+        qs('.inline-reply-chips', qs('#arena-thread'))?.remove();
+    });
 
     qs('#btn-quick-reply')?.addEventListener('click', () => {
         const $bar = qs('#quick-reply-bar');
@@ -8514,6 +8584,7 @@ export function initUI() {
         const $btn   = qs('#send-btn');
         const $est   = qs('#token-estimate');
         const $label = qs('#active-bot-label');
+        const $bg    = qs('.arena__bg');
         if (streaming) {
             $btn.innerHTML = '<i data-lucide="square"></i>';
             $btn.title = 'Stop generation (also cancels queued group bots)';
@@ -8522,6 +8593,7 @@ export function initUI() {
             if ($label && botName) {
                 $label.innerHTML = `<span class="bot-label--streaming">${esc(botName)}</span> <span class="bot-label-dots"><span></span><span></span><span></span></span>`;
             }
+            $bg?.classList.add('streaming-pulse');
         } else {
             $btn.innerHTML = '<i data-lucide="send"></i>';
             $btn.title = 'Send';
@@ -8533,6 +8605,7 @@ export function initUI() {
                 ? (getCharOverride(state.activeBotId)?.nickname || activeChar.name || '')
                 : '';
             if ($label) $label.textContent = displayName ? `→ ${displayName}` : '';
+            $bg?.classList.remove('streaming-pulse');
         }
         lucideRefresh($btn);
     }
@@ -8659,8 +8732,9 @@ export function initUI() {
         if ($tokenEst) $tokenEst.textContent = '';
         if ($cmdAc) $cmdAc.hidden = true;
 
-        // Remove welcome screen
+        // Remove welcome screen and any inline reply chips
         qs('#arena-welcome')?.remove();
+        qs('.inline-reply-chips')?.remove();
 
         // Flush any queued re-inject directives as an ephemeral system message.
         // Stored only in the DOM dataset — never written to state.config.

@@ -983,6 +983,18 @@ body.focus-mode .message--bot .message__content p.rp-narration {
     font-size: 0.97rem;
     line-height: 1.96;
 }
+body.focus-mode .message--bot .message__content p.rp-action-para {
+    color: rgba(165, 210, 255, 0.9);
+    font-size: 0.96rem;
+    line-height: 1.9;
+    text-shadow: 0 0 18px rgba(96,165,250,0.2);
+}
+body.focus-mode .message--bot .message__content p.rp-thought-para {
+    color: rgba(210, 182, 255, 0.9);
+    font-size: 0.95rem;
+    line-height: 1.92;
+    text-shadow: 0 0 16px rgba(180,145,255,0.28);
+}
 body.focus-mode .message__content .rp-speech {
     font-size: 1.02em;
     text-shadow: 0 0 18px rgba(242,203,126,0.55), 0 0 40px rgba(242,203,126,0.18);

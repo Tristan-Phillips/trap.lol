@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.9",
+    "schema_version": "1.5.10",
     "last_updated": "2026-05-18",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -597,6 +597,22 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-18",
+      "message": "feat(underdark): immersion pass 2 — inline reply chips, RP para classes, UFR examples, OOC hardening",
+      "scope": "playground/underdark/",
+      "impact": "high",
+      "files": [
+        "playground/underdark/script/main.js",
+        "playground/underdark/script/modules/ui.js",
+        "playground/underdark/script/modules/llm-engine.js",
+        "playground/underdark/style/arena.css",
+        "playground/underdark/style/scene-codex.css",
+        "status/logs/data/logs.json"
+      ],
+      "why": "Continued the deep immersion pass: inline AI-generated reply chips auto-appear after each bot turn, rp-action/thought paragraph classes fix wrong colour inheritance, ambient streaming pulse is now always-on, UFR gains concrete correct+forbidden format examples, sanitizeRpResponse gains more OOC patterns, {{char}}/{{user}} resolved in all first_mes and alt-greeting injection paths."
+    },
     {
       "hash": "f423416",
       "date": "2026-05-18",
@@ -2588,6 +2604,18 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-18",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Continued the Underdark deep immersion pass with a focused set of rendering, OOC-prevention, and UX improvements. Inline AI reply chips now auto-appear under the last bot message after each turn (3 contextual suggestions, dismiss on use). New rp-action-para and rp-thought-para CSS classes prevent paragraphs that consist entirely of an action or thought span from inheriting the wrong paragraph colour. Ambient streaming pulse is now always-on (previously focus-mode-only). UFR directive strengthened with a concrete CORRECT/FORBIDDEN format example block. sanitizeRpResponse extended with more OOC patterns (Certainly, Here is…, Responding as…, ## Note, etc.). {{char}}/{{user}} tokens now resolved in all first_mes and alt-greeting injection paths including group chat setup and the profile panel alt-greeting switcher.",
+      "decisions": [
+        "Inline reply chips inject directly into the thread DOM as a .inline-reply-chips element — not through the quick-reply bar button — so they appear automatically without requiring user interaction. They are dismissed by clicking a chip or by sending any message.",
+        "rp-action-para / rp-thought-para paragraph classification uses an 85% content-dominance threshold: if ≥85% of a paragraph's stripped text comes from action/thought spans, the para gets the matching class.",
+        "sanitizeRpResponse remains conservative (leading-lines only, stops at first RP content) but the OOC pattern list is expanded to cover more model-specific leaks without risking false positives mid-response.",
+        "UFR now includes a concrete correct-response example (3 lines showing all 4 UFR layers in use) and a FORBIDDEN section with verbatim examples of disallowed openers — showing is more effective than telling alone."
+      ]
+    },
     {
       "date": "2026-05-18",
       "agent": "Claude Sonnet 4.6",
