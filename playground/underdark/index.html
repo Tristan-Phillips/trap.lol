@@ -548,8 +548,9 @@
                     </div>
                     <div class="input-container__toolbar">
                         <button id="reinject-toggle-btn" class="btn-icon btn-icon--small" title="Re-inject directives [I]"><i data-lucide="zap"></i></button>
-                        <button id="btn-quick-reply" class="btn-icon btn-icon--small" title="Quick replies"><i data-lucide="list"></i></button>
-                        <button id="btn-overlord-beat" class="btn-icon btn-icon--small" title="Call Overlord — narrate the current scene beat [N]"><i data-lucide="wind"></i></button>
+                        <button id="btn-quick-reply" class="btn-icon btn-icon--small" title="Director panel — Actions, Tone, Overlord"><i data-lucide="sliders-horizontal"></i></button>
+                        <button id="btn-scene-inject" class="btn-icon btn-icon--small" title="Scene directive — inject a scene event into the next response"><i data-lucide="pencil-line"></i></button>
+                        <button id="btn-overlord-beat" class="btn-icon btn-icon--small" title="Call Overlord — narrate the current scene beat [B]"><i data-lucide="wind"></i></button>
                         <button id="btn-add-image" class="btn-icon btn-icon--small" title="Attach image"><i data-lucide="image"></i></button>
                         <button id="btn-quick-snapshot" class="btn-icon btn-icon--small" title="Snapshot — generate a scene image from current chat context [/image]"><i data-lucide="camera"></i></button>
                         <button id="btn-img-studio" class="btn-icon btn-icon--small arena-action--studio" title="Image Studio [S]"><i data-lucide="wand-2"></i></button>
@@ -563,8 +564,14 @@
                     </div>
                     <div id="input-previews" class="input-previews" hidden></div>
                     <div id="cmd-autocomplete" class="cmd-autocomplete" hidden></div>
+                    <div id="scene-inject-bar" class="scene-inject-bar" hidden>
+                        <span class="scene-inject-bar__label"><i data-lucide="pencil-line"></i></span>
+                        <input id="scene-inject-input" class="scene-inject-bar__input" type="text" placeholder="Scene directive — e.g. She starts to have a panic attack" autocomplete="off" spellcheck="false">
+                        <button id="scene-inject-clear" class="scene-inject-bar__clear btn-icon btn-icon--small" title="Clear"><i data-lucide="x"></i></button>
+                    </div>
                     <form id="rp-form" class="input-container__form">
                         <textarea id="rp-input" class="input-container__textarea" rows="1" placeholder="Type a message…"></textarea>
+                        <button type="button" id="btn-trigger-response" class="input-container__trigger" title="Trigger character response without sending a message"><i data-lucide="zap"></i></button>
                         <button type="submit" id="send-btn" class="input-container__send" aria-label="Send"><i data-lucide="send"></i></button>
                     </form>
                 </div>

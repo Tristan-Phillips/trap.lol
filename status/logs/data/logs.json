@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.17",
+    "schema_version": "1.5.18",
     "last_updated": "2026-05-18",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -597,6 +597,21 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-18",
+      "message": "feat(underdark): Director panel, tone toggles, scene inject bar, trigger response",
+      "scope": "playground/underdark/",
+      "impact": "high",
+      "files": [
+        "playground/underdark/index.html",
+        "playground/underdark/script/main.js",
+        "playground/underdark/script/modules/ui.js",
+        "playground/underdark/style/arena.css",
+        "status/logs/data/logs.json"
+      ],
+      "why": "Redesigned the input layer: quick-reply-bar becomes a tabbed Director panel (Actions/Tone/Overlord); Tone tab has 8 persistent toggle chips that inject a character-specific directive on every send until cleared; scene-inject bar is a single-line text input above the textarea for one-shot scene events; trigger-response button (zap, next to send) fires the character without requiring player input; all three new inputs respect active tone and scene directive in the same pipeline as normal sends."
+    },
     {
       "hash": "889fb10",
       "date": "2026-05-18",
@@ -2701,6 +2716,19 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-18",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Redesigned the input control layer. The quick-reply bar is now a tabbed Director panel with three tabs: Actions (pacing/voice/format chips that append text to textarea), Tone (8 persistent toggle chips — Lust, Rage, Grief, Fear, Tender, Predatory, Unravelling, Joy — that inject a character-specific tone directive on every send until cleared, one active at a time), and Overlord (all scene narration actions in one place). Added scene-inject bar: a blue-tinted single-line input above the textarea, toggled by a pencil-line toolbar button, that wraps its value as a [SCENE DIRECTIVE] and appends it to pendingReinject at send time (consumed once, clears after firing). Added trigger-response button (zap icon, gold, next to the send button) that fires triggerBotResponse for the active character without requiring any player input — respects active tone and scene inject in the same pipeline as a normal send.",
+      "decisions": [
+        "Tone directives are injected through the existing pendingReinject pipeline (ephemeral system message right before generation) — no new state path needed, and they compose cleanly with reinject-tray directives.",
+        "Scene inject is consumed on send (value cleared after firing) so it is always one-shot — the user types it per turn, not a persistent setting.",
+        "Tone toggle is persistent until explicitly cleared — click same tone again or use the Clear button. This is intentional: setting a tone for a sustained scene passage is more useful than repeating the click every turn.",
+        "Trigger-response button does not add a user message to history — it simply fires triggerBotResponse, which is correct for cases where you want the character to continue without any player input (e.g. character monologues, reactive beats).",
+        "Director panel is rebuilt each time it opens (not cached) so the active tone state is always reflected immediately."
+      ]
+    },
     {
       "date": "2026-05-18",
       "agent": "Claude Sonnet 4.6",
