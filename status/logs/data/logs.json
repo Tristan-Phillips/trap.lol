@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.18",
+    "schema_version": "1.5.19",
     "last_updated": "2026-05-18",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -597,6 +597,18 @@
     ]
   },
   "commits": [
+    {
+      "hash": "366deed",
+      "date": "2026-05-18",
+      "message": "style(underdark): visual polish for Director panel",
+      "scope": "playground/underdark/",
+      "impact": "low",
+      "files": [
+        "playground/underdark/script/main.js",
+        "playground/underdark/style/arena.css"
+      ],
+      "why": "User requested visual improvement after seeing the functional Director panel; replaced flat chip CSS with polished panel background (near-opaque dark, accent glow), refined tab bar with active underline + glow, pill-shaped tone chips with violet-pink active state, colour-coded chip categories (purple for actions, violet for tone, sky blue for Overlord), warm-gold AI suggestions, and contained active-tone row."
+    },
     {
       "hash": "6485036",
       "date": "2026-05-18",
@@ -2716,6 +2728,16 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-18",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Visual polish pass on the Director panel. Replaced flat functional CSS with a fully styled dark panel (near-opaque background, accent-glowing top border, backdrop blur), refined tab bar with active underline + text-shadow glow, pill-shaped tone chips with violet-pink active state and inset glow, colour-coded chip categories (purple actions, violet tone, sky blue Overlord), warm-gold AI suggestions, and a contained active-tone indicator row. Version bumped to ui.js v126.",
+      "decisions": [
+        "Chip category colouring chosen by semantic function: actions are neutral purple (they append text), tone chips are violet-pink (character-state modifiers), Overlord chips are sky blue (world-narration, clearly distinct from the other two), AI suggestions are warm gold italic (advisory, not directive).",
+        "Active tone row uses its own boxed section rather than just a colour on the chip — makes the persistent state more visually prominent and obvious at a glance."
+      ]
+    },
     {
       "date": "2026-05-18",
       "agent": "Claude Sonnet 4.6",
