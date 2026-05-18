@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.20",
+    "schema_version": "1.5.21",
     "last_updated": "2026-05-18",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -597,6 +597,19 @@
     ]
   },
   "commits": [
+    {
+      "hash": "5d89ad9",
+      "date": "2026-05-18",
+      "message": "feat(underdark): rework Director panel — Direct/Mood/World tabs, chips fire immediately",
+      "scope": "playground/underdark/",
+      "impact": "high",
+      "files": [
+        "playground/underdark/script/main.js",
+        "playground/underdark/script/modules/ui.js",
+        "playground/underdark/style/arena.css"
+      ],
+      "why": "The original Actions tab was confusing — chips like 'Continue' appended text but required the player to still manually send. Reworked to three semantically clear tabs: Direct (chips fire triggerBotResponse immediately, no player message), Mood (renamed from Tone, same persistent toggle logic), World (renamed from Overlord). DIR_ACTIONS renamed to DIR_DIRECT with directive field, .dir-btn--action renamed to .dir-btn--direct. Direct chips compose with active mood and optionally fire an Overlord beat before the character responds."
+    },
     {
       "hash": "1f3d4bf",
       "date": "2026-05-18",
@@ -2740,6 +2753,18 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-18",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Reworked the Director panel from scratch. The confusing 'Actions' tab (which only staged text for the next send) is replaced by 'Direct' — chips that call triggerBotResponse immediately without any player message. 'Tone' renamed to 'Mood', 'Overlord' renamed to 'World'. Direct chips compose with the active Mood directive and optionally fire an Overlord beat first (Continue, Time skip, Linger do; Voice/Shape chips don't). A hint line in the tab explains the immediate-fire behaviour.",
+      "decisions": [
+        "Direct chips fire triggerBotResponse directly — this is the correct mental model: the player is directing the character, not composing a message. No intermediate 'stage and send' step.",
+        "Active mood is composited into the Direct chip reinject at fire time (same logic as normal send), so the mood state is always respected regardless of how the character is triggered.",
+        "Tabs renamed: Actions→Direct, Tone→Mood, Overlord→World — clearer semantic meaning for each control surface.",
+        "OOC chip removed from the Direct panel entirely since it requires player-typed content and doesn't fit the immediate-fire model."
+      ]
+    },
     {
       "date": "2026-05-18",
       "agent": "Claude Sonnet 4.6",
