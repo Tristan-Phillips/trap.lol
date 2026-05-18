@@ -4,17 +4,15 @@
    GPL-3.0 — trap.lol */
 
 import { config } from './core.js';
-import { getApiKey } from './llm-auth.js';
 
 function apiBase() {
   return config?.llm?.api_base ?? 'https://nano-gpt.com/api/v1';
 }
 
-function authHeaders(proxyMode = false) {
+function authHeaders(apiKey, proxyMode = false) {
   if (proxyMode) return { 'Content-Type': 'application/json' };
-  const key = getApiKey();
-  return key
-    ? { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` }
+  return apiKey
+    ? { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` }
     : { 'Content-Type': 'application/json' };
 }
 
@@ -35,7 +33,8 @@ export function extractThoughts(rawText) {
 // opts.onError(err)            — called on any failure
 // opts.signal                  — optional AbortSignal
 // opts.proxyMode               — skip Bearer header, use credentials:include
-export async function streamChat(payload, { onChunk, onDone, onError, signal, proxyMode = false } = {}) {
+// opts.apiKey                  — caller-supplied key; avoids shared-module-instance problems
+export async function streamChat(payload, { onChunk, onDone, onError, signal, proxyMode = false, apiKey = '' } = {}) {
   const sendPayload = { ...payload, stream: true };
   // Strip engine-private fields before sending
   delete sendPayload._charName;
@@ -48,7 +47,7 @@ export async function streamChat(payload, { onChunk, onDone, onError, signal, pr
       method: 'POST',
       signal,
       credentials: proxyMode ? 'include' : 'omit',
-      headers: authHeaders(proxyMode),
+      headers: authHeaders(apiKey, proxyMode),
       body: JSON.stringify(sendPayload),
     });
 
@@ -101,7 +100,7 @@ export async function streamChat(payload, { onChunk, onDone, onError, signal, pr
 
 // ── Non-streaming chat completion ─────────────────────────────────────────────
 // Returns { text, thoughts, rawText, tokens } or throws.
-export async function fetchChat(payload, { proxyMode = false } = {}) {
+export async function fetchChat(payload, { proxyMode = false, apiKey = '' } = {}) {
   const sendPayload = { ...payload, stream: false };
   delete sendPayload._charName;
   delete sendPayload._flags;
@@ -109,7 +108,7 @@ export async function fetchChat(payload, { proxyMode = false } = {}) {
   const res = await fetch(`${apiBase()}/chat/completions`, {
     method: 'POST',
     credentials: proxyMode ? 'include' : 'omit',
-    headers: authHeaders(proxyMode),
+    headers: authHeaders(apiKey, proxyMode),
     body: JSON.stringify(sendPayload),
   });
 

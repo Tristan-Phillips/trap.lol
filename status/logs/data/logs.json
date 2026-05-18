@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.6",
+    "schema_version": "1.5.7",
     "last_updated": "2026-05-18",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -597,6 +597,22 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-18",
+      "message": "fix(underdark): fix 402 by decoupling llm-transport from llm-auth module instance",
+      "scope": "glass/script/modules/, playground/underdark/",
+      "impact": "critical",
+      "files": [
+        "glass/script/modules/llm-transport.js",
+        "glass/script/modules/llm-chat.js",
+        "playground/underdark/script/modules/llm-engine.js",
+        "playground/underdark/script/modules/ui.js",
+        "playground/underdark/script/main.js",
+        "status/logs/data/logs.json"
+      ],
+      "why": "Underdark returned HTTP 402 on every message despite a valid subscription. Root cause: llm-transport.js imported llm-auth.js with no version suffix, while all Underdark modules import llm-auth.js?v=3 — the browser treated these as separate module instances with independent _apiKey state, so llm-transport.js always sent requests with no Authorization header."
+    },
     {
       "hash": "dcf7a16",
       "date": "2026-05-18",
@@ -2539,6 +2555,20 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-18",
+      "agent": "Claude Sonnet 4.6",
+      "type": "bug_fix",
+      "summary": "Diagnosed and fixed the Underdark HTTP 402 regression caused by a split ES module instance for llm-auth.js. The fix removes llm-auth.js from llm-transport.js entirely — callers now pass apiKey explicitly via opts, eliminating the module-instance coupling. Both Neural Uplink and Underdark updated to pass their respective keys.",
+      "decisions": [
+        "llm-transport.js no longer imports llm-auth.js — it accepts apiKey as an explicit parameter in streamChat/fetchChat opts. This makes the transport truly stateless and import-graph agnostic.",
+        "Version suffixes (?v=N) on ES module imports create separate module instances with separate state — any shared singleton (like the _apiKey variable in llm-auth.js) will be silently split across importers using different URL forms. This is a class of bug to avoid in future.",
+        "New apps that share glass modules must use consistent import URLs (with or without version suffix) across all files that access the same module's state."
+      ],
+      "rules_reinforced": [
+        "ES module identity in the browser is URL-exact — ?v=3 and no-suffix are distinct modules with separate state. Never mix versioned and unversioned imports of the same module that holds singleton state."
+      ]
+    },
     {
       "date": "2026-05-18",
       "agent": "Claude Sonnet 4.6",

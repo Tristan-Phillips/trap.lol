@@ -617,7 +617,7 @@ async function summarizeDropped(messages, config) {
     };
 
     try {
-        const result = await fetchChat(payload);
+        const result = await fetchChat(payload, { apiKey });
         return result.text.trim() || '';
     } catch (err) {
         console.warn('[llm] summarizeDropped error:', err.message);
@@ -1022,6 +1022,7 @@ export async function streamCompletion(payload, onChunk, onDone, onError, signal
 
     await streamChat(payload, {
         signal,
+        apiKey: getApiKey(),
         onChunk(delta, fullRaw) {
             tokenCount  += estimateTokens(delta);
             lastFullRaw  = fullRaw;
@@ -1078,7 +1079,7 @@ export async function summarizeDroppedMessages(messages, { model, chatId, horizo
     };
 
     try {
-        const result = await fetchChat(payload);
+        const result = await fetchChat(payload, { apiKey });
         const summary = result.text.trim() || null;
         if (summary) sessionStorage.setItem(cacheKey, summary);
         return summary;
@@ -1089,8 +1090,9 @@ export async function summarizeDroppedMessages(messages, { model, chatId, horizo
 
 // ── Non-streaming fallback ────────────────────────────────────────────────────
 export async function fetchCompletion(payload) {
-    if (!getApiKey()) throw new Error('No API key configured.');
-    const result = await fetchChat(payload);
+    const apiKey = getApiKey();
+    if (!apiKey) throw new Error('No API key configured.');
+    const result = await fetchChat(payload, { apiKey });
     return {
         text:    payload._flags?.showThoughts ? result.rawText : result.text,
         thoughts: result.thoughts,

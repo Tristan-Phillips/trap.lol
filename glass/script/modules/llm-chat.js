@@ -309,6 +309,7 @@ export async function sendMessage(ctx) {
       await streamChat(payload, {
         signal: abortController.signal,
         proxyMode: auth.PROXY_MODE,
+        apiKey: token,
         onChunk(delta) {
           if (!chunkCount) $thinking.remove();
           fullText += delta;
@@ -332,7 +333,7 @@ export async function sendMessage(ctx) {
       });
 
     } else {
-      const result = await fetchChat(payload, { proxyMode: auth.PROXY_MODE });
+      const result = await fetchChat(payload, { proxyMode: auth.PROXY_MODE, apiKey: token });
       fullText = result.text;
       $thinking.remove();
     }
