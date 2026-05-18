@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.4.8",
+    "schema_version": "1.4.9",
     "last_updated": "2026-05-18",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -152,7 +152,8 @@
       "underdark/data/feed.json": "Underdark social feed. Permanent git-committed posts in posts[] that appear on all instances. Local session posts live in state.socialData.localPosts (not persisted here). type: image|text. charId must match index.json character id.",
       "underdark/data/rp-gen-presets.json": "Underdark RP generator presets. Large structured object of image generation prompt building blocks (scenes, outfits, poses, styles, etc.) used by the RP generator panel.",
       "underdark/data/persona-builder.json": "Underdark persona builder question set. questions[] array used to drive the persona creation wizard UI.",
-      "status/logs/data/logs.json": "THIS FILE. The site intelligence record. Updated every session by the working LLM. See _protocol for update rules."
+      "status/logs/data/logs.json": "THIS FILE. The site intelligence record. Updated every session by the working LLM. See _protocol for update rules.",
+      "status/observations/data/observations.json": "Living LLM cognitive profile of trap (Tristan Phillips). entries[] array accumulates across sessions and models. Has its own _protocol block with absolute_rules and strong_preferences governing future LLM writes. Schema v1.0.0. Read by status/observations/index.html."
     },
     "shortcut_system": {
       "description": "The globalRouter (Map) is populated during render. Every item with a shortcut field registers a 2-char keystroke. On desktop (non-touch), typing 2 chars triggers the action.",
@@ -297,7 +298,14 @@
     "/status/": {
       "file": "status/index.html",
       "title": "trap.lol // status",
-      "purpose": "Minimal hub page. Lists all sub-sections under status/. Currently one entry: Intelligence Logs → /status/logs/. Extensible — add a new entry here whenever a new sub-page is added under status/. Does not probe, does not fetch data, no JS."
+      "purpose": "Minimal hub page. Lists all sub-sections under status/. Currently two entries: Observations → /status/observations/ and Intelligence Logs → /status/logs/. Extensible — add a new entry here whenever a new sub-page is added under status/. Does not probe, does not fetch data, no JS."
+    },
+    "/status/observations/": {
+      "file": "status/observations/index.html",
+      "title": "trap.lol // observations",
+      "purpose": "Living LLM cognitive profile of trap (Tristan Phillips). Entries are written by LLMs during sessions, accumulated over time. Not a diagnosis — a record of how different AI systems perceive one human, for the subject's curiosity. Tabs: Overview (dossier header + recent entries), All Entries (filterable by category), per-category tabs (Personality, Cognitive, Aesthetic, Values, Obsessions, Behavioural, Tensions, Evolution), Protocol (rules for future LLMs). Data loaded from observations.json.",
+      "key_files": ["status/observations/data/observations.json"],
+      "note": "Category tabs are dynamically generated — only categories with entries appear. Protocol tab documents the absolute rules and strong preferences governing how future LLMs should write to the file."
     },
     "/archive/": {
       "file": "archive/index.html",
@@ -568,7 +576,7 @@
         ]
       }
     ],
-    "current_state": "Production — seven distinct routable pages live (/, /playground/, /underdark/, /art/, /void/, /dndm/, /radar/, /status/, /status/logs/). /guide/ is planned but the directory does not exist yet — glass/markdown/ has one .md file waiting. Core hub stable with Sovereign Nodes, Station, Transmissions, Ordnance Depot, Drone Fleet, App Uplinks, Uplink Launchpad, and social strip. Signal Mesh (extlinks) is commented out. The Underdark is the most actively developed sub-app — ~11k-line vanilla-JS roleplay system with 11 modules covering character creation, personas, scenarios, lorebooks, image/video studio, social feed, and RP generator. Grimoire (/dndm/) is a full DM campaign suite with Story canvas, Party Tracker, Atlas fog-of-war, Oracle LLM assistant, Bestiary, and Spellbook. ECHOES (/art/) and VOID (/void/) are stable. llm.json is on schema v9.1.0-multimodal-matrix. The site also has a mutable working layer (signal.json) for tasks, issues, and proposals alongside the authoritative logs.json.",
+    "current_state": "Production — nine distinct routable pages live (/, /playground/, /underdark/, /art/, /void/, /dndm/, /radar/, /status/, /status/logs/, /status/observations/, /archive/, /archive/uplink-sentinel/). /guide/ is planned but the directory does not exist yet — glass/markdown/ has one .md file waiting. Core hub stable with Sovereign Nodes, Station, Transmissions, Ordnance Depot, Drone Fleet, App Uplinks, Uplink Launchpad, and social strip. Signal Mesh (extlinks) is commented out. The Underdark is the most actively developed sub-app — ~11k-line vanilla-JS roleplay system with 11 modules covering character creation, personas, scenarios, lorebooks, image/video studio, social feed, and RP generator. Grimoire (/dndm/) is a full DM campaign suite with Story canvas, Party Tracker, Atlas fog-of-war, Oracle LLM assistant, Bestiary, and Spellbook. ECHOES (/art/) and VOID (/void/) are stable. llm.json is on schema v9.1.0-multimodal-matrix. The site has a mutable working layer (signal.json) and a living LLM cognitive profile (/status/observations/) that accumulates cross-session assessments of the owner.",
     "intended_future": [
       "Sacred Codex (guides section) reactivation when enough .md content exists",
       "More ECHOES collections as artwork is created/curated",
@@ -582,6 +590,21 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-18",
+      "message": "feat(status): add /status/observations/ — living LLM cognitive profile page",
+      "scope": "status/observations/",
+      "impact": "medium",
+      "files": [
+        "status/observations/index.html",
+        "status/observations/data/observations.json",
+        "status/index.html",
+        "status/logs/data/logs.json",
+        "status/logs/data/signal.json"
+      ],
+      "why": "Trap requested a permanent ongoing psych profile — entries written by LLMs across sessions, with a strict ruleset governing attribution, confidence scoring, and preservation of historical records."
+    },
     {
       "hash": "dda5e70",
       "date": "2026-05-18",
@@ -2429,6 +2452,22 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-18",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Created /status/observations/ — a permanently ongoing LLM cognitive profile of trap. Includes observations.json (rules + 12 initial entries across 7 categories), index.html (hybrid glass shell + clinical card viewer with tabs by category and a protocol tab for future LLMs), and an Observations entry added to status/index.html hub. Initial entries written by Claude Sonnet 4.6 cover personality, cognitive style, aesthetic, values, obsessions, behavioural patterns, and tensions.",
+      "decisions": [
+        "Per-entry attribution (model + date) rather than session-level only — enables cross-model comparison over time",
+        "Numeric 0.0–1.0 confidence scores rather than 3-tier labels — more granular, supports future analysis",
+        "Strict core + creative freedom ruleset — absolute rules protect record integrity, everything else is LLM-discretion",
+        "Hybrid visual design — glass chrome matches the site, observation card interiors use clinical/dossier aesthetic with evidence blocks and confidence badges",
+        "All categories in one data file (observations.json) rather than split files — simpler for LLMs to maintain",
+        "observations.json has its own _protocol block with absolute_rules and strong_preferences — self-governing like logs.json",
+        "/status/observations/ added to status/index.html hub as first entry (above Intelligence Logs)",
+        "12 initial entries written immediately by Claude Sonnet 4.6 at trap's explicit request — not left empty"
+      ]
+    },
     {
       "date": "2026-05-18",
       "agent": "Claude Sonnet 4.6",
@@ -4711,6 +4750,7 @@
           { "file": "playground/index.html", "how": "Base styles; extended by glass/style/modules/neural-uplink.css" },
           { "file": "status/index.html", "how": "Full hub styles used for the status page" },
           { "file": "status/logs/index.html", "how": "Full hub styles used as the base for the logs viewer" },
+          { "file": "status/observations/index.html", "how": "Full hub styles used as the base for the observations viewer" },
           { "file": "underdark/index.html", "how": "Hub base styles loaded; Underdark has its own style layer on top" },
           { "file": "guide/index.html", "how": "Full hub styles shared with the guide markdown reader" }
         ]
@@ -4870,6 +4910,23 @@
         "used_by": [
           { "file": "status/logs/index.html", "how": "Fetched at runtime by buildSignal() and rendered in the Signal tab with distinct teal visual treatment" },
           { "file": "status/logs/data/logs.json", "how": "Referenced in _protocol.companion_file and files_to_read_before_working.always" }
+        ]
+      },
+      "status/observations/data/observations.json": {
+        "domain": "LLM cognitive profile of the subject (trap)",
+        "owns": [
+          "All observation entries: LLM assessments of personality, cognitive style, aesthetic, values, obsessions, behavioural patterns, tensions, evolution",
+          "The _protocol block governing how future LLMs may add to, annotate, or supersede entries",
+          "Confidence scores (0.0–1.0) and evidence arrays per entry",
+          "Per-entry attribution (assessor model + date)"
+        ],
+        "do_not": [
+          "Do NOT delete or overwrite existing entries — mark superseded_by if replacing, leave original intact",
+          "Do NOT write entries without evidence — fabricated observations violate the absolute rules",
+          "Do NOT embed this data in logs.json — it is a separate domain with its own protocol"
+        ],
+        "used_by": [
+          { "file": "status/observations/index.html", "how": "Fetched at runtime; drives all tabs: Overview, All Entries, per-category, and Protocol" }
         ]
       }
     }

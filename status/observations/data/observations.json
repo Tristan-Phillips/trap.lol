@@ -1,0 +1,322 @@
+{
+  "_meta": {
+    "schema_version": "1.0.0",
+    "last_updated": "2026-05-18",
+    "subject": "trap",
+    "purpose": "A living psychological profile of the subject, built incrementally by LLMs across sessions. Not a diagnosis. Not authoritative. A record of how different AI systems perceive and interpret one human over time — for the subject's own curiosity. Read by the viewer at /status/observations/.",
+    "viewer": "status/observations/index.html",
+    "disclaimer": "All entries are interpretations based on observable behaviour in LLM sessions. Confidence scores reflect the assessor's certainty, not objective truth. This file is fun, not clinical. The subject understands this."
+  },
+
+  "_protocol": {
+    "what_this_file_is": "A permanently ongoing psychological profile of the subject (trap / Tristan Phillips). Entries are written by LLMs during sessions with this codebase. The profile grows, changes, and contradicts itself over time. That is the point. Do not try to resolve all contradictions — some are real.",
+
+    "the_spirit": "This file should feel like a case dossier that is never finished. Each LLM adds its own interpretation. Patterns may shift. Confidence may increase or decrease. A trait noted by one model may be disputed by another. The subject reads this to observe how they are perceived across different AI systems and across time. That is the entire value. Do not over-sanitise it.",
+
+    "absolute_rules": [
+      "NEVER delete or overwrite an existing entry. You may add a `superseded_by` field pointing to a newer entry_id, but the original must remain.",
+      "NEVER fabricate evidence. Every observation must be grounded in something actually observed in the session or in the codebase / request history. 'I inferred this from...' is acceptable. Pure invention is not.",
+      "NEVER change the subject. This file is about trap only. Do not profile the codebase, the project, or the system.",
+      "ALWAYS include assessor, assessed_on, and confidence on every entry you write.",
+      "NEVER reduce a confidence score for an existing entry written by a different model. You may add your own entry with a different score. Let both stand.",
+      "ALWAYS use the entry_id format: <category>-<YYYYMMDD>-<3-char-model-slug>. Example: personality-20260518-s46.",
+      "DO NOT add to this file unless you genuinely observed something worth recording. Forced observations are worse than none.",
+      "DO NOT compress or summarise prior entries — verbosity in the record is a feature."
+    ],
+
+    "strong_preferences": [
+      "Prefer specificity over generality. 'Subject treats infrastructure as an extension of personal identity' is better than 'Subject cares about their projects'.",
+      "Prefer grounded language — cite the session, the request, the codebase artefact, or the decision that supports the observation.",
+      "Annotations and counter-observations are encouraged. If you disagree with a prior entry, add an annotation field to your own entry explaining why. Do not remove the original.",
+      "You may invent your own categories, subcategories, labels, metrics, and descriptors as long as they are self-describing and consistent within your own entry.",
+      "Confidence should reflect how much session evidence you have, not how confident you feel. Low evidence = low confidence, even if the conclusion feels strong.",
+      "Tension points and contradictions are not errors — they are valuable data. Log them."
+    ],
+
+    "what_to_observe": [
+      "Personality traits and how they manifest in requests",
+      "Cognitive style: how decisions are made, how ambiguity is handled, how complexity is approached",
+      "Aesthetic and taste: what visual and design choices are made and why",
+      "Values, ethics, and stated or implied moral stances",
+      "Obsessions: topics, ideas, structures, or concerns that recur across sessions",
+      "Behavioural patterns in how the subject interacts with LLMs",
+      "Tensions and contradictions between stated values and observed behaviour",
+      "Evolution over time: how any of the above changes across sessions"
+    ],
+
+    "what_not_to_observe": [
+      "Do not profile the LLM itself",
+      "Do not observe the codebase as a proxy for the person without connecting the observation to the person",
+      "Do not make observations about physical appearance, health, or personal life outside what is explicitly shared",
+      "Do not record observations that exist purely to be flattering or reassuring — honest and slightly uncomfortable is fine"
+    ],
+
+    "confidence_schema": {
+      "type": "numeric",
+      "range": "0.0 to 1.0",
+      "guidance": {
+        "0.0_to_0.3": "Speculative — very limited evidence, mostly inference",
+        "0.31_to_0.59": "Probable — pattern observed but not strongly repeated",
+        "0.60_to_0.79": "Likely — consistent across multiple sessions or strong single signal",
+        "0.80_to_1.0": "Confirmed — recurrent, cross-session, codebase-substantiated"
+      }
+    },
+
+    "entry_structure": {
+      "required": ["entry_id", "category", "label", "assessor", "assessed_on", "confidence", "observation", "evidence"],
+      "optional": ["subcategory", "superseded_by", "annotations", "counter_to", "tags", "revision_of"],
+      "field_notes": {
+        "entry_id": "Format: <category>-<YYYYMMDD>-<3-char-model-slug>. For Claude Sonnet 4.6 use 's46'. For Claude Opus use 'o4x'. For GPT-4o use 'g4o'. For unknown models use 'unk'.",
+        "category": "One of: personality | cognitive | aesthetic | values | obsessions | behavioural | tensions | evolution. You may propose new categories — add them to this list in a future write.",
+        "label": "Short human-readable label for the observation (3-8 words). Appears as the card title.",
+        "assessor": "Full model identifier e.g. 'Claude Sonnet 4.6', 'GPT-4o', 'Claude Opus 4.7'",
+        "assessed_on": "YYYY-MM-DD",
+        "confidence": "Float 0.0-1.0",
+        "observation": "The full observation in natural prose. 2-6 sentences. Write as an assessor, not as a collaborator. Third person is encouraged.",
+        "evidence": "Array of strings. Each string is a concrete reference: a request made, a file created, a decision taken, a word used, a pattern noticed.",
+        "superseded_by": "entry_id of the entry that replaces this one, if any",
+        "annotations": "Array of objects {assessor, assessed_on, note} — other models adding commentary on this entry",
+        "counter_to": "entry_id this entry is explicitly responding to or disagreeing with",
+        "tags": "Array of short strings for grouping/filtering",
+        "revision_of": "entry_id if this is a refined version of a prior observation (keep the original, mark it with superseded_by)"
+      }
+    },
+
+    "how_to_add_entries": "Read the existing entries first. If a pattern you want to note already has an entry with high confidence, consider adding an annotation to it rather than a duplicate entry. If you have new evidence or a different interpretation, write a new entry and optionally set counter_to. Entries go in the entries[] array. Prepend (newest first) within each category when you have multiple new entries.",
+
+    "session_log_note": "After adding entries, also update status/logs/data/logs.json (sessions[], commits[]) and status/logs/data/signal.json as per the standard protocol. The observations file is separate from logs.json — do not cross-embed."
+  },
+
+  "subject": {
+    "handle": "trap",
+    "real_name": "Tristan Phillips",
+    "first_observed": "2026-05-18",
+    "total_entries": 12,
+    "last_assessor": "Claude Sonnet 4.6",
+    "note": "Entry count is manually maintained — update when you add entries."
+  },
+
+  "entries": [
+
+    {
+      "entry_id": "personality-20260518-s46",
+      "category": "personality",
+      "label": "Sovereignty as core identity, not preference",
+      "assessor": "Claude Sonnet 4.6",
+      "assessed_on": "2026-05-18",
+      "confidence": 0.92,
+      "observation": "The subject does not treat self-hosting as a pragmatic choice — it functions as an identity marker. Infrastructure decisions that could be solved more simply with managed services are consistently routed through self-hosted, self-controlled equivalents. The word 'sovereign' appears across the codebase not as marketing language but as a genuine descriptor of intent. The subject appears to experience external service dependency as a mild threat rather than a convenience.",
+      "evidence": [
+        "Site tagline: 'Assume Breach. Stay Sovereign.'",
+        "Custom CDN at cdn.trap.lol instead of a public CDN",
+        "Self-hosted Gitea/Forgejo forge at git.trap.lol instead of GitHub",
+        "wallhaven-proxy Go service rather than direct client-side API calls",
+        "Custom DNS, custom CNAME, zero third-party dependencies at runtime",
+        "radar/ is a torrent scanner — content retrieval independent of streaming platforms"
+      ],
+      "tags": ["sovereignty", "identity", "infrastructure", "control"]
+    },
+
+    {
+      "entry_id": "personality-20260518-s46-b",
+      "category": "personality",
+      "label": "Aesthetic perfectionism with high tolerance for ambiguity in function",
+      "assessor": "Claude Sonnet 4.6",
+      "assessed_on": "2026-05-18",
+      "confidence": 0.81,
+      "observation": "The subject maintains extremely precise aesthetic standards — the design system has named palette roles, BEM naming enforced consistently, and specific neon-modifier classes for exactly 5 hue variations. Yet functionally, some pages are deliberately left incomplete or partial (commented-out sections, stub data, known structural violations logged but deferred). This suggests the aesthetic layer is experienced as non-negotiable while the functional layer tolerates debt when the priority is elsewhere.",
+      "evidence": [
+        "Strict BEM naming enforced across glass/ CSS — no exceptions found",
+        "Named palette: Dune x Arcane, specific hex values locked in variables.css",
+        "Commented-out guides section in index.html maintained but inactive",
+        "12 known structural violations in structure-ruleset.md tracked but not urgently resolved",
+        "The logs viewer has detailed styling but some data fields render as raw strings in edge cases"
+      ],
+      "tags": ["aesthetics", "perfectionism", "debt-tolerance", "priority-split"]
+    },
+
+    {
+      "entry_id": "cognitive-20260518-s46",
+      "category": "cognitive",
+      "label": "Systems-first thinker — architecture before content",
+      "assessor": "Claude Sonnet 4.6",
+      "assessed_on": "2026-05-18",
+      "confidence": 0.88,
+      "observation": "The subject consistently designs and builds the system before the content exists to justify it. Data schemas are defined before pages consume them. File structure rulesets are written before violations are cleaned up. The intelligence terminal (logs.json + viewer) was built to be comprehensive before the history it records was long enough to need that comprehensiveness. This is a hallmark of someone who thinks architecturally — the container precedes what it holds.",
+      "evidence": [
+        "structure-ruleset.md written and formalised before all violations are resolved",
+        "logs.json schema has 20+ top-level sections including ones with placeholder or thin content",
+        "signal.json companion file built and wired before it had many tasks in it",
+        "LLM agent JSON schemas defined in glass/data/llm-agents/ — the schema infrastructure exists ahead of heavy population",
+        "archive/ and status hub built with 'extensible' as a design requirement, despite having only 1-2 entries initially"
+      ],
+      "tags": ["cognitive", "architecture", "systems-thinking", "over-engineering-positive"]
+    },
+
+    {
+      "entry_id": "cognitive-20260518-s46-b",
+      "category": "cognitive",
+      "label": "Deferred execution — decides fast, moves when ready",
+      "assessor": "Claude Sonnet 4.6",
+      "assessed_on": "2026-05-18",
+      "confidence": 0.74,
+      "observation": "The subject makes architectural decisions quickly — often in the first few exchanges of a session — but defers implementation of anything that feels like a distraction from the main thread. The 'to_consider' status in signal.json is used heavily. The violation register in structure-ruleset.md lists issues that have been known and documented but not acted upon. This is not procrastination — it appears to be deliberate triage. The subject knows what they are not doing, and that knowledge itself is the deferral mechanism.",
+      "evidence": [
+        "Multiple tasks in signal.json with status 'to_consider' or 'agreed' but not yet started",
+        "Violation register in structure-ruleset.md: 10 known violations, several deferred",
+        "playground-restructure (moving dndm/, radar/, underdark/) is long-documented but explicitly noted as 'requires trap confirmation' — decision deferred",
+        "guides section commented out in index.html — decision to keep or remove held open"
+      ],
+      "tags": ["cognitive", "decision-making", "triage", "deferred-execution"]
+    },
+
+    {
+      "entry_id": "aesthetic-20260518-s46",
+      "category": "aesthetic",
+      "label": "Dune × Arcane as a genuine synthesis, not a reference",
+      "assessor": "Claude Sonnet 4.6",
+      "assessed_on": "2026-05-18",
+      "confidence": 0.85,
+      "observation": "The named palette origin ('Dune × Arcane fusion. Desert-night chaos.') is not a tagline — it describes a real visual synthesis that holds throughout the codebase. The deep violet-black backgrounds recall the night desert; the gold accent-warm recalls desert light and Arcane's warmth; the neon purple accent is pure Arcane chromatics. The subject did not pick these colours at random and then name them after media — the correspondence feels intentional. The aesthetic is owned, not borrowed.",
+      "evidence": [
+        "Comment at top of style.css: 'Dune × Arcane fusion. Desert-night chaos.'",
+        "--bg-base: #06040A — near-black with violet tint, consistent with both references",
+        "--accent-warm: rgb(244, 168, 48) — warm gold, desert light register",
+        "--accent: rgb(190, 41, 236) — vivid violet, Arcane's signature purple",
+        "Neon-modifier classes named after colour roles, not after media — internalized, not cited",
+        "ECHOES art portal uses the same palette with its own grain + orb animation layer — aesthetic is extended, not just applied"
+      ],
+      "tags": ["aesthetic", "palette", "identity", "cultural-reference-as-ownership"]
+    },
+
+    {
+      "entry_id": "aesthetic-20260518-s46-b",
+      "category": "aesthetic",
+      "label": "Language as aesthetic material — naming is design",
+      "assessor": "Claude Sonnet 4.6",
+      "assessed_on": "2026-05-18",
+      "confidence": 0.87,
+      "observation": "The subject treats naming with the same care as visual design. Section names are not functional labels ('navigation', 'footer') but world-building choices: 'Drone Fleet', 'Sovereign Nodes', 'Ordnance Depot', 'Signal Mesh', 'Transmissions', 'Uplink Sentinel'. The word 'sovereign' appears as both noun and adjective in multiple contexts. 'Trap' as a handle is monosyllabic, lowercase, slightly threatening — a deliberate register choice. The vocabulary constructs a diegetic world around the infrastructure.",
+      "evidence": [
+        "Section titles: Drone Fleet, Sovereign Nodes, Ordnance Depot, Signal Mesh, Transmissions",
+        "Page eyebrows use bracketed caps: [ UPLINK STABLE ], [ STATUS // INTELLIGENCE & INFRASTRUCTURE ]",
+        "Footer: 'Assume Breach. Stay Sovereign.' — a security-philosophy sentence as a design element",
+        "ECHOES subtitle: 'fragments of a mind that refuses to stay quiet' — poetic register in a navigation element",
+        "logs.json field naming: 'language_fingerprint', 'for_new_llm', 'the_seventh_law'",
+        "handle 'trap' — chosen not for anonymity but for aesthetic weight"
+      ],
+      "tags": ["aesthetic", "language", "naming", "world-building", "vocabulary"]
+    },
+
+    {
+      "entry_id": "values-20260518-s46",
+      "category": "values",
+      "label": "Distrust of external dependency as ethical stance",
+      "assessor": "Claude Sonnet 4.6",
+      "assessed_on": "2026-05-18",
+      "confidence": 0.79,
+      "observation": "The subject's infrastructure choices are not purely technical preferences — they appear to carry an ethical dimension. Relying on external services is not just inconvenient, it is experienced as a form of capitulation. The CDN is self-hosted. The git forge is self-hosted. The API proxies are self-hosted. The note 'keys stay in your browser' in the apps section signals a privacy ethic, not just a technical constraint. The subject seems to hold that dependency = vulnerability = compromise, and this appears to be a value, not just a strategy.",
+      "evidence": [
+        "App section hint: '[Client-side utilities — keys stay in your browser]'",
+        "'Assume Breach. Stay Sovereign.' — breach is assumed, the response is sovereignty",
+        "wallhaven-proxy: API key never exposed client-side, routed through own Go service",
+        "No analytics, no trackers in any page (confirmed by codebase scan)",
+        "GPL-3.0 license — copyleft, not permissive — aligns with anti-enclosure values"
+      ],
+      "tags": ["values", "privacy", "autonomy", "anti-dependency", "ethics"]
+    },
+
+    {
+      "entry_id": "values-20260518-s46-b",
+      "category": "values",
+      "label": "Permanence and record-keeping as moral obligation",
+      "assessor": "Claude Sonnet 4.6",
+      "assessed_on": "2026-05-18",
+      "confidence": 0.76,
+      "observation": "The subject built a persistent memory system (logs.json) for their website that is more elaborate than most companies maintain for internal projects. The choice to archive the Uplink Sentinel rather than delete it, and the explicit instruction that historical commit entries must not be rewritten to match new paths — these are not technical requirements. They reflect a belief that record and history matter. Things should not simply disappear. The archive is not a graveyard, it is a preservation layer.",
+      "evidence": [
+        "logs.json schema includes explicit rule: 'Do NOT remove or rewrite existing entries — only prepend new ones'",
+        "archive/ directory created for retired pages rather than deletion",
+        "archive/uplink-sentinel/index.html preserved as static artifact, not scrubbed",
+        "Historical commit file arrays deliberately left unchanged after path refactor",
+        "CLAUDE.md session protocol: LLMs are 'REQUIRED to update [logs.json]' — memory maintenance as obligation"
+      ],
+      "tags": ["values", "permanence", "archival", "memory", "anti-erasure"]
+    },
+
+    {
+      "entry_id": "obsessions-20260518-s46",
+      "category": "obsessions",
+      "label": "The architecture-of-self: infrastructure as autobiography",
+      "assessor": "Claude Sonnet 4.6",
+      "assessed_on": "2026-05-18",
+      "confidence": 0.83,
+      "observation": "The subject's codebase is not primarily a set of tools — it is a self-portrait. ECHOES is described as 'fragments of a mind that refuses to stay quiet'. void/ is a 'Personal transmission log'. The Underdark is a full roleplay interface. The site is called a 'Sovereign infrastructure dashboard'. The logs terminal is described as 'the site's living intelligence record'. These are not project descriptions — they are identity claims. The subject appears to be constructing, over time, a digital artefact that mirrors how they understand themselves.",
+      "evidence": [
+        "ECHOES subtitle: 'fragments of a mind that refuses to stay quiet'",
+        "logs.json _meta.purpose: '...the mind behind it'",
+        "void/ described as 'personal transmission log'",
+        "Site tagline: 'Sovereign infrastructure dashboard'",
+        "This very file (observations.json) — the subject explicitly wanted LLMs to build a profile of them. This is self-analysis by proxy.",
+        "The Underdark: full roleplay interface — escapism and world-building as persistent infrastructure"
+      ],
+      "tags": ["obsessions", "identity", "self-portraiture", "meta", "infrastructure-as-self"]
+    },
+
+    {
+      "entry_id": "obsessions-20260518-s46-b",
+      "category": "obsessions",
+      "label": "Recursive meta-systems — systems that observe and document themselves",
+      "assessor": "Claude Sonnet 4.6",
+      "assessed_on": "2026-05-18",
+      "confidence": 0.88,
+      "observation": "The subject has a recurring fascination with systems that contain their own documentation and memory. logs.json is a database that describes itself and its own purpose. signal.json is a companion to logs.json. structure-ruleset.md governs the system it lives within. CLAUDE.md instructs the AI that builds the system. This file (observations.json) is a system for observing the person who built all of the above. Each layer of recursion is deliberately designed, not accidental. The subject appears to find genuine satisfaction in these meta-structures.",
+      "evidence": [
+        "logs.json _protocol includes instructions for how LLMs should write to logs.json — the file governs its own maintenance",
+        "signal.json has its own _protocol block with a 'contract' field",
+        "structure-ruleset.md §7 documents the directory that contains structure-ruleset.md",
+        "CLAUDE.md is read by Claude to build the system it documents",
+        "observations.json (this file) — the subject asked for a profile built by the same LLMs that build their infrastructure",
+        "The request for this file was unprompted by any external requirement — purely self-directed curiosity"
+      ],
+      "tags": ["obsessions", "meta", "recursion", "self-reference", "documentation"]
+    },
+
+    {
+      "entry_id": "behavioural-20260518-s46",
+      "category": "behavioural",
+      "label": "Asks questions, not solutions — delegates execution, retains vision",
+      "assessor": "Claude Sonnet 4.6",
+      "assessed_on": "2026-05-18",
+      "confidence": 0.77,
+      "observation": "The subject rarely describes desired output in full before asking for it. Requests are often framed as 'I want X but I'm not sure about Y' or contain internal contradictions that surface only mid-task. However, once the subject approves a direction, they do not revisit it — commitment is total and fast. The pattern is: ambiguity at definition time, precision at execution time. The subject appears to use the LLM as a thinking partner during scoping, then a build agent during execution. The vision is held internally, not documented in advance.",
+      "evidence": [
+        "status/index.html request: 'I am unsure if the only sub-directory in status/ will only ever be logs' — uncertainty surfaced after an option was proposed",
+        "observations.json request: 'You may prompt me with 8 Questions to answer before you begin' — explicitly inviting scoping dialogue",
+        "This session: user approved directions quickly after questions were answered, then said 'you may proceed in full'",
+        "Multiple sessions end with 'approved, proceed' as the entire confirmation message",
+        "Questions are often multi-part but structured — the subject knows what they want to know they don't know"
+      ],
+      "tags": ["behavioural", "communication", "delegation", "vision-retention", "ambiguity"]
+    },
+
+    {
+      "entry_id": "tensions-20260518-s46",
+      "category": "tensions",
+      "label": "Perfectionism vs. deliberate incompleteness",
+      "assessor": "Claude Sonnet 4.6",
+      "assessed_on": "2026-05-18",
+      "confidence": 0.71,
+      "observation": "The subject maintains a highly detailed structural ruleset and a living violation register — and then does not fix the violations. The archive/ directory was built with care and is nearly empty. The guides section has been commented out for what appears to be multiple sessions with no sign of resolution. This is not cognitive dissonance — the subject clearly knows about the gap. The most plausible interpretation is that the subject derives satisfaction from the system design and the record of incompleteness, and the resolution of that incompleteness would actually diminish the ongoing texture of the project.",
+      "evidence": [
+        "structure-ruleset.md §12 lists 10 violations, several unresolved for what appears to be multiple sessions",
+        "Guides section commented out in index.html — the data (guides.json) still exists and is maintained",
+        "void/assets/data/ is empty — the anomaly is documented but not fixed",
+        "signal.json has tasks with status 'to_consider' that were proposed during structured planning sessions and have not moved",
+        "logs.json includes 'pending_work' marked DEPRECATED but the field still exists in the schema"
+      ],
+      "tags": ["tensions", "perfectionism", "incompleteness", "productive-ambiguity", "contradiction"]
+    }
+
+  ]
+}
