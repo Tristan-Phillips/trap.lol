@@ -17,7 +17,7 @@
         "1": {
             "name": "VOID",
             "slug": "void",
-            "path": "/void/",
+            "path": "/playground/void/",
             "icon": "radio",
             "description": "Personal transmission log. Raw entries — unfiltered and unguarded.",
             "tags": [

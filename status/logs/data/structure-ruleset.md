@@ -133,16 +133,17 @@ Apps are top-level directories. The rule for what gets a top-level slot:
 **Current valid top-level apps:**
 
 ```
-art/        /art/       — ECHOES gallery
-dndm/       /dndm/      — D&D manager
-playground/ /playground/ — App hub / Neural Uplink
-radar/      /radar/     — Torrent scanner
-status/     /status/    — Uplink Sentinel + logs
-underdark/  /underdark/ — Roleplay interface
-void/       /void/      — Personal transmission log
+art/        /art/                      — ECHOES gallery
+playground/ /playground/               — Playground hub (index lists all sub-apps)
+  ├── neural-uplink/  /playground/neural-uplink/  — LLM chat interface
+  ├── underdark/      /playground/underdark/       — Roleplay interface
+  ├── radar/          /playground/radar/           — Torrent scanner
+  ├── dndm/           /playground/dndm/            — D&D manager (Grimoire)
+  └── void/           /playground/void/            — Personal transmission log
+status/     /status/                   — Status hub + logs + observations
 ```
 
-**Pending restructure** (see `tdo.txt`): `dndm/`, `radar/`, `underdark/` should become sub-apps under `playground/`. Until that move is made, they remain top-level.
+`playground/` is both a hub page (`playground/index.html`) and a container for sub-apps. Sub-apps are Pattern B apps nested one level inside `playground/`. They follow all standard Pattern B rules except their absolute URL base is `/playground/<name>/` rather than `/<name>/`.
 
 ---
 
@@ -186,8 +187,10 @@ llm-agents/       — agent definition subdirectory
 
 Apps in Pattern B (self-contained with `assets/`) must not:
 - Import from another app's `assets/` directory
-- Reach upward more than one level to `glass/` (allowed: `../../glass/script/modules/`)
+- Reach upward more than two levels to `glass/` (for top-level apps: `../../glass/`; for sub-apps under `playground/`: `../../../glass/` — only if needed, prefer absolute `/glass/` paths)
 - Duplicate data that already exists in `glass/data/`
+
+**Prefer absolute paths** (`/glass/script/modules/llm-auth.js`) over relative upward traversal in JS imports — absolute paths work regardless of nesting depth and are immune to directory restructures.
 
 Apps must:
 - Keep their `index.html` at the app root (not inside `assets/`)
@@ -251,8 +254,7 @@ Only the following belong at the repo root:
 | `package.json` | npm scripts for local dev server only |
 
 **Does not belong at root:**
-- `tdo.txt` — move to `.ai/tdo.md`
-- Any app directory that should be under `playground/` (per `tdo.txt`)
+- Any app directory that should be under `playground/` — restructure is complete
 - Any compiled binary or generated file
 
 ---
@@ -266,22 +268,21 @@ Only the following belong at the repo root:
 
 ---
 
-## 11. `void/assets/` Anomaly
+## 11. `playground/void/assets/` Layout
 
-The `void/` app has an `assets/data/` directory that is currently empty. The actual data file (`void.json`) lives in `assets/content/` instead. This is a structural anomaly.
+`void/` is now at `playground/void/`. The previous `assets/content/void.json` anomaly has been resolved — `void.json` now lives at its correct location:
 
-**Correct target state:**
 ```
-void/assets/
+playground/void/assets/
   data/
-    void.json         — move here from assets/content/
+    void.json         — ✓ correct location
   script/
     app.js
   style/
     style.css
 ```
 
-`assets/content/` should not exist — content data is data, it lives in `assets/data/`.
+`assets/content/` no longer exists.
 
 ---
 
@@ -291,13 +292,16 @@ Known current violations (to be resolved):
 
 | Violation | Location | Rule | Fix |
 |-----------|----------|------|-----|
-| Compiled binary in data dir | `glass/data/formatter` | §5 | Move to `services/` or delete |
-| Go source in data dir | `glass/data/formatter.go` | §5 | Move to `services/` or delete |
-| Temp JSON committed | `glass/data/llmtemp.json` | §5 | Delete |
-| Scratch JSON committed | `glass/data/llm-gen.json` | §5 | Delete or move to `.ai/` |
-| Todo file at repo root | `tdo.txt` | §9 | Move to `.ai/tdo.md` |
-| Data in `assets/content/` | `void/assets/content/void.json` | §11 | Move to `void/assets/data/void.json` |
 | `guide/` missing | (no `guide/` dir) | §4 | Create per architecture docs |
-| Empty `void/assets/data/` | `void/assets/data/` | §11 | Populate after moving void.json |
-| `.ai/plan-css-refactor.md` | `.ai/` | §8 | Delete (CSS refactor is shipped) |
-| `dndm/`, `radar/`, `underdark/` at root | repo root | §4 | Move under `playground/` (per tdo.txt) |
+
+Previously resolved violations (2026-05-18):
+
+| Violation | Resolution |
+|-----------|------------|
+| `glass/data/formatter` binary | Already removed before this session |
+| `glass/data/formatter.go` | Already removed before this session |
+| `glass/data/llmtemp.json` | Already removed before this session |
+| `glass/data/llm-gen.json` | Already removed before this session |
+| `void/assets/content/void.json` anomaly | Moved to `playground/void/assets/data/void.json` |
+| `.ai/plan-css-refactor.md` | Deleted (CSS refactor shipped) |
+| `dndm/`, `radar/`, `underdark/`, `void/` at root | Moved under `playground/` |

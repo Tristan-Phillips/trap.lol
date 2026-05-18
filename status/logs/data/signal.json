@@ -79,12 +79,12 @@
     {
       "id": "structure-violation-cleanup",
       "title": "Resolve all violations in structure-ruleset.md §12",
-      "status": "agreed",
+      "status": "done",
       "requested": "2026-05-18",
-      "closed": null,
-      "closed_by": null,
+      "closed": "2026-05-18",
+      "closed_by": "llm",
       "description": "10 known structural violations documented in status/logs/structure-ruleset.md §12. Deletions first (llmtemp.json, llm-gen.json, plan-css-refactor.md), moves second (formatter/formatter.go → services/, tdo.txt → .ai/tdo.md, void.json → void/assets/data/), restructure last (dndm/ + radar/ + underdark/ → playground/ — requires explicit trap confirmation due to URL changes).",
-      "notes": "Do not tackle during unrelated sessions. App directory moves require explicit trap confirmation before proceeding.",
+      "notes": "Completed 2026-05-18. All violations resolved: formatter/formatter.go/llmtemp.json/llm-gen.json were already gone. plan-css-refactor.md deleted. void.json moved to playground/void/assets/data/. App restructure completed this session (trap confirmed). Only remaining violation is guide/ missing — that's a to_consider, not a violation. §12 register updated.",
       "tags": ["structure", "cleanup", "glass"],
       "files_affected": [
         "glass/data/formatter",
@@ -117,15 +117,15 @@
     },
     {
       "id": "playground-restructure",
-      "title": "Move dndm/, radar/, underdark/ under playground/ — roster page at /playground/",
-      "status": "to_consider",
+      "title": "Move dndm/, radar/, underdark/, void/ under playground/ — hub at /playground/",
+      "status": "done",
       "requested": "2026-05-18",
-      "closed": null,
-      "closed_by": null,
-      "description": "Per tdo.txt: move dndm, radar, underdark into playground as subdirectories. Move current playground LLM page into playground/aiagent/. Create roster at playground/index.html linking to sub-apps. Keep App Uplinks on /index.html reusing same JSONs.",
-      "notes": "Requires explicit trap confirmation — involves URL changes. Currently also tracked in structure-violation-cleanup.",
+      "closed": "2026-05-18",
+      "closed_by": "trap",
+      "description": "Move dndm, radar, underdark, void into playground as subdirectories. Move current playground LLM page into playground/neural-uplink/. Create hub at playground/index.html listing all sub-apps. All internal absolute paths corrected.",
+      "notes": "Completed 2026-05-18 — trap accepted proposed structure and confirmed proceed. Neural Uplink slug chosen (not aiagent). All paths corrected. apps.json and trap.json updated. structure-ruleset.md §4/§6/§9/§11/§12 updated.",
       "tags": ["structure", "playground", "routing"],
-      "files_affected": ["dndm/", "radar/", "underdark/", "playground/"]
+      "files_affected": ["dndm/", "radar/", "underdark/", "void/", "playground/"]
     },
     {
       "id": "void-new-authoring",

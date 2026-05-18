@@ -3,7 +3,7 @@
     "0": {
       "name": "RADAR",
       "slug": "radar",
-      "path": "/radar/",
+      "path": "/playground/radar/",
       "icon": "radar",
       "description": "Torrent scanner and TorBox cache interface. Search, queue and pull direct links",
       "tags": ["torrent", "media", "torbox"],
@@ -23,7 +23,7 @@
     "2": {
       "name": "The Underdark",
       "slug": "underdark",
-      "path": "/underdark/",
+      "path": "/playground/underdark/",
       "icon": "swords",
       "description": "Advanced LLM roleplay interface. Cinematic multi-bot layout and Lorebooks.",
       "tags": ["ai", "llm", "roleplay", "characters"],
@@ -33,7 +33,7 @@
     "3": {
       "name": "Grimoire",
       "slug": "dndm",
-      "path": "/dndm/",
+      "path": "/playground/dndm/",
       "icon": "swords",
       "description": "Full Dungeon Master suite. Campaign manager, combat tracker, bestiary, atlas, oracle, and more.",
       "tags": ["dnd", "tabletop", "campaign", "tools"],

@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.4.9",
+    "schema_version": "1.5.0",
     "last_updated": "2026-05-18",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -253,44 +253,50 @@
     },
     "/playground/": {
       "file": "playground/index.html",
+      "title": "trap.lol // playground",
+      "purpose": "Playground hub page. Launchpad listing all playground sub-apps: Neural Uplink, The Underdark, RADAR, Grimoire, VOID. Static HTML, no JS, no data fetch. Cards link to each sub-app at /playground/<name>/.",
+      "note": "All former top-level apps (dndm/, radar/, underdark/, void/) have been moved under playground/ as sub-apps. Neural Uplink (previously playground/index.html) is now at /playground/neural-uplink/."
+    },
+    "/playground/neural-uplink/": {
+      "file": "playground/neural-uplink/index.html",
       "title": "trap.lol // neural uplink",
       "purpose": "LLM playground. Multi-model chat interface. Session management, agent personas, system prompt override, temperature control, streaming.",
-      "script": "playground/script/main.js (imports glass/script/modules/llm.js and sub-modules)",
+      "script": "playground/neural-uplink/script/main.js (imports /glass/script/modules/llm.js and sub-modules via absolute paths)",
       "api": "nano-gpt.com/api/v1 (OpenAI-compatible, multi-provider routing)",
       "auth": "API key stored in localStorage. Key never sent anywhere except the API endpoint.",
       "models": "Defined in glass/data/llm.json _index_matrix.text + routing_table. Grouped by provider in the model selector.",
       "agents": "JSON files in glass/data/llm-agents/. Loaded async. Default agent = default.json. Active: default.json, opsec-dev.json, sovereign-architect.json."
     },
-    "/underdark/": {
-      "file": "underdark/index.html",
+    "/playground/underdark/": {
+      "file": "playground/underdark/index.html",
       "title": "The Underdark // Reality Matrix",
       "purpose": "Advanced roleplay interface. Cinematic multi-bot layout with character roster, persona system, scenario editor, lorebook, image studio, social feed, and RP generator. The deepest, most immersive LLM experience on the site.",
-      "data": "underdark/data/ (index.json, personas.json, scenarios.json, scenario-index.json, feed.json, rp-gen-presets.json, persona-builder.json)",
-      "script": "underdark/script/modules/ui.js — sole large module (~11k lines). Shares glass/data/llm.json for model routing.",
-      "note": "Self-contained — has its own underdark/data/ for character/persona/scenario data. Does NOT use glass/data/ except for llm.json and llm-agents/."
+      "data": "playground/underdark/data/ (index.json, personas.json, scenarios.json, scenario-index.json, feed.json, rp-gen-presets.json, persona-builder.json)",
+      "script": "playground/underdark/script/modules/ui.js — sole large module (~11k lines). Shares glass/data/llm.json for model routing. Imports glass modules via absolute /glass/ paths.",
+      "note": "Self-contained — has its own data/ for character/persona/scenario data. Does NOT use glass/data/ except for llm.json and llm-agents/."
     },
-    "/void/": {
-      "file": "void/index.html",
+    "/playground/void/": {
+      "file": "playground/void/index.html",
       "title": "void // trap.lol",
       "purpose": "Personal transmission log. Data-driven feed of raw personal entries rendered from void.json via marked.js + DOMPurify. Spotlight overlay for full entry reading. Deep-water dark aesthetic, fully self-contained.",
-      "data": "void/assets/content/void.json (NOTE: lives in content/ not data/ — known structural anomaly per structure-ruleset.md §11; correct target is void/assets/data/void.json)",
-      "script": "void/assets/script/app.js (type=module, self-contained — does NOT use glass/script/)",
-      "css": "void/assets/style/style.css (self-contained — does NOT use glass/style/)",
+      "data": "playground/void/assets/data/void.json (previously assets/content/ — anomaly resolved 2026-05-18)",
+      "script": "playground/void/assets/script/app.js (type=module, self-contained — does NOT use glass/script/)",
+      "css": "playground/void/assets/style/style.css (self-contained — does NOT use glass/style/)",
       "sub_pages": {
-        "void/new/index.html": "Local-only VOID entry authoring tool. Live markdown preview, ID generator, JSON fragment export. Not publicly linked. EXISTS on disk."
+        "playground/void/new/index.html": "Local-only VOID entry authoring tool. Live markdown preview, ID generator, JSON fragment export. Not publicly linked. EXISTS on disk."
       }
     },
-    "/dndm/": {
-      "file": "dndm/index.html",
+    "/playground/dndm/": {
+      "file": "playground/dndm/index.html",
       "title": "Grimoire // Campaign Suite",
       "purpose": "DM campaign management tool. Tabbed single-page app with: Party Tracker (5e character sheets, HP bars, conditions, death saves, combat initiative), Atlas (fog-of-war map canvas, pan/zoom, marker pins, player screen push via BroadcastChannel), Soundscape (ambient audio with volume/loop), Oracle (nano-gpt streaming rules assistant), Bestiary (D&D 5e monsters with advanced filters), Spellbook (D&D 5e spells with advanced filters), Campaign overview (NPCs, Lore Wiki, Session log, export/import), and Story (narrative decision tree canvas with node types, bezier edges, Oracle suggestions, journey log).",
       "data": "No external JSON data files — all campaign state persists to localStorage (dndm_campaigns index + per-slot dndm_campaign_<id> keys). Bestiary and Spellbook data is bundled inline in app.js.",
-      "script": "dndm/assets/script/app.js (self-contained vanilla JS, single DOMContentLoaded closure)",
-      "css": "dndm/assets/style/style.css (self-contained)",
+      "script": "playground/dndm/assets/script/app.js (self-contained vanilla JS, single DOMContentLoaded closure)",
+      "css": "playground/dndm/assets/style/style.css (self-contained)",
       "note": "Multi-campaign slot system: dndm_campaigns[] index array, individual slots at dndm_campaign_<uuid>. Legacy single-slot data auto-migrates to 'camp_legacy' on first load. Oracle uses nano-gpt API key stored in localStorage."
     },
-    "/radar/": {
-      "file": "radar/index.html",
+    "/playground/radar/": {
+      "file": "playground/radar/index.html",
       "title": "RADAR // ANOMALY",
       "purpose": "Torrent scanner and TorBox debrid cache interface. Search for torrents, check TorBox cache, queue downloads. Requires TorBox API key.",
       "api": "TorBox API. Key stored in localStorage."
@@ -576,7 +582,7 @@
         ]
       }
     ],
-    "current_state": "Production — nine distinct routable pages live (/, /playground/, /underdark/, /art/, /void/, /dndm/, /radar/, /status/, /status/logs/, /status/observations/, /archive/, /archive/uplink-sentinel/). /guide/ is planned but the directory does not exist yet — glass/markdown/ has one .md file waiting. Core hub stable with Sovereign Nodes, Station, Transmissions, Ordnance Depot, Drone Fleet, App Uplinks, Uplink Launchpad, and social strip. Signal Mesh (extlinks) is commented out. The Underdark is the most actively developed sub-app — ~11k-line vanilla-JS roleplay system with 11 modules covering character creation, personas, scenarios, lorebooks, image/video studio, social feed, and RP generator. Grimoire (/dndm/) is a full DM campaign suite with Story canvas, Party Tracker, Atlas fog-of-war, Oracle LLM assistant, Bestiary, and Spellbook. ECHOES (/art/) and VOID (/void/) are stable. llm.json is on schema v9.1.0-multimodal-matrix. The site has a mutable working layer (signal.json) and a living LLM cognitive profile (/status/observations/) that accumulates cross-session assessments of the owner.",
+    "current_state": "Production — all pages live. URL structure restructured 2026-05-18: dndm/, radar/, underdark/, void/ moved under playground/ as sub-apps. playground/ is now a hub (index.html lists all sub-apps). Neural Uplink (formerly playground/index.html) now lives at /playground/neural-uplink/. All §12 structural violations resolved. Routable pages: /, /playground/, /playground/neural-uplink/, /playground/underdark/, /playground/dndm/, /playground/radar/, /playground/void/, /art/, /status/, /status/logs/, /status/observations/, /archive/, /archive/uplink-sentinel/. /guide/ planned but not yet built. Core hub stable. The Underdark is the most actively developed sub-app — ~11k-line roleplay system. Grimoire is a full DM suite. ECHOES and VOID stable. The site has a mutable working layer (signal.json) and a living LLM cognitive profile (/status/observations/).",
     "intended_future": [
       "Sacred Codex (guides section) reactivation when enough .md content exists",
       "More ECHOES collections as artwork is created/curated",
@@ -590,6 +596,32 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-18",
+      "message": "refactor(structure): move dndm, radar, underdark, void into playground/; neural-uplink sub-dir; playground hub; §12 violations resolved",
+      "scope": "playground/, glass/data/, status/logs/data/",
+      "impact": "high",
+      "files": [
+        "playground/index.html",
+        "playground/neural-uplink/index.html",
+        "playground/neural-uplink/script/main.js",
+        "playground/dndm/index.html",
+        "playground/dndm/assets/script/app.js",
+        "playground/radar/index.html",
+        "playground/underdark/index.html",
+        "playground/void/index.html",
+        "playground/void/new/index.html",
+        "playground/void/assets/script/app.js",
+        "playground/void/assets/data/void.json",
+        "glass/data/apps.json",
+        "glass/data/trap.json",
+        "status/logs/data/structure-ruleset.md",
+        "status/logs/data/logs.json",
+        "status/logs/data/signal.json"
+      ],
+      "why": "Consolidate all playground-category apps under playground/ per structure-ruleset.md §4. Resolves remaining §12 violations: void.json content/→data/ move, plan-css-refactor.md deleted, apps restructured. All internal paths corrected. /glass/ imports use absolute paths going forward to be depth-immune."
+    },
     {
       "hash": "307f798",
       "date": "2026-05-18",
@@ -2452,6 +2484,24 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-18",
+      "agent": "Claude Sonnet 4.6",
+      "type": "refactor",
+      "summary": "Full repository restructure — dndm/, radar/, underdark/, void/ moved under playground/ as sub-apps. playground/ is now a hub (index.html + 5 sub-app cards). Neural Uplink (formerly playground/) now at playground/neural-uplink/. All internal absolute paths corrected across all moved files. void.json moved from assets/content/ to assets/data/ (§11 anomaly resolved). All remaining §12 violations closed. structure-ruleset.md updated to reflect the new topology.",
+      "decisions": [
+        "playground/ is both a hub page and a sub-app container — sub-apps are Pattern B apps one level inside playground/, not at repo root",
+        "neural-uplink is the canonical slug for the LLM chat app (previously unnamed as the root playground page)",
+        "playground/index.html is a static HTML hub — no JS fetch, no data layer, cards hardcoded — consistent with status/index.html pattern",
+        "Absolute /glass/ import paths preferred over relative ../../glass/ traversal — depth-immune, survives future restructures",
+        "§12 violation register pruned: all violations except guide/ are now resolved",
+        "void.json canonical path is now playground/void/assets/data/void.json — assets/content/ no longer exists"
+      ],
+      "rules_reinforced": [
+        "All absolute paths in JS and HTML must use the full rooted path (e.g. /playground/dndm/assets/data/...) — never assume the directory hasn't moved",
+        "Use absolute /glass/ import paths in all JS modules rather than relative traversal — makes apps depth-immune"
+      ]
+    },
     {
       "date": "2026-05-18",
       "agent": "Claude Sonnet 4.6",
