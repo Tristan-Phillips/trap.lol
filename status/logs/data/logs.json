@@ -598,7 +598,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "b0ac522",
       "date": "2026-05-18",
       "message": "feat(underdark): immersion pass 4 — affect tone glyphs, input breathing pulse, auto-recap, rhythm directive",
       "scope": "playground/underdark/",
@@ -613,7 +613,7 @@
       "why": "Fourth immersion pass: affect-tone system classifies each bot response into one of 5 emotional registers and tints the message bubble + injects a tiny glyph on the speaker name; input container breathes with a soft glow while the model generates; Overlord auto-recap fires every ~20 turns to anchor long sessions; sentence rhythm micro-directive derives from character archetype and injects pacing guidance into the system prompt."
     },
     {
-      "hash": "pending",
+      "hash": "e65b665",
       "date": "2026-05-18",
       "message": "feat(underdark): immersion pass 3 — Overlord depth, prompt fingerprinting, atmospheric placeholders",
       "scope": "playground/underdark/",
