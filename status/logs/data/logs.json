@@ -583,6 +583,15 @@
   },
   "commits": [
     {
+      "hash": "pending",
+      "date": "2026-05-18",
+      "message": "feat(home): add Archive link to footer nav",
+      "scope": "index.html",
+      "impact": "low",
+      "files": ["index.html", "status/logs/data/logs.json"],
+      "why": "Surface the archive/ directory subtly from the home page via the existing footer nav — same pattern as Status and Forgejo links."
+    },
+    {
       "hash": "c526401",
       "date": "2026-05-18",
       "message": "refactor(logs): move logs.json, signal.json, structure-ruleset.md into status/logs/data/",
