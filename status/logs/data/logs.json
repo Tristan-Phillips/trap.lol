@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.16",
+    "schema_version": "1.5.17",
     "last_updated": "2026-05-18",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -597,6 +597,22 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-18",
+      "message": "feat(underdark): Overlord beat system — manual + chip-triggered scene narration",
+      "scope": "playground/underdark/",
+      "impact": "high",
+      "files": [
+        "playground/underdark/index.html",
+        "playground/underdark/script/main.js",
+        "playground/underdark/script/modules/ui.js",
+        "playground/underdark/script/modules/llm-engine.js",
+        "playground/underdark/style/arena.css",
+        "status/logs/data/logs.json"
+      ],
+      "why": "Implements Option C Overlord beat architecture: a wind-flag toolbar button (B key) manually fires an atmospheric OVERLORD — BEAT block; Continue, Narrate, and Time skip chips arm a pendingBeat tag so sending auto-fires a beat before the character responds; smart guard prevents double-beats in the last 3 messages; UFR directive updated to prohibit third-person self-introduction ('She is...' card description echoing)."
+    },
     {
       "hash": "d1c5316",
       "date": "2026-05-18",
@@ -2685,6 +2701,21 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-18",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Implemented Option C Overlord beat system after design session with trap. New _fireOverlordBeat() function fires an OVERLORD — BEAT atmospheric block: world-only narration (no character dialogue, no decisions) responding to the current scene moment. Three trigger paths: (1) manual — wind-flag button in input toolbar, B keyboard shortcut, command palette; (2) chip-armed — Continue, Narrate, and Time skip chips set data-pending-beat on the textarea, which the submit handler consumes and fires beat before the character responds; (3) smart guard — beat mode is skipped if a beat/transition already appeared in the last 3 history messages, preventing double-beats on rapid interaction. UFR directive updated with a new prohibition against third-person self-description ('She is…' openings). Beat prompt shape designed around 'world receiving a moment' — sensory/atmospheric only, not character-directed.",
+      "decisions": [
+        "Manual button approach chosen over per-turn automatic Overlord to avoid cost doubling and latency on every turn — user controls when narration fires.",
+        "Chip-armed approach (pendingBeat on textarea dataset) mirrors the existing pendingReinject pattern — clean, stateless, consumed at submit time.",
+        "Continue, Narrate, and Time skip chips arm the beat; Slow burn does not (it's a character pacing directive, not a scene-change moment where world narration adds value).",
+        "Beat prompt deliberately lacks 'what the character does' — the Overlord writes what the environment/space/light/air does, so the character response that follows is grounded without being pre-empted.",
+        "Smart guard checks only last 3 messages (not last N turns) — tight enough to prevent double-beats on rapid clicks, loose enough that a beat can fire again after a few exchanges.",
+        "B key chosen for shortcut (Beat) since N was taken by New Character and W was taken; B is free, mnemonic, and consistent with B=Beat.",
+        "UFR prohibition against 'She is…' openings targets the specific failure mode where the model echoes its card description as an introductory paragraph before responding — already had a sanitizer catch, now also blocked at the prompt level."
+      ]
+    },
     {
       "date": "2026-05-18",
       "agent": "Claude Sonnet 4.6",

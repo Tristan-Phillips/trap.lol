@@ -1165,6 +1165,19 @@
     padding: 6px var(--space-sm) 0;
     min-height: 0;
 }
+/* Overlord beat button — glows gold when armed, spins while fetching */
+#btn-overlord-beat { color: var(--text-muted); transition: color 0.2s, box-shadow 0.2s; }
+#btn-overlord-beat:hover { color: #c9a84c; }
+#btn-overlord-beat.overlord-armed {
+    color: #f2cb7e;
+    box-shadow: 0 0 8px rgba(242,203,126,0.35);
+}
+#btn-overlord-beat.overlord-loading { color: #f2cb7e; pointer-events: none; }
+#btn-overlord-beat.overlord-loading i { animation: overlord-spin 0.9s linear infinite; }
+@keyframes overlord-spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
 .input-container__bot-label {
     font-family: var(--font-mono);
     font-size: 0.68rem;

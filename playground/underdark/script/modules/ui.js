@@ -18,7 +18,7 @@ import {
     exportFullInstance, importFullInstance
 } from './state.js?v=2';
 import { resolveImageUrl, saveImageBlob, deleteImageBlob, isIdbImageRef, idbImageRefId, isDataUrl } from './storage.js?v=3';
-import { buildPayload, streamCompletion, fetchCompletion, buildOverlordContext, summarizeDroppedMessages, sanitizeRpResponse, detectAffectTone } from './llm-engine.js?v=14';
+import { buildPayload, streamCompletion, fetchCompletion, buildOverlordContext, summarizeDroppedMessages, sanitizeRpResponse, detectAffectTone } from './llm-engine.js?v=15';
 import { parseCommand, executeCommand, filterCommands, COMMANDS } from './commands.js?v=3';
 import { IMAGE_MODELS, DEFAULT_MODEL, buildImagePrompt, generateImagePromptWithLLM, describeSceneWithLLM, generateImage, VIDEO_MODELS, generateVideo, generateVideoPromptWithLLM } from './image-engine.js?v=3';
 import { addBook, removeBook, addEntry, updateEntry, removeEntry, createBook, scanLorebooks } from './lorebook.js?v=3';
@@ -7127,6 +7127,7 @@ export function initUI() {
             entrance:   'OVERLORD — ENTRANCE',
             whisper:    'OVERLORD — WHISPER',
             irony:      'OVERLORD — IRONY',
+            beat:       'OVERLORD — BEAT',
         };
         const modeIcons = {
             scene:      'eye',
@@ -7137,6 +7138,7 @@ export function initUI() {
             entrance:   'user-plus',
             whisper:    'ear',
             irony:      'theater',
+            beat:       'wind',
         };
         const label = modeLabels[mode] || 'OVERLORD';
         const icon  = modeIcons[mode]  || 'eye';
@@ -7831,6 +7833,66 @@ export function initUI() {
         } catch { /* silent */ }
     }
 
+    // ── Overlord beat — manual call + chip-triggered scene narration ─────────
+    // Fires a 'beat' Overlord block: the world's physical/atmospheric response
+    // to the current moment. Does NOT write character dialogue or decisions.
+    //
+    // Smart trigger logic: only fires if the last Overlord block is not already
+    // a 'beat' or 'transition' from within the last 3 messages (prevents double-beats
+    // on rapid clicks). Always fires when `force` is true (manual button / chip).
+    //
+    // The prompt shape differs by context:
+    //   - If a player message exists and `context` is provided: world responds to that action
+    //   - Otherwise: world describes the current ambient scene state
+    let _overlordBeatInFlight = false;
+    async function _fireOverlordBeat({ force = false, context = null } = {}) {
+        if (!getApiKey()) return;
+        if (_overlordBeatInFlight) return;
+
+        // Smart guard: skip if a beat/transition already appears in the last 3 messages
+        if (!force) {
+            const recent = state.history.slice(-3);
+            const hasRecentBeat = recent.some(m =>
+                m.role === 'system' && (m.overlordMode === 'beat' || m.overlordMode === 'transition')
+            );
+            if (hasRecentBeat) return;
+        }
+
+        const $btn = qs('#btn-overlord-beat');
+        _overlordBeatInFlight = true;
+        $btn?.classList.add('overlord-loading');
+        $btn?.classList.remove('overlord-armed');
+
+        try {
+            await _fireOverlord('beat', ({ charNames, histText, meters, scenario, playerName }) => {
+                const mStr = [
+                    meters.tension  != null ? `tension ${meters.tension}%`  : '',
+                    meters.intimacy != null ? `intimacy ${meters.intimacy}%` : '',
+                    meters.danger   != null ? `danger ${meters.danger}%`     : '',
+                ].filter(Boolean).join(', ');
+
+                // If we have explicit context (from chip text), give the Overlord
+                // the intended narrative direction as well as scene state.
+                const directionLine = context
+                    ? `\nNarrative direction requested: "${context}"`
+                    : '';
+
+                // Pull the last player message as the action the world is responding to
+                const lastUser = [...state.history].reverse().find(m => m.role === 'user');
+                const playerAct = lastUser?.content
+                    ?.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 250) || '';
+                const actionLine = playerAct
+                    ? `\nThe player's last action/words: "${playerAct}"`
+                    : '';
+
+                return `Write the world's immediate physical and atmospheric response to this moment of the scene.${actionLine}${directionLine}\n\nDescribe what shifts in the environment, the space between characters, the air, the light, sound, or texture — what the world itself perceives and reflects back. Do NOT write what any character decides, says, or feels internally. Do NOT advance the plot. Only the world receiving this moment.\n\n1 tight paragraph. Open with a concrete sensory detail that is specific to THIS scene.${scenario ? `\n\nSetting: ${scenario.slice(0, 200)}` : ''}${mStr ? `\nScene state: ${mStr}` : ''}\n\n${histText}`;
+            }, 240);
+        } catch { /* silent */ }
+
+        _overlordBeatInFlight = false;
+        $btn?.classList.remove('overlord-loading');
+    }
+
     // ── Auto-save ─────────────────────────────────────────────────────────────
     const _AS_KEY = 'underdark_autosave';
     let _autoSaving = false;
@@ -7947,10 +8009,10 @@ export function initUI() {
         {
             label: 'Pacing',
             entries: [
-                { key: 'continue',   label: '▶ Continue',     text: '(Continue the scene from where we left off.)' },
-                { key: 'narrate',    label: '✦ Narrate',       text: '(Narrate what happens next — no dialogue, pure action and atmosphere.)' },
-                { key: 'slow',       label: '◌ Slow burn',     text: '(Slow the pace. Linger on the moment — the senses, the silence, the feeling.)' },
-                { key: 'timeskip',   label: '⟳ Time skip',     text: '(Move the story forward in time to the next meaningful moment.)' },
+                { key: 'continue',   label: '▶ Continue',     text: '(Continue the scene from where we left off.)',                             overlordBeat: true },
+                { key: 'narrate',    label: '✦ Narrate',       text: '(Narrate what happens next — no dialogue, pure action and atmosphere.)',    overlordBeat: true },
+                { key: 'slow',       label: '◌ Slow burn',     text: '(Slow the pace. Linger on the moment — the senses, the silence, the feeling.)', overlordBeat: false },
+                { key: 'timeskip',   label: '⟳ Time skip',     text: '(Move the story forward in time to the next meaningful moment.)',           overlordBeat: true },
             ],
         },
         {
@@ -8123,10 +8185,28 @@ export function initUI() {
         } else {
             $ta.value = cur ? `${cur}\n${entry.text}` : entry.text;
         }
+        // Tag for Overlord beat pre-fire on submit
+        if (entry.overlordBeat) {
+            $ta.dataset.pendingBeat = entry.key;
+            qs('#btn-overlord-beat')?.classList.add('overlord-armed');
+        }
         $ta.dispatchEvent(new Event('input'));
         $ta.focus();
         const $bar = qs('#quick-reply-bar');
         if ($bar) $bar.hidden = true;
+    });
+
+    // ── Overlord beat — manual toolbar button ────────────────────────────────
+    // Clicking the wind-flag button fires a beat immediately (force=true, no guard).
+    // If the textarea has text (user is mid-compose), that text is treated as context.
+    qs('#btn-overlord-beat')?.addEventListener('click', async () => {
+        if (_overlordBeatInFlight || state.isStreaming) return;
+        const $ta = qs('#rp-input');
+        const ctx = $ta?.value?.trim() || null;
+        // Clear any armed state from a previous chip click
+        $ta && delete $ta.dataset.pendingBeat;
+        qs('#btn-overlord-beat')?.classList.remove('overlord-armed');
+        await _fireOverlordBeat({ force: true, context: ctx }).catch(() => {});
     });
 
     // ── Session Export / Import ───────────────────────────────────────────────
@@ -8822,6 +8902,17 @@ export function initUI() {
         const msg = addMessage('user', text);
         appendMessage(msg);
         renderChats();
+
+        // Overlord beat pre-fire — consume pending chip tag or armed state
+        const $ta3 = qs('#rp-input');
+        const _pendingBeat = $ta3?.dataset.pendingBeat || null;
+        if ($ta3?.dataset.pendingBeat) delete $ta3.dataset.pendingBeat;
+        qs('#btn-overlord-beat')?.classList.remove('overlord-armed');
+        if (_pendingBeat) {
+            // Pass the chip's context so the beat prompt is direction-aware
+            const _beatCtx = _qrLookup[_pendingBeat]?.text?.replace(/^\(|\)$/g, '') || null;
+            await _fireOverlordBeat({ force: true, context: _beatCtx }).catch(() => {});
+        }
 
         // Bump generation so any still-running loop from a previous turn self-terminates
         clearGroupTimers();
@@ -9932,6 +10023,7 @@ export function initUI() {
         if (e.key === 'i' || e.key === 'I') qs('#reinject-toggle-btn')?.click();
         if (e.key === 'c' || e.key === 'C') toggleCodex();
         if (e.key === 's' || e.key === 'S') openImgStudio();
+        if (e.key === 'b' || e.key === 'B') qs('#btn-overlord-beat')?.click();
         if (e.key === '/' ) { e.preventDefault(); qs('#search-toggle')?.click(); }
     });
 
@@ -9954,6 +10046,7 @@ export function initUI() {
         { label: 'Open thread settings',        icon: 'settings-2',        key: null,     action: () => qs('#btn-thread-config')?.click() },
         { label: 'Export all (full backup)',    icon: 'hard-drive-download',key: null,    action: () => qs('#btn-export-full')?.click() },
         { label: 'Download last auto-save',     icon: 'clock-arrow-down',  key: null,     action: () => qs('#btn-download-autosave')?.click() },
+        { label: 'Overlord: scene beat [B]',     icon: 'wind',              key: 'B',      action: () => qs('#btn-overlord-beat')?.click() },
         { label: 'Force Overlord narration',    icon: 'crown',             key: null,     action: () => qs('#codex-force-overlord')?.click() },
         { label: 'Overlord: recap scene',       icon: 'scroll-text',       key: null,     action: () => qs('#codex-recap')?.click() },
         { label: 'Overlord: transition',        icon: 'arrow-right-circle',key: null,     action: () => qs('#codex-overlord-transition')?.click() },
