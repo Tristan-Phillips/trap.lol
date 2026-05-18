@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.4",
+    "schema_version": "1.5.5",
     "last_updated": "2026-05-18",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -597,6 +597,15 @@
     ]
   },
   "commits": [
+    {
+      "hash": "dbfc324",
+      "date": "2026-05-18",
+      "message": "fix(underdark): intercept x402 subscription errors; improve model select grouping",
+      "scope": "glass/script/modules/, playground/underdark/",
+      "impact": "medium",
+      "files": ["glass/script/modules/llm-transport.js", "playground/underdark/script/modules/ui.js"],
+      "why": "HTTP 402 from nano-gpt was bleeding raw XNO payment request text into the UI; model selects showed no modality or subscription distinction making it impossible to know which models required a paid subscription."
+    },
     {
       "hash": "48e8bca",
       "date": "2026-05-18",
