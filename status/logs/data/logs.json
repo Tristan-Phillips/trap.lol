@@ -583,7 +583,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "dda5e70",
       "date": "2026-05-18",
       "message": "feat(home): add Archive link to footer nav",
       "scope": "index.html",
