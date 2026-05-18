@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.2",
+    "schema_version": "1.5.3",
     "last_updated": "2026-05-18",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -596,6 +596,15 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-18",
+      "message": "fix(underdark): source API base from config.json via glass/core.js instead of hardcoding nano-gpt URL",
+      "scope": "playground/underdark/",
+      "impact": "medium",
+      "files": ["playground/underdark/script/modules/llm-engine.js"],
+      "why": "llm-engine.js hardcoded nano-gpt.com/api/v1 — if the API base ever changes in config.json it would be silently ignored by Underdark while Neural Uplink (which reads config.llm.api_base) would correctly update."
+    },
     {
       "hash": "ea0adf1",
       "date": "2026-05-18",
@@ -2498,6 +2507,19 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-18",
+      "agent": "Claude Sonnet 4.6",
+      "type": "bug_fix",
+      "summary": "Audited LLM API access across Neural Uplink and Underdark. Neural Uplink correctly sources model list from glass/data/llm.json via loadCoreData()/llmData, and API base from config.json → llm.api_base. Underdark ui.js correctly fetches /glass/data/llm.json directly for model selects. Fixed: llm-engine.js had the nano-gpt API base hardcoded; now imports config from glass/core.js and reads config.llm.api_base at call time with a fallback.",
+      "decisions": [
+        "Underdark llm-engine.js imports config from /glass/script/modules/core.js — this is safe because core.js is already loaded before any LLM call can be made (ui.js boot sequence calls loadModels() which awaits the llm.json fetch first)",
+        "getApiBase() is a function not a const so it reads the live config value at call time, not at module parse time"
+      ],
+      "rules_reinforced": [
+        "All nano-gpt API configuration (base URL, model list, endpoint paths) must originate from glass/data/config.json or glass/data/llm.json — never hardcoded in app JS"
+      ]
+    },
     {
       "date": "2026-05-18",
       "agent": "Claude Sonnet 4.6",

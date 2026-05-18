@@ -15,8 +15,11 @@
 import { getApiKey } from '/glass/script/modules/llm-auth.js?v=3';
 import { scanLorebooks } from './lorebook.js?v=3';
 import { getCharOverride, getBotMemoriesFromReality } from './state.js?v=2';
+import { config } from '/glass/script/modules/core.js';
 
-const API_BASE = 'https://nano-gpt.com/api/v1';
+function getApiBase() {
+    return config?.llm?.api_base ?? 'https://nano-gpt.com/api/v1';
+}
 
 // ── Rough token estimator (4 chars ≈ 1 token) ────────────────────────────────
 function estimateTokens(text) {
@@ -625,7 +628,7 @@ async function summarizeDropped(messages, config) {
     };
 
     try {
-        const res = await fetch(`${API_BASE}/chat/completions`, {
+        const res = await fetch(`${getApiBase()}/chat/completions`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
             body: JSON.stringify(payload)
@@ -1042,7 +1045,7 @@ export async function streamCompletion(payload, onChunk, onDone, onError, signal
     let tokenCount = 0;
 
     try {
-        const res = await fetch(`${API_BASE}/chat/completions`, {
+        const res = await fetch(`${getApiBase()}/chat/completions`, {
             method:  'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
             body:    JSON.stringify(sendPayload),
@@ -1147,7 +1150,7 @@ export async function summarizeDroppedMessages(messages, { model, chatId, horizo
     };
 
     try {
-        const res = await fetch(`${API_BASE}/chat/completions`, {
+        const res = await fetch(`${getApiBase()}/chat/completions`, {
             method:  'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
             body:    JSON.stringify(payload)
@@ -1171,7 +1174,7 @@ export async function fetchCompletion(payload) {
     delete sendPayload._charName;
     delete sendPayload._flags;
 
-    const res = await fetch(`${API_BASE}/chat/completions`, {
+    const res = await fetch(`${getApiBase()}/chat/completions`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
         body:    JSON.stringify(sendPayload)
