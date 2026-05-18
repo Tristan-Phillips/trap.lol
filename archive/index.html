@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>trap.lol // archive</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2306040A'/%3E%3Crect x='6' y='10' width='20' height='14' rx='2' fill='none' stroke='%237D6E92' stroke-width='2'/%3E%3Cpath d='M10 10V8a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2' stroke='%237D6E92' stroke-width='2' fill='none'/%3E%3Cline x1='12' y1='16' x2='20' y2='16' stroke='%237D6E92' stroke-width='1.5'/%3E%3C/svg%3E" />
+    <meta name="description" content="Archived projects and retired pages from trap.lol." />
+    <link rel="stylesheet" href="/glass/style/style.css" />
+    <style>
+      /* ══════════════════════════════════════════════════
+         ARCHIVE — trap.lol
+         Decommissioned artifacts. Static record only.
+         ══════════════════════════════════════════════════ */
+
+      .back-nav {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+        color: var(--text-muted);
+        text-decoration: none;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        transition: color var(--transition), gap var(--transition-med);
+        margin-bottom: var(--space-md);
+      }
+      .back-nav:hover { color: var(--accent-warm); gap: 0.65rem; }
+      .back-nav svg   { width: 0.75rem; height: 0.75rem; flex-shrink: 0; }
+
+      /* ─── Archive notice banner ─── */
+      .archive-notice {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border-mute);
+        border-left: 3px solid rgba(125, 110, 146, 0.5);
+        border-radius: 6px;
+        padding: 1rem 1.5rem;
+        margin-bottom: var(--space-lg);
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+      .archive-notice__icon {
+        color: var(--text-muted);
+        flex-shrink: 0;
+        margin-top: 1px;
+      }
+      .archive-notice__body {
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+        color: var(--text-muted);
+        line-height: 1.6;
+        letter-spacing: 0.04em;
+      }
+      .archive-notice__body strong {
+        color: var(--text-warm);
+        font-weight: 600;
+      }
+
+      /* ─── Entry list ─── */
+      .archive-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .archive-entry {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: 1.25rem;
+        background: var(--glass-bg);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid var(--glass-border-mute);
+        border-radius: 6px;
+        padding: 1rem 1.25rem;
+        text-decoration: none;
+        transition:
+          border-color var(--transition),
+          background   var(--transition),
+          transform    var(--transition-med),
+          box-shadow   var(--transition-med);
+        animation: entry-rise 0.4s cubic-bezier(0.25, 0, 0, 1) both;
+      }
+      .archive-entry:hover {
+        border-color: rgba(var(--accent-warm-rgb), 0.2);
+        background: var(--glass-bg-warm);
+        transform: translateY(-1px);
+        box-shadow: 0 6px 24px rgba(var(--accent-warm-rgb), 0.06);
+      }
+      @keyframes entry-rise {
+        from { opacity: 0; transform: translateY(6px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+
+      .archive-entry__sigil {
+        width: 36px;
+        height: 36px;
+        border-radius: 6px;
+        background: rgba(125, 110, 146, 0.08);
+        border: 1px solid rgba(125, 110, 146, 0.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-muted);
+        flex-shrink: 0;
+        transition: background var(--transition), border-color var(--transition), color var(--transition);
+      }
+      .archive-entry:hover .archive-entry__sigil {
+        background: rgba(var(--accent-warm-rgb), 0.08);
+        border-color: rgba(var(--accent-warm-rgb), 0.2);
+        color: var(--accent-warm);
+      }
+
+      .archive-entry__info { min-width: 0; }
+      .archive-entry__name {
+        font-family: var(--font-mono);
+        font-size: var(--text-sm);
+        font-weight: 600;
+        color: var(--text-main);
+        margin-bottom: 0.2rem;
+        transition: color var(--transition);
+      }
+      .archive-entry:hover .archive-entry__name { color: #fff; }
+      .archive-entry__desc {
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+        color: var(--text-muted);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .archive-entry__meta {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 0.3rem;
+        flex-shrink: 0;
+      }
+      .archive-badge {
+        font-family: var(--font-mono);
+        font-size: 0.6rem;
+        text-transform: uppercase;
+        letter-spacing: 0.13em;
+        padding: 0.18rem 0.45rem;
+        border-radius: 3px;
+        border: 1px solid rgba(125, 110, 146, 0.25);
+        color: var(--text-muted);
+        background: rgba(125, 110, 146, 0.06);
+      }
+      .archive-entry__date {
+        font-family: var(--font-mono);
+        font-size: 0.6rem;
+        color: rgba(125, 110, 146, 0.45);
+        letter-spacing: 0.06em;
+      }
+
+      /* ─── Empty state ─── */
+      .archive-empty {
+        background: var(--glass-bg);
+        border: 1px dashed var(--glass-border-mute);
+        border-radius: 6px;
+        padding: 3rem;
+        text-align: center;
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+        color: rgba(125, 110, 146, 0.4);
+        letter-spacing: 0.08em;
+      }
+
+      @media (max-width: 600px) {
+        .archive-entry { grid-template-columns: auto 1fr; }
+        .archive-entry__meta { display: none; }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .archive-entry { animation: none; opacity: 1; }
+      }
+    </style>
+  </head>
+  <body>
+
+    <a href="/" class="back-nav" aria-label="Return to trap.lol">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+      trap.lol
+    </a>
+
+    <header>
+      <div class="header__eyebrow">[ ARCHIVE // DECOMMISSIONED ARTIFACTS ]</div>
+      <h1 class="header__title" data-text="ARCHIVE">ARCHIVE</h1>
+      <p class="header__subtitle">retired pages &amp; preserved artifacts</p>
+    </header>
+
+    <main>
+
+      <div class="archive-notice" role="note">
+        <svg class="archive-notice__icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></svg>
+        <div class="archive-notice__body">
+          These pages are <strong>no longer maintained</strong>. They are preserved as static artifacts — functional snapshots of their last committed state. No active development. No guaranteed accuracy.
+        </div>
+      </div>
+
+      <section aria-labelledby="archive-title">
+        <h2 id="archive-title" class="section-title">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></svg>
+          Artifacts
+        </h2>
+        <div class="archive-list" id="archive-list">
+
+          <a href="/archive/uplink-sentinel/" class="archive-entry" style="animation-delay:0ms">
+            <div class="archive-entry__sigil" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="8" x="2" y="2" rx="2"/><rect width="20" height="8" x="2" y="14" rx="2"/><line x1="6" x2="6.01" y1="6" y2="6"/><line x1="6" x2="6.01" y1="18" y2="18"/></svg>
+            </div>
+            <div class="archive-entry__info">
+              <div class="archive-entry__name">Uplink Sentinel</div>
+              <div class="archive-entry__desc">Live infrastructure monitor — sovereign nodes &amp; service uptime</div>
+            </div>
+            <div class="archive-entry__meta">
+              <span class="archive-badge">Archived</span>
+              <span class="archive-entry__date">2026-05-18</span>
+            </div>
+          </a>
+
+        </div>
+      </section>
+
+    </main>
+
+    <footer class="site-footer">
+      <div class="site-footer__bar">
+        <span>trap.lol // archive</span>
+        <span class="site-footer__bar-sep">//</span>
+        <span>Decommissioned. Preserved. Not forgotten.</span>
+      </div>
+    </footer>
+
+    <a id="uplink-node" href="/" class="uplink-node" aria-label="Return to trap.lol hub">
+      <span class="uplink-node__sigil" aria-hidden="true">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 2" opacity="0.45"/>
+          <circle cx="12" cy="12" r="3.5" fill="currentColor"/>
+        </svg>
+        <span class="uplink-node__drain" aria-hidden="true"></span>
+      </span>
+      <span class="uplink-node__label">uplink</span>
+    </a>
+    <script>
+      (function() {
+        const node = document.getElementById('uplink-node');
+        node.addEventListener('click', function(e) {
+          e.preventDefault();
+          node.classList.add('uplink-node--firing');
+          setTimeout(function() { window.location.href = node.getAttribute('href'); }, 310);
+        });
+      })();
+    </script>
+
+  </body>
+</html>

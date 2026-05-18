@@ -1,0 +1,289 @@
+{
+  "_meta": {
+    "schema_version": "1.0.0",
+    "last_updated": "2026-05-18",
+    "companion_to": "status/logs/logs.json",
+    "viewer": "status/logs/index.html — Signal tab"
+  },
+  "_protocol": {
+    "what_this_file_is": "signal.json is the mutable, provisional companion to logs.json. Where logs.json is concrete, authoritative, and binding — signal.json is fluid, debatable, and in-progress. It holds tasks that may or may not be done, issues that may or may not be fixed, and proposals that were offered but not necessarily chosen. The laws and rules in logs.json still govern all work. Nothing in this file overrides them.",
+    "the_contract": "This file is NOT a rulebook. It is a working surface. Its contents are provisional — tasks can be cancelled, issues can be closed, proposals can be discarded. An LLM must not treat entries here as confirmed requirements unless status is 'agreed' or 'in_progress'.",
+    "when_to_update": {
+      "tasks": "Add a task when: (1) trap explicitly says so mid-session ('log that', 'add to signal'), OR (2) trap makes a single request containing multiple feature asks — log each as a separate task. LLM may auto-close tasks as 'no_longer_relevant' or 'irrelevant' if context clearly warrants it — mark closed_by: 'llm'. Trap-closed tasks use closed_by: 'trap'. These are styled differently in the viewer.",
+      "issues": "Add an issue when: (1) trap explicitly asks, OR (2) the LLM encounters a Critical-severity problem during any session — proactively flag these even without being asked. Warning and Note issues are only logged when explicitly discussed. Always include scope and reproduction_note (a one-sentence description of how to reproduce or observe the problem — for resolved issues, describe what the state was before the fix).",
+      "proposals": "Add a proposal entry whenever the LLM offers multiple options and trap selects one — log ALL options including the chosen one. Required fields: context (what was asked, reworded to focus on the request only — no explicit commands or bad phrasing), summary (the proposal itself), why_guess (1-sentence LLM guess on why chosen or not chosen), session_date (YYYY-MM-DD of the session it was offered), chosen (true/false/null for pending). Total characters of context + summary + why_guess must not exceed 256 (spaces excluded). Tags: max 3, short, not counted toward 256."
+    },
+    "rule_promotion": "If the LLM is ≥90% confident that something in this file should be promoted to a rule in logs.json (rules.absolute or rules.strong_preferences), it MUST surface this as an explicit question to trap — it may NOT edit logs.json rules unilaterally. State clearly: what the rule would be, why confidence is high, and ask for confirmation.",
+    "status_vocabulary": {
+      "tasks": {
+        "scratch": "Raw idea, not yet evaluated — may go nowhere",
+        "brainstorm": "Being actively thought about, no commitment yet",
+        "to_consider": "Trap has seen it, not yet decided",
+        "agreed": "Trap has confirmed this will be done — not yet started",
+        "in_progress": "Actively being worked on this session or the last",
+        "done": "Completed — add commit hash to notes",
+        "deferred": "Postponed — add reason to notes",
+        "decided_against": "Explicitly rejected by trap",
+        "no_longer_relevant": "Context has changed — was valid, now moot (LLM or trap judgement)",
+        "irrelevant": "Was never really relevant — misclassified or superseded before starting"
+      },
+      "issues": {
+        "open": "Unresolved — needs attention",
+        "resolved": "Fixed — fill fix_summary and prevention fields"
+      },
+      "proposals": {
+        "chosen": "Trap selected this option",
+        "not_chosen": "Trap did not select this option",
+        "pending": "Offered but trap has not yet indicated a choice"
+      }
+    },
+    "severity_vocabulary": {
+      "critical": "Breaks functionality, introduces a security risk, or causes data loss — flag proactively even if trap did not ask",
+      "warning": "Degrades quality, violates a ruleset, creates tech debt, or is a poor implementation — log when discussed",
+      "note": "Cosmetic, style, dead code, minor redundancy — log when discussed"
+    }
+  },
+  "tasks": [
+    {
+      "id": "archive-directory-and-status-hub",
+      "title": "Create archive/ directory + repurpose status/index.html as hub",
+      "status": "done",
+      "requested": "2026-05-18",
+      "closed": "2026-05-18",
+      "closed_by": "trap",
+      "description": "Create archive/index.html roster page for retired artifacts. Move Uplink Sentinel from status/index.html to archive/uplink-sentinel/index.html as a static preserved artifact (no probing, unknown status for dynamic nodes). Replace status/index.html with a minimal extensible hub page listing sub-sections under status/.",
+      "notes": "Committed as pending. archive/uplink-sentinel/ is a static snapshot — no polling, no countdown. status/index.html is now a plain hub with no JS, extensible as new sub-pages are added.",
+      "tags": ["archive", "status", "structure"],
+      "files_affected": [
+        "archive/index.html",
+        "archive/uplink-sentinel/index.html",
+        "status/index.html"
+      ]
+    },
+    {
+      "id": "structure-violation-cleanup",
+      "title": "Resolve all violations in structure-ruleset.md §12",
+      "status": "agreed",
+      "requested": "2026-05-18",
+      "closed": null,
+      "closed_by": null,
+      "description": "10 known structural violations documented in status/logs/structure-ruleset.md §12. Deletions first (llmtemp.json, llm-gen.json, plan-css-refactor.md), moves second (formatter/formatter.go → services/, tdo.txt → .ai/tdo.md, void.json → void/assets/data/), restructure last (dndm/ + radar/ + underdark/ → playground/ — requires explicit trap confirmation due to URL changes).",
+      "notes": "Do not tackle during unrelated sessions. App directory moves require explicit trap confirmation before proceeding.",
+      "tags": ["structure", "cleanup", "glass"],
+      "files_affected": [
+        "glass/data/formatter",
+        "glass/data/formatter.go",
+        "glass/data/llmtemp.json",
+        "glass/data/llm-gen.json",
+        "tdo.txt",
+        "void/assets/content/void.json",
+        ".ai/plan-css-refactor.md",
+        "dndm/",
+        "radar/",
+        "underdark/"
+      ]
+    },
+    {
+      "id": "signal-json-build",
+      "title": "Build signal.json + Signal tab in logs viewer",
+      "status": "done",
+      "requested": "2026-05-18",
+      "closed": "2026-05-18",
+      "closed_by": "trap",
+      "description": "Create signal.json as the mutable companion to logs.json. Four buckets: tasks, issues, proposals, migrated pending_work. Add Signal tab to status/logs/index.html with distinct visual treatment. Update logs.json to reference signal.json in _protocol and remove pending_work.",
+      "notes": "Completed this session. signal.json created, Signal tab added with teal visual distinction, logs.json updated with companion_file reference and deprecated pending_work.",
+      "tags": ["signal", "logs", "status"],
+      "files_affected": [
+        "status/logs/signal.json",
+        "status/logs/index.html",
+        "status/logs/logs.json"
+      ]
+    },
+    {
+      "id": "playground-restructure",
+      "title": "Move dndm/, radar/, underdark/ under playground/ — roster page at /playground/",
+      "status": "to_consider",
+      "requested": "2026-05-18",
+      "closed": null,
+      "closed_by": null,
+      "description": "Per tdo.txt: move dndm, radar, underdark into playground as subdirectories. Move current playground LLM page into playground/aiagent/. Create roster at playground/index.html linking to sub-apps. Keep App Uplinks on /index.html reusing same JSONs.",
+      "notes": "Requires explicit trap confirmation — involves URL changes. Currently also tracked in structure-violation-cleanup.",
+      "tags": ["structure", "playground", "routing"],
+      "files_affected": ["dndm/", "radar/", "underdark/", "playground/"]
+    },
+    {
+      "id": "void-new-authoring",
+      "title": "void/new/index.html — local-only VOID entry authoring tool",
+      "status": "to_consider",
+      "requested": "2026-05-18",
+      "closed": null,
+      "closed_by": null,
+      "description": "From tdo.txt: a local-only authoring tool at /void/new/ for creating new VOID transmission entries. Sub-page pattern: void/new/index.html.",
+      "notes": "Not yet scoped or designed.",
+      "tags": ["void", "authoring"],
+      "files_affected": ["void/"]
+    },
+    {
+      "id": "statstation-trap-json-views",
+      "title": "Design views for statstation.json and trap.json on home page",
+      "status": "to_consider",
+      "requested": "2026-05-18",
+      "closed": null,
+      "closed_by": null,
+      "description": "From tdo.txt: statstation.json (non-public station services) and trap.json (personal transmissions: art, rants) need section designs on index.html. Currently fetched but not rendered.",
+      "notes": "Design pass needed before implementation.",
+      "tags": ["glass", "home", "ui"],
+      "files_affected": ["index.html", "glass/script/modules/ui.js"]
+    },
+    {
+      "id": "social-button-rework",
+      "title": "Remove radial hovering social button from index.html, relocate icons subtly",
+      "status": "to_consider",
+      "requested": "2026-05-18",
+      "closed": null,
+      "closed_by": null,
+      "description": "From tdo.txt: the floating radial social button on the home page should be removed. Social icons should be relocated to a more subtle fixed position.",
+      "notes": "UX/design decision — needs trap input on where the icons should land.",
+      "tags": ["glass", "home", "ui"],
+      "files_affected": ["index.html", "glass/style/style.css"]
+    },
+    {
+      "id": "sovereign-nodes-style",
+      "title": "Style sovereign nodes more like Drone Fleet (smaller footprint)",
+      "status": "to_consider",
+      "requested": "2026-05-18",
+      "closed": null,
+      "closed_by": null,
+      "description": "From tdo.txt: bot/sovereign node cards on the home page should be styled to match the Drone Fleet section aesthetic with a smaller visual footprint.",
+      "notes": null,
+      "tags": ["glass", "home", "ui"],
+      "files_affected": ["index.html", "glass/script/modules/ui.js", "glass/style/style.css"]
+    },
+    {
+      "id": "playground-history-bug",
+      "title": "Neural Uplink — fix silent send failure + playground redesign",
+      "status": "done",
+      "requested": "2026-05-17",
+      "closed": "2026-05-17",
+      "closed_by": "trap",
+      "description": "playground/index.html sends messages but gets no response. Root cause: history missing from ctx in llm.js. Also: redesign the playground page to match evolved site aesthetic.",
+      "notes": "Fixed in 2c58076. history: state.history added to ctx in llm.js:142. HTML redesigned with scanline overlay, SVG back arrow, NEURAL UPLINK // SOVEREIGN INFERENCE identity.",
+      "tags": ["playground", "llm", "bugfix"],
+      "files_affected": ["playground/index.html", "glass/script/modules/llm.js", "glass/style/modules/neural-uplink.css"]
+    },
+    {
+      "id": "dndm-phase-5",
+      "title": "DM MATRIX Phase 5 — Campaign, Sessions, NPCs, Lore Wiki, Export/Import",
+      "status": "done",
+      "requested": "2026-05-16",
+      "closed": "2026-05-17",
+      "closed_by": "trap",
+      "description": "Campaign module, NPC tracker, Lore Wiki (tabbed), Session log with XP, Export/Import campaign JSON. All persisted to localStorage['dndm_campaign'].",
+      "notes": "Committed as 62e8517. Bug fix ba99cc1 followed — Object.assign in campaignLoad() corrupted campaign.lore with stale localStorage data.",
+      "tags": ["dndm", "phase5"],
+      "files_affected": ["dndm/index.html", "dndm/assets/script/app.js", "dndm/assets/style/style.css"]
+    },
+    {
+      "id": "dndm-phase-6-atlas",
+      "title": "DM MATRIX Phase 6 — Atlas, Soundscape, Player Screen",
+      "status": "done",
+      "requested": "2026-05-16",
+      "closed": "2026-05-17",
+      "closed_by": "trap",
+      "description": "Atlas: map image upload with fog-of-war canvas. Soundscape: ambient audio controls. Player Screen: BroadcastChannel push to second tab.",
+      "notes": "Committed as d718e69.",
+      "tags": ["dndm", "phase6"],
+      "files_affected": ["dndm/index.html", "dndm/assets/script/app.js", "dndm/assets/style/style.css"]
+    },
+    {
+      "id": "dndm-phase-8-sheet",
+      "title": "DM MATRIX Phase 8 — Full 5e character sheet per PC",
+      "status": "done",
+      "requested": "2026-05-17",
+      "closed": "2026-05-17",
+      "closed_by": "trap",
+      "description": "Full 5e character sheet overlay per PC: 6 ability scores, saving throws, 18 skills, spell slots 1-9, textareas for features/equipment/backstory, meta fields. Live localStorage persistence.",
+      "notes": "Party migrated from sessionStorage to localStorage.",
+      "tags": ["dndm", "phase8"],
+      "files_affected": ["dndm/index.html", "dndm/assets/script/app.js", "dndm/assets/style/style.css"]
+    },
+    {
+      "id": "dndm-phase-8-partybar",
+      "title": "DM MATRIX Phase 8 — Party status bar during session mode",
+      "status": "done",
+      "requested": "2026-05-17",
+      "closed": "2026-05-17",
+      "closed_by": "trap",
+      "description": "Persistent sticky HP strip visible only when session is active. Each PC shows name, colour-coded HP bar, HP numbers, condition badges, KO skull.",
+      "notes": "Wired into beginSession/endSession/refreshPCCard.",
+      "tags": ["dndm", "phase8"],
+      "files_affected": ["dndm/index.html", "dndm/assets/script/app.js", "dndm/assets/style/style.css"]
+    },
+    {
+      "id": "dndm-phase-8-filters",
+      "title": "DM MATRIX Phase 8 — Bestiary + Spellbook advanced filters",
+      "status": "done",
+      "requested": "2026-05-17",
+      "closed": "2026-05-17",
+      "closed_by": "trap",
+      "description": "Bestiary: CR range, 14 creature type pills, 6 size pills. Spellbook: level pills, school pills, concentration/ritual toggles, class pills. Clear resets all.",
+      "notes": "Filters reset on source change.",
+      "tags": ["dndm", "phase8"],
+      "files_affected": ["dndm/index.html", "dndm/assets/script/app.js", "dndm/assets/style/style.css"]
+    },
+    {
+      "id": "dndm-story-module",
+      "title": "DM MATRIX — STORY module (narrative decision tree)",
+      "status": "done",
+      "requested": "2026-05-17",
+      "closed": "2026-05-17",
+      "closed_by": "trap",
+      "description": "Full narrative decision tree builder: pan/zoom canvas, 6 node types, bezier SVG edges, drag/connect/delete modes, Oracle contextual suggestions, NOW PLAYING strip, Off-Script wildcard spawner.",
+      "notes": "Persisted to campaign.narrative.",
+      "tags": ["dndm", "story"],
+      "files_affected": ["dndm/index.html", "dndm/assets/script/app.js", "dndm/assets/style/style.css"]
+    },
+    {
+      "id": "dndm-phase-9-polish",
+      "title": "Grimoire Phase 9 — Touch targets, reduced motion, visual polish",
+      "status": "done",
+      "requested": "2026-05-17",
+      "closed": "2026-05-17",
+      "closed_by": "trap",
+      "description": "Touch target compliance (≥44px, pointer:coarse). prefers-reduced-motion extended to STORY canvas nodes, Oracle animation, HP bar transitions, character sheet overlay.",
+      "notes": "CSS-only. Committed as 8fcd4a9.",
+      "tags": ["dndm", "phase9", "a11y"],
+      "files_affected": ["dndm/assets/style/style.css", "status/logs/logs.json"]
+    },
+    {
+      "id": "dndm-phase-8-oracleask",
+      "title": "DM MATRIX Phase 8 — Oracle Ask buttons on stat blocks + spell panels",
+      "status": "done",
+      "requested": "2026-05-17",
+      "closed": "2026-05-17",
+      "closed_by": "trap",
+      "description": "◈ Ask Oracle button on monster stat blocks and spell panels. Pre-fills prompt, switches to Oracle module.",
+      "notes": null,
+      "tags": ["dndm", "oracle"],
+      "files_affected": ["dndm/assets/script/app.js"]
+    }
+  ],
+  "issues": [
+    {
+      "id": "llm-json-schema-migration",
+      "title": "llm.json v9.1.0: _index array removed, _index_matrix replaces it",
+      "severity": "critical",
+      "status": "resolved",
+      "scope": "glass/script/modules/llm.js, glass/script/modules/ui.js, underdark/script/modules/ui.js",
+      "flagged": "2026-05-18",
+      "flagged_by": "llm",
+      "description": "llm.json schema rewritten — _index flat array removed entirely. Three call sites still iterated _index to populate model <select> dropdowns, causing a silent crash (TypeError: undefined is not iterable). pay_per_token boolean also removed in favour of cost_tier string.",
+      "reproduction_note": "Load any page that renders a model <select> (playground, underdark) — dropdown is empty and throws TypeError in console because _index is undefined on the new schema.",
+      "fix_summary": "All three call sites updated to iterate _index_matrix.text (modality → provider → [ids]) grouped by provider. pay_per_token glyph logic replaced with cost_tier comparison ('Basically Free'/'Cheap' → ✦, else ◆). ui.js sub-counter updated to count cost_tier='Basically Free'.",
+      "prevention": "Before consuming llm.json in JS, check _meta.schema_version and verify expected top-level keys exist. When llm.json schema changes, grep for all _index and pay_per_token references immediately.",
+      "resolved": "2026-05-18",
+      "commit": "pending"
+    }
+  ],
+  "proposals": []
+}

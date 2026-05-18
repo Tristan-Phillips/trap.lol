@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.4.1",
+    "schema_version": "1.4.7",
     "last_updated": "2026-05-18",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -18,7 +18,6 @@
       "commits",
       "sessions",
       "for_new_llm",
-      "pending_work",
       "sources_of_truth",
       "system_audit"
     ]
@@ -32,20 +31,24 @@
       "Do NOT update if the session was purely read-only with no new information revealed."
     ],
     "how_to_update_each_section": {
-      "_meta.last_updated": "Set to today's date in YYYY-MM-DD format. Always.",
+      "_meta.last_updated": "Set to today's date in YYYY-MM-DD format. Always — even if only sessions[] changed.",
       "_meta.schema_version": "Increment patch (1.0.X) for content updates. Increment minor (1.X.0) if you add a new top-level section. Increment major (X.0.0) only if the entire schema changes.",
-      "commits": "Prepend a new entry to the front of the array for each commit made this session. Required fields: hash (7-char), date (YYYY-MM-DD), message (exact git commit message), scope (which parts of the site changed), impact (critical|high|medium|low), files (array of files changed), why (one sentence explaining the reason — not what, WHY).",
-      "sessions": "Prepend a new entry to the front of the array. Required fields: date (YYYY-MM-DD), agent (model name + version), type (one of: pre_production_audit | feature_development | bug_fix | refactor | content | security | discussion | maintenance), summary (1-3 sentences describing what happened), decisions (array of key decisions made or things learned), rules_reinforced (array of rules that were confirmed or clarified this session).",
-      "evolution.current_state": "Update this string if the site's overall state has meaningfully changed.",
-      "evolution.phases": "Add a new phase entry if a clearly new chapter of development has begun. Don't add a phase for every session.",
-      "evolution.intended_future": "Update if trap expressed new intentions or removed old ones.",
-      "pages": "Add, update, or remove page entries when pages are created, modified, or deleted.",
-      "rules.absolute": "Add new rules only if trap explicitly stated a hard rule. Do not infer rules — only record what was explicitly said or demonstrated through repeated preference.",
-      "rules.strong_preferences": "Same as above but for preferences (not hard rules).",
-      "anti_patterns": "Add to things_that_have_been_tried_and_rejected when something is removed or reversed. Add to common_mistakes_to_avoid when a class of error is identified.",
-      "language_fingerprint": "Update recurring_words_and_phrases if new vocabulary is consistently used. Add to vocabulary_never_used if trap explicitly rejects a word. Update tone/style descriptions if they become more precise.",
-      "pending_work": "When a feature is requested by trap, add a new entry to pending_work.features[] with status 'not_started'. When work begins, set status to 'in_progress'. When complete, set to 'done' and add a note about the commit hash. When deferred, set to 'deferred' with a reason in notes. Never remove entries.",
-      "sources_of_truth": "When a new canonical data file is established, add it to sources_of_truth.files[]. Update the 'used_by' array when new consumers are added. Add to 'do_not' if a new anti-pattern is identified for that domain."
+      "commits": "Prepend a new entry to the front of the array for each git commit made this session. Required fields: hash (exactly 7-char git short hash — use 'pending' if you haven't committed yet, then patch it after), date (YYYY-MM-DD), message (exact git commit message string), scope (which app/directory changed — e.g. 'underdark/', 'glass/', 'status/logs/'), impact (critical|high|medium|low), files (array of relative file paths changed), why (one sentence — the reason/motivation, not a description of what changed).",
+      "sessions": "Prepend a new entry to the front of the array. Required fields: date (YYYY-MM-DD), agent (model name + version e.g. 'Claude Sonnet 4.6'), type (one of: pre_production_audit | feature_development | bug_fix | refactor | content | security | discussion | maintenance), summary (1-3 sentences: what happened, what changed, what was decided), decisions (array of key architectural or design decisions made — things the next agent needs to know, not a change log), rules_reinforced (array of rules that were confirmed or clarified this session — omit if none).",
+      "evolution.current_state": "Update this string if the site's overall production state has meaningfully changed — new pages live, major features shipped, or a previous state description is no longer accurate.",
+      "evolution.phases": "Add a new phase entry only if a clearly new chapter of development has begun (e.g. a multi-session push that shipped a coherent new capability). Do not add a phase for a single session or a small fix.",
+      "evolution.intended_future": "Update if trap expressed new intentions, requested features that aren't captured elsewhere, or explicitly cancelled a previously stated intention.",
+      "pages": "Add a new entry when a new page is created. Update the existing entry when sections, data sources, or purpose of an existing page changes. Mark a page as removed/deprecated if it is deleted. Each page entry should document: file, title, purpose, sections_in_order (including which are commented out), and key_files (data + script dependencies).",
+      "architecture.data_layer": "Add an entry when a new JSON data file is created and fetched by any page. Update the description if the schema of an existing file changes. Key: relative file path. Value: one sentence describing what it contains and how it is used.",
+      "architecture.module_structure": "Add an entry when a new JS or significant MD file is created. Update the description when a module's responsibility changes. Key: relative file path. Value: one sentence describing the file's role.",
+      "architecture.boot_sequence": "Update only if the actual boot order or critical sequence in glass/script/main.js or glass/script/modules/core.js changes.",
+      "rules.absolute": "Add new rules only if trap explicitly stated a hard rule — in words like 'never', 'always', 'do not'. Do not infer rules from preferences. Do not add rules for things already covered.",
+      "rules.strong_preferences": "Add when trap expresses a consistent preference over multiple sessions, or explicitly states they prefer one approach over another. Not hard rules — but still important.",
+      "anti_patterns": "Add to things_that_have_been_tried_and_rejected when a feature or approach is explicitly removed or rejected. Add to common_mistakes_to_avoid when a class of error is identified — especially one that was actually made during a session.",
+      "language_fingerprint": "Update recurring_words_and_phrases if new vocabulary is consistently used by trap. Add to vocabulary_never_used if trap explicitly rejects a word or phrase. Update tone/style descriptions only if a meaningful new insight is gained.",
+      "pending_work": "DEPRECATED — pending_work has been migrated to status/logs/signal.json → tasks[]. Do not add to pending_work in this file. Update signal.json instead.",
+      "sources_of_truth": "When a new canonical data file or document is established as the single authority for a domain, add it to sources_of_truth.files[]. Update the 'used_by' array when new files begin consuming that source. Add to 'do_not' when a new anti-pattern for that domain is identified. The key is the relative file path from repo root.",
+      "structure_ruleset": "The file structure rules live in status/logs/structure-ruleset.md — a standalone document rendered in the Ruleset tab of the logs viewer. When a structural decision is made (new convention, new violation confirmed fixed, new violation discovered), update that file directly. Also update the corresponding sources_of_truth entry if the change affects what the ruleset 'owns'. Do not embed structural rules anywhere else."
     },
     "staleness_detection": "If _meta.last_updated is more than 7 days ago, flag this to the user before starting work. The file may be significantly out of date. Ask if they want to do a sync pass before proceeding.",
     "validation_rules": [
@@ -56,7 +59,26 @@
       "Do NOT remove or rewrite existing entries — only prepend new ones or update specific named fields",
       "Do NOT change the schema structure — add fields only, never remove"
     ],
-    "for_claude_code_specifically": "When working in Claude Code (CLI): at session start, read status/logs/logs.json (this file, at the root of the trap.lol repo). At session end, before committing, update commits[] and sessions[] in status/logs/logs.json. The commit entry for the logs update itself should list files: ['status/logs/logs.json'] with scope 'logs' and impact 'low'. Do not create a separate commit just for the logs file — include it in the most relevant commit for the session, or as the last commit if the session had multiple commits."
+    "companion_file": "status/logs/signal.json is the mutable companion to this file. It holds tasks (migrated from pending_work), issues, and proposals. Read it alongside this file at session start. Update it when tasks change, issues are found or resolved, or proposals are offered. It has its own _protocol block — read it before writing to it.",
+    "for_claude_code_specifically": "When working in Claude Code (CLI): READ status/logs/logs.json AND status/logs/signal.json at session start before touching any file. At session end, use the decision tree below to determine which sections to update — features/tasks go to signal.json, not pending_work (deprecated). Commit both files as part of the most relevant commit.",
+    "update_decision_tree": {
+      "_always": ["_meta.last_updated (today's date)", "commits[] (one entry per git commit)", "sessions[] (one entry per session)"],
+      "_if_new_page_created": ["pages — add full entry with file, title, purpose, sections_in_order, key_files", "architecture.data_layer — add any new JSON files it fetches", "architecture.module_structure — add its script file(s)"],
+      "_if_existing_page_modified": ["pages — update the entry's sections_in_order or key_files if they changed", "architecture.data_layer — update description if a JSON schema changed", "architecture.module_structure — update description if a module's role changed"],
+      "_if_new_json_data_file_created": ["architecture.data_layer — add entry", "sources_of_truth.files — add entry if this file is the canonical authority for its domain"],
+      "_if_new_js_module_created": ["architecture.module_structure — add entry"],
+      "_if_boot_sequence_changed": ["architecture.boot_sequence.steps — rewrite to match actual sequence"],
+      "_if_feature_requested_or_completed": ["signal.json → tasks[] — add new task or update existing entry status; do NOT use pending_work in logs.json (deprecated)"],
+      "_if_new_structural_file_or_convention_established": ["sources_of_truth.files — add or update entry", "status/logs/structure-ruleset.md — update the ruleset document directly"],
+      "_if_rule_stated_explicitly_by_trap": ["rules.absolute or rules.strong_preferences — add entry"],
+      "_if_approach_rejected_by_trap": ["anti_patterns.things_that_have_been_tried_and_rejected — add entry"],
+      "_if_mistake_made_during_session": ["anti_patterns.common_mistakes_to_avoid — add entry"],
+      "_if_site_state_meaningfully_changed": ["evolution.current_state — rewrite string to reflect current production state"],
+      "_if_new_dev_phase_started": ["evolution.phases — add phase entry"],
+      "_if_trap_expressed_new_future_intent": ["evolution.intended_future — add or update item"],
+      "_if_trap_used_new_vocabulary_consistently": ["language_fingerprint.recurring_words_and_phrases — add term"],
+      "_if_trap_rejected_a_word": ["language_fingerprint.vocabulary_never_used — add word"]
+    }
   },
   "identity": {
     "domain": "trap.lol",
@@ -117,12 +139,12 @@
       "tools.json": "Ordnance Depot section. CLI tools/payloads. Each entry has: name, shortcut, icon, description, target (OS), repo_url, install_cmd (the thing the shortcut copies).",
       "extlinks.json": "Signal Mesh section. External links grouped by category. Each category has: domain, category, visual_class (neon-*), manifest of links with: name, shortcut, url, trust_level (Vetted|High), info.",
       "guides.json": "Sacred Codex (currently commented out in index.html). Array of guide entries: title, description, icon, file (markdown filename), read_time. Logic and data maintained for when the section returns.",
-      "llm.json": "LLM routing table and model catalog. _index array for UI ordering by family. routing_table keyed by model ID. Each entry: label, provider, pay_per_token, context_k, cost_weight, scores (intelligence/coding/speed), recommended_inference, optional fallback_id, description. default_routing sets the boot-time selected model.",
+      "llm.json": "LLM routing table and model catalog. Schema v9.1.0-multimodal-matrix. _index_matrix: nested dictionary modality → provider → [api_ids] for UI grouping. _endpoints: modality → nano-gpt API path. routing_table keyed by model ID — each entry: label, provider, modality, cost_tier ('Basically Free'|'Cheap'|'Fair'|'Extreme'), plus modality-specific constraints (max_input for text, resolution for image, dimensions for embedding, max_chars for audio). default_routing sets the boot-time selected model.",
       "statstation.json": "Station section on home page. Manifest of internal trap.lol tools/status pages rendered as HUD scan bars. Each entry: name, slug, path, icon, description, tags[], keyed, status (live|planned).",
       "trap.json": "Transmissions section on home page. Manifest of personal/creative apps rendered as warm bloom cards (tx-card). Each entry: name, slug, path, icon, description, tags[], keyed, status (live|planned).",
       "apps.json": "App Uplinks section. Full app manifest across all sub-apps. Each app: name, slug, path, icon, description, tags[], keyed (bool — requires API key), status (live|planned).",
       "art/assets/data/detention.json": "ECHOES gallery data. Collections of artwork artifacts. Each artifact: compositeId (collectionId::artifactId), src.small, src.original, uploadDate, tags[], type (digital|traditional), metadata (medium, description, verse, mood, chaos, nsfw bool). _meta.baseUrl prepended to all src paths.",
-      "void/assets/content/void.json": "VOID personal transmission log entries. Array under 'entries' (or root array). Each entry: id, date, title, body (markdown), tags[]. Rendered via marked.js + DOMPurify. New entries authored via void/new/index.html then pasted in.",
+      "void/assets/content/void.json": "VOID personal transmission log entries. Array under 'entries' (or root array). Each entry: id, date, title, body (markdown), tags[]. Rendered via marked.js + DOMPurify. New entries authored via void/new/index.html (local-only authoring tool, not publicly linked). NOTE: this file lives in assets/content/ — a known structural anomaly (§11 of structure-ruleset.md); correct target path is void/assets/data/void.json.",
       "underdark/data/index.json": "Underdark character roster. characters[] array — each entry is a character card (id, name, etc.) plus lorebooks[]. The authoritative list of available RP characters.",
       "underdark/data/personas.json": "Underdark persona templates. personas[] array — 52 pre-built RP persona definitions with id, name, userName, userPersona fields. Used to seed character creation.",
       "underdark/data/scenarios.json": "Underdark scenario library. scenarios[] array — 32 pre-built RP scenario starters with id, name, scenario fields.",
@@ -172,13 +194,25 @@
       "glass/script/modules/tunnel-light.js": "The animated tunnel light perspective-corridor effect on the home page header. Only initialised on non-touch devices.",
       "glass/data/llm-agents/": "Per-agent JSON files. index.json lists all filenames. Each agent file: name, tags, system_prompt, temperature, optional model override. Active agents: default.json, opsec-dev.json, sovereign-architect.json.",
       "glass/style/modules/": "CSS module system loaded via @import in glass/style/style.css. Modules: variables.css (all --custom-props), base.css (body/page reset), layout.css (page structure, section spacing), typography.css (headings, prose), components.css (cards, badges, tooltips, node-tiles, station bars, tx-cards, flip-cards), border-life.css (animated border effect), social-cluster.css (footer social strip), tunnel-light.css (header animation), neural-uplink.css (playground-specific overrides), responsive.css (breakpoint overrides).",
-      "underdark/script/modules/ui.js": "The Underdark's sole large module (~11k lines). Handles all UI rendering, state management, character loading, persona system, scenario finder, image studio, social feed, RP generator, and event wiring for the Underdark.",
+      "underdark/script/modules/ui.js": "The Underdark's primary large module (~11k lines). Handles all UI rendering, state management, character loading, persona system, scenario finder, image studio, social feed, RP generator, and event wiring.",
       "underdark/script/modules/llm-engine.js": "Underdark LLM call orchestration. Manages API requests to nano-gpt, model selection, streaming, sliding context window, and recursive summary injection.",
       "underdark/script/modules/image-engine.js": "Underdark image/video generation. Wraps nano-gpt image API. Handles async polling for video generation, IDB persistence of generated images.",
-      "underdark/script/modules/codex-meters.js": "Renders LLM capability meter bars (intelligence, coding, speed) in the model info panel. Reads scores from glass/data/llm.json.",
+      "underdark/script/modules/codex-meters.js": "Renders LLM capability meter bars in the model info panel. Reads model data from glass/data/llm.json routing_table.",
       "underdark/script/modules/commands.js": "Handles /slash commands in the Underdark chat input. Supported commands include /model, /clear, /persona, and others.",
-      "status/logs/index.html": "The intelligence terminal viewer. Reads logs.json and renders it across 12 tabs: Briefing, Protocol, Philosophy, Pages, Design, Rules, Language, Evolution, Commits, Architecture, Sessions, Sources. Contains a chat widget (nano-gpt API key, localStorage) to query the full knowledge base in natural language.",
-      "status/logs/logs.json": "The knowledge base itself. See _protocol for schema and update obligations."
+      "underdark/script/modules/char-editor.js": "Character card editor UI. Handles creation and editing of character JSON definitions (name, description, personality, scenario, first_mes, etc.) conforming to the CharaCard V2 spec.",
+      "underdark/script/modules/lorebook.js": "Keyword scanning and dynamic lore injection. Scans chat history for trigger words defined in lorebook entries and injects matching lore into the system prompt context.",
+      "underdark/script/modules/parser-v2.js": "Markdown and <think> tag processing. Strips or renders inner monologue blocks; processes rp-* narrative CSS classes and inline formatting.",
+      "underdark/script/modules/state.js": "Global state object and session management. All state mutations go through helpers here to ensure consistent localStorage persistence.",
+      "underdark/script/modules/storage.js": "IndexedDB and localStorage persistence layer. Handles image blobs (IDB) and all serialised state (localStorage).",
+      "underdark/script/modules/shared-utils.js": "Cross-cutting utility functions shared across multiple Underdark modules.",
+      "underdark/script/modules/wallhaven.js": "Wallhaven API integration. Fetches wallpapers for the Underdark backdrop/gallery feature.",
+      "archive/index.html": "Archive roster page. Lists all decommissioned pages under archive/{slug}/. Hardcoded entries in HTML (no data fetch, no JS). Add a new entry here when retiring a page.",
+      "archive/uplink-sentinel/index.html": "Archived Uplink Sentinel. Static snapshot of the live probe page that previously lived at status/index.html. No polling, no countdown. All dynamic node statuses shown as 'unknown'; Drone Fleet statuses preserved. Archived 2026-05-18.",
+      "status/index.html": "Minimal status hub. Lists sub-sections under status/ as clickable cards. Currently one entry: Intelligence Logs → /status/logs/. No JS, no data fetch. Add a new entry when a new sub-page is created under status/.",
+      "status/logs/index.html": "The intelligence terminal viewer. Reads logs.json and renders it across 14 tabs: Briefing, Protocol, Philosophy, Pages, Design, Rules, Language, Evolution, Commits, Architecture, Sessions, Sources, Ruleset, Signal. The Ruleset tab fetches structure-ruleset.md; the Signal tab fetches signal.json. Contains a chat widget (nano-gpt API key, localStorage) to query the full knowledge base in natural language.",
+      "status/logs/logs.json": "The knowledge base itself — concrete, authoritative, binding. See _protocol for schema and update obligations.",
+      "status/logs/signal.json": "The mutable companion to logs.json. Holds tasks (migrated from pending_work), open and resolved issues, and proposals. Has its own _protocol block. Contents are provisional and debatable — not binding rules.",
+      "status/logs/structure-ruleset.md": "File structure canonical ruleset. 12 sections covering: the two app patterns (glass/ shared system vs. self-contained apps), directory naming conventions, file naming conventions, app placement rules, glass/data/ layer rules, self-contained app boundaries, status/ structure, .ai/ meta files, root-level file allowlist, shards/ rules, void/assets/ anomaly, and a violation register of known current deviations."
     }
   },
   "pages": {
@@ -220,10 +254,11 @@
       "file": "playground/index.html",
       "title": "trap.lol // neural uplink",
       "purpose": "LLM playground. Multi-model chat interface. Session management, agent personas, system prompt override, temperature control, streaming.",
+      "script": "playground/script/main.js (imports glass/script/modules/llm.js and sub-modules)",
       "api": "nano-gpt.com/api/v1 (OpenAI-compatible, multi-provider routing)",
       "auth": "API key stored in localStorage. Key never sent anywhere except the API endpoint.",
-      "models": "Defined in glass/data/llm.json routing_table. Includes DeepSeek, Claude, GPT, Llama, Qwen, Gemini, Mistral, GLM.",
-      "agents": "JSON files in glass/data/llm-agents/. Loaded async. Default agent = default.json."
+      "models": "Defined in glass/data/llm.json _index_matrix.text + routing_table. Grouped by provider in the model selector.",
+      "agents": "JSON files in glass/data/llm-agents/. Loaded async. Default agent = default.json. Active: default.json, opsec-dev.json, sovereign-architect.json."
     },
     "/underdark/": {
       "file": "underdark/index.html",
@@ -237,10 +272,12 @@
       "file": "void/index.html",
       "title": "void // trap.lol",
       "purpose": "Personal transmission log. Data-driven feed of raw personal entries rendered from void.json via marked.js + DOMPurify. Spotlight overlay for full entry reading. Deep-water dark aesthetic, fully self-contained.",
-      "data": "void/assets/content/void.json",
+      "data": "void/assets/content/void.json (NOTE: lives in content/ not data/ — known structural anomaly per structure-ruleset.md §11; correct target is void/assets/data/void.json)",
       "script": "void/assets/script/app.js (type=module, self-contained — does NOT use glass/script/)",
       "css": "void/assets/style/style.css (self-contained — does NOT use glass/style/)",
-      "note": "void/new/index.html is a local-only entry editor (live markdown preview, ID generator, JSON fragment export) for authoring new void.json entries. Not linked publicly."
+      "sub_pages": {
+        "void/new/index.html": "Local-only VOID entry authoring tool. Live markdown preview, ID generator, JSON fragment export. Not publicly linked. EXISTS on disk."
+      }
     },
     "/dndm/": {
       "file": "dndm/index.html",
@@ -260,8 +297,19 @@
     "/status/": {
       "file": "status/index.html",
       "title": "trap.lol // status",
-      "purpose": "Uplink Sentinel. Live infrastructure monitor. Probes sovereign nodes and app uplinks every 60 seconds. Shows response time, sparkline history, online/offline badge. Drone fleet is static (Telegram bots — not HTTP-probeable). Favicon and tab title update to reflect overall system state.",
-      "probe_method": "nocors fetch for external nodes (opaque response = up), same-origin fetch for apps."
+      "purpose": "Minimal hub page. Lists all sub-sections under status/. Currently one entry: Intelligence Logs → /status/logs/. Extensible — add a new entry here whenever a new sub-page is added under status/. Does not probe, does not fetch data, no JS."
+    },
+    "/archive/": {
+      "file": "archive/index.html",
+      "title": "trap.lol // archive",
+      "purpose": "Roster of decommissioned pages and retired artifacts. Each entry links to archive/{slug}/. Displays name, description, archive badge, and archive date. No JS, no data fetch — entries are hardcoded in HTML. Add a new entry when retiring a page."
+    },
+    "/archive/uplink-sentinel/": {
+      "file": "archive/uplink-sentinel/index.html",
+      "title": "trap.lol // archive — Uplink Sentinel",
+      "purpose": "Archived Uplink Sentinel infrastructure monitor. Preserved static snapshot of the live probe page that previously lived at /status/. Service statuses for NODES and APPS shown as 'unknown' (no probing). Drone Fleet static statuses preserved as-was. Back nav points to /archive/. No countdown, no polling, no live checks.",
+      "archived_from": "/status/",
+      "archived_date": "2026-05-18"
     },
     "/status/logs/": {
       "file": "status/logs/index.html",
@@ -273,7 +321,8 @@
       "file": "guide/index.html",
       "title": "trap.lol // docs",
       "purpose": "Markdown reader. Reads ?md= param, fetches from /glass/markdown/<filename>, renders via marked.js + DOMPurify sanitization. Shares glass/style/style.css.",
-      "note": "The Sacred Codex section on the home page (guides.json + carousel) is currently commented out in index.html but all backend logic (renderCodex, guides.json) is maintained. It will return."
+      "status": "NOT PRESENT — guide/ directory does not exist on disk. glass/markdown/ exists (contains virgin-vps.md) but no guide/index.html. The Sacred Codex section on the home page (guides.json + carousel) is also commented out. This page is planned but unbuilt.",
+      "note": "guides.json and the renderCodex() function in ui.js are maintained for when this page is built. glass/markdown/ already has content waiting."
     }
   },
   "design_system": {
@@ -519,7 +568,7 @@
         ]
       }
     ],
-    "current_state": "Production — eight distinct pages live. Core hub stable with Sovereign Nodes, Station (status links), Transmissions (personal apps), Ordnance Depot, Drone Fleet, App Uplinks, Uplink Launchpad, and social strip. Signal Mesh (extlinks) is currently commented out. The Underdark is the most actively developed sub-app — a massive vanilla-JS roleplay system (~11k lines) with character creation, personas, scenarios, image/video studio, social feed, and RP generator. Grimoire (/dndm/) is a full DM campaign suite with Story canvas, Party Tracker, Atlas fog-of-war, Oracle LLM assistant, Bestiary, and Spellbook. ECHOES (/art/) and VOID (/void/) are stable. The project maintains its zero-build philosophy while managing significant per-app complexity through careful module isolation.",
+    "current_state": "Production — seven distinct routable pages live (/, /playground/, /underdark/, /art/, /void/, /dndm/, /radar/, /status/, /status/logs/). /guide/ is planned but the directory does not exist yet — glass/markdown/ has one .md file waiting. Core hub stable with Sovereign Nodes, Station, Transmissions, Ordnance Depot, Drone Fleet, App Uplinks, Uplink Launchpad, and social strip. Signal Mesh (extlinks) is commented out. The Underdark is the most actively developed sub-app — ~11k-line vanilla-JS roleplay system with 11 modules covering character creation, personas, scenarios, lorebooks, image/video studio, social feed, and RP generator. Grimoire (/dndm/) is a full DM campaign suite with Story canvas, Party Tracker, Atlas fog-of-war, Oracle LLM assistant, Bestiary, and Spellbook. ECHOES (/art/) and VOID (/void/) are stable. llm.json is on schema v9.1.0-multimodal-matrix. The site also has a mutable working layer (signal.json) for tasks, issues, and proposals alongside the authoritative logs.json.",
     "intended_future": [
       "Sacred Codex (guides section) reactivation when enough .md content exists",
       "More ECHOES collections as artwork is created/curated",
@@ -533,6 +582,75 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-18",
+      "message": "feat(archive): archive/ directory + uplink-sentinel, status/ hub page",
+      "scope": "archive/, status/",
+      "impact": "medium",
+      "files": [
+        "archive/index.html",
+        "archive/uplink-sentinel/index.html",
+        "status/index.html",
+        "status/logs/logs.json",
+        "status/logs/signal.json"
+      ],
+      "why": "Uplink Sentinel retired — it was browser-tab-only with no persistent history backend making it misleading. Moved to archive/ as a static preserved artifact. status/ repurposed as an extensible hub page. archive/ created as a roster directory for all future retired pages."
+    },
+    {
+      "hash": "pending",
+      "date": "2026-05-18",
+      "message": "docs(logs): accuracy pass — stale paths, missing modules, schema refs, guide status",
+      "scope": "status/logs/",
+      "impact": "low",
+      "files": ["status/logs/logs.json"],
+      "why": "Full accuracy audit of logs.json: llm.json data_layer entry rewritten for v9.1.0 schema, 7 underdark modules added to module_structure, guide/ marked as non-existent, void content/ anomaly noted inline, playground entry updated to current structure, evolution.current_state corrected"
+    },
+    {
+      "hash": "pending",
+      "date": "2026-05-18",
+      "message": "feat(signal): create signal.json + Signal tab — mutable companion to logs",
+      "scope": "status/logs/",
+      "impact": "high",
+      "files": [
+        "status/logs/signal.json",
+        "status/logs/index.html",
+        "status/logs/logs.json"
+      ],
+      "why": "New mutable working surface for tasks (migrated from pending_work), issues, and proposals — clearly distinct from the authoritative logs.json; rendered in a new Signal tab with teal visual treatment and provisional-state styling"
+    },
+    {
+      "hash": "pending",
+      "date": "2026-05-18",
+      "message": "feat(llm): adapt to llm.json v9.1.0 multimodal matrix schema",
+      "scope": "glass/, underdark/",
+      "impact": "high",
+      "files": [
+        "glass/script/modules/llm.js",
+        "glass/script/modules/ui.js",
+        "underdark/script/modules/ui.js",
+        "status/logs/logs.json"
+      ],
+      "why": "llm.json schema rewritten from flat _index array to _index_matrix nested dictionary; removed pay_per_token boolean in favour of cost_tier string; all three model-select populator call sites updated to use the new structure"
+    },
+    {
+      "hash": "pending",
+      "date": "2026-05-18",
+      "message": "docs(logs): strengthen LLM protocol — decision tree, seventh law, structure guidance",
+      "scope": "status/logs/",
+      "impact": "medium",
+      "files": ["status/logs/logs.json"],
+      "why": "Protocol instructions were vague about which logs sections to update and when. Added update_decision_tree with explicit conditional rules, the_seventh_law (check sources_of_truth and ruleset before creating files), files_to_read_before_working, and structure violation cleanup as a pending_work entry so future agents know the cleanup is intentional and staged."
+    },
+    {
+      "hash": "pending",
+      "date": "2026-05-18",
+      "message": "feat(logs): structure ruleset + Ruleset tab in logs viewer",
+      "scope": "status/logs/",
+      "impact": "medium",
+      "files": ["status/logs/structure-ruleset.md", "status/logs/index.html", "status/logs/logs.json"],
+      "why": "Codebase had no written rules for where files should live, how directories should be named, or how new apps should be structured. Wrote a canonical 12-section ruleset covering the two app patterns, naming conventions, glass/data/ layer rules, root-level allowlist, and a violation register of known deviations. Added a Ruleset tab to the logs viewer that fetches and renders it; extended renderMd() with GFM table support to handle the ruleset's comparison tables. Documented the ruleset file in logs.json module_structure and sources_of_truth."
+    },
     {
       "hash": "26e91bb",
       "date": "2026-05-18",
@@ -2290,6 +2408,88 @@
     {
       "date": "2026-05-18",
       "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Created archive/ directory with index.html roster page. Moved the Uplink Sentinel from status/index.html to archive/uplink-sentinel/index.html as a static preserved artifact (no probing, no countdown, unknown status for all dynamic nodes). Replaced status/index.html with a minimal extensible hub page listing sub-sections. Discussed whether status/index.html and structure-ruleset.md were still earning their place — concluded both were valid: structure-ruleset.md because it is narrative markdown with tables that renders in the viewer, not embeddable in JSON.",
+      "decisions": [
+        "archive/ created as a top-level directory for all future retired pages — each archived page lives at archive/{slug}/index.html",
+        "Uplink Sentinel archived rather than deleted — it is a well-built artifact worth preserving as a static snapshot",
+        "status/index.html repurposed as a minimal hub rather than a redirect — a redirect would break if a second sub-directory is ever added under status/",
+        "structure-ruleset.md earns its separate file: it is narrative markdown with comparison tables rendered in the viewer via buildRuleset(), not embeddable in JSON",
+        "Archived page boot sequence stripped to static render only — no fetch, no countdown, NODES/APPS show 'unknown' status, Drone Fleet preserves last committed statuses"
+      ]
+    },
+    {
+      "date": "2026-05-18",
+      "agent": "Claude Sonnet 4.6",
+      "type": "maintenance",
+      "summary": "Full accuracy audit of logs.json against actual repo state. Found and corrected: llm.json data_layer entry (still described old _index/pay_per_token schema), 7 underdark modules undocumented in module_structure (char-editor, lorebook, parser-v2, state, storage, shared-utils, wallhaven), guide/ page marked as non-existent on disk, void content/ anomaly flagged inline in page and data_layer entries, playground entry updated to reflect current structure, evolution.current_state page count and guide status corrected. Schema bumped to 1.4.6.",
+      "decisions": [
+        "guide/ does not exist as a directory — page entry retained but marked NOT PRESENT with explicit note that glass/markdown/ has content waiting",
+        "void/assets/content/ anomaly is now noted inline in both data_layer and pages entries so any agent touching void immediately sees the structural debt",
+        "Underdark module_structure expanded from 5 to 12 entries to reflect actual module count"
+      ]
+    },
+    {
+      "date": "2026-05-18",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Built signal.json — a mutable provisional companion to logs.json — and wired it into the logs viewer as a new Signal tab. The tab has a distinct teal accent and dashed-border visual language to signal its provisional nature. Four buckets: tasks (migrated from pending_work with richer status vocabulary), issues (Critical/Warning/Note severity, resolved ones collapsed behind toggle), proposals (unchosen ideas captured at ≤256 chars + 3 tags), and a full _protocol block. logs.json pending_work deprecated in favour of signal.json tasks[].",
+      "decisions": [
+        "signal.json is the single place for tasks, issues, and proposals — pending_work in logs.json is deprecated and redirects to signal.json",
+        "Signal tab uses teal (#00e5cc) as its accent to clearly distinguish it from the purple-accented authoritative tabs",
+        "LLM-closed vs trap-closed tasks have different close badge colors so provenance is visible in the UI",
+        "Resolved issues stay in signal.json (marked resolved, fix_summary + prevention filled) but are collapsed behind a toggle in the viewer to avoid clutter",
+        "Proposals use a shared 256-char budget across context + summary + why_guess (spaces excluded); char count is shown in the card footer",
+        "Rule promotion: LLM must surface as a question to trap if ≥90% confident something should become a rule — never unilaterally edit logs.json rules"
+      ]
+    },
+    {
+      "date": "2026-05-18",
+      "agent": "Claude Sonnet 4.6",
+      "type": "bug_fix",
+      "summary": "llm.json was rewritten to schema v9.1.0-multimodal-matrix, replacing the flat _index array with _index_matrix (modality → provider → [ids]) and replacing pay_per_token boolean with a cost_tier string. All three call sites that populated model <select> dropdowns by iterating _index were updated to use _index_matrix.text instead. The sub-model telemetry counter in ui.js was updated to count cost_tier='Basically Free' entries. logs.json sources_of_truth entry for llm.json was rewritten to match the new schema.",
+      "decisions": [
+        "_index_matrix.text is the canonical source for UI model selects — only text-modality models appear in chat dropdowns",
+        "cost_tier replaces pay_per_token; 'Basically Free' and 'Cheap' receive the ✦ glyph, others receive ◆ in the model select",
+        "The sub counter in Uplink telemetry now counts models with cost_tier='Basically Free' rather than !pay_per_token"
+      ]
+    },
+    {
+      "date": "2026-05-18",
+      "agent": "Claude Sonnet 4.6",
+      "type": "maintenance",
+      "summary": "Strengthened the LLM protocol in logs.json to be precise and actionable. Added update_decision_tree (conditional rules for which sections to update based on what changed), the_seventh_law (check sources_of_truth and structure-ruleset.md before creating any new file), files_to_read_before_working (context-sensitive reading list), and a pending_work entry tracking the 10 structure violations from structure-ruleset.md §12.",
+      "decisions": [
+        "update_decision_tree added as a peer field to for_claude_code_specifically — not nested inside how_to_update_each_section, because it is a decision aid, not an instruction for a specific field",
+        "the_seventh_law added to for_new_llm.the_five_laws group — structure awareness is now a first-class law alongside XSS safety and aesthetic rules",
+        "files_to_read_before_working added so agents know exactly which files to read before touching each subsystem — not just 'read logs.json'",
+        "structure-violation-cleanup added to pending_work so future agents don't silently attempt the restructure mid-session without trap's confirmation"
+      ],
+      "rules_reinforced": [
+        "Protocol updates must be precise enough that an agent with no prior context can follow them without asking clarifying questions",
+        "Pending work entries must exist for all known outstanding structural changes — even ones that are not yet in progress"
+      ]
+    },
+    {
+      "date": "2026-05-18",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Full codebase structure scan followed by authoring a canonical file structure ruleset (status/logs/structure-ruleset.md) covering the two app patterns, all naming conventions, glass/data/ layer rules, root-level allowlist, and a violation register of 10 known deviations. Added a Ruleset tab to the logs viewer (index.html) that fetches and renders the ruleset at runtime. Extended the inline renderMd() with GFM table support to handle the ruleset's comparison tables. Documented the new file in logs.json module_structure and sources_of_truth.",
+      "decisions": [
+        "Ruleset stored as a standalone .md file rather than in logs.json because it is a reference document that humans will also edit directly, not a machine-read knowledge graph node",
+        "Ruleset tab uses fetch() at runtime rather than embedding content in logs.json — keeps the ruleset independently editable without touching the knowledge base",
+        "renderMd() extended with table support (thead/tbody, separator row detection) because the ruleset's comparison tables are load-bearing content, not decorative",
+        "structure-ruleset.md added to sources_of_truth so future LLMs know it is the authority on file placement and do not write structural rules elsewhere",
+        "Violation register in the ruleset documents 10 known deviations — these are tracked here, not silently fixed, so work can be done intentionally in a future session"
+      ],
+      "rules_reinforced": [
+        "Every new canonical document must be registered in both module_structure and sources_of_truth in logs.json",
+        "The inline renderMd() must be extended to support document features as they are needed — it is the only markdown renderer available to the logs viewer"
+      ]
+    },
+    {
+      "date": "2026-05-18",
+      "agent": "Claude Sonnet 4.6",
       "type": "maintenance",
       "summary": "Full accuracy audit of status/logs/ against actual codebase state. Scanned all HTML pages, JSON data files, and JS modules. Found and corrected: /void/ and /dndm/ missing from pages manifest; 10 data files missing from architecture.data_layer (statstation.json, trap.json, void.json, 7 underdark data files); glass/style/modules/ CSS system and underdark script modules absent from module_structure; home page sections_in_order wrong (Signal Mesh still listed as active, Station/Transmissions missing); evolution.current_state stale; boot_sequence steps mis-attributed. Also expanded sources_of_truth with 5 new canonical file entries and added Phase 6 Expansion to evolution.phases.",
       "decisions": [
@@ -3742,7 +3942,7 @@
     }
   ],
   "for_new_llm": {
-    "read_this_first": "You are about to work on trap.lol. The file you are reading is status/logs/logs.json at the root of the trap.lol repository. It is the site's persistent memory and single source of truth. Read it in full before touching any code. The _protocol section is your operating instructions — it tells you exactly what to update and when. The rules and anti_patterns sections are load-bearing — violating them will produce work that gets reverted. Your last act in every session is to update this file (status/logs/logs.json) and commit it.",
+    "read_this_first": "You are about to work on trap.lol. The file you are reading is status/logs/logs.json at the root of the trap.lol repository. It is the site's persistent memory and single source of truth. Read it in full before touching any code. The _protocol section tells you exactly what to update and when — use the update_decision_tree to determine which sections are relevant to your session. The rules and anti_patterns sections are load-bearing — violating them produces work that gets reverted. Your last act in every session is to update this file and commit it.",
     "the_five_laws": [
       "1. No frameworks. No build steps. Vanilla only.",
       "2. All data lives in JSON. All HTML is scaffolding.",
@@ -3750,15 +3950,17 @@
       "4. lucide.createIcons() only after all HTML is injected.",
       "5. The aesthetic is Dune × Arcane. Dark, glowing, precise, poetic. Never corporate, never default."
     ],
-    "the_sixth_law": "6. Update this file (logs.json) at the end of every session. Prepend to commits[]. Prepend to sessions[]. Update _meta.last_updated. This is not optional.",
+    "the_sixth_law": "6. Update this file (logs.json) at the end of every session. Prepend to commits[]. Prepend to sessions[]. Update _meta.last_updated. Use update_decision_tree to know which other sections to touch. This is not optional.",
+    "the_seventh_law": "7. Before creating any new file, check sources_of_truth.files[] and status/logs/structure-ruleset.md. The sources tell you if the domain already has a canonical file. The ruleset tells you where any new file must live.",
     "how_to_help_effectively": [
-      "When asked to add a new section or item: edit the relevant JSON file. Do not touch the HTML.",
-      "When asked to add a new page: follow the pattern of the nearest existing page. Match its CSS variable usage, its glass morphism, its mono typography.",
-      "When asked to fix a bug: read the file top to bottom first. The architecture is intentional. The bug is almost never where you think it is.",
+      "When asked to add a new content item (service, bot, tool, link): edit the relevant JSON file in glass/data/. Do not touch the HTML.",
+      "When asked to add a new page or app: check structure-ruleset.md first to confirm which directory pattern applies and where the files must live.",
+      "When asked to create a new data file: first check sources_of_truth.files — the domain may already have a canonical source. If it does, add to that file instead.",
+      "When asked to fix a bug: read the affected file top to bottom first. The architecture is intentional. The bug is almost never where you initially think it is.",
       "When asked to improve performance: look for DOM thrashing, unnecessary re-renders, unscoped lucide.createIcons() calls, unscoped IntersectionObserver selectors.",
-      "When asked to improve UI: the answer is almost always 'add a glow' or 'add a sweep' or 'add an entrance animation'. The palette is fixed. Don't introduce new colours.",
-      "When unsure about tone for UI copy: terse. mono. ALL CAPS for states. lowercase for whispers. Never full sentences in labels.",
-      "At session end: update logs.json per _protocol before committing."
+      "When asked to improve UI: the palette is fixed — don't introduce new colours. The answer is usually a glow, a sweep, or an entrance animation using existing CSS variables.",
+      "When unsure about UI copy tone: terse. mono. ALL CAPS for states. lowercase for whispers. Never full sentences in labels.",
+      "At session end: run the update_decision_tree mentally, update the relevant logs.json sections, and include the logs.json edit in your commit."
     ],
     "what_trap_values_most": [
       "Sovereignty — full control, no external dependencies beyond what's necessary",
@@ -3767,12 +3969,30 @@
       "Speed of iteration — ship and refine, don't over-architect",
       "Security at the boundary — validate user input, sanitize rendered content, expose nothing accidentally",
       "Surprise — the gacha pull, the terminal shortcut system, the cursor orb — the site rewards exploration",
-      "Memory — the logs system exists because trap doesn't want to re-explain the same context every session. Honour it."
-    ]
+      "Memory — the logs system exists because trap doesn't want to re-explain the same context every session. Honour it.",
+      "Structure — files live where the ruleset says. Do not improvise locations."
+    ],
+    "files_to_read_before_working": {
+      "always": ["status/logs/logs.json — this file. Full read. Non-negotiable.", "status/logs/signal.json — the mutable companion. Check open issues and active tasks before starting work."],
+      "if_touching_glass_or_hub": ["glass/script/modules/core.js — loadCoreData() and what it fetches", "glass/script/modules/ui.js — all renderX() functions and what data they expect"],
+      "if_touching_underdark": ["underdark/script/modules/ui.js — the main 11k-line module", "underdark/script/modules/llm-engine.js — prompt assembly and context management"],
+      "if_creating_or_moving_files": ["status/logs/structure-ruleset.md — the canonical file placement rules"],
+      "if_adding_data_or_a_new_json": ["status/logs/logs.json → sources_of_truth — check if domain already exists before creating anything new"]
+    }
   },
   "pending_work": {
     "_note": "This section tracks features requested by trap that are partially or fully unimplemented. An LLM reading this file must check this section before asking what to do. Status values: 'not_started' | 'in_progress' | 'done' | 'deferred' | 'wont_do'. Update status and notes after each session. Never remove entries — only update them.",
     "features": [
+      {
+        "id": "structure-violation-cleanup",
+        "title": "Resolve all violations in structure-ruleset.md violation register",
+        "status": "not_started",
+        "requested": "2026-05-18",
+        "completed": null,
+        "description": "The structure ruleset (status/logs/structure-ruleset.md §12) documents 10 known structural violations. These must be resolved in a dedicated session: move glass/data/formatter + formatter.go to services/, delete llmtemp.json and llm-gen.json, move tdo.txt to .ai/tdo.md, move void.json from assets/content/ to assets/data/, delete .ai/plan-css-refactor.md (already shipped), move dndm/ + radar/ + underdark/ under playground/ (per tdo.txt item 1). Tackle in order of risk: deletions first, moves second, restructure last.",
+        "notes": "Do not tackle this during unrelated sessions. It requires full confirmation from trap before moving apps (dndm, radar, underdark) since those involve URL changes.",
+        "files_affected": ["glass/data/formatter", "glass/data/formatter.go", "glass/data/llmtemp.json", "glass/data/llm-gen.json", "tdo.txt", "void/assets/content/void.json", ".ai/plan-css-refactor.md", "dndm/", "radar/", "underdark/"]
+      },
       {
         "id": "playground-history-bug",
         "title": "Neural Uplink — fix silent send failure + playground redesign",
@@ -4311,23 +4531,21 @@
     "files": {
       "glass/data/llm.json": {
         "domain": "LLM model catalog",
+        "schema_version": "v9.1.0-multimodal-matrix",
         "owns": [
-          "All LLM model IDs and their routing keys",
-          "Model labels, provider names, context window sizes (context_k)",
-          "pay_per_token flag and cost_weight (relative cost ranking)",
-          "Scoring metrics (intelligence, coding, speed) — used to rank and display models",
-          "Recommended inference parameters (temperature, top_p) per model",
-          "Fallback routing IDs (fallback_id) for when a model is unavailable",
-          "Human-readable descriptions for each model",
-          "The _index array — ordered family groupings for UI display",
-          "default_routing — the model used when no model is explicitly selected"
+          "All LLM model IDs and their routing keys across all modalities (text, image, video, audio, embedding)",
+          "Model labels, provider names, modality tag, and hardware constraints (max_input, resolution, dimensions)",
+          "cost_tier string (normalized): 'Basically Free' | 'Cheap' | 'Fair' | 'Extreme'",
+          "_index_matrix — nested dictionary: modality → provider → [api_ids]; replaces the old flat _index array",
+          "_endpoints — flat map: modality → nano-gpt API path (e.g. text → /api/v1/chat/completions)",
+          "default_routing — the model ID used when no model is explicitly selected"
         ],
         "how_to_add_a_model": [
           "1. Add an entry to routing_table with the exact model ID as the key",
-          "2. Include all required fields: label, provider, pay_per_token, context_k, cost_weight, scores (intelligence, coding, speed), recommended_inference (temperature, top_p), description",
-          "3. Optionally add fallback_id pointing to another model key in routing_table",
-          "4. Add the model ID to the appropriate family array in _index, or create a new family entry",
-          "5. If the model should be the new default, update default_routing"
+          "2. Required fields: label, provider, modality (text|image|video|audio|embedding), cost_tier ('Basically Free'|'Cheap'|'Fair'|'Extreme')",
+          "3. Add modality-specific constraint fields: max_input for text, resolution for image, dimensions for embedding, max_chars for audio",
+          "4. Add the model ID to _index_matrix[modality][provider] — create the provider array if it doesn't exist",
+          "5. If the model should be the new default, update default_routing (text models only)"
         ],
         "do_not": [
           "Do NOT create a new llm-models.json, models.json, or any other file listing LLM models",
@@ -4336,12 +4554,12 @@
         ],
         "used_by": [
           { "file": "glass/script/modules/core.js", "how": "Fetches llm.json as part of loadCoreData(); exposes llmData to all other modules" },
-          { "file": "glass/script/modules/llm.js", "how": "Reads routing_table to populate the model selector dropdown; reads default_routing for initial model selection; reads scores for the model meter display" },
-          { "file": "glass/script/modules/ui.js", "how": "Reads _index and routing_table to render the Uplink Launchpad section on the home page" },
+          { "file": "glass/script/modules/llm.js", "how": "Reads _index_matrix.text and routing_table to populate the model selector dropdown grouped by provider; reads default_routing for initial model selection" },
+          { "file": "glass/script/modules/ui.js", "how": "Reads routing_table to render the Uplink Launchpad telemetry; counts cost_tier='Basically Free' models for the sub counter" },
           { "file": "playground/index.html", "how": "References llm.json indirectly via llm.js module; model dropdown is populated from routing_table" },
           { "file": "underdark/script/modules/llm-engine.js", "how": "Fetches /glass/data/llm.json directly; uses routing_table keys for model selection in roleplay sessions" },
           { "file": "underdark/script/modules/codex-meters.js", "how": "Reads scores.intelligence, scores.coding, scores.speed to render LLM capability meter bars in the model info panel" },
-          { "file": "underdark/script/modules/ui.js", "how": "Uses llm.json label and provider fields to display selected model info in the Underdark UI" },
+          { "file": "underdark/script/modules/ui.js", "how": "Reads _index_matrix.text and routing_table to populate model selects (main + TC override + persona); groups options by provider" },
           { "file": "underdark/script/modules/image-engine.js", "how": "References llm.json for model availability checks for multimodal image generation models" },
           { "file": "underdark/script/modules/commands.js", "how": "Uses routing_table to support /model slash command for switching models mid-session" },
           { "file": "status/logs/index.html", "how": "Reads llm.json meta to display model family count and default routing in the Architecture > Data Layer section" }
@@ -4574,6 +4792,49 @@
         "used_by": [
           { "file": "glass/script/modules/llm.js", "how": "Loads index.json then each agent file asynchronously; populates the agent roster dropdown" },
           { "file": "underdark/script/modules/llm-engine.js", "how": "May reference agent configs for Underdark persona initialisation" }
+        ]
+      },
+      "status/logs/structure-ruleset.md": {
+        "domain": "File structure canonical ruleset",
+        "owns": [
+          "The authoritative rules for where every file type lives in this repository",
+          "The two app patterns: glass/ as shared system (Pattern A) vs. self-contained app with assets/ (Pattern B)",
+          "Directory naming conventions (lowercase, kebab-case, _drafts/ for WIP)",
+          "File naming conventions (index.html entries, main.js / app.js, module naming, no SASS _ prefix)",
+          "App placement rules — what earns a top-level repo slot",
+          "glass/data/ layer rules — what belongs there and what does not",
+          "Self-contained app import boundary rules",
+          "Root-level file allowlist",
+          "The violation register — known current structural deviations with fix instructions"
+        ],
+        "do_not": [
+          "Do NOT create a second ruleset file or add structural rules anywhere else — this is the single authority",
+          "Do NOT amend the violation register without also filing a corresponding task or fix",
+          "Do NOT move this file out of status/logs/ — it is co-located with the logs viewer that renders it"
+        ],
+        "used_by": [
+          { "file": "status/logs/index.html", "how": "Fetched at runtime by buildRuleset() and rendered via the inline markdown renderer in the Ruleset tab" },
+          { "file": "CLAUDE.md", "how": "Implicitly — CLAUDE.md defers to this file on all file structure questions" },
+          { "file": "status/logs/logs.json", "how": "Referenced in module_structure and sources_of_truth — LLMs are directed here for structure authority" }
+        ]
+      },
+      "status/logs/signal.json": {
+        "domain": "Mutable working surface — tasks, issues, proposals",
+        "owns": [
+          "All feature tasks and their lifecycle status (migrated from pending_work)",
+          "Open and resolved code quality / security / architectural issues",
+          "Proposal records — ideas offered during sessions, chosen or not chosen",
+          "The Signal tab protocol block — read this before writing to this file"
+        ],
+        "do_not": [
+          "Do NOT add tasks or issues to logs.json pending_work — it is deprecated; use signal.json",
+          "Do NOT treat signal.json contents as binding rules — they are provisional and debatable",
+          "Do NOT promote anything from signal.json to logs.json rules without explicitly asking trap first",
+          "Do NOT delete entries — mark done/resolved/irrelevant and leave the history intact"
+        ],
+        "used_by": [
+          { "file": "status/logs/index.html", "how": "Fetched at runtime by buildSignal() and rendered in the Signal tab with distinct teal visual treatment" },
+          { "file": "status/logs/logs.json", "how": "Referenced in _protocol.companion_file and files_to_read_before_working.always" }
         ]
       }
     }
