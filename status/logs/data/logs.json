@@ -598,7 +598,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "6485036",
       "date": "2026-05-18",
       "message": "feat(underdark): Director panel, tone toggles, scene inject bar, trigger response",
       "scope": "playground/underdark/",
