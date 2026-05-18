@@ -597,7 +597,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "ea0adf1",
       "date": "2026-05-18",
       "message": "docs: fix remaining stale /dndm/ and /underdark/ path references in SPEC.md, signal.json, GEMINI-underdark.md",
       "scope": "playground/dndm/, status/logs/, .ai/",
