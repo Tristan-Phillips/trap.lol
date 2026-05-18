@@ -598,7 +598,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "03dd398",
       "date": "2026-05-18",
       "message": "feat(underdark): add 2B and Yennefer to character roster",
       "scope": "playground/underdark/",
