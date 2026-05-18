@@ -947,6 +947,143 @@
         margin-top: 0.4rem;
       }
 
+      /* ── Sources of Truth ── */
+      .sot-card {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border-mute);
+        border-radius: 8px;
+        margin-bottom: 0.6rem;
+        overflow: hidden;
+        animation: card-rise 0.4s cubic-bezier(0.25, 0, 0, 1) both;
+        transition: border-color var(--transition);
+      }
+      .sot-card:hover { border-color: rgba(190,41,236,0.22); }
+      .sot-card__header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem 1.5rem;
+        cursor: pointer;
+        user-select: none;
+        background: rgba(190,41,236,0.03);
+        border-bottom: 1px solid transparent;
+        transition: background var(--transition), border-color var(--transition);
+      }
+      .sot-card.open .sot-card__header {
+        border-bottom-color: var(--glass-border-mute);
+        background: rgba(190,41,236,0.06);
+      }
+      .sot-card__file {
+        font-family: var(--font-mono);
+        font-size: 0.82rem;
+        color: var(--accent);
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .sot-card__domain {
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+        color: var(--text-muted);
+        letter-spacing: 0.08em;
+        flex-shrink: 0;
+      }
+      .sot-card__chevron {
+        width: 14px; height: 14px;
+        flex-shrink: 0;
+        color: var(--text-muted);
+        transition: transform var(--transition);
+      }
+      .sot-card.open .sot-card__chevron { transform: rotate(180deg); }
+      .sot-card__body {
+        display: none;
+        padding: 1.25rem 1.5rem;
+      }
+      .sot-card.open .sot-card__body { display: block; }
+
+      .sot-section {
+        margin-bottom: 1rem;
+      }
+      .sot-section:last-child { margin-bottom: 0; }
+      .sot-section__label {
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        margin-bottom: 0.45rem;
+        opacity: 0.7;
+      }
+      .sot-section__label--owns  { color: var(--accent); }
+      .sot-section__label--donot { color: #ef4444; }
+      .sot-section__label--how   { color: #4ade80; }
+      .sot-section__label--used  { color: var(--accent-warm); }
+
+      .sot-list {
+        list-style: none;
+        padding: 0; margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+      }
+      .sot-list__item {
+        font-family: var(--font-mono);
+        font-size: 0.76rem;
+        color: var(--text-muted);
+        line-height: 1.5;
+        padding: 0.4rem 0.75rem;
+        background: rgba(0,0,0,0.2);
+        border: 1px solid var(--glass-border-mute);
+        border-radius: 4px;
+        display: flex;
+        gap: 0.6rem;
+        align-items: flex-start;
+      }
+      .sot-list__item::before {
+        content: '·';
+        color: var(--accent);
+        flex-shrink: 0;
+      }
+      .sot-list__item--donot { border-left: 2px solid rgba(239,68,68,0.4); }
+      .sot-list__item--donot::before { color: #ef4444; content: '✕'; font-size: 0.6rem; margin-top: 0.2em; }
+      .sot-list__item--how { border-left: 2px solid rgba(74,222,128,0.35); }
+      .sot-list__item--how::before { color: #4ade80; content: '→'; }
+
+      .sot-dep-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1.4fr) minmax(0, 2fr);
+        gap: 0.35rem 1rem;
+        align-items: baseline;
+        padding: 0.45rem 0.75rem;
+        background: rgba(0,0,0,0.2);
+        border: 1px solid var(--glass-border-mute);
+        border-radius: 4px;
+        margin-bottom: 0.3rem;
+        transition: border-color var(--transition);
+      }
+      .sot-dep-row:hover { border-color: rgba(244,168,48,0.22); }
+      .sot-dep-file {
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        color: var(--accent-warm);
+        word-break: break-all;
+      }
+      .sot-dep-how {
+        font-family: var(--font-sans);
+        font-size: 0.76rem;
+        color: var(--text-muted);
+        line-height: 1.5;
+      }
+
+      @media (max-width: 560px) {
+        .sot-card__header { padding: 0.85rem 1rem; }
+        .sot-card__body   { padding: 1rem; }
+        .sot-dep-row { grid-template-columns: 1fr; }
+      }
+
       /* ── Hidden utility ── */
       .hidden { display: none !important; }
 
@@ -1636,6 +1773,85 @@
         `).join('');
       }
 
+      function buildSourcesOfTruth(data) {
+        const panel = addTab('sources', 'Sources');
+        const sot = data.sources_of_truth;
+
+        if (!sot || !sot.files) {
+          panel.innerHTML = '<p class="log-prose">No sources_of_truth section found in logs.json.</p>';
+          return;
+        }
+
+        const chevronSvg = `<svg class="sot-card__chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>`;
+
+        function renderList(arr, mod = '') {
+          if (!arr?.length) return '';
+          return `<ul class="sot-list">${arr.map(item =>
+            `<li class="sot-list__item${mod ? ' sot-list__item--' + mod : ''}">${esc(item)}</li>`
+          ).join('')}</ul>`;
+        }
+
+        function renderDeps(arr) {
+          if (!arr?.length) return '<p class="kv-val muted">—</p>';
+          return arr.map(dep =>
+            `<div class="sot-dep-row">
+              <div class="sot-dep-file">${esc(dep.file)}</div>
+              <div class="sot-dep-how">${esc(dep.how)}</div>
+            </div>`
+          ).join('');
+        }
+
+        const cards = Object.entries(sot.files).map(([filePath, info], i) => {
+          const id = `sot-${i}`;
+          return `<div class="sot-card" id="${esc(id)}" style="animation-delay:${i * 0.04}s">
+            <div class="sot-card__header" role="button" tabindex="0" aria-expanded="false" aria-controls="sot-body-${i}" data-sot="${esc(id)}">
+              <span class="sot-card__file">${esc(filePath)}</span>
+              <span class="sot-card__domain">${esc(info.domain || '')}</span>
+              ${chevronSvg}
+            </div>
+            <div class="sot-card__body" id="sot-body-${i}">
+              ${info.owns?.length ? `
+                <div class="sot-section">
+                  <div class="sot-section__label sot-section__label--owns">Owns</div>
+                  ${renderList(info.owns)}
+                </div>` : ''}
+              ${info.how_to_add_a_model?.length ? `
+                <div class="sot-section">
+                  <div class="sot-section__label sot-section__label--how">How to Add a Model</div>
+                  ${renderList(info.how_to_add_a_model, 'how')}
+                </div>` : ''}
+              ${info.do_not?.length ? `
+                <div class="sot-section">
+                  <div class="sot-section__label sot-section__label--donot">Do NOT</div>
+                  ${renderList(info.do_not, 'donot')}
+                </div>` : ''}
+              ${info.used_by?.length ? `
+                <div class="sot-section">
+                  <div class="sot-section__label sot-section__label--used">Used By</div>
+                  ${renderDeps(info.used_by)}
+                </div>` : ''}
+            </div>
+          </div>`;
+        }).join('');
+
+        const meta = `<div class="log-card" style="margin-bottom:1.25rem">
+          <div class="belief-block__label" style="font-family:var(--font-mono);font-size:var(--text-xs);letter-spacing:0.14em;text-transform:uppercase;color:var(--accent-warm);opacity:0.7;margin-bottom:0.5rem">LLM Instruction</div>
+          <div class="belief-block__text" style="font-family:var(--font-sans);font-size:var(--text-sm);color:var(--text-main);line-height:1.75;opacity:0.88">${esc(sot._instruction_for_llms || '')}</div>
+        </div>`;
+
+        panel.innerHTML = meta + cards;
+
+        panel.querySelectorAll('.sot-card__header').forEach(header => {
+          function toggle() {
+            const card = document.getElementById(header.dataset.sot);
+            const open = card.classList.toggle('open');
+            header.setAttribute('aria-expanded', open);
+          }
+          header.addEventListener('click', toggle);
+          header.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+        });
+      }
+
       /* ─────────────────────────────────────────────────
          CHAT WIDGET
          ───────────────────────────────────────────────── */
@@ -1824,6 +2040,7 @@
           buildCommits(data);
           buildArchitecture(data);
           buildSessions(data);
+          buildSourcesOfTruth(data);
 
           const hash = window.location.hash.replace('#', '');
           const firstTab = $tabs.querySelector('.log-tab');

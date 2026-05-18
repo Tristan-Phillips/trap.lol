@@ -1,8 +1,8 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.3.61",
-    "last_updated": "2026-05-17",
+    "schema_version": "1.4.0",
+    "last_updated": "2026-05-18",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
       "_protocol",
@@ -19,6 +19,7 @@
       "sessions",
       "for_new_llm",
       "pending_work",
+      "sources_of_truth",
       "system_audit"
     ]
   },
@@ -43,7 +44,8 @@
       "rules.strong_preferences": "Same as above but for preferences (not hard rules).",
       "anti_patterns": "Add to things_that_have_been_tried_and_rejected when something is removed or reversed. Add to common_mistakes_to_avoid when a class of error is identified.",
       "language_fingerprint": "Update recurring_words_and_phrases if new vocabulary is consistently used. Add to vocabulary_never_used if trap explicitly rejects a word. Update tone/style descriptions if they become more precise.",
-      "pending_work": "When a feature is requested by trap, add a new entry to pending_work.features[] with status 'not_started'. When work begins, set status to 'in_progress'. When complete, set to 'done' and add a note about the commit hash. When deferred, set to 'deferred' with a reason in notes. Never remove entries."
+      "pending_work": "When a feature is requested by trap, add a new entry to pending_work.features[] with status 'not_started'. When work begins, set status to 'in_progress'. When complete, set to 'done' and add a note about the commit hash. When deferred, set to 'deferred' with a reason in notes. Never remove entries.",
+      "sources_of_truth": "When a new canonical data file is established, add it to sources_of_truth.files[]. Update the 'used_by' array when new consumers are added. Add to 'do_not' if a new anti-pattern is identified for that domain."
     },
     "staleness_detection": "If _meta.last_updated is more than 7 days ago, flag this to the user before starting work. The file may be significantly out of date. Ask if they want to do a sync pass before proceeding.",
     "validation_rules": [
@@ -478,6 +480,15 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-18",
+      "message": "feat(logs): sources_of_truth section + Sources tab in logs viewer",
+      "scope": "status/logs/",
+      "impact": "medium",
+      "files": ["status/logs/logs.json", "status/logs/index.html"],
+      "why": "Multiple LLM context windows were creating parallel JSON files for domains that already had a canonical source (e.g. new llm model lists instead of editing glass/data/llm.json). Added sources_of_truth section to logs.json declaring every canonical data file, what it owns, how to add to it, what NOT to do, and which files depend on it. New Sources tab in the logs viewer renders this as navigable dependency cards."
+    },
     {
       "hash": "91008bb",
       "date": "2026-05-17",
@@ -2214,6 +2225,23 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-18",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Added sources_of_truth section to logs.json and a new Sources tab to the logs viewer. The section declares every canonical data file in the site, what domain it owns, how to add to it, what NOT to do (common anti-patterns), and a full used_by dependency list so any LLM knows exactly which pages and scripts will be affected by a change. Viewer renders each file as an expandable card with colour-coded owns/do-not/used-by sections. Minor (1.3.x → 1.4.0) schema bump for the new top-level section.",
+      "decisions": [
+        "sources_of_truth is a new top-level section (not nested inside architecture) — it is a first-class instruction document for LLMs, not an architecture annotation",
+        "glass/data/llm.json declared as the single source for all LLM model data — any new model must go there; never create a parallel model list",
+        "used_by entries include the exact file path AND how each consumer uses the source — file path alone is not enough for an LLM to understand impact",
+        "do_not entries are explicit prohibitions framed as 'Do NOT' — same imperative voice as the rules.absolute section so LLMs treat them as hard rules",
+        "Schema version bumped from 1.3.61 to 1.4.0 — addition of a new top-level section warrants a minor bump per the schema_version rule"
+      ],
+      "rules_reinforced": [
+        "When a new canonical data file is established, immediately document it in sources_of_truth.files with domain, owns, do_not, and used_by",
+        "Never create a new JSON file for a domain that already has a canonical source in sources_of_truth.files"
+      ]
+    },
     {
       "date": "2026-05-17",
       "agent": "Claude Sonnet 4.6",
@@ -4197,6 +4225,196 @@
         "files_affected": ["playground/characters/index.html", "playground/characters/script/modules/ui.js", "playground/characters/style/controls.css", "playground/characters/style/style.css"]
       }
     ]
+  },
+  "sources_of_truth": {
+    "_what_this_section_is": "Canonical data files that are the single source of truth for their domain. Any LLM or context window working on this codebase MUST consult these files before creating new data, new lists, or new config for the same domain. NEVER create a parallel file for a domain that already has a canonical source here.",
+    "_instruction_for_llms": "If you need data about LLM models, check glass/data/llm.json first. If you need to add a model, add it there. If you need style tokens, check glass/style/style.css. Do NOT create new JSON files for things already defined here. Check the 'used_by' field to understand what pages/scripts depend on each file before modifying it.",
+    "files": {
+      "glass/data/llm.json": {
+        "domain": "LLM model catalog",
+        "owns": [
+          "All LLM model IDs and their routing keys",
+          "Model labels, provider names, context window sizes (context_k)",
+          "pay_per_token flag and cost_weight (relative cost ranking)",
+          "Scoring metrics (intelligence, coding, speed) — used to rank and display models",
+          "Recommended inference parameters (temperature, top_p) per model",
+          "Fallback routing IDs (fallback_id) for when a model is unavailable",
+          "Human-readable descriptions for each model",
+          "The _index array — ordered family groupings for UI display",
+          "default_routing — the model used when no model is explicitly selected"
+        ],
+        "how_to_add_a_model": [
+          "1. Add an entry to routing_table with the exact model ID as the key",
+          "2. Include all required fields: label, provider, pay_per_token, context_k, cost_weight, scores (intelligence, coding, speed), recommended_inference (temperature, top_p), description",
+          "3. Optionally add fallback_id pointing to another model key in routing_table",
+          "4. Add the model ID to the appropriate family array in _index, or create a new family entry",
+          "5. If the model should be the new default, update default_routing"
+        ],
+        "do_not": [
+          "Do NOT create a new llm-models.json, models.json, or any other file listing LLM models",
+          "Do NOT hardcode model IDs or labels in HTML or JS — always read from this file",
+          "Do NOT duplicate model data in logs.json, underdark data files, or agent configs"
+        ],
+        "used_by": [
+          { "file": "glass/script/modules/core.js", "how": "Fetches llm.json as part of loadCoreData(); exposes llmData to all other modules" },
+          { "file": "glass/script/modules/llm.js", "how": "Reads routing_table to populate the model selector dropdown; reads default_routing for initial model selection; reads scores for the model meter display" },
+          { "file": "glass/script/modules/ui.js", "how": "Reads _index and routing_table to render the Uplink Launchpad section on the home page" },
+          { "file": "playground/index.html", "how": "References llm.json indirectly via llm.js module; model dropdown is populated from routing_table" },
+          { "file": "underdark/script/modules/llm-engine.js", "how": "Fetches /glass/data/llm.json directly; uses routing_table keys for model selection in roleplay sessions" },
+          { "file": "underdark/script/modules/codex-meters.js", "how": "Reads scores.intelligence, scores.coding, scores.speed to render LLM capability meter bars in the model info panel" },
+          { "file": "underdark/script/modules/ui.js", "how": "Uses llm.json label and provider fields to display selected model info in the Underdark UI" },
+          { "file": "underdark/script/modules/image-engine.js", "how": "References llm.json for model availability checks for multimodal image generation models" },
+          { "file": "underdark/script/modules/commands.js", "how": "Uses routing_table to support /model slash command for switching models mid-session" },
+          { "file": "status/logs/index.html", "how": "Reads llm.json meta to display model family count and default routing in the Architecture > Data Layer section" }
+        ]
+      },
+      "glass/data/config.json": {
+        "domain": "Site-wide configuration and CDN shard URLs",
+        "owns": [
+          "Site metadata: title, domain, tagline, eyebrow, author, year",
+          "CDN shard URLs for lucide.min.js, marked.min.js, dompurify.min.js — the ONLY place these paths are defined",
+          "LLM API config: api_base URL, api_token, default system_prompt for the playground",
+          "Referral codes (nano-gpt referral URL)",
+          "Social links array"
+        ],
+        "do_not": [
+          "Do NOT hardcode CDN shard URLs in any HTML <script> tag or JS fetch — always read from config.json at boot",
+          "Do NOT duplicate site metadata (title, tagline, author) in other JSON files"
+        ],
+        "used_by": [
+          { "file": "glass/script/modules/core.js", "how": "Fetches config.json FIRST (blocking boot step) — CDN shard URLs are required before any other module can load" },
+          { "file": "glass/script/modules/ui.js", "how": "Reads title, tagline, eyebrow, author, year for renderMeta() and renderHeader(); reads socials for renderSocialCluster()" },
+          { "file": "glass/script/modules/llm.js", "how": "Reads api_base, api_token, and system_prompt for the playground chat API calls" }
+        ]
+      },
+      "glass/data/hosting.json": {
+        "domain": "Sovereign Nodes — self-hosted services",
+        "owns": [
+          "All self-hosted service entries: name, hosting software, URL, online/offline status",
+          "Shortcut keys for sovereign nodes (2-char, must be globally unique)"
+        ],
+        "do_not": [
+          "Do NOT add app shortcuts here — apps go in apps.json",
+          "status must be 'online' or 'offline' — no other values"
+        ],
+        "used_by": [
+          { "file": "glass/script/modules/core.js", "how": "Fetched in parallel with other data JSONs during boot" },
+          { "file": "glass/script/modules/ui.js", "how": "renderHosting() reads manifest and renders Sovereign Nodes section on home page" },
+          { "file": "status/index.html", "how": "Probes each URL in manifest for uptime monitoring" }
+        ]
+      },
+      "glass/data/apps.json": {
+        "domain": "App Uplinks — trap.lol sub-applications",
+        "owns": [
+          "All app entries: name, slug, path, icon, description, tags, keyed flag, status (live|planned)",
+          "The authoritative list of what sub-apps exist at trap.lol"
+        ],
+        "do_not": [
+          "Do NOT mark an app 'live' until it is actually deployed and functional",
+          "status must be 'live' or 'planned' only"
+        ],
+        "used_by": [
+          { "file": "glass/script/modules/core.js", "how": "Fetched during boot" },
+          { "file": "glass/script/modules/ui.js", "how": "renderApps() renders the App Uplinks section; renderUplinkLaunchpad() renders the LLM quick-launch strip using apps marked as LLM-type" },
+          { "file": "status/index.html", "how": "App entries with a path are probed for uptime" }
+        ]
+      },
+      "glass/data/extlinks.json": {
+        "domain": "Signal Mesh — curated external links",
+        "owns": [
+          "All external link entries grouped by category",
+          "Category visual_class assignments (neon-* modifier classes)",
+          "Trust level per link (Vetted | High)",
+          "Shortcut keys for external links (2-char, globally unique)"
+        ],
+        "do_not": [
+          "trust_level must be 'Vetted' or 'High' only",
+          "visual_class must be one of: neon-cyan, neon-magenta, neon-green, neon-violet, neon-red"
+        ],
+        "used_by": [
+          { "file": "glass/script/modules/core.js", "how": "Fetched during boot" },
+          { "file": "glass/script/modules/ui.js", "how": "renderSignalMesh() iterates categories and renders grouped link cards" }
+        ]
+      },
+      "glass/data/bots.json": {
+        "domain": "Drone Fleet — Telegram bots",
+        "owns": [
+          "All Telegram bot entries: name, shortcut, icon, chat_url, repo_url, status, description"
+        ],
+        "do_not": [
+          "status must be 'online' or 'offline' only"
+        ],
+        "used_by": [
+          { "file": "glass/script/modules/core.js", "how": "Fetched during boot" },
+          { "file": "glass/script/modules/ui.js", "how": "renderBots() renders the Drone Fleet section" }
+        ]
+      },
+      "glass/data/tools.json": {
+        "domain": "Ordnance Depot — CLI tools and payloads",
+        "owns": [
+          "All CLI tool/script entries: name, shortcut, icon, description, target OS, repo_url, install_cmd",
+          "install_cmd is the payload copied to clipboard when the shortcut is typed"
+        ],
+        "used_by": [
+          { "file": "glass/script/modules/core.js", "how": "Fetched during boot" },
+          { "file": "glass/script/modules/ui.js", "how": "renderTools() renders the Ordnance Depot section; install_cmd registered as copy-type shortcut" }
+        ]
+      },
+      "glass/style/style.css": {
+        "domain": "Design system — CSS custom properties, BEM base components, layout",
+        "owns": [
+          "All CSS custom properties (--accent, --text-main, --font-mono, --space-*, etc.) — the single source for design tokens",
+          "The grain + scanline overlay effects on body",
+          "Base BEM component definitions: .header__*, .modal__*, .panel__*, .card, etc.",
+          "Responsive breakpoint values",
+          "Animation keyframes shared across pages"
+        ],
+        "do_not": [
+          "Do NOT redefine CSS custom properties in page-specific stylesheets — extend only",
+          "Do NOT add page-specific rules to this file — use page-level <style> blocks or glass/style/modules/*.css",
+          "Self-contained apps (art/, radar/) have their own style.css and do NOT import this file"
+        ],
+        "used_by": [
+          { "file": "index.html", "how": "Linked as the main stylesheet for the hub" },
+          { "file": "playground/index.html", "how": "Base styles; extended by glass/style/modules/neural-uplink.css" },
+          { "file": "status/index.html", "how": "Full hub styles used for the status page" },
+          { "file": "status/logs/index.html", "how": "Full hub styles used as the base for the logs viewer" },
+          { "file": "underdark/index.html", "how": "Hub base styles loaded; Underdark has its own style layer on top" },
+          { "file": "guide/index.html", "how": "Full hub styles shared with the guide markdown reader" }
+        ]
+      },
+      "art/assets/data/detention.json": {
+        "domain": "ECHOES gallery — artwork artifact data",
+        "owns": [
+          "All artwork artifact entries: compositeId, src.small, src.original, uploadDate, tags, type (digital|traditional), metadata (medium, description, verse, mood, chaos, nsfw)",
+          "baseUrl in _meta — prepended to all src paths",
+          "Collection structure"
+        ],
+        "do_not": [
+          "Do NOT reference artwork paths anywhere except this file and art/assets/script/app.js",
+          "Do NOT add new artwork to the hub's data files — all gallery content lives here"
+        ],
+        "used_by": [
+          { "file": "art/assets/script/app.js", "how": "The sole consumer — fetches detention.json, flattens collections, drives the entire gallery experience" }
+        ]
+      },
+      "glass/data/llm-agents/": {
+        "domain": "LLM agent personas for the playground",
+        "owns": [
+          "Per-agent JSON files — each defines a named persona with system_prompt, temperature, model override, tags",
+          "index.json — lists all agent filenames to load",
+          "The canonical roster of available agents in the playground and Underdark"
+        ],
+        "do_not": [
+          "Do NOT hardcode agent names, system prompts, or temperatures in JS — always read from these files",
+          "Do NOT create agent definitions outside this directory"
+        ],
+        "used_by": [
+          { "file": "glass/script/modules/llm.js", "how": "Loads index.json then each agent file asynchronously; populates the agent roster dropdown" },
+          { "file": "underdark/script/modules/llm-engine.js", "how": "May reference agent configs for Underdark persona initialisation" }
+        ]
+      }
+    }
   },
   "system_audit": {
     "description": "A comprehensive point-in-time analysis of the project's architecture, intents, strengths, and vulnerabilities.",
