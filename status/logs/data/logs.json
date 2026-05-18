@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.22",
+    "schema_version": "1.5.23",
     "last_updated": "2026-05-18",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -597,6 +597,21 @@
     ]
   },
   "commits": [
+    {
+      "hash": "803cced",
+      "date": "2026-05-18",
+      "message": "fix(underdark): model quick-picker — escape overflow:hidden via fixed position",
+      "scope": "playground/underdark/",
+      "impact": "low",
+      "files": [
+        "playground/underdark/index.html",
+        "playground/underdark/script/main.js",
+        "playground/underdark/script/modules/ui.js",
+        "playground/underdark/style/arena.css",
+        "playground/underdark/style/reinject.css"
+      ],
+      "why": "The picker was invisible because .input-container has overflow:hidden which clips absolutely-positioned children. Fix: moved picker div outside .input-container entirely (now a sibling of </footer>), switched to position:fixed, and positioned it dynamically via getBoundingClientRect() on the model button so it always appears directly above the click point."
+    },
     {
       "hash": "84bf978",
       "date": "2026-05-18",
