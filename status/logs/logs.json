@@ -481,7 +481,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "6b26c6f",
       "date": "2026-05-18",
       "message": "feat(logs): sources_of_truth section + Sources tab in logs viewer",
       "scope": "status/logs/",
