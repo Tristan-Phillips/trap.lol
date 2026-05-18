@@ -8823,15 +8823,7 @@ export function initUI() {
         const $tcModel = qs('#tc-model-select');
         if ($tcModel && $tcModel.options.length <= 1) {
             fetch('/glass/data/llm.json').then(r => r.json()).then(data => {
-                const textProviders = data._index_matrix?.text || {};
-                const optHtml = Object.entries(textProviders).map(([provider, ids]) => `
-                    <optgroup label="${esc(provider)}">
-                        ${ids.map(id => {
-                            const m = data.routing_table[id];
-                            return m ? `<option value="${esc(id)}">${esc(m.label)}</option>` : '';
-                        }).join('')}
-                    </optgroup>`).join('');
-                $tcModel.innerHTML = '<option value="">— Inherit from continuity —</option>' + optHtml;
+                $tcModel.innerHTML = '<option value="">— Inherit from continuity —</option>' + buildModelOptHtml(data);
                 $tcModel.value = tc.model || '';
                 lucideRefresh($tcModel.closest('.tc-shell'));
             }).catch(() => {});
@@ -9441,21 +9433,40 @@ export function initUI() {
         });
     }
 
+    // Build <optgroup> HTML from llm.json data, grouped by modality then provider.
+    // Text models show ◆ (pay-per-token) or ⬡ (subscription) prefix.
+    function buildModelOptHtml(data, modalities = ['text', 'image', 'video', 'audio']) {
+        const matrix = data._index_matrix || {};
+        const rt     = data.routing_table  || {};
+        const MODAL_LABELS = { text: '── TEXT ──', image: '── IMAGE ──', video: '── VIDEO ──', audio: '── AUDIO ──' };
+        let html = '';
+        for (const modality of modalities) {
+            const providers = matrix[modality];
+            if (!providers || !Object.keys(providers).length) continue;
+            html += `<optgroup label="${MODAL_LABELS[modality] || modality.toUpperCase()}" disabled></optgroup>`;
+            for (const [provider, ids] of Object.entries(providers)) {
+                const opts = ids.map(id => {
+                    const m = rt[id];
+                    if (!m) return '';
+                    const glyph = modality === 'text'
+                        ? (m.requires_subscription ? '⬡' : '◆')
+                        : '';
+                    const label = glyph ? `${glyph} ${m.label}` : m.label;
+                    return `<option value="${esc(id)}">${esc(label)}</option>`;
+                }).join('');
+                if (opts) html += `<optgroup label="${esc(provider)}">${opts}</optgroup>`;
+            }
+        }
+        return html;
+    }
+
     // Load models
     async function loadModels() {
         const selects = qsa('#model-select, #persona-model-select');
         try {
             const res  = await fetch('/glass/data/llm.json');
             const data = await res.json();
-
-            const textProviders = data._index_matrix?.text || {};
-            const optHtml = Object.entries(textProviders).map(([provider, ids]) => `
-                <optgroup label="${esc(provider)}">
-                    ${ids.map(id => {
-                        const m = data.routing_table[id];
-                        return m ? `<option value="${esc(id)}">${esc(m.label)}</option>` : '';
-                    }).join('')}
-                </optgroup>`).join('');
+            const optHtml = buildModelOptHtml(data);
 
             selects.forEach(($sel, i) => {
                 const prefix = i > 0 ? '<option value="">— Use global model —</option>' : '';
@@ -9468,7 +9479,7 @@ export function initUI() {
 
         } catch (err) {
             console.warn('[underdark] loadModels failed, using fallback:', err.message);
-            const fallbackOpt = '<option value="deepseek-r1">DeepSeek R1</option>';
+            const fallbackOpt = '<option value="deepseek-r1">◆ DeepSeek R1</option>';
             selects.forEach(($sel, i) => {
                 $sel.innerHTML = (i > 0 ? '<option value="">— Use global model —</option>' : '') + fallbackOpt;
             });

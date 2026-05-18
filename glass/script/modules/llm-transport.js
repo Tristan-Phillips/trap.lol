@@ -53,6 +53,7 @@ export async function streamChat(payload, { onChunk, onDone, onError, signal, pr
     });
 
     if (!res.ok) {
+      if (res.status === 402) throw Object.assign(new Error('This model requires an active nano-gpt subscription.'), { status: 402 });
       let msg = `HTTP ${res.status}`;
       try { const j = await res.json(); msg = j.error?.message || j.error || msg; } catch (_) {}
       throw Object.assign(new Error(msg), { status: res.status });
@@ -107,6 +108,7 @@ export async function fetchChat(payload, { proxyMode = false } = {}) {
   });
 
   if (!res.ok) {
+    if (res.status === 402) throw Object.assign(new Error('This model requires an active nano-gpt subscription.'), { status: 402 });
     const j = await res.json().catch(() => ({}));
     throw Object.assign(
       new Error(j.error?.message || j.error || `HTTP ${res.status}`),
