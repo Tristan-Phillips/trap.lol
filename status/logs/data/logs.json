@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.12",
+    "schema_version": "1.5.13",
     "last_updated": "2026-05-18",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -597,6 +597,21 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-18",
+      "message": "feat(underdark): immersion pass 5 — tension escalation, player resonance, deep focus mode",
+      "scope": "playground/underdark/",
+      "impact": "high",
+      "files": [
+        "playground/underdark/script/main.js",
+        "playground/underdark/script/modules/ui.js",
+        "playground/underdark/script/modules/llm-engine.js",
+        "playground/underdark/style/scene-codex.css",
+        "status/logs/data/logs.json"
+      ],
+      "why": "Fifth immersion pass: post-history cue now injects a scene pressure nudge at high tension/danger meter values; detects the player's last message emotional register and reflects it back as a resonance cue so the character responds to the emotional weight not just the words; focus mode deepened with character name fading, user bubbles receding, inline chips ghosting, scene dividers nearly invisible, and token/model badges hidden."
+    },
     {
       "hash": "b0ac522",
       "date": "2026-05-18",
@@ -2633,6 +2648,19 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-18",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Fifth immersion pass for the Underdark. Post-history cue now has two new dynamic injections: (1) scene pressure nudge — when tension ≥65% or danger ≥55%, the cue tells the model the scene is charged and every word matters; at ≥80%/70% it escalates further; at high intimacy it shifts to unhurried and close. (2) Player emotional resonance — the last player message is scanned for affective keywords; when a register is detected (tension, intimacy, grief, menace, wonder) the cue whispers a resonance instruction to the character ('the player is carrying something heavy — receive it') so responses address the emotional weight not just the literal text. Focus mode CSS deeply enhanced: character name fades to invisible at rest (reappears on hover at 42% opacity), user bubbles drop to 6% bg opacity and 82% total opacity, inline reply chips ghost to 45%, scene dividers to 25%, message actions to invisible, token/model badges removed entirely — all recover on hover for accessibility.",
+      "decisions": [
+        "Scene pressure nudge and player resonance cues are both injected into the defaultPostHistory string (the final system message) so they are the absolute last thing the model reads before generating — maximum influence on the first word.",
+        "Player resonance uses a minimum threshold of 3 keyword matches (same as detectAffectTone) to avoid false positives on short or emotionally neutral player messages.",
+        "Resonance text is framed as brief imperative instructions ('Receive it.', 'Meet them there.') — terse enough not to break the cue's rhythm but specific enough to meaningfully shift the register.",
+        "Focus mode changes are all reversible on :hover so core functionality (copy, delete, react, annotate) remains accessible without leaving focus mode.",
+        "Token and model badges are outright hidden in focus mode (display:none) — they serve telemetry and debugging, which are actively distracting during deep RP."
+      ]
+    },
     {
       "date": "2026-05-18",
       "agent": "Claude Sonnet 4.6",

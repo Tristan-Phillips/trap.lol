@@ -990,8 +990,8 @@ export function buildPayload(ctx) {
 
     // Final pre-generation cue — last thing the model reads before it writes.
     // Keep it tight: no preamble, immediate scene start, identity lock.
-    // Embed any available character trait/mood so the model is reminded of
-    // who this is right before generating — not just where they are.
+    // Embed character trait/mood hint, scene pressure, and player emotional register
+    // so the model enters generation attuned to the exact current moment.
     const _traitHint = (() => {
         if (!override) return '';
         const parts = [];
@@ -999,7 +999,58 @@ export function buildPayload(ctx) {
         if (override.moodBaseline?.trim()) parts.push(`current mood: ${override.moodBaseline.trim().slice(0, 60)}`);
         return parts.length ? ` [${parts.join(' | ')}]` : '';
     })();
-    const defaultPostHistory = `You are ${charName}${_traitHint}. The scene is live. Write your response now — begin with the scene, not a note about the scene. No preamble. No reminders. No meta-commentary. Start with dialogue, action, thought, or prose. Nothing else.`;
+
+    // Scene pressure nudge — high tension/danger injects a terse urgency reminder.
+    // Only fires when there is a clear signal; absent meters = no injection.
+    const _meters = ctx.meters || {};
+    const _pressureHint = (() => {
+        const t = _meters.tension  ?? 0;
+        const d = _meters.danger   ?? 0;
+        const i = _meters.intimacy ?? 0;
+        if (t >= 80 || d >= 70)
+            return ` The air is charged — something is about to break. Every word ${charName} says now matters.`;
+        if (t >= 65 || d >= 55)
+            return ` The scene is tense. Let that weight show in how ${charName} moves and speaks.`;
+        if (i >= 75)
+            return ` This is a close, intimate moment. Let ${charName} be present and unhurried.`;
+        return '';
+    })();
+
+    // Player emotional resonance — detect the last player message's affect register
+    // and surface it as a brief "the player is [X]" cue so the character can respond
+    // to the emotional weight of what was just sent, not just the literal content.
+    const _playerResonance = (() => {
+        const lastUserMsg = [...(history || [])].reverse().find(m => m.role === 'user');
+        if (!lastUserMsg?.content) return '';
+        const userText = lastUserMsg.content
+            .replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+        if (userText.length < 15) return '';
+        const resonanceMap = {
+            tension:  `${userName} is tense — read it in their words.`,
+            intimacy: `${userName} is reaching out. Receive it.`,
+            grief:    `${userName} is carrying something heavy right now.`,
+            menace:   `${userName} is pushing hard. Feel the pressure.`,
+            wonder:   `${userName} is open and present. Meet them there.`,
+        };
+        // Re-use the same keyword signals as detectAffectTone but inline here
+        // (no import loop — this is llm-engine.js importing from itself isn't possible)
+        const stripped = userText.toLowerCase();
+        const signals = {
+            tension:  /\b(quiet|tense|wait|breath|edge|careful|wary|wrong|cold|freeze)\b/g,
+            intimacy: /\b(close|warm|touch|soft|gentle|hand|feel|heart|together|safe|trust|please|hold|near)\b/g,
+            grief:    /\b(lost|gone|miss|alone|empty|hurt|pain|never|nothing|sorrow|break|hollow)\b/g,
+            menace:   /\b(threat|force|blood|blade|punish|obey|suffer|rage|cruel|grip|warn|danger)\b/g,
+            wonder:   /\b(strange|never|discover|ancient|glow|beautiful|awe|stars|extraordinary|luminous)\b/g,
+        };
+        let best = null; let bestScore = 2; // min threshold of 3
+        for (const [tone, re] of Object.entries(signals)) {
+            const score = (stripped.match(re) || []).length;
+            if (score > bestScore) { best = tone; bestScore = score; }
+        }
+        return best ? ` ${resonanceMap[best]}` : '';
+    })();
+
+    const defaultPostHistory = `You are ${charName}${_traitHint}. The scene is live.${_pressureHint}${_playerResonance} Write your response now — begin with the scene, not a note about the scene. No preamble. No reminders. No meta-commentary. Start with dialogue, action, thought, or prose. Nothing else.`;
     const finalAnchor = (postHistory || defaultPostHistory)
         .replace(/\{\{char\}\}/gi, charName)
         .replace(/\{\{user\}\}/gi, userName)

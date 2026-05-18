@@ -1025,6 +1025,48 @@ body.focus-mode .message__content .stream-cursor::after {
     font-size: 0.9em;
     text-shadow: 0 0 8px rgba(190, 41, 236, 0.6);
 }
+/* Character name nearly vanishes in focus mode — prose takes over */
+body.focus-mode .message__name {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+}
+body.focus-mode .message:hover .message__name { opacity: 0.42; }
+/* User bubble recedes significantly — scene is the character's space */
+body.focus-mode .message--user .message__bubble {
+    background: rgba(var(--accent-warm-rgb), 0.06);
+    border-color: rgba(var(--accent-warm-rgb), 0.12);
+    opacity: 0.82;
+    transition: opacity 0.3s ease;
+}
+body.focus-mode .message--user:hover .message__bubble { opacity: 1; }
+/* User message content dims — character's response is the focus */
+body.focus-mode .message--user .message__content {
+    color: rgba(200, 185, 160, 0.72);
+    transition: color 0.3s ease;
+}
+body.focus-mode .message--user:hover .message__content { color: rgba(230, 215, 185, 0.92); }
+/* Inline reply chips ghost in focus mode */
+body.focus-mode .inline-reply-chips { opacity: 0.45; transition: opacity 0.3s ease; }
+body.focus-mode .inline-reply-chips:hover { opacity: 1; }
+/* Scene dividers nearly invisible — don't interrupt the prose flow */
+body.focus-mode .scene-divider {
+    opacity: 0.25;
+    transition: opacity 0.3s ease;
+}
+body.focus-mode .scene-divider:hover { opacity: 0.7; }
+/* Message actions ghost until explicitly hovered */
+body.focus-mode .message__actions {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+body.focus-mode .message:hover .message__actions { opacity: 0.65; }
+/* Tone glyphs in focus mode — slightly more visible since prose is stripped back */
+body.focus-mode .message--bot[data-tone] .message__name::after { opacity: 0.6; }
+/* Token badges disappear in focus mode — pure prose */
+body.focus-mode .message__token-badge,
+body.focus-mode .message__model-badge { display: none; }
 
 /* ════════════════════════════════════════════════════════════════
    Responsive
