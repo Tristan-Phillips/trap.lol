@@ -598,7 +598,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "f6e89c9",
       "date": "2026-05-18",
       "message": "fix(underdark): ~~thought~~ renders as strikethrough; card instructions leak into responses",
       "scope": "playground/underdark/",
@@ -864,7 +864,7 @@
       "why": "Uplink Sentinel retired — it was browser-tab-only with no persistent history backend making it misleading. Moved to archive/ as a static preserved artifact. status/ repurposed as an extensible hub page. archive/ created as a roster directory for all future retired pages."
     },
     {
-      "hash": "pending",
+      "hash": "f6e89c9",
       "date": "2026-05-18",
       "message": "docs(logs): accuracy pass — stale paths, missing modules, schema refs, guide status",
       "scope": "status/logs/",
@@ -873,7 +873,7 @@
       "why": "Full accuracy audit of logs.json: llm.json data_layer entry rewritten for v9.1.0 schema, 7 underdark modules added to module_structure, guide/ marked as non-existent, void content/ anomaly noted inline, playground entry updated to current structure, evolution.current_state corrected"
     },
     {
-      "hash": "pending",
+      "hash": "f6e89c9",
       "date": "2026-05-18",
       "message": "feat(signal): create signal.json + Signal tab — mutable companion to logs",
       "scope": "status/logs/",
@@ -886,7 +886,7 @@
       "why": "New mutable working surface for tasks (migrated from pending_work), issues, and proposals — clearly distinct from the authoritative logs.json; rendered in a new Signal tab with teal visual treatment and provisional-state styling"
     },
     {
-      "hash": "pending",
+      "hash": "f6e89c9",
       "date": "2026-05-18",
       "message": "feat(llm): adapt to llm.json v9.1.0 multimodal matrix schema",
       "scope": "glass/, underdark/",
@@ -900,7 +900,7 @@
       "why": "llm.json schema rewritten from flat _index array to _index_matrix nested dictionary; removed pay_per_token boolean in favour of cost_tier string; all three model-select populator call sites updated to use the new structure"
     },
     {
-      "hash": "pending",
+      "hash": "f6e89c9",
       "date": "2026-05-18",
       "message": "docs(logs): strengthen LLM protocol — decision tree, seventh law, structure guidance",
       "scope": "status/logs/",
@@ -909,7 +909,7 @@
       "why": "Protocol instructions were vague about which logs sections to update and when. Added update_decision_tree with explicit conditional rules, the_seventh_law (check sources_of_truth and ruleset before creating files), files_to_read_before_working, and structure violation cleanup as a pending_work entry so future agents know the cleanup is intentional and staged."
     },
     {
-      "hash": "pending",
+      "hash": "f6e89c9",
       "date": "2026-05-18",
       "message": "feat(logs): structure ruleset + Ruleset tab in logs viewer",
       "scope": "status/logs/",
