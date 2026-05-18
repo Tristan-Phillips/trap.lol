@@ -500,6 +500,15 @@ export function initUI() {
     let _gateModel      = state.config.model || 'deepseek-r1';
     let _gateThreshold  = 40;
 
+    // Image model — persisted across session, overridden by quick-picker
+    const IMG_MODELS = [
+        { id: 'hidream',    label: 'HiDream',     note: 'NSFW-capable' },
+        { id: 'flux-dev',   label: 'Flux Dev',    note: 'SFW' },
+        { id: 'flux-pro',   label: 'Flux Pro',    note: 'High quality' },
+        { id: 'flux-schnell', label: 'Flux Schnell', note: 'Fast' },
+    ];
+    let _imgModel = localStorage.getItem('underdark_img_model') || 'hidream';
+
     function _gateShowStep(next, dir = 'forward') {
         const steps = qsa('.api-gate__step', $gate);
         const runes = qsa('.api-gate__rune', $gate);
@@ -4377,9 +4386,7 @@ export function initUI() {
             });
             const prompt = styleModifiers ? `${basePrompt}, ${styleModifiers}` : basePrompt;
 
-            // Pick best model: prefer NSFW-capable HiDream when adult content is on,
-            // fall back to flux-dev for SFW
-            const model = nsfwFlag ? 'hidream' : 'flux-dev';
+            const model = _imgModel;
 
             const { negative } = buildImagePrompt({ charId, scene: { nsfw: nsfwLevel }, includeNsfw, nsfwLevel });
             const dataUrl = await generateImage({ model, prompt, negativePrompt: negative, size: '1024x1024' });
@@ -10043,9 +10050,66 @@ export function initUI() {
         if ($tokens) $tokens.textContent = state.telemetry.sessionTokens;
         if ($model) {
             const tc = state.chat?.threadConfig;
-            $model.textContent = (tc?.model || state.config.model) || '—';
+            const activeModel = tc?.model || state.config.model || '—';
+            // Show only the final path segment (after last /) for brevity
+            $model.textContent = activeModel.split('/').pop();
         }
     }
+
+    // ── Model quick-picker ────────────────────────────────────────────────────
+    function _buildModelPicker() {
+        const $picker = qs('#model-quick-picker');
+        if (!$picker) return;
+        const cur = state.config.model || 'deepseek-r1';
+        const llmHtml = GATE_MODELS.map(m =>
+            `<button class="mqp-chip${m.id === cur ? ' mqp-chip--active' : ''}" data-mqp-llm="${esc(m.id)}">${esc(m.label)}</button>`
+        ).join('');
+        const imgHtml = IMG_MODELS.map(m =>
+            `<button class="mqp-chip mqp-chip--img${m.id === _imgModel ? ' mqp-chip--active' : ''}" data-mqp-img="${esc(m.id)}" title="${esc(m.note)}">${esc(m.label)}</button>`
+        ).join('');
+        $picker.innerHTML = `
+            <div class="mqp-section">
+                <span class="mqp-label">LLM</span>
+                <div class="mqp-chips">${llmHtml}</div>
+            </div>
+            <div class="mqp-section">
+                <span class="mqp-label">Image</span>
+                <div class="mqp-chips">${imgHtml}</div>
+            </div>`;
+    }
+
+    qs('#stat-model')?.addEventListener('click', e => {
+        e.stopPropagation();
+        const $picker = qs('#model-quick-picker');
+        if (!$picker) return;
+        if (!$picker.hidden) { $picker.hidden = true; return; }
+        _buildModelPicker();
+        $picker.hidden = false;
+    });
+
+    document.addEventListener('click', e => {
+        if (!e.target.closest('#model-quick-picker') && !e.target.closest('#stat-model')) {
+            const $p = qs('#model-quick-picker');
+            if ($p) $p.hidden = true;
+        }
+    });
+
+    document.addEventListener('click', e => {
+        const llmBtn = e.target.closest('[data-mqp-llm]');
+        if (llmBtn) {
+            const id = llmBtn.dataset.mqpLlm;
+            setConfig({ model: id });
+            updateTelemetry();
+            _buildModelPicker();
+            return;
+        }
+        const imgBtn = e.target.closest('[data-mqp-img]');
+        if (imgBtn) {
+            _imgModel = imgBtn.dataset.mqpImg;
+            localStorage.setItem('underdark_img_model', _imgModel);
+            _buildModelPicker();
+        }
+    });
 
     // ── Modal: message edit backdrop ─────────────────────────────────────────
     qs('.modal__backdrop', qs('#modal-msg-edit'))?.addEventListener('click', () => {

@@ -180,6 +180,87 @@
     opacity: 0.6;
 }
 .arena-stats__model { color: var(--theme-accent); }
+.arena-stats__model--btn {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    color: var(--theme-accent);
+    transition: opacity 0.15s, text-shadow 0.15s;
+}
+.arena-stats__model--btn:hover {
+    opacity: 1;
+    text-shadow: 0 0 8px var(--theme-glow);
+}
+
+/* ── Model quick-picker popover ── */
+.model-quick-picker {
+    position: absolute;
+    bottom: calc(100% + 6px);
+    right: 0;
+    z-index: 200;
+    background: rgba(6,4,10,0.97);
+    border: 1px solid rgba(var(--accent-rgb), 0.22);
+    border-radius: 8px;
+    box-shadow: 0 -6px 28px rgba(0,0,0,0.7), 0 0 0 1px rgba(var(--accent-rgb), 0.06);
+    backdrop-filter: blur(14px);
+    padding: 10px 12px 10px;
+    min-width: 260px;
+    max-width: 320px;
+}
+.model-quick-picker[hidden] { display: none !important; }
+.mqp-section { margin-bottom: 10px; }
+.mqp-section:last-child { margin-bottom: 0; }
+.mqp-label {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: #3d3347;
+    margin-bottom: 6px;
+}
+.mqp-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+.mqp-chip {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 4px;
+    color: #7a6d8a;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    padding: 3px 9px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    white-space: nowrap;
+}
+.mqp-chip:hover {
+    background: rgba(var(--accent-rgb), 0.1);
+    border-color: rgba(var(--accent-rgb), 0.3);
+    color: var(--theme-accent);
+}
+.mqp-chip--active {
+    background: rgba(var(--accent-rgb), 0.16);
+    border-color: rgba(var(--accent-rgb), 0.5);
+    color: var(--theme-accent);
+    text-shadow: 0 0 8px var(--theme-glow);
+}
+.mqp-chip--img:hover {
+    background: rgba(96,165,250,0.1);
+    border-color: rgba(96,165,250,0.3);
+    color: #93c5fd;
+}
+.mqp-chip--img.mqp-chip--active {
+    background: rgba(96,165,250,0.16);
+    border-color: rgba(96,165,250,0.5);
+    color: #93c5fd;
+    text-shadow: 0 0 8px rgba(96,165,250,0.4);
+}
 
 /* ── Form primitives ── */
 .form-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }
