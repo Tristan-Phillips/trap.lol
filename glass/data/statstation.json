@@ -1,12 +1,12 @@
 {
   "manifest": {
     "0": {
-      "name": "Uplink Sentinel",
+      "name": "Status Hub",
       "slug": "status",
       "path": "/status/",
-      "icon": "activity",
-      "description": "Live infrastructure monitor. Sovereign nodes, app uplinks, and drone fleet.",
-      "tags": ["infra", "monitoring", "uptime"],
+      "icon": "layout-list",
+      "description": "Intelligence records, observations, and infrastructure logs.",
+      "tags": ["infra", "status", "logs"],
       "keyed": false,
       "status": "live"
     },

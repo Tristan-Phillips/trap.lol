@@ -8823,9 +8823,10 @@ export function initUI() {
         const $tcModel = qs('#tc-model-select');
         if ($tcModel && $tcModel.options.length <= 1) {
             fetch('/glass/data/llm.json').then(r => r.json()).then(data => {
-                const optHtml = data._index.map(group => `
-                    <optgroup label="${esc(group.family)}">
-                        ${group.models.map(id => {
+                const textProviders = data._index_matrix?.text || {};
+                const optHtml = Object.entries(textProviders).map(([provider, ids]) => `
+                    <optgroup label="${esc(provider)}">
+                        ${ids.map(id => {
                             const m = data.routing_table[id];
                             return m ? `<option value="${esc(id)}">${esc(m.label)}</option>` : '';
                         }).join('')}
@@ -9447,9 +9448,10 @@ export function initUI() {
             const res  = await fetch('/glass/data/llm.json');
             const data = await res.json();
 
-            const optHtml = data._index.map(group => `
-                <optgroup label="${esc(group.family)}">
-                    ${group.models.map(id => {
+            const textProviders = data._index_matrix?.text || {};
+            const optHtml = Object.entries(textProviders).map(([provider, ids]) => `
+                <optgroup label="${esc(provider)}">
+                    ${ids.map(id => {
                         const m = data.routing_table[id];
                         return m ? `<option value="${esc(id)}">${esc(m.label)}</option>` : '';
                     }).join('')}

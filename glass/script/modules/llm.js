@@ -123,16 +123,18 @@ export function initLLM() {
   if (!PROXY_MODE) Auth.restoreKeyFromCookie();
 
   // Populate Models
-  llmData._index.forEach(({ family, models: ids }) => {
+  const textProviders = llmData._index_matrix?.text || {};
+  Object.entries(textProviders).forEach(([provider, ids]) => {
     const group = document.createElement("optgroup");
-    group.label = family;
+    group.label = provider;
     ids.forEach(id => {
       const entry = llmData.routing_table[id];
       if (!entry) return;
       modelMap.set(id, { ...entry, id });
       const opt = document.createElement("option");
       opt.value = id;
-      opt.textContent = `${entry.pay_per_token ? "\u25C6" : "\u2726"} ${entry.label}`;
+      const glyph = (entry.cost_tier === "Basically Free" || entry.cost_tier === "Cheap") ? "\u2726" : "\u25C6";
+      opt.textContent = `${glyph} ${entry.label}`;
       if (id === llmData.default_routing) opt.selected = true;
       group.appendChild(opt);
     });

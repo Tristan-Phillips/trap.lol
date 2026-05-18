@@ -494,7 +494,7 @@ function renderTelemetry() {
   const $tele = document.getElementById("uplink-telemetry");
   if (!$tele) return;
   const models = Object.values(llmData.routing_table || {});
-  const subCount = models.filter(m => !m.pay_per_token).length;
+  const subCount = models.filter(m => m.cost_tier === "Basically Free").length;
   const defaultId = llmData.default_routing;
   const def = llmData.routing_table?.[defaultId] || { label: defaultId || "—", provider: "" };
 
