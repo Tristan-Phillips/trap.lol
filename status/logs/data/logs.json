@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.21",
+    "schema_version": "1.5.22",
     "last_updated": "2026-05-18",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -597,6 +597,21 @@
     ]
   },
   "commits": [
+    {
+      "hash": "84bf978",
+      "date": "2026-05-18",
+      "message": "feat(underdark): clickable model badge — quick-pick LLM and image model",
+      "scope": "playground/underdark/",
+      "impact": "medium",
+      "files": [
+        "playground/underdark/index.html",
+        "playground/underdark/script/main.js",
+        "playground/underdark/script/modules/ui.js",
+        "playground/underdark/style/arena.css",
+        "playground/underdark/style/reinject.css"
+      ],
+      "why": "User wanted to click the model label in the stats bar to quickly switch LLM and image model without opening the full gate. The stat-model span is now a button; clicking it opens a popover with two sections: LLM chips (all GATE_MODELS) and Image chips (HiDream, Flux Dev, Flux Pro, Flux Schnell). LLM selection calls setConfig({ model }); image model is stored in _imgModel and localStorage. Image model replaces the previous NSFW-conditional hardcode in the snapshot path."
+    },
     {
       "hash": "5d89ad9",
       "date": "2026-05-18",
@@ -2753,6 +2768,17 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-18",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Added clickable model quick-picker. The model label in the arena stats bar is now a button; clicking it opens a popover with LLM chips (all GATE_MODELS) and Image chips (HiDream, Flux Dev, Flux Pro, Flux Schnell). LLM selection calls setConfig immediately; image model persists to localStorage as underdark_img_model. Image model is now user-controlled rather than hardcoded based on the NSFW flag.",
+      "decisions": [
+        "Image model selection decoupled from the NSFW flag — the old auto-select (hidream when NSFW on, flux-dev when off) is replaced by user intent via _imgModel. Default is still hidream.",
+        "Popover is position: absolute anchored to the toolbar (which now has position: relative) — no extra portal logic needed.",
+        "Active chip is highlighted with accent colour so current selection is immediately visible."
+      ]
+    },
     {
       "date": "2026-05-18",
       "agent": "Claude Sonnet 4.6",
