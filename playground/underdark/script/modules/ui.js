@@ -18,7 +18,7 @@ import {
     exportFullInstance, importFullInstance
 } from './state.js?v=2';
 import { resolveImageUrl, saveImageBlob, deleteImageBlob, isIdbImageRef, idbImageRefId, isDataUrl } from './storage.js?v=3';
-import { buildPayload, streamCompletion, fetchCompletion, buildOverlordContext, summarizeDroppedMessages, sanitizeRpResponse, detectAffectTone } from './llm-engine.js?v=13';
+import { buildPayload, streamCompletion, fetchCompletion, buildOverlordContext, summarizeDroppedMessages, sanitizeRpResponse, detectAffectTone } from './llm-engine.js?v=14';
 import { parseCommand, executeCommand, filterCommands, COMMANDS } from './commands.js?v=3';
 import { IMAGE_MODELS, DEFAULT_MODEL, buildImagePrompt, generateImagePromptWithLLM, describeSceneWithLLM, generateImage, VIDEO_MODELS, generateVideo, generateVideoPromptWithLLM } from './image-engine.js?v=3';
 import { addBook, removeBook, addEntry, updateEntry, removeEntry, createBook, scanLorebooks } from './lorebook.js?v=3';
@@ -329,16 +329,20 @@ function renderMarkdown(text) {
             return '<p>' + esc(text).replace(/\n/g, '<br>') + '</p>';
         }
 
-        // 3. Post-sanitise RP injection via RegExp constructors (no literal quote chars — editor auto-curls them)
+        // 3. Post-sanitise RP injection.
         // U+0022 = straight “    U+201C = left curly “    U+201D = right curly “
         // U+2018 = left curly '  U+2019 = right curly '
+        //
+        // IMPORTANT: marked entity-encodes straight “ as &quot; in paragraph text.
+        // We unescape ALL &quot; → “ BEFORE regex matching so a single unified
+        // speech regex handles every quote style without double-matching.
 
-        // Any open-quote char followed by content followed by any close-quote char
-        const Q  = '\\u0022\\u201C\\u201D\\u2018\\u2019'; // all quote chars (open or close)
-        const NQ = '[^\\u0022\\u201C\\u201D\\u2018\\u2019<\\n]'; // not a quote, <, or newline
+        html = html.replace(/&quot;/g, '”');
+
+        // All quote chars (open or close). NQ: not a quote, tag-open, or newline.
+        const Q  = '\\u0022\\u201C\\u201D\\u2018\\u2019';
+        const NQ = '[^\\u0022\\u201C\\u201D\\u2018\\u2019<\\n]';
         const speechRe    = new RegExp('[' + Q + '](' + NQ + '{2,}?)[' + Q + ']', 'g');
-        // &quot; variant — marked entity-encodes straight “ when inside certain contexts
-        const quotedEntRe = /&quot;((?:[^<]){2,}?)&quot;/g;
         // UFR: ~tilde-wrapped~ inner thoughts, plus legacy _underscore_ thoughts
         const thoughtRe   = /~((?:[^~\n]){2,}?)~/g;
         const thoughtReUs = /(?<![_\w])_((?:[^_\n]){2,}?)_(?![_\w])/g;
@@ -347,7 +351,6 @@ function renderMarkdown(text) {
         // Run all replacements in a single text-node pass
         html = html.replace(/>([^<]+)</g, (_, textNode) => {
             let t = textNode;
-            t = t.replace(quotedEntRe, (__, inner) => '<span class=”rp-speech”>”' + inner + '”</span>');
             t = t.replace(speechRe,    (__, inner) => '<span class=”rp-speech”>”' + inner + '”</span>');
             t = t.replace(thoughtRe,   (__, inner) => '<span class=”rp-thought”>' + inner + '</span>');
             t = t.replace(thoughtReUs, (__, inner) => '<span class=”rp-thought”>' + inner + '</span>');

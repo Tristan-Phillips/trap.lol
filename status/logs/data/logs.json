@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.15",
+    "schema_version": "1.5.16",
     "last_updated": "2026-05-18",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -597,6 +597,20 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-18",
+      "message": "fix(underdark): speech colouring broken (&quot; corruption); imperative OOC leaks not caught",
+      "scope": "playground/underdark/",
+      "impact": "high",
+      "files": [
+        "playground/underdark/script/main.js",
+        "playground/underdark/script/modules/ui.js",
+        "playground/underdark/script/modules/llm-engine.js",
+        "status/logs/data/logs.json"
+      ],
+      "why": "Two bugs: (1) marked.js entity-encodes straight quotes as &quot; — the old two-regex pass (quotedEntRe then speechRe) was running speechRe on the output of quotedEntRe, matching the literal string 'rp-speech' inside a class attribute as quoted content and producing nested/corrupted spans; fix is to unescape all &quot; globally before any regex pass, then remove quotedEntRe entirely. (2) imperative-verb OOC card instructions like 'Never break the Underdark format.' were not caught by the sanitizer's third-person directive pattern — added a separate pattern for Never/Always/Do not/Don't/Avoid/Refrain/Ensure etc. at line start."
+    },
     {
       "hash": "f6e89c9",
       "date": "2026-05-18",
@@ -2671,6 +2685,20 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-18",
+      "agent": "Claude Sonnet 4.6",
+      "type": "bug_fix",
+      "summary": "Two rendering bugs fixed. (1) Speech colouring (rp-speech gold) was silently broken: marked.js entity-encodes straight double-quotes as &quot; in paragraph text. The old pipeline ran quotedEntRe first (wrapping &quot;...&quot; in rp-speech spans), then ran speechRe on the result — speechRe matched the literal string 'rp-speech' inside the class attribute as quoted content and produced corrupted nested spans. Fix: globally unescape all &quot; to \" before any regex pass, remove quotedEntRe entirely, single speechRe handles all quote styles. (2) Imperative-verb OOC card instructions ('Never break the Underdark format.', 'Always refer to the player as...') were not caught by the sanitizer's existing third-person directive pattern (which requires She/He/They as the opener). Added a second pattern for Never/Always/Do not/Don't/Avoid/Refrain from/Make sure/Ensure/Remember to/Keep/Maintain/Stay in/Remain in at line start.",
+      "decisions": [
+        "The root cause of &quot; corruption was a two-pass regex on the same string — quotedEntRe produced spans, then speechRe's pattern matched the attribute string 'rp-speech' between the class attribute quotes. The fix (unescape globally first, remove quotedEntRe) eliminates the two-pass problem entirely: one unified speechRe handles both entity-encoded and raw quote variants.",
+        "The imperative-verb sanitizer pattern is anchored at line start (^) and only fires during the leading-line OOC strip phase — it cannot hit legitimate mid-response prose because the stripper stops at the first RP marker (quote, asterisk, tilde). Pattern is intentionally broad for line-start imperatives because any instruction verb at the very start of a bot response is almost certainly an OOC echo, not narration.",
+        "llm-engine.js bumped to v14; ui.js stays at v122 (already bumped in previous commit)."
+      ],
+      "rules_reinforced": [
+        "Multi-pass regex on the same HTML string is dangerous: later passes can match substrings produced by earlier passes, especially attribute values. Always unescape entities before any regex pass that targets those characters."
+      ]
+    },
     {
       "date": "2026-05-18",
       "agent": "Claude Sonnet 4.6",

@@ -1213,6 +1213,9 @@ export function sanitizeRpResponse(text) {
                 // “The character must…” — verbatim post_history_instructions echoed into output.
                 // Pattern: “She/He/They/The character + modal verb + instruction verb”
                 /^(She|He|They|The character|This character)\s+(should|must|will|won't|shall|needs? to|is to|is not to|does not|cannot|can't|doesn't)\s+(use|say|refer|avoid|keep|maintain|never|always|write|speak|address|call|treat|act|portray|respond|stay|remain)\b/i.test(trimmed) ||
+                // Imperative-verb card instruction leaks — “Never break the Underdark format.”,
+                // “Always refer to…”, “Do not use…”, “Avoid mentioning…”
+                /^(Never|Always|Do not|Don't|Avoid|Refrain from|Make sure|Ensure|Remember to|Keep|Maintain|Stay in|Remain in)\s+(break|use|refer|say|avoid|maintain|keep|write|speak|address|call|treat|act|portray|respond|stay|remain|the|in character|consistent|true|aware)\b/i.test(trimmed) ||
                 (/^\s*$/.test(trimmed) && cleaned.length === 0)        // leading blank line
             );
 
