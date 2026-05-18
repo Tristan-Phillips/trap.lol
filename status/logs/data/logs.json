@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.7",
+    "schema_version": "1.5.8",
     "last_updated": "2026-05-18",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -597,6 +597,15 @@
     ]
   },
   "commits": [
+    {
+      "hash": "afbbbe3",
+      "date": "2026-05-18",
+      "message": "fix(apps): update LLM Playground card to Neural Uplink at correct path",
+      "scope": "glass/data/",
+      "impact": "medium",
+      "files": ["glass/data/apps.json"],
+      "why": "App Uplinks card was still pointing to /playground/ (hub) with the pre-restructure name 'LLM Playground' — missed during the playground/ directory migration."
+    },
     {
       "hash": "27f7f96",
       "date": "2026-05-18",
