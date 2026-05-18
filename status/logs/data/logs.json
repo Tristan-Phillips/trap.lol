@@ -597,7 +597,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "691b02d",
       "date": "2026-05-18",
       "message": "refactor(structure): move dndm, radar, underdark, void into playground/; neural-uplink sub-dir; playground hub; §12 violations resolved",
       "scope": "playground/, glass/data/, status/logs/data/",
