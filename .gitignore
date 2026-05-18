@@ -7,5 +7,6 @@ CLAUDE.md
 .env
 .bin
 shared/*
-dndm/assets/data/5etools/*
-dndm/assets/data/5etools/5e-SRD-classes.json
+playground/dndm/assets/data/5etools/*
+playground/dndm/assets/data/5etools/5e-SRD-classes.json
+services/nano-gpt-models/formatter
