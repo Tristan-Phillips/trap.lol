@@ -9449,7 +9449,7 @@ export function initUI() {
                     const m = rt[id];
                     if (!m) return '';
                     const glyph = modality === 'text'
-                        ? (m.requires_subscription ? '⬡' : '◆')
+                        ? (m.requires_subscription ? '◆' : '⬡')
                         : '';
                     const label = glyph ? `${glyph} ${m.label}` : m.label;
                     return `<option value="${esc(id)}">${esc(label)}</option>`;

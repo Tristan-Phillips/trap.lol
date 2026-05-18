@@ -245,8 +245,8 @@ export async function sendMessage(ctx) {
   const token = auth.PROXY_MODE ? "" : auth.getApiKey();
 
   const m = model.getSelected();
-  const inf = m.recommended_inference;
-  const temperature = cfg.tempOverride ?? inf.temperature;
+  const inf = m?.recommended_inference ?? {};
+  const temperature = cfg.tempOverride ?? inf.temperature ?? 0.7;
 
   let contextHistory = [...history];
   if (cfg.maxCtxTurns !== null) {
@@ -289,7 +289,7 @@ export async function sendMessage(ctx) {
     messages,
     stream: cfg.streaming,
     temperature,
-    top_p: inf.top_p,
+    ...(inf.top_p != null && { top_p: inf.top_p }),
   };
 
   const handleProxyError = (err) => {
