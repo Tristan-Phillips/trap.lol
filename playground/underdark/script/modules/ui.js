@@ -7863,6 +7863,22 @@ export function initUI() {
         $btn?.classList.add('overlord-loading');
         $btn?.classList.remove('overlord-armed');
 
+        // Inject a skeleton placeholder so the user sees immediate feedback
+        const $placeholder = document.createElement('div');
+        $placeholder.className = 'overlord-block overlord-block--beat overlord-block--pending';
+        $placeholder.innerHTML = `
+            <div class="overlord-block__rail overlord-block__rail--top">
+                <span class="overlord-block__glyph"><i data-lucide="wind"></i></span>
+                <span class="overlord-block__label">OVERLORD — BEAT</span>
+                <span class="overlord-block__line"></span>
+            </div>
+            <div class="overlord-block__body">
+                <span class="thinking"><span></span><span></span><span></span></span>
+            </div>`;
+        $thread?.appendChild($placeholder);
+        lucideRefresh($placeholder);
+        $thread && ($thread.scrollTop = $thread.scrollHeight);
+
         try {
             await _fireOverlord('beat', ({ charNames, histText, meters, scenario, playerName }) => {
                 const mStr = [
@@ -7887,7 +7903,9 @@ export function initUI() {
 
                 return `Write the world's immediate physical and atmospheric response to this moment of the scene.${actionLine}${directionLine}\n\nDescribe what shifts in the environment, the space between characters, the air, the light, sound, or texture — what the world itself perceives and reflects back. Do NOT write what any character decides, says, or feels internally. Do NOT advance the plot. Only the world receiving this moment.\n\n1 tight paragraph. Open with a concrete sensory detail that is specific to THIS scene.${scenario ? `\n\nSetting: ${scenario.slice(0, 200)}` : ''}${mStr ? `\nScene state: ${mStr}` : ''}\n\n${histText}`;
             }, 240);
-        } catch { /* silent */ }
+        } catch { /* silent */ } finally {
+            $placeholder.remove();
+        }
 
         _overlordBeatInFlight = false;
         $btn?.classList.remove('overlord-loading');
