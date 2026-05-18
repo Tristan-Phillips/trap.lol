@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.14",
+    "schema_version": "1.5.15",
     "last_updated": "2026-05-18",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -597,6 +597,20 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-18",
+      "message": "fix(underdark): ~~thought~~ renders as strikethrough; card instructions leak into responses",
+      "scope": "playground/underdark/",
+      "impact": "high",
+      "files": [
+        "playground/underdark/script/main.js",
+        "playground/underdark/script/modules/ui.js",
+        "playground/underdark/script/modules/llm-engine.js",
+        "status/logs/data/logs.json"
+      ],
+      "why": "Two rendering bugs visible in production: (1) model uses ~~tilde~~ for inner thoughts, marked.js converts to <del> which renders as visible strikethrough instead of rp-thought purple; (2) post_history_instructions text ('She should not use pet names...') leaked verbatim into response as prose — sanitizer didn't catch third-person directive lines."
+    },
     {
       "hash": "03dd398",
       "date": "2026-05-18",
@@ -2657,6 +2671,20 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-18",
+      "agent": "Claude Sonnet 4.6",
+      "type": "bug_fix",
+      "summary": "Two rendering bugs caught from screenshot. (1) ~~strikethrough~~ inner thoughts: marked.js with gfm:true converts ~~text~~ to <del>...</del> which displays as visible strikethrough. Fix: added <del> → rp-thought span conversion in renderMarkdown, running after the <em> → rp-action pass, before the paragraph classifier. (2) card instruction leak: post_history_instructions content ('She should not use any pet names or overly familiar language.') was appearing verbatim as the first line of bot responses. Pattern is a third-person imperative — 'She/He/They should/must/will [verb]'. Added to sanitizeRpResponse's leading-line OOC pattern list.",
+      "decisions": [
+        "<del> → rp-thought conversion must run after <em> → rp-action so the paragraph classifier sees both span types correctly when scoring dominance.",
+        "The third-person directive pattern is scoped tightly (She/He/They + modal + instruction verb) to avoid false positives on legitimate in-scene narration that uses similar grammar mid-response — the sanitizer only strips leading lines.",
+        "~~tilde~~ thoughts and _underscore_ thoughts are already handled as rp-thought in the text-node pass; <del> was the missing case because marked converts ~~ to a different tag."
+      ],
+      "rules_reinforced": [
+        "Bugs caught from screenshots require reading the exact rendered HTML chain: raw model text → sanitizeRpResponse → marked.parse → DOMPurify → RP span injection → paragraph classification. Any stage can introduce or fail to catch a visual defect."
+      ]
+    },
     {
       "date": "2026-05-18",
       "agent": "Claude Sonnet 4.6",

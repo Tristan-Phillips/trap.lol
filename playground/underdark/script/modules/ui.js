@@ -18,7 +18,7 @@ import {
     exportFullInstance, importFullInstance
 } from './state.js?v=2';
 import { resolveImageUrl, saveImageBlob, deleteImageBlob, isIdbImageRef, idbImageRefId, isDataUrl } from './storage.js?v=3';
-import { buildPayload, streamCompletion, fetchCompletion, buildOverlordContext, summarizeDroppedMessages, sanitizeRpResponse, detectAffectTone } from './llm-engine.js?v=12';
+import { buildPayload, streamCompletion, fetchCompletion, buildOverlordContext, summarizeDroppedMessages, sanitizeRpResponse, detectAffectTone } from './llm-engine.js?v=13';
 import { parseCommand, executeCommand, filterCommands, COMMANDS } from './commands.js?v=3';
 import { IMAGE_MODELS, DEFAULT_MODEL, buildImagePrompt, generateImagePromptWithLLM, describeSceneWithLLM, generateImage, VIDEO_MODELS, generateVideo, generateVideoPromptWithLLM } from './image-engine.js?v=3';
 import { addBook, removeBook, addEntry, updateEntry, removeEntry, createBook, scanLorebooks } from './lorebook.js?v=3';
@@ -358,6 +358,10 @@ function renderMarkdown(text) {
         // Action layer: <em> produced by marked from *asterisk* content → rp-action spans.
         // Must run before the rp-narration pass so the presence check sees rp-action, not <em>.
         html = html.replace(/<em>([\s\S]+?)<\/em>/g, (_, inner) => '<span class=”rp-action”>' + inner + '</span>');
+
+        // Thought layer: <del> produced by marked from ~~tilde~~ content → rp-thought spans.
+        // Models use ~~...~~ for inner thoughts (GFM strikethrough); render as thought, not strikethrough.
+        html = html.replace(/<del>([\s\S]+?)<\/del>/g, (_, inner) => '<span class=”rp-thought”>' + inner + '</span>');
 
         // Classify paragraphs by their dominant RP layer.
         // A paragraph that consists entirely (or nearly) of a single rp-* layer gets a matching

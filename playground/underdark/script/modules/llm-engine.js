@@ -1194,7 +1194,7 @@ export function sanitizeRpResponse(text) {
             // Known OOC preamble patterns — self-directed notes, reminders, asides
             const isOOC = (
                 // Common self-directed openers
-                /^(Note|Reminder|Remember|Keep in mind|As \w|I will|I'll|I should|I need to|Using|Use ['”'”“”]|Okay,|Sure,|Alright,|Understood[,.]|Got it|Certainly|Of course|Absolutely)[,:.\s]/i.test(trimmed) ||
+                /^(Note|Reminder|Remember|Keep in mind|As \w|I will|I'll|I should|I need to|Using|Use ['”'”””]|Okay,|Sure,|Alright,|Understood[,.]|Got it|Certainly|Of course|Absolutely)[,:.\s]/i.test(trimmed) ||
                 // Parenthetical aside to self — e.g. (Using “kid” as the term)
                 /^\(.*\)$/.test(trimmed) ||
                 // Block label: “Format:”, “Style:”, etc.
@@ -1209,6 +1209,10 @@ export function sanitizeRpResponse(text) {
                 /^#{1,3}\s*(Note|Response|Reply|Scene|Setup|Character|Roleplay)/i.test(trimmed) ||
                 // Explicit “continuing as” / “speaking as” self-labels
                 /^(Continuing as|Speaking as|Playing as|Writing as|Responding as)\b/i.test(trimmed) ||
+                // Third-person card instruction leaks — “She should not…”, “He will always…”,
+                // “The character must…” — verbatim post_history_instructions echoed into output.
+                // Pattern: “She/He/They/The character + modal verb + instruction verb”
+                /^(She|He|They|The character|This character)\s+(should|must|will|won't|shall|needs? to|is to|is not to|does not|cannot|can't|doesn't)\s+(use|say|refer|avoid|keep|maintain|never|always|write|speak|address|call|treat|act|portray|respond|stay|remain)\b/i.test(trimmed) ||
                 (/^\s*$/.test(trimmed) && cleaned.length === 0)        // leading blank line
             );
 
