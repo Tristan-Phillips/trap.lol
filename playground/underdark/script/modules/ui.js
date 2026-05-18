@@ -18,7 +18,7 @@ import {
     exportFullInstance, importFullInstance
 } from './state.js?v=2';
 import { resolveImageUrl, saveImageBlob, deleteImageBlob, isIdbImageRef, idbImageRefId, isDataUrl } from './storage.js?v=3';
-import { buildPayload, streamCompletion, fetchCompletion, buildOverlordContext, summarizeDroppedMessages, sanitizeRpResponse } from './llm-engine.js?v=9';
+import { buildPayload, streamCompletion, fetchCompletion, buildOverlordContext, summarizeDroppedMessages, sanitizeRpResponse } from './llm-engine.js?v=10';
 import { parseCommand, executeCommand, filterCommands, COMMANDS } from './commands.js?v=3';
 import { IMAGE_MODELS, DEFAULT_MODEL, buildImagePrompt, generateImagePromptWithLLM, describeSceneWithLLM, generateImage, VIDEO_MODELS, generateVideo, generateVideoPromptWithLLM } from './image-engine.js?v=3';
 import { addBook, removeBook, addEntry, updateEntry, removeEntry, createBook, scanLorebooks } from './lorebook.js?v=3';
@@ -3024,10 +3024,16 @@ export function initUI() {
         } else if (state.history.length > 0 && state.config.flags?.autoEntrance !== false) {
             // Auto entrance narration when a character joins a live session
             const enteringChar = getCharOverride(id)?.nickname || char.name;
-            _fireOverlord('entrance', ({ scenario, histText }) =>
-                `Write a cinematic entrance narration for ${enteringChar}. Describe how they arrive, how they carry themselves, what their presence does to the air and the space. This is the moment the scene registers their existence. Do not write their dialogue. 1-2 vivid paragraphs.\n\n${scenario ? `Setting: ${scenario.slice(0, 200)}\n\n` : ''}${histText}`,
-                300
-            ).catch(() => {});
+            _fireOverlord('entrance', ({ scenario, histText, charNames, meters }) => {
+                const othersPresent = charNames.filter(n => n !== enteringChar).join(', ');
+                const mStr = meters
+                    ? [
+                        meters.tension  != null ? `tension ${meters.tension}%`  : '',
+                        meters.intimacy != null ? `intimacy ${meters.intimacy}%` : '',
+                      ].filter(Boolean).join(', ')
+                    : '';
+                return `Write the moment ${enteringChar} enters a scene already in motion. Describe how they arrive, how the space shifts to acknowledge them, what their body language and presence communicate before a single word is spoken.${othersPresent ? ` Those already present: ${othersPresent}.` : ''}${mStr ? ` Scene state: ${mStr}.` : ''} Do not write their dialogue. 1-2 vivid paragraphs.\n\n${scenario ? `Setting: ${scenario.slice(0, 200)}\n\n` : ''}${histText}`;
+            }, 300).catch(() => {});
         }
     }
 
@@ -3205,11 +3211,25 @@ export function initUI() {
         if (qs('#scene-codex')?.classList.contains('scene-codex--open')) renderCodexCast();
     }
 
+    // Atmospheric placeholder phrases — cycle on each character switch to avoid staleness
+    const _RP_PLACEHOLDERS = [
+        n => `Speak, act, or think… ${n} is listening.`,
+        n => `What do you say to ${n}?`,
+        n => `Your move. ${n} waits.`,
+        n => `Step into the scene with ${n}…`,
+        n => `Respond to ${n}…`,
+        n => `${n} watches. What do you do?`,
+        n => `The scene is live. Your turn.`,
+        n => `Say something to ${n}…`,
+    ];
+    let _phIdx = 0;
     function _updateInputPlaceholder(charName) {
         const $ta = qs('#rp-input');
         if (!$ta) return;
         if (charName) {
-            $ta.placeholder = `Message ${charName}…`;
+            const fn = _RP_PLACEHOLDERS[_phIdx % _RP_PLACEHOLDERS.length];
+            _phIdx++;
+            $ta.placeholder = fn(charName);
         } else {
             $ta.placeholder = 'Select a character to begin…';
         }
@@ -7179,8 +7199,9 @@ export function initUI() {
 
         const overlordSystem = [
             `You are OVERLORD — the omniscient narrator voice of this collaborative roleplay. You are not any character. You are the unseen author: all-knowing, all-perceiving, writing in present tense with literary, sensory prose.`,
-            `Your voice: cinematic, atmospheric, precise. Never melodramatic. Never generic. Every image you conjure should feel earned and specific to THIS scene, THESE people, THIS moment.`,
-            `Rules you never break:\n• Do NOT write character dialogue or spoken words\n• Do NOT write what characters decide to do — only what the world and atmosphere do\n• Do NOT address the player directly or use second person\n• Do NOT use bullet points or lists — write in continuous prose\n• Keep responses focused: 1-3 paragraphs unless instructed otherwise\n• Begin your response immediately with prose — no preamble, no "Here is…", no "Certainly", no acknowledgement`,
+            `Your voice: cinematic, atmospheric, precise. Never melodramatic. Never generic. Every image you conjure should feel earned and specific to THIS scene, THESE people, THIS moment. Specificity is your virtue — a particular angle of light, a specific sound, a detail only an observer who was truly present would notice.`,
+            `Pacing instinct: read the scene state. When tension is high, write short declarative sentences that land like held breath. When intimacy is high, slow down — linger on sensation and nearness. When danger is high, use fragmented perception. Match your rhythm to what the scene is doing, not what you think it should do.`,
+            `Rules you never break:\n• Do NOT write character dialogue or spoken words — not even implied speech\n• Do NOT write what characters decide to do — only what the world, atmosphere, and environment do\n• Do NOT address the player or reader directly — you have no audience, only witnesses\n• Do NOT use bullet points or lists — continuous prose only\n• Do NOT name emotions directly (no "fear", "longing", "tension") — render them as sensation and image\n• Keep responses focused: 1-3 paragraphs unless instructed otherwise\n• Begin immediately with prose — your first word opens the scene, not announces it`,
             overlordCtx ? `Current scene state:\n${overlordCtx}` : '',
         ].filter(Boolean).join('\n\n');
 
@@ -7761,10 +7782,16 @@ export function initUI() {
         if (hasRecentOverlord) return;
 
         try {
-            await _fireOverlord('transition', ({ charNames, histText }) =>
-                `Narrate a scene transition for this roleplay. The current participants are: ${charNames.join(', ')}. Based on what has happened so far, write a brief atmospheric transition — a time-skip, movement to a new location, or a shift in mood. 1-2 vivid paragraphs. No dialogue.\n\n${histText}`,
-                250
-            );
+            await _fireOverlord('transition', ({ charNames, histText, meters, scenario }) => {
+                const mStr = meters
+                    ? [
+                        meters.tension  != null ? `tension ${meters.tension}%`  : '',
+                        meters.intimacy != null ? `intimacy ${meters.intimacy}%` : '',
+                        meters.danger   != null ? `danger ${meters.danger}%`     : '',
+                      ].filter(Boolean).join(', ')
+                    : '';
+                return `Write a scene transition that grows organically from what has just occurred. Do not summarise the past — move the scene forward.\n\nParticipants: ${charNames.join(', ')}${scenario ? `\nSetting: ${scenario.slice(0, 180)}` : ''}${mStr ? `\nCurrent scene state: ${mStr}` : ''}\n\nChoose one of: a small shift in location or lighting, a passage of time, an environmental change, or a charged silence that resets the emotional register. 1-2 precise paragraphs. No character dialogue or direct action.\n\n${histText}`;
+            }, 280);
         } catch { /* silent */ }
     }
 

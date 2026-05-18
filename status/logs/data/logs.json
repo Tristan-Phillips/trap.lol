@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.10",
+    "schema_version": "1.5.11",
     "last_updated": "2026-05-18",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -597,6 +597,20 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-18",
+      "message": "feat(underdark): immersion pass 3 — Overlord depth, prompt fingerprinting, atmospheric placeholders",
+      "scope": "playground/underdark/",
+      "impact": "high",
+      "files": [
+        "playground/underdark/script/main.js",
+        "playground/underdark/script/modules/ui.js",
+        "playground/underdark/script/modules/llm-engine.js",
+        "status/logs/data/logs.json"
+      ],
+      "why": "Third immersion pass: Overlord system prompt upgraded with pacing instinct and show-not-tell rules; auto-transition/entrance prompts now meter-aware and contextual; ImmersionLock embeds character voice fingerprint; post-history cue embeds trait/mood hint; summarizeDropped system prompts rewritten for continuity quality; input placeholder cycles through atmospheric phrases."
+    },
     {
       "hash": "f557edc",
       "date": "2026-05-18",
@@ -2604,6 +2618,18 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-18",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Third immersion pass for the Underdark. Overlord system prompt upgraded with a pacing instinct block (vary sentence rhythm by tension/intimacy/danger levels) and a show-not-tell rule (no emotion words — render as sensation and image). Auto-transition and entrance Overlord prompts are now meter-aware and context-rich. ImmersionLock now optionally embeds the character's speech patterns, catchphrases, core traits, and archetype as a voice fingerprint read immediately before generation. Post-history cue gains a trait/mood hint. Both summarizeDropped functions have improved system prompts for better story continuity. Input placeholder cycles through 8 atmospheric phrases (e.g. 'Aela watches. What do you do?') on each character switch.",
+      "decisions": [
+        "ImmersionLock voice fingerprint is injected only when override fields are populated — it never adds noise for characters with no data, and is capped at 120/80/100/60 chars per field to stay brief.",
+        "Post-history trait hint is bracketed [like this] to visually distinguish it from the main cue text and make it easy to spot in prompt inspector.",
+        "Overlord's show-not-tell rule is: never name emotions (fear, longing, tension) — render them as sensation and image. This is a stronger constraint than 'be atmospheric'.",
+        "Auto-transition now reads live meter values and passes them to the Overlord so the narration can match the scene's emotional state rather than generic transition prose."
+      ]
+    },
     {
       "date": "2026-05-18",
       "agent": "Claude Sonnet 4.6",

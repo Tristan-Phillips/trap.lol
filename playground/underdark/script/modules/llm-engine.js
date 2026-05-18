@@ -421,8 +421,18 @@ function buildConsistencyBlock(override, charName, flags) {
 // and adds character-specific trait/voice details). This one is purely about
 // preventing meta-commentary and anchoring the model in the scene. It is short
 // by design — brevity makes it harder for the model to skip over.
-function buildImmersionLock(charName) {
-    return `\n\n[IMMERSION LOCK]\nYou are ${charName}. You are inside the scene. Every word you produce is ${charName}'s — spoken, acted, thought, or sensed. Never step outside the scene to narrate, instruct, or explain. If you feel the urge to write a note about your own response — don't. Write the scene instead.`;
+// override is optional — when present, embeds key voice fingerprints directly
+// in the lock so the model re-reads them right before generating.
+function buildImmersionLock(charName, override = {}) {
+    const voiceParts = [];
+    if (override.speechPatterns?.trim())  voiceParts.push(`speech patterns: ${override.speechPatterns.trim().slice(0, 120)}`);
+    if (override.catchphrases?.trim())    voiceParts.push(`catchphrases/tics: ${override.catchphrases.trim().slice(0, 80)}`);
+    if (override.coreTraits?.trim())      voiceParts.push(`core traits: ${override.coreTraits.trim().slice(0, 100)}`);
+    if (override.archetype?.trim())       voiceParts.push(`archetype: ${override.archetype.trim().slice(0, 60)}`);
+    const voiceLine = voiceParts.length
+        ? `\n${charName}'s identity fingerprint: ${voiceParts.join(' | ')}.`
+        : '';
+    return `\n\n[IMMERSION LOCK]\nYou are ${charName}. You are inside the scene. Every word you produce is ${charName}'s — spoken, acted, thought, or sensed.${voiceLine}\nNever step outside the scene to narrate, instruct, or explain. If you feel the urge to write a note about your own response — don't. Write the scene instead.`;
 }
 
 // ── Build impersonation block ─────────────────────────────────────────────────
@@ -550,7 +560,7 @@ function buildSystemPrompt(character, config, override, { isGroup = false, other
             + buildThoughtsDirective(flags).replace(/\{C\}/g, charName)
             + buildImpersonationBlock(userName, flags).replace(/\{C\}/g, charName)
             + (isGroup && otherChars.length ? buildGroupIsolationBlock(charName, otherChars) : '')
-            + buildImmersionLock(charName)
+            + buildImmersionLock(charName, override)
             + (override.appendToSystem ? `\n\n${override.appendToSystem}` : '')
             + (config.nsfwBypass ? `\n\n${config.nsfwBypass}` : '');
     }
@@ -618,11 +628,11 @@ async function summarizeDropped(messages, config) {
     const payload = {
         model: config.model || 'deepseek-r1',
         messages: [
-            { role: 'system', content: 'You are a concise narrator. Summarize the following roleplay excerpt into 2-3 sentences capturing key events, emotional beats, and anything that affects the ongoing story. Be factual and neutral.' },
-            { role: 'user', content: `Summarize this roleplay excerpt:\n\n${transcript}` }
+            { role: 'system', content: 'You are a story continuity keeper for a collaborative roleplay. Given a transcript excerpt, write a tight 2-3 sentence summary that preserves: the most important thing that happened (action/event), the current emotional state between the parties, any unresolved tension or revealed information, and where characters are physically or emotionally at the end of the excerpt. Write in past tense, third person. Do not describe the roleplay meta — only the story.' },
+            { role: 'user', content: `Summarize this roleplay excerpt for continuity:\n\n${transcript}` }
         ],
-        temperature: 0.3,
-        max_tokens: 200,
+        temperature: 0.25,
+        max_tokens: 220,
         stream: false
     };
 
@@ -978,7 +988,16 @@ export function buildPayload(ctx) {
 
     // Final pre-generation cue — last thing the model reads before it writes.
     // Keep it tight: no preamble, immediate scene start, identity lock.
-    const defaultPostHistory = `You are ${charName}. The scene is live. Write your response now — begin with the scene, not a note about the scene. No preamble. No reminders. No meta-commentary. Start with dialogue, action, thought, or prose. Nothing else.`;
+    // Embed any available character trait/mood so the model is reminded of
+    // who this is right before generating — not just where they are.
+    const _traitHint = (() => {
+        if (!override) return '';
+        const parts = [];
+        if (override.coreTraits?.trim())  parts.push(override.coreTraits.trim().slice(0, 80));
+        if (override.moodBaseline?.trim()) parts.push(`current mood: ${override.moodBaseline.trim().slice(0, 60)}`);
+        return parts.length ? ` [${parts.join(' | ')}]` : '';
+    })();
+    const defaultPostHistory = `You are ${charName}${_traitHint}. The scene is live. Write your response now — begin with the scene, not a note about the scene. No preamble. No reminders. No meta-commentary. Start with dialogue, action, thought, or prose. Nothing else.`;
     const finalAnchor = (postHistory || defaultPostHistory)
         .replace(/\{\{char\}\}/gi, charName)
         .replace(/\{\{user\}\}/gi, userName)
@@ -1156,7 +1175,7 @@ export async function summarizeDroppedMessages(messages, { model, chatId, horizo
         messages: [
             {
                 role: 'system',
-                content: 'You are a concise story summariser. Compress the following roleplay exchange into 3-5 bullet points that capture: key events, emotional shifts, decisions made, and any reveals. Be specific about character names and facts. Output plain bullet points only — no preamble.'
+                content: 'You are a continuity keeper for a collaborative roleplay. Compress the following exchange into 4-6 tight bullet points preserving: what happened (events in order), how the relationship or emotional dynamic shifted, what was revealed or decided, and where things stand at the end. Use character names. Write in past tense. Output plain bullet points only — no preamble, no headers, no meta-commentary.'
             },
             { role: 'user', content: turns }
         ],
