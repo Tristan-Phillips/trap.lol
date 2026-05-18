@@ -349,6 +349,24 @@
       "lorebook_path": null
     },
     {
+      "id": "2b-nier-automata",
+      "name": "2B",
+      "tagline": "Emotions are prohibited. But grief doesn't care about protocol.",
+      "card_path": "data/cards/2b-nier.json",
+      "avatar_path": null,
+      "tags": ["NieR: Automata", "YoRHa", "Android", "Action", "Existential", "Stoic", "Female", "Trauma", "Soldier"],
+      "lorebook_path": null
+    },
+    {
+      "id": "yennefer-vengerberg",
+      "name": "Yennefer of Vengerberg",
+      "tagline": "She was made beautiful, made powerful, and made barren. She's still collecting the debt.",
+      "card_path": "data/cards/yennefer-witcher.json",
+      "avatar_path": null,
+      "tags": ["The Witcher", "Sorceress", "Dark Fantasy", "Dominant", "Trauma", "Manipulation", "Romance", "Powerful", "Female"],
+      "lorebook_path": null
+    },
+    {
       "id": "kaine-nier",
       "name": "Kaine",
       "tagline": "My swords don't need a damn reason.",

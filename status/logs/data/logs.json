@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.13",
+    "schema_version": "1.5.14",
     "last_updated": "2026-05-18",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -597,6 +597,15 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-18",
+      "message": "feat(underdark): add 2B and Yennefer to character roster",
+      "scope": "playground/underdark/",
+      "impact": "low",
+      "files": ["playground/underdark/data/index.json"],
+      "why": "2B (NieR: Automata) and Yennefer of Vengerberg (The Witcher) had complete card files on disk but were missing from index.json — they were invisible to the roster loader."
+    },
     {
       "hash": "80fae37",
       "date": "2026-05-18",
@@ -2648,6 +2657,16 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-18",
+      "agent": "Claude Sonnet 4.6",
+      "type": "maintenance",
+      "summary": "Roster sync: 2B (NieR: Automata) and Yennefer of Vengerberg (The Witcher) had complete, high-quality card files in data/cards/ but were absent from index.json, making them invisible to the roster loader. Added both entries with appropriate taglines and tags.",
+      "decisions": [
+        "2B entry uses id 'nier-automata' aligned with her card file 2b-nier.json. Tagline highlights the core tension: emotions are prohibited, but grief doesn't follow protocol.",
+        "Yennefer entry uses id 'yennefer-vengerberg'. Tagline focuses on her defining wound — made powerful, made beautiful, made barren — rather than generic 'powerful sorceress' framing."
+      ]
+    },
     {
       "date": "2026-05-18",
       "agent": "Claude Sonnet 4.6",
