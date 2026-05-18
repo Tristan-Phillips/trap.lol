@@ -598,7 +598,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "889fb10",
       "date": "2026-05-18",
       "message": "feat(underdark): Overlord beat system — manual + chip-triggered scene narration",
       "scope": "playground/underdark/",
