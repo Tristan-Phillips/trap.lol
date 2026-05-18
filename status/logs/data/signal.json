@@ -52,7 +52,7 @@
       "closed": "2026-05-18",
       "closed_by": "trap",
       "description": "Permanently ongoing LLM psych profile of trap. observations.json with _protocol ruleset (absolute rules + strong preferences) + 12 initial entries by Claude Sonnet 4.6. Hybrid glass/clinical HTML viewer with tabs: Overview, All Entries (filterable), per-category, Protocol. Added to status/index.html hub as first entry.",
-      "notes": "Committed as pending — hash to be patched. Initial entries cover: personality (2), cognitive (2), aesthetic (2), values (2), obsessions (2), behavioural (1), tensions (1). Future LLMs add to entries[] per _protocol rules.",
+      "notes": "Committed as 307f798. Initial entries cover: personality (2), cognitive (2), aesthetic (2), values (2), obsessions (2), behavioural (1), tensions (1). Future LLMs add to entries[] per _protocol rules.",
       "tags": ["observations", "status", "meta", "llm"],
       "files_affected": [
         "status/observations/index.html",

@@ -591,7 +591,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "307f798",
       "date": "2026-05-18",
       "message": "feat(status): add /status/observations/ — living LLM cognitive profile page",
       "scope": "status/observations/",
