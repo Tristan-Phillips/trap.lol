@@ -598,7 +598,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "d1c5316",
       "date": "2026-05-18",
       "message": "fix(underdark): speech colouring broken (&quot; corruption); imperative OOC leaks not caught",
       "scope": "playground/underdark/",
