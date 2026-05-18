@@ -598,7 +598,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "f557edc",
       "date": "2026-05-18",
       "message": "feat(underdark): immersion pass 2 — inline reply chips, RP para classes, UFR examples, OOC hardening",
       "scope": "playground/underdark/",
