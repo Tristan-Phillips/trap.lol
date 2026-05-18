@@ -15,11 +15,7 @@
 import { getApiKey } from '/glass/script/modules/llm-auth.js?v=3';
 import { scanLorebooks } from './lorebook.js?v=3';
 import { getCharOverride, getBotMemoriesFromReality } from './state.js?v=2';
-import { config } from '/glass/script/modules/core.js';
-
-function getApiBase() {
-    return config?.llm?.api_base ?? 'https://nano-gpt.com/api/v1';
-}
+import { streamChat, fetchChat, extractThoughts as _extractThoughts } from '/glass/script/modules/llm-transport.js';
 
 // ── Rough token estimator (4 chars ≈ 1 token) ────────────────────────────────
 function estimateTokens(text) {
@@ -516,15 +512,8 @@ export function buildOverlordContext({ charNames = [], scenario = '', playerName
     return parts.join('\n');
 }
 
-// ── Strip <think> from display text, return both ──────────────────────────────
-export function extractThoughts(rawText) {
-    const thoughts = [];
-    const cleaned  = rawText.replace(/<think>([\s\S]*?)<\/think>/gi, (_, t) => {
-        thoughts.push(t.trim());
-        return '';
-    }).trim();
-    return { text: cleaned, thoughts };
-}
+// Re-export so callers in ui.js don't need a separate import
+export { _extractThoughts as extractThoughts };
 
 // ── System prompt builder ─────────────────────────────────────────────────────
 function buildSystemPrompt(character, config, override, { isGroup = false, otherChars = [] } = {}) {
@@ -628,17 +617,8 @@ async function summarizeDropped(messages, config) {
     };
 
     try {
-        const res = await fetch(`${getApiBase()}/chat/completions`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-            body: JSON.stringify(payload)
-        });
-        if (!res.ok) {
-            console.warn(`[llm] summarizeDropped failed: HTTP ${res.status}`);
-            return '';
-        }
-        const data = await res.json();
-        return data.choices?.[0]?.message?.content?.trim() || '';
+        const result = await fetchChat(payload);
+        return result.text.trim() || '';
     } catch (err) {
         console.warn('[llm] summarizeDropped error:', err.message);
         return '';
@@ -1028,92 +1008,40 @@ export function buildPayload(ctx) {
 }
 
 // ── Streaming fetch ───────────────────────────────────────────────────────────
+// Wraps llm-transport streamChat with Underdark-specific concerns:
+// token counting, mid-stream thought filtering, and partial-abort commit.
 export async function streamCompletion(payload, onChunk, onDone, onError, signal) {
-    const apiKey = getApiKey();
-    if (!apiKey) {
+    if (!getApiKey()) {
         onError(new Error('No API key. Add your nano-gpt key in Settings → Config → API Key.'));
         return;
     }
 
-    const sendPayload = { ...payload };
-    delete sendPayload._charName;
-    delete sendPayload._flags;
-
     const showThoughts = payload._flags?.showThoughts ?? false;
+    let tokenCount  = 0;
+    let lastFullRaw = '';
 
-    let fullText   = '';
-    let tokenCount = 0;
-
-    try {
-        const res = await fetch(`${getApiBase()}/chat/completions`, {
-            method:  'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-            body:    JSON.stringify(sendPayload),
-            signal
-        });
-
-        if (!res.ok) {
-            let errMsg = `HTTP ${res.status}`;
-            try { const j = await res.json(); errMsg = j.error?.message || j.error || errMsg; } catch (_) {}
-            throw new Error(errMsg);
-        }
-
-        const reader  = res.body.getReader();
-        const decoder = new TextDecoder();
-        let   buffer  = '';
-
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-
-            buffer += decoder.decode(value, { stream: true });
-            const lines = buffer.split('\n');
-            buffer = lines.pop();
-
-            for (const line of lines) {
-                if (!line.startsWith('data: ')) continue;
-                const dataStr = line.slice(6).trim();
-                if (dataStr === '[DONE]') {
-                    const { text, thoughts } = extractThoughts(fullText);
-                    onDone(showThoughts ? fullText : text, tokenCount, thoughts);
-                    return;
-                }
-                try {
-                    const json  = JSON.parse(dataStr);
-                    const delta = json.choices?.[0]?.delta?.content || '';
-                    if (delta) {
-                        fullText   += delta;
-                        tokenCount += estimateTokens(delta);
-                        // Stream display: hide thought tags unless showThoughts is on
-                        const displayText = showThoughts
-                            ? fullText
-                            : fullText.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
-                        onChunk(delta, displayText);
-                    }
-                    if (json.usage?.completion_tokens) tokenCount = json.usage.completion_tokens;
-                } catch (_) {}
-            }
-        }
-
-        if (fullText) {
-            const { text, thoughts } = extractThoughts(fullText);
-            onDone(showThoughts ? fullText : text, tokenCount, thoughts);
-        } else {
-            onError(new Error('Stream ended with no content.'));
-        }
-
-    } catch (err) {
-        if (err.name === 'AbortError') {
-            if (fullText) {
-                const { text, thoughts } = extractThoughts(fullText);
-                onDone(showThoughts ? fullText : text, tokenCount, thoughts);
+    await streamChat(payload, {
+        signal,
+        onChunk(delta, fullRaw) {
+            tokenCount  += estimateTokens(delta);
+            lastFullRaw  = fullRaw;
+            const displayText = showThoughts
+                ? fullRaw
+                : fullRaw.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+            onChunk(delta, displayText);
+        },
+        onDone(text, thoughts, rawFull) {
+            onDone(showThoughts ? rawFull : text, tokenCount, thoughts);
+        },
+        onError(err) {
+            if (err.name === 'AbortError' && lastFullRaw) {
+                const { text, thoughts } = _extractThoughts(lastFullRaw);
+                onDone(showThoughts ? lastFullRaw : text, tokenCount, thoughts);
             } else {
-                onError(new Error('Generation cancelled.'));
+                onError(err);
             }
-        } else {
-            onError(err);
-        }
-    }
+        },
+    });
 }
 
 // ── Memory compression: summarise messages that dropped past the context horizon ──
@@ -1150,14 +1078,8 @@ export async function summarizeDroppedMessages(messages, { model, chatId, horizo
     };
 
     try {
-        const res = await fetch(`${getApiBase()}/chat/completions`, {
-            method:  'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-            body:    JSON.stringify(payload)
-        });
-        if (!res.ok) return null;
-        const data = await res.json();
-        const summary = data.choices?.[0]?.message?.content?.trim() || null;
+        const result = await fetchChat(payload);
+        const summary = result.text.trim() || null;
         if (summary) sessionStorage.setItem(cacheKey, summary);
         return summary;
     } catch {
@@ -1167,31 +1089,11 @@ export async function summarizeDroppedMessages(messages, { model, chatId, horizo
 
 // ── Non-streaming fallback ────────────────────────────────────────────────────
 export async function fetchCompletion(payload) {
-    const apiKey = getApiKey();
-    if (!apiKey) throw new Error('No API key configured.');
-
-    const sendPayload = { ...payload, stream: false };
-    delete sendPayload._charName;
-    delete sendPayload._flags;
-
-    const res = await fetch(`${getApiBase()}/chat/completions`, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-        body:    JSON.stringify(sendPayload)
-    });
-
-    if (!res.ok) {
-        const j = await res.json().catch(() => ({}));
-        throw new Error(j.error?.message || j.error || `HTTP ${res.status}`);
-    }
-
-    const data = await res.json();
-    const raw  = data.choices?.[0]?.message?.content || '';
-    const { text, thoughts } = extractThoughts(raw);
-
+    if (!getApiKey()) throw new Error('No API key configured.');
+    const result = await fetchChat(payload);
     return {
-        text:     payload._flags?.showThoughts ? raw : text,
-        thoughts,
-        tokens:   data.usage?.completion_tokens || 0
+        text:    payload._flags?.showThoughts ? result.rawText : result.text,
+        thoughts: result.thoughts,
+        tokens:   result.tokens,
     };
 }

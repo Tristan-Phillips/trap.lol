@@ -1,5 +1,6 @@
 // Neural Uplink — Messaging & Core Logic
 import { esc } from './core.js';
+import { streamChat, fetchChat } from './llm-transport.js';
 
 export function sanitizeHtml(html) {
   if (typeof DOMPurify !== "undefined") {
@@ -279,84 +280,60 @@ export async function sendMessage(ctx) {
   const abortController = new AbortController();
   sendMessage._currentAbort = abortController;
 
-  try {
-    const res = await fetch(`${llm.api_base}/chat/completions`, {
-      method: "POST",
-      signal: abortController.signal,
-      credentials: auth.PROXY_MODE ? "include" : "omit",
-      headers: {
-        "Content-Type": "application/json",
-        ...(token ? { "Authorization": `Bearer ${token}` } : {})
-      },
-      body: JSON.stringify({ 
-        model: m.id, 
-        messages, 
-        stream: cfg.streaming, 
-        temperature, 
-        top_p: inf.top_p 
-      }),
-    });
+  let fullText  = "";
+  let chunkCount = 0;
+  let stopped   = false;
 
-    if (!res.ok) {
-      if (auth.PROXY_MODE && (res.status === 401 || res.status === 403)) {
-        let reason = res.status === 401 ? "Session expired." : "Access denied.";
-        try {
-          const err = await res.json();
-          if (err.error) reason = err.error;
-          if (err.auth_url) llm._proxyAuthUrl = err.auth_url;
-        } catch {}
-        const authUrl = llm._proxyAuthUrl || llm.auth_url;
-        const authLink = authUrl ? ` <a href="${esc(authUrl)}" target="_blank" rel="noopener" class="llm-msg__auth-link">Authenticate →</a>` : "";
-        throw Object.assign(new Error(reason), { _authFragment: authLink });
-      }
-      throw new Error(`HTTP ${res.status} — ${await res.text()}`);
+  const payload = {
+    model: m.id,
+    messages,
+    stream: cfg.streaming,
+    temperature,
+    top_p: inf.top_p,
+  };
+
+  const handleProxyError = (err) => {
+    if (auth.PROXY_MODE && err.status && (err.status === 401 || err.status === 403)) {
+      const authUrl = llm._proxyAuthUrl || llm.auth_url;
+      const authLink = authUrl ? ` <a href="${esc(authUrl)}" target="_blank" rel="noopener" class="llm-msg__auth-link">Authenticate →</a>` : "";
+      return Object.assign(new Error(err.message), { _authFragment: authLink });
     }
+    return err;
+  };
 
-    let fullText = "";
-    let chunkCount = 0;
-    let stopped = false;
-
+  try {
     if (cfg.streaming) {
       ui.setStatus("streaming", "STREAMING...");
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
       let rafPending = false;
 
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          
-          const lines = decoder.decode(value, { stream: true }).split("\n");
-          for (const line of lines) {
-            if (!line.startsWith("data: ")) continue;
-            const payload = line.slice(6).trim();
-            if (payload === "[DONE]") break;
-            try {
-              const delta = JSON.parse(payload).choices?.[0]?.delta?.content;
-              if (delta) {
-                if (!chunkCount) $thinking.remove();
-                fullText += delta;
-                chunkCount++;
-                if (!rafPending) {
-                  rafPending = true;
-                  requestAnimationFrame(() => {
-                    $streamTarget.innerHTML = renderMarkdown(fullText);
-                    ui.messages.scrollTop = ui.messages.scrollHeight;
-                    rafPending = false;
-                  });
-                }
-              }
-            } catch {}
+      await streamChat(payload, {
+        signal: abortController.signal,
+        proxyMode: auth.PROXY_MODE,
+        onChunk(delta) {
+          if (!chunkCount) $thinking.remove();
+          fullText += delta;
+          chunkCount++;
+          if (!rafPending) {
+            rafPending = true;
+            requestAnimationFrame(() => {
+              $streamTarget.innerHTML = renderMarkdown(fullText);
+              ui.messages.scrollTop = ui.messages.scrollHeight;
+              rafPending = false;
+            });
           }
-        }
-      } catch (e) {
-        if (e.name === "AbortError") stopped = true;
-        else throw e;
-      }
+        },
+        onDone(text) {
+          fullText = text || fullText;
+        },
+        onError(err) {
+          if (err.name === "AbortError") { stopped = true; return; }
+          throw handleProxyError(err);
+        },
+      });
+
     } else {
-      const data = await res.json();
-      fullText = data.choices?.[0]?.message?.content ?? "";
+      const result = await fetchChat(payload, { proxyMode: auth.PROXY_MODE });
+      fullText = result.text;
       $thinking.remove();
     }
 
@@ -365,7 +342,6 @@ export async function sendMessage(ctx) {
     if (stopped && !fullText) {
       $streamMsg.remove();
       history.pop();
-      // Remove last user message from DOM
       ui.messages.querySelectorAll(".llm-msg--user")?.item(-1)?.remove();
       ui.input.value = userText;
       ui.input.style.height = "auto";
@@ -391,7 +367,7 @@ export async function sendMessage(ctx) {
     history.pop();
     ui.messages.querySelectorAll(".llm-msg--user")?.item(-1)?.remove();
     ui.setStatus("error", "ERROR");
-    
+
     if (e.name === "AbortError") {
       appendSysLog(ui.messages, "Generation stopped.");
     } else {
@@ -399,7 +375,7 @@ export async function sendMessage(ctx) {
       if (e._authFragment) appendSysLog(ui.messages, `${e.message}${e._authFragment}`, true);
       else appendSysLog(ui.messages, `Error: ${e.message}`);
     }
-    
+
     ui.input.value = userText;
     ui.input.style.height = "auto";
     setTimeout(() => { if (ui.getShellState() === "error") ui.setStatus("ready", "READY"); }, 4000);

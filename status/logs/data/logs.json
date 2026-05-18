@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.3",
+    "schema_version": "1.5.4",
     "last_updated": "2026-05-18",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -188,7 +188,8 @@
       "glass/script/modules/core.js": "fetchJSON(), loadScript(), esc(), renderError(), loadCoreData() — fetches config.json then all data JSONs in parallel, loads shards. Exports globalRouter, IS_TOUCH, all data variables.",
       "glass/script/modules/ui.js": "All render functions: renderMeta, renderHeader, renderFooter, renderHosting, renderTools, renderBots, renderSignalMesh, renderCodex (guarded — guides section commented out), renderApps, renderUplinkLaunchpad, renderSocialCluster. All event handlers: initClipboard, initBotTooltips, initScrollTop, initExtTooltips, initTerminal, initFlipCards. updateCarouselArrows.",
       "glass/script/modules/llm.js": "LLM playground orchestrator. Wires up all UI refs, manages state (history, turnCount, tokenCount), handles form submit, agent roster async loading.",
-      "glass/script/modules/llm-chat.js": "Message rendering, markdown sanitization (DOMPurify + marked), streaming response handler, clipboard copy for code blocks.",
+      "glass/script/modules/llm-transport.js": "Shared HTTP transport for all nano-gpt API calls. Exports streamChat (SSE streaming), fetchChat (non-streaming), extractThoughts (<think> tag stripping). No UI, no app logic — pure network layer. The canonical base for any app that calls the LLM API.",
+      "glass/script/modules/llm-chat.js": "Message rendering, markdown sanitization (DOMPurify + marked), streaming response handler, clipboard copy for code blocks. Delegates raw HTTP to llm-transport.js.",
       "glass/script/modules/llm-auth.js": "API key storage (localStorage), keybar UI.",
       "glass/script/modules/llm-sessions.js": "Session save/load/export (JSON + MD), bulk delete, import.",
       "glass/script/modules/llm-settings.js": "Model selector, system prompt override, temperature, context window, streaming toggle, enter-to-send toggle.",
@@ -196,7 +197,7 @@
       "glass/data/llm-agents/": "Per-agent JSON files. index.json lists all filenames. Each agent file: name, tags, system_prompt, temperature, optional model override. Active agents: default.json, opsec-dev.json, sovereign-architect.json.",
       "glass/style/modules/": "CSS module system loaded via @import in glass/style/style.css. Modules: variables.css (all --custom-props), base.css (body/page reset), layout.css (page structure, section spacing), typography.css (headings, prose), components.css (cards, badges, tooltips, node-tiles, station bars, tx-cards, flip-cards), border-life.css (animated border effect), social-cluster.css (footer social strip), tunnel-light.css (header animation), neural-uplink.css (playground-specific overrides), responsive.css (breakpoint overrides).",
       "underdark/script/modules/ui.js": "The Underdark's primary large module (~11k lines). Handles all UI rendering, state management, character loading, persona system, scenario finder, image studio, social feed, RP generator, and event wiring.",
-      "underdark/script/modules/llm-engine.js": "Underdark LLM call orchestration. Manages API requests to nano-gpt, model selection, streaming, sliding context window, and recursive summary injection.",
+      "playground/underdark/script/modules/llm-engine.js": "Underdark LLM payload construction and call orchestration. Builds system prompts, injects lorebooks/personas/meters, manages sliding context window and memory summarisation. Delegates raw HTTP transport to glass/script/modules/llm-transport.js.",
       "underdark/script/modules/image-engine.js": "Underdark image/video generation. Wraps nano-gpt image API. Handles async polling for video generation, IDB persistence of generated images.",
       "underdark/script/modules/codex-meters.js": "Renders LLM capability meter bars in the model info panel. Reads model data from glass/data/llm.json routing_table.",
       "underdark/script/modules/commands.js": "Handles /slash commands in the Underdark chat input. Supported commands include /model, /clear, /persona, and others.",
@@ -596,6 +597,19 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-18",
+      "message": "refactor(glass): extract llm-transport.js — shared HTTP transport for all LLM apps",
+      "scope": "glass/script/modules/, playground/underdark/",
+      "impact": "medium",
+      "files": [
+        "glass/script/modules/llm-transport.js",
+        "glass/script/modules/llm-chat.js",
+        "playground/underdark/script/modules/llm-engine.js"
+      ],
+      "why": "Duplicate HTTP/SSE transport logic existed in llm-chat.js (Neural Uplink) and llm-engine.js (Underdark). Extracted into glass/script/modules/llm-transport.js so any future app gets streamChat/fetchChat/extractThoughts for free without re-implementing fetch, SSE parsing, thought-stripping, or error handling."
+    },
     {
       "hash": "f15a8de",
       "date": "2026-05-18",
@@ -2507,6 +2521,22 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-18",
+      "agent": "Claude Sonnet 4.6",
+      "type": "refactor",
+      "summary": "Extracted shared LLM HTTP transport into glass/script/modules/llm-transport.js. New module exports streamChat, fetchChat, and extractThoughts — pure functions with no UI or app-specific logic. llm-chat.js (Neural Uplink) and llm-engine.js (Underdark) now delegate all raw fetch/SSE/thought-stripping to the transport layer. App-specific concerns (token counting, thought display filtering, partial-abort commit, proxy auth error handling) remain in each app's own module.",
+      "decisions": [
+        "llm-transport.js lives in glass/script/modules/ — it is the canonical transport for all nano-gpt API calls across the entire site",
+        "streamChat passes both (delta, fullAccumulated) to onChunk so consumers can inspect accumulated text mid-stream (Underdark needs this for live <think> tag detection)",
+        "Prompt building and payload construction are explicitly NOT abstracted — they are app-specific and should remain in each app's engine module",
+        "getApiKey import retained in llm-engine.js for fast-fail guards in streamCompletion/fetchCompletion — the transport layer handles the actual auth header injection"
+      ],
+      "rules_reinforced": [
+        "Transport is universal, payload construction is always app-specific",
+        "New apps that need nano-gpt access should import streamChat/fetchChat from /glass/script/modules/llm-transport.js — never re-implement the SSE loop"
+      ]
+    },
     {
       "date": "2026-05-18",
       "agent": "Claude Sonnet 4.6",
