@@ -598,7 +598,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "48e8bca",
       "date": "2026-05-18",
       "message": "refactor(glass): extract llm-transport.js — shared HTTP transport for all LLM apps",
       "scope": "glass/script/modules/, playground/underdark/",
