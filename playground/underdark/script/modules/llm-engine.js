@@ -929,6 +929,11 @@ export function buildPayload(ctx) {
         // Strip thought tags from history (they should not be re-fed to the model)
         content = content.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
 
+        // Sanitize any OOC preamble from bot history messages — catches legacy
+        // messages stored before the sanitizer was introduced, and prevents the
+        // model from treating prior meta-commentary as valid assistant behaviour.
+        if (isBot) content = sanitizeRpResponse(content);
+
         // In group chat, prefix ALL messages with speaker name so attribution is unambiguous.
         // This is the primary defence against character bleed — the model always knows who said what.
         if (isGroup && allChars.length > 1) {
