@@ -8163,21 +8163,24 @@ export function initUI() {
         if (!entry) return;
         const $ta = qs('#rp-input');
         if (!$ta) return;
-        const cur = $ta.value;
         if (entry.key === 'ooc') {
+            // OOC is the only chip that edits the textarea — user fills in the content
             const before = '[OOC: ', after = ']';
+            const cur = $ta.value;
             const full = cur ? `${cur}\n${before}${after}` : `${before}${after}`;
             $ta.value = full;
             $ta.setSelectionRange(full.length - after.length, full.length - after.length);
+            $ta.dispatchEvent(new Event('input'));
+            $ta.focus();
         } else {
-            $ta.value = cur ? `${cur}\n${entry.text}` : entry.text;
+            // All other action chips inject as a hidden directive — not visible user text
+            const existing = ($ta.dataset.pendingReinject || '').trim();
+            $ta.dataset.pendingReinject = existing ? `${existing}\n\n${entry.text}` : entry.text;
         }
         if (entry.overlordBeat) {
             $ta.dataset.pendingBeat = entry.key;
             qs('#btn-overlord-beat')?.classList.add('overlord-armed');
         }
-        $ta.dispatchEvent(new Event('input'));
-        $ta.focus();
         qs('#quick-reply-bar')?.setAttribute('hidden', '');
     });
 
