@@ -602,7 +602,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "cee8212",
       "date": "2026-05-19",
       "message": "feat(underdark): add Behavior tab to Thread Settings, Oracle in Profile tab, Thread Memory field",
       "scope": "playground/underdark/",
