@@ -779,7 +779,7 @@
         <button class="settings-nav__item" data-stab="narrative"><i data-lucide="pen-tool"></i> Narrative</button>
         <button class="settings-nav__item" data-stab="persona"><i data-lucide="user-circle-2"></i> My Persona</button>
         <button class="settings-nav__item" data-stab="backup"><i data-lucide="database"></i> Backup</button>
-        <button class="settings-nav__item" data-stab="gallery"><i data-lucide="images"></i> Gallery</button>
+        <a class="settings-nav__item settings-nav__item--link" href="./gallery/" target="_blank"><i data-lucide="images"></i> Image Vault <i data-lucide="external-link" style="width:11px;height:11px;margin-left:2px;opacity:0.5;"></i></a>
       </nav>
 
       <!-- Panels -->
@@ -1047,21 +1047,7 @@
           </div>
         </div>
 
-        <!-- ── Gallery ── -->
-        <div class="settings-panel" data-stab="gallery">
-          <div class="settings-panel__title">Image Gallery <span class="settings-panel__sub">All generated images across all continuities</span></div>
-          <div class="settings-gallery">
-            <div class="settings-gallery__toolbar">
-              <input type="text" id="settings-gallery-search" class="control-input control-input--sm" placeholder="Search by character, prompt…">
-              <select id="settings-gallery-filter" class="control-select control-select--sm">
-                <option value="">All Characters</option>
-              </select>
-            </div>
-            <div id="settings-gallery-grid" class="settings-gallery__grid">
-              <!-- Populated by JS -->
-            </div>
-          </div>
-        </div>
+        <!-- Gallery tab removed — now a standalone page at ./gallery/ -->
 
       </div><!-- /.settings-panels -->
     </div><!-- /.settings-modal__body -->

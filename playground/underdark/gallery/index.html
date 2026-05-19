@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Underdark — Image Vault</title>
+  <link rel="icon" href="/favicon.ico">
+  <link rel="stylesheet" href="./style/style.css">
+</head>
+<body>
+
+<!-- ── Header ── -->
+<header class="vault-header">
+  <div class="vault-header__left">
+    <a href="../" class="vault-back" title="Return to The Underdark">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+    </a>
+    <div class="vault-header__title">
+      <span class="vault-header__eyebrow">UNDERDARK // </span>
+      <span class="vault-header__name">IMAGE VAULT</span>
+    </div>
+  </div>
+  <div class="vault-header__stats" id="vault-stats">
+    <span class="vault-stat" id="stat-total">— images</span>
+    <span class="vault-stat-sep">·</span>
+    <span class="vault-stat" id="stat-chars">— characters</span>
+  </div>
+  <div class="vault-header__controls">
+    <div class="vault-view-switcher">
+      <button class="vv-btn active" data-view="grid" title="Grid">
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
+      </button>
+      <button class="vv-btn" data-view="masonry" title="Masonry">
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="10" x="3" y="3" rx="1"/><rect width="7" height="9" x="3" y="15" rx="1"/><rect width="9" height="9" x="12" y="15" rx="1"/></svg>
+      </button>
+      <button class="vv-btn" data-view="timeline" title="Timeline by character">
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="m17 7-5-5-5 5"/><path d="m17 17-5 5-5-5"/></svg>
+      </button>
+    </div>
+    <div class="vault-sort-wrap">
+      <select id="vault-sort" class="vault-select">
+        <option value="newest">Newest first</option>
+        <option value="oldest">Oldest first</option>
+        <option value="character">By character</option>
+      </select>
+    </div>
+  </div>
+</header>
+
+<!-- ── Layout ── -->
+<div class="vault-layout">
+
+  <!-- ── Sidebar ── -->
+  <aside class="vault-sidebar" id="vault-sidebar">
+    <div class="vault-sidebar__section">
+      <div class="vault-sidebar__label">Search</div>
+      <div class="vault-search-wrap">
+        <svg class="vault-search-icon" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="text" id="vault-search" class="vault-search" placeholder="Search characters…">
+        <button id="vault-search-clear" class="vault-search-clear" hidden>
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="vault-sidebar__section">
+      <div class="vault-sidebar__label">Characters <span id="char-filter-count" class="vault-sidebar__count"></span></div>
+      <div id="char-roster" class="char-roster">
+        <!-- JS populated -->
+      </div>
+    </div>
+
+    <div class="vault-sidebar__section" id="tag-section" hidden>
+      <div class="vault-sidebar__label">Tags</div>
+      <div id="tag-roster" class="tag-roster">
+        <!-- JS populated -->
+      </div>
+    </div>
+
+    <div class="vault-sidebar__section">
+      <div class="vault-sidebar__label">Add Images</div>
+      <div class="vault-add-zone" id="vault-add-zone">
+        <div class="vault-add-zone__prompt" id="drop-prompt">
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+          <span>Drop images here</span>
+          <em>or click to browse</em>
+        </div>
+        <input type="file" id="vault-file-input" hidden multiple accept="image/*">
+      </div>
+      <div class="vault-url-row">
+        <input type="text" id="vault-url-input" class="vault-url-input" placeholder="Paste image URL…">
+        <button id="vault-url-add" class="vault-url-btn">Add</button>
+      </div>
+      <div class="vault-add-target" id="vault-add-target">
+        <span class="vault-add-target__label">Adding to:</span>
+        <select id="vault-char-target" class="vault-select vault-select--sm">
+          <option value="">Select character…</option>
+        </select>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── Main content ── -->
+  <main class="vault-main" id="vault-main">
+    <div id="vault-empty" class="vault-empty" hidden>
+      <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+      <p>No images in the Vault yet.</p>
+      <em>Generate images in The Underdark or add via URL / file upload in the sidebar.</em>
+    </div>
+    <div id="vault-no-results" class="vault-empty" hidden>
+      <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <p>No images match your filters.</p>
+      <button class="vault-clear-filters" id="clear-all-filters">Clear all filters</button>
+    </div>
+    <div id="vault-loading" class="vault-loading">
+      <div class="vault-loading__spinner"></div>
+      <span>Loading vault…</span>
+    </div>
+    <!-- Grid / masonry container -->
+    <div id="vault-grid" class="vault-grid vault-grid--grid" hidden></div>
+    <!-- Timeline container -->
+    <div id="vault-timeline" class="vault-timeline" hidden></div>
+  </main>
+</div>
+
+<!-- ── Lightbox ── -->
+<div id="vault-lb" class="vault-lb" hidden>
+  <div class="vault-lb__backdrop" id="lb-backdrop"></div>
+  <div class="vault-lb__stage">
+    <button class="vault-lb__close" id="lb-close">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+    </button>
+    <button class="vault-lb__nav vault-lb__nav--prev" id="lb-prev">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+    </button>
+    <div class="vault-lb__img-wrap" id="lb-img-wrap">
+      <img id="lb-img" class="vault-lb__img" src="" alt="">
+    </div>
+    <button class="vault-lb__nav vault-lb__nav--next" id="lb-next">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+    </button>
+    <div class="vault-lb__info">
+      <div class="vault-lb__info-top">
+        <div class="vault-lb__char-pill" id="lb-char-pill"></div>
+        <div class="vault-lb__counter" id="lb-counter">1 / 1</div>
+      </div>
+      <div class="vault-lb__tags" id="lb-tags"></div>
+      <div class="vault-lb__actions">
+        <button class="vault-lb__action-btn" id="lb-set-avatar" title="Set as character avatar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span>Set Avatar</span>
+        </button>
+        <button class="vault-lb__action-btn" id="lb-add-tag" title="Add tag">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+          <span>Tag</span>
+        </button>
+        <button class="vault-lb__action-btn" id="lb-download" title="Download">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+          <span>Download</span>
+        </button>
+        <button class="vault-lb__action-btn vault-lb__action-btn--danger" id="lb-delete" title="Remove from gallery">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+          <span>Delete</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Toast ── -->
+<div id="vault-toasts" class="vault-toasts"></div>
+
+<script type="module" src="./script/app.js"></script>
+</body>
+</html>

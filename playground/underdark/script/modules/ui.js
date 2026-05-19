@@ -2587,7 +2587,6 @@ export function initUI() {
         $settingsModal.hidden = false;
         switchSettingsTab(tab);
         lucideRefresh($settingsModal);
-        if (tab === 'gallery') renderSettingsGallery();
     }
 
     function closeSettings() {
@@ -2595,9 +2594,8 @@ export function initUI() {
     }
 
     function switchSettingsTab(target) {
-        qsa('.settings-nav__item', $settingsModal).forEach($b => $b.classList.toggle('active', $b.dataset.stab === target));
+        qsa('.settings-nav__item[data-stab]', $settingsModal).forEach($b => $b.classList.toggle('active', $b.dataset.stab === target));
         qsa('.settings-panel', $settingsModal).forEach($p => $p.classList.toggle('active', $p.dataset.stab === target));
-        if (target === 'gallery') renderSettingsGallery();
     }
 
     qs('#settings-close-btn', $settingsModal)?.addEventListener('click', closeSettings);
@@ -2660,74 +2658,6 @@ export function initUI() {
         closeProfileFlyout();
         openSettings('backup');
     });
-
-    // ── Settings Gallery ─────────────────────────────────────────────────────
-    async function renderSettingsGallery() {
-        const $grid = qs('#settings-gallery-grid', $settingsModal);
-        if (!$grid) return;
-
-        // Collect all gallery images from all characters
-        const items = [];
-        for (const meta of state.characters) {
-            const char = state.loadedCharacters[meta.id];
-            if (!char) continue;
-            const imgs = char.extensions?.underdark?.gallery || [];
-            imgs.forEach((ref, i) => {
-                items.push({ charId: meta.id, charName: char.name || meta.name, ref, idx: i });
-            });
-        }
-
-        // Apply search/filter
-        const search = (qs('#settings-gallery-search', $settingsModal)?.value || '').toLowerCase();
-        const filterChar = qs('#settings-gallery-filter', $settingsModal)?.value || '';
-        const filtered = items.filter(it =>
-            (!filterChar || it.charId === filterChar) &&
-            (!search || it.charName.toLowerCase().includes(search))
-        );
-
-        if (!filtered.length) {
-            $grid.innerHTML = `<div class="settings-gallery__empty"><i data-lucide="images"></i><p>No images yet. Generate some in the Image Studio.</p></div>`;
-            lucideRefresh($grid);
-            return;
-        }
-
-        // Populate character filter
-        const $filter = qs('#settings-gallery-filter', $settingsModal);
-        if ($filter && $filter.options.length <= 1) {
-            state.characters.forEach(c => {
-                const opt = document.createElement('option');
-                opt.value = c.id;
-                opt.textContent = state.loadedCharacters[c.id]?.name || c.name;
-                $filter.appendChild(opt);
-            });
-        }
-
-        // Resolve and render
-        $grid.innerHTML = '<div class="settings-gallery__loading">Loading…</div>';
-        const resolved = await Promise.all(filtered.map(async it => {
-            const url = await resolveImageUrl(it.ref).catch(() => null);
-            return url ? { ...it, url } : null;
-        }));
-        const valid = resolved.filter(Boolean);
-
-        $grid.innerHTML = valid.map(it => `
-            <div class="sg-item" data-char-id="${esc(it.charId)}" data-idx="${it.idx}" title="${esc(it.charName)}">
-                <img src="${esc(it.url)}" class="sg-item__img" loading="lazy" alt="${esc(it.charName)}">
-                <div class="sg-item__meta">${esc(it.charName)}</div>
-            </div>`).join('');
-
-        qsa('.sg-item', $grid).forEach($item => {
-            $item.addEventListener('click', () => {
-                const cId  = $item.dataset.charId;
-                const idx  = +$item.dataset.idx;
-                closeSettings();
-                openLightbox(cId, idx);
-            });
-        });
-    }
-
-    qs('#settings-gallery-search', $settingsModal)?.addEventListener('input', debounce(() => renderSettingsGallery(), 300));
-    qs('#settings-gallery-filter', $settingsModal)?.addEventListener('change', () => renderSettingsGallery());
 
     // ── API Key ───────────────────────────────────────────────────────────────
     const $apiInput  = qs('#api-key-input');

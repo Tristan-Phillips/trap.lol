@@ -1,0 +1,713 @@
+/**
+ * app.js — Underdark Image Vault
+ * Self-contained page. Reads underdark_chars_v4 + underdark_db (IDB) directly.
+ * No dependency on the main underdark app or glass/ modules.
+ */
+
+'use strict';
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// IDB — inline (no import, standalone page)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+let _db = null;
+function openDB() {
+    if (_db) return Promise.resolve(_db);
+    return new Promise((resolve, reject) => {
+        const req = indexedDB.open('underdark_db', 1);
+        req.onupgradeneeded = e => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains('blobs')) db.createObjectStore('blobs');
+        };
+        req.onsuccess = e => { _db = e.target.result; resolve(_db); };
+        req.onerror   = e => reject(e.target.error);
+    });
+}
+async function idbGet(key) {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+        const req = db.transaction('blobs', 'readonly').objectStore('blobs').get(key);
+        req.onsuccess = e => resolve(e.target.result ?? null);
+        req.onerror   = e => reject(e.target.error);
+    });
+}
+async function idbDelete(key) {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+        const req = db.transaction('blobs', 'readwrite').objectStore('blobs').delete(key);
+        req.onsuccess = () => resolve();
+        req.onerror   = e => reject(e.target.error);
+    });
+}
+function isIdbRef(str) { return typeof str === 'string' && str.startsWith('idb:img:'); }
+function idbRefId(str) { return str.replace(/^idb:img:/, ''); }
+async function resolveUrl(ref) {
+    if (!ref) return null;
+    if (isIdbRef(ref)) return idbGet(`img:${idbRefId(ref)}`).catch(() => null);
+    return ref;
+}
+function isDataUrl(str) { return typeof str === 'string' && str.startsWith('data:'); }
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// HELPERS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const qs  = (sel, ctx = document) => ctx.querySelector(sel);
+const qsa = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
+function esc(s) {
+    return String(s ?? '').replace(/[&<>"']/g, c =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function slug(s) { return String(s || '').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''); }
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// STATE
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const S = {
+    // Raw data
+    chars: [],          // { id, name, avatarRef, galleryRefs[], galleryMeta{} }
+    // Flat list of all resolved items
+    items: [],          // { url, ref, charId, charName, idx, ts }
+    // Filter / view state
+    view:         'grid',
+    sort:         'newest',
+    filterChar:   '',   // charId or ''
+    filterTags:   new Set(),
+    search:       '',
+    // Lightbox
+    lbItems:      [],   // filtered + sorted items visible in current render
+    lbIndex:      0,
+};
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// PERSISTENCE — read/write underdark_chars_v4
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function readStorage() {
+    try {
+        const raw = localStorage.getItem('underdark_chars_v4');
+        if (!raw) return null;
+        return JSON.parse(raw);
+    } catch { return null; }
+}
+function writeStorage(data) {
+    try { localStorage.setItem('underdark_chars_v4', JSON.stringify(data)); } catch { /* storage full */ }
+}
+function getCharData() {
+    const data = readStorage();
+    if (!data) return [];
+    const roster = data.characters || [];
+    const loaded = data.loadedCharacters || {};
+    return roster.map(meta => {
+        const char    = loaded[String(meta.id)] || {};
+        const ext     = char.extensions?.underdark || {};
+        return {
+            id:          String(meta.id),
+            name:        char.name || meta.name || 'Unknown',
+            avatarRef:   meta.avatar_path || null,
+            galleryRefs: ext.gallery      || [],
+            galleryMeta: ext.galleryMeta  || {},
+        };
+    });
+}
+function saveGallery(charId, galleryRefs, galleryMeta) {
+    const data = readStorage();
+    if (!data) return;
+    const char = (data.loadedCharacters || {})[charId];
+    if (!char) return;
+    if (!char.extensions)           char.extensions = {};
+    if (!char.extensions.underdark) char.extensions.underdark = {};
+    char.extensions.underdark.gallery     = galleryRefs;
+    char.extensions.underdark.galleryMeta = galleryMeta;
+    writeStorage(data);
+}
+function saveAvatar(charId, ref) {
+    const data = readStorage();
+    if (!data) return;
+    const rosterEntry = (data.characters || []).find(c => String(c.id) === charId);
+    if (rosterEntry) rosterEntry.avatar_path = ref;
+    const char = (data.loadedCharacters || {})[charId];
+    if (char) char.avatar_path = ref;
+    writeStorage(data);
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// BOOT — load all images
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+async function boot() {
+    showLoading(true);
+    S.chars = getCharData();
+    populateCharTarget();
+    buildCharRoster();
+
+    const allItems = [];
+    await Promise.all(S.chars.map(async (ch, chIdx) => {
+        const allRefs = [ch.avatarRef, ...ch.galleryRefs].filter(Boolean);
+        await Promise.all(allRefs.map(async (ref, i) => {
+            const url = await resolveUrl(ref);
+            if (!url) return;
+            const isAvatar = (i === 0 && ref === ch.avatarRef);
+            allItems.push({
+                url,
+                ref,
+                charId:   ch.id,
+                charName: ch.name,
+                charIdx:  chIdx,
+                idx:      i,
+                isAvatar,
+                ts:       Date.now() - chIdx * 1000 - i, // preserve relative order
+                tags:     ch.galleryMeta[ref]?.tags || [],
+            });
+        }));
+    }));
+
+    S.items = allItems;
+    buildTagRoster();
+    updateStats();
+    showLoading(false);
+    render();
+}
+
+function showLoading(on) {
+    qs('#vault-loading').hidden = !on;
+    qs('#vault-grid').hidden    = on;
+    qs('#vault-timeline').hidden = on;
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// SIDEBAR — character roster + tag roster
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+async function buildCharRoster() {
+    const $roster = qs('#char-roster');
+    if (!$roster) return;
+
+    const items = [];
+    for (const ch of S.chars) {
+        const count = [ch.avatarRef, ...ch.galleryRefs].filter(Boolean).length;
+        if (!count) continue;
+        let avatarUrl = null;
+        if (ch.avatarRef) avatarUrl = await resolveUrl(ch.avatarRef);
+        items.push({ ch, count, avatarUrl });
+    }
+
+    if (!items.length) {
+        $roster.innerHTML = `<div class="char-roster__empty">No characters with images</div>`;
+        return;
+    }
+
+    $roster.innerHTML = items.map(({ ch, count, avatarUrl }) => `
+        <button class="char-chip${S.filterChar === ch.id ? ' char-chip--active' : ''}" data-char-id="${esc(ch.id)}">
+            <div class="char-chip__avatar">
+                ${avatarUrl
+                    ? `<img src="${esc(avatarUrl)}" alt="${esc(ch.name)}" class="char-chip__img">`
+                    : `<span class="char-chip__initial">${esc(ch.name.slice(0, 1))}</span>`}
+            </div>
+            <span class="char-chip__name">${esc(ch.name)}</span>
+            <span class="char-chip__count">${count}</span>
+        </button>`).join('');
+
+    qsa('.char-chip', $roster).forEach(btn => {
+        btn.addEventListener('click', () => {
+            const id = btn.dataset.charId;
+            S.filterChar = S.filterChar === id ? '' : id;
+            qsa('.char-chip', $roster).forEach(b => b.classList.toggle('char-chip--active', b.dataset.charId === S.filterChar));
+            qs('#char-filter-count').textContent = S.filterChar ? '1 active' : '';
+            render();
+        });
+    });
+}
+
+function buildTagRoster() {
+    const allTags = [...new Set(S.items.flatMap(it => it.tags))].sort();
+    const $section = qs('#tag-section');
+    const $roster  = qs('#tag-roster');
+    if (!allTags.length || !$section || !$roster) { if ($section) $section.hidden = true; return; }
+    $section.hidden = false;
+    $roster.innerHTML = allTags.map(t => `
+        <button class="tag-chip${S.filterTags.has(t) ? ' tag-chip--active' : ''}" data-tag="${esc(t)}">${esc(t)}</button>
+    `).join('');
+    qsa('.tag-chip', $roster).forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tag = btn.dataset.tag;
+            if (S.filterTags.has(tag)) S.filterTags.delete(tag); else S.filterTags.add(tag);
+            btn.classList.toggle('tag-chip--active', S.filterTags.has(tag));
+            render();
+        });
+    });
+}
+
+function populateCharTarget() {
+    const $sel = qs('#vault-char-target');
+    if (!$sel) return;
+    S.chars.forEach(ch => {
+        const opt = document.createElement('option');
+        opt.value = ch.id;
+        opt.textContent = ch.name;
+        $sel.appendChild(opt);
+    });
+}
+
+function updateStats() {
+    const total = S.items.length;
+    const chars = new Set(S.items.map(it => it.charId)).size;
+    qs('#stat-total').textContent = `${total} image${total !== 1 ? 's' : ''}`;
+    qs('#stat-chars').textContent = `${chars} character${chars !== 1 ? 's' : ''}`;
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// FILTER + SORT
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function getFilteredItems() {
+    let items = S.items.slice();
+
+    if (S.filterChar)      items = items.filter(it => it.charId === S.filterChar);
+    if (S.filterTags.size) items = items.filter(it => [...S.filterTags].every(t => it.tags.includes(t)));
+    if (S.search) {
+        const q = S.search.toLowerCase();
+        items = items.filter(it => it.charName.toLowerCase().includes(q));
+    }
+
+    if (S.sort === 'newest')    items.sort((a, b) => b.ts - a.ts);
+    else if (S.sort === 'oldest') items.sort((a, b) => a.ts - b.ts);
+    else if (S.sort === 'character') items.sort((a, b) => a.charIdx - b.charIdx || a.idx - b.idx);
+
+    return items;
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// RENDER
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function render() {
+    const filtered = getFilteredItems();
+    S.lbItems = filtered;
+
+    const $empty   = qs('#vault-empty');
+    const $noRes   = qs('#vault-no-results');
+    const $grid    = qs('#vault-grid');
+    const $tl      = qs('#vault-timeline');
+
+    // Edge cases
+    if (!S.items.length) {
+        $empty.hidden = false; $noRes.hidden = true;
+        $grid.hidden = true; $tl.hidden = true;
+        return;
+    }
+    $empty.hidden = true;
+
+    if (!filtered.length) {
+        $noRes.hidden = false; $grid.hidden = true; $tl.hidden = true;
+        return;
+    }
+    $noRes.hidden = true;
+
+    if (S.view === 'timeline') {
+        $grid.hidden = true; $tl.hidden = false;
+        renderTimeline(filtered, $tl);
+    } else {
+        $tl.hidden = true; $grid.hidden = false;
+        $grid.className = `vault-grid vault-grid--${S.view}`;
+        renderGrid(filtered, $grid);
+    }
+}
+
+function renderGrid(items, $grid) {
+    $grid.innerHTML = '';
+    items.forEach((item, i) => {
+        const $tile = document.createElement('div');
+        $tile.className = `vault-tile${item.isAvatar ? ' vault-tile--avatar' : ''}`;
+        $tile.dataset.i = i;
+
+        const tagHtml = item.tags.length
+            ? item.tags.map(t => `<span class="vault-tile__tag">${esc(t)}</span>`).join('')
+            : '';
+
+        $tile.innerHTML = `
+            <div class="vault-tile__img-wrap">
+                <img src="${esc(item.url)}" alt="${esc(item.charName)}" class="vault-tile__img" loading="lazy" draggable="false">
+                ${item.isAvatar ? '<div class="vault-tile__avatar-badge"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>' : ''}
+                <div class="vault-tile__overlay">
+                    <div class="vault-tile__char-label">${esc(item.charName)}</div>
+                    ${tagHtml ? `<div class="vault-tile__tags">${tagHtml}</div>` : ''}
+                    <div class="vault-tile__actions">
+                        <button class="vault-tile__btn" data-action="open" title="Open"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" x2="14" y1="3" y2="10"/><line x1="3" x2="10" y1="21" y2="14"/></svg></button>
+                        <button class="vault-tile__btn" data-action="dl" title="Download"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg></button>
+                        ${!item.isAvatar ? `<button class="vault-tile__btn vault-tile__btn--del" data-action="del" title="Delete"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>` : ''}
+                    </div>
+                </div>
+            </div>`;
+
+        $tile.querySelector('[data-action="open"]').addEventListener('click', e => { e.stopPropagation(); openLightbox(i); });
+        $tile.querySelector('[data-action="dl"]').addEventListener('click',   e => { e.stopPropagation(); downloadItem(item); });
+        const $del = $tile.querySelector('[data-action="del"]');
+        if ($del) $del.addEventListener('click', e => { e.stopPropagation(); deleteItem(item); });
+        $tile.querySelector('.vault-tile__img-wrap').addEventListener('click', () => openLightbox(i));
+
+        $grid.appendChild($tile);
+    });
+}
+
+function renderTimeline(items, $tl) {
+    // Group by charId preserving sort order
+    const groups = new Map();
+    items.forEach(item => {
+        if (!groups.has(item.charId)) groups.set(item.charId, []);
+        groups.get(item.charId).push(item);
+    });
+
+    $tl.innerHTML = '';
+    for (const [charId, charItems] of groups) {
+        const ch = S.chars.find(c => c.id === charId);
+        if (!ch) continue;
+
+        const $section = document.createElement('div');
+        $section.className = 'vault-tl-section';
+        $section.innerHTML = `
+            <div class="vault-tl-header">
+                <div class="vault-tl-header__name">${esc(ch.name)}</div>
+                <div class="vault-tl-header__count">${charItems.length} image${charItems.length !== 1 ? 's' : ''}</div>
+            </div>
+            <div class="vault-tl-row"></div>`;
+
+        const $row = $section.querySelector('.vault-tl-row');
+        const baseIdx = items.indexOf(charItems[0]);
+        charItems.forEach((item, localI) => {
+            const $tile = document.createElement('div');
+            $tile.className = `vault-tl-tile${item.isAvatar ? ' vault-tl-tile--avatar' : ''}`;
+            $tile.innerHTML = `<img src="${esc(item.url)}" alt="${esc(item.charName)}" class="vault-tl-tile__img" loading="lazy">`;
+            $tile.addEventListener('click', () => openLightbox(baseIdx + localI));
+            $row.appendChild($tile);
+        });
+
+        $tl.appendChild($section);
+    }
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// LIGHTBOX
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function openLightbox(idx) {
+    S.lbIndex = Math.max(0, Math.min(S.lbItems.length - 1, idx));
+    qs('#vault-lb').hidden = false;
+    document.body.classList.add('lb-open');
+    renderLightbox();
+}
+function closeLightbox() {
+    qs('#vault-lb').hidden = true;
+    document.body.classList.remove('lb-open');
+}
+function renderLightbox() {
+    const item = S.lbItems[S.lbIndex];
+    if (!item) return;
+    const $img = qs('#lb-img');
+    $img.src = item.url;
+
+    qs('#lb-counter').textContent = `${S.lbIndex + 1} / ${S.lbItems.length}`;
+    qs('#lb-char-pill').textContent = item.charName;
+    qs('#lb-prev').disabled = S.lbIndex <= 0;
+    qs('#lb-next').disabled = S.lbIndex >= S.lbItems.length - 1;
+
+    const $setAv = qs('#lb-set-avatar');
+    $setAv.disabled = item.isAvatar;
+    $setAv.title = item.isAvatar ? 'Already the avatar' : 'Set as character avatar';
+
+    const $del = qs('#lb-delete');
+    $del.disabled = item.isAvatar;
+    $del.title = item.isAvatar ? 'Cannot delete avatar image' : 'Remove from gallery';
+
+    renderLbTags(item);
+}
+function renderLbTags(item) {
+    const $tags = qs('#lb-tags');
+    $tags.innerHTML = item.tags.map(t =>
+        `<span class="lb-tag">${esc(t)}<button class="lb-tag__rm" data-rmtag="${esc(t)}">×</button></span>`
+    ).join('');
+    qsa('.lb-tag__rm', $tags).forEach(btn => {
+        btn.addEventListener('click', () => removeTagFromItem(item, btn.dataset.rmtag));
+    });
+}
+
+function lbNav(dir) {
+    const next = S.lbIndex + dir;
+    if (next < 0 || next >= S.lbItems.length) return;
+    S.lbIndex = next;
+    renderLightbox();
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ACTIONS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function downloadItem(item) {
+    const a = document.createElement('a');
+    a.href = item.url;
+    a.download = `${slug(item.charName)}-${String(item.idx + 1).padStart(3, '0')}.png`;
+    a.click();
+}
+
+async function deleteItem(item) {
+    if (item.isAvatar) { showToast('Cannot delete the avatar image — change avatar first', 'warn'); return; }
+    if (!confirm(`Remove this image from ${item.charName}'s gallery?`)) return;
+
+    const ch = S.chars.find(c => c.id === item.charId);
+    if (!ch) return;
+    const idx = ch.galleryRefs.indexOf(item.ref);
+    if (idx === -1) return;
+
+    if (isIdbRef(item.ref)) await idbDelete(`img:${idbRefId(item.ref)}`).catch(() => {});
+    if (ch.galleryMeta[item.ref]) delete ch.galleryMeta[item.ref];
+    ch.galleryRefs.splice(idx, 1);
+
+    saveGallery(ch.id, ch.galleryRefs, ch.galleryMeta);
+
+    // Remove from S.items and re-render
+    const siIdx = S.items.findIndex(it => it.ref === item.ref && it.charId === item.charId);
+    if (siIdx !== -1) S.items.splice(siIdx, 1);
+    updateStats();
+    render();
+    if (!S.lbItems.length) { closeLightbox(); }
+    else {
+        S.lbIndex = Math.min(S.lbIndex, S.lbItems.length - 1);
+        renderLightbox();
+    }
+    showToast('Image removed', 'success');
+}
+
+function setAsAvatar(item) {
+    if (item.isAvatar) return;
+    const ch = S.chars.find(c => c.id === item.charId);
+    if (!ch) return;
+
+    // Move old avatar into gallery front, move this ref to avatar
+    if (ch.avatarRef) {
+        const oldIdx = ch.galleryRefs.indexOf(ch.avatarRef);
+        if (oldIdx === -1) ch.galleryRefs.unshift(ch.avatarRef);
+    }
+    const thisIdx = ch.galleryRefs.indexOf(item.ref);
+    if (thisIdx !== -1) ch.galleryRefs.splice(thisIdx, 1);
+    ch.avatarRef = item.ref;
+
+    saveGallery(ch.id, ch.galleryRefs, ch.galleryMeta);
+    saveAvatar(ch.id, item.ref);
+
+    // Update S.items flags
+    S.items.forEach(it => {
+        if (it.charId === item.charId) it.isAvatar = (it.ref === item.ref);
+    });
+
+    render();
+    if (!qs('#vault-lb').hidden) {
+        S.lbItems = getFilteredItems();
+        renderLightbox();
+    }
+    showToast(`Avatar updated for ${item.charName}`, 'success');
+}
+
+function addTagToItem(item, tag) {
+    if (!tag) return;
+    const clean = tag.trim().toLowerCase().replace(/\s+/g, '-').slice(0, 20);
+    if (!clean) return;
+    const ch = S.chars.find(c => c.id === item.charId);
+    if (!ch) return;
+    if (!ch.galleryMeta[item.ref]) ch.galleryMeta[item.ref] = { tags: [] };
+    if (!ch.galleryMeta[item.ref].tags.includes(clean)) {
+        ch.galleryMeta[item.ref].tags.push(clean);
+        item.tags = ch.galleryMeta[item.ref].tags;
+        saveGallery(ch.id, ch.galleryRefs, ch.galleryMeta);
+        buildTagRoster();
+        renderLbTags(item);
+    }
+}
+
+function removeTagFromItem(item, tag) {
+    const ch = S.chars.find(c => c.id === item.charId);
+    if (!ch || !ch.galleryMeta[item.ref]) return;
+    ch.galleryMeta[item.ref].tags = ch.galleryMeta[item.ref].tags.filter(t => t !== tag);
+    item.tags = ch.galleryMeta[item.ref].tags;
+    saveGallery(ch.id, ch.galleryRefs, ch.galleryMeta);
+    buildTagRoster();
+    renderLbTags(item);
+}
+
+async function addImageToChar(charId, dataUrlOrRef) {
+    if (!charId) { showToast('Select a character first', 'warn'); return; }
+    const ch = S.chars.find(c => c.id === charId);
+    if (!ch) return;
+
+    let ref = dataUrlOrRef;
+    if (isDataUrl(dataUrlOrRef)) {
+        // Mirror what gallery.js does — save to IDB
+        const blobId = `gallery-${charId}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+        try {
+            const db = await openDB();
+            await new Promise((resolve, reject) => {
+                const req = db.transaction('blobs', 'readwrite').objectStore('blobs').put(dataUrlOrRef, `img:${blobId}`);
+                req.onsuccess = () => resolve();
+                req.onerror   = e => reject(e.target.error);
+            });
+            ref = `idb:img:${blobId}`;
+        } catch { ref = dataUrlOrRef; }
+    }
+
+    if (!ch.galleryRefs.includes(ref)) {
+        ch.galleryRefs.push(ref);
+        saveGallery(ch.id, ch.galleryRefs, ch.galleryMeta);
+        const url = await resolveUrl(ref);
+        if (url) {
+            S.items.push({ url, ref, charId: ch.id, charName: ch.name, charIdx: S.chars.indexOf(ch), idx: ch.galleryRefs.length - 1, isAvatar: false, ts: Date.now(), tags: [] });
+            updateStats();
+            render();
+        }
+        showToast('Image added', 'success');
+    } else {
+        showToast('Already in gallery', 'info');
+    }
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// TOAST
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function showToast(msg, type = 'info') {
+    const $c = qs('#vault-toasts');
+    const $t = document.createElement('div');
+    $t.className = `vault-toast vault-toast--${type}`;
+    $t.textContent = msg;
+    $c.appendChild($t);
+    requestAnimationFrame(() => $t.classList.add('vault-toast--in'));
+    setTimeout(() => { $t.classList.remove('vault-toast--in'); setTimeout(() => $t.remove(), 300); }, 3000);
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// EVENT WIRING
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function wire() {
+    // View switcher
+    qsa('.vv-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            S.view = btn.dataset.view;
+            qsa('.vv-btn').forEach(b => b.classList.toggle('active', b === btn));
+            render();
+        });
+    });
+
+    // Sort
+    qs('#vault-sort').addEventListener('change', e => {
+        S.sort = e.target.value;
+        render();
+    });
+
+    // Search
+    const $search = qs('#vault-search');
+    const $clearBtn = qs('#vault-search-clear');
+    $search.addEventListener('input', () => {
+        S.search = $search.value;
+        $clearBtn.hidden = !$search.value;
+        render();
+    });
+    $clearBtn.addEventListener('click', () => {
+        $search.value = ''; S.search = ''; $clearBtn.hidden = true;
+        render();
+    });
+
+    // Clear all filters
+    qs('#clear-all-filters')?.addEventListener('click', () => {
+        S.filterChar = ''; S.filterTags.clear(); S.search = '';
+        qs('#vault-search').value = '';
+        qs('#vault-search-clear').hidden = true;
+        qs('#char-filter-count').textContent = '';
+        qsa('.char-chip').forEach(b => b.classList.remove('char-chip--active'));
+        qsa('.tag-chip').forEach(b => b.classList.remove('tag-chip--active'));
+        render();
+    });
+
+    // Lightbox nav
+    qs('#lb-close').addEventListener('click', closeLightbox);
+    qs('#lb-backdrop').addEventListener('click', closeLightbox);
+    qs('#lb-prev').addEventListener('click', () => lbNav(-1));
+    qs('#lb-next').addEventListener('click', () => lbNav(1));
+
+    qs('#lb-download').addEventListener('click', () => {
+        const item = S.lbItems[S.lbIndex];
+        if (item) downloadItem(item);
+    });
+    qs('#lb-set-avatar').addEventListener('click', () => {
+        const item = S.lbItems[S.lbIndex];
+        if (item) setAsAvatar(item);
+    });
+    qs('#lb-delete').addEventListener('click', () => {
+        const item = S.lbItems[S.lbIndex];
+        if (item) deleteItem(item);
+    });
+    qs('#lb-add-tag').addEventListener('click', () => {
+        const item = S.lbItems[S.lbIndex];
+        if (!item) return;
+        const tag = prompt('Add tag:');
+        if (tag) addTagToItem(item, tag);
+    });
+
+    // Keyboard
+    document.addEventListener('keydown', e => {
+        if (qs('#vault-lb').hidden) return;
+        if (e.key === 'Escape')       { closeLightbox(); return; }
+        if (e.key === 'ArrowLeft')    lbNav(-1);
+        if (e.key === 'ArrowRight')   lbNav(1);
+    });
+
+    // Touch swipe on lightbox
+    let _sx = 0;
+    qs('#vault-lb').addEventListener('touchstart', e => { _sx = e.touches[0].clientX; }, { passive: true });
+    qs('#vault-lb').addEventListener('touchend', e => {
+        const dx = e.changedTouches[0].clientX - _sx;
+        if (Math.abs(dx) > 40) lbNav(dx < 0 ? 1 : -1);
+    }, { passive: true });
+
+    // File upload (sidebar add zone)
+    const $zone = qs('#vault-add-zone');
+    const $fileInput = qs('#vault-file-input');
+    $zone.addEventListener('click', () => $fileInput.click());
+    $zone.addEventListener('dragover', e => { e.preventDefault(); $zone.classList.add('vault-add-zone--drag'); });
+    $zone.addEventListener('dragleave', () => $zone.classList.remove('vault-add-zone--drag'));
+    $zone.addEventListener('drop', e => {
+        e.preventDefault(); $zone.classList.remove('vault-add-zone--drag');
+        handleFiles([...e.dataTransfer.files]);
+    });
+    $fileInput.addEventListener('change', e => {
+        handleFiles([...e.target.files]);
+        e.target.value = '';
+    });
+
+    // URL add
+    qs('#vault-url-add').addEventListener('click', () => {
+        const $input = qs('#vault-url-input');
+        const url = $input.value.trim();
+        if (!url) return;
+        try { new URL(url); } catch { showToast('Invalid URL', 'error'); return; }
+        const charId = qs('#vault-char-target').value;
+        addImageToChar(charId, url);
+        $input.value = '';
+    });
+    qs('#vault-url-input').addEventListener('keydown', e => {
+        if (e.key === 'Enter') qs('#vault-url-add').click();
+    });
+}
+
+async function handleFiles(files) {
+    const charId = qs('#vault-char-target').value;
+    if (!charId) { showToast('Select a character first', 'warn'); return; }
+    let added = 0;
+    for (const file of files) {
+        if (!file.type.startsWith('image/')) { showToast(`${file.name}: not an image`, 'error'); continue; }
+        if (file.size > 10 * 1024 * 1024)    { showToast(`${file.name} exceeds 10 MB`, 'error'); continue; }
+        const dataUrl = await new Promise((res, rej) => {
+            const r = new FileReader();
+            r.onload  = ev => res(ev.target.result);
+            r.onerror = ()  => rej();
+            r.readAsDataURL(file);
+        }).catch(() => null);
+        if (!dataUrl) continue;
+        await addImageToChar(charId, dataUrl);
+        added++;
+    }
+    if (added) showToast(`${added} image${added !== 1 ? 's' : ''} added`, 'success');
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// INIT
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+wire();
+boot();

@@ -112,6 +112,15 @@
 }
 .settings-nav__item.active svg { opacity: 1; }
 
+.settings-nav__item--link {
+    text-decoration: none;
+    margin-top: auto;
+    border-top: 1px solid rgba(190, 41, 236, 0.08);
+    border-radius: 0 0 0 8px;
+    margin-left: -2px;
+    padding-left: 14px;
+}
+
 /* ── Panels ── */
 .settings-panels {
     flex: 1;

@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.34",
+    "schema_version": "1.5.35",
     "last_updated": "2026-05-19",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -212,6 +212,9 @@
       "underdark/script/modules/storage.js": "IndexedDB and localStorage persistence layer. Handles image blobs (IDB) and all serialised state (localStorage).",
       "underdark/script/modules/shared-utils.js": "Cross-cutting utility functions shared across multiple Underdark modules.",
       "underdark/script/modules/wallhaven.js": "Wallhaven API integration. Fetches wallpapers for the Underdark backdrop/gallery feature.",
+      "playground/underdark/gallery/index.html": "Image Vault standalone page. Full-page gallery for all character images across all continuities. Reads underdark_chars_v4 (localStorage) and underdark_db (IDB) directly. No dependency on glass/ or the main underdark module graph.",
+      "playground/underdark/gallery/script/app.js": "Image Vault app logic. Self-contained (no ES module imports). Inline IDB helpers, 3 view modes (grid/masonry/timeline), character filter sidebar, tag filter, search, sort, full lightbox with set-avatar/tag/download/delete, drag-and-drop + URL image add. Writes back to underdark_chars_v4 for avatar and gallery mutations.",
+      "playground/underdark/gallery/style/style.css": "Image Vault standalone styles. Dune×Arcane palette, no glass/ dependency. Covers header, sidebar, grid/masonry/timeline layouts, lightbox, toasts, responsive breakpoints.",
       "archive/index.html": "Archive roster page. Lists all decommissioned pages under archive/{slug}/. Hardcoded entries in HTML (no data fetch, no JS). Add a new entry here when retiring a page.",
       "archive/uplink-sentinel/index.html": "Archived Uplink Sentinel. Static snapshot of the live probe page that previously lived at status/index.html. No polling, no countdown. All dynamic node statuses shown as 'unknown'; Drone Fleet statuses preserved. Archived 2026-05-18.",
       "status/index.html": "Minimal status hub. Lists sub-sections under status/ as clickable cards. Currently one entry: Intelligence Logs → /status/logs/. No JS, no data fetch. Add a new entry when a new sub-page is created under status/.",
@@ -601,6 +604,24 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-19",
+      "message": "feat(underdark): Image Vault standalone gallery page at playground/underdark/gallery/",
+      "scope": "playground/underdark/",
+      "impact": "high",
+      "files": [
+        "playground/underdark/gallery/index.html",
+        "playground/underdark/gallery/script/app.js",
+        "playground/underdark/gallery/style/style.css",
+        "playground/underdark/index.html",
+        "playground/underdark/script/main.js",
+        "playground/underdark/script/modules/ui.js",
+        "playground/underdark/style/settings-modal.css",
+        "status/logs/data/logs.json"
+      ],
+      "why": "The Settings modal gallery panel was cramped and limited — extracted into a full standalone page at ./gallery/ with 3 view modes (grid/masonry/timeline), character filter sidebar with avatar chips, tag filter chips, full lightbox with set-avatar/tag/download/delete, drag-and-drop + URL image add, and stats bar. Settings modal Gallery button replaced with an external link to the new page. Dead renderSettingsGallery() code removed from ui.js."
+    },
     {
       "hash": "883a1b3",
       "date": "2026-05-19",
@@ -2947,6 +2968,20 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-19",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Built the Image Vault — a standalone full-page gallery at playground/underdark/gallery/. Reads the same underdark_chars_v4 localStorage and underdark_db IndexedDB as the main app with no shared code dependency. Three view modes (uniform grid, masonry, character timeline), character filter sidebar with avatar chips, tag multi-filter, search, sort, full lightbox with set-avatar/tag/download/delete. Drag-and-drop and URL image add with character target selector. Removed the cramped Settings modal gallery panel; the nav item is now an external link to the new page. Dead renderSettingsGallery() code cleaned from ui.js.",
+      "decisions": [
+        "Standalone page with inlined IDB helpers — no import from /glass/ or underdark/script/. The gallery/ page must work even if the main app's module graph changes.",
+        "Reads underdark_chars_v4 directly — same localStorage key the main app uses. Writes back to the same key for avatar promotions and gallery deletions.",
+        "Gallery nav item in Settings modal changed to <a href='./gallery/' target='_blank'> — opens in new tab so user keeps context in the main app.",
+        "Three views: grid (uniform height, object-fit cover), masonry (CSS columns, natural aspect ratio), timeline (grouped by character with a horizontal filmstrip per group).",
+        "Lightbox covers full viewport with backdrop-filter blur. Tag editor uses prompt() — avoids inline DOM complexity for a page that is already complex.",
+        "addImageToChar mirrors gallery.js's IDB save pattern exactly so refs are compatible with main app reads."
+      ]
+    },
     {
       "date": "2026-05-19",
       "agent": "Claude Sonnet 4.6",
