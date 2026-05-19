@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.32",
+    "schema_version": "1.5.33",
     "last_updated": "2026-05-19",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -601,6 +601,26 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-19",
+      "message": "feat(underdark): remove Oracle from Scene Codex, redesign profile actions, fix wallhaven lightbox",
+      "scope": "playground/underdark/",
+      "impact": "medium",
+      "files": [
+        "playground/underdark/index.html",
+        "playground/underdark/script/main.js",
+        "playground/underdark/script/modules/ui.js",
+        "playground/underdark/script/modules/wallhaven.js",
+        "playground/underdark/style/scene-codex.css",
+        "playground/underdark/style/terminal.css",
+        "playground/underdark/style/oracle.css",
+        "playground/underdark/style/wallhaven.css",
+        "playground/underdark/style/style.css",
+        "status/logs/data/logs.json"
+      ],
+      "why": "Oracle column removed from Scene Codex (now only in Profile sidebar panel). Profile action buttons redesigned as pact-* system: a primary Add-to-Thread CTA, 4-up icon grid (Edit/Gallery/Wallhaven/Videos), and a 2-up danger row. Oracle moved above Feed/Details/Notes tabs via DOM move into #profile-oracle-inject-target inside renderProfile(). Wallhaven lightbox fixed: thumbnail shown at full viewport size immediately while full-res preloads, no blur overlay."
+    },
     {
       "hash": "cee8212",
       "date": "2026-05-19",
@@ -2915,6 +2935,19 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-19",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Four changes to The Underdark: (1) Oracle column removed from Scene Codex — the 4-column god-view is now 3 columns, digest takes the freed space, Oracle lives exclusively in the Profile sidebar panel; (2) Oracle in Profile tab moved above Feed/Details/Notes tabs using a DOM-move pattern: renderProfile() injects a #profile-oracle-inject-target placeholder inside the profile card HTML, then appends the static #profile-oracle-wrap into it so the Oracle persists across profile re-renders; (3) Profile action buttons redesigned as pact-* system — Add to Thread as a full-width accent CTA, secondary actions as a 4-up icon+label grid (Edit/Gallery/Wallhaven/Videos), danger actions as a 2-up row with escalating danger styling; (4) Wallhaven lightbox fixed — thumbnail shown at full 90vw×84vh immediately (no blur) while full-res preloads in background, swap on load.",
+      "decisions": [
+        "Oracle removed from Scene Codex col 4 — codex is now a focused 3-column tool (State/Controls/Digest) without the Oracle adding cognitive overhead; Oracle is better accessed from the character Profile panel where it relates to the active character.",
+        "Oracle DOM-move pattern: #profile-oracle-wrap is static HTML outside #profile-card, but renderProfile() does appendChild into #profile-oracle-inject-target — the Oracle element is moved not cloned, preserving event listeners and conversation state across character switches.",
+        "openOracle() keyboard shortcut (O key) now opens the Terminal sidebar, switches to Profile tab, and opens the Oracle details element — no longer opens the Scene Codex.",
+        "Profile actions pact-* system replaces old btn class soup — cleaner visual hierarchy with fewer lines, better use of the narrow sidebar width, icon-only grid avoids long text labels that wrap awkwardly at 240px.",
+        "Wallhaven lightbox: removed the blur-placeholder pattern — the large thumbnail is shown at the full lightbox dimensions (object-fit: contain + explicit width/height) immediately; this looks better than a tiny blurred image at natural thumbnail dimensions."
+      ]
+    },
     {
       "date": "2026-05-19",
       "agent": "Claude Sonnet 4.6",

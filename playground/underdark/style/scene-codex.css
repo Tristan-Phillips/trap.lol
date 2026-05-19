@@ -1,6 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   Scene Codex — God-view overlay  (redesign v2)
-   Layout:  cast strip → 4-col body → footer stats strip
+   Scene Codex — God-view overlay  (redesign v3)
+   Layout:  cast strip → 3-col body (State | Controls | Digest) → footer
+   Oracle moved to Profile sidebar panel.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ── Container ── */
@@ -204,7 +205,7 @@
 .scene-codex--dm .codex-cast-card__avatar-wrap { width: 44px; height: 44px; }
 
 /* ════════════════════════════════════════════════════════════════
-   BODY — four columns
+   BODY — three columns (State | Controls | Digest)
    ════════════════════════════════════════════════════════════════ */
 .scene-codex__body {
     display: flex;
@@ -652,102 +653,7 @@
     opacity: 1;
 }
 
-/* ════════════════════════════════════════════════════════════════
-   COL 4 — Oracle
-   ════════════════════════════════════════════════════════════════ */
-.scene-codex__col--oracle {
-    flex: 0 0 280px;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-    padding: 12px 14px 10px;
-    border-left: 1px solid rgba(167, 139, 250, 0.1);
-    border-right: none;
-}
-
-.oracle-label-sub {
-    font-size: 0.55rem;
-    color: rgba(167, 139, 250, 0.38);
-    font-family: var(--font-mono);
-    letter-spacing: 0.04em;
-    margin-left: 2px;
-    flex: 1;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.oracle-char-select-inline {
-    flex-shrink: 0;
-    font-size: 0.65rem;
-    padding: 2px 5px;
-    border-radius: 5px;
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(167, 139, 250, 0.18);
-    color: var(--text-muted);
-    cursor: pointer;
-    max-width: 100px;
-}
-.oracle-preset-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    margin-bottom: 7px;
-}
-.oracle-thread--inline {
-    flex: 1;
-    min-height: 80px;
-    max-height: 150px;
-    overflow-y: auto;
-    padding: 8px 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    background: rgba(0, 0, 0, 0.22);
-    border: 1px solid rgba(167, 139, 250, 0.1);
-    border-radius: 8px;
-    margin-bottom: 6px;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(167, 139, 250, 0.12) transparent;
-}
-.oracle-thread--inline::-webkit-scrollbar { width: 3px; }
-.oracle-thread--inline::-webkit-scrollbar-thumb { background: rgba(167, 139, 250, 0.18); border-radius: 2px; }
-.oracle-thread--inline .oracle-thread__empty {
-    padding: 10px 8px;
-    gap: 6px;
-    font-size: 0.7rem;
-}
-.oracle-thread--inline .oracle-thread__empty svg { width: 18px; height: 18px; }
-.oracle-thread--inline .oracle-msg {
-    max-width: 100%;
-    font-size: 0.73rem;
-    padding: 7px 10px;
-    line-height: 1.55;
-}
-.oracle-footer--inline {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    border: none;
-    background: none;
-    padding: 0;
-}
-.oracle-textarea--inline {
-    font-size: 0.75rem;
-    min-height: 32px;
-    max-height: 70px;
-    padding: 5px 10px;
-    border-radius: 7px;
-}
-.oracle-footer__actions--inline {
-    padding: 0;
-    border: none;
-    gap: 5px;
-}
-.oracle-footer__actions--inline .oracle-footer__btn {
-    font-size: 0.63rem;
-    padding: 3px 9px;
-}
+/* Oracle col removed — Oracle now lives in Profile sidebar panel */
 
 /* ════════════════════════════════════════════════════════════════
    FOOTER STRIP — session stats
@@ -1071,26 +977,18 @@ body.focus-mode .message__model-badge { display: none; }
 /* ════════════════════════════════════════════════════════════════
    Responsive
    ════════════════════════════════════════════════════════════════ */
-@media (max-width: 1200px) {
-    .scene-codex__col--oracle { flex: 0 0 250px; }
-    .scene-codex__col--digest { flex: 0 0 170px; }
-}
-
 @media (max-width: 1000px) {
     .scene-codex__col--digest { display: none; }
-    .scene-codex__col--oracle { flex: 0 0 240px; }
 }
 
 @media (max-width: 860px) {
     .scene-codex__col--state { display: none; }
     .scene-codex__col--controls { flex: 1; }
     .scene-codex__inner { overflow-x: auto; }
-    .scene-codex__col--oracle { flex: 0 0 220px; }
     .scene-codex__grip { display: block; }
 }
 
 @media (max-width: 640px) {
-    .scene-codex__col--oracle { display: none; }
     .codex-inject-grid { grid-template-columns: 1fr 1fr 1fr; }
     .codex-cast { padding: 8px 12px 7px; min-height: 56px; }
     .scene-codex__inner { padding-top: 10px; }

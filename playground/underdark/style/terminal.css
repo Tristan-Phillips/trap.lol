@@ -575,8 +575,8 @@
 .profile-actions {
     display: flex;
     flex-direction: column;
-    gap: 5px;
-    padding: var(--space-sm) var(--space-md) var(--space-md);
+    gap: 8px;
+    padding: 10px 12px 12px;
     border-top: 1px solid rgba(var(--accent-rgb), 0.1);
     background: linear-gradient(180deg, rgba(var(--accent-rgb), 0.03) 0%, transparent 100%);
 }
@@ -585,33 +585,108 @@
     padding: 0 var(--space-md) var(--space-sm);
 }
 
-/* Action buttons — glowing accent-border style */
-.profile-actions .btn,
-.profile-wh-row .btn {
-    border-color: rgba(var(--accent-rgb), 0.15);
-    position: relative;
-    overflow: hidden;
-}
-.profile-actions .btn::before,
-.profile-wh-row .btn::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(90deg, transparent 0%, rgba(var(--accent-rgb), 0.04) 50%, transparent 100%);
-    opacity: 0;
-    transition: opacity 0.2s;
-}
-.profile-actions .btn:hover::before,
-.profile-wh-row .btn:hover::before { opacity: 1; }
-.profile-actions .btn--accent {
+/* ── Profile action buttons — pact-* system ── */
+
+/* Primary: Add to Thread */
+.pact-primary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 16px;
+    border-radius: 10px;
     background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.22) 0%, rgba(var(--accent-rgb), 0.14) 100%);
-    border-color: rgba(var(--accent-rgb), 0.4);
-    box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.12), inset 0 1px 0 rgba(255,255,255,0.06);
+    border: 1px solid rgba(var(--accent-rgb), 0.42);
+    color: rgba(var(--accent-rgb), 1);
+    color: #e0b8ff;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.15s, box-shadow 0.15s, border-color 0.15s;
+    box-shadow: 0 0 14px rgba(var(--accent-rgb), 0.12);
 }
-.profile-actions .btn--accent:hover {
+.pact-primary svg { width: 14px; height: 14px; flex-shrink: 0; }
+.pact-primary:hover {
     background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.32) 0%, rgba(var(--accent-rgb), 0.2) 100%);
-    box-shadow: 0 0 20px rgba(var(--accent-rgb), 0.22), inset 0 1px 0 rgba(255,255,255,0.08);
+    border-color: rgba(var(--accent-rgb), 0.65);
+    box-shadow: 0 0 22px rgba(var(--accent-rgb), 0.22);
 }
+.pact-primary[hidden] { display: none; }
+
+/* Secondary grid — 4-up icon+label tiles */
+.pact-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 5px;
+}
+
+.pact-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 9px 4px 8px;
+    border-radius: 9px;
+    background: rgba(255,255,255,0.026);
+    border: 1px solid rgba(255,255,255,0.06);
+    color: rgba(200,185,230,0.5);
+    font-family: var(--font-mono);
+    font-size: 0.52rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.13s, border-color 0.13s, color 0.13s;
+    text-align: center;
+}
+.pact-btn svg { width: 14px; height: 14px; opacity: 0.6; transition: opacity 0.13s; flex-shrink: 0; }
+.pact-btn:hover {
+    background: rgba(var(--accent-rgb), 0.1);
+    border-color: rgba(var(--accent-rgb), 0.25);
+    color: rgba(220,195,255,0.85);
+}
+.pact-btn:hover svg { opacity: 1; }
+
+/* Danger row */
+.pact-danger-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+}
+
+.pact-danger-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 7px 10px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.06);
+    color: rgba(200,185,230,0.35);
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.13s, border-color 0.13s, color 0.13s;
+}
+.pact-danger-btn svg { width: 12px; height: 12px; flex-shrink: 0; opacity: 0.55; }
+.pact-danger-btn:hover {
+    background: rgba(220, 50, 50, 0.08);
+    border-color: rgba(220, 50, 50, 0.22);
+    color: rgba(255, 130, 130, 0.75);
+}
+.pact-danger-btn:hover svg { opacity: 1; }
+.pact-danger-btn--hard:hover {
+    background: rgba(220, 50, 50, 0.14);
+    border-color: rgba(220, 50, 50, 0.38);
+    color: rgba(255, 100, 100, 0.9);
+}
+.pact-danger-btn[hidden] { display: none; }
 
 /* ── World View ── */
 .world-view__header {

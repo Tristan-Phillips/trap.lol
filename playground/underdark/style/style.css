@@ -9,7 +9,7 @@
 /* ── Layout Components ── */
 @import './sidebar.css?v=2';
 @import './arena.css?v=10';
-@import './terminal.css?v=2';
+@import './terminal.css?v=3';
 @import './chat.css';
 
 /* ── Controls & Utilities ── */
@@ -24,7 +24,7 @@
 @import './modals.css';
 @import './settings-modal.css';
 @import './thread-config.css?v=2';
-@import './oracle.css?v=2';
+@import './oracle.css?v=3';
 @import './gallery-modal.css';
 @import './char-editor.css';
 
@@ -37,7 +37,7 @@
 @import './wallhaven.css';
 
 /* ── Scene Codex (god view) + Video Gen ── */
-@import './scene-codex.css?v=4';
+@import './scene-codex.css?v=5';
 
 /* ── Image Studio (full-screen generation wizard) ── */
 @import './img-studio.css';

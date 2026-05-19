@@ -609,6 +609,8 @@ kbd {
 
 /* Image */
 .wh-lightbox__img {
+  width: 90vw;
+  height: 84vh;
   max-width: 90vw;
   max-height: 84vh;
   object-fit: contain;

@@ -3359,6 +3359,8 @@ export function initUI() {
                     </div>
                 </header>
 
+                <div id="profile-oracle-inject-target"></div>
+
                 <div class="profile-view__tabs-nav">
                     <button class="profile-tab-btn active" data-profile-tab="feed"><i data-lucide="grid"></i> Feed</button>
                     <button class="profile-tab-btn" data-profile-tab="details"><i data-lucide="info"></i> Details</button>
@@ -3428,6 +3430,11 @@ export function initUI() {
 
             </div>`;
 
+        // Slot the persistent Oracle panel into the inject target above the tab bar
+        const $oracleTarget = qs('#profile-oracle-inject-target', $profile);
+        const $oracleWrap   = qs('#profile-oracle-wrap');
+        if ($oracleTarget && $oracleWrap) $oracleTarget.appendChild($oracleWrap);
+
         // Tab switching
         qsa('.profile-tab-btn', $profile).forEach($btn => {
             $btn.onclick = () => {
@@ -3474,14 +3481,7 @@ export function initUI() {
         qs('#btn-add-to-thread').onclick = () => addCharacterToThread(id);
         qs('#btn-char-edit').onclick     = () => openCharEditor(id);
         qs('#btn-gallery-add').onclick   = () => { switchSidebarTab('social'); openSocialFeed(id); renderSocialSidebar(); };
-
-        const $whRow = qs('#profile-wh-row');
-        if ($whRow) $whRow.hidden = false;
-        qs('#btn-wh-profile')?.addEventListener('click', () => {
-            if (typeof window.openWallhavenGallery === 'function') {
-                window.openWallhavenGallery(char.name || '', id);
-            }
-        });
+        qs('#btn-wh-profile').onclick    = () => { if (typeof window.openWallhavenGallery === 'function') window.openWallhavenGallery(char.name || '', id); };
         qs('#btn-remove-char').onclick = () => {
             removeBotFromChat(id);
             delete _rrIndex[state.chat.id];
@@ -7901,145 +7901,14 @@ export function initUI() {
             showToast('Add a character to the thread before using Oracle', 'warn', 2800);
             return;
         }
-        // Populate inline character select
-        const $sel = qs('#oracle-char-select');
-        if ($sel) {
-            $sel.innerHTML = state.activeBotIds.map(id => {
-                const c = state.loadedCharacters[id];
-                const name = getCharOverride(id).nickname || c?.name || id;
-                return `<option value="${esc(id)}">${esc(name)}</option>`;
-            }).join('');
-            if (!$sel.value && state.activeBotId) $sel.value = state.activeBotId;
-        }
-        // Open the Scene Codex panel (oracle lives in col 3)
-        openCodex();
-        // Scroll oracle col into view on small screens and focus input
-        setTimeout(() => {
-            qs('#oracle-input')?.focus();
-            qs('.scene-codex__col--oracle')?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'end' });
-        }, 80);
+        // Oracle now lives in the Profile sidebar panel — open Terminal + Profile tab
+        const $terminal = qs('#terminal-sidebar');
+        if ($terminal) $terminal.dataset.collapsed = 'false';
+        switchSidebarTab('profile');
+        const $oraclePanel = qs('#profile-oracle-panel');
+        if ($oraclePanel && !$oraclePanel.open) $oraclePanel.open = true;
+        setTimeout(() => qs('#oracle-sidebar-input')?.focus(), 80);
     }
-
-    async function sendOracleQuery(text) {
-        if (ctx.oracleStreaming || !text.trim()) return;
-        const charId   = qs('#oracle-char-select')?.value || state.activeBotId;
-        const char     = state.loadedCharacters[charId];
-        if (!char) { showToast('No character selected for Oracle', 'error'); return; }
-        const charName = getCharOverride(charId).nickname || char.name;
-
-        // Replace {{char}} / {{user}} tokens
-        const resolvedText = text
-            .replace(/\{\{char\}\}/gi, charName)
-            .replace(/\{\{user\}\}/gi, state.config.userName || 'User');
-
-        // Append user message to oracle thread UI
-        const $thread = qs('#oracle-thread');
-        const $userBubble = document.createElement('div');
-        $userBubble.className = 'oracle-msg oracle-msg--user';
-        $userBubble.textContent = resolvedText;
-        $thread?.appendChild($userBubble);
-        $thread.scrollTop = $thread.scrollHeight;
-
-        ctx.oracleHistory.push({ role: 'user', content: resolvedText });
-
-        // Build payload using current character context + oracle history, never writing to state
-        const _worldScenario = state.reality?.worldConfig?.scenario || '';
-        const oracleConfig = {
-            ...state.config,
-            maxOutput: Math.max(state.config.maxOutput || 512, 1024),
-            stream: true,
-            ...(_worldScenario ? { _worldScenario } : {})
-        };
-        const fullPayload = buildPayload({
-            character: { ...char, id: charId },
-            history:   ctx.oracleHistory.slice(0, -1), // omit last user msg — it's in messages already
-            lore:      state.lorebooks,
-            config:    oracleConfig,
-            isGroup:   false,
-            allChars:  [],
-            sessionId: 'oracle-private'
-        });
-        // Replace the payload's messages with oracle history so context is isolated
-        fullPayload.messages = [
-            fullPayload.messages[0], // keep system prompt
-            ...ctx.oracleHistory.map(m => ({ role: m.role === 'bot' ? 'assistant' : m.role, content: m.content }))
-        ];
-
-        const $botBubble = document.createElement('div');
-        $botBubble.className = 'oracle-msg oracle-msg--bot';
-        $botBubble.innerHTML = '<span class="thinking"><span></span><span></span><span></span></span>';
-        $thread?.appendChild($botBubble);
-        $thread.scrollTop = $thread.scrollHeight;
-
-        ctx.oracleStreaming = true;
-        const $sendBtn = qs('#oracle-send-btn');
-        if ($sendBtn) { $sendBtn.disabled = true; $sendBtn.innerHTML = '<i data-lucide="square"></i>'; lucideRefresh($sendBtn); }
-
-        let finalText = '';
-        await streamCompletion(fullPayload,
-            (_delta, full) => {
-                $botBubble.innerHTML = renderMarkdown(full);
-                $thread.scrollTop = $thread.scrollHeight;
-                finalText = full;
-            },
-            (text) => {
-                finalText = text;
-                $botBubble.innerHTML = renderMarkdown(finalText);
-                ctx.oracleHistory.push({ role: 'assistant', content: finalText });
-                ctx.oracleStreaming = false;
-                if ($sendBtn) { $sendBtn.disabled = false; $sendBtn.innerHTML = '<i data-lucide="send"></i>'; lucideRefresh($sendBtn); }
-                $thread.scrollTop = $thread.scrollHeight;
-            },
-            (err) => {
-                $botBubble.innerHTML = `<span class="msg-error">[Oracle error: ${esc(err.message)}]</span>`;
-                ctx.oracleStreaming = false;
-                if ($sendBtn) { $sendBtn.disabled = false; $sendBtn.innerHTML = '<i data-lucide="send"></i>'; lucideRefresh($sendBtn); }
-            }
-        );
-    }
-
-    qs('#oracle-send-btn')?.addEventListener('click', () => {
-        const $in = qs('#oracle-input');
-        const text = $in?.value.trim();
-        if (!text) return;
-        $in.value = '';
-        sendOracleQuery(text);
-    });
-
-    qs('#oracle-input')?.addEventListener('keydown', e => {
-        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); qs('#oracle-send-btn')?.click(); }
-    });
-
-    qsa('.oracle-inject-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const key     = btn.dataset.inject;
-            const preset  = ORACLE_PRESETS[key];
-            if (!preset) return;
-            const $in = qs('#oracle-input');
-            if ($in) {
-                $in.value = preset.prompt;
-                $in.focus();
-            }
-        });
-    });
-
-    qs('#oracle-inject-to-chat')?.addEventListener('click', () => {
-        // Grab last oracle bot response and inject as an author's note into the live chat
-        const lastBot = [...ctx.oracleHistory].reverse().find(m => m.role === 'assistant');
-        if (!lastBot) { showToast('No Oracle response to inject', 'warn'); return; }
-        const truncated = lastBot.content.slice(0, 400);
-        const existing = state.config.authorsNote || '';
-        setConfig({ authorsNote: (existing ? existing + '\n\n' : '') + `[Oracle Context: ${truncated}]` });
-        syncConfigUI();
-        showToast('Oracle insight injected as Author\'s Note', 'info', 2500);
-    });
-
-    qs('#oracle-clear')?.addEventListener('click', () => {
-        ctx.oracleHistory = [];
-        const $thread = qs('#oracle-thread');
-        if ($thread) $thread.innerHTML = '';
-        showToast('Oracle thread cleared', 'info', 1400);
-    });
 
     // ── Sidebar Oracle (Profile tab) — shares oracleHistory + sendOracleQuery ─
     async function sendSidebarOracleQuery(text) {

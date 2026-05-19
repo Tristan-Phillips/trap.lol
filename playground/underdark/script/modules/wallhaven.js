@@ -740,21 +740,19 @@ function openLightbox(idx,set){
 function renderLightbox(){
   resetLbView();
   const ds=lbDataset(), w=ds[WH.lbIndex]; if(!w)return;
-  // Show thumbnail immediately as blurred placeholder, then swap to full-res
+  // Show the large thumb at full viewport size immediately (no blur)
   lbImg.src = w.thumbs.large || '';
-  lbImg.style.filter = 'blur(8px)';
-  lbImg.classList.add('wh-lb-img--loading');
-  const t = new Image();
-  t.onload = () => {
-    lbImg.src = w.path;
-    lbImg.style.filter = '';
-    lbImg.classList.remove('wh-lb-img--loading');
-  };
-  t.onerror = () => {
-    lbImg.style.filter = '';
-    lbImg.classList.remove('wh-lb-img--loading');
-  };
-  t.src = w.path;
+  lbImg.style.filter = '';
+  lbImg.classList.remove('wh-lb-img--loading');
+  // Preload full-res and swap in when ready
+  if(w.path){
+    const t = new Image();
+    t.onload = () => {
+      lbImg.src = w.path;
+    };
+    // on error, large thumb stays visible — no fallback needed
+    t.src = w.path;
+  }
   lbRes.textContent=w.resolution;
   lbPurityEl.textContent=purityLabel(w.purity); lbPurityEl.className=`wh-lb-badge wh-lb-badge--${w.purity}`;
   lbCat.textContent=w.category;

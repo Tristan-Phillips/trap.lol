@@ -6,7 +6,7 @@
     <title>The Underdark // Reality Matrix</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2306040A'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%23ef4444' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23ef4444'/%3E%3C/svg%3E" />
     <link rel="stylesheet" href="/glass/style/style.css">
-    <link rel="stylesheet" href="./style/style.css?v=81">
+    <link rel="stylesheet" href="./style/style.css?v=82">
 </head>
 <body class="underdark-page">
 
@@ -459,38 +459,6 @@
                         </div>
                     </div>
 
-                    <!-- COL 4: Oracle — isolated counsel -->
-                    <div class="scene-codex__col scene-codex__col--oracle">
-                        <div class="scene-codex__section-head scene-codex__section-head--oracle">
-                            <i data-lucide="eye"></i> Oracle
-                            <span class="oracle-label-sub">isolated — never touches your story</span>
-                            <select id="oracle-char-select" class="oracle-char-select-inline"></select>
-                        </div>
-                        <div class="oracle-preset-row">
-                            <button class="oracle-inject-btn" data-inject="recontextualize"><i data-lucide="map"></i> Recontextualize</button>
-                            <button class="oracle-inject-btn" data-inject="continuity"><i data-lucide="scroll-text"></i> Continuity</button>
-                            <button class="oracle-inject-btn" data-inject="reset"><i data-lucide="refresh-cw"></i> Reset Voice</button>
-                            <button class="oracle-inject-btn" data-inject="escalate"><i data-lucide="flame"></i> Escalate</button>
-                            <button class="oracle-inject-btn" data-inject="uncensor"><i data-lucide="shield-off"></i> Uncensor</button>
-                        </div>
-                        <div id="oracle-thread" class="oracle-thread oracle-thread--inline">
-                            <div class="oracle-thread__empty">
-                                <i data-lucide="eye"></i>
-                                <p>Ask the Oracle anything.</p>
-                            </div>
-                        </div>
-                        <div class="oracle-footer oracle-footer--inline">
-                            <div class="oracle-input-row">
-                                <textarea id="oracle-input" class="oracle-textarea oracle-textarea--inline" rows="2" placeholder="Ask the Oracle… {{char}} {{user}}"></textarea>
-                                <button id="oracle-send-btn" class="oracle-send-btn" title="Send (Enter)"><i data-lucide="send"></i></button>
-                            </div>
-                            <div class="oracle-footer__actions oracle-footer__actions--inline">
-                                <button id="oracle-inject-to-chat" class="oracle-footer__btn oracle-footer__btn--inject" title="Inject last Oracle response as Author's Note"><i data-lucide="arrow-down-to-line"></i> Inject</button>
-                                <button id="oracle-clear" class="oracle-footer__btn" title="Clear Oracle thread"><i data-lucide="eraser"></i> Clear</button>
-                            </div>
-                        </div>
-                    </div>
-
                     </div><!-- /.scene-codex__body -->
 
                     <!-- RELATIONSHIP MAP OVERLAY (hidden by default) -->
@@ -622,54 +590,84 @@
             <div id="tab-profile" class="tab-panel active" role="tabpanel">
                 <div id="profile-card"></div>
                 <div id="profile-actions" class="profile-actions" hidden>
-                    <button id="btn-add-to-thread" class="btn btn--accent btn--full">Add to Thread</button>
-                    <button id="btn-char-edit" class="btn btn--secondary btn--full"><i data-lucide="sliders-horizontal"></i> Edit Character</button>
-                    <button id="btn-gallery-add" class="btn btn--ghost btn--full"><i data-lucide="images"></i> View Gallery</button>
-                    <button id="btn-remove-char" class="btn btn--ghost btn--full">Remove from Thread</button>
-                    <button id="btn-delete-char" class="btn btn--ghost btn--full btn--danger-ghost">Delete Character</button>
+                    <!-- Primary action -->
+                    <button id="btn-add-to-thread" class="pact-primary">
+                        <i data-lucide="user-plus"></i>
+                        <span>Add to Thread</span>
+                    </button>
+                    <!-- Secondary grid -->
+                    <div class="pact-grid">
+                        <button id="btn-char-edit" class="pact-btn" title="Edit Character">
+                            <i data-lucide="sliders-horizontal"></i>
+                            <span>Edit</span>
+                        </button>
+                        <button id="btn-gallery-add" class="pact-btn" title="View Gallery">
+                            <i data-lucide="images"></i>
+                            <span>Gallery</span>
+                        </button>
+                        <button id="btn-wh-profile" class="pact-btn" title="Wallhaven Gallery">
+                            <i data-lucide="image-plus"></i>
+                            <span>Wallhaven</span>
+                        </button>
+                        <button id="btn-video-gallery" class="pact-btn" title="Video Gallery">
+                            <i data-lucide="film"></i>
+                            <span>Videos</span>
+                        </button>
+                    </div>
+                    <!-- Destructive row -->
+                    <div class="pact-danger-row">
+                        <button id="btn-remove-char" class="pact-danger-btn">
+                            <i data-lucide="user-minus"></i>
+                            <span>Remove</span>
+                        </button>
+                        <button id="btn-delete-char" class="pact-danger-btn pact-danger-btn--hard">
+                            <i data-lucide="trash-2"></i>
+                            <span>Delete</span>
+                        </button>
+                    </div>
                 </div>
                 <div id="gallery-strip" class="gallery-strip" hidden></div>
                 <div id="video-strip-wrap" hidden>
-                    <button id="btn-video-gallery" class="btn btn--ghost btn--full" style="margin-top:6px"><i data-lucide="film"></i> Video Gallery</button>
                     <div id="video-strip" class="video-strip"></div>
                 </div>
-                <div id="profile-wh-row" class="profile-wh-row" hidden>
-                    <button id="btn-wh-profile" class="btn btn--ghost btn--full btn--flex"><i data-lucide="image-plus"></i> Wallhaven Gallery</button>
-                </div>
+                <div id="profile-wh-row" class="profile-wh-row" hidden></div>
 
-                <!-- Oracle — isolated counsel, in-sidebar -->
-                <details class="profile-oracle" id="profile-oracle-panel">
-                    <summary class="profile-oracle__toggle">
-                        <i data-lucide="eye"></i>
-                        <span class="profile-oracle__title">Oracle</span>
-                        <span class="profile-oracle__sub">isolated · never touches your story</span>
-                        <i data-lucide="chevron-down" class="profile-oracle__chevron"></i>
-                    </summary>
-                    <div class="profile-oracle__body">
-                        <div class="profile-oracle__presets">
-                            <button class="oracle-inject-btn oracle-inject-btn--sm" data-inject="recontextualize"><i data-lucide="map"></i> Recontextualize</button>
-                            <button class="oracle-inject-btn oracle-inject-btn--sm" data-inject="continuity"><i data-lucide="scroll-text"></i> Continuity</button>
-                            <button class="oracle-inject-btn oracle-inject-btn--sm" data-inject="reset"><i data-lucide="refresh-cw"></i> Reset</button>
-                            <button class="oracle-inject-btn oracle-inject-btn--sm" data-inject="escalate"><i data-lucide="flame"></i> Escalate</button>
-                        </div>
-                        <div id="oracle-sidebar-thread" class="oracle-thread oracle-thread--sidebar">
-                            <div class="oracle-thread__empty">
-                                <i data-lucide="eye"></i>
-                                <p>Ask the Oracle anything.</p>
+                <!-- Oracle — injected here by renderProfile() above the Feed/Details/Notes tabs -->
+                <!-- Static wrapper so Oracle persists even when profile-card re-renders -->
+                <div id="profile-oracle-wrap">
+                    <details class="profile-oracle" id="profile-oracle-panel">
+                        <summary class="profile-oracle__toggle">
+                            <i data-lucide="eye"></i>
+                            <span class="profile-oracle__title">Oracle</span>
+                            <span class="profile-oracle__sub">isolated · never touches your story</span>
+                            <i data-lucide="chevron-down" class="profile-oracle__chevron"></i>
+                        </summary>
+                        <div class="profile-oracle__body">
+                            <div class="profile-oracle__presets">
+                                <button class="oracle-inject-btn oracle-inject-btn--sm" data-inject="recontextualize"><i data-lucide="map"></i> Recontextualize</button>
+                                <button class="oracle-inject-btn oracle-inject-btn--sm" data-inject="continuity"><i data-lucide="scroll-text"></i> Continuity</button>
+                                <button class="oracle-inject-btn oracle-inject-btn--sm" data-inject="reset"><i data-lucide="refresh-cw"></i> Reset</button>
+                                <button class="oracle-inject-btn oracle-inject-btn--sm" data-inject="escalate"><i data-lucide="flame"></i> Escalate</button>
+                            </div>
+                            <div id="oracle-sidebar-thread" class="oracle-thread oracle-thread--sidebar">
+                                <div class="oracle-thread__empty">
+                                    <i data-lucide="eye"></i>
+                                    <p>Ask the Oracle anything.</p>
+                                </div>
+                            </div>
+                            <div class="oracle-sidebar-footer">
+                                <div class="oracle-input-row">
+                                    <textarea id="oracle-sidebar-input" class="oracle-textarea oracle-textarea--sidebar" rows="2" placeholder="Ask the Oracle… {{char}} {{user}}"></textarea>
+                                    <button id="oracle-sidebar-send" class="oracle-send-btn oracle-send-btn--sm" title="Send"><i data-lucide="send"></i></button>
+                                </div>
+                                <div class="oracle-sidebar-actions">
+                                    <button id="oracle-sidebar-inject" class="oracle-footer__btn oracle-footer__btn--inject" title="Inject as Author's Note"><i data-lucide="arrow-down-to-line"></i> Inject</button>
+                                    <button id="oracle-sidebar-clear" class="oracle-footer__btn" title="Clear Oracle"><i data-lucide="eraser"></i> Clear</button>
+                                </div>
                             </div>
                         </div>
-                        <div class="oracle-sidebar-footer">
-                            <div class="oracle-input-row">
-                                <textarea id="oracle-sidebar-input" class="oracle-textarea oracle-textarea--sidebar" rows="2" placeholder="Ask the Oracle… {{char}} {{user}}"></textarea>
-                                <button id="oracle-sidebar-send" class="oracle-send-btn oracle-send-btn--sm" title="Send"><i data-lucide="send"></i></button>
-                            </div>
-                            <div class="oracle-sidebar-actions">
-                                <button id="oracle-sidebar-inject" class="oracle-footer__btn oracle-footer__btn--inject" title="Inject as Author's Note"><i data-lucide="arrow-down-to-line"></i> Inject</button>
-                                <button id="oracle-sidebar-clear" class="oracle-footer__btn" title="Clear Oracle"><i data-lucide="eraser"></i> Clear</button>
-                            </div>
-                        </div>
-                    </div>
-                </details>
+                    </details>
+                </div>
             </div>
 
             <!-- Codex Tab — World scenario + Lorebooks -->
@@ -3788,7 +3786,7 @@
 
 <div id="toast-container" class="toast-container"></div>
 <script src="https://cdn.trap.lol/shards/lucide.min.js"></script><script src="https://cdn.trap.lol/shards/marked.min.js"></script><script src="https://cdn.trap.lol/shards/purify.min.js"></script>
-<script type="module" src="./script/main.js?v=73"></script>
+<script type="module" src="./script/main.js?v=74"></script>
 <!-- ── Wallhaven Arena ── -->
 <script src="./script/modules/wallhaven.js"></script>
 
