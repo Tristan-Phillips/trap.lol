@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.35",
+    "schema_version": "1.5.36",
     "last_updated": "2026-05-19",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -604,6 +604,19 @@
     ]
   },
   "commits": [
+    {
+      "hash": "22c2a5d",
+      "date": "2026-05-19",
+      "message": "fix(gallery): lightbox hidden override, modal panel layout, keyboard shortcuts",
+      "scope": "playground/underdark/gallery/",
+      "impact": "high",
+      "files": [
+        "playground/underdark/gallery/index.html",
+        "playground/underdark/gallery/script/app.js",
+        "playground/underdark/gallery/style/style.css"
+      ],
+      "why": "Page opened with the lightbox already showing and the X button could not close it. Root cause: .vault-lb { display: flex } overrode the browser's [hidden] attribute display:none rule (class selector beats attribute selector in specificity). Fixed with [hidden] { display: none !important } at the reset layer. Restructured lightbox as a contained modal panel (not full-viewport) with topbar/body/info layout so the grid is visible as the primary view behind the backdrop. Keyboard shortcuts (arrows, Esc) scoped correctly."
+    },
     {
       "hash": "f8c045a",
       "date": "2026-05-19",
