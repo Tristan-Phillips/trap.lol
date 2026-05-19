@@ -692,7 +692,8 @@ body {
     flex: 1;
     min-width: 0;
     min-height: 0;
-    /* overflow visible so zoomed image can spill; clipping handled by panel */
+    /* height: 100% forces percentage resolution for child max-height */
+    height: 100%;
     overflow: hidden;
     display: flex;
     align-items: center;

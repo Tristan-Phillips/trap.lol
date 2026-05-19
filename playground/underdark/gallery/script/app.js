@@ -320,7 +320,7 @@ function renderGrid(items, $grid) {
 
         $tile.innerHTML = `
             <div class="vault-tile__img-wrap">
-                <img src="${esc(item.url)}" alt="${esc(item.charName)}" class="vault-tile__img" loading="lazy" draggable="false">
+                <img src="${esc(item.url)}" alt="${esc(item.charName)}" class="vault-tile__img" loading="lazy" draggable="false" onerror="this.closest('.vault-tile').style.display='none'">
                 ${item.isAvatar ? '<div class="vault-tile__avatar-badge"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>' : ''}
                 <div class="vault-tile__overlay">
                     <div class="vault-tile__char-label">${esc(item.charName)}</div>
@@ -370,7 +370,7 @@ function renderTimeline(items, $tl) {
         charItems.forEach((item, localI) => {
             const $tile = document.createElement('div');
             $tile.className = `vault-tl-tile${item.isAvatar ? ' vault-tl-tile--avatar' : ''}`;
-            $tile.innerHTML = `<img src="${esc(item.url)}" alt="${esc(item.charName)}" class="vault-tl-tile__img" loading="lazy">`;
+            $tile.innerHTML = `<img src="${esc(item.url)}" alt="${esc(item.charName)}" class="vault-tl-tile__img" loading="lazy" onerror="this.closest('.vault-tl-tile').style.display='none'">`;
             $tile.addEventListener('click', () => openLightbox(baseIdx + localI));
             $row.appendChild($tile);
         });
@@ -537,8 +537,16 @@ function renderLightbox() {
     const item = S.lbItems[S.lbIndex];
     if (!item) return;
     const $img = qs('#lb-img');
-    $img.src = item.url;
     lbtReset(false); // reset transform on image change
+    $img.onerror = null;
+    $img.src = item.url;
+    $img.onerror = () => {
+        // Skip to next valid image automatically
+        const dir = S.lbIndex < S.lbItems.length - 1 ? 1 : -1;
+        const next = S.lbIndex + dir;
+        if (next >= 0 && next < S.lbItems.length) { S.lbIndex = next; renderLightbox(); }
+        else closeLightbox();
+    };
 
     qs('#lb-counter').textContent = `${S.lbIndex + 1} / ${S.lbItems.length}`;
     qs('#lb-char-pill').textContent = item.charName;
