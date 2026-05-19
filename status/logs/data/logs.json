@@ -602,7 +602,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "e38d526",
       "date": "2026-05-19",
       "message": "feat(underdark): remove Oracle from Scene Codex, redesign profile actions, fix wallhaven lightbox",
       "scope": "playground/underdark/",
