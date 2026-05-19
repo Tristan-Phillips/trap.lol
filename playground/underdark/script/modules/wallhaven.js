@@ -720,6 +720,53 @@ function setAsBackground(url){
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// FULL-RES IMAGE CACHE + SMART PRELOADER
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// LRU cache keyed by wallpaper id → resolved full-res URL
+const LB_CACHE_MAX = 40;
+const lbCache = new Map(); // id → url (insertion order = LRU)
+
+function lbCacheGet(id){ return lbCache.get(id) || null; }
+function lbCacheSet(id, url){
+  lbCache.delete(id); // bump to end (most-recent)
+  lbCache.set(id, url);
+  if(lbCache.size > LB_CACHE_MAX){
+    lbCache.delete(lbCache.keys().next().value); // evict oldest
+  }
+}
+
+// Token prevents stale loads from writing to the active lightbox image
+let _lbLoadToken = 0;
+// Timeout handle for deferred neighbour preloading
+let _lbPreloadTimer = null;
+
+// Load full-res for a wallpaper, writing into cache.
+// Returns a Promise<url|null>. Cancellable via token comparison.
+function loadFullRes(w, token, onLoad){
+  if(!w || !w.path) return;
+  if(lbCacheGet(w.id)){ onLoad && onLoad(w.id, lbCacheGet(w.id), token); return; }
+  const img = new Image();
+  img.onload = () => {
+    lbCacheSet(w.id, w.path);
+    onLoad && onLoad(w.id, w.path, token);
+  };
+  // on error: cache nothing, thumbnail stays visible
+  img.src = w.path;
+}
+
+// Silently preload neighbours into cache (no DOM writes)
+function scheduleNeighbourPreload(ds, centerIdx){
+  clearTimeout(_lbPreloadTimer);
+  _lbPreloadTimer = setTimeout(() => {
+    // Preload pattern: +1, -1, +2, -2 (by priority)
+    [1, -1, 2, -2].forEach(offset => {
+      const w = ds[centerIdx + offset];
+      if(w && !lbCacheGet(w.id)) loadFullRes(w, -1, null);
+    });
+  }, 180); // wait until user pauses navigating
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // LIGHTBOX
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 function lbDataset(){
@@ -740,19 +787,29 @@ function openLightbox(idx,set){
 function renderLightbox(){
   resetLbView();
   const ds=lbDataset(), w=ds[WH.lbIndex]; if(!w)return;
-  // Show the large thumb at full viewport size immediately (no blur)
+
+  // Invalidate any previous in-flight full-res load
+  const token = ++_lbLoadToken;
+  clearTimeout(_lbPreloadTimer);
+
+  // Show thumbnail immediately (fills viewport via CSS width/height)
   lbImg.src = w.thumbs.large || '';
-  lbImg.style.filter = '';
   lbImg.classList.remove('wh-lb-img--loading');
-  // Preload full-res and swap in when ready
-  if(w.path){
-    const t = new Image();
-    t.onload = () => {
-      lbImg.src = w.path;
-    };
-    // on error, large thumb stays visible — no fallback needed
-    t.src = w.path;
+
+  const cached = lbCacheGet(w.id);
+  if(cached){
+    // Instant swap — already in cache
+    lbImg.src = cached;
+  } else if(w.path){
+    loadFullRes(w, token, (id, url, tok) => {
+      // Only write to DOM if this is still the active load
+      if(tok === _lbLoadToken) lbImg.src = url;
+    });
   }
+
+  // Kick off neighbour preloading after user settles
+  scheduleNeighbourPreload(ds, WH.lbIndex);
+
   lbRes.textContent=w.resolution;
   lbPurityEl.textContent=purityLabel(w.purity); lbPurityEl.className=`wh-lb-badge wh-lb-badge--${w.purity}`;
   lbCat.textContent=w.category;

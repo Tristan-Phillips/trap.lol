@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.33",
+    "schema_version": "1.5.34",
     "last_updated": "2026-05-19",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -601,6 +601,18 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-19",
+      "message": "fix(underdark): wallhaven smart preloader — LRU cache, token-gated loads, neighbour preload",
+      "scope": "playground/underdark/",
+      "impact": "medium",
+      "files": [
+        "playground/underdark/script/modules/wallhaven.js",
+        "status/logs/data/logs.json"
+      ],
+      "why": "Full-res images rarely loaded because stale in-flight fetches had no cancellation, and nothing was preloaded before the user clicked. Added LRU image cache (40 slots), a load-token system to discard stale callbacks, and deferred neighbour preloading (+1/-1/+2/-2 with 180ms settle delay) so the full-res is already cached on most navigations."
+    },
     {
       "hash": "e38d526",
       "date": "2026-05-19",
@@ -2935,6 +2947,19 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-19",
+      "agent": "Claude Sonnet 4.6",
+      "type": "bug_fix",
+      "summary": "Fixed wallhaven lightbox full-res images not loading reliably. Root cause: no cancellation of stale in-flight fetches meant rapid navigation could display the wrong image, and without preloading, every open was a cold fetch race. Added LRU cache (40 slots), per-load token system to discard stale callbacks, and a deferred neighbour preloader (+1/-1/+2/-2 priority at 180ms settle) so images are hot in cache before the user reaches them.",
+      "decisions": [
+        "Cache keyed by wallpaper ID (not URL) — ID is stable, URL may vary by API response",
+        "Token increments on every renderLightbox() call; onLoad only writes to DOM if token matches current — prevents wrong-image flicker on fast navigation",
+        "Neighbour preloads are silent (no DOM writes) — they only populate cache; no spinner or state change",
+        "180ms debounce on neighbour preload — fires only when user pauses, not on every key/click during rapid scan",
+        "Max 40 cache slots (LRU eviction) — generous enough that a full page stays warm, tight enough not to hold many MB of Image objects"
+      ]
+    },
     {
       "date": "2026-05-19",
       "agent": "Claude Sonnet 4.6",
