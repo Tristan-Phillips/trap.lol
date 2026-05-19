@@ -601,7 +601,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "5a91942",
       "date": "2026-05-19",
       "message": "refactor(underdark): extract gallery/lightbox to gallery.js — third split of ui.js",
       "scope": "playground/underdark/",
