@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.38",
+    "schema_version": "1.5.39",
     "last_updated": "2026-05-20",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -604,6 +604,18 @@
     ]
   },
   "commits": [
+    {
+      "hash": "f36aba7",
+      "date": "2026-05-20",
+      "message": "feat(gallery): lightbox floating HUD — actions + tags hover over image, full panel height for image",
+      "scope": "playground/underdark/gallery/",
+      "impact": "medium",
+      "files": [
+        "playground/underdark/gallery/index.html",
+        "playground/underdark/gallery/style/style.css"
+      ],
+      "why": "Bottom info bar was wasting ~80px of panel height; moving actions into a hover-triggered floating HUD gives the image full panel height and only surfaces controls when needed."
+    },
     {
       "hash": "5382706",
       "date": "2026-05-20",
@@ -3009,6 +3021,18 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-20",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Reworked the lightbox bottom info bar into a floating HUD overlay. The bottom panel section (~80px) was removed entirely; actions and tag row now float over the image bottom edge behind a gradient scrim, fading in on hover. Panel grew to 960×880 (from 900×820). Zoom pill moved to top-right to avoid HUD clash. Mobile gets always-visible HUD. Action button labels collapse to icon-only at ≤680px.",
+      "decisions": [
+        "HUD lives inside .vault-lb__img-wrap (not .vault-lb__body) so it is clipped to the image area bounds, not the full body width including nav arrows.",
+        "focus-within keeps HUD visible while the tag input is focused, preventing it from fading out mid-type.",
+        "backdrop-filter: blur on buttons and tag input so they read cleanly against busy image backgrounds without needing a heavy opaque scrim.",
+        "Zoom pill moved from bottom-center to top-right — avoids overlapping with HUD content at the bottom."
+      ]
+    },
     {
       "date": "2026-05-20",
       "agent": "Claude Sonnet 4.6",
