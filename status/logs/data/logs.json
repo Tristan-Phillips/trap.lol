@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.25",
+    "schema_version": "1.5.26",
     "last_updated": "2026-05-19",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -196,7 +196,9 @@
       "glass/script/modules/tunnel-light.js": "The animated tunnel light perspective-corridor effect on the home page header. Only initialised on non-touch devices.",
       "glass/data/llm-agents/": "Per-agent JSON files. index.json lists all filenames. Each agent file: name, tags, system_prompt, temperature, optional model override. Active agents: default.json, opsec-dev.json, sovereign-architect.json.",
       "glass/style/modules/": "CSS module system loaded via @import in glass/style/style.css. Modules: variables.css (all --custom-props), base.css (body/page reset), layout.css (page structure, section spacing), typography.css (headings, prose), components.css (cards, badges, tooltips, node-tiles, station bars, tx-cards, flip-cards), border-life.css (animated border effect), social-cluster.css (footer social strip), tunnel-light.css (header animation), neural-uplink.css (playground-specific overrides), responsive.css (breakpoint overrides).",
-      "underdark/script/modules/ui.js": "The Underdark's primary large module (~11k lines). Handles all UI rendering, state management, character loading, persona system, scenario finder, image studio, social feed, RP generator, and event wiring.",
+      "underdark/script/modules/ui.js": "The Underdark's primary orchestration module (~10.8k lines, actively being split). Handles boot, roster, profile, chat core, reality/settings, lorebooks, config bindings, telemetry, keyboard shortcuts, and rendering. Director panel, Thread Config, and more are now delegated to dedicated modules.",
+      "playground/underdark/script/modules/director.js": "Director panel module. Owns Direct chips (fire character immediately), Mood toggles (persistent tone state), World (Overlord shortcuts), AI quick-reply generation, inline reply chips, and scene inject bar wiring. Exports getActiveTone() and generateAIQuickReplies(state) to ui.js.",
+      "playground/underdark/script/modules/thread-config.js": "Thread Config editor module. Owns openThreadConfig modal, tcLogPush, renderThreadLog, and updateThreadConfigBadge. Exported functions tcLogPush and updateThreadConfigBadge are consumed at 5 call sites in ui.js.",
       "playground/underdark/script/modules/llm-engine.js": "Underdark LLM payload construction and call orchestration. Builds system prompts, injects lorebooks/personas/meters, manages sliding context window and memory summarisation. Delegates raw HTTP transport to glass/script/modules/llm-transport.js.",
       "underdark/script/modules/image-engine.js": "Underdark image/video generation. Wraps nano-gpt image API. Handles async polling for video generation, IDB persistence of generated images.",
       "underdark/script/modules/codex-meters.js": "Renders LLM capability meter bars in the model info panel. Reads model data from glass/data/llm.json routing_table.",
@@ -597,6 +599,20 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-19",
+      "message": "refactor(underdark): extract Thread Config editor to thread-config.js — second split of ui.js",
+      "scope": "playground/underdark/",
+      "impact": "medium",
+      "files": [
+        "playground/underdark/script/modules/thread-config.js",
+        "playground/underdark/script/modules/ui.js",
+        "playground/underdark/script/main.js",
+        "status/logs/data/logs.json"
+      ],
+      "why": "Continued incremental split of ui.js. Extracted Thread Config editor (openThreadConfig modal, tcLogPush, renderThreadLog, updateThreadConfigBadge) into thread-config.js. ui.js reduced from 11,139 to 10,776 lines. tcLogPush and updateThreadConfigBadge are imported back to ui.js for the 4 call sites in the chat engine and roster logic."
+    },
     {
       "hash": "85d99ae",
       "date": "2026-05-19",
@@ -2806,6 +2822,17 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-19",
+      "agent": "Claude Sonnet 4.6",
+      "type": "refactor",
+      "summary": "Continued incremental ui.js split. Extracted Thread Config editor (openThreadConfig, tcLogPush, renderThreadLog, updateThreadConfigBadge) to thread-config.js (378 lines). ui.js now 10,776 lines (down from 11,430 at session start). Cross-module exports verified: tcLogPush imported at 4 call sites, updateThreadConfigBadge at 1. Tab nav duplicate listener removed (consolidated into initThreadConfig). All symbol references validated clean before commit.",
+      "decisions": [
+        "initThreadConfig receives confirm/showModal/hideModal/showToast/lucideRefresh/buildModelOptHtml as deps — avoids re-importing ui-only helpers that don't belong in the thread-config module.",
+        "Log tab nav listener consolidated inside initThreadConfig tab click handler — removes the duplicate _origTcNavClick wrapper that existed in the old closure.",
+        "lucideRefresh in renderThreadLog replaced with direct window.lucide?.createIcons scoped call — thread-config.js has no access to the closure helper, but lucide is globally available on window."
+      ]
+    },
     {
       "date": "2026-05-19",
       "agent": "Claude Sonnet 4.6",
