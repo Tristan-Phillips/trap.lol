@@ -29,6 +29,7 @@ import { qs, qsa, esc, debounce, parseLLMArray, parseLLMJson, parseLLMLines } fr
 import { initCodexMeters, applyStatusTags, updateCodexMeters as _updateCodexMeters } from './codex-meters.js?v=2';
 import { initDirector, getActiveTone, generateAIQuickReplies } from './director.js?v=1';
 import { initThreadConfig, tcLogPush, updateThreadConfigBadge } from './thread-config.js?v=1';
+import { initGallery, addToGallery, addToVideoGallery, getAllFeedPosts, getAllGalleryImages, ensureGalleryStore, saveLocalPost, removeLocalPostBySrc } from './gallery.js?v=1';
 
 // Light markdown renderer for profile details — bold, italic, headers, line breaks only.
 // Does NOT use marked.js to avoid dependency — covers the common character-card patterns.
@@ -441,9 +442,6 @@ export function initUI() {
 
         // Gallery / lightbox state
         galleryCharId: null,
-        lbImages: [],
-        lbRefs:   [],
-        lbIndex:  0,
 
         // Social feed state
         feedMode: 'hot',
@@ -472,6 +470,15 @@ export function initUI() {
 
     // ── Picker mode — closure variable, not window global ────────────────────
     let _pickerMode = null;
+
+    // ── Gallery / Lightbox module ─────────────────────────────────────────────
+    const { openLightbox, openGalleryModal, renderGalleryStrip, openVideoGalleryModal, renderVideoStrip } =
+        initGallery(ctx, {
+            lucideRefresh,
+            showToast,
+            confirm,
+            renderRoster: (...args) => renderRoster(...args),
+        });
 
     // ── Initiation Gate — ritual multi-step wizard ───────────────────────────
     const $gate      = qs('#api-gate');
@@ -3342,7 +3349,7 @@ export function initUI() {
                     <div class="profile-view__info">
                         <h3 class="profile-view__name">${esc(char.name)}</h3>
                         <div class="profile-view__stats">
-                            <span><strong>${getAllFeedPosts(id).length}</strong> posts</span>
+                            <span><strong>${getAllFeedPosts(id, ctx.permanentFeedPosts).length}</strong> posts</span>
                             <span><strong>${(((id.charCodeAt(0) * 137 + id.charCodeAt(1 % id.length) * 31) % 491) / 10).toFixed(1)}k</strong> followers</span>
                             <span><strong>${((id.charCodeAt(0) * 53 + id.length * 17) % 900) + 100}</strong> following</span>
                         </div>
@@ -3807,453 +3814,6 @@ export function initUI() {
     qs('.modal__backdrop', qs('#modal-char-picker'))?.addEventListener('click', () => { qs('#modal-char-picker').hidden = true; });
     qs('#picker-search-input')?.addEventListener('input', debounce(e => renderPickerGrid(e.target.value), 200));
 
-    // ── Gallery ────────────────────────────────────────────────────────────────
-    // ctx.galleryCharId, ctx.lbImages, ctx.lbRefs, ctx.lbIndex declared in ctx above
-    let lbImages = [];   // resolved display URLs (for <img src>)
-    let lbRefs   = [];   // raw storage refs (for save/delete operations)
-    let lbIndex  = 0;
-
-    function getCharGallery(id) {
-        return state.loadedCharacters[id]?.extensions?.underdark?.gallery || [];
-    }
-
-    function getAllGalleryImages(id) {
-        const meta  = state.characters.find(c => c.id === id);
-        const extra = getCharGallery(id);
-        return [meta?.avatar_path, ...extra].filter(Boolean);
-    }
-
-    // Unified post list for a character — merges:
-    //   1. Permanent posts from data/feed.json (git-committed, all instances)
-    //   2. Local composed/generated posts from state.socialData.localPosts[charId]
-    // Gallery images (extensions.underdark.gallery) are NOT included here —
-    // they serve the lightbox/gallery-strip only. Every image that should appear
-    // in the feed must be a localPost (created automatically by addToGallery) or
-    // a permanent post in feed.json.
-    // Each returned object: { id, type, src?, caption, timestamp, permanent, postIdx }
-    function getAllFeedPosts(charId) {
-        const seen = new Set();
-        const result = [];
-
-        // Permanent feed.json posts (newest-first within this source)
-        ctx.permanentFeedPosts.filter(p => p.charId === charId).forEach((p, i) => {
-            const id = p.id || `perm-${charId}-${i}`;
-            if (seen.has(id)) return;
-            seen.add(id);
-            result.push({ ...p, id, permanent: true, postIdx: result.length });
-        });
-
-        // Local composed/generated posts
-        const localPosts = state.socialData?.localPosts?.[charId] || [];
-        localPosts.forEach((p, i) => {
-            const id = p.id || `local-${charId}-${i}`;
-            if (seen.has(id)) return;
-            seen.add(id);
-            result.push({ ...p, id, permanent: false, postIdx: result.length });
-        });
-
-        return result;
-    }
-
-    function ensureGalleryStore(id) {
-        const char = state.loadedCharacters[id];
-        if (!char) return null;
-        if (!char.extensions)                char.extensions = {};
-        if (!char.extensions.underdark)      char.extensions.underdark = {};
-        if (!char.extensions.underdark.gallery) char.extensions.underdark.gallery = [];
-        if (!char.extensions.underdark.galleryMeta) char.extensions.underdark.galleryMeta = {};
-        if (!char.extensions.underdark.videoGallery) char.extensions.underdark.videoGallery = [];
-        return char;
-    }
-
-    function _getGalleryMeta(id, ref) {
-        const char = ensureGalleryStore(id);
-        if (!char) return { tags: [] };
-        return char.extensions.underdark.galleryMeta[ref] || { tags: [] };
-    }
-
-    function _setGalleryMeta(id, ref, patch) {
-        const char = ensureGalleryStore(id);
-        if (!char) return;
-        const existing = char.extensions.underdark.galleryMeta[ref] || { tags: [] };
-        char.extensions.underdark.galleryMeta[ref] = { ...existing, ...patch };
-        saveState();
-    }
-
-    // Push a data URL (or URL string) to a character's gallery, offloading
-    // data URLs to IndexedDB so they don't fill localStorage.
-    // Also creates a localPost entry so the image appears in the feed.
-    async function addToGallery(charId, dataUrl, { caption = null } = {}) {
-        const charObj = ensureGalleryStore(charId);
-        if (!charObj) return null;
-        const gallery = charObj.extensions.underdark.gallery;
-        if (gallery.includes(dataUrl)) return dataUrl;
-
-        let stored;
-        if (isDataUrl(dataUrl)) {
-            const blobId = `gallery-${charId}-${Date.now()}-${Math.random().toString(36).slice(2,6)}`;
-            const ref = await saveImageBlob(blobId, dataUrl).catch(() => null);
-            stored = ref || dataUrl;
-        } else {
-            stored = dataUrl;
-        }
-
-        gallery.push(stored);
-
-        // Mirror into localPosts so the image appears in the feed — skip if already there
-        const existingPost = (state.socialData?.localPosts?.[charId] || []).find(p => p.src === stored);
-        if (!existingPost) _saveLocalPost(charId, { type: 'image', src: stored, caption });
-
-        saveState();
-        return stored;
-    }
-
-    // ── Video gallery helpers ─────────────────────────────────────────────────
-    function addToVideoGallery(charId, videoUrl) {
-        if (!charId || !videoUrl) return;
-        const charObj = ensureGalleryStore(charId);
-        if (!charObj) return;
-        const vg = charObj.extensions.underdark.videoGallery;
-        if (!vg.includes(videoUrl)) {
-            vg.push(videoUrl);
-            saveState();
-        }
-    }
-
-    async function renderVideoStrip(id) {
-        const $wrap = qs('#video-strip-wrap');
-        const $strip = qs('#video-strip');
-        if (!$wrap || !$strip) return;
-        const charObj = ensureGalleryStore(id);
-        const vids = charObj?.extensions?.underdark?.videoGallery || [];
-        if (!vids.length) { $wrap.hidden = true; return; }
-        $wrap.hidden = false;
-        const last4 = vids.slice(-4).reverse();
-        $strip.innerHTML = last4.map((url, i) => `
-            <div class="video-strip-item" data-vi="${vids.length - 1 - i}" title="Play video">
-                <div class="video-strip-item__thumb">
-                    <i data-lucide="clapperboard"></i>
-                    <span class="video-strip-item__num">${vids.length - i}</span>
-                </div>
-            </div>`).join('');
-        qsa('.video-strip-item', $strip).forEach(el => {
-            el.onclick = () => openVideoGalleryModal(id, parseInt(el.dataset.vi));
-        });
-        lucideRefresh($strip);
-    }
-
-    function openVideoGalleryModal(id, startIdx = null) {
-        const meta = state.characters.find(c => c.id === id);
-        const $t = qs('#vgallery-title');
-        if ($t) $t.textContent = `${meta?.name || 'Character'}`;
-        renderVideoGalleryModal(id, startIdx);
-        qs('#modal-video-gallery').hidden = false;
-        lucideRefresh(qs('#modal-video-gallery'));
-    }
-
-    function renderVideoGalleryModal(id, playIdx = null) {
-        const charObj = ensureGalleryStore(id);
-        const vids = charObj?.extensions?.underdark?.videoGallery || [];
-        const $count = qs('#vgallery-count');
-        if ($count) $count.textContent = vids.length ? `${vids.length} video${vids.length !== 1 ? 's' : ''}` : '';
-
-        const $grid = qs('#vgallery-grid');
-        const $player = qs('#vgallery-player');
-        const $videoEl = qs('#vgallery-video-el');
-
-        if (!vids.length) {
-            if ($grid) $grid.innerHTML = `<div class="gallery-empty"><i data-lucide="clapperboard"></i><span>No videos saved yet</span><p>Generate a video then click "Save to Gallery".</p></div>`;
-            lucideRefresh($grid);
-            if ($player) $player.hidden = true;
-            return;
-        }
-
-        if (playIdx !== null && vids[playIdx]) {
-            if ($grid) $grid.hidden = true;
-            if ($player) $player.hidden = false;
-            if ($videoEl) { $videoEl.src = vids[playIdx]; $videoEl.play().catch(() => {}); }
-            qs('#vgallery-player-close')?.addEventListener('click', () => renderVideoGalleryModal(id), { once: true });
-            qs('#vgallery-player-dl')?.addEventListener('click', () => {
-                const a = document.createElement('a');
-                a.href = vids[playIdx];
-                a.download = `underdark-video-${playIdx + 1}.mp4`;
-                a.click();
-            }, { once: true });
-            qs('#vgallery-player-del')?.addEventListener('click', async () => {
-                const ok = await confirm('Delete Video', 'Remove this video from the gallery?');
-                if (!ok) return;
-                vids.splice(playIdx, 1);
-                saveState();
-                renderVideoStrip(id);
-                renderVideoGalleryModal(id);
-            }, { once: true });
-            return;
-        }
-
-        // Grid view
-        if ($player) $player.hidden = true;
-        if ($grid) $grid.hidden = false;
-        $grid.innerHTML = vids.map((url, i) => `
-            <div class="vgallery-item" data-vgi="${i}">
-                <div class="vgallery-item__thumb">
-                    <i data-lucide="clapperboard"></i>
-                    <span class="vgallery-item__num">${i + 1}</span>
-                </div>
-                <div class="gallery-item__overlay">
-                    <button class="gallery-item__btn" data-play="${i}" title="Play"><i data-lucide="play"></i></button>
-                    <button class="gallery-item__btn gallery-item__btn--dl" data-vdl="${i}" title="Download"><i data-lucide="download"></i></button>
-                    <button class="gallery-item__btn gallery-item__btn--del" data-vdel="${i}" title="Delete"><i data-lucide="trash-2"></i></button>
-                </div>
-            </div>`).join('');
-
-        qsa('[data-play]', $grid).forEach(btn => btn.onclick = () => renderVideoGalleryModal(id, parseInt(btn.dataset.play)));
-        qsa('[data-vdl]', $grid).forEach(btn => btn.onclick = () => {
-            const i = parseInt(btn.dataset.vdl);
-            const a = document.createElement('a'); a.href = vids[i]; a.download = `underdark-video-${i + 1}.mp4`; a.click();
-        });
-        qsa('[data-vdel]', $grid).forEach(btn => btn.onclick = async () => {
-            const i = parseInt(btn.dataset.vdel);
-            const ok = await confirm('Delete Video', 'Remove this video from the gallery?');
-            if (!ok) return;
-            vids.splice(i, 1);
-            saveState();
-            renderVideoStrip(id);
-            renderVideoGalleryModal(id);
-        });
-        lucideRefresh($grid);
-    }
-
-    // Resolve all gallery image refs to display URLs (for rendering)
-    async function resolveGalleryImages(id) {
-        const meta  = state.characters.find(c => c.id === id);
-        const extra = getCharGallery(id);
-        const avatarRef = meta?.avatar_path;
-        const all = [avatarRef, ...extra].filter(Boolean);
-        return Promise.all(all.map(ref => resolveImageUrl(ref)));
-    }
-
-    // ── Gallery strip (profile tab) ───────────────────────────────────────────
-    async function renderGalleryStrip(id) {
-        const $strip = qs('#gallery-strip');
-        if (!$strip) return;
-        const allRefs = getAllGalleryImages(id);
-
-        if (!allRefs.length) {
-            $strip.innerHTML = `
-                <div class="gallery-feed-empty">
-                    <i data-lucide="camera"></i>
-                    <p>No data-shards shared yet.</p>
-                </div>`;
-            lucideRefresh($strip);
-            return;
-        }
-
-        // Resolve all refs (may include idb: refs)
-        const resolvedUrls = await Promise.all(allRefs.map(ref => resolveImageUrl(ref)));
-
-        $strip.innerHTML = resolvedUrls.map((src, i) =>
-            src ? `<div class="gallery-feed-item" data-gi="${i}">
-                 <img src="${src}" loading="lazy" class="gallery-feed-img">
-                 ${i === 0 ? '<div class="gallery-feed-badge"><i data-lucide="star"></i></div>' : ''}
-             </div>` : ''
-        ).join('') + `
-            <div class="gallery-feed-item gallery-feed-item--add" id="gallery-strip-add">
-                <i data-lucide="plus"></i>
-            </div>`;
-
-        qsa('.gallery-feed-item:not(.gallery-feed-item--add)', $strip).forEach($t => {
-            const idx = parseInt($t.dataset.gi);
-            $t.addEventListener('click', () => openLightbox(id, idx));
-        });
-
-        qs('#gallery-strip-add', $strip)?.addEventListener('click', () => openGalleryModal(id));
-        lucideRefresh($strip);
-    }
-
-    // ── Gallery modal (manage / add / remove) ─────────────────────────────────
-    function openGalleryModal(id) {
-        ctx.galleryCharId = id;
-        const char = state.loadedCharacters[id];
-        const meta = state.characters.find(c => c.id === id);
-        const $gcn = qs('#gallery-char-name'); if ($gcn) $gcn.textContent = char?.name || meta?.name || 'Gallery';
-        renderGalleryModal(id);
-        qs('#modal-gallery').hidden = false;
-        lucideRefresh(qs('#modal-gallery'));
-    }
-
-    async function renderGalleryModal(id, tagFilter = null) {
-        const $grid = qs('#gallery-grid');
-        if (!$grid) return;
-        const allRefs = getAllGalleryImages(id);
-        const meta = state.characters.find(c => c.id === id);
-        const charObj = ensureGalleryStore(id);
-
-        const $title = qs('#gallery-title');
-        if ($title) $title.textContent = `${meta?.name || 'Character'}`;
-
-        const $count = qs('#gallery-count');
-        if ($count) $count.textContent = allRefs.length ? `${allRefs.length} image${allRefs.length !== 1 ? 's' : ''}` : '';
-
-        // Collect all unique tags across this gallery for the filter bar
-        const allTags = [...new Set(allRefs.flatMap(ref =>
-            charObj?.extensions?.underdark?.galleryMeta?.[ref]?.tags || []
-        ))].sort();
-
-        // Render filter bar (between header and grid)
-        let $filterBar = qs('#gallery-tag-filter');
-        if (!$filterBar) {
-            $filterBar = document.createElement('div');
-            $filterBar.id = 'gallery-tag-filter';
-            $filterBar.className = 'gallery-tag-filter';
-            $grid.parentElement.insertBefore($filterBar, $grid);
-        }
-        if (allTags.length) {
-            $filterBar.innerHTML = `
-                <span class="gallery-tag-filter__label">Filter:</span>
-                <button class="gallery-tag-chip gallery-tag-chip--filter${!tagFilter ? ' gallery-tag-chip--active' : ''}" data-filter="">All</button>
-                ${allTags.map(t => `<button class="gallery-tag-chip gallery-tag-chip--filter${tagFilter === t ? ' gallery-tag-chip--active' : ''}" data-filter="${esc(t)}">${esc(t)}</button>`).join('')}`;
-            $filterBar.hidden = false;
-            qsa('[data-filter]', $filterBar).forEach(btn => {
-                btn.onclick = () => renderGalleryModal(id, btn.dataset.filter || null);
-            });
-        } else {
-            $filterBar.hidden = true;
-        }
-
-        if (!allRefs.length) {
-            $grid.innerHTML = `
-                <div class="gallery-empty">
-                    <i data-lucide="camera"></i>
-                    <span>No images yet</span>
-                    <p>Add images using the URL field or file upload below.</p>
-                </div>`;
-            lucideRefresh($grid);
-            return;
-        }
-
-        // Apply tag filter before resolving URLs
-        const filteredRefs = tagFilter
-            ? allRefs.filter(ref => {
-                const tags = charObj?.extensions?.underdark?.galleryMeta?.[ref]?.tags || [];
-                return tags.includes(tagFilter);
-            })
-            : allRefs;
-
-        if (!filteredRefs.length) {
-            $grid.innerHTML = `
-                <div class="gallery-empty">
-                    <i data-lucide="tag"></i>
-                    <span>No images tagged "${esc(tagFilter)}"</span>
-                </div>`;
-            lucideRefresh($grid);
-            return;
-        }
-
-        // Resolve all IDB refs to display URLs
-        const resolvedUrls = await Promise.all(filteredRefs.map(ref => resolveImageUrl(ref)));
-
-        $grid.innerHTML = resolvedUrls.map((src, i) => {
-            if (!src) return '';
-            const ref = filteredRefs[i];
-            const origIdx = allRefs.indexOf(ref);
-            const isCover = origIdx === 0;
-            const tags = charObj?.extensions?.underdark?.galleryMeta?.[ref]?.tags || [];
-            const tagHtml = `
-                <div class="gallery-item__tags">
-                    ${tags.map(t => `<span class="gallery-tag-chip gallery-tag-chip--item" data-rmtag="${esc(t)}" data-ref="${esc(ref)}">${esc(t)}<span class="gallery-tag-chip__x">×</span></span>`).join('')}
-                    <button class="gallery-tag-chip gallery-tag-chip--add" data-addtag data-ref="${esc(ref)}" title="Add tag"><i data-lucide="plus" style="width:10px;height:10px;"></i></button>
-                </div>`;
-            return `
-            <div class="gallery-item${isCover ? ' gallery-item--cover' : ''}" data-gi="${origIdx}" data-ref="${esc(ref)}">
-                <img src="${esc(src)}" alt="Image ${origIdx + 1}" loading="lazy" class="gallery-item__img">
-                ${isCover ? `<span class="gallery-item__badge">Avatar</span>` : ''}
-                ${tagHtml}
-                <div class="gallery-item__overlay">
-                    <button class="gallery-item__btn" data-lb="${origIdx}" title="Expand"><i data-lucide="expand"></i></button>
-                    <button class="gallery-item__btn gallery-item__btn--dl" data-dl="${i}" title="Download"><i data-lucide="download"></i></button>
-                    ${isCover ? `<button class="gallery-item__btn gallery-item__btn--set" data-set-cover="-1" title="Already profile picture" disabled><i data-lucide="star"></i></button>` : `<button class="gallery-item__btn gallery-item__btn--set" data-set-cover="${origIdx - 1}" title="Set as profile picture"><i data-lucide="user-check"></i></button>`}
-                    ${!isCover ? `<button class="gallery-item__btn gallery-item__btn--del" data-del="${origIdx - 1}" title="Remove"><i data-lucide="trash-2"></i></button>` : ''}
-                </div>
-            </div>`;
-        }).join('');
-
-        qsa('[data-lb]', $grid).forEach(btn => btn.onclick = () => openLightbox(id, parseInt(btn.dataset.lb)));
-        qsa('[data-set-cover]', $grid).forEach(btn => btn.onclick = () => {
-            const idx = parseInt(btn.dataset.setCover);
-            const gallery = charObj.extensions.underdark.gallery;
-            const ref = gallery[idx];
-            if (meta && ref) {
-                if (meta.avatar_path) gallery.unshift(meta.avatar_path);
-                gallery.splice(gallery.indexOf(ref), 1);
-                meta.avatar_path = ref;
-                delete _avatarCache[id];
-                saveState();
-                renderRoster();
-                renderGalleryStrip(id);
-                renderGalleryModal(id);
-                showToast('Avatar updated');
-            }
-        });
-        qsa('[data-del]', $grid).forEach(btn => btn.onclick = async () => {
-            const idx = parseInt(btn.dataset.del);
-            const gallery = charObj.extensions.underdark.gallery;
-            const ref = gallery[idx];
-            if (isIdbImageRef(ref)) await deleteImageBlob(idbImageRefId(ref)).catch(() => {});
-            // Also clean up meta
-            if (charObj.extensions.underdark.galleryMeta) delete charObj.extensions.underdark.galleryMeta[ref];
-            gallery.splice(idx, 1);
-            _removeLocalPostBySrc(id, ref);
-            saveState();
-            renderGalleryStrip(id);
-            renderGalleryModal(id, tagFilter);
-        });
-        qsa('[data-dl]', $grid).forEach(btn => btn.onclick = async () => {
-            const idx = parseInt(btn.dataset.dl);
-            const src = resolvedUrls[idx];
-            if (!src) return;
-            const a = document.createElement('a');
-            a.href = src;
-            a.download = `${(meta?.name || 'image').toLowerCase().replace(/\s+/g, '-')}-${String(idx + 1).padStart(3, '0')}.png`;
-            a.click();
-        });
-
-        // Tag remove
-        qsa('[data-rmtag]', $grid).forEach(chip => chip.onclick = e => {
-            e.stopPropagation();
-            const tag = chip.dataset.rmtag;
-            const ref = chip.dataset.ref;
-            const m = _getGalleryMeta(id, ref);
-            m.tags = m.tags.filter(t => t !== tag);
-            _setGalleryMeta(id, ref, m);
-            renderGalleryModal(id, tagFilter);
-        });
-
-        // Tag add — inline input
-        qsa('[data-addtag]', $grid).forEach(btn => btn.onclick = e => {
-            e.stopPropagation();
-            const ref = btn.dataset.ref;
-            const $tags = btn.closest('.gallery-item__tags');
-            if ($tags.querySelector('.gallery-tag-chip--input')) return;
-            const $inp = document.createElement('input');
-            $inp.className = 'gallery-tag-chip gallery-tag-chip--input';
-            $inp.placeholder = 'tag…';
-            $inp.maxLength = 20;
-            $tags.insertBefore($inp, btn);
-            $inp.focus();
-            const commit = () => {
-                const val = $inp.value.trim().toLowerCase().replace(/\s+/g, '-');
-                if (val) {
-                    const m = _getGalleryMeta(id, ref);
-                    if (!m.tags.includes(val)) { m.tags.push(val); _setGalleryMeta(id, ref, m); }
-                }
-                renderGalleryModal(id, tagFilter);
-            };
-            $inp.onkeydown = e2 => { if (e2.key === 'Enter') { e2.preventDefault(); commit(); } if (e2.key === 'Escape') renderGalleryModal(id, tagFilter); };
-            $inp.onblur = commit;
-        });
-
-        lucideRefresh($grid);
-    }
 
     // ── Quick Snapshot ────────────────────────────────────────────────────────
     // One-click scene capture — uses LLM to build the best possible prompt from
@@ -5526,7 +5086,7 @@ export function initUI() {
         $list.innerHTML = state.characters.map(c => {
             const rawAv = c.avatar_path || state.loadedCharacters[c.id]?.avatar;
             const av = getAvatarUrlSync(c.id, rawAv) || rawAv;
-            const postCount = getAllFeedPosts(c.id).length;
+            const postCount = getAllFeedPosts(c.id, ctx.permanentFeedPosts).length;
             const isActive = ctx.feedMode === c.id;
             const avHtml = av && !isEmoji(av)
                 ? `<div class="social-char-item__avatar" style="background-image:url('${esc(av)}')"></div>`
@@ -5586,7 +5146,7 @@ export function initUI() {
         if (!$feedList) return;
         const allPosts = [];
         for (const c of state.characters) {
-            const posts = getAllFeedPosts(c.id);
+            const posts = getAllFeedPosts(c.id, ctx.permanentFeedPosts);
             const meta  = c;
             const char  = state.loadedCharacters[c.id];
             posts.forEach((p, i) => allPosts.push({ ...p, charId: c.id, meta, char, postIdx: p.postIdx ?? i }));
@@ -5662,7 +5222,7 @@ export function initUI() {
         const char = state.loadedCharacters[id];
         const meta = state.characters.find(c => c.id === id);
         const charName = char?.name || meta?.name || 'Unknown';
-        const allPosts = getAllFeedPosts(id);
+        const allPosts = getAllFeedPosts(id, ctx.permanentFeedPosts);
 
         if (!allPosts.length) {
             $feedList.innerHTML = `
@@ -5884,7 +5444,7 @@ export function initUI() {
                 ${state.characters.map(c => {
                     const rawAv = c.avatar_path || state.loadedCharacters[c.id]?.avatar;
                     const av = getAvatarUrlSync(c.id, rawAv) || rawAv;
-                    const postCount = getAllFeedPosts(c.id).length;
+                    const postCount = getAllFeedPosts(c.id, ctx.permanentFeedPosts).length;
                     const avHtml = av && !isEmoji(av)
                         ? `<div class="feed-suggested-item__avatar" style="background-image:url('${esc(av)}')"></div>`
                         : `<div class="feed-suggested-item__avatar">${av || '👤'}</div>`;
@@ -5910,7 +5470,7 @@ export function initUI() {
         const charName = char?.name || meta?.name || 'Unknown';
         const rawAv = meta?.avatar_path || char?.avatar;
         const av = getAvatarUrlSync(charId, rawAv) || rawAv;
-        const postCount = getAllFeedPosts(charId).length;
+        const postCount = getAllFeedPosts(charId, ctx.permanentFeedPosts).length;
         const likeCount = Object.values(getFeedLikes(charId)).filter(Boolean).length;
         const bio = char?.description?.slice(0, 120) || meta?.tagline || '';
 
@@ -5961,7 +5521,7 @@ export function initUI() {
             ${others.map(c => {
                 const rAv = c.avatar_path || state.loadedCharacters[c.id]?.avatar;
                 const a = getAvatarUrlSync(c.id, rAv) || rAv;
-                const posts = getAllFeedPosts(c.id).length;
+                const posts = getAllFeedPosts(c.id, ctx.permanentFeedPosts).length;
                 const aHtml = a && !isEmoji(a)
                     ? `<div class="feed-suggested-item__avatar" style="background-image:url('${esc(a)}')"></div>`
                     : `<div class="feed-suggested-item__avatar">${a || '👤'}</div>`;
@@ -6132,7 +5692,7 @@ export function initUI() {
             const imgUrl  = _composeType === 'image' ? ($urlInput?.value || '').trim() : null;
             if (!caption && !imgUrl) { showToast('Write something first.', 'warn'); return; }
 
-            _saveLocalPost(selCharId, {
+            saveLocalPost(selCharId, {
                 type: _composeType === 'image' && imgUrl ? 'image' : 'text',
                 src: imgUrl || null,
                 caption: caption || null,
@@ -6150,33 +5710,6 @@ export function initUI() {
         $cancel?.addEventListener('click', cleanup, { once: true });
         $close?.addEventListener('click', cleanup, { once: true });
         $bd?.addEventListener('click', cleanup, { once: true });
-    }
-
-    function _saveLocalPost(charId, { type, src, caption }) {
-        if (!state.socialData.localPosts) state.socialData.localPosts = {};
-        if (!state.socialData.localPosts[charId]) state.socialData.localPosts[charId] = [];
-        const id = `local-${charId}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
-        state.socialData.localPosts[charId].push({
-            id,
-            charId,
-            type,
-            src: src || null,
-            caption: caption || null,
-            timestamp: Date.now(),
-            permanent: false,
-        });
-        saveState();
-        return id;
-    }
-
-    function _removeLocalPostBySrc(charId, src) {
-        const posts = state.socialData?.localPosts?.[charId];
-        if (!posts) return;
-        const idx = posts.findIndex(p => p.src === src);
-        if (idx !== -1) {
-            posts.splice(idx, 1);
-            saveState();
-        }
     }
 
     // ── Feed Export ───────────────────────────────────────────────────────────
@@ -6242,7 +5775,7 @@ export function initUI() {
         const meta    = pick;
         const charName = char?.name || meta?.name || 'Unknown';
         const scenario = state.reality?.worldConfig?.scenario || '';
-        const recentPosts = getAllFeedPosts(charId).slice(0, 3).map(p => p.caption).filter(Boolean).join(' | ');
+        const recentPosts = getAllFeedPosts(charId, ctx.permanentFeedPosts).slice(0, 3).map(p => p.caption).filter(Boolean).join(' | ');
 
         try {
             const { text } = await fetchCompletion({
@@ -6257,7 +5790,7 @@ export function initUI() {
 
             if (!text?.trim() || !ctx.streamActive) return;
 
-            _saveLocalPost(charId, { type: 'text', src: null, caption: text.trim() });
+            saveLocalPost(charId, { type: 'text', src: null, caption: text.trim() });
 
             // Inject into current feed view with typing animation
             if ($feedList && !$feedList.hidden) {
@@ -6349,196 +5882,6 @@ export function initUI() {
         ctx.streamSpeed = parseInt(e.target.value, 10) || 30;
     });
 
-    // ── Lightbox ──────────────────────────────────────────────────────────────
-    async function openLightbox(charId, startIndex) {
-        ctx.galleryCharId = charId;
-        lbIndex       = startIndex;
-        const $lb = qs('#lightbox');
-        $lb.hidden = false;
-        lucideRefresh($lb);
-        // Resolve all IDB refs so lightbox has actual displayable URLs
-        lbRefs   = getAllGalleryImages(charId);
-        lbImages = await Promise.all(lbRefs.map(ref => resolveImageUrl(ref)));
-        renderLightbox(0);
-    }
-
-    function renderLightbox(dir = 0) {
-        if (!lbImages.length) return;
-        lbIndex = Math.max(0, Math.min(lbImages.length - 1, lbIndex));
-        const src   = lbImages[lbIndex];
-        const $img  = qs('#lb-img');
-
-        if ($img) {
-            $img.classList.remove('lb-anim-next', 'lb-anim-prev');
-            void $img.offsetWidth; // force reflow for animation reset
-            if (dir > 0) $img.classList.add('lb-anim-next');
-            else if (dir < 0) $img.classList.add('lb-anim-prev');
-            $img.src = src;
-        }
-
-        const $idx   = qs('#lb-idx');
-        const $total = qs('#lb-total');
-        if ($idx)   $idx.textContent   = lbIndex + 1;
-        if ($total) $total.textContent = lbImages.length;
-
-        const $cap = qs('#lb-caption');
-        if ($cap) $cap.textContent = lbIndex === 0 ? 'Cover Image' : `Image ${lbIndex + 1} of ${lbImages.length}`;
-
-        const $setAv = qs('#lb-set-avatar');
-        if ($setAv) $setAv.disabled = (lbIndex === 0);
-
-        const $del = qs('#lb-remove');
-        if ($del)  $del.disabled = (lbIndex === 0);
-
-        const $dl = qs('#lb-download');
-        if ($dl) $dl.disabled = !src;
-
-        const $prev = qs('#lb-prev');
-        const $next = qs('#lb-next');
-        if ($prev) $prev.disabled = lbIndex <= 0;
-        if ($next) $next.disabled = lbIndex >= lbImages.length - 1;
-    }
-
-    qs('#lb-prev')?.addEventListener('click', () => { lbIndex--; renderLightbox(-1); });
-    qs('#lb-next')?.addEventListener('click', () => { lbIndex++; renderLightbox(1); });
-    qs('#lb-close')?.addEventListener('click', () => { qs('#lightbox').hidden = true; });
-    qs('.lightbox__backdrop')?.addEventListener('click', () => { qs('#lightbox').hidden = true; });
-
-    qs('#lb-download')?.addEventListener('click', () => {
-        const src = lbImages[lbIndex];
-        if (!src) return;
-        const meta = ctx.galleryCharId ? state.characters.find(c => c.id === ctx.galleryCharId) : null;
-        const a = document.createElement('a');
-        a.href = src;
-        a.download = `${(meta?.name || 'image').toLowerCase().replace(/\s+/g, '-')}-${String(lbIndex + 1).padStart(3, '0')}.png`;
-        a.click();
-    });
-
-    qs('#lb-set-avatar')?.addEventListener('click', async () => {
-        if (!ctx.galleryCharId || lbIndex === 0) return;
-        const ref  = lbRefs[lbIndex];   // storage ref
-        const meta = state.characters.find(c => c.id === ctx.galleryCharId);
-        const char = ensureGalleryStore(ctx.galleryCharId);
-        if (!meta || !char) return;
-        const gallery = char.extensions.underdark.gallery;
-        if (meta.avatar_path) gallery.unshift(meta.avatar_path);
-        const idx = gallery.indexOf(ref);
-        if (idx !== -1) gallery.splice(idx, 1);
-        meta.avatar_path = ref;
-        saveState();
-        renderRoster();
-        renderGalleryStrip(ctx.galleryCharId);
-        renderGalleryModal(ctx.galleryCharId);
-        lbRefs   = getAllGalleryImages(ctx.galleryCharId);
-        lbImages = await Promise.all(lbRefs.map(r => resolveImageUrl(r)));
-        lbIndex  = 0;
-        renderLightbox(0);
-        showToast('Cover image updated');
-    });
-
-    qs('#lb-remove')?.addEventListener('click', async () => {
-        if (!ctx.galleryCharId || lbIndex === 0) return;
-        const char = ensureGalleryStore(ctx.galleryCharId);
-        if (!char) return;
-        const ref = char.extensions.underdark.gallery[lbIndex - 1];
-        if (isIdbImageRef(ref)) await deleteImageBlob(idbImageRefId(ref)).catch(() => {});
-        char.extensions.underdark.gallery.splice(lbIndex - 1, 1);
-        saveState();
-        lbRefs   = getAllGalleryImages(ctx.galleryCharId);
-        lbImages = await Promise.all(lbRefs.map(r => resolveImageUrl(r)));
-        renderGalleryStrip(ctx.galleryCharId);
-        renderGalleryModal(ctx.galleryCharId);
-        if (!lbImages.filter(Boolean).length) { qs('#lightbox').hidden = true; return; }
-        lbIndex = Math.min(lbIndex, lbImages.length - 1);
-        renderLightbox(0);
-        showToast('Image removed');
-    });
-
-    // Keyboard nav in lightbox
-    document.addEventListener('keydown', e => {
-        if (qs('#lightbox')?.hidden === false) {
-            if (e.key === 'ArrowLeft')  { lbIndex--; renderLightbox(-1); }
-            if (e.key === 'ArrowRight') { lbIndex++; renderLightbox(1); }
-            if (e.key === 'Escape')     { qs('#lightbox').hidden = true; }
-        }
-    });
-
-    // Close gallery modal
-    qs('#gallery-close')?.addEventListener('click', () => { qs('#modal-gallery').hidden = true; });
-    qs('.modal__backdrop', qs('#modal-gallery'))?.addEventListener('click', () => { qs('#modal-gallery').hidden = true; });
-
-    // Upload files
-    qs('#gallery-add-file')?.addEventListener('click', () => qs('#gallery-file-input').click());
-    qs('#gallery-file-input')?.addEventListener('change', async e => {
-        const files = [...e.target.files];
-        e.target.value = '';
-        if (!ctx.galleryCharId) return;
-        let added = 0;
-        for (const file of files) {
-            if (file.size > 10 * 1024 * 1024) { showToast(`${file.name} exceeds 10 MB limit`, 'error'); continue; }
-            const dataUrl = await new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload  = ev => resolve(ev.target.result);
-                reader.onerror = () => reject(new Error(`Failed to read ${file.name}`));
-                reader.readAsDataURL(file);
-            }).catch(err => { showToast(err.message, 'error'); return null; });
-            if (!dataUrl) continue;
-            await addToGallery(ctx.galleryCharId, dataUrl);
-            added++;
-        }
-        if (added) {
-            renderGalleryStrip(ctx.galleryCharId);
-            renderGalleryModal(ctx.galleryCharId);
-            showToast(`${added} image${added !== 1 ? 's' : ''} added`);
-        }
-    });
-
-    // Add by URL
-    qs('#gallery-url-add')?.addEventListener('click', async () => {
-        const $input = qs('#gallery-url-input');
-        const url = $input?.value.trim();
-        if (!url) return;
-        try { new URL(url); } catch { showToast('Invalid URL', 'error'); return; }
-        if (!ctx.galleryCharId) return;
-        await addToGallery(ctx.galleryCharId, url);
-        $input.value = '';
-        renderGalleryStrip(ctx.galleryCharId);
-        renderGalleryModal(ctx.galleryCharId);
-        showToast('Image URL added');
-    });
-    qs('#gallery-url-input')?.addEventListener('keydown', e => {
-        if (e.key === 'Enter') qs('#gallery-url-add').click();
-    });
-
-    // Export all gallery images as individual downloads
-    qs('#gallery-export-all')?.addEventListener('click', async () => {
-        if (!ctx.galleryCharId) return;
-        const allRefs = getAllGalleryImages(ctx.galleryCharId);
-        if (!allRefs.length) { showToast('No images to export', 'warn'); return; }
-        const meta = state.characters.find(c => c.id === ctx.galleryCharId);
-        const nameSlug = (meta?.name || 'gallery').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-        const allImages = await Promise.all(allRefs.map(ref => resolveImageUrl(ref)));
-        let count = 0;
-        for (let i = 0; i < allImages.length; i++) {
-            const src = allImages[i];
-            if (!src) continue;
-            if (!src.startsWith('data:')) {
-                window.open(src, '_blank', 'noopener');
-                continue;
-            }
-            await new Promise(resolve => {
-                const a = document.createElement('a');
-                a.href = src;
-                a.download = `${nameSlug}-${String(i + 1).padStart(3, '0')}.png`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                setTimeout(resolve, 200);
-            });
-            count++;
-        }
-        showToast(`Exported ${count} image${count !== 1 ? 's' : ''}`, 'info', 2500);
-    });
 
     // ── Chat Background ────────────────────────────────────────────────────────
     function initChatBackground() {
@@ -7034,7 +6377,7 @@ export function initUI() {
                     }).catch(() => ({ text: null }));
                     caption = text?.trim() || null;
                 }
-                _saveLocalPost(targetBotId, { type: 'text', src: null, caption: caption || content.slice(0, 200) });
+                saveLocalPost(targetBotId, { type: 'text', src: null, caption: caption || content.slice(0, 200) });
                 showToast(`Posted to ${esc(name)}'s feed.`);
             } finally {
                 if ($btn) { $btn.disabled = false; $btn.querySelector('i').dataset.lucide = 'image-plus'; lucideRefresh($btn); }
@@ -10311,8 +9654,6 @@ export function initUI() {
 
     qs('#btn-video-gen')?.addEventListener('click', openVideoGenModal);
     qs('#video-gen-close')?.addEventListener('click', () => hideModal('modal-video-gen'));
-    qs('#vgallery-close')?.addEventListener('click', () => { qs('#modal-video-gallery').hidden = true; });
-    qs('#modal-video-gallery [data-close]')?.addEventListener('click', () => { qs('#modal-video-gallery').hidden = true; });
     qsa('[data-close]', $videoModal || document).forEach(el => {
         if ($videoModal?.contains(el)) el.addEventListener('click', () => hideModal('modal-video-gen'));
     });

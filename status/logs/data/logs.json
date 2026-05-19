@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.26",
+    "schema_version": "1.5.27",
     "last_updated": "2026-05-19",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -196,9 +196,10 @@
       "glass/script/modules/tunnel-light.js": "The animated tunnel light perspective-corridor effect on the home page header. Only initialised on non-touch devices.",
       "glass/data/llm-agents/": "Per-agent JSON files. index.json lists all filenames. Each agent file: name, tags, system_prompt, temperature, optional model override. Active agents: default.json, opsec-dev.json, sovereign-architect.json.",
       "glass/style/modules/": "CSS module system loaded via @import in glass/style/style.css. Modules: variables.css (all --custom-props), base.css (body/page reset), layout.css (page structure, section spacing), typography.css (headings, prose), components.css (cards, badges, tooltips, node-tiles, station bars, tx-cards, flip-cards), border-life.css (animated border effect), social-cluster.css (footer social strip), tunnel-light.css (header animation), neural-uplink.css (playground-specific overrides), responsive.css (breakpoint overrides).",
-      "underdark/script/modules/ui.js": "The Underdark's primary orchestration module (~10.8k lines, actively being split). Handles boot, roster, profile, chat core, reality/settings, lorebooks, config bindings, telemetry, keyboard shortcuts, and rendering. Director panel, Thread Config, and more are now delegated to dedicated modules.",
+      "underdark/script/modules/ui.js": "The Underdark's primary orchestration module (~10.1k lines, actively being split). Handles boot, roster, profile, chat core, reality/settings, lorebooks, config bindings, telemetry, keyboard shortcuts, and rendering. Director panel, Thread Config, Gallery/Lightbox, and more are now delegated to dedicated modules.",
       "playground/underdark/script/modules/director.js": "Director panel module. Owns Direct chips (fire character immediately), Mood toggles (persistent tone state), World (Overlord shortcuts), AI quick-reply generation, inline reply chips, and scene inject bar wiring. Exports getActiveTone() and generateAIQuickReplies(state) to ui.js.",
       "playground/underdark/script/modules/thread-config.js": "Thread Config editor module. Owns openThreadConfig modal, tcLogPush, renderThreadLog, and updateThreadConfigBadge. Exported functions tcLogPush and updateThreadConfigBadge are consumed at 5 call sites in ui.js.",
+      "playground/underdark/script/modules/gallery.js": "Gallery, lightbox, and social post storage module. Owns character image gallery (data helpers, strip, modal, tags, export), video gallery (strip + modal), lightbox (open/nav/set-avatar/remove), and saveLocalPost/removeLocalPostBySrc. initGallery(ctx, deps) returns {openLightbox, openGalleryModal, renderGalleryStrip, openVideoGalleryModal, renderVideoStrip}. getAllFeedPosts is a named export used by social, image-studio, and ui.js.",
       "playground/underdark/script/modules/llm-engine.js": "Underdark LLM payload construction and call orchestration. Builds system prompts, injects lorebooks/personas/meters, manages sliding context window and memory summarisation. Delegates raw HTTP transport to glass/script/modules/llm-transport.js.",
       "underdark/script/modules/image-engine.js": "Underdark image/video generation. Wraps nano-gpt image API. Handles async polling for video generation, IDB persistence of generated images.",
       "underdark/script/modules/codex-meters.js": "Renders LLM capability meter bars in the model info panel. Reads model data from glass/data/llm.json routing_table.",
@@ -599,6 +600,20 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-19",
+      "message": "refactor(underdark): extract gallery/lightbox to gallery.js — third split of ui.js",
+      "scope": "playground/underdark/",
+      "impact": "medium",
+      "files": [
+        "playground/underdark/script/modules/gallery.js",
+        "playground/underdark/script/modules/ui.js",
+        "playground/underdark/script/main.js",
+        "status/logs/data/logs.json"
+      ],
+      "why": "Third incremental split of ui.js. Extracted gallery data helpers, lightbox, gallery modal/strip, video gallery, and social post storage (_saveLocalPost/_removeLocalPostBySrc) into gallery.js (~738 lines). ui.js reduced from 10,776 to 10,117 lines. initGallery(ctx, deps) returns {openLightbox, openGalleryModal, renderGalleryStrip, openVideoGalleryModal, renderVideoStrip} refs. getAllFeedPosts updated to take permanentFeedPosts as explicit arg."
+    },
     {
       "hash": "69e0d20",
       "date": "2026-05-19",
@@ -2822,6 +2837,19 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-19",
+      "agent": "Claude Sonnet 4.6",
+      "type": "refactor",
+      "summary": "Third incremental split of ui.js. Extracted gallery/lightbox/social-post-storage block (~660 lines across two non-contiguous sections) into gallery.js (~738 lines). ui.js reduced from 10,776 to 10,117 lines. initGallery(ctx, deps) returns closure refs for openLightbox, openGalleryModal, renderGalleryStrip, openVideoGalleryModal, renderVideoStrip. _saveLocalPost/_removeLocalPostBySrc promoted to public saveLocalPost/removeLocalPostBySrc exports. getAllFeedPosts now takes permanentFeedPosts as explicit second arg to break closure dependency.",
+      "decisions": [
+        "Gallery block was split across two non-contiguous sections (lines 3810–4257 and 6352–6542 in pre-extraction ui.js). Both removed in sequence via Python script for precision.",
+        "_saveLocalPost/_removeLocalPostBySrc were in the Social Feed section (not gallery block) but moved to gallery.js because addToGallery depends on them — social.js will import them from gallery.js when extracted next.",
+        "getAllFeedPosts signature changed from getAllFeedPosts(charId) to getAllFeedPosts(charId, permanentFeedPosts) — ctx.permanentFeedPosts passed at every call site in ui.js.",
+        "initGallery called early in initUI (after ctx init, before first gallery usage) using renderRoster thunk (...args) => renderRoster(...args) to avoid forward-reference issues.",
+        "Duplicate vgallery-close listener removed from ui.js — gallery.js now owns all video gallery modal close wiring."
+      ]
+    },
     {
       "date": "2026-05-19",
       "agent": "Claude Sonnet 4.6",
