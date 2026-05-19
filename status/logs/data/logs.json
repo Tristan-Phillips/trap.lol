@@ -605,7 +605,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "f8c045a",
       "date": "2026-05-19",
       "message": "feat(underdark): Image Vault standalone gallery page at playground/underdark/gallery/",
       "scope": "playground/underdark/",
