@@ -600,7 +600,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "69e0d20",
       "date": "2026-05-19",
       "message": "refactor(underdark): extract Thread Config editor to thread-config.js — second split of ui.js",
       "scope": "playground/underdark/",
