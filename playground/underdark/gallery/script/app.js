@@ -640,12 +640,22 @@ function wire() {
         if (tag) addTagToItem(item, tag);
     });
 
-    // Keyboard
+    // Keyboard shortcuts
     document.addEventListener('keydown', e => {
+        // Guard: only act when lightbox is open and no text input is focused
         if (qs('#vault-lb').hidden) return;
-        if (e.key === 'Escape')       { closeLightbox(); return; }
-        if (e.key === 'ArrowLeft')    lbNav(-1);
-        if (e.key === 'ArrowRight')   lbNav(1);
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+        if (e.key === 'Escape')                            { closeLightbox(); return; }
+        if (e.key === 'ArrowLeft'  || e.key === 'a' || e.key === 'A') { lbNav(-1); return; }
+        if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D' && !e.ctrlKey) {
+            // 'D' is also download shortcut — only navigate with ctrl-free D
+            if (e.key !== 'D' || !e.shiftKey) lbNav(1);
+            return;
+        }
+        if ((e.key === 'D' || e.key === 'd') && e.shiftKey) {
+            const item = S.lbItems[S.lbIndex]; if (item) downloadItem(item);
+            return;
+        }
     });
 
     // Touch swipe on lightbox

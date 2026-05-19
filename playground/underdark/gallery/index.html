@@ -126,44 +126,54 @@
 <!-- ── Lightbox ── -->
 <div id="vault-lb" class="vault-lb" hidden>
   <div class="vault-lb__backdrop" id="lb-backdrop"></div>
-  <div class="vault-lb__stage">
-    <button class="vault-lb__close" id="lb-close">
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-    </button>
-    <button class="vault-lb__nav vault-lb__nav--prev" id="lb-prev">
-      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-    </button>
-    <div class="vault-lb__img-wrap" id="lb-img-wrap">
-      <img id="lb-img" class="vault-lb__img" src="" alt="">
+  <div class="vault-lb__panel">
+
+    <!-- Top bar -->
+    <div class="vault-lb__topbar">
+      <div class="vault-lb__char-pill" id="lb-char-pill"></div>
+      <div class="vault-lb__counter" id="lb-counter">1 / 1</div>
+      <span class="vault-lb__kb-hint">← → navigate · Esc close</span>
+      <button class="vault-lb__close" id="lb-close" title="Close (Esc)">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
     </div>
-    <button class="vault-lb__nav vault-lb__nav--next" id="lb-next">
-      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-    </button>
-    <div class="vault-lb__info">
-      <div class="vault-lb__info-top">
-        <div class="vault-lb__char-pill" id="lb-char-pill"></div>
-        <div class="vault-lb__counter" id="lb-counter">1 / 1</div>
+
+    <!-- Image + nav arrows -->
+    <div class="vault-lb__body">
+      <button class="vault-lb__nav vault-lb__nav--prev" id="lb-prev" title="Previous (←)">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
+      <div class="vault-lb__img-wrap" id="lb-img-wrap">
+        <img id="lb-img" class="vault-lb__img" src="" alt="">
       </div>
+      <button class="vault-lb__nav vault-lb__nav--next" id="lb-next" title="Next (→)">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+      </button>
+    </div>
+
+    <!-- Bottom info -->
+    <div class="vault-lb__info">
       <div class="vault-lb__tags" id="lb-tags"></div>
       <div class="vault-lb__actions">
         <button class="vault-lb__action-btn" id="lb-set-avatar" title="Set as character avatar">
-          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           <span>Set Avatar</span>
         </button>
         <button class="vault-lb__action-btn" id="lb-add-tag" title="Add tag">
-          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
           <span>Tag</span>
         </button>
-        <button class="vault-lb__action-btn" id="lb-download" title="Download">
-          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+        <button class="vault-lb__action-btn" id="lb-download" title="Download (D)">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
           <span>Download</span>
         </button>
-        <button class="vault-lb__action-btn vault-lb__action-btn--danger" id="lb-delete" title="Remove from gallery">
-          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+        <button class="vault-lb__action-btn vault-lb__action-btn--danger" id="lb-delete" title="Delete">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
           <span>Delete</span>
         </button>
       </div>
     </div>
+
   </div>
 </div>
 
