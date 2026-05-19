@@ -602,7 +602,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "883a1b3",
       "date": "2026-05-19",
       "message": "fix(underdark): wallhaven smart preloader — LRU cache, token-gated loads, neighbour preload",
       "scope": "playground/underdark/",
