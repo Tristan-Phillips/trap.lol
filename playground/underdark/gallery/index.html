@@ -138,7 +138,7 @@
       </button>
     </div>
 
-    <!-- Image + nav arrows -->
+    <!-- Image + nav arrows + floating HUD -->
     <div class="vault-lb__body">
       <button class="vault-lb__nav vault-lb__nav--prev" id="lb-prev" title="Previous (←)">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
@@ -146,43 +146,45 @@
       <div class="vault-lb__img-wrap" id="lb-img-wrap">
         <img id="lb-img" class="vault-lb__img" src="" alt="">
         <div class="lb-zoom-pill" id="lb-zoom-pill">100%</div>
+
+        <!-- Floating HUD — fades in on body hover -->
+        <div class="vault-lb__hud" id="lb-hud">
+          <div class="vault-lb__hud-tags-row">
+            <div class="vault-lb__tags" id="lb-tags"></div>
+            <div class="vault-lb__tag-input-row">
+              <input type="text" id="lb-tag-input" class="vault-lb__tag-input" placeholder="Add tag…" maxlength="20" autocomplete="off" spellcheck="false">
+              <button class="vault-lb__tag-confirm" id="lb-tag-confirm" title="Add tag (Enter)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="vault-lb__hud-actions">
+            <button class="vault-lb__action-btn" id="lb-set-avatar" title="Set as character avatar">
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <span>Set Avatar</span>
+            </button>
+            <button class="vault-lb__action-btn" id="lb-rotate" title="Rotate 90° (R)">
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+              <span>Rotate</span>
+            </button>
+            <button class="vault-lb__action-btn" id="lb-zoom-reset" title="Reset zoom (double-click image)">
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="M8 11h6"/></svg>
+              <span>Reset</span>
+            </button>
+            <button class="vault-lb__action-btn" id="lb-download" title="Download (Shift+D)">
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+              <span>Download</span>
+            </button>
+            <button class="vault-lb__action-btn vault-lb__action-btn--danger" id="lb-delete" title="Delete">
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+              <span>Delete</span>
+            </button>
+          </div>
+        </div>
       </div>
       <button class="vault-lb__nav vault-lb__nav--next" id="lb-next" title="Next (→)">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
       </button>
-    </div>
-
-    <!-- Bottom info -->
-    <div class="vault-lb__info">
-      <div class="vault-lb__tags" id="lb-tags"></div>
-      <div class="vault-lb__tag-input-row" id="lb-tag-row">
-        <input type="text" id="lb-tag-input" class="vault-lb__tag-input" placeholder="Add tag…" maxlength="20" autocomplete="off" spellcheck="false">
-        <button class="vault-lb__tag-confirm" id="lb-tag-confirm" title="Add tag (Enter)">
-          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
-        </button>
-      </div>
-      <div class="vault-lb__actions">
-        <button class="vault-lb__action-btn" id="lb-set-avatar" title="Set as character avatar">
-          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          <span>Set Avatar</span>
-        </button>
-        <button class="vault-lb__action-btn" id="lb-rotate" title="Rotate 90° (R)">
-          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-          <span>Rotate</span>
-        </button>
-        <button class="vault-lb__action-btn" id="lb-zoom-reset" title="Reset zoom (double-click image)">
-          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="M8 11h6"/></svg>
-          <span>Reset</span>
-        </button>
-        <button class="vault-lb__action-btn" id="lb-download" title="Download (Shift+D)">
-          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-          <span>Download</span>
-        </button>
-        <button class="vault-lb__action-btn vault-lb__action-btn--danger" id="lb-delete" title="Delete">
-          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-          <span>Delete</span>
-        </button>
-      </div>
     </div>
 
   </div>

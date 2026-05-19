@@ -633,9 +633,9 @@ body {
     border: 1px solid rgba(190, 41, 236, 0.2);
     border-radius: var(--radius-lg);
     box-shadow: 0 24px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.03);
-    width: min(900px, calc(100vw - 32px));
+    width: min(960px, calc(100vw - 32px));
     /* Use height (not max-height) so flex children can resolve % constraints */
-    height: min(88vh, 820px);
+    height: min(92vh, 880px);
     overflow: hidden;
 }
 
@@ -673,7 +673,11 @@ body {
     flex: 1;
     min-height: 0;
     position: relative;
+    /* HUD fades in when hovering the body area */
 }
+.vault-lb__body:hover .vault-lb__hud { opacity: 1; pointer-events: auto; }
+/* Keep HUD visible while interacting with it even if cursor drifts slightly */
+.vault-lb__hud:focus-within { opacity: 1 !important; pointer-events: auto !important; }
 .vault-lb__nav {
     width: 44px;
     align-self: stretch;
@@ -724,16 +728,15 @@ body {
 /* Suppress transition during active drag/pinch for zero-lag feedback */
 .vault-lb__img.lb-no-transition { transition: none; }
 
-/* Zoom indicator */
+/* Zoom indicator — top-right corner so it doesn't clash with the bottom HUD */
 .lb-zoom-pill {
     position: absolute;
-    bottom: 10px;
-    left: 50%;
-    transform: translateX(-50%);
+    top: 10px;
+    right: 12px;
     font-family: var(--font-mono);
     font-size: 0.62rem;
     color: var(--text-secondary);
-    background: rgba(10, 7, 16, 0.75);
+    background: rgba(10, 7, 16, 0.78);
     border: 1px solid var(--border);
     border-radius: 5px;
     padding: 2px 8px;
@@ -741,23 +744,38 @@ body {
     opacity: 0;
     transition: opacity 0.3s;
     white-space: nowrap;
+    z-index: 5;
 }
 .lb-zoom-pill--visible { opacity: 1; }
 
-/* Bottom info bar — inside the panel */
-.vault-lb__info {
-    flex-shrink: 0;
-    border-top: 1px solid var(--border-mute);
-    background: rgba(0,0,0,0.15);
-    padding: 10px 14px;
+/* ── Floating HUD — overlays bottom of img-wrap, fades in on body hover ── */
+.vault-lb__hud {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    z-index: 10;
+    padding: 14px 16px 12px;
+    /* Gradient scrim so text/buttons sit on a dark base regardless of image */
+    background: linear-gradient(to top,
+        rgba(5, 3, 10, 0.92) 0%,
+        rgba(5, 3, 10, 0.72) 60%,
+        transparent 100%);
     display: flex;
     flex-direction: column;
-    gap: 7px;
+    gap: 8px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
 }
-.vault-lb__info-top {
+.vault-lb__hud-tags-row {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.vault-lb__hud-actions {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
 }
 .vault-lb__char-pill {
     font-family: var(--font-mono);
@@ -791,16 +809,19 @@ body {
     display: flex;
     align-items: center;
     gap: 5px;
+    flex-shrink: 0;
 }
 .vault-lb__tag-input {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
+    background: rgba(10, 7, 16, 0.75);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid rgba(120, 80, 200, 0.25);
     color: var(--text-primary);
     font-family: var(--font-mono);
     font-size: 0.68rem;
     border-radius: 5px;
-    padding: 4px 8px;
-    width: 140px;
+    padding: 5px 9px;
+    width: 130px;
     outline: none;
     transition: border-color 0.15s;
 }
@@ -810,8 +831,10 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 26px; height: 26px;
-    background: var(--accent-glow);
+    width: 28px; height: 28px;
+    background: rgba(190, 41, 236, 0.2);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     border: 1px solid var(--accent-dim);
     color: var(--accent);
     border-radius: 5px;
@@ -819,7 +842,7 @@ body {
     flex-shrink: 0;
     transition: background 0.12s;
 }
-.vault-lb__tag-confirm:hover { background: rgba(190, 41, 236, 0.28); }
+.vault-lb__tag-confirm:hover { background: rgba(190, 41, 236, 0.35); }
 .lb-tag {
     display: inline-flex;
     align-items: center;
@@ -844,28 +867,25 @@ body {
 }
 .lb-tag__rm:hover { color: var(--red); }
 
-.vault-lb__actions {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-}
 .vault-lb__action-btn {
     display: flex;
     align-items: center;
-    gap: 6px;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid var(--border);
+    gap: 5px;
+    background: rgba(10, 7, 16, 0.75);
+    border: 1px solid rgba(120, 80, 200, 0.25);
     color: var(--text-secondary);
     font-family: var(--font-mono);
     font-size: 0.68rem;
     border-radius: 6px;
-    padding: 5px 12px;
+    padding: 5px 11px;
     cursor: pointer;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     transition: color 0.12s, border-color 0.12s, background 0.12s;
 }
-.vault-lb__action-btn:hover:not(:disabled) { color: var(--accent); border-color: var(--accent-dim); background: var(--accent-glow); }
+.vault-lb__action-btn:hover:not(:disabled) { color: var(--accent); border-color: var(--accent-dim); background: rgba(190, 41, 236, 0.22); }
 .vault-lb__action-btn:disabled { opacity: 0.3; cursor: default; }
-.vault-lb__action-btn--danger:hover:not(:disabled) { color: var(--red); border-color: var(--red-dim); background: rgba(224, 85, 85, 0.1); }
+.vault-lb__action-btn--danger:hover:not(:disabled) { color: var(--red); border-color: var(--red-dim); background: rgba(224, 85, 85, 0.18); }
 
 /* ── Toasts ── */
 .vault-toasts {
@@ -908,8 +928,10 @@ body.lb-open { overflow: hidden !important; }
     .vault-sidebar { width: 180px; }
     .vault-grid--grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
     .vault-grid--masonry { columns: 3; }
-    .vault-lb__panel { max-width: calc(100vw - 24px); width: calc(100vw - 24px); }
+    .vault-lb__panel { width: calc(100vw - 24px); height: min(92vh, calc(100vh - 24px)); }
     .vault-lb__kb-hint { display: none; }
+    /* Touch: always show HUD since there's no hover on mobile */
+    .vault-lb__hud { opacity: 1; pointer-events: auto; }
 }
 @media (max-width: 680px) {
     .vault-layout { flex-direction: column; height: auto; overflow: auto; }
@@ -926,6 +948,9 @@ body.lb-open { overflow: hidden !important; }
     .vault-main { overflow: visible; }
     .vault-header__stats { display: none; }
     .vault-grid--masonry { columns: 2; }
-    .vault-lb { padding: 8px; }
-    .vault-lb__nav { width: 36px; }
+    .vault-lb { padding: 6px; }
+    .vault-lb__nav { width: 32px; }
+    .vault-lb__hud { padding: 10px 12px 10px; gap: 6px; }
+    .vault-lb__action-btn span { display: none; }
+    .vault-lb__action-btn { padding: 6px 8px; }
 }
