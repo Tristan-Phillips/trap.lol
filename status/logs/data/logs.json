@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.30",
+    "schema_version": "1.5.31",
     "last_updated": "2026-05-19",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -197,7 +197,7 @@
       "glass/data/llm-agents/": "Per-agent JSON files. index.json lists all filenames. Each agent file: name, tags, system_prompt, temperature, optional model override. Active agents: default.json, opsec-dev.json, sovereign-architect.json.",
       "glass/style/modules/": "CSS module system loaded via @import in glass/style/style.css. Modules: variables.css (all --custom-props), base.css (body/page reset), layout.css (page structure, section spacing), typography.css (headings, prose), components.css (cards, badges, tooltips, node-tiles, station bars, tx-cards, flip-cards), border-life.css (animated border effect), social-cluster.css (footer social strip), tunnel-light.css (header animation), neural-uplink.css (playground-specific overrides), responsive.css (breakpoint overrides).",
       "underdark/script/modules/ui.js": "The Underdark's primary orchestration module (~9.3k lines, actively being split). Handles boot, roster, profile, chat core, reality/settings, lorebooks, config bindings, telemetry, keyboard shortcuts, and rendering. Director, Thread Config, Gallery/Lightbox, and Social Feed are now delegated to dedicated modules.",
-      "playground/underdark/script/modules/director.js": "Director panel module. Owns Direct chips (fire character immediately), Mood toggles (persistent tone state), World (Overlord shortcuts), AI quick-reply generation, inline reply chips, and scene inject bar wiring. Exports getActiveTone() and generateAIQuickReplies(state) to ui.js.",
+      "playground/underdark/script/modules/director.js": "Director panel module. Owns Direct chips, Mood toggles, World (Overlord shortcuts), Scene tab (replaces old scene-inject-bar), AI quick-reply generation, and inline reply chips. 4-tab panel with icons and slide-in animation. Exports getActiveTone(), getSceneDirective(), clearSceneDirective(), generateAIQuickReplies(state) — ui.js uses getSceneDirective/clearSceneDirective instead of DOM qs('#scene-inject-input').",
       "playground/underdark/script/modules/thread-config.js": "Thread Config editor module. Owns openThreadConfig modal, tcLogPush, renderThreadLog, and updateThreadConfigBadge. Exported functions tcLogPush and updateThreadConfigBadge are consumed at 5 call sites in ui.js.",
       "playground/underdark/script/modules/social.js": "Social Feed module. Owns social sidebar, hot feed and per-character feed rendering, post list with likes/comments/DM wiring, Compose Post modal, Feed Export JSON download, and Living World LLM auto-post stream. initSocial(ctx, deps) returns {renderSocialFeed, renderHotFeed, renderSocialSidebar, openSocialFeed, openComposeModal, startLivingWorld, pauseLivingWorld}.",
       "playground/underdark/script/modules/gallery.js": "Gallery, lightbox, and social post storage module. Owns character image gallery (data helpers, strip, modal, tags, export), video gallery (strip + modal), lightbox (open/nav/set-avatar/remove), and saveLocalPost/removeLocalPostBySrc. initGallery(ctx, deps) returns {openLightbox, openGalleryModal, renderGalleryStrip, openVideoGalleryModal, renderVideoStrip}. getAllFeedPosts is a named export used by social, image-studio, and ui.js.",
@@ -601,6 +601,22 @@
     ]
   },
   "commits": [
+    {
+      "hash": "b7cdac7",
+      "date": "2026-05-19",
+      "message": "feat(underdark): redesign Director panel — 4 tabs, Scene integrated, slide-in animation",
+      "scope": "playground/underdark/",
+      "impact": "medium",
+      "files": [
+        "playground/underdark/script/modules/director.js",
+        "playground/underdark/script/modules/ui.js",
+        "playground/underdark/script/main.js",
+        "playground/underdark/index.html",
+        "playground/underdark/style/arena.css",
+        "playground/underdark/style/responsive.css"
+      ],
+      "why": "Director panel redesigned: 4 tabs (Direct/Mood/World/Scene) with lucide icons and slide-in animation. Scene tab absorbs the old standalone scene-inject bar and toolbar button. Scene value persisted via module variable with exported getSceneDirective/clearSceneDirective — ui.js reads these instead of querying a dynamic DOM element."
+    },
     {
       "hash": "0a253ca",
       "date": "2026-05-19",
@@ -2881,6 +2897,18 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-19",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Redesigned the Director panel in The Underdark. The old 3-tab (Direct/Mood/World) panel plus a separate scene-inject toolbar button and floating bar were replaced with a unified 4-tab panel (Direct/Mood/World/Scene) with lucide icons per tab, a slide-in entry animation, and persistent tab state across rebuilds. The Scene tab absorbs the old scene-inject bar — the standalone toolbar button and HTML element were removed. Scene directive value is now tracked in a module-level _sceneVal variable with exported getSceneDirective/clearSceneDirective accessors so ui.js can read it regardless of whether the Director panel is open.",
+      "decisions": [
+        "Scene inject input moved into the Director panel as a 4th tab rather than staying as a separate toolbar button + floating bar — reduces toolbar clutter and makes scene injection discoverable alongside the other director tools.",
+        "Scene value stored in director.js module-level _sceneVal rather than reading DOM — necessary since the input element only exists while the panel is open.",
+        "Tab memory (_activeDirectorTab) persisted across _buildDirectorPanel rebuilds — previously, a tone toggle would always reset the panel to the Mood tab, now it stays on whichever tab the user was on.",
+        "Slide-in animation (translateY 6px → 0) added — the panel previously just appeared instantly."
+      ]
+    },
     {
       "date": "2026-05-19",
       "agent": "Claude Sonnet 4.6",
