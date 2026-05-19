@@ -632,7 +632,8 @@ body {
     border-radius: var(--radius-lg);
     box-shadow: 0 24px 80px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.03);
     width: min(900px, calc(100vw - 32px));
-    max-height: min(88vh, 800px);
+    /* Use height (not max-height) so flex children can resolve % constraints */
+    height: min(88vh, 820px);
     overflow: hidden;
 }
 
@@ -691,12 +692,18 @@ body {
     flex: 1;
     min-width: 0;
     min-height: 0;
+    /* overflow visible so zoomed image can spill; clipping handled by panel */
     overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 10px;
+    position: relative;
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
 }
+.vault-lb__img-wrap.lb-dragging { cursor: grabbing; }
 .vault-lb__img {
     max-width: 100%;
     max-height: 100%;
@@ -706,7 +713,33 @@ body {
     border-radius: 6px;
     display: block;
     box-shadow: 0 4px 30px rgba(0,0,0,0.5);
+    transform-origin: center center;
+    transition: transform 0.08s ease-out;
+    pointer-events: none;
+    will-change: transform;
 }
+/* Suppress transition during active drag/pinch for zero-lag feedback */
+.vault-lb__img.lb-no-transition { transition: none; }
+
+/* Zoom indicator */
+.lb-zoom-pill {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    color: var(--text-secondary);
+    background: rgba(10, 7, 16, 0.75);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 2px 8px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+    white-space: nowrap;
+}
+.lb-zoom-pill--visible { opacity: 1; }
 
 /* Bottom info bar — inside the panel */
 .vault-lb__info {

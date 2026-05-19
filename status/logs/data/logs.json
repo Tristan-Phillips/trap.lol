@@ -1,8 +1,8 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.36",
-    "last_updated": "2026-05-19",
+    "schema_version": "1.5.37",
+    "last_updated": "2026-05-20",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
       "_protocol",
@@ -604,6 +604,20 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-20",
+      "message": "feat(gallery): zoom/pan/rotate engine + lightbox image overflow fix",
+      "scope": "playground/underdark/gallery/",
+      "impact": "high",
+      "files": [
+        "playground/underdark/gallery/index.html",
+        "playground/underdark/gallery/script/app.js",
+        "playground/underdark/gallery/style/style.css",
+        "status/logs/data/logs.json"
+      ],
+      "why": "Portrait images overflowed the lightbox panel because max-height:100% on <img> cannot resolve against a flex parent with max-height (no explicit height for percentage resolution). Fixed by switching .vault-lb__panel to height: min(88vh, 820px). Added full LBT transform engine: wheel zoom (focal-point aware), click-drag pan, pinch-to-zoom, R key / Rotate button for 90° increments, double-click to reset, 0 to reset, Escape resets zoom before closing, zoom percentage pill overlay, arrow keys pan when zoomed."
+    },
     {
       "hash": "22c2a5d",
       "date": "2026-05-19",
@@ -2981,6 +2995,19 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-20",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Fixed lightbox image overflow in the standalone gallery and added a full zoom/pan/rotate engine. Two root causes fixed: (1) portrait images overflowed .vault-lb__panel because max-height on the panel cannot propagate to the child <img> max-height: 100% — switched panel to height: min(88vh, 820px) so flex children resolve correctly; (2) no transform capability existed. Built LBT engine: focal-point wheel zoom, click-drag pan (with cursor states), two-finger pinch zoom on mobile, R key / Rotate button for 90° steps, double-click / 0 key to reset, Escape resets zoom first then closes. Existing swipe-to-navigate guarded so it only fires when not zoomed in. All keyboard bindings coexist without conflicts.",
+      "decisions": [
+        "Panel uses height not max-height — this is the correct fix for percentage-height image constraints inside a flex column. max-height creates ambiguity that percentage children cannot resolve; explicit height does not.",
+        "LBT.scale, LBT.tx, LBT.ty, LBT.rot are module-level — reset to identity on openLightbox() and on renderLightbox() (image change). Never persisted between images.",
+        "Wheel zoom applies to img-wrap center as default; event-target focal point used when wheel fires over the wrap element.",
+        "Swipe navigation disabled when LBT.scale > 1 to prevent navigation conflicts with pan gesture.",
+        "Escape key now resets zoom first if any transform is active, closes lightbox only if already at identity — prevents accidental close when trying to un-zoom."
+      ]
+    },
     {
       "date": "2026-05-19",
       "agent": "Claude Sonnet 4.6",

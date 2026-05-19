@@ -380,23 +380,165 @@ function renderTimeline(items, $tl) {
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// LIGHTBOX TRANSFORM ENGINE (zoom / pan / rotate)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const LBT = { scale: 1, tx: 0, ty: 0, rot: 0 };
+const LBT_MIN = 0.25, LBT_MAX = 8;
+let _zoomPillTimer = null;
+
+function lbtApply(transition = true) {
+    const $img = qs('#lb-img');
+    if (!$img) return;
+    if (transition) { $img.classList.remove('lb-no-transition'); }
+    else            { $img.classList.add('lb-no-transition'); }
+    $img.style.transform = `translate(${LBT.tx}px, ${LBT.ty}px) rotate(${LBT.rot}deg) scale(${LBT.scale})`;
+    lbtShowZoomPill();
+}
+
+function lbtReset(transition = true) {
+    LBT.scale = 1; LBT.tx = 0; LBT.ty = 0; LBT.rot = 0;
+    lbtApply(transition);
+}
+
+function lbtShowZoomPill() {
+    const $pill = qs('#lb-zoom-pill');
+    if (!$pill) return;
+    $pill.textContent = `${Math.round(LBT.scale * 100)}%${LBT.rot ? ` · ${LBT.rot}°` : ''}`;
+    $pill.classList.add('lb-zoom-pill--visible');
+    clearTimeout(_zoomPillTimer);
+    _zoomPillTimer = setTimeout(() => $pill.classList.remove('lb-zoom-pill--visible'), 1800);
+}
+
+function lbtZoomAt(delta, cx, cy) {
+    // cx/cy are coordinates relative to the img-wrap element
+    const $wrap = qs('#lb-img-wrap');
+    const rect  = $wrap.getBoundingClientRect();
+    const px = cx - rect.left - rect.width  / 2;
+    const py = cy - rect.top  - rect.height / 2;
+
+    const newScale = Math.min(LBT_MAX, Math.max(LBT_MIN, LBT.scale * delta));
+    const ratio = newScale / LBT.scale;
+    LBT.tx = px + (LBT.tx - px) * ratio;
+    LBT.ty = py + (LBT.ty - py) * ratio;
+    LBT.scale = newScale;
+    lbtApply(false);
+}
+
+function lbtClampPan() {
+    // When scale <= 1 snap back to center
+    if (LBT.scale <= 1) { LBT.tx = 0; LBT.ty = 0; }
+}
+
+// ── Wheel zoom ──
+function _onWheel(e) {
+    if (qs('#vault-lb').hidden) return;
+    e.preventDefault();
+    const factor = e.deltaY < 0 ? 1.12 : 1 / 1.12;
+    lbtZoomAt(factor, e.clientX, e.clientY);
+}
+
+// ── Drag pan ──
+let _drag = { active: false, sx: 0, sy: 0, tx0: 0, ty0: 0 };
+function _onMouseDown(e) {
+    if (e.button !== 0) return;
+    _drag.active = true;
+    _drag.sx = e.clientX; _drag.sy = e.clientY;
+    _drag.tx0 = LBT.tx;   _drag.ty0 = LBT.ty;
+    qs('#lb-img-wrap').classList.add('lb-dragging');
+    qs('#lb-img').classList.add('lb-no-transition');
+}
+function _onMouseMove(e) {
+    if (!_drag.active) return;
+    LBT.tx = _drag.tx0 + (e.clientX - _drag.sx);
+    LBT.ty = _drag.ty0 + (e.clientY - _drag.sy);
+    lbtApply(false);
+}
+function _onMouseUp() {
+    if (!_drag.active) return;
+    _drag.active = false;
+    qs('#lb-img-wrap').classList.remove('lb-dragging');
+    lbtClampPan();
+    lbtApply(true);
+}
+
+// ── Pinch zoom ──
+let _pinch = { active: false, dist0: 0, scale0: 1, cx: 0, cy: 0 };
+function _pinchDist(touches) {
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.hypot(dx, dy);
+}
+function _onTouchStart(e) {
+    if (e.touches.length === 2) {
+        _pinch.active = true;
+        _pinch.dist0  = _pinchDist(e.touches);
+        _pinch.scale0 = LBT.scale;
+        _pinch.cx = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+        _pinch.cy = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+    }
+}
+function _onTouchMove(e) {
+    if (_pinch.active && e.touches.length === 2) {
+        e.preventDefault();
+        const dist = _pinchDist(e.touches);
+        const newScale = Math.min(LBT_MAX, Math.max(LBT_MIN, _pinch.scale0 * (dist / _pinch.dist0)));
+        const ratio = newScale / LBT.scale;
+        const $wrap = qs('#lb-img-wrap');
+        const rect  = $wrap.getBoundingClientRect();
+        const px = _pinch.cx - rect.left - rect.width  / 2;
+        const py = _pinch.cy - rect.top  - rect.height / 2;
+        LBT.tx = px + (LBT.tx - px) * ratio;
+        LBT.ty = py + (LBT.ty - py) * ratio;
+        LBT.scale = newScale;
+        lbtApply(false);
+    }
+}
+function _onTouchEnd() {
+    if (_pinch.active) {
+        _pinch.active = false;
+        lbtClampPan();
+        lbtApply(true);
+    }
+}
+
+// ── Double-click reset ──
+function _onDblClick() { lbtReset(true); }
+
+// Wire transform events once (called from wire())
+function wireTransform() {
+    const $wrap = qs('#lb-img-wrap');
+    $wrap.addEventListener('wheel',      _onWheel,    { passive: false });
+    $wrap.addEventListener('mousedown',  _onMouseDown);
+    document.addEventListener('mousemove', _onMouseMove);
+    document.addEventListener('mouseup',   _onMouseUp);
+    $wrap.addEventListener('touchstart',  _onTouchStart, { passive: true });
+    $wrap.addEventListener('touchmove',   _onTouchMove,  { passive: false });
+    $wrap.addEventListener('touchend',    _onTouchEnd,   { passive: true });
+    $wrap.addEventListener('dblclick',    _onDblClick);
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // LIGHTBOX
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 function openLightbox(idx) {
     S.lbIndex = Math.max(0, Math.min(S.lbItems.length - 1, idx));
     qs('#vault-lb').hidden = false;
     document.body.classList.add('lb-open');
+    lbtReset(false); // reset transform without animation on open
     renderLightbox();
 }
 function closeLightbox() {
     qs('#vault-lb').hidden = true;
     document.body.classList.remove('lb-open');
+    _drag.active = false;
+    _pinch.active = false;
 }
 function renderLightbox() {
     const item = S.lbItems[S.lbIndex];
     if (!item) return;
     const $img = qs('#lb-img');
     $img.src = item.url;
+    lbtReset(false); // reset transform on image change
 
     qs('#lb-counter').textContent = `${S.lbIndex + 1} / ${S.lbItems.length}`;
     qs('#lb-char-pill').textContent = item.charName;
@@ -621,6 +763,10 @@ function wire() {
     qs('#lb-prev').addEventListener('click', () => lbNav(-1));
     qs('#lb-next').addEventListener('click', () => lbNav(1));
 
+    qs('#lb-rotate').addEventListener('click', () => {
+        LBT.rot = (LBT.rot + 90) % 360; lbtApply(true);
+    });
+    qs('#lb-zoom-reset').addEventListener('click', () => lbtReset(true));
     qs('#lb-download').addEventListener('click', () => {
         const item = S.lbItems[S.lbIndex];
         if (item) downloadItem(item);
@@ -645,12 +791,37 @@ function wire() {
         // Guard: only act when lightbox is open and no text input is focused
         if (qs('#vault-lb').hidden) return;
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-        if (e.key === 'Escape')                            { closeLightbox(); return; }
-        if (e.key === 'ArrowLeft'  || e.key === 'a' || e.key === 'A') { lbNav(-1); return; }
-        if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D' && !e.ctrlKey) {
-            // 'D' is also download shortcut — only navigate with ctrl-free D
-            if (e.key !== 'D' || !e.shiftKey) lbNav(1);
-            return;
+        if (e.key === 'Escape') {
+            // Escape resets zoom first if zoomed, then closes
+            if (LBT.scale !== 1 || LBT.rot !== 0) { lbtReset(true); return; }
+            closeLightbox(); return;
+        }
+        if (e.key === 'ArrowLeft'  || e.key === 'a' || e.key === 'A') {
+            if (LBT.scale <= 1) { lbNav(-1); return; }
+            // Zoomed in: pan instead
+            LBT.tx += 60; lbtClampPan(); lbtApply(true); return;
+        }
+        if (e.key === 'ArrowRight' || (e.key === 'd' && !e.shiftKey) || (e.key === 'D' && !e.shiftKey && !e.ctrlKey)) {
+            if (LBT.scale <= 1) { lbNav(1); return; }
+            LBT.tx -= 60; lbtClampPan(); lbtApply(true); return;
+        }
+        if (e.key === 'ArrowUp') {
+            if (LBT.scale > 1) { LBT.ty += 60; lbtApply(true); } return;
+        }
+        if (e.key === 'ArrowDown') {
+            if (LBT.scale > 1) { LBT.ty -= 60; lbtApply(true); } return;
+        }
+        if (e.key === '+' || e.key === '=') {
+            const $wrap = qs('#lb-img-wrap'); const rect = $wrap.getBoundingClientRect();
+            lbtZoomAt(1.2, rect.left + rect.width / 2, rect.top + rect.height / 2); return;
+        }
+        if (e.key === '-') {
+            const $wrap = qs('#lb-img-wrap'); const rect = $wrap.getBoundingClientRect();
+            lbtZoomAt(1 / 1.2, rect.left + rect.width / 2, rect.top + rect.height / 2); return;
+        }
+        if (e.key === '0') { lbtReset(true); return; }
+        if (e.key === 'r' || e.key === 'R') {
+            LBT.rot = (LBT.rot + 90) % 360; lbtApply(true); return;
         }
         if ((e.key === 'D' || e.key === 'd') && e.shiftKey) {
             const item = S.lbItems[S.lbIndex]; if (item) downloadItem(item);
@@ -658,12 +829,18 @@ function wire() {
         }
     });
 
-    // Touch swipe on lightbox
-    let _sx = 0;
-    qs('#vault-lb').addEventListener('touchstart', e => { _sx = e.touches[0].clientX; }, { passive: true });
+    // Touch swipe on lightbox (single-finger only — pinch is handled by wireTransform)
+    let _sx = 0, _swipeActive = false;
+    qs('#vault-lb').addEventListener('touchstart', e => {
+        if (e.touches.length !== 1) { _swipeActive = false; return; }
+        _sx = e.touches[0].clientX;
+        _swipeActive = true;
+    }, { passive: true });
     qs('#vault-lb').addEventListener('touchend', e => {
+        if (!_swipeActive || LBT.scale > 1) return; // don't swipe-navigate when zoomed
         const dx = e.changedTouches[0].clientX - _sx;
-        if (Math.abs(dx) > 40) lbNav(dx < 0 ? 1 : -1);
+        if (Math.abs(dx) > 50) lbNav(dx < 0 ? 1 : -1);
+        _swipeActive = false;
     }, { passive: true });
 
     // File upload (sidebar add zone)
@@ -720,4 +897,5 @@ async function handleFiles(files) {
 // INIT
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 wire();
+wireTransform();
 boot();
