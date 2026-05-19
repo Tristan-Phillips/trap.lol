@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.27",
+    "schema_version": "1.5.28",
     "last_updated": "2026-05-19",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -196,9 +196,10 @@
       "glass/script/modules/tunnel-light.js": "The animated tunnel light perspective-corridor effect on the home page header. Only initialised on non-touch devices.",
       "glass/data/llm-agents/": "Per-agent JSON files. index.json lists all filenames. Each agent file: name, tags, system_prompt, temperature, optional model override. Active agents: default.json, opsec-dev.json, sovereign-architect.json.",
       "glass/style/modules/": "CSS module system loaded via @import in glass/style/style.css. Modules: variables.css (all --custom-props), base.css (body/page reset), layout.css (page structure, section spacing), typography.css (headings, prose), components.css (cards, badges, tooltips, node-tiles, station bars, tx-cards, flip-cards), border-life.css (animated border effect), social-cluster.css (footer social strip), tunnel-light.css (header animation), neural-uplink.css (playground-specific overrides), responsive.css (breakpoint overrides).",
-      "underdark/script/modules/ui.js": "The Underdark's primary orchestration module (~10.1k lines, actively being split). Handles boot, roster, profile, chat core, reality/settings, lorebooks, config bindings, telemetry, keyboard shortcuts, and rendering. Director panel, Thread Config, Gallery/Lightbox, and more are now delegated to dedicated modules.",
+      "underdark/script/modules/ui.js": "The Underdark's primary orchestration module (~9.3k lines, actively being split). Handles boot, roster, profile, chat core, reality/settings, lorebooks, config bindings, telemetry, keyboard shortcuts, and rendering. Director, Thread Config, Gallery/Lightbox, and Social Feed are now delegated to dedicated modules.",
       "playground/underdark/script/modules/director.js": "Director panel module. Owns Direct chips (fire character immediately), Mood toggles (persistent tone state), World (Overlord shortcuts), AI quick-reply generation, inline reply chips, and scene inject bar wiring. Exports getActiveTone() and generateAIQuickReplies(state) to ui.js.",
       "playground/underdark/script/modules/thread-config.js": "Thread Config editor module. Owns openThreadConfig modal, tcLogPush, renderThreadLog, and updateThreadConfigBadge. Exported functions tcLogPush and updateThreadConfigBadge are consumed at 5 call sites in ui.js.",
+      "playground/underdark/script/modules/social.js": "Social Feed module. Owns social sidebar, hot feed and per-character feed rendering, post list with likes/comments/DM wiring, Compose Post modal, Feed Export JSON download, and Living World LLM auto-post stream. initSocial(ctx, deps) returns {renderSocialFeed, renderHotFeed, renderSocialSidebar, openSocialFeed, openComposeModal, startLivingWorld, pauseLivingWorld}.",
       "playground/underdark/script/modules/gallery.js": "Gallery, lightbox, and social post storage module. Owns character image gallery (data helpers, strip, modal, tags, export), video gallery (strip + modal), lightbox (open/nav/set-avatar/remove), and saveLocalPost/removeLocalPostBySrc. initGallery(ctx, deps) returns {openLightbox, openGalleryModal, renderGalleryStrip, openVideoGalleryModal, renderVideoStrip}. getAllFeedPosts is a named export used by social, image-studio, and ui.js.",
       "playground/underdark/script/modules/llm-engine.js": "Underdark LLM payload construction and call orchestration. Builds system prompts, injects lorebooks/personas/meters, manages sliding context window and memory summarisation. Delegates raw HTTP transport to glass/script/modules/llm-transport.js.",
       "underdark/script/modules/image-engine.js": "Underdark image/video generation. Wraps nano-gpt image API. Handles async polling for video generation, IDB persistence of generated images.",
@@ -600,6 +601,20 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-19",
+      "message": "refactor(underdark): extract social feed to social.js — fourth split of ui.js",
+      "scope": "playground/underdark/",
+      "impact": "medium",
+      "files": [
+        "playground/underdark/script/modules/social.js",
+        "playground/underdark/script/modules/ui.js",
+        "playground/underdark/script/main.js",
+        "status/logs/data/logs.json"
+      ],
+      "why": "Fourth incremental split of ui.js. Extracted Social Feed, Compose Post Modal, Feed Export, and Living World Stream (~826 lines) into social.js. ui.js reduced from 10,117 to 9,310 lines. initSocial(ctx, deps) returns {renderSocialFeed, renderHotFeed, renderSocialSidebar, openSocialFeed, openComposeModal, startLivingWorld, pauseLivingWorld}."
+    },
     {
       "hash": "5a91942",
       "date": "2026-05-19",
@@ -2837,6 +2852,17 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-19",
+      "agent": "Claude Sonnet 4.6",
+      "type": "refactor",
+      "summary": "Fourth incremental split of ui.js. Extracted Social Feed, Compose Post Modal, Feed Export, and Living World Stream (~826 lines) into social.js (~570 lines). ui.js reduced from 10,117 to 9,310 lines. initSocial(ctx, deps) returns 7 refs consumed by ui.js. getAvatarUrl/getAvatarUrlSync/isEmoji/relativeTime passed as deps rather than moved — they depend on module-level _avatarCache in ui.js and would need a deeper refactor to extract.",
+      "decisions": [
+        "Social Feed, Compose Post Modal, Feed Export, and Living World Stream extracted together as one cohesive social.js module — these four sections are tightly coupled through renderSocialFeed/renderHotFeed/renderSocialSidebar call chains.",
+        "getAvatarUrl, getAvatarUrlSync, isEmoji, relativeTime passed as deps not imports — getAvatarUrl/getAvatarUrlSync reference _avatarCache defined in ui.js module scope; moving them would require extracting that cache too (deferred).",
+        "saveLocalPost imported directly from gallery.js in social.js — no need to pass via deps since gallery.js is already a stable module."
+      ]
+    },
     {
       "date": "2026-05-19",
       "agent": "Claude Sonnet 4.6",
