@@ -65,8 +65,18 @@ let _aiQRCache = null;
 // ── Exported getter — lets the form submit handler in ui.js read mood state ───
 export function getActiveTone() { return _activeTone; }
 
+// ── Scene value persisted across panel close/rebuild ─────────────────────────
+let _sceneVal = '';
+export function getSceneDirective() { return _sceneVal; }
+export function clearSceneDirective() { _sceneVal = ''; }
+
+// ── Track which Director tab is open across rebuilds ─────────────────────────
+let _activeDirectorTab = 'direct';
+
 // ── Build Director panel HTML ─────────────────────────────────────────────────
-function _buildDirectorPanel($bar) {
+function _buildDirectorPanel($bar, preferTab) {
+    if (preferTab) _activeDirectorTab = preferTab;
+
     const directGroups = {};
     DIR_DIRECT.forEach(e => {
         if (!directGroups[e.grp]) directGroups[e.grp] = [];
@@ -88,27 +98,53 @@ function _buildDirectorPanel($bar) {
         `<button class="dir-btn dir-btn--overlord" data-dir-overlord="${esc(o.key)}" title="${esc(o.title)}">${esc(o.label)}</button>`
     ).join('');
 
+    // Sync _sceneVal from live DOM before rebuild (in case user typed without closing)
+    const $liveSceneInput = qs('#scene-inject-input');
+    if ($liveSceneInput) _sceneVal = $liveSceneInput.value;
+    const existingSceneVal = _sceneVal;
+
+    const tabs = [
+        { key: 'direct', label: 'Direct', icon: 'zap'         },
+        { key: 'mood',   label: 'Mood',   icon: 'thermometer', badge: _activeTone ? '●' : '' },
+        { key: 'world',  label: 'World',  icon: 'globe'        },
+        { key: 'scene',  label: 'Scene',  icon: 'pencil-line'  },
+    ];
+
+    const tabBarHtml = tabs.map(t =>
+        `<button class="dir-tab${_activeDirectorTab === t.key ? ' dir-tab--active' : ''}" data-tab="${esc(t.key)}">
+            <i data-lucide="${esc(t.icon)}"></i>${esc(t.label)}${t.badge ? `<span class="dir-tab__badge">${esc(t.badge)}</span>` : ''}
+        </button>`
+    ).join('');
+
     $bar.innerHTML = `
-        <div class="dir-tabs">
-            <button class="dir-tab dir-tab--active" data-tab="direct">Direct</button>
-            <button class="dir-tab" data-tab="mood">Mood${_activeTone ? ' ●' : ''}</button>
-            <button class="dir-tab" data-tab="world">World</button>
-        </div>
-        <div class="dir-tab-pane dir-tab-pane--active" data-tab-pane="direct">
-            <div class="dir-direct-hint">Fires the character immediately — no message needed.</div>
+        <div class="dir-tabs">${tabBarHtml}</div>
+        <div class="dir-tab-pane${_activeDirectorTab === 'direct' ? ' dir-tab-pane--active' : ''}" data-tab-pane="direct">
             ${directHtml}
         </div>
-        <div class="dir-tab-pane" data-tab-pane="mood">
+        <div class="dir-tab-pane${_activeDirectorTab === 'mood' ? ' dir-tab-pane--active' : ''}" data-tab-pane="mood">
             <div class="dir-group dir-group--tone">
                 ${moodHtml}
             </div>
-            ${_activeTone ? `<div class="dir-tone-active-row"><span class="dir-tone-active-label">Active: ${esc(_dirToneLookup[_activeTone.key]?.label || '')}</span><button class="dir-tone-clear" id="dir-tone-clear-btn">× Clear</button></div>` : ''}
+            ${_activeTone ? `<div class="dir-tone-active-row"><span class="dir-tone-active-label">Active: ${esc(_dirToneLookup[_activeTone.key]?.label || '')}</span><button class="dir-tone-clear" id="dir-tone-clear-btn">Clear</button></div>` : ''}
         </div>
-        <div class="dir-tab-pane" data-tab-pane="world">
+        <div class="dir-tab-pane${_activeDirectorTab === 'world' ? ' dir-tab-pane--active' : ''}" data-tab-pane="world">
             <div class="dir-group">
                 ${worldHtml}
             </div>
+        </div>
+        <div class="dir-tab-pane dir-tab-pane--scene${_activeDirectorTab === 'scene' ? ' dir-tab-pane--active' : ''}" data-tab-pane="scene">
+            <div class="dir-scene-row">
+                <i data-lucide="pencil-line" class="dir-scene-icon"></i>
+                <input id="scene-inject-input" class="dir-scene-input" type="text"
+                    placeholder="Scene directive — e.g. She starts to have a panic attack"
+                    autocomplete="off" spellcheck="false"
+                    value="${esc(existingSceneVal)}">
+                <button class="dir-scene-clear btn-icon btn-icon--small" title="Clear" id="dir-scene-clear-btn"><i data-lucide="x"></i></button>
+            </div>
+            <p class="dir-scene-hint">Fires on the next send or trigger — one-shot.</p>
         </div>`;
+
+    if (window.lucide) window.lucide.createIcons({ nodes: [$bar] });
 }
 
 export function injectInlineReplyChips(replies) {
@@ -167,8 +203,18 @@ export function initDirector({ state, triggerBotResponse, _fireOverlordBeat }) {
         const $bar = qs('#quick-reply-bar');
         if (!$bar) return;
         const opening = $bar.hidden;
+        if (!opening) {
+            // Save scene value before hiding
+            const $si = qs('#scene-inject-input', $bar);
+            if ($si) _sceneVal = $si.value;
+        }
         if (opening) _buildDirectorPanel($bar);
         $bar.hidden = !opening;
+    });
+
+    // Sync scene value as user types (event delegation — element is dynamic)
+    document.addEventListener('input', e => {
+        if (e.target.id === 'scene-inject-input') _sceneVal = e.target.value;
     });
 
     // Tab switching inside the Director panel
@@ -178,8 +224,10 @@ export function initDirector({ state, triggerBotResponse, _fireOverlordBeat }) {
         const $bar = qs('#quick-reply-bar');
         if (!$bar || $bar.hidden) return;
         const target = tab.dataset.tab;
+        _activeDirectorTab = target;
         qsa('.dir-tab', $bar).forEach(t => t.classList.toggle('dir-tab--active', t.dataset.tab === target));
         qsa('.dir-tab-pane', $bar).forEach(p => p.classList.toggle('dir-tab-pane--active', p.dataset.tabPane === target));
+        if (target === 'scene') qs('#scene-inject-input', $bar)?.focus();
     });
 
     // Direct chip — fires character immediately, no player message
@@ -211,11 +259,7 @@ export function initDirector({ state, triggerBotResponse, _fireOverlordBeat }) {
         if (!tone) return;
         _activeTone = (_activeTone?.key === key) ? null : { key, directive: tone.directive };
         const $bar = qs('#quick-reply-bar');
-        if ($bar && !$bar.hidden) {
-            _buildDirectorPanel($bar);
-            qsa('.dir-tab', $bar).forEach(t => t.classList.toggle('dir-tab--active', t.dataset.tab === 'mood'));
-            qsa('.dir-tab-pane', $bar).forEach(p => p.classList.toggle('dir-tab-pane--active', p.dataset.tabPane === 'mood'));
-        }
+        if ($bar && !$bar.hidden) _buildDirectorPanel($bar, 'mood');
     });
 
     // Clear mood button
@@ -223,11 +267,7 @@ export function initDirector({ state, triggerBotResponse, _fireOverlordBeat }) {
         if (!e.target.closest('#dir-tone-clear-btn')) return;
         _activeTone = null;
         const $bar = qs('#quick-reply-bar');
-        if ($bar && !$bar.hidden) {
-            _buildDirectorPanel($bar);
-            qsa('.dir-tab', $bar).forEach(t => t.classList.toggle('dir-tab--active', t.dataset.tab === 'mood'));
-            qsa('.dir-tab-pane', $bar).forEach(p => p.classList.toggle('dir-tab-pane--active', p.dataset.tabPane === 'mood'));
-        }
+        if ($bar && !$bar.hidden) _buildDirectorPanel($bar, 'mood');
     });
 
     // World (Overlord) shortcut click
@@ -271,26 +311,20 @@ export function initDirector({ state, triggerBotResponse, _fireOverlordBeat }) {
         qs('.inline-reply-chips', qs('#arena-thread'))?.remove();
     });
 
-    // Scene inject bar toggle
-    qs('#btn-scene-inject')?.addEventListener('click', () => {
-        const $bar = qs('#scene-inject-bar');
-        if (!$bar) return;
-        const opening = $bar.hidden;
-        $bar.hidden = !opening;
-        if (opening) {
-            qs('#scene-inject-input')?.focus();
-            qs('#btn-scene-inject')?.classList.add('scene-inject-armed');
-        } else {
-            qs('#btn-scene-inject')?.classList.remove('scene-inject-armed');
-        }
-    });
-    qs('#scene-inject-clear')?.addEventListener('click', () => {
+    // Scene tab — clear button (inside Director panel, dynamically rendered)
+    document.addEventListener('click', e => {
+        if (!e.target.closest('#dir-scene-clear-btn')) return;
+        _sceneVal = '';
         const $inp = qs('#scene-inject-input');
         if ($inp) $inp.value = '';
-        qs('#scene-inject-bar')?.setAttribute('hidden', '');
-        qs('#btn-scene-inject')?.classList.remove('scene-inject-armed');
     });
-    qs('#scene-inject-input')?.addEventListener('keydown', e => {
-        if (e.key === 'Escape') { qs('#btn-scene-inject')?.click(); }
+
+    // Scene tab — Escape closes the panel
+    document.addEventListener('keydown', e => {
+        if (e.key !== 'Escape') return;
+        const $inp = qs('#scene-inject-input');
+        if (document.activeElement === $inp) {
+            qs('#quick-reply-bar')?.setAttribute('hidden', '');
+        }
     });
 }

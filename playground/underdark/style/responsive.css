@@ -94,27 +94,14 @@ html, body.underdark-page {
 .search-highlight--current   { background: var(--theme-accent); color: #000; border-radius: 2px; }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   QUICK REPLY BAR
+   DIRECTOR PANEL (quick-reply-bar) — responsive overrides
    ═══════════════════════════════════════════════════════════════════════════ */
 .quick-reply-bar[hidden] { display: none !important; }
-.quick-reply-bar {
-    display: flex; gap: 6px; padding: 6px var(--space-md);
-    overflow-x: auto; scrollbar-width: none; flex-shrink: 0;
-    background: rgba(0,0,0,0.4); border-top: 1px solid var(--glass-border-mute);
-    animation: slideUp 0.15s ease;
+@media (max-width: 480px) {
+    .dir-tab { font-size: 0.52rem; padding: 7px 2px 6px; }
+    .dir-tab svg { display: none; }
+    .dir-tab-pane { padding: 7px 10px 9px; }
 }
-.quick-reply-bar::-webkit-scrollbar { display: none; }
-@keyframes slideUp {
-    from { opacity:0; transform: translateY(6px); }
-    to   { opacity:1; transform: translateY(0); }
-}
-.qr-btn {
-    background: rgba(var(--accent-rgb), 0.08); border: 1px solid rgba(var(--accent-rgb), 0.2);
-    color: var(--theme-accent); border-radius: 20px; padding: 5px 12px;
-    font-size: 0.7rem; font-family: var(--font-mono); cursor: pointer;
-    white-space: nowrap; touch-action: manipulation; transition: var(--transition); flex-shrink: 0;
-}
-.qr-btn:hover { background: rgba(var(--accent-rgb), 0.18); border-color: var(--theme-accent); }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    MESSAGE REACTIONS

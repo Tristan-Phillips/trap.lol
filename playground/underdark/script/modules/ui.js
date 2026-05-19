@@ -27,7 +27,7 @@ import { getApiKey, setApiKey, clearApiKey, isValidKeyFormat, restoreKeyFromCook
 import { initCharEditor } from './char-editor.js?v=3';
 import { qs, qsa, esc, debounce, parseLLMArray, parseLLMJson, parseLLMLines } from './shared-utils.js?v=4';
 import { initCodexMeters, applyStatusTags, updateCodexMeters as _updateCodexMeters } from './codex-meters.js?v=2';
-import { initDirector, getActiveTone, generateAIQuickReplies } from './director.js?v=1';
+import { initDirector, getActiveTone, getSceneDirective, clearSceneDirective, generateAIQuickReplies } from './director.js?v=2';
 import { initThreadConfig, tcLogPush, updateThreadConfigBadge } from './thread-config.js?v=1';
 import { initGallery, addToGallery, addToVideoGallery, getAllFeedPosts, getAllGalleryImages, ensureGalleryStore, saveLocalPost, removeLocalPostBySrc } from './gallery.js?v=1';
 import { initSocial } from './social.js?v=2';
@@ -5357,7 +5357,7 @@ export function initUI() {
     // Stays here: needs getCharOverride from the state.js closure.
     qs('#btn-trigger-response')?.addEventListener('click', async () => {
         if (state.isStreaming || !state.activeBotId) return;
-        const _sceneVal = qs('#scene-inject-input')?.value?.trim();
+        const _sceneValRaw = getSceneDirective();
         let _triggerReinject = '';
         const _tone = getActiveTone();
         if (_tone?.directive) {
@@ -5365,13 +5365,12 @@ export function initUI() {
                 || state.loadedCharacters[state.activeBotId]?.name || 'Character';
             _triggerReinject = _tone.directive.replace(/\{C\}/g, charName);
         }
-        if (_sceneVal) {
-            const sceneDirective = `[SCENE DIRECTIVE — THIS TURN ONLY]\nThe following event or condition is now occurring in the scene. Incorporate it into your response naturally:\n${_sceneVal}`;
+        if (_sceneValRaw) {
+            const sceneDirective = `[SCENE DIRECTIVE — THIS TURN ONLY]\nThe following event or condition is now occurring in the scene. Incorporate it into your response naturally:\n${_sceneValRaw}`;
             _triggerReinject = _triggerReinject ? `${_triggerReinject}\n\n${sceneDirective}` : sceneDirective;
-            const $inp = qs('#scene-inject-input');
-            if ($inp) $inp.value = '';
-            qs('#scene-inject-bar')?.setAttribute('hidden', '');
-            qs('#btn-scene-inject')?.classList.remove('scene-inject-armed');
+            clearSceneDirective();
+            const $si = qs('#scene-inject-input');
+            if ($si) $si.value = '';
         }
         await triggerBotResponse(state.activeBotId, _triggerReinject).catch(() => {});
     });
@@ -6085,12 +6084,14 @@ export function initUI() {
             const toneInject = _activeTone.directive.replace(/\{C\}/g, charName);
             pendingReinject = pendingReinject ? `${pendingReinject}\n\n${toneInject}` : toneInject;
         }
-        // Inject scene directive from the scene-inject bar if present
-        const _sceneInject = qs('#scene-inject-input')?.value?.trim();
+        // Inject scene directive if one is armed
+        const _sceneInject = getSceneDirective();
         if (_sceneInject) {
             const sceneDirective = `[SCENE DIRECTIVE — THIS TURN ONLY]\nThe following event or condition is now occurring in the scene. Incorporate it into your response naturally:\n${_sceneInject}`;
             pendingReinject = pendingReinject ? `${pendingReinject}\n\n${sceneDirective}` : sceneDirective;
-            qs('#scene-inject-input').value = '';
+            clearSceneDirective();
+            const $si = qs('#scene-inject-input');
+            if ($si) $si.value = '';
         }
         updateReinjectUI();
 
