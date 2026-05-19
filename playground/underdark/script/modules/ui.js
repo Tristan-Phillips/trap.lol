@@ -27,6 +27,7 @@ import { getApiKey, setApiKey, clearApiKey, isValidKeyFormat, restoreKeyFromCook
 import { initCharEditor } from './char-editor.js?v=3';
 import { qs, qsa, esc, debounce, parseLLMArray, parseLLMJson, parseLLMLines } from './shared-utils.js?v=4';
 import { initCodexMeters, applyStatusTags, updateCodexMeters as _updateCodexMeters } from './codex-meters.js?v=2';
+import { initDirector, getActiveTone, generateAIQuickReplies } from './director.js?v=1';
 
 // Light markdown renderer for profile details — bold, italic, headers, line breaks only.
 // Does NOT use marked.js to avoid dependency — covers the common character-card patterns.
@@ -8029,314 +8030,21 @@ export function initUI() {
     });
 
     // ── Director Panel ────────────────────────────────────────────────────────
-    // Three tabs: Actions (pacing/voice/format chips → append to textarea)
-    //             Tone    (persistent toggle → injects directive each turn until cleared)
-    //             Overlord (scene narration calls)
-
-    // ── Actions tab — chips that append text to the textarea ─────────────────
-    // DIRECT tab — chips that fire the character immediately (no player message needed).
-    // Each triggers triggerBotResponse with the directive as reinject.
-    // overlordBeat: true = also fire an Overlord beat before the character responds.
-    const DIR_DIRECT = [
-        { grp: 'Scene',   key: 'continue',   label: '▶ Continue',       directive: '(Continue the scene from where we left off.)',                                   overlordBeat: true  },
-        { grp: 'Scene',   key: 'timeskip',   label: '⟳ Time skip',       directive: '(Move the story forward in time to the next meaningful moment.)',               overlordBeat: true  },
-        { grp: 'Scene',   key: 'slow',       label: '◌ Linger',          directive: '(Slow the pace. Linger on this moment — the senses, the silence, the feeling.)', overlordBeat: false },
-        { grp: 'Voice',   key: 'introspect', label: '⦿ Inner world',     directive: '(Open up your inner world right now. Thoughts, fears, desires — let them surface.)' },
-        { grp: 'Voice',   key: 'describe',   label: '◈ Describe',        directive: '(Paint the scene around you — what do you see, hear, feel, smell right now?)'   },
-        { grp: 'Voice',   key: 'react',      label: '⊞ React',           directive: '(React honestly to what just happened. How does it land for you?)'              },
-        { grp: 'Voice',   key: 'whisper',    label: '⌁ Whisper',         directive: '(Lean in close and whisper something — something you would not say out loud.)'  },
-        { grp: 'Shape',   key: 'shorter',    label: '← Shorter',         directive: '(Keep this response brief and punchy.)'                                         },
-        { grp: 'Shape',   key: 'longer',     label: '→ Longer',          directive: '(Give a longer, fully painted response this time.)'                             },
-        { grp: 'Shape',   key: 'prose',      label: '~ Prose',           directive: '(Write this beat as lyrical prose — slow, sensory, literary.)'                  },
-    ];
-    const _dirDirectLookup = {};
-    DIR_DIRECT.forEach(e => { _dirDirectLookup[e.key] = e; });
-
-    // Keep _dirActionLookup as an alias so the pendingBeat path in the submit handler still works
-    const _dirActionLookup = _dirDirectLookup;
-
-    // ── Mood tab — persistent toggles that colour every response until cleared ──
-    // Only one mood active at a time. Cleared when clicked again or via Clear btn.
-    // The directive is injected as pendingReinject at send time.
-    let _activeTone = null; // { key, directive }
-    const DIR_TONES = [
-        { key: 'lust',      label: '♦ Lust',       directive: '[TONE SHIFT — ACTIVE]\nLet desire bleed through every word. {C}\'s body language, word choice, and attention are tuned to attraction right now. Let it show — in what they notice, what they linger on, what they don\'t say.' },
-        { key: 'rage',      label: '⚡ Rage',        directive: '[TONE SHIFT — ACTIVE]\n{C} is furious. Something has cracked beneath the surface. Let rage coil through their responses — short sentences, clipped answers, the effort of restraint or its total absence.' },
-        { key: 'grief',     label: '◎ Grief',       directive: '[TONE SHIFT — ACTIVE]\n{C} is carrying loss right now. Let it dull the edges of their presence — slower responses, distance, moments where they almost say what they\'re feeling and then don\'t.' },
-        { key: 'fear',      label: '◈ Fear',        directive: '[TONE SHIFT — ACTIVE]\n{C} is afraid. Not of something abstract — of something immediate, present in this scene. Let hypervigilance show: checking exits, flinching at small sounds, holding very still.' },
-        { key: 'tender',    label: '♡ Tender',      directive: '[TONE SHIFT — ACTIVE]\nThis is a soft moment for {C}. Let tenderness come through — gentle touches, quieter voice, the kind of attention that makes someone feel seen.' },
-        { key: 'predatory', label: '☽ Predatory',   directive: '[TONE SHIFT — ACTIVE]\n{C} is in hunter mode. Controlled, deliberate, circling. Every movement is measured. They want something and they are deciding how to take it.' },
-        { key: 'broken',    label: '◌ Unravelling', directive: '[TONE SHIFT — ACTIVE]\n{C} is close to the edge. Composure is thin and cracking. Let the fractures show — uneven speech, sudden silences, emotions surfacing that they would normally bury.' },
-        { key: 'joy',       label: '✧ Joy',         directive: '[TONE SHIFT — ACTIVE]\n{C} is genuinely, unexpectedly happy right now. Let lightness lift the scene — a warmth in how they look at things, humour that comes naturally, the rare looseness of someone who isn\'t guarding themselves.' },
-    ];
-    const _dirToneLookup = {};
-    DIR_TONES.forEach(t => { _dirToneLookup[t.key] = t; });
-
-    // ── Overlord tab — scene narration actions ────────────────────────────────
-    const DIR_OVERLORD = [
-        { key: 'beat',       label: '⊹ Beat',        title: 'Narrate the current scene beat',      action: () => qs('#btn-overlord-beat')?.click() },
-        { key: 'transition', label: '→ Transition',   title: 'Scene transition',                    action: () => qs('#codex-overlord-transition')?.click() },
-        { key: 'entrance',   label: '◈ Entrance',    title: 'Character entrance narration',        action: () => qs('#codex-overlord-entrance')?.click() },
-        { key: 'moment',     label: '◉ Moment',      title: 'Charged / intimate moment',           action: () => qs('#codex-overlord-moment')?.click() },
-        { key: 'reaction',   label: '⚡ Environment', title: 'Environmental reaction',              action: () => qs('#codex-overlord-reaction')?.click() },
-        { key: 'whisper',    label: '⌁ Whisper',     title: 'Overlord aside / whisper to player',  action: () => qs('#codex-overlord-whisper')?.click() },
-        { key: 'irony',      label: '⊗ Irony',       title: 'Dramatic irony injection',            action: () => qs('#codex-overlord-irony')?.click() },
-        { key: 'recap',      label: '⊡ Recap',       title: 'Story anchor recap',                  action: () => qs('#codex-recap')?.click() },
-        { key: 'redesc',     label: '⊙ Re-describe',  title: 'Force Overlord to re-describe scene', action: () => qs('#codex-force-overlord')?.click() },
-    ];
-
-    // ── Build Director panel HTML ─────────────────────────────────────────────
-    function _buildDirectorPanel($bar) {
-        // Group DIR_DIRECT by grp label
-        const directGroups = {};
-        DIR_DIRECT.forEach(e => {
-            if (!directGroups[e.grp]) directGroups[e.grp] = [];
-            directGroups[e.grp].push(e);
-        });
-
-        const directHtml = Object.entries(directGroups).map(([grp, entries]) =>
-            `<div class="dir-group">
-                <span class="dir-group__label">${esc(grp)}</span>
-                ${entries.map(e => `<button class="dir-btn dir-btn--direct" data-dir-direct="${esc(e.key)}">${esc(e.label)}</button>`).join('')}
-            </div>`
-        ).join('');
-
-        const moodHtml = DIR_TONES.map(t =>
-            `<button class="dir-btn dir-btn--tone${_activeTone?.key === t.key ? ' dir-btn--tone-active' : ''}" data-dir-tone="${esc(t.key)}" title="${esc(t.directive.split('\n')[1] || '')}">${esc(t.label)}</button>`
-        ).join('');
-
-        const worldHtml = DIR_OVERLORD.map(o =>
-            `<button class="dir-btn dir-btn--overlord" data-dir-overlord="${esc(o.key)}" title="${esc(o.title)}">${esc(o.label)}</button>`
-        ).join('');
-
-        $bar.innerHTML = `
-            <div class="dir-tabs">
-                <button class="dir-tab dir-tab--active" data-tab="direct">Direct</button>
-                <button class="dir-tab" data-tab="mood">Mood${_activeTone ? ' ●' : ''}</button>
-                <button class="dir-tab" data-tab="world">World</button>
-            </div>
-            <div class="dir-tab-pane dir-tab-pane--active" data-tab-pane="direct">
-                <div class="dir-direct-hint">Fires the character immediately — no message needed.</div>
-                ${directHtml}
-            </div>
-            <div class="dir-tab-pane" data-tab-pane="mood">
-                <div class="dir-group dir-group--tone">
-                    ${moodHtml}
-                </div>
-                ${_activeTone ? `<div class="dir-tone-active-row"><span class="dir-tone-active-label">Active: ${esc(_dirToneLookup[_activeTone.key]?.label || '')}</span><button class="dir-tone-clear" id="dir-tone-clear-btn">× Clear</button></div>` : ''}
-            </div>
-            <div class="dir-tab-pane" data-tab-pane="world">
-                <div class="dir-group">
-                    ${worldHtml}
-                </div>
-            </div>`;
-        lucideRefresh($bar);
-    }
-
-    // ── Director panel open / close ───────────────────────────────────────────
-    qs('#btn-quick-reply')?.addEventListener('click', () => {
-        const $bar = qs('#quick-reply-bar');
-        if (!$bar) return;
-        const opening = $bar.hidden;
-        if (opening) _buildDirectorPanel($bar);
-        $bar.hidden = !opening;
-    });
-
-    // Tab switching inside the Director panel
-    document.addEventListener('click', e => {
-        const tab = e.target.closest('.dir-tab');
-        if (!tab) return;
-        const $bar = qs('#quick-reply-bar');
-        if (!$bar || $bar.hidden) return;
-        const target = tab.dataset.tab;
-        qsa('.dir-tab', $bar).forEach(t => t.classList.toggle('dir-tab--active', t.dataset.tab === target));
-        qsa('.dir-tab-pane', $bar).forEach(p => p.classList.toggle('dir-tab-pane--active', p.dataset.tabPane === target));
-    });
-
-    // ── Direct chip click — fires character immediately, no player message ──────
-    document.addEventListener('click', async e => {
-        const btn = e.target.closest('.dir-btn--direct');
-        if (!btn) return;
-        const entry = _dirDirectLookup[btn.dataset.dirDirect];
-        if (!entry) return;
-        qs('#quick-reply-bar')?.setAttribute('hidden', '');
-
-        // Compose reinject: directive + any active tone
-        let reinject = entry.directive;
-        if (_activeTone?.directive) {
-            const charName = state.bots?.find(b => b.id === state.activeBotId)?.name || 'the character';
-            reinject += '\n\n' + _activeTone.directive.replace(/\{C\}/g, charName);
-        }
-
-        // Optionally fire Overlord beat first, then character
-        if (entry.overlordBeat) {
-            await _fireOverlordBeat({ force: false, context: entry.directive });
-        }
-
-        triggerBotResponse(state.activeBotId, reinject);
-    });
-
-    // ── Tone toggle click ─────────────────────────────────────────────────────
-    document.addEventListener('click', e => {
-        const btn = e.target.closest('.dir-btn--tone');
-        if (!btn) return;
-        const key = btn.dataset.dirTone;
-        const tone = _dirToneLookup[key];
-        if (!tone) return;
-        // Toggle: same key = clear; different key = activate
-        _activeTone = (_activeTone?.key === key) ? null : { key, directive: tone.directive };
-        // Rebuild panel to reflect new state
-        const $bar = qs('#quick-reply-bar');
-        if ($bar && !$bar.hidden) {
-            _buildDirectorPanel($bar);
-            // Restore mood tab
-            qsa('.dir-tab', $bar).forEach(t => t.classList.toggle('dir-tab--active', t.dataset.tab === 'mood'));
-            qsa('.dir-tab-pane', $bar).forEach(p => p.classList.toggle('dir-tab-pane--active', p.dataset.tabPane === 'mood'));
-        }
-    });
-
-    // Clear tone/mood button
-    document.addEventListener('click', e => {
-        if (!e.target.closest('#dir-tone-clear-btn')) return;
-        _activeTone = null;
-        const $bar = qs('#quick-reply-bar');
-        if ($bar && !$bar.hidden) {
-            _buildDirectorPanel($bar);
-            qsa('.dir-tab', $bar).forEach(t => t.classList.toggle('dir-tab--active', t.dataset.tab === 'mood'));
-            qsa('.dir-tab-pane', $bar).forEach(p => p.classList.toggle('dir-tab-pane--active', p.dataset.tabPane === 'mood'));
-        }
-    });
-
-    // ── Overlord action click ─────────────────────────────────────────────────
-    document.addEventListener('click', e => {
-        const btn = e.target.closest('.dir-btn--overlord');
-        if (!btn) return;
-        const entry = DIR_OVERLORD.find(o => o.key === btn.dataset.dirOverlord);
-        if (!entry) return;
-        qs('#quick-reply-bar')?.setAttribute('hidden', '');
-        entry.action();
-    });
-
-    // ── AI suggested reply click ──────────────────────────────────────────────
-    // Handles both inline chips (in thread) and Director panel suggestions tab
-    document.addEventListener('click', e => {
-        const btn = e.target.closest('.dir-btn--ai') || e.target.closest('.qr-btn--ai');
-        if (!btn) return;
-        const idx = parseInt(btn.dataset.qrAi, 10);
-        const text = _aiQRCache?.replies?.[idx];
-        if (!text) return;
-        const $ta = qs('#rp-input');
-        if (!$ta) return;
-        $ta.value = $ta.value ? `${$ta.value}\n${text}` : text;
-        $ta.dispatchEvent(new Event('input'));
-        $ta.focus();
-        qs('#quick-reply-bar')?.setAttribute('hidden', '');
-    });
-
-    // AI-generated contextual suggestions — cached per history length
-    let _aiQRCache = null;
-
-    async function _generateAIQuickReplies() {
-        const key = getApiKey();
-        if (!key) return;
-        const hist = state.history.filter(m => m.role === 'bot' || m.role === 'user').slice(-3);
-        if (hist.length < 1) return;
-        const histLen = state.history.length;
-        if (_aiQRCache?.histLen === histLen) return;
-
-        const snippet = hist.map(m => {
-            const name = m.role === 'user'
-                ? (state.config.userName || 'You')
-                : (state.loadedCharacters[m.botId]?.name || 'Character');
-            return `${name}: ${m.content?.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 120)}`;
-        }).join('\n');
-
-        try {
-            const { text } = await fetchCompletion({
-                model: state.config.model || 'deepseek-r1',
-                messages: [
-                    { role: 'system', content: 'You generate short reply starters for a player in a collaborative roleplay. Output ONLY a JSON array of exactly 3 strings, each 4-10 words. Each string is a complete first-person reply starter that the player can build on. Vary the emotional register: one confident/direct, one vulnerable/emotional, one intrigued/questioning. No quotes around the full output — just raw JSON array.' },
-                    { role: 'user', content: `Recent exchange:\n${snippet}\n\nGenerate 3 reply starters.` }
-                ],
-                max_tokens: 100,
-                temperature: 0.9
-            });
-            const replies = parseLLMArray(text).slice(0, 3).filter(r => typeof r === 'string' && r.trim());
-            if (replies.length) {
-                _aiQRCache = { histLen, replies };
-                const $bar = qs('#quick-reply-bar');
-                if ($bar) delete $bar.dataset.built;
-                _injectInlineReplyChips(replies);
-            }
-        } catch { /* silent */ }
-    }
-
-    function _injectInlineReplyChips(replies) {
-        const $thread = qs('#arena-thread');
-        if (!$thread) return;
-        qs('.inline-reply-chips', $thread)?.remove();
-        const $chips = document.createElement('div');
-        $chips.className = 'inline-reply-chips';
-        $chips.setAttribute('aria-label', 'Suggested replies');
-        $chips.innerHTML = replies.map((r, i) =>
-            `<button class="inline-reply-chip" data-reply-idx="${i}">${esc(r)}</button>`
-        ).join('');
-        $thread.appendChild($chips);
-        requestAnimationFrame(() => { $thread.scrollTop = $thread.scrollHeight; });
-    }
-
-    // Inline chip click (in-thread suggestions row)
-    document.addEventListener('click', e => {
-        const chip = e.target.closest('.inline-reply-chip');
-        if (!chip) return;
-        const idx  = parseInt(chip.dataset.replyIdx, 10);
-        const text = _aiQRCache?.replies?.[idx];
-        if (!text) return;
-        const $ta = qs('#rp-input');
-        if ($ta) {
-            $ta.value = $ta.value ? `${$ta.value}\n${text}` : text;
-            $ta.dispatchEvent(new Event('input'));
-            $ta.focus();
-        }
-        qs('.inline-reply-chips', qs('#arena-thread'))?.remove();
-    });
-
-    // ── Scene inject bar toggle ───────────────────────────────────────────────
-    qs('#btn-scene-inject')?.addEventListener('click', () => {
-        const $bar = qs('#scene-inject-bar');
-        if (!$bar) return;
-        const opening = $bar.hidden;
-        $bar.hidden = !opening;
-        if (opening) {
-            qs('#scene-inject-input')?.focus();
-            qs('#btn-scene-inject')?.classList.add('scene-inject-armed');
-        } else {
-            qs('#btn-scene-inject')?.classList.remove('scene-inject-armed');
-        }
-    });
-    qs('#scene-inject-clear')?.addEventListener('click', () => {
-        const $inp = qs('#scene-inject-input');
-        if ($inp) $inp.value = '';
-        qs('#scene-inject-bar')?.setAttribute('hidden', '');
-        qs('#btn-scene-inject')?.classList.remove('scene-inject-armed');
-    });
-    // Close scene inject bar on Escape
-    qs('#scene-inject-input')?.addEventListener('keydown', e => {
-        if (e.key === 'Escape') { qs('#btn-scene-inject')?.click(); }
-    });
+    // Extracted to director.js. Wires all Director panel event listeners and
+    // exposes getActiveTone() for the form submit handler.
+    initDirector({ state, triggerBotResponse, _fireOverlordBeat });
 
     // ── Trigger response button ───────────────────────────────────────────────
-    // Fires the active character's response without requiring the player to type.
-    // The active tone and scene inject are consumed exactly as in a normal send.
+    // Stays here: needs getCharOverride from the state.js closure.
     qs('#btn-trigger-response')?.addEventListener('click', async () => {
         if (state.isStreaming || !state.activeBotId) return;
-        // Consume scene inject if present
         const _sceneVal = qs('#scene-inject-input')?.value?.trim();
         let _triggerReinject = '';
-        if (_activeTone?.directive) {
+        const _tone = getActiveTone();
+        if (_tone?.directive) {
             const charName = getCharOverride(state.activeBotId)?.nickname
                 || state.loadedCharacters[state.activeBotId]?.name || 'Character';
-            _triggerReinject = _activeTone.directive.replace(/\{C\}/g, charName);
+            _triggerReinject = _tone.directive.replace(/\{C\}/g, charName);
         }
         if (_sceneVal) {
             const sceneDirective = `[SCENE DIRECTIVE — THIS TURN ONLY]\nThe following event or condition is now occurring in the scene. Incorporate it into your response naturally:\n${_sceneVal}`;
@@ -8852,7 +8560,7 @@ export function initUI() {
                     // ambient status live even when the codex panel is closed.
                     updateCodexDigest();
                     // Background: generate AI contextual quick reply starters for this turn
-                    _generateAIQuickReplies();
+                    generateAIQuickReplies(state);
                     // Auto transition every N turns (default 8) if no Overlord block in last N messages
                     _maybeAutoTransition();
                     // Auto recap every ~20 turns — story anchor for long sessions
@@ -9050,6 +8758,7 @@ export function initUI() {
             qsa('.reinject-btn').forEach(b => b.classList.remove('reinject-btn--active'));
         }
         // Inject active tone directive — appended to any existing reinject
+        const _activeTone = getActiveTone();
         if (_activeTone?.directive) {
             const charName = state.activeBotId
                 ? (getCharOverride(state.activeBotId)?.nickname || state.loadedCharacters[state.activeBotId]?.name || 'Character')
@@ -9078,7 +8787,7 @@ export function initUI() {
         qs('#btn-overlord-beat')?.classList.remove('overlord-armed');
         if (_pendingBeat) {
             // Pass the chip's context so the beat prompt is direction-aware
-            const _beatCtx = _dirActionLookup[_pendingBeat]?.text?.replace(/^\(|\)$/g, '') || null;
+            const _beatCtx = null; // pendingBeat context removed — chip directives moved to director.js
             await _fireOverlordBeat({ force: true, context: _beatCtx }).catch(() => {});
         }
 

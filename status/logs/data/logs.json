@@ -1,8 +1,8 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.24",
-    "last_updated": "2026-05-18",
+    "schema_version": "1.5.25",
+    "last_updated": "2026-05-19",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
       "_protocol",
@@ -597,6 +597,20 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-19",
+      "message": "refactor(underdark): extract Director panel to director.js — first split of ui.js",
+      "scope": "playground/underdark/",
+      "impact": "medium",
+      "files": [
+        "playground/underdark/script/modules/director.js",
+        "playground/underdark/script/modules/ui.js",
+        "playground/underdark/script/main.js",
+        "status/logs/data/logs.json"
+      ],
+      "why": "ui.js was 11,430 lines — extracted the Director panel (Direct chips, Mood toggles, World shortcuts, AI quick-reply generation, scene inject bar) into director.js as step 1 of an incremental ui.js split. ui.js is now 11,139 lines. initDirector(deps) is called from initUI; getActiveTone() is exported for the form submit handler."
+    },
     {
       "hash": "13bdcf4",
       "date": "2026-05-19",
@@ -2792,6 +2806,19 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-19",
+      "agent": "Claude Sonnet 4.6",
+      "type": "refactor",
+      "summary": "Began incremental split of ui.js (11,430 lines). First extraction: Director panel → director.js (296 lines). Exports initDirector(deps) for event wiring and getActiveTone() for the form submit handler to read mood state across the module boundary. ui.js reduced to 11,139 lines. Dead _dirActionLookup reference in the pendingBeat path cleaned up at the same time.",
+      "decisions": [
+        "Incremental split strategy chosen over a single-pass rewrite — one module per commit, each independently testable.",
+        "director.js receives state and callbacks (triggerBotResponse, _fireOverlordBeat) as deps via initDirector — no closure sharing, no circular imports.",
+        "getActiveTone() getter pattern used instead of exporting _activeTone directly — keeps mood state encapsulated in director.js.",
+        "btn-trigger-response and btn-overlord-beat listeners intentionally kept in ui.js — they require closure-scoped getCharOverride and _overlordBeatInFlight respectively.",
+        "Next targets for extraction: thread-setup.js (~900 lines), image-studio.js (~1100 lines), social.js (~700 lines), codex.js (~550 lines), thread-config.js (~250 lines)."
+      ]
+    },
     {
       "date": "2026-05-19",
       "agent": "Claude Sonnet 4.6",
