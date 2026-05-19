@@ -644,10 +644,10 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 10px 14px;
+    padding: 8px 12px;
     border-bottom: 1px solid var(--border-mute);
     flex-shrink: 0;
-    background: rgba(0,0,0,0.2);
+    background: rgba(0,0,0,0.3);
 }
 .vault-lb__close {
     margin-left: auto;
@@ -665,46 +665,52 @@ body {
 }
 .vault-lb__close:hover { color: var(--text-primary); border-color: var(--accent-dim); background: var(--accent-glow); }
 
-/* Image area with side nav arrows */
+/* Image area — full bleed, nav arrows float over it */
 .vault-lb__body {
-    display: flex;
-    align-items: center;
-    gap: 0;
     flex: 1;
     min-height: 0;
     position: relative;
-    /* HUD fades in when hovering the body area */
+    overflow: hidden;
 }
+/* Fade in HUD + nav on body hover */
 .vault-lb__body:hover .vault-lb__hud { opacity: 1; pointer-events: auto; }
-/* Keep HUD visible while interacting with it even if cursor drifts slightly */
+.vault-lb__body:hover .vault-lb__nav  { opacity: 1; pointer-events: auto; }
+/* Keep HUD visible while typing in tag input */
 .vault-lb__hud:focus-within { opacity: 1 !important; pointer-events: auto !important; }
+
+/* Nav arrows — absolute, float over image */
 .vault-lb__nav {
-    width: 44px;
-    align-self: stretch;
-    flex-shrink: 0;
-    background: transparent;
-    border: none;
-    color: var(--text-muted);
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 20;
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: rgba(10, 7, 16, 0.6);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid rgba(120, 80, 200, 0.2);
+    color: var(--text-secondary);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: color 0.15s, background 0.15s;
+    opacity: 0;
+    transition: color 0.15s, background 0.15s, opacity 0.2s;
 }
-.vault-lb__nav:hover:not(:disabled) { color: var(--accent); background: rgba(190, 41, 236, 0.06); }
-.vault-lb__nav:disabled { opacity: 0.15; cursor: default; }
+.vault-lb__nav--prev { left: 14px; }
+.vault-lb__nav--next { right: 14px; }
+.vault-lb__nav:hover:not(:disabled) { color: var(--accent); background: rgba(190, 41, 236, 0.25); border-color: var(--accent-dim); }
+.vault-lb__nav:disabled { opacity: 0 !important; cursor: default; }
 
+/* img-wrap fills the full body — no padding, no border-radius on the img itself */
 .vault-lb__img-wrap {
-    flex: 1;
-    min-width: 0;
-    min-height: 0;
-    /* height: 100% forces percentage resolution for child max-height */
+    width: 100%;
     height: 100%;
     overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 10px;
     position: relative;
     cursor: grab;
     user-select: none;
@@ -717,9 +723,7 @@ body {
     width: auto;
     height: auto;
     object-fit: contain;
-    border-radius: 6px;
     display: block;
-    box-shadow: 0 4px 30px rgba(0,0,0,0.5);
     transform-origin: center center;
     transition: transform 0.08s ease-out;
     pointer-events: none;
@@ -753,11 +757,11 @@ body {
     position: absolute;
     bottom: 0; left: 0; right: 0;
     z-index: 10;
-    padding: 14px 16px 12px;
-    /* Gradient scrim so text/buttons sit on a dark base regardless of image */
+    padding: 48px 16px 14px;
+    /* Gradient scrim: tight, starts dense at bottom */
     background: linear-gradient(to top,
-        rgba(5, 3, 10, 0.92) 0%,
-        rgba(5, 3, 10, 0.72) 60%,
+        rgba(5, 3, 10, 0.88) 0%,
+        rgba(5, 3, 10, 0.6) 45%,
         transparent 100%);
     display: flex;
     flex-direction: column;
@@ -949,8 +953,8 @@ body.lb-open { overflow: hidden !important; }
     .vault-header__stats { display: none; }
     .vault-grid--masonry { columns: 2; }
     .vault-lb { padding: 6px; }
-    .vault-lb__nav { width: 32px; }
-    .vault-lb__hud { padding: 10px 12px 10px; gap: 6px; }
+    .vault-lb__nav { width: 34px; height: 34px; }
+    .vault-lb__hud { padding: 36px 12px 12px; gap: 6px; }
     .vault-lb__action-btn span { display: none; }
     .vault-lb__action-btn { padding: 6px 8px; }
 }
