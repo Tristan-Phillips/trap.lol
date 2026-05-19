@@ -188,6 +188,131 @@
 .oracle-send-btn:disabled { opacity: 0.3; cursor: not-allowed; box-shadow: none; }
 
 
+/* ── Inline variants (Scene Codex) ── */
+.oracle-thread--inline {
+    padding: 10px 12px;
+    gap: 8px;
+}
+.oracle-textarea--inline {
+    font-size: 0.8rem;
+    min-height: 34px;
+}
+.oracle-footer--inline .oracle-input-row {
+    padding: 8px 12px 10px;
+}
+.oracle-footer--inline .oracle-footer__actions {
+    padding: 6px 12px 4px;
+}
+
+/* ── Sidebar variant (Profile tab Oracle) ── */
+.profile-oracle {
+    margin-top: 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(167,139,250,0.12);
+    background: rgba(167,139,250,0.03);
+    overflow: hidden;
+}
+
+.profile-oracle[open] {
+    border-color: rgba(167,139,250,0.22);
+}
+
+.profile-oracle__toggle {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 13px;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+    transition: background 0.15s;
+}
+.profile-oracle__toggle::-webkit-details-marker { display: none; }
+.profile-oracle__toggle:hover { background: rgba(167,139,250,0.05); }
+.profile-oracle__toggle svg { width: 12px; height: 12px; flex-shrink: 0; color: rgba(167,139,250,0.65); }
+
+.profile-oracle__title {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(167,139,250,0.75);
+}
+
+.profile-oracle__sub {
+    font-size: 0.6rem;
+    color: rgba(167,139,250,0.35);
+    font-family: var(--font-sans, sans-serif);
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.profile-oracle__chevron {
+    flex-shrink: 0;
+    transition: transform 0.18s;
+}
+.profile-oracle[open] .profile-oracle__chevron {
+    transform: rotate(180deg);
+}
+
+.profile-oracle__body {
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid rgba(167,139,250,0.1);
+}
+
+.profile-oracle__presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 8px 10px 6px;
+    border-bottom: 1px solid rgba(167,139,250,0.07);
+}
+
+.oracle-inject-btn--sm {
+    padding: 3px 9px;
+    font-size: 0.62rem;
+}
+.oracle-inject-btn--sm svg { width: 10px; height: 10px; }
+
+.oracle-thread--sidebar {
+    padding: 8px 12px;
+    gap: 7px;
+    max-height: 220px;
+}
+.oracle-thread--sidebar .oracle-thread__empty { padding: 18px 12px; }
+.oracle-thread--sidebar .oracle-thread__empty svg { width: 22px; height: 22px; }
+.oracle-thread--sidebar .oracle-thread__empty p { font-size: 0.72rem; }
+
+.oracle-sidebar-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border-top: 1px solid rgba(167,139,250,0.08);
+}
+
+.oracle-textarea--sidebar {
+    font-size: 0.78rem;
+    min-height: 34px;
+    max-height: 90px;
+}
+
+.oracle-send-btn--sm {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+}
+.oracle-send-btn--sm svg { width: 13px; height: 13px; }
+
+.oracle-sidebar-actions {
+    display: flex;
+    gap: 6px;
+    padding: 5px 12px 8px;
+}
+
 /* ── Confirm danger styling ── */
 .btn--danger-confirm {
     background: rgba(239,68,68,0.15) !important;

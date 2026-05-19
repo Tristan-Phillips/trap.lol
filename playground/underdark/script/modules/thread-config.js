@@ -39,9 +39,10 @@ export function updateThreadConfigBadge() {
     if (!$btn) return;
     const tc = state.chat?.threadConfig;
     const hasOverrides = tc && (
-        tc.threadScenario || tc.model || tc.temperature != null || tc.maxOutput != null ||
+        tc.threadScenario || tc.memory || tc.model || tc.temperature != null || tc.maxOutput != null ||
         tc.userName || tc.userPersona ||
-        (tc.narrativeTone && Object.values(tc.narrativeTone).some(v => v))
+        (tc.narrativeTone && Object.values(tc.narrativeTone).some(v => v)) ||
+        (tc.behavior && Object.values(tc.behavior).some(v => v && v !== false))
     );
     $btn.classList.toggle('arena-action--active', !!hasOverrides);
     $btn.title = hasOverrides ? 'Thread Settings (overrides active)' : 'Thread Settings';
@@ -156,6 +157,7 @@ export function initThreadConfig({ confirm, showModal, hideModal, showToast, luc
 
         // Core tab
         qs('#tc-scenario').value        = tc.threadScenario || '';
+        qs('#tc-memory').value          = tc.memory || '';
         qs('#tc-user-name').value       = tc.userName || '';
         qs('#tc-user-persona').value    = tc.userPersona || '';
         const $autoLore = qs('#tc-auto-attach-lorebooks');
@@ -228,6 +230,28 @@ export function initThreadConfig({ confirm, showModal, hideModal, showToast, luc
         qsa('#tc-pacing-pills .tc-pacing-btn').forEach($p => {
             $p.classList.toggle('active', $p.dataset.val === (tone.pacing || ''));
         });
+
+        // Behavior tab
+        const beh = tc.behavior || {};
+        const $monoHidden = qs('#tc-monologue');
+        if ($monoHidden) $monoHidden.value = beh.monologue || '';
+        qsa('#tc-monologue-pills .tc-behavior-btn').forEach($p => {
+            $p.classList.toggle('active', $p.dataset.val === (beh.monologue || ''));
+        });
+        const $proseHidden = qs('#tc-prose');
+        if ($proseHidden) $proseHidden.value = beh.prose || '';
+        qsa('#tc-prose-pills .tc-behavior-btn').forEach($p => {
+            $p.classList.toggle('active', $p.dataset.val === (beh.prose || ''));
+        });
+        const $contHidden = qs('#tc-continuation');
+        if ($contHidden) $contHidden.value = beh.continuation || '';
+        qsa('#tc-continuation-pills .tc-behavior-toggle').forEach($p => {
+            $p.classList.toggle('active', $p.dataset.val === (beh.continuation || ''));
+        });
+        const $purple = qs('#tc-suppress-purple');
+        if ($purple) $purple.checked = !!beh.suppressPurple;
+        const $forbidden = qs('#tc-forbidden');
+        if ($forbidden) $forbidden.value = beh.forbidden || '';
 
         // Reset to Core tab
         qsa('.tc-nav__item').forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected', 'false'); });
@@ -317,6 +341,33 @@ export function initThreadConfig({ confirm, showModal, hideModal, showToast, luc
         qsa('#tc-pacing-pills .tc-pacing-btn').forEach(b => b.classList.toggle('active', b.dataset.val === $inp?.value));
     });
 
+    // Behavior — monologue pills
+    qs('#tc-monologue-pills')?.addEventListener('click', e => {
+        const $p = e.target.closest('.tc-behavior-btn');
+        if (!$p) return;
+        const $h = qs(`#${$p.dataset.target}`);
+        if ($h) $h.value = $p.dataset.val === $h.value ? '' : $p.dataset.val;
+        qsa('#tc-monologue-pills .tc-behavior-btn').forEach(b => b.classList.toggle('active', b.dataset.val === $h?.value));
+    });
+
+    // Behavior — prose pills
+    qs('#tc-prose-pills')?.addEventListener('click', e => {
+        const $p = e.target.closest('.tc-behavior-btn');
+        if (!$p) return;
+        const $h = qs(`#${$p.dataset.target}`);
+        if ($h) $h.value = $p.dataset.val === $h.value ? '' : $p.dataset.val;
+        qsa('#tc-prose-pills .tc-behavior-btn').forEach(b => b.classList.toggle('active', b.dataset.val === $h?.value));
+    });
+
+    // Behavior — continuation toggles
+    qs('#tc-continuation-pills')?.addEventListener('click', e => {
+        const $p = e.target.closest('.tc-behavior-toggle');
+        if (!$p) return;
+        const $h = qs(`#${$p.dataset.target}`);
+        if ($h) $h.value = $p.dataset.val === $h.value ? '' : $p.dataset.val;
+        qsa('#tc-continuation-pills .tc-behavior-toggle').forEach(b => b.classList.toggle('active', b.dataset.val === $h?.value));
+    });
+
     // Save
     qs('#tc-save')?.addEventListener('click', () => {
         const chat = state.chat;
@@ -325,6 +376,7 @@ export function initThreadConfig({ confirm, showModal, hideModal, showToast, luc
         const tc = chat.threadConfig;
 
         tc.threadScenario      = qs('#tc-scenario')?.value.trim() || '';
+        tc.memory              = qs('#tc-memory')?.value.trim() || '';
         const modelVal         = qs('#tc-model-select')?.value || '';
         tc.model               = modelVal || null;
         tc.userName            = qs('#tc-user-name')?.value.trim()    || null;
@@ -344,6 +396,17 @@ export function initThreadConfig({ confirm, showModal, hideModal, showToast, luc
         const hasTone = Object.values(tone).some(v => v.trim() !== '');
         tc.narrativeTone = hasTone ? tone : null;
 
+        const behavior = {
+            monologue:      qs('#tc-monologue')?.value    || '',
+            prose:          qs('#tc-prose')?.value        || '',
+            continuation:   qs('#tc-continuation')?.value || '',
+            suppressPurple: qs('#tc-suppress-purple')?.checked || false,
+            forbidden:      qs('#tc-forbidden')?.value.trim()   || '',
+        };
+        const hasBehavior = behavior.monologue || behavior.prose || behavior.continuation ||
+                            behavior.suppressPurple || behavior.forbidden;
+        tc.behavior = hasBehavior ? behavior : null;
+
         saveState();
         hideModal('modal-thread-config');
         showToast('Thread settings saved', 'info', 1800);
@@ -352,6 +415,7 @@ export function initThreadConfig({ confirm, showModal, hideModal, showToast, luc
         if (tc.model) _changes.push(`model → ${tc.model.split('/').pop()}`);
         if (tc.temperature != null) _changes.push(`temp → ${tc.temperature.toFixed(2)}`);
         if (tc.narrativeTone?.toneTags) _changes.push(`tone → ${tc.narrativeTone.toneTags}`);
+        if (tc.behavior?.prose) _changes.push(`prose → ${tc.behavior.prose.split(' ')[0]}`);
         if (_changes.length) tcLogPush('event', `Thread settings updated: ${_changes.join(', ')}`);
         updateThreadConfigBadge();
     });

@@ -636,6 +636,40 @@
                 <div id="profile-wh-row" class="profile-wh-row" hidden>
                     <button id="btn-wh-profile" class="btn btn--ghost btn--full btn--flex"><i data-lucide="image-plus"></i> Wallhaven Gallery</button>
                 </div>
+
+                <!-- Oracle — isolated counsel, in-sidebar -->
+                <details class="profile-oracle" id="profile-oracle-panel">
+                    <summary class="profile-oracle__toggle">
+                        <i data-lucide="eye"></i>
+                        <span class="profile-oracle__title">Oracle</span>
+                        <span class="profile-oracle__sub">isolated · never touches your story</span>
+                        <i data-lucide="chevron-down" class="profile-oracle__chevron"></i>
+                    </summary>
+                    <div class="profile-oracle__body">
+                        <div class="profile-oracle__presets">
+                            <button class="oracle-inject-btn oracle-inject-btn--sm" data-inject="recontextualize"><i data-lucide="map"></i> Recontextualize</button>
+                            <button class="oracle-inject-btn oracle-inject-btn--sm" data-inject="continuity"><i data-lucide="scroll-text"></i> Continuity</button>
+                            <button class="oracle-inject-btn oracle-inject-btn--sm" data-inject="reset"><i data-lucide="refresh-cw"></i> Reset</button>
+                            <button class="oracle-inject-btn oracle-inject-btn--sm" data-inject="escalate"><i data-lucide="flame"></i> Escalate</button>
+                        </div>
+                        <div id="oracle-sidebar-thread" class="oracle-thread oracle-thread--sidebar">
+                            <div class="oracle-thread__empty">
+                                <i data-lucide="eye"></i>
+                                <p>Ask the Oracle anything.</p>
+                            </div>
+                        </div>
+                        <div class="oracle-sidebar-footer">
+                            <div class="oracle-input-row">
+                                <textarea id="oracle-sidebar-input" class="oracle-textarea oracle-textarea--sidebar" rows="2" placeholder="Ask the Oracle… {{char}} {{user}}"></textarea>
+                                <button id="oracle-sidebar-send" class="oracle-send-btn oracle-send-btn--sm" title="Send"><i data-lucide="send"></i></button>
+                            </div>
+                            <div class="oracle-sidebar-actions">
+                                <button id="oracle-sidebar-inject" class="oracle-footer__btn oracle-footer__btn--inject" title="Inject as Author's Note"><i data-lucide="arrow-down-to-line"></i> Inject</button>
+                                <button id="oracle-sidebar-clear" class="oracle-footer__btn" title="Clear Oracle"><i data-lucide="eraser"></i> Clear</button>
+                            </div>
+                        </div>
+                    </div>
+                </details>
             </div>
 
             <!-- Codex Tab — World scenario + Lorebooks -->
@@ -1381,6 +1415,10 @@
           <i data-lucide="scroll-text"></i>
           <span>Log</span>
         </button>
+        <button class="tc-nav__item" data-tc-tab="behavior" role="tab" aria-selected="false">
+          <i data-lucide="pen-tool"></i>
+          <span>Style</span>
+        </button>
       </nav>
 
       <!-- Panels -->
@@ -1396,6 +1434,16 @@
               <em class="tc-section__note">layered on top of world scenario</em>
             </div>
             <textarea id="tc-scenario" class="tc-textarea" rows="4" placeholder="Additional context specific to this thread — location, time, circumstances…"></textarea>
+          </section>
+
+          <section class="tc-section">
+            <div class="tc-section__hdr">
+              <i data-lucide="bookmark"></i>
+              <span>Thread Memory</span>
+              <em class="tc-section__note">facts the LLM must always remember</em>
+            </div>
+            <textarea id="tc-memory" class="tc-textarea" rows="3" placeholder="Key facts, established canon, things that must not be forgotten in this thread…"></textarea>
+            <span class="tc-field-hint">Injected verbatim at the top of every system prompt in this thread.</span>
           </section>
 
           <section class="tc-section">
@@ -1598,6 +1646,123 @@
           <div id="tc-log-list" class="tc-log-list">
             <!-- Populated by JS -->
           </div>
+
+        </div>
+
+        <!-- ── BEHAVIOR ── -->
+        <div class="tc-panel" id="tc-panel-behavior" role="tabpanel" hidden>
+
+          <section class="tc-section">
+            <div class="tc-section__hdr">
+              <i data-lucide="brain"></i>
+              <span>Internal Monologue</span>
+              <em class="tc-section__note">how much inner thought surfaces in prose</em>
+            </div>
+            <div class="tc-behavior-row" id="tc-monologue-pills">
+              <button class="tc-behavior-btn" data-target="tc-monologue" data-val="">
+                <i data-lucide="minus-circle"></i>
+                <span>Off</span>
+                <em>action &amp; dialogue only</em>
+              </button>
+              <button class="tc-behavior-btn" data-target="tc-monologue" data-val="subtle internal reflection, woven into action">
+                <i data-lucide="feather"></i>
+                <span>Subtle</span>
+                <em>brief flashes of thought</em>
+              </button>
+              <button class="tc-behavior-btn" data-target="tc-monologue" data-val="visible internal monologue, clearly present alongside action">
+                <i data-lucide="message-circle"></i>
+                <span>Visible</span>
+                <em>thoughts alongside action</em>
+              </button>
+              <button class="tc-behavior-btn" data-target="tc-monologue" data-val="rich internal monologue, psychologically detailed">
+                <i data-lucide="book-open"></i>
+                <span>Deep</span>
+                <em>psychological depth</em>
+              </button>
+            </div>
+            <input type="hidden" id="tc-monologue" value="">
+          </section>
+
+          <section class="tc-section">
+            <div class="tc-section__hdr">
+              <i data-lucide="type"></i>
+              <span>Prose Style</span>
+              <em class="tc-section__note">writing register for this thread</em>
+            </div>
+            <div class="tc-behavior-row tc-behavior-row--3" id="tc-prose-pills">
+              <button class="tc-behavior-btn" data-target="tc-prose" data-val="">
+                <i data-lucide="minus"></i>
+                <span>Inherit</span>
+                <em>from continuity settings</em>
+              </button>
+              <button class="tc-behavior-btn" data-target="tc-prose" data-val="lean, minimal prose — function over flourish">
+                <i data-lucide="zap"></i>
+                <span>Lean</span>
+                <em>tight, minimal, direct</em>
+              </button>
+              <button class="tc-behavior-btn" data-target="tc-prose" data-val="balanced literary prose — evocative but controlled">
+                <i data-lucide="pen-tool"></i>
+                <span>Literary</span>
+                <em>evocative, measured</em>
+              </button>
+              <button class="tc-behavior-btn" data-target="tc-prose" data-val="rich, lush prose — sensory detail, poetic cadence">
+                <i data-lucide="sparkles"></i>
+                <span>Lush</span>
+                <em>poetic, immersive</em>
+              </button>
+            </div>
+            <input type="hidden" id="tc-prose" value="">
+          </section>
+
+          <div class="tc-row-fields">
+            <section class="tc-section tc-section--half">
+              <div class="tc-section__hdr"><i data-lucide="arrow-right-circle"></i><span>On Continuation</span></div>
+              <div class="tc-behavior-stack" id="tc-continuation-pills">
+                <button class="tc-behavior-toggle" data-target="tc-continuation" data-val="additive — continue the current scene seamlessly">
+                  <span class="tc-behavior-toggle__dot"></span>
+                  <div>
+                    <span class="tc-behavior-toggle__label">Additive</span>
+                    <span class="tc-behavior-toggle__sub">continue scene seamlessly</span>
+                  </div>
+                </button>
+                <button class="tc-behavior-toggle" data-target="tc-continuation" data-val="scene-break — insert a clear narrative beat before continuing">
+                  <span class="tc-behavior-toggle__dot"></span>
+                  <div>
+                    <span class="tc-behavior-toggle__label">Scene Break</span>
+                    <span class="tc-behavior-toggle__sub">insert a narrative beat</span>
+                  </div>
+                </button>
+              </div>
+              <input type="hidden" id="tc-continuation" value="">
+            </section>
+            <section class="tc-section tc-section--half">
+              <div class="tc-section__hdr"><i data-lucide="shield-off"></i><span>Purple Prose</span></div>
+              <label class="tc-toggle-row" style="margin-top:4px">
+                <input type="checkbox" id="tc-suppress-purple">
+                <span class="tc-toggle-row__track"><span class="tc-toggle-row__thumb"></span></span>
+                <div>
+                  <span class="tc-toggle-row__label">Suppress</span>
+                  <span class="tc-toggle-row__sub">penalise overwrought metaphors &amp; clichés</span>
+                </div>
+              </label>
+            </section>
+          </div>
+
+          <section class="tc-section">
+            <div class="tc-section__hdr">
+              <i data-lucide="slash"></i>
+              <span>Forbidden Phrases</span>
+              <em class="tc-section__note">never write these</em>
+            </div>
+            <textarea id="tc-forbidden" class="tc-textarea" rows="3" placeholder="Comma-separated phrases the AI must never use in this thread… e.g. 'orbs, throbbing, waves of pleasure'"></textarea>
+          </section>
+
+          <section class="tc-section tc-section--info">
+            <div class="tc-info-card">
+              <i data-lucide="info"></i>
+              <p>Style directives are layered on top of Tone settings. They affect the <em>how</em> of writing — the register, depth, and mechanics — not the emotional content.</p>
+            </div>
+          </section>
 
         </div>
 
@@ -3623,7 +3788,7 @@
 
 <div id="toast-container" class="toast-container"></div>
 <script src="https://cdn.trap.lol/shards/lucide.min.js"></script><script src="https://cdn.trap.lol/shards/marked.min.js"></script><script src="https://cdn.trap.lol/shards/purify.min.js"></script>
-<script type="module" src="./script/main.js?v=72"></script>
+<script type="module" src="./script/main.js?v=73"></script>
 <!-- ── Wallhaven Arena ── -->
 <script src="./script/modules/wallhaven.js"></script>
 

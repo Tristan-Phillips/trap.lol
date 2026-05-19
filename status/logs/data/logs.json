@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.31",
+    "schema_version": "1.5.32",
     "last_updated": "2026-05-19",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -198,7 +198,7 @@
       "glass/style/modules/": "CSS module system loaded via @import in glass/style/style.css. Modules: variables.css (all --custom-props), base.css (body/page reset), layout.css (page structure, section spacing), typography.css (headings, prose), components.css (cards, badges, tooltips, node-tiles, station bars, tx-cards, flip-cards), border-life.css (animated border effect), social-cluster.css (footer social strip), tunnel-light.css (header animation), neural-uplink.css (playground-specific overrides), responsive.css (breakpoint overrides).",
       "underdark/script/modules/ui.js": "The Underdark's primary orchestration module (~9.3k lines, actively being split). Handles boot, roster, profile, chat core, reality/settings, lorebooks, config bindings, telemetry, keyboard shortcuts, and rendering. Director, Thread Config, Gallery/Lightbox, and Social Feed are now delegated to dedicated modules.",
       "playground/underdark/script/modules/director.js": "Director panel module. Owns Direct chips, Mood toggles, World (Overlord shortcuts), Scene tab (replaces old scene-inject-bar), AI quick-reply generation, and inline reply chips. 4-tab panel with icons and slide-in animation. Exports getActiveTone(), getSceneDirective(), clearSceneDirective(), generateAIQuickReplies(state) — ui.js uses getSceneDirective/clearSceneDirective instead of DOM qs('#scene-inject-input').",
-      "playground/underdark/script/modules/thread-config.js": "Thread Config editor module. Owns openThreadConfig modal, tcLogPush, renderThreadLog, and updateThreadConfigBadge. Exported functions tcLogPush and updateThreadConfigBadge are consumed at 5 call sites in ui.js.",
+      "playground/underdark/script/modules/thread-config.js": "Thread Config editor module. Owns openThreadConfig modal, tcLogPush, renderThreadLog, and updateThreadConfigBadge. Exported functions tcLogPush and updateThreadConfigBadge are consumed by ui.js. threadConfig schema: { threadScenario, memory, model, temperature, maxOutput, userName, userPersona, autoAttachLorebooks, pinnedLoreBookIds, narrativeTone (sexualEnergy, toneTags, amplify, avoid, pacing) | null, behavior (monologue, prose, continuation, suppressPurple, forbidden) | null, log[] }.",
       "playground/underdark/script/modules/social.js": "Social Feed module. Owns social sidebar, hot feed and per-character feed rendering, post list with likes/comments/DM wiring, Compose Post modal, Feed Export JSON download, and Living World LLM auto-post stream. initSocial(ctx, deps) returns {renderSocialFeed, renderHotFeed, renderSocialSidebar, openSocialFeed, openComposeModal, startLivingWorld, pauseLivingWorld}.",
       "playground/underdark/script/modules/gallery.js": "Gallery, lightbox, and social post storage module. Owns character image gallery (data helpers, strip, modal, tags, export), video gallery (strip + modal), lightbox (open/nav/set-avatar/remove), and saveLocalPost/removeLocalPostBySrc. initGallery(ctx, deps) returns {openLightbox, openGalleryModal, renderGalleryStrip, openVideoGalleryModal, renderVideoStrip}. getAllFeedPosts is a named export used by social, image-studio, and ui.js.",
       "playground/underdark/script/modules/llm-engine.js": "Underdark LLM payload construction and call orchestration. Builds system prompts, injects lorebooks/personas/meters, manages sliding context window and memory summarisation. Delegates raw HTTP transport to glass/script/modules/llm-transport.js.",
@@ -601,6 +601,24 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-19",
+      "message": "feat(underdark): add Behavior tab to Thread Settings, Oracle in Profile tab, Thread Memory field",
+      "scope": "playground/underdark/",
+      "impact": "medium",
+      "files": [
+        "playground/underdark/index.html",
+        "playground/underdark/script/modules/thread-config.js",
+        "playground/underdark/script/modules/ui.js",
+        "playground/underdark/script/main.js",
+        "playground/underdark/style/thread-config.css",
+        "playground/underdark/style/oracle.css",
+        "playground/underdark/style/style.css",
+        "status/logs/data/logs.json"
+      ],
+      "why": "Three-part feature expansion: (1) Thread Settings gains a 5th 'Style' tab with writing behavior controls (internal monologue level, prose register, continuation style, purple prose suppression, forbidden phrases); (2) Thread Settings Core tab gains a Thread Memory textarea — facts injected verbatim into every system prompt in this thread; (3) Oracle panel embedded as a collapsible details element in the right sidebar's Profile tab — shares oracleHistory and sendOracleQuery with the existing codex Oracle."
+    },
     {
       "hash": "b7cdac7",
       "date": "2026-05-19",
@@ -2897,6 +2915,20 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-19",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Three-part expansion of The Underdark's god-view and settings systems. Thread Settings modal gained a 5th 'Style' tab with writing behavior controls (internal monologue depth, prose register, continuation style, purple prose suppression toggle, forbidden phrases textarea) plus a Thread Memory field in the Core tab. The Oracle panel was embedded as a collapsible sidebar widget in the Profile tab — shares oracleHistory and the send/inject/clear logic with the Scene Codex Oracle. Oracle sidebar uses its own send function (sendSidebarOracleQuery) that targets #oracle-sidebar-thread rather than #oracle-thread, both updating the same ctx.oracleHistory.",
+      "decisions": [
+        "Thread Memory added as a top-level tc.memory field on threadConfig — injected verbatim into system prompt on every turn in this thread; distinct from tc.threadScenario (which is narrative context, not persistent facts).",
+        "Behavior tab persisted as tc.behavior: { monologue, prose, continuation, suppressPurple, forbidden } — null when no overrides active, matching the narrativeTone null-when-empty pattern.",
+        "Oracle sidebar uses <details> collapsible pattern in the Profile tab rather than a separate panel or tab — keeps the sidebar from growing too tall and lets it share space with the profile card and gallery strip naturally.",
+        "Sidebar Oracle shares ctx.oracleHistory with the codex Oracle — they are the same conversation, just rendered in two different DOM locations. Clearing from either location clears both.",
+        "Behavior pills use tc-behavior-btn class (4-column grid, icon + label + em subdesc) and tc-behavior-toggle for binary choices — new CSS classes in thread-config.css rather than reusing pacing/energy classes to allow independent styling.",
+        "oracle.css gains inline/sidebar variant modifier classes (--inline, --sidebar, --sm) rather than duplicating full component CSS — same component, different density."
+      ]
+    },
     {
       "date": "2026-05-19",
       "agent": "Claude Sonnet 4.6",

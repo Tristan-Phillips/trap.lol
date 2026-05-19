@@ -28,7 +28,7 @@ import { initCharEditor } from './char-editor.js?v=3';
 import { qs, qsa, esc, debounce, parseLLMArray, parseLLMJson, parseLLMLines } from './shared-utils.js?v=4';
 import { initCodexMeters, applyStatusTags, updateCodexMeters as _updateCodexMeters } from './codex-meters.js?v=2';
 import { initDirector, getActiveTone, getSceneDirective, clearSceneDirective, generateAIQuickReplies } from './director.js?v=2';
-import { initThreadConfig, tcLogPush, updateThreadConfigBadge } from './thread-config.js?v=1';
+import { initThreadConfig, tcLogPush, updateThreadConfigBadge } from './thread-config.js?v=2';
 import { initGallery, addToGallery, addToVideoGallery, getAllFeedPosts, getAllGalleryImages, ensureGalleryStore, saveLocalPost, removeLocalPostBySrc } from './gallery.js?v=1';
 import { initSocial } from './social.js?v=2';
 import { initImageStudio } from './image-studio.js?v=1';
@@ -8038,6 +8038,128 @@ export function initUI() {
         ctx.oracleHistory = [];
         const $thread = qs('#oracle-thread');
         if ($thread) $thread.innerHTML = '';
+        showToast('Oracle thread cleared', 'info', 1400);
+    });
+
+    // ── Sidebar Oracle (Profile tab) — shares oracleHistory + sendOracleQuery ─
+    async function sendSidebarOracleQuery(text) {
+        if (ctx.oracleStreaming || !text.trim()) return;
+        const charId   = state.activeBotId;
+        const char     = state.loadedCharacters[charId];
+        if (!char) { showToast('No active character for Oracle', 'warn'); return; }
+        const charName = getCharOverride(charId).nickname || char.name;
+
+        const resolvedText = text
+            .replace(/\{\{char\}\}/gi, charName)
+            .replace(/\{\{user\}\}/gi, state.config.userName || 'User');
+
+        const $thread = qs('#oracle-sidebar-thread');
+        const $emptyCheck = $thread?.querySelector('.oracle-thread__empty');
+        if ($emptyCheck) $emptyCheck.remove();
+
+        const $userBubble = document.createElement('div');
+        $userBubble.className = 'oracle-msg oracle-msg--user';
+        $userBubble.textContent = resolvedText;
+        $thread?.appendChild($userBubble);
+        if ($thread) $thread.scrollTop = $thread.scrollHeight;
+
+        ctx.oracleHistory.push({ role: 'user', content: resolvedText });
+
+        const _worldScenario = state.reality?.worldConfig?.scenario || '';
+        const oracleConfig = {
+            ...state.config,
+            maxOutput: Math.max(state.config.maxOutput || 512, 1024),
+            stream: true,
+            ...(_worldScenario ? { _worldScenario } : {})
+        };
+        const fullPayload = buildPayload({
+            character: { ...char, id: charId },
+            history:   ctx.oracleHistory.slice(0, -1),
+            lore:      state.lorebooks,
+            config:    oracleConfig,
+            isGroup:   false,
+            allChars:  [],
+            sessionId: 'oracle-private'
+        });
+        fullPayload.messages = [
+            fullPayload.messages[0],
+            ...ctx.oracleHistory.map(m => ({ role: m.role === 'bot' ? 'assistant' : m.role, content: m.content }))
+        ];
+
+        const $botBubble = document.createElement('div');
+        $botBubble.className = 'oracle-msg oracle-msg--bot';
+        $botBubble.innerHTML = '<span class="thinking"><span></span><span></span><span></span></span>';
+        $thread?.appendChild($botBubble);
+        if ($thread) $thread.scrollTop = $thread.scrollHeight;
+
+        ctx.oracleStreaming = true;
+        const $sendBtn = qs('#oracle-sidebar-send');
+        if ($sendBtn) { $sendBtn.disabled = true; $sendBtn.innerHTML = '<i data-lucide="square"></i>'; lucideRefresh($sendBtn); }
+
+        let finalText = '';
+        await streamCompletion(fullPayload,
+            (_delta, full) => {
+                $botBubble.innerHTML = renderMarkdown(full);
+                if ($thread) $thread.scrollTop = $thread.scrollHeight;
+                finalText = full;
+            },
+            (text) => {
+                finalText = text;
+                $botBubble.innerHTML = renderMarkdown(finalText);
+                ctx.oracleHistory.push({ role: 'assistant', content: finalText });
+                ctx.oracleStreaming = false;
+                if ($sendBtn) { $sendBtn.disabled = false; $sendBtn.innerHTML = '<i data-lucide="send"></i>'; lucideRefresh($sendBtn); }
+                if ($thread) $thread.scrollTop = $thread.scrollHeight;
+            },
+            (err) => {
+                $botBubble.innerHTML = `<span class="msg-error">[Oracle error: ${esc(err.message)}]</span>`;
+                ctx.oracleStreaming = false;
+                if ($sendBtn) { $sendBtn.disabled = false; $sendBtn.innerHTML = '<i data-lucide="send"></i>'; lucideRefresh($sendBtn); }
+            }
+        );
+    }
+
+    qs('#oracle-sidebar-send')?.addEventListener('click', () => {
+        const $in = qs('#oracle-sidebar-input');
+        const text = $in?.value.trim();
+        if (!text) return;
+        $in.value = '';
+        sendSidebarOracleQuery(text);
+    });
+
+    qs('#oracle-sidebar-input')?.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); qs('#oracle-sidebar-send')?.click(); }
+    });
+
+    // Sidebar preset buttons — fill into sidebar input (same presets object)
+    qsa('#profile-oracle-panel .oracle-inject-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const key    = btn.dataset.inject;
+            const preset = ORACLE_PRESETS[key];
+            if (!preset) return;
+            const $in = qs('#oracle-sidebar-input');
+            if ($in) { $in.value = preset.prompt; $in.focus(); }
+        });
+    });
+
+    qs('#oracle-sidebar-inject')?.addEventListener('click', () => {
+        const lastBot = [...ctx.oracleHistory].reverse().find(m => m.role === 'assistant');
+        if (!lastBot) { showToast('No Oracle response to inject', 'warn'); return; }
+        const truncated = lastBot.content.slice(0, 400);
+        const existing = state.config.authorsNote || '';
+        setConfig({ authorsNote: (existing ? existing + '\n\n' : '') + `[Oracle Context: ${truncated}]` });
+        syncConfigUI();
+        showToast('Oracle insight injected as Author\'s Note', 'info', 2500);
+    });
+
+    qs('#oracle-sidebar-clear')?.addEventListener('click', () => {
+        ctx.oracleHistory = [];
+        const $thread = qs('#oracle-sidebar-thread');
+        if ($thread) $thread.innerHTML = `<div class="oracle-thread__empty"><i data-lucide="eye"></i><p>Ask the Oracle anything.</p></div>`;
+        lucideRefresh($thread);
+        // Also clear codex oracle thread UI
+        const $codexThread = qs('#oracle-thread');
+        if ($codexThread) $codexThread.innerHTML = '';
         showToast('Oracle thread cleared', 'info', 1400);
     });
 
