@@ -602,7 +602,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "0a253ca",
       "date": "2026-05-19",
       "message": "fix(underdark): export openHotFeed from social.js — social tab rendered blank",
       "scope": "playground/underdark/",
