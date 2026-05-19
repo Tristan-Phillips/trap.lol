@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.37",
+    "schema_version": "1.5.38",
     "last_updated": "2026-05-20",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -604,6 +604,20 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-20",
+      "message": "fix(gallery): audit fixes — avatar dedup, grid aspect-ratio, inline tag input, kb-hint, onerror, overflow, keyboard guards",
+      "scope": "playground/underdark/gallery/",
+      "impact": "medium",
+      "files": [
+        "playground/underdark/gallery/index.html",
+        "playground/underdark/gallery/script/app.js",
+        "playground/underdark/gallery/style/style.css",
+        "status/logs/data/logs.json"
+      ],
+      "why": "Pre-continuation audit found multiple bugs: avatar blob duplication, portrait image clipping, prompt() blocking tag input, stale lbIndex after setAsAvatar, keyboard modifier conflicts, and a body overflow lock that prevented normal page scrolling."
+    },
     {
       "hash": "8133fe5",
       "date": "2026-05-20",
@@ -2995,6 +3009,18 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-20",
+      "agent": "Claude Sonnet 4.6",
+      "type": "bug_fix",
+      "summary": "Pre-continuation audit of the Image Vault (playground/underdark/gallery/). Found and fixed 8 distinct bugs: (1) avatarRef duplicated in grid if it appeared in galleryRefs — deduped before building allRefs; (2) grid fixed 180px height brutally clipped portrait images — replaced with aspect-ratio: 3/4 on the img-wrap; (3) tag input used prompt() — replaced with inline input row in lightbox info bar; (4) setAsAvatar reassigned S.lbItems then called renderLightbox with stale S.lbIndex — now re-finds item by ref; (5) onerror inline attribute on grid tiles — moved to event listener; (6) body overflow:hidden was unconditional — moved to body.lb-open only so the layout's internal scroll still works; (7) keyboard hint text was static even when zoom mode changed arrow key meaning; (8) Ctrl+D and Ctrl+A keyboard shortcuts were not guarded, could conflict with browser defaults.",
+      "decisions": [
+        "Grid tiles now use aspect-ratio: 3/4 (portrait proportion) so all tiles display consistently without arbitrary square-cropping. object-fit: cover still applies — images fill the proportional box.",
+        "Inline tag input is always visible in the lightbox info bar (no click-to-reveal) — simpler than a toggle, costs minimal vertical space.",
+        "Tag input keydown uses stopPropagation as belt-and-suspenders even though the document keydown handler already guards INPUT targets.",
+        "seqOffset counter outside the inner Promise.all ensures deterministic timestamp ordering across character groups even though IDB resolves concurrently."
+      ]
+    },
     {
       "date": "2026-05-20",
       "agent": "Claude Sonnet 4.6",

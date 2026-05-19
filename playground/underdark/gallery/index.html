@@ -132,7 +132,7 @@
     <div class="vault-lb__topbar">
       <div class="vault-lb__char-pill" id="lb-char-pill"></div>
       <div class="vault-lb__counter" id="lb-counter">1 / 1</div>
-      <span class="vault-lb__kb-hint">← → navigate · Esc close</span>
+      <span class="vault-lb__kb-hint" id="lb-kb-hint">← → navigate · Esc close</span>
       <button class="vault-lb__close" id="lb-close" title="Close (Esc)">
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
       </button>
@@ -155,6 +155,12 @@
     <!-- Bottom info -->
     <div class="vault-lb__info">
       <div class="vault-lb__tags" id="lb-tags"></div>
+      <div class="vault-lb__tag-input-row" id="lb-tag-row">
+        <input type="text" id="lb-tag-input" class="vault-lb__tag-input" placeholder="Add tag…" maxlength="20" autocomplete="off" spellcheck="false">
+        <button class="vault-lb__tag-confirm" id="lb-tag-confirm" title="Add tag (Enter)">
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+        </button>
+      </div>
       <div class="vault-lb__actions">
         <button class="vault-lb__action-btn" id="lb-set-avatar" title="Set as character avatar">
           <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -168,11 +174,7 @@
           <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="M8 11h6"/></svg>
           <span>Reset</span>
         </button>
-        <button class="vault-lb__action-btn" id="lb-add-tag" title="Add tag">
-          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
-          <span>Tag</span>
-        </button>
-        <button class="vault-lb__action-btn" id="lb-download" title="Download (D)">
+        <button class="vault-lb__action-btn" id="lb-download" title="Download (Shift+D)">
           <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
           <span>Download</span>
         </button>

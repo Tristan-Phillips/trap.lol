@@ -138,12 +138,17 @@ async function boot() {
     buildCharRoster();
 
     const allItems = [];
+    const baseTs = Date.now();
+    let seqOffset = 0;
     await Promise.all(S.chars.map(async (ch, chIdx) => {
-        const allRefs = [ch.avatarRef, ...ch.galleryRefs].filter(Boolean);
+        // Deduplicate: if avatarRef appears in galleryRefs, don't show it twice
+        const galleryOnly = ch.galleryRefs.filter(r => r !== ch.avatarRef);
+        const allRefs = [ch.avatarRef, ...galleryOnly].filter(Boolean);
         await Promise.all(allRefs.map(async (ref, i) => {
             const url = await resolveUrl(ref);
             if (!url) return;
-            const isAvatar = (i === 0 && ref === ch.avatarRef);
+            const isAvatar = ref === ch.avatarRef;
+            const localOffset = seqOffset++;
             allItems.push({
                 url,
                 ref,
@@ -152,7 +157,7 @@ async function boot() {
                 charIdx:  chIdx,
                 idx:      i,
                 isAvatar,
-                ts:       Date.now() - chIdx * 1000 - i, // preserve relative order
+                ts:       baseTs - chIdx * 10000 - localOffset,
                 tags:     ch.galleryMeta[ref]?.tags || [],
             });
         }));
@@ -320,7 +325,7 @@ function renderGrid(items, $grid) {
 
         $tile.innerHTML = `
             <div class="vault-tile__img-wrap">
-                <img src="${esc(item.url)}" alt="${esc(item.charName)}" class="vault-tile__img" loading="lazy" draggable="false" onerror="this.closest('.vault-tile').style.display='none'">
+                <img src="${esc(item.url)}" alt="${esc(item.charName)}" class="vault-tile__img" loading="lazy" draggable="false">
                 ${item.isAvatar ? '<div class="vault-tile__avatar-badge"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>' : ''}
                 <div class="vault-tile__overlay">
                     <div class="vault-tile__char-label">${esc(item.charName)}</div>
@@ -332,6 +337,7 @@ function renderGrid(items, $grid) {
                     </div>
                 </div>
             </div>`;
+        $tile.querySelector('.vault-tile__img').addEventListener('error', () => { $tile.style.display = 'none'; });
 
         $tile.querySelector('[data-action="open"]').addEventListener('click', e => { e.stopPropagation(); openLightbox(i); });
         $tile.querySelector('[data-action="dl"]').addEventListener('click',   e => { e.stopPropagation(); downloadItem(item); });
@@ -393,6 +399,12 @@ function lbtApply(transition = true) {
     else            { $img.classList.add('lb-no-transition'); }
     $img.style.transform = `translate(${LBT.tx}px, ${LBT.ty}px) rotate(${LBT.rot}deg) scale(${LBT.scale})`;
     lbtShowZoomPill();
+    const $hint = qs('#lb-kb-hint');
+    if ($hint) {
+        $hint.textContent = LBT.scale > 1
+            ? '← → ↑ ↓ pan · 0 reset · Esc close'
+            : '← → navigate · R rotate · Esc close';
+    }
 }
 
 function lbtReset(transition = true) {
@@ -540,6 +552,8 @@ function renderLightbox() {
     lbtReset(false); // reset transform on image change
     $img.onerror = null;
     $img.src = item.url;
+    const $ti = qs('#lb-tag-input');
+    if ($ti) $ti.value = '';
     $img.onerror = () => {
         // Skip to next valid image automatically
         const dir = S.lbIndex < S.lbItems.length - 1 ? 1 : -1;
@@ -643,6 +657,9 @@ function setAsAvatar(item) {
     render();
     if (!qs('#vault-lb').hidden) {
         S.lbItems = getFilteredItems();
+        // Re-find the same image by ref so the index stays on the correct item
+        const newIdx = S.lbItems.findIndex(it => it.ref === item.ref && it.charId === item.charId);
+        S.lbIndex = newIdx !== -1 ? newIdx : Math.min(S.lbIndex, S.lbItems.length - 1);
         renderLightbox();
     }
     showToast(`Avatar updated for ${item.charName}`, 'success');
@@ -787,11 +804,20 @@ function wire() {
         const item = S.lbItems[S.lbIndex];
         if (item) deleteItem(item);
     });
-    qs('#lb-add-tag').addEventListener('click', () => {
+    // Inline tag input
+    const $tagInput   = qs('#lb-tag-input');
+    const $tagConfirm = qs('#lb-tag-confirm');
+    function commitTag() {
         const item = S.lbItems[S.lbIndex];
         if (!item) return;
-        const tag = prompt('Add tag:');
-        if (tag) addTagToItem(item, tag);
+        const val = $tagInput.value.trim();
+        if (val) addTagToItem(item, val);
+        $tagInput.value = '';
+    }
+    $tagConfirm.addEventListener('click', commitTag);
+    $tagInput.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); commitTag(); }
+        e.stopPropagation(); // prevent lightbox keyboard shortcuts while typing
     });
 
     // Keyboard shortcuts
@@ -804,12 +830,12 @@ function wire() {
             if (LBT.scale !== 1 || LBT.rot !== 0) { lbtReset(true); return; }
             closeLightbox(); return;
         }
-        if (e.key === 'ArrowLeft'  || e.key === 'a' || e.key === 'A') {
+        if (e.key === 'ArrowLeft' || ((e.key === 'a' || e.key === 'A') && !e.ctrlKey && !e.metaKey)) {
             if (LBT.scale <= 1) { lbNav(-1); return; }
             // Zoomed in: pan instead
             LBT.tx += 60; lbtClampPan(); lbtApply(true); return;
         }
-        if (e.key === 'ArrowRight' || (e.key === 'd' && !e.shiftKey) || (e.key === 'D' && !e.shiftKey && !e.ctrlKey)) {
+        if (e.key === 'ArrowRight' || (e.key === 'd' && !e.shiftKey && !e.ctrlKey && !e.metaKey) || (e.key === 'D' && !e.shiftKey && !e.ctrlKey && !e.metaKey)) {
             if (LBT.scale <= 1) { lbNav(1); return; }
             LBT.tx -= 60; lbtClampPan(); lbtApply(true); return;
         }

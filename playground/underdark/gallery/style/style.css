@@ -45,7 +45,6 @@ body {
     font-family: var(--font-sans);
     font-size: 14px;
     line-height: 1.5;
-    overflow: hidden; /* layout uses internal scroll on .vault-main */
 }
 
 /* ── Header ── */
@@ -491,8 +490,11 @@ body {
     width: 100%;
     height: auto;
 }
+.vault-grid--grid .vault-tile__img-wrap {
+    aspect-ratio: 3 / 4;
+}
 .vault-grid--grid .vault-tile__img {
-    height: 180px;
+    height: 100%;
     object-fit: cover;
 }
 
@@ -785,6 +787,39 @@ body {
     gap: 5px;
     min-height: 18px;
 }
+.vault-lb__tag-input-row {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.vault-lb__tag-input {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    border-radius: 5px;
+    padding: 4px 8px;
+    width: 140px;
+    outline: none;
+    transition: border-color 0.15s;
+}
+.vault-lb__tag-input:focus { border-color: var(--accent-dim); }
+.vault-lb__tag-input::placeholder { color: var(--text-muted); }
+.vault-lb__tag-confirm {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px; height: 26px;
+    background: var(--accent-glow);
+    border: 1px solid var(--accent-dim);
+    color: var(--accent);
+    border-radius: 5px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.12s;
+}
+.vault-lb__tag-confirm:hover { background: rgba(190, 41, 236, 0.28); }
 .lb-tag {
     display: inline-flex;
     align-items: center;
@@ -860,7 +895,7 @@ body {
 .vault-toast--info    { border-color: var(--border); color: var(--text-secondary); }
 
 /* ── Body scroll lock when lb open ── */
-body.lb-open { overflow: hidden; }
+body.lb-open { overflow: hidden !important; }
 
 /* ── Scrollbar ── */
 ::-webkit-scrollbar         { width: 5px; height: 5px; }
