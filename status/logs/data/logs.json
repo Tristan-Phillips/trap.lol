@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.28",
+    "schema_version": "1.5.29",
     "last_updated": "2026-05-19",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -603,6 +603,20 @@
   "commits": [
     {
       "hash": "pending",
+      "date": "2026-05-19",
+      "message": "fix(underdark): resolve three ReferenceErrors introduced by image-studio.js extraction",
+      "scope": "playground/underdark/",
+      "impact": "high",
+      "files": [
+        "playground/underdark/script/modules/image-studio.js",
+        "playground/underdark/script/main.js",
+        "playground/underdark/index.html",
+        "status/logs/data/logs.json"
+      ],
+      "why": "image-studio.js called getAvatarUrl (private to ui.js, not injected) and deleted _avatarCache (ui.js module-scope, inaccessible cross-module) — both would throw ReferenceError at runtime. Cache deletion was also redundant. main.js and index.html version strings bumped to bust browser cache after the extraction commit."
+    },
+    {
+      "hash": "73d0e9b",
       "date": "2026-05-19",
       "message": "refactor(underdark): extract social feed to social.js — fourth split of ui.js",
       "scope": "playground/underdark/",
@@ -2852,6 +2866,17 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-19",
+      "agent": "Claude Sonnet 4.6",
+      "type": "bug_fix",
+      "summary": "Audited the image-studio.js extraction and identified three bugs that would throw ReferenceError at runtime. Fixed: (1) getAvatarUrl (private to ui.js, not injected as dep) replaced with getAvatarUrlSync + resolveImageUrl fallback — both already available in image-studio.js scope. (2) delete _avatarCache[cid] removed — _avatarCache is ui.js module scope, inaccessible cross-module, and redundant because the cache invalidates naturally on ref mismatch. (3) main.js ui.js import bumped to v=135 and index.html main.js script tag bumped to v=70 to bust browser cache after the prior extraction commit.",
+      "decisions": [
+        "getAvatarUrl replaced with getAvatarUrlSync(charId, rawAv) || await resolveImageUrl(rawAv) — sync cache hit handles the common case; resolveImageUrl handles IDB blobs. No new dep injection needed.",
+        "_avatarCache deletion removed entirely — the ui.js cache already self-invalidates when meta.avatar_path changes (ref mismatch at getAvatarUrl line 252). Removing the line has zero functional impact.",
+        "Version bump strategy: ui.js query string version (v=135) lives in main.js, not index.html. index.html only bumps main.js (v=70). This is the established pattern from prior extraction commits."
+      ]
+    },
     {
       "date": "2026-05-19",
       "agent": "Claude Sonnet 4.6",
