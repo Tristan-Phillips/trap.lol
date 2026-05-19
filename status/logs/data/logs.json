@@ -602,9 +602,9 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "0662529",
       "date": "2026-05-19",
-      "message": "fix(underdark): resolve three ReferenceErrors introduced by image-studio.js extraction",
+      "message": "fix(underdark): resolve ReferenceErrors from image-studio.js extraction",
       "scope": "playground/underdark/",
       "impact": "high",
       "files": [
