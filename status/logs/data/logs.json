@@ -605,7 +605,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "8133fe5",
       "date": "2026-05-20",
       "message": "feat(gallery): zoom/pan/rotate engine + lightbox image overflow fix",
       "scope": "playground/underdark/gallery/",
