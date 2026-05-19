@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.39",
+    "schema_version": "1.5.40",
     "last_updated": "2026-05-20",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -604,6 +604,18 @@
     ]
   },
   "commits": [
+    {
+      "hash": "3684cfe",
+      "date": "2026-05-20",
+      "message": "fix(gallery): lightbox full-bleed image — remove padding, float nav arrows, eliminate hard cutoffs",
+      "scope": "playground/underdark/gallery/",
+      "impact": "medium",
+      "files": [
+        "playground/underdark/gallery/index.html",
+        "playground/underdark/gallery/style/style.css"
+      ],
+      "why": "Image had a 10px padding creating hard rectangular cutoffs against the panel background; nav arrows flanked the image creating dead columns; border-radius on the img element was inconsistent with the panel clipping."
+    },
     {
       "hash": "f36aba7",
       "date": "2026-05-20",
