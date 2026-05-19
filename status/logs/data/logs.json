@@ -605,7 +605,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "5382706",
       "date": "2026-05-20",
       "message": "fix(gallery): audit fixes — avatar dedup, grid aspect-ratio, inline tag input, kb-hint, onerror, overflow, keyboard guards",
       "scope": "playground/underdark/gallery/",
