@@ -6,6 +6,11 @@
 
 document.addEventListener('DOMContentLoaded', function () {
 
+  // Data files are gitignored locally and served from the CDN in production.
+  // To develop locally: drop the 5etools/ folder into assets/data/ and set this to
+  // '/playground/dndm/assets/data/5etools'
+  var DATA_BASE = 'https://cdn.trap.lol/dndm/5etools';
+
   // ── Helpers ────────────────────────────────────────────────
 
   function esc(s) {
@@ -868,7 +873,7 @@ document.addEventListener('DOMContentLoaded', function () {
     $list.innerHTML  = '<div class="bestiary-loading"><span class="loading-dot"></span> Loading ' + esc(src.label) + '…</div>';
     $panel.innerHTML = '<div class="stat-block-empty">Select a creature to view its stat block.</div>';
 
-    fetch('/playground/dndm/assets/data/5etools/bestiary/' + src.file)
+    fetch(DATA_BASE + '/bestiary/' + src.file)
       .then(function(r) { return r.ok ? r.json() : Promise.reject(r.status); })
       .then(function(d) {
         var monsters = (d.monster || []).slice().sort(function(a, b) {
@@ -1280,7 +1285,7 @@ document.addEventListener('DOMContentLoaded', function () {
     $list.innerHTML  = '<div class="bestiary-loading"><span class="loading-dot"></span> Loading ' + esc(src.label) + '…</div>';
     $panel.innerHTML = '<div class="stat-block-empty">Select a spell to view its description.</div>';
 
-    fetch('/playground/dndm/assets/data/5etools/spells/' + src.file)
+    fetch(DATA_BASE + '/spells/' + src.file)
       .then(function(r) { return r.ok ? r.json() : Promise.reject(r.status); })
       .then(function(d) {
         var spells = (d.spell || []).slice().sort(function(a, b) {
@@ -1573,8 +1578,8 @@ document.addEventListener('DOMContentLoaded', function () {
     $cs.innerHTML = '<div class="bestiary-loading"><span class="loading-dot"></span> Loading reference data…</div>';
 
     Promise.all([
-      fetch('/playground/dndm/assets/data/5etools/conditionsdiseases.json').then(function(r) { return r.json(); }),
-      fetch('/playground/dndm/assets/data/5etools/actions.json').then(function(r) { return r.json(); })
+      fetch(DATA_BASE + '/conditionsdiseases.json').then(function(r) { return r.json(); }),
+      fetch(DATA_BASE + '/actions.json').then(function(r) { return r.json(); })
     ]).then(function(results) {
       var conds   = results[0].condition || [];
       var actions = results[1].action    || [];
