@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.23",
+    "schema_version": "1.5.24",
     "last_updated": "2026-05-18",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -597,6 +597,15 @@
     ]
   },
   "commits": [
+    {
+      "hash": "13bdcf4",
+      "date": "2026-05-19",
+      "message": "fix(dndm): fetch 5etools JSON data from CDN — files are gitignored",
+      "scope": "playground/dndm/",
+      "impact": "high",
+      "files": ["playground/dndm/assets/script/app.js"],
+      "why": "The 5etools data directory is gitignored (playground/dndm/assets/data/5etools/*) so the JSON files exist locally but are never pushed to GitHub Pages. All three fetch() calls (bestiary, spells, cheatsheet) were pointing at /playground/dndm/assets/data/5etools/ which 404s in production. Added DATA_BASE constant pointing to https://cdn.trap.lol/dndm/5etools and replaced all three hardcoded paths. Files need to be uploaded to the CDN at that path."
+    },
     {
       "hash": "803cced",
       "date": "2026-05-18",
@@ -2783,6 +2792,17 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-19",
+      "agent": "Claude Sonnet 4.6",
+      "type": "bug_fix",
+      "summary": "Fixed dndm JSON data not loading in production. Root cause: playground/dndm/assets/data/5etools/* is gitignored, so the files exist locally but never reach GitHub Pages. All three fetch() paths in app.js were pointing at the local /playground/dndm/ path. Added a DATA_BASE constant (https://cdn.trap.lol/dndm/5etools) and updated all fetches to use it. The 5etools data files still need to be uploaded to that CDN path to go live.",
+      "decisions": [
+        "CDN path chosen as https://cdn.trap.lol/dndm/5etools — consistent with the existing cdn.trap.lol/shards/ pattern used by glass/.",
+        "DATA_BASE is a single constant at the top of app.js with a comment showing how to override it locally — no config file needed for a single variable.",
+        "Gitignore rule left intact — the data files are large and third-party; CDN hosting is the right separation."
+      ]
+    },
     {
       "date": "2026-05-18",
       "agent": "Claude Sonnet 4.6",
