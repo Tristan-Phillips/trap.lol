@@ -813,6 +813,7 @@ export function initSocial(ctx, {
         renderHotFeed,
         renderSocialSidebar,
         openSocialFeed,
+        openHotFeed,
         openComposeModal,
         startLivingWorld,
         pauseLivingWorld,

@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.29",
+    "schema_version": "1.5.30",
     "last_updated": "2026-05-19",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -601,6 +601,21 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-19",
+      "message": "fix(underdark): export openHotFeed from social.js — social tab rendered blank",
+      "scope": "playground/underdark/",
+      "impact": "high",
+      "files": [
+        "playground/underdark/script/modules/social.js",
+        "playground/underdark/script/modules/ui.js",
+        "playground/underdark/script/main.js",
+        "playground/underdark/index.html",
+        "status/logs/data/logs.json"
+      ],
+      "why": "switchSidebarTab('social') in ui.js called openHotFeed() which was never exported from social.js — ReferenceError silently killed the render, leaving feed-arena visible but blank with no content and the default 'Insta-Shard' placeholder text."
+    },
     {
       "hash": "0662529",
       "date": "2026-05-19",
@@ -2866,6 +2881,16 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-19",
+      "agent": "Claude Sonnet 4.6",
+      "type": "bug_fix",
+      "summary": "Diagnosed social feed rendering blank. Root cause: openHotFeed is a private function inside social.js and was never included in initSocial's return object. switchSidebarTab('social') in ui.js called it directly, throwing a silent ReferenceError that killed the entire render path — leaving feed-arena visible (ctx.$feedArena.hidden = false had already fired) but with no content injected. Fix: export openHotFeed from social.js return block, destructure it in ui.js, bump social.js import version to v=2.",
+      "decisions": [
+        "openHotFeed added to social.js return object — it is logically part of the public API since ui.js's switchSidebarTab needs it for the social tab entry point.",
+        "The silent failure pattern (arena visible, content blank, no error in boot overlay) is characteristic of a ReferenceError thrown inside an event-wired callback or tab handler — not caught by the boot try/catch."
+      ]
+    },
     {
       "date": "2026-05-19",
       "agent": "Claude Sonnet 4.6",

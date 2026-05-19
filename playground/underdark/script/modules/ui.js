@@ -30,7 +30,7 @@ import { initCodexMeters, applyStatusTags, updateCodexMeters as _updateCodexMete
 import { initDirector, getActiveTone, generateAIQuickReplies } from './director.js?v=1';
 import { initThreadConfig, tcLogPush, updateThreadConfigBadge } from './thread-config.js?v=1';
 import { initGallery, addToGallery, addToVideoGallery, getAllFeedPosts, getAllGalleryImages, ensureGalleryStore, saveLocalPost, removeLocalPostBySrc } from './gallery.js?v=1';
-import { initSocial } from './social.js?v=1';
+import { initSocial } from './social.js?v=2';
 import { initImageStudio } from './image-studio.js?v=1';
 
 // Light markdown renderer for profile details — bold, italic, headers, line breaks only.
@@ -3841,7 +3841,7 @@ export function initUI() {
 
 
     // ── Social Feed module ────────────────────────────────────────────────────
-    const { renderSocialFeed, renderHotFeed, renderSocialSidebar, openSocialFeed, openComposeModal, startLivingWorld, pauseLivingWorld } =
+    const { renderSocialFeed, renderHotFeed, renderSocialSidebar, openSocialFeed, openHotFeed, openComposeModal, startLivingWorld, pauseLivingWorld } =
         initSocial(ctx, {
             lucideRefresh,
             showToast,
