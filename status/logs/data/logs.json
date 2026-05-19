@@ -598,7 +598,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "85d99ae",
       "date": "2026-05-19",
       "message": "refactor(underdark): extract Director panel to director.js — first split of ui.js",
       "scope": "playground/underdark/",
