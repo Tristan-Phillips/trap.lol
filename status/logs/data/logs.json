@@ -660,7 +660,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "7486be6",
       "date": "2026-05-20",
       "message": "fix(wallhaven+gallery): use wh_char_gallery key to avoid saveState race, add unassign cleanup",
       "scope": "playground/wallhaven/, playground/underdark/gallery/",
