@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.47",
+    "schema_version": "1.5.48",
     "last_updated": "2026-05-20",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -659,6 +659,20 @@
     ]
   },
   "commits": [
+    {
+      "hash": "16a8d52",
+      "date": "2026-05-20",
+      "message": "fix(gallery+underdark+wallhaven): cross-tab sync, saveGallery wh separation, timeline video, lb assign UX",
+      "scope": "playground/underdark/, playground/underdark/gallery/, playground/wallhaven/",
+      "impact": "high",
+      "files": [
+        "playground/underdark/script/modules/state.js",
+        "playground/underdark/gallery/script/app.js",
+        "playground/underdark/gallery/style/style.css",
+        "playground/wallhaven/script/app.js"
+      ],
+      "why": "Autonomous audit session: four bugs fixed: (1) wallhaven feed posts written to underdark_v4 weren't reflected in underdark's in-memory state — added storage listener for STORAGE_KEY in state.js; (2) saveGallery() was writing wh_char_gallery URLs into ext.gallery causing duplication on next boot — added getWhUrls() filter; (3) timeline view rendered broken img tags for video items — added isVideo branch with play icon; (4) syncLbButtons checked any-assignment instead of selected-char assignment — button now accurately shows assign vs unassign for the current select value."
+    },
     {
       "hash": "7486be6",
       "date": "2026-05-20",
@@ -3301,6 +3315,21 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-20",
+      "agent": "Claude Sonnet 4.6",
+      "type": "bug_fix",
+      "summary": "Autonomous audit session while user was away. Full read of wallhaven app.js, gallery app.js, state.js, social.js, and gallery.js. Four bugs identified and fixed: (1) socialData.localPosts written by wallhaven to underdark_v4 were invisible to underdark's in-memory state — root cause of black squares in social feed; (2) saveGallery() wrote merged galleryRefs (including wh URLs) to ext.gallery causing duplication; (3) timeline view had no video item handling; (4) lb assign button showed wrong active state when image was assigned to a different character than the one selected.",
+      "decisions": [
+        "state.js now has two storage event listeners: one for CHARS_KEY (loadedCharacters merge, existing) and a new one for STORAGE_KEY (socialData.localPosts merge). This ensures any direct localStorage write to underdark_v4 by external tabs is reflected in memory immediately.",
+        "getWhUrls(charId) is the canonical helper for getting the set of wallhaven-assigned URLs for a character. saveGallery() uses it to exclude those URLs from ext.gallery, keeping the two stores cleanly separated.",
+        "The gallery page now has a storage event listener (debounced 400ms) that live-merges new wallhaven assignments into S.items and re-renders — no page refresh needed after assigning from wallhaven.",
+        "lbAssignBtn active state is now per-selected-character: if charA is selected and the image is assigned to charB, the button shows inactive (assign) not active (unassign)."
+      ],
+      "rules_reinforced": [
+        "Any function that persists a merged/computed view of data (galleryRefs = ext.gallery + wh_char_gallery) must not write the merged form back to either source. Write back to each source independently or not at all."
+      ]
+    },
     {
       "date": "2026-05-20",
       "agent": "Claude Sonnet 4.6",
