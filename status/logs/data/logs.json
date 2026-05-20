@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.44",
+    "schema_version": "1.5.45",
     "last_updated": "2026-05-20",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -659,6 +659,20 @@
     ]
   },
   "commits": [
+    {
+      "hash": "bcb5a1b",
+      "date": "2026-05-20",
+      "message": "fix(wallhaven+gallery): assign UI hidden, tile assign, gallery button, video tiles",
+      "scope": "playground/wallhaven/, playground/underdark/, playground/underdark/gallery/",
+      "impact": "high",
+      "files": [
+        "playground/wallhaven/script/app.js",
+        "playground/underdark/script/modules/ui.js",
+        "playground/underdark/gallery/script/app.js",
+        "playground/underdark/gallery/style/style.css"
+      ],
+      "why": "Four issues: (1) lbAssignWrap was never explicitly shown when HAS_CHARS — only the negative case set it hidden; (2) tile assign button opened lightbox instead of quick-assigning to the active character from URL; (3) GALLERY profile button opened social tab instead of the gallery page; (4) generated videos in videoGallery were not included in the gallery page at all."
+    },
     {
       "hash": "8c0ab83",
       "date": "2026-05-20",
@@ -3263,6 +3277,18 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-20",
+      "agent": "Claude Sonnet 4.6",
+      "type": "bug_fix",
+      "summary": "Four more fixes across wallhaven, underdark, and gallery: (1) lbAssignWrap was never set visible when HAS_CHARS (only hidden in the !HAS_CHARS branch) — now explicitly shown. (2) Tile assign button called openLightbox instead of directly assigning to WH.charId; now quick-assigns when charId is available. (3) GALLERY profile button in underdark terminal was wired to open the social tab — changed to open /playground/underdark/gallery/?char=id in a new tab. (4) Gallery page now includes videoGallery refs as type:'video' items with play-icon tiles, video lightbox support (swaps in a video element), and video delete support via saveVideoRefs().",
+      "decisions": [
+        "Gallery page (?char=id) URL param pre-filters the character sidebar and highlights the chip on boot — allows direct linking from underdark profile to a character's gallery.",
+        "Video items in the gallery use type:'video' flag; lightbox dynamically inserts a <video> element alongside the existing <img> and toggles display based on item type.",
+        "saveVideoRefs() in gallery/script/app.js is the gallery-page equivalent of addToVideoGallery() in gallery.js — writes videoGallery[] directly to underdark_chars_v4.",
+        "Tile assign button behavior: if WH.charId is set (page opened from underdark with charId param), clicking the assign button on a tile directly calls assignToChar without opening the lightbox — one-click assignment."
+      ]
+    },
     {
       "date": "2026-05-20",
       "agent": "Claude Sonnet 4.6",
