@@ -300,7 +300,7 @@
                     <button id="btn-open-settings-hdr" hidden></button>
                     <button id="oracle-btn" hidden></button>
                     <button id="chat-bg-btn" hidden></button>
-                    <button id="wh-open-btn" hidden></button>
+                    <a id="wh-open-btn" hidden href="/playground/wallhaven/" target="_blank" rel="noopener"></a>
                     <button id="btn-video-gen" hidden></button>
                     <button id="export-chat" hidden></button>
                     <button id="clear-thread" hidden></button>
@@ -314,7 +314,7 @@
                         <button class="header-overflow-item" data-overflow-for="btn-img-studio"><i data-lucide="wand-2"></i> Image Studio</button>
                         <button class="header-overflow-item" data-overflow-for="btn-video-gen"><i data-lucide="film"></i> Generate Video</button>
                         <button class="header-overflow-item" data-overflow-for="chat-bg-btn"><i data-lucide="palette"></i> Chat Tint</button>
-                        <button class="header-overflow-item" data-overflow-for="wh-open-btn"><i data-lucide="image-plus"></i> Wallhaven Gallery</button>
+                        <a id="wh-overflow-link" class="header-overflow-item" href="/playground/wallhaven/" target="_blank" rel="noopener"><i data-lucide="image-plus"></i> Wallhaven Gallery</a>
                         <button class="header-overflow-item" data-overflow-for="export-chat"><i data-lucide="download"></i> Export Session</button>
                         <button class="header-overflow-item header-overflow-item--danger" data-overflow-for="clear-thread"><i data-lucide="trash-2"></i> Clear Thread</button>
                     </div>
@@ -3403,267 +3403,8 @@
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════════════════════════
-     WALLHAVEN ARENA — full arena view, same z-layer pattern as feed-arena
-══════════════════════════════════════════════════════════════════════════ -->
-<main id="wh-arena" class="arena arena--wh" hidden aria-label="Wallhaven Image Archive">
-
-  <!-- ── Top header bar ── -->
-  <header class="wh-header">
-    <div class="wh-header__left">
-      <button id="wh-back-btn" class="wh-back-btn" title="Back to Thread">
-        <i data-lucide="chevron-left"></i>
-        <span>Back</span>
-      </button>
-      <!-- Mobile sidebar toggle (only visible on small screens) -->
-      <button id="wh-sidebar-toggle" class="wh-sidebar-toggle" title="Filters &amp; Views" aria-label="Toggle filters">
-        <i data-lucide="sliders-horizontal"></i>
-      </button>
-      <div class="wh-header__logo">
-        <svg viewBox="0 0 24 24" fill="none"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><line x1="4" y1="22" x2="4" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-      </div>
-      <div>
-        <span class="wh-header__title">Wallhaven</span>
-        <span id="wh-char-label" class="wh-header__sub">Visual Archive</span>
-      </div>
-    </div>
-
-    <div class="wh-header__center">
-      <div class="wh-search-wrap">
-        <i data-lucide="search" class="wh-search-icon"></i>
-        <input type="text" id="wh-search-input" class="wh-search-input" placeholder="Search wallpapers…" autocomplete="off">
-        <button id="wh-search-clear" class="wh-search-clear" hidden title="Clear search"><i data-lucide="x"></i></button>
-      </div>
-      <button id="wh-search-btn" class="wh-btn wh-btn--accent"><i data-lucide="search"></i> Search</button>
-    </div>
-
-    <div class="wh-header__right">
-      <div class="wh-apikey-wrap">
-        <input type="password" id="wh-apikey-input" class="wh-apikey-input" placeholder="API key">
-        <button id="wh-apikey-toggle" class="wh-apikey-toggle" title="Show/hide"><i data-lucide="eye"></i></button>
-        <button id="wh-apikey-save" class="wh-btn wh-btn--ghost wh-btn--sm">Connect</button>
-        <div id="wh-key-status" class="wh-key-status"></div>
-      </div>
-    </div>
-  </header>
-
-  <!-- ── Body: sidebar + grid ── -->
-  <div class="wh-body">
-
-    <!-- Mobile sidebar backdrop -->
-    <div id="wh-sidebar-backdrop" class="wh-sidebar-backdrop" hidden></div>
-
-    <!-- ── Left filter sidebar ── -->
-    <aside class="wh-sidebar" id="wh-sidebar">
-
-      <!-- View tabs -->
-      <div class="wh-view-tabs">
-        <button class="wh-view-tab active" data-wview="browse"><i data-lucide="grid-2x2"></i> Browse</button>
-        <button class="wh-view-tab" data-wview="liked"><i data-lucide="heart"></i> Liked <span id="wh-liked-count" class="wh-liked-badge">0</span></button>
-        <button class="wh-view-tab" data-wview="saved"><i data-lucide="bookmark"></i> Saved <span id="wh-saved-count" class="wh-saved-badge">0</span></button>
-        <button class="wh-view-tab" data-wview="assigned"><i data-lucide="user-check"></i> Assigned <span id="wh-assigned-count" class="wh-saved-badge">0</span></button>
-      </div>
-
-      <!-- Character filter (shown in assigned view) -->
-      <div id="wh-char-filter-wrap" class="wh-char-filter-wrap" hidden>
-        <div class="wh-sidebar-section__label" style="padding:8px 10px 4px;">Filter by Character</div>
-        <select id="wh-char-filter" class="wh-char-filter-select">
-          <option value="">All Characters</option>
-        </select>
-        <button id="wh-unassign-all-btn" class="wh-btn wh-btn--ghost wh-btn--sm wh-unassign-all-btn" title="Unassign filtered selection from all characters"><i data-lucide="user-x"></i> Unassign All</button>
-      </div>
-
-      <!-- Filters (only shown in browse view) -->
-      <div id="wh-filters-panel" class="wh-filters-panel">
-
-        <div class="wh-sidebar-section">
-          <div class="wh-sidebar-section__label">Category</div>
-          <div class="wh-chips wh-chips--col" id="wh-cats">
-            <button class="wh-chip wh-chip--cat active" data-cat="general"><i data-lucide="globe"></i> General</button>
-            <button class="wh-chip wh-chip--cat active" data-cat="anime"><i data-lucide="sparkles"></i> Anime</button>
-            <button class="wh-chip wh-chip--cat active" data-cat="people"><i data-lucide="user"></i> People</button>
-          </div>
-        </div>
-
-        <div class="wh-sidebar-section">
-          <div class="wh-sidebar-section__label">Purity</div>
-          <div class="wh-chips wh-chips--col" id="wh-purities">
-            <button class="wh-chip wh-chip--sfw active" data-purity="sfw"><i data-lucide="shield-check"></i> SFW</button>
-            <button class="wh-chip wh-chip--sketchy" data-purity="sketchy"><i data-lucide="shield-alert"></i> Sketchy</button>
-            <button class="wh-chip wh-chip--nsfw" data-purity="nsfw"><i data-lucide="shield-off"></i> NSFW</button>
-          </div>
-        </div>
-
-        <div class="wh-sidebar-section">
-          <div class="wh-sidebar-section__label">Sort by</div>
-          <div class="wh-chips wh-chips--col" id="wh-sorts">
-            <button class="wh-chip active" data-sort="toplist"><i data-lucide="trending-up"></i> Top</button>
-            <button class="wh-chip" data-sort="relevance"><i data-lucide="target"></i> Relevance</button>
-            <button class="wh-chip" data-sort="date_added"><i data-lucide="clock"></i> Newest</button>
-            <button class="wh-chip" data-sort="views"><i data-lucide="eye"></i> Views</button>
-            <button class="wh-chip" data-sort="favorites"><i data-lucide="heart"></i> Favorites</button>
-            <button class="wh-chip" data-sort="random"><i data-lucide="shuffle"></i> Random</button>
-          </div>
-        </div>
-
-        <div class="wh-sidebar-section" id="wh-toprange-group">
-          <div class="wh-sidebar-section__label">Time Range</div>
-          <div class="wh-chips wh-chips--wrap" id="wh-ranges">
-            <button class="wh-chip" data-range="1d">1d</button>
-            <button class="wh-chip" data-range="3d">3d</button>
-            <button class="wh-chip" data-range="1w">1w</button>
-            <button class="wh-chip active" data-range="1M">1M</button>
-            <button class="wh-chip" data-range="3M">3M</button>
-            <button class="wh-chip" data-range="6M">6M</button>
-            <button class="wh-chip" data-range="1y">1y</button>
-          </div>
-        </div>
-
-        <div class="wh-sidebar-section">
-          <div class="wh-sidebar-section__label">Layout</div>
-          <div class="wh-chips wh-chips--wrap" id="wh-layouts">
-            <button class="wh-chip active" data-layout="grid"><i data-lucide="grid-2x2"></i> Grid</button>
-            <button class="wh-chip" data-layout="masonry"><i data-lucide="layout-dashboard"></i> Masonry</button>
-            <button class="wh-chip" data-layout="large"><i data-lucide="maximize-2"></i> Large</button>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- Stats / credit at bottom of sidebar -->
-      <div class="wh-sidebar-footer">
-        <div class="wh-rate-note"><i data-lucide="zap"></i> 45 req/min</div>
-        <a href="https://wallhaven.cc" target="_blank" rel="noopener" class="wh-credit">wallhaven.cc</a>
-      </div>
-    </aside>
-
-    <!-- ── Main content area ── -->
-    <div class="wh-main">
-
-      <!-- Status bar -->
-      <div class="wh-statusbar">
-        <div class="wh-statusbar__left">
-          <span id="wh-status-text" class="wh-status-text"></span>
-          <span id="wh-result-count" class="wh-result-count"></span>
-        </div>
-        <div class="wh-statusbar__right">
-          <div class="wh-page-controls" id="wh-page-controls" hidden>
-            <span class="wh-page-indicator">Page <span id="wh-page-num">1</span> / <span id="wh-page-total">?</span></span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Grid / states -->
-      <div class="wh-grid-area" id="wh-grid-area">
-        <div class="wh-empty-state" id="wh-empty">
-          <div class="wh-empty-icon"><i data-lucide="image"></i></div>
-          <p class="wh-empty-msg">Search for wallpapers or press <kbd>Search</kbd> to load top results.</p>
-          <p class="wh-empty-hint">API key unlocks Sketchy &amp; NSFW &mdash; paste it in the header.</p>
-          <div class="wh-kb-hints">
-            <span class="wh-kb-hint"><kbd>L</kbd> like</span>
-            <span class="wh-kb-hint"><kbd>S</kbd> save</span>
-            <span class="wh-kb-hint"><kbd>D</kbd> download</span>
-            <span class="wh-kb-hint"><kbd>←</kbd><kbd>→</kbd> navigate</span>
-            <span class="wh-kb-hint"><kbd>Esc</kbd> close</span>
-          </div>
-        </div>
-        <div class="wh-empty-state" id="wh-liked-empty" hidden>
-          <div class="wh-empty-icon"><i data-lucide="heart"></i></div>
-          <p class="wh-empty-msg">No liked images yet.</p>
-          <p class="wh-empty-hint">Click the heart on any wallpaper to save it here.</p>
-        </div>
-        <div class="wh-empty-state" id="wh-saved-empty" hidden>
-          <div class="wh-empty-icon"><i data-lucide="bookmark"></i></div>
-          <p class="wh-empty-msg">No saved images yet.</p>
-          <p class="wh-empty-hint">Click the bookmark on any wallpaper to save it here.</p>
-        </div>
-        <div class="wh-empty-state" id="wh-assigned-empty" hidden>
-          <div class="wh-empty-icon"><i data-lucide="user-check"></i></div>
-          <p class="wh-empty-msg">No images assigned to characters yet.</p>
-          <p class="wh-empty-hint">Open any image and use <strong>Assign to Character</strong> to link it to a character's gallery and social feed.</p>
-        </div>
-        <div class="wh-spinner" id="wh-spinner" hidden>
-          <div class="wh-spinner__ring"></div>
-          <span>Scanning the archive…</span>
-        </div>
-        <div class="wh-error-state" id="wh-error" hidden>
-          <i data-lucide="alert-triangle"></i>
-          <span id="wh-error-msg">An error occurred.</span>
-          <button id="wh-retry-btn" class="wh-btn wh-btn--ghost wh-btn--sm"><i data-lucide="refresh-cw"></i> Retry</button>
-        </div>
-        <div id="wh-grid" class="wh-grid wh-grid--grid"></div>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- ── Mobile view tab bar (bottom nav on small screens) ── -->
-  <nav class="wh-mobile-tabs" id="wh-mobile-tabs" aria-label="Gallery views">
-    <button class="wh-mobile-tab active" data-wview="browse"><i data-lucide="grid-2x2"></i><span>Browse</span></button>
-    <button class="wh-mobile-tab" data-wview="liked"><i data-lucide="heart"></i><span>Liked <span class="wh-liked-badge" id="wh-liked-count-m">0</span></span></button>
-    <button class="wh-mobile-tab" data-wview="saved"><i data-lucide="bookmark"></i><span>Saved <span class="wh-saved-badge" id="wh-saved-count-m">0</span></span></button>
-    <button class="wh-mobile-tab" data-wview="assigned"><i data-lucide="user-check"></i><span>Assigned</span></button>
-  </nav>
-
-</main>
-
-<!-- ── Wallhaven Lightbox ── -->
-<div id="wh-lightbox" class="wh-lightbox" hidden>
-  <div class="wh-lightbox__backdrop" id="wh-lb-backdrop"></div>
-  <div class="wh-lightbox__stage">
-    <div id="wh-lb-viewport" class="wh-lb-viewport">
-      <img id="wh-lb-img" class="wh-lightbox__img" src="" alt="">
-    </div>
-    <!-- zoom level indicator — appears on zoom change, fades automatically -->
-    <div id="wh-lb-zoom-pill" class="wh-lb-zoom-pill" aria-hidden="true">100%</div>
-
-    <!-- top-right corner controls -->
-    <div class="wh-lb-corner">
-      <button id="wh-lb-like" class="wh-lb-corner-btn" title="Like (L)"><i data-lucide="heart"></i></button>
-      <button id="wh-lb-save" class="wh-lb-corner-btn" title="Save (S)"><i data-lucide="bookmark"></i></button>
-      <button id="wh-lb-download" class="wh-lb-corner-btn" title="Download (D)"><i data-lucide="download"></i></button>
-      <button id="wh-lb-close" class="wh-lb-corner-btn" title="Close (Esc)"><i data-lucide="x"></i></button>
-    </div>
-
-    <!-- bottom info bar -->
-    <div class="wh-lightbox__ui">
-      <div class="wh-lightbox__info">
-        <span id="wh-lb-res" class="wh-lb-badge"></span>
-        <span id="wh-lb-purity" class="wh-lb-badge"></span>
-        <span id="wh-lb-cat" class="wh-lb-badge"></span>
-        <span id="wh-lb-views" class="wh-lb-badge"><i data-lucide="eye"></i> <span></span></span>
-        <span id="wh-lb-faves" class="wh-lb-badge"><i data-lucide="heart"></i> <span></span></span>
-      </div>
-      <div class="wh-lightbox__actions">
-        <button id="wh-lb-set-bg" class="wh-lb-action-btn" title="Set as arena background"><i data-lucide="image"></i> Set BG</button>
-        <!-- Assign to character -->
-        <div class="wh-lb-assign-wrap">
-          <select id="wh-lb-assign-select" class="wh-lb-assign-select" title="Pick character to assign">
-            <option value="">Assign to…</option>
-          </select>
-          <button id="wh-lb-assign-btn" class="wh-lb-action-btn wh-lb-action-btn--accent" title="Assign to selected character"><i data-lucide="user-check"></i> Assign</button>
-        </div>
-        <a id="wh-lb-open" href="#" target="_blank" rel="noopener" class="wh-lb-action-btn"><i data-lucide="external-link"></i> Source</a>
-      </div>
-    </div>
-
-    <button id="wh-lb-prev" class="wh-lb-nav wh-lb-nav--prev" title="Previous (←)"><i data-lucide="chevron-left"></i></button>
-    <button id="wh-lb-next" class="wh-lb-nav wh-lb-nav--next" title="Next (→)"><i data-lucide="chevron-right"></i></button>
-
-    <!-- slide counter -->
-    <div class="wh-lb-counter" id="wh-lb-counter"></div>
-
-    <!-- keyboard hints (desktop only) -->
-    <div class="wh-lb-kb-strip" aria-hidden="true">
-      <span><kbd>L</kbd> like</span>
-      <span><kbd>S</kbd> save</span>
-      <span><kbd>D</kbd> dl</span>
-      <span><kbd>+</kbd><kbd>-</kbd> zoom</span>
-      <span><kbd>0</kbd> reset</span>
-      <span><kbd>Esc</kbd> close</span>
-    </div>
-  </div>
-</div>
+<!-- WALLHAVEN ARENA removed — moved to /playground/wallhaven/ standalone portal -->
+<div id="wh-arena" hidden></div>
 
 <!-- ── Generic text-input modal (replaces native prompt()) ── -->
 <div id="modal-text-input" class="modal" hidden>
@@ -3773,8 +3514,6 @@
 <div id="toast-container" class="toast-container"></div>
 <script src="https://cdn.trap.lol/shards/lucide.min.js"></script><script src="https://cdn.trap.lol/shards/marked.min.js"></script><script src="https://cdn.trap.lol/shards/purify.min.js"></script>
 <script type="module" src="./script/main.js?v=74"></script>
-<!-- ── Wallhaven Arena ── -->
-<script src="./script/modules/wallhaven.js"></script>
 
 </body>
 </html>

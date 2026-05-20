@@ -865,6 +865,16 @@ export function initUI() {
             if (open) { closeOverflow(); return; }
             $overflowMenu.hidden = false;
             $overflowBtn.setAttribute('aria-expanded', 'true');
+            // Update wallhaven link with active character params
+            const $whLink = qs('#wh-overflow-link');
+            if ($whLink) {
+                const charId = state.activeBotId;
+                const char   = charId ? state.loadedCharacters[charId] : null;
+                const params = new URLSearchParams();
+                if (char?.name) params.set('q', char.name);
+                if (charId)     params.set('charId', charId);
+                $whLink.href = '/playground/wallhaven/' + (params.toString() ? '?' + params.toString() : '');
+            }
         });
         $overflowMenu.querySelectorAll('.header-overflow-item').forEach(item => {
             item.addEventListener('click', () => {
@@ -3411,7 +3421,12 @@ export function initUI() {
         qs('#btn-add-to-thread').onclick = () => addCharacterToThread(id);
         qs('#btn-char-edit').onclick     = () => openCharEditor(id);
         qs('#btn-gallery-add').onclick   = () => { switchSidebarTab('social'); openSocialFeed(id); renderSocialSidebar(); };
-        qs('#btn-wh-profile').onclick    = () => { if (typeof window.openWallhavenGallery === 'function') window.openWallhavenGallery(char.name || '', id); };
+        qs('#btn-wh-profile').onclick    = () => {
+            const params = new URLSearchParams();
+            if (char.name) params.set('q', char.name);
+            params.set('charId', id);
+            window.open('/playground/wallhaven/?' + params.toString(), '_blank', 'noopener');
+        };
         qs('#btn-remove-char').onclick = () => {
             removeBotFromChat(id);
             delete _rrIndex[state.chat.id];

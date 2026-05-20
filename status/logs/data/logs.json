@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.40",
+    "schema_version": "1.5.41",
     "last_updated": "2026-05-20",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -62,22 +62,62 @@
     "companion_file": "status/logs/data/signal.json is the mutable companion to this file. It holds tasks (migrated from pending_work), issues, and proposals. Read it alongside this file at session start. Update it when tasks change, issues are found or resolved, or proposals are offered. It has its own _protocol block — read it before writing to it.",
     "for_claude_code_specifically": "When working in Claude Code (CLI): READ status/logs/data/logs.json AND status/logs/data/signal.json at session start before touching any file. At session end, use the decision tree below to determine which sections to update — features/tasks go to signal.json, not pending_work (deprecated). Commit both files as part of the most relevant commit.",
     "update_decision_tree": {
-      "_always": ["_meta.last_updated (today's date)", "commits[] (one entry per git commit)", "sessions[] (one entry per session)"],
-      "_if_new_page_created": ["pages — add full entry with file, title, purpose, sections_in_order, key_files", "architecture.data_layer — add any new JSON files it fetches", "architecture.module_structure — add its script file(s)"],
-      "_if_existing_page_modified": ["pages — update the entry's sections_in_order or key_files if they changed", "architecture.data_layer — update description if a JSON schema changed", "architecture.module_structure — update description if a module's role changed"],
-      "_if_new_json_data_file_created": ["architecture.data_layer — add entry", "sources_of_truth.files — add entry if this file is the canonical authority for its domain"],
-      "_if_new_js_module_created": ["architecture.module_structure — add entry"],
-      "_if_boot_sequence_changed": ["architecture.boot_sequence.steps — rewrite to match actual sequence"],
-      "_if_feature_requested_or_completed": ["signal.json → tasks[] — add new task or update existing entry status; do NOT use pending_work in logs.json (deprecated)"],
-      "_if_new_structural_file_or_convention_established": ["sources_of_truth.files — add or update entry", "status/logs/data/structure-ruleset.md — update the ruleset document directly"],
-      "_if_rule_stated_explicitly_by_trap": ["rules.absolute or rules.strong_preferences — add entry"],
-      "_if_approach_rejected_by_trap": ["anti_patterns.things_that_have_been_tried_and_rejected — add entry"],
-      "_if_mistake_made_during_session": ["anti_patterns.common_mistakes_to_avoid — add entry"],
-      "_if_site_state_meaningfully_changed": ["evolution.current_state — rewrite string to reflect current production state"],
-      "_if_new_dev_phase_started": ["evolution.phases — add phase entry"],
-      "_if_trap_expressed_new_future_intent": ["evolution.intended_future — add or update item"],
-      "_if_trap_used_new_vocabulary_consistently": ["language_fingerprint.recurring_words_and_phrases — add term"],
-      "_if_trap_rejected_a_word": ["language_fingerprint.vocabulary_never_used — add word"]
+      "_always": [
+        "_meta.last_updated (today's date)",
+        "commits[] (one entry per git commit)",
+        "sessions[] (one entry per session)"
+      ],
+      "_if_new_page_created": [
+        "pages — add full entry with file, title, purpose, sections_in_order, key_files",
+        "architecture.data_layer — add any new JSON files it fetches",
+        "architecture.module_structure — add its script file(s)"
+      ],
+      "_if_existing_page_modified": [
+        "pages — update the entry's sections_in_order or key_files if they changed",
+        "architecture.data_layer — update description if a JSON schema changed",
+        "architecture.module_structure — update description if a module's role changed"
+      ],
+      "_if_new_json_data_file_created": [
+        "architecture.data_layer — add entry",
+        "sources_of_truth.files — add entry if this file is the canonical authority for its domain"
+      ],
+      "_if_new_js_module_created": [
+        "architecture.module_structure — add entry"
+      ],
+      "_if_boot_sequence_changed": [
+        "architecture.boot_sequence.steps — rewrite to match actual sequence"
+      ],
+      "_if_feature_requested_or_completed": [
+        "signal.json → tasks[] — add new task or update existing entry status; do NOT use pending_work in logs.json (deprecated)"
+      ],
+      "_if_new_structural_file_or_convention_established": [
+        "sources_of_truth.files — add or update entry",
+        "status/logs/data/structure-ruleset.md — update the ruleset document directly"
+      ],
+      "_if_rule_stated_explicitly_by_trap": [
+        "rules.absolute or rules.strong_preferences — add entry"
+      ],
+      "_if_approach_rejected_by_trap": [
+        "anti_patterns.things_that_have_been_tried_and_rejected — add entry"
+      ],
+      "_if_mistake_made_during_session": [
+        "anti_patterns.common_mistakes_to_avoid — add entry"
+      ],
+      "_if_site_state_meaningfully_changed": [
+        "evolution.current_state — rewrite string to reflect current production state"
+      ],
+      "_if_new_dev_phase_started": [
+        "evolution.phases — add phase entry"
+      ],
+      "_if_trap_expressed_new_future_intent": [
+        "evolution.intended_future — add or update item"
+      ],
+      "_if_trap_used_new_vocabulary_consistently": [
+        "language_fingerprint.recurring_words_and_phrases — add term"
+      ],
+      "_if_trap_rejected_a_word": [
+        "language_fingerprint.vocabulary_never_used — add word"
+      ]
     }
   },
   "identity": {
@@ -211,7 +251,7 @@
       "underdark/script/modules/state.js": "Global state object and session management. All state mutations go through helpers here to ensure consistent localStorage persistence.",
       "underdark/script/modules/storage.js": "IndexedDB and localStorage persistence layer. Handles image blobs (IDB) and all serialised state (localStorage).",
       "underdark/script/modules/shared-utils.js": "Cross-cutting utility functions shared across multiple Underdark modules.",
-      "underdark/script/modules/wallhaven.js": "Wallhaven API integration. Fetches wallpapers for the Underdark backdrop/gallery feature.",
+      "underdark/script/modules/wallhaven.js": "DEPRECATED — removed from playground/underdark/index.html. Code migrated to playground/wallhaven/script/app.js as a standalone portal. File still exists on disk but is no longer loaded.",
       "playground/underdark/gallery/index.html": "Image Vault standalone page. Full-page gallery for all character images across all continuities. Reads underdark_chars_v4 (localStorage) and underdark_db (IDB) directly. No dependency on glass/ or the main underdark module graph.",
       "playground/underdark/gallery/script/app.js": "Image Vault app logic. Self-contained (no ES module imports). Inline IDB helpers, 3 view modes (grid/masonry/timeline), character filter sidebar, tag filter, search, sort, full lightbox with set-avatar/tag/download/delete, drag-and-drop + URL image add. Writes back to underdark_chars_v4 for avatar and gallery mutations.",
       "playground/underdark/gallery/style/style.css": "Image Vault standalone styles. Dune×Arcane palette, no glass/ dependency. Covers header, sidebar, grid/masonry/timeline layouts, lightbox, toasts, responsive breakpoints.",
@@ -221,7 +261,9 @@
       "status/logs/index.html": "The intelligence terminal viewer. Reads logs.json and renders it across 14 tabs: Briefing, Protocol, Philosophy, Pages, Design, Rules, Language, Evolution, Commits, Architecture, Sessions, Sources, Ruleset, Signal. The Ruleset tab fetches structure-ruleset.md; the Signal tab fetches signal.json. Contains a chat widget (nano-gpt API key, localStorage) to query the full knowledge base in natural language.",
       "status/logs/data/logs.json": "The knowledge base itself — concrete, authoritative, binding. See _protocol for schema and update obligations.",
       "status/logs/data/signal.json": "The mutable companion to logs.json. Holds tasks (migrated from pending_work), open and resolved issues, and proposals. Has its own _protocol block. Contents are provisional and debatable — not binding rules.",
-      "status/logs/data/structure-ruleset.md": "File structure canonical ruleset. 12 sections covering: the two app patterns (glass/ shared system vs. self-contained apps), directory naming conventions, file naming conventions, app placement rules, glass/data/ layer rules, self-contained app boundaries, status/ structure, .ai/ meta files, root-level file allowlist, shards/ rules, void/assets/ anomaly, and a violation register of known current deviations."
+      "status/logs/data/structure-ruleset.md": "File structure canonical ruleset. 12 sections covering: the two app patterns (glass/ shared system vs. self-contained apps), directory naming conventions, file naming conventions, app placement rules, glass/data/ layer rules, self-contained app boundaries, status/ structure, .ai/ meta files, root-level file allowlist, shards/ rules, void/assets/ anomaly, and a violation register of known current deviations.",
+      "playground/wallhaven/script/app.js": "Wallhaven standalone portal logic. Adapted from underdark/script/modules/wallhaven.js — all underdark DOM dependencies removed. Reads URL params on boot, gates assign UI behind nano_gpt_key, preserves addToCharacterGalleryInApp() verbatim so assignments appear in the gallery page.",
+      "playground/wallhaven/style/style.css": "Wallhaven standalone portal styles. Adapted from underdark/style/wallhaven.css — page-level layout (html/body height:100dvh flex column) instead of arena overlay, Dune×Arcane accent #be29ec hardcoded, all --theme-accent / --accent-rgb vars retained as CSS custom props."
     }
   },
   "pages": {
@@ -318,7 +360,9 @@
       "file": "status/observations/index.html",
       "title": "trap.lol // observations",
       "purpose": "Living LLM cognitive profile of trap (Tristan Phillips). Entries are written by LLMs during sessions, accumulated over time. Not a diagnosis — a record of how different AI systems perceive one human, for the subject's curiosity. Tabs: Overview (dossier header + recent entries), All Entries (filterable by category), per-category tabs (Personality, Cognitive, Aesthetic, Values, Obsessions, Behavioural, Tensions, Evolution), Protocol (rules for future LLMs). Data loaded from observations.json.",
-      "key_files": ["status/observations/data/observations.json"],
+      "key_files": [
+        "status/observations/data/observations.json"
+      ],
       "note": "Category tabs are dynamically generated — only categories with entries appear. Protocol tab documents the absolute rules and strong preferences governing how future LLMs should write to the file."
     },
     "/archive/": {
@@ -345,6 +389,17 @@
       "purpose": "Markdown reader. Reads ?md= param, fetches from /glass/markdown/<filename>, renders via marked.js + DOMPurify sanitization. Shares glass/style/style.css.",
       "status": "NOT PRESENT — guide/ directory does not exist on disk. glass/markdown/ exists (contains virgin-vps.md) but no guide/index.html. The Sacred Codex section on the home page (guides.json + carousel) is also commented out. This page is planned but unbuilt.",
       "note": "guides.json and the renderCodex() function in ui.js are maintained for when this page is built. glass/markdown/ already has content waiting."
+    },
+    "/playground/wallhaven/": {
+      "file": "playground/wallhaven/index.html",
+      "title": "WALLHAVEN — Visual Archive",
+      "purpose": "Standalone wallhaven image search portal. Browse, like, save, and assign wallpapers to underdark characters. Assignments write to underdark_chars_v4 so images appear in the character gallery page. Opened from underdark via URL params ?q=charname&charId=x to pre-fill search and character selection.",
+      "script": "playground/wallhaven/script/app.js (self-contained, no imports — adapted from underdark/script/modules/wallhaven.js)",
+      "css": "playground/wallhaven/style/style.css (self-contained, Dune×Arcane palette hardcoded — no --theme-accent coupling to underdark)",
+      "api": "Wallhaven proxy at wallhaven.trap.lol (Go service, 45 req/min rate limit). Wallhaven API key stored in localStorage as wh_apikey.",
+      "localStorage_keys": "wh_liked, wh_saved, wh_liked_data, wh_saved_data, wh_assigned, wh_assigned_data, wh_filters, wh_apikey, underdark_chars_v4 (assign writes here)",
+      "assign_gate": "Assign UI (character select + Assigned tab) only shown when localStorage('nano_gpt_key') is non-empty — signals the user has an underdark account.",
+      "url_params": "?q=charname pre-fills search and sets charName; ?charId=id pre-selects the character in the assign select and sets charId for the default assign"
     }
   },
   "design_system": {
@@ -605,6 +660,21 @@
   },
   "commits": [
     {
+      "hash": "pending",
+      "date": "2026-05-20",
+      "message": "feat(wallhaven): standalone portal — extract wallhaven from underdark into /playground/wallhaven/",
+      "scope": "playground/wallhaven/, playground/underdark/",
+      "impact": "high",
+      "files": [
+        "playground/wallhaven/index.html",
+        "playground/wallhaven/script/app.js",
+        "playground/wallhaven/style/style.css",
+        "playground/underdark/index.html",
+        "playground/underdark/script/modules/ui.js"
+      ],
+      "why": "Wallhaven was embedded inside underdark as a full-page arena overlay; extracting it into its own page gives it a permanent URL, allows navigation via URL params (?q=charname&charId=x), and removes ~12k chars of dead HTML from underdark while keeping the assign-to-gallery data flow intact."
+    },
+    {
       "hash": "3684cfe",
       "date": "2026-05-20",
       "message": "fix(gallery): lightbox full-bleed image — remove padding, float nav arrows, eliminate hard cutoffs",
@@ -844,7 +914,9 @@
       "message": "fix(dndm): fetch 5etools JSON data from CDN — files are gitignored",
       "scope": "playground/dndm/",
       "impact": "high",
-      "files": ["playground/dndm/assets/script/app.js"],
+      "files": [
+        "playground/dndm/assets/script/app.js"
+      ],
       "why": "The 5etools data directory is gitignored (playground/dndm/assets/data/5etools/*) so the JSON files exist locally but are never pushed to GitHub Pages. All three fetch() calls (bestiary, spells, cheatsheet) were pointing at /playground/dndm/assets/data/5etools/ which 404s in production. Added DATA_BASE constant pointing to https://cdn.trap.lol/dndm/5etools and replaced all three hardcoded paths. Files need to be uploaded to the CDN at that path."
     },
     {
@@ -979,7 +1051,9 @@
       "message": "feat(underdark): add 2B and Yennefer to character roster",
       "scope": "playground/underdark/",
       "impact": "low",
-      "files": ["playground/underdark/data/index.json"],
+      "files": [
+        "playground/underdark/data/index.json"
+      ],
       "why": "2B (NieR: Automata) and Yennefer of Vengerberg (The Witcher) had complete card files on disk but were missing from index.json — they were invisible to the roster loader."
     },
     {
@@ -1048,7 +1122,10 @@
       "message": "feat(underdark): sanitize history before context injection; Overlord no-preamble",
       "scope": "playground/underdark/",
       "impact": "medium",
-      "files": ["playground/underdark/script/modules/llm-engine.js", "playground/underdark/script/modules/ui.js"],
+      "files": [
+        "playground/underdark/script/modules/llm-engine.js",
+        "playground/underdark/script/modules/ui.js"
+      ],
       "why": "Old history messages stored before the sanitizer was introduced could condition the model to repeat OOC preamble patterns. Also Overlord can produce 'Here is the narration:' type openers — banned explicitly."
     },
     {
@@ -1072,7 +1149,9 @@
       "message": "fix(apps): update LLM Playground card to Neural Uplink at correct path",
       "scope": "glass/data/",
       "impact": "medium",
-      "files": ["glass/data/apps.json"],
+      "files": [
+        "glass/data/apps.json"
+      ],
       "why": "App Uplinks card was still pointing to /playground/ (hub) with the pre-restructure name 'LLM Playground' — missed during the playground/ directory migration."
     },
     {
@@ -1097,7 +1176,11 @@
       "message": "fix: correct recommended_inference crash, 402 message, and subscription glyph",
       "scope": "glass/script/modules/, playground/underdark/",
       "impact": "high",
-      "files": ["glass/script/modules/llm-chat.js", "glass/script/modules/llm-transport.js", "playground/underdark/script/modules/ui.js"],
+      "files": [
+        "glass/script/modules/llm-chat.js",
+        "glass/script/modules/llm-transport.js",
+        "playground/underdark/script/modules/ui.js"
+      ],
       "why": "Neural Uplink silently failed on send because m.recommended_inference was undefined (field doesn't exist in llm.json routing_table), causing a TypeError before the try block that left the UI frozen. Also corrected inverted subscription glyph labels and 402 error message."
     },
     {
@@ -1106,7 +1189,10 @@
       "message": "fix(underdark): intercept x402 subscription errors; improve model select grouping",
       "scope": "glass/script/modules/, playground/underdark/",
       "impact": "medium",
-      "files": ["glass/script/modules/llm-transport.js", "playground/underdark/script/modules/ui.js"],
+      "files": [
+        "glass/script/modules/llm-transport.js",
+        "playground/underdark/script/modules/ui.js"
+      ],
       "why": "HTTP 402 from nano-gpt was bleeding raw XNO payment request text into the UI; model selects showed no modality or subscription distinction making it impossible to know which models required a paid subscription."
     },
     {
@@ -1128,7 +1214,9 @@
       "message": "fix(underdark): source API base from config.json via glass/core.js instead of hardcoding nano-gpt URL",
       "scope": "playground/underdark/",
       "impact": "medium",
-      "files": ["playground/underdark/script/modules/llm-engine.js"],
+      "files": [
+        "playground/underdark/script/modules/llm-engine.js"
+      ],
       "why": "llm-engine.js hardcoded nano-gpt.com/api/v1 — if the API base ever changes in config.json it would be silently ignored by Underdark while Neural Uplink (which reads config.llm.api_base) would correctly update."
     },
     {
@@ -1192,7 +1280,10 @@
       "message": "feat(home): add Archive link to footer nav",
       "scope": "index.html",
       "impact": "low",
-      "files": ["index.html", "status/logs/data/logs.json"],
+      "files": [
+        "index.html",
+        "status/logs/data/logs.json"
+      ],
       "why": "Surface the archive/ directory subtly from the home page via the existing footer nav — same pattern as Status and Forgejo links."
     },
     {
@@ -1231,7 +1322,9 @@
       "message": "docs(logs): accuracy pass — stale paths, missing modules, schema refs, guide status",
       "scope": "status/logs/",
       "impact": "low",
-      "files": ["status/logs/logs.json"],
+      "files": [
+        "status/logs/logs.json"
+      ],
       "why": "Full accuracy audit of logs.json: llm.json data_layer entry rewritten for v9.1.0 schema, 7 underdark modules added to module_structure, guide/ marked as non-existent, void content/ anomaly noted inline, playground entry updated to current structure, evolution.current_state corrected"
     },
     {
@@ -1267,7 +1360,9 @@
       "message": "docs(logs): strengthen LLM protocol — decision tree, seventh law, structure guidance",
       "scope": "status/logs/",
       "impact": "medium",
-      "files": ["status/logs/logs.json"],
+      "files": [
+        "status/logs/logs.json"
+      ],
       "why": "Protocol instructions were vague about which logs sections to update and when. Added update_decision_tree with explicit conditional rules, the_seventh_law (check sources_of_truth and ruleset before creating files), files_to_read_before_working, and structure violation cleanup as a pending_work entry so future agents know the cleanup is intentional and staged."
     },
     {
@@ -1276,7 +1371,11 @@
       "message": "feat(logs): structure ruleset + Ruleset tab in logs viewer",
       "scope": "status/logs/",
       "impact": "medium",
-      "files": ["status/logs/structure-ruleset.md", "status/logs/index.html", "status/logs/logs.json"],
+      "files": [
+        "status/logs/structure-ruleset.md",
+        "status/logs/index.html",
+        "status/logs/logs.json"
+      ],
       "why": "Codebase had no written rules for where files should live, how directories should be named, or how new apps should be structured. Wrote a canonical 12-section ruleset covering the two app patterns, naming conventions, glass/data/ layer rules, root-level allowlist, and a violation register of known deviations. Added a Ruleset tab to the logs viewer that fetches and renders it; extended renderMd() with GFM table support to handle the ruleset's comparison tables. Documented the ruleset file in logs.json module_structure and sources_of_truth."
     },
     {
@@ -1285,7 +1384,9 @@
       "message": "docs(logs): full accuracy audit — missing pages, data files, modules, stale evolution",
       "scope": "status/logs/",
       "impact": "medium",
-      "files": ["status/logs/logs.json"],
+      "files": [
+        "status/logs/logs.json"
+      ],
       "why": "Comprehensive codebase scan revealed logs.json had drifted significantly from reality: /void/ and /dndm/ pages missing from pages manifest; statstation.json, trap.json, void.json, and 7 underdark data files missing from architecture.data_layer; glass/style/modules/ CSS system and all underdark script modules absent from module_structure; home page sections_in_order wrong (Signal Mesh commented out, Station/Transmissions sections not listed); evolution.current_state and intended_future stale (no Grimoire, VOID, or Phase 6 context); boot_sequence steps mis-attributed to main.js vs ui.js. All corrected. sources_of_truth.files expanded with statstation.json, trap.json, void.json, feed.json, and index.json entries. Phase 6 Expansion added to evolution.phases."
     },
     {
@@ -1294,7 +1395,10 @@
       "message": "feat(logs): sources_of_truth section + Sources tab in logs viewer",
       "scope": "status/logs/",
       "impact": "medium",
-      "files": ["status/logs/logs.json", "status/logs/index.html"],
+      "files": [
+        "status/logs/logs.json",
+        "status/logs/index.html"
+      ],
       "why": "Multiple LLM context windows were creating parallel JSON files for domains that already had a canonical source (e.g. new llm model lists instead of editing glass/data/llm.json). Added sources_of_truth section to logs.json declaring every canonical data file, what it owns, how to add to it, what NOT to do, and which files depend on it. New Sources tab in the logs viewer renders this as navigable dependency cards."
     },
     {
@@ -1303,7 +1407,12 @@
       "message": "feat(grimoire): full D&D character sheet modal — sections, ability boxes, new fields",
       "scope": "dndm/",
       "impact": "medium",
-      "files": ["dndm/assets/script/app.js", "dndm/assets/style/style.css", "dndm/index.html", "status/logs/logs.json"],
+      "files": [
+        "dndm/assets/script/app.js",
+        "dndm/assets/style/style.css",
+        "dndm/index.html",
+        "status/logs/logs.json"
+      ],
       "why": "Add Character modal was a flat label/input grid with no structure, no ability score display, and missing standard D&D fields (subclass, background, XP, ideals). Replaced with a sectioned char-sheet-modal layout: Identity (name, class, subclass, race, background, alignment, player, level, XP), Ability Scores (6 hexagonal stat boxes with live modifier calculation and passive perception), Combat Stats (HP, AC, initiative, speed, prof bonus, passive perception), Languages & Traits (personality, bonds, ideals, flaws), and Backstory. All new fields persisted to the pc object; migration guards added for existing saved characters."
     },
     {
@@ -1312,7 +1421,10 @@
       "message": "fix(grimoire): node ctx menu scope + SVG marker namespace",
       "scope": "dndm/",
       "impact": "medium",
-      "files": ["dndm/assets/script/app.js", "status/logs/logs.json"],
+      "files": [
+        "dndm/assets/script/app.js",
+        "status/logs/logs.json"
+      ],
       "why": "Node right-click menu never appeared because storyNodeCtxShow/Hide were defined inside initStory() (inner scope) but called from storyCreateNodeEl (outer scope) — function was undefined at call time. Crow's foot arrow heads didn't render because defs.innerHTML += on a detached SVG element loses namespace context on each += iteration; fixed by building the full string and doing a single $svg.innerHTML assignment so the parser uses SVG namespace for all children at once."
     },
     {
@@ -1321,7 +1433,12 @@
       "message": "feat(grimoire): node right-click context menu — edit, set now playing, add branch, delete",
       "scope": "dndm/",
       "impact": "medium",
-      "files": ["dndm/assets/script/app.js", "dndm/assets/style/style.css", "dndm/index.html", "status/logs/logs.json"],
+      "files": [
+        "dndm/assets/script/app.js",
+        "dndm/assets/style/style.css",
+        "dndm/index.html",
+        "status/logs/logs.json"
+      ],
       "why": "Nodes had no quick-action affordance — right-clicking did nothing; all edits required selecting the node and using the right panel. Node context menu brings the most common actions inline: Edit in Composer, Set as Now Playing (greyed if already active), Add Branch, and Delete Node with a visual separator before the danger item."
     },
     {
@@ -1330,7 +1447,11 @@
       "message": "feat(grimoire): edge click popup — crow's foot heads, label, delete",
       "scope": "dndm/",
       "impact": "medium",
-      "files": ["dndm/assets/script/app.js", "dndm/assets/style/style.css", "dndm/index.html"],
+      "files": [
+        "dndm/assets/script/app.js",
+        "dndm/assets/style/style.css",
+        "dndm/index.html"
+      ],
       "why": "Edges were uneditable after creation — no way to change notation style or delete without entering delete mode. Popup gives direct access: 7 crow's foot head options per end (arrow/many/one/zero-or-one/zero-or-many/one-or-many/none), optional label shown on the bezier, delete button. Full SVG marker defs in defs block with mirrored start-marker variants."
     },
     {
@@ -1339,7 +1460,11 @@
       "message": "feat(grimoire): port drag-to-connect, horizontal bezier edges, ctx menu click-to-dismiss",
       "scope": "dndm/",
       "impact": "high",
-      "files": ["dndm/assets/script/app.js", "dndm/assets/style/style.css", "dndm/index.html"],
+      "files": [
+        "dndm/assets/script/app.js",
+        "dndm/assets/style/style.css",
+        "dndm/index.html"
+      ],
       "why": "Canvas left-click was placing nodes when user just wanted to dismiss the context menu. Story nodes needed visual output/input ports like n8n/Lucide Charts — drag from right port draws a live animated bezier wire; drop on node connects them, drop on canvas creates a new node at that position. All edges now horizontal right-to-left bezier curves instead of vertical top-to-bottom, matching the new port positions."
     },
     {
@@ -1348,7 +1473,11 @@
       "message": "feat(grimoire): canvas right-click menu, per-node colors, remove oracle key row",
       "scope": "dndm/",
       "impact": "medium",
-      "files": ["dndm/assets/script/app.js", "dndm/assets/style/style.css", "dndm/index.html"],
+      "files": [
+        "dndm/assets/script/app.js",
+        "dndm/assets/style/style.css",
+        "dndm/index.html"
+      ],
       "why": "Three UX improvements: (1) canvas right-click shows a type picker context menu so users don't need to pre-select a node type before clicking; (2) each node can have its own border/accent color from a 9-swatch palette via --node-custom-color CSS var; (3) Oracle key row (the ...Save bar at the bottom of the Story panel) removed permanently since the key is already in Settings."
     },
     {
@@ -1357,7 +1486,12 @@
       "message": "feat(grimoire): campaign slot system, Load Campaign modal, API key in Settings",
       "scope": "dndm/",
       "impact": "high",
-      "files": ["dndm/assets/script/app.js", "dndm/assets/style/style.css", "dndm/index.html", "status/logs/logs.json"],
+      "files": [
+        "dndm/assets/script/app.js",
+        "dndm/assets/style/style.css",
+        "dndm/index.html",
+        "status/logs/logs.json"
+      ],
       "why": "New Campaign and Load Campaign buttons were functionally identical — both just dismissed the welcome screen with the same single localStorage slot. Slot system adds named multi-campaign support: dndm_campaigns index array, per-slot keys dndm_campaign_<id>, legacy auto-migration, new campaign prompt, Load Campaign modal listing all saved slots with delete and import-from-file. API key restored to Settings modal per user feedback."
     },
     {
@@ -1366,7 +1500,11 @@
       "message": "feat(grimoire): Composer — full-screen distraction-free editor for campaign text",
       "scope": "dndm/",
       "impact": "high",
-      "files": ["dndm/assets/script/app.js", "dndm/assets/style/style.css", "dndm/index.html"],
+      "files": [
+        "dndm/assets/script/app.js",
+        "dndm/assets/style/style.css",
+        "dndm/index.html"
+      ],
       "why": "All text-heavy campaign edits (NPC notes, lore entries, campaign meta, scratch pad) were using browser prompt() dialogs — a single-line blocking UI unsuitable for long-form writing. Composer replaces every prompt() with a full-screen overlay editor (position:fixed, inset:0) with proper multi-line textareas, serif body font, word count, Ctrl+S save, Esc discard, and dirty-tracking confirmation. Expands campaign data model with hook, tone, secrets fields; NPC model with location, relationship, status, portrait; Oracle context now includes all campaign meta so LLM suggestions are scenario-aware."
     },
     {
@@ -1375,7 +1513,11 @@
       "message": "feat(art): shift-select panel + immersive card reveal",
       "scope": "art/",
       "impact": "medium",
-      "files": ["art/assets/script/app.js", "art/assets/style/style.css", "art/index.html"],
+      "files": [
+        "art/assets/script/app.js",
+        "art/assets/style/style.css",
+        "art/index.html"
+      ],
       "why": "Added shift+click multi-select with a slide-in right panel showing thumbnails, composite IDs, and clipboard copy of all selected IDs. Card reveal upgraded to blur(4px)→blur(0) desaturate→saturate entrance with a one-shot chromatic shimmer (purple→white→gold diagonal sweep) that self-removes on animationend."
     },
     {
@@ -1384,7 +1526,10 @@
       "message": "feat(art): pull divider + lookahead span promotion",
       "scope": "art/",
       "impact": "medium",
-      "files": ["art/assets/script/app.js", "art/assets/style/style.css"],
+      "files": [
+        "art/assets/script/app.js",
+        "art/assets/style/style.css"
+      ],
       "why": "Each executePull now injects a full-width grid divider above the new batch showing tier icon, running total count, and expanding lines in the tier colour. Lookahead span logic: landscape at start of row checks if the next card is portrait before committing to span 2 — if not, promotes to span 3 immediately rather than leaving a gap that no portrait is coming to backfill."
     },
     {
@@ -1393,7 +1538,10 @@
       "message": "fix(art): square images classified as portrait, row height 300→380px",
       "scope": "art/",
       "impact": "low",
-      "files": ["art/assets/script/app.js", "art/assets/style/style.css"],
+      "files": [
+        "art/assets/script/app.js",
+        "art/assets/style/style.css"
+      ],
       "why": "Landscape threshold was >= 1.15x — squares and near-squares were incorrectly classified as landscape and given span 2. Changed to > 1.15x so squares go portrait (span 1). Row height bumped 300→380px so portrait cells are taller than wide at typical viewport widths."
     },
     {
@@ -1402,7 +1550,10 @@
       "message": "fix(art): eliminate orphaned grid cells — resolveSpans + full-row promotion",
       "scope": "art/",
       "impact": "medium",
-      "files": ["art/assets/script/app.js", "art/assets/style/style.css"],
+      "files": [
+        "art/assets/script/app.js",
+        "art/assets/style/style.css"
+      ],
       "why": "Landscape cards landing in the last 1-col slot of a row (remaining===1) are promoted to span 3 (full row) instead of span 2, which would leave an empty orphan cell that no portrait card can backfill. _gridColCursor tracked across all batches so resolveSpans stays coherent across pulls. Row height 280→300px desktop, 200→220px mobile."
     },
     {
@@ -1411,7 +1562,10 @@
       "message": "feat(art): stable grid — portrait 1-col, landscape 2-col, no reflow on pull",
       "scope": "art/",
       "impact": "high",
-      "files": ["art/assets/script/app.js", "art/assets/style/style.css"],
+      "files": [
+        "art/assets/script/app.js",
+        "art/assets/style/style.css"
+      ],
       "why": "Replaced CSS columns (rebalances on append) with CSS grid + fixed grid-auto-rows. Orientation probed via Image() before DOM insertion so grid-column:span is set before placement — existing cards never reflow when a pull adds new ones. New _gridColCursor module state tracks column position across batches. Added NSFW support: metadata.nsfw boolean, frosted veil requiring click-to-reveal, NSFW filter button (4th filter, shows NSFW without veils in other filters keeps veils)."
     },
     {
@@ -1420,7 +1574,10 @@
       "message": "fix(art): stagger pull cards by batch position, not global index",
       "scope": "art/",
       "impact": "low",
-      "files": ["art/assets/script/app.js", "art/assets/style/style.css"],
+      "files": [
+        "art/assets/script/app.js",
+        "art/assets/style/style.css"
+      ],
       "why": "Cards were staggering by global filtered[] index — cards 18-28 all had 810-1260ms base delays and fired near-simultaneously as a screen flash. Now each batch staggers from 0 relative to batch position (dataset.batchIdx) so every pull animates cleanly regardless of where in the manifest it starts."
     },
     {
@@ -1429,7 +1586,9 @@
       "message": "fix(art): respect natural image aspect ratios in gallery grid — landscape cards no longer forced to portrait",
       "scope": "art/",
       "impact": "medium",
-      "files": ["art/assets/style/style.css"],
+      "files": [
+        "art/assets/style/style.css"
+      ],
       "why": "All gallery thumbnails were rendered in a fixed 3/4 aspect-ratio container, squashing landscape images into portrait frames. Removing the aspect-ratio constraint and letting each card's height be driven by the image's natural dimensions (width:100%; height:auto) means portrait images appear tall and landscape images appear wide — no forced cropping."
     },
     {
@@ -1438,7 +1597,9 @@
       "message": "fix(playground): remove ::before flex spacer — causes large gap on fresh shell",
       "scope": "playground/",
       "impact": "low",
-      "files": ["glass/style/modules/neural-uplink.css"],
+      "files": [
+        "glass/style/modules/neural-uplink.css"
+      ],
       "why": "The flex spacer created a large empty block on a fresh shell with only 1-2 messages. Bottom-anchoring adds no real value in this interface — messages flow naturally from the top and the shell fills available height."
     },
     {
@@ -1447,7 +1608,10 @@
       "message": "fix(playground): gap above shell — body.pg-body direct selector + zero top padding",
       "scope": "playground/",
       "impact": "low",
-      "files": ["playground/index.html", "glass/style/modules/neural-uplink.css"],
+      "files": [
+        "playground/index.html",
+        "glass/style/modules/neural-uplink.css"
+      ],
       "why": "body:has() selector may not fire reliably in all contexts — added body.pg-body direct class selector (matching Underdark pattern) as a fallback. Also zeroed 0.75rem top padding on .playground-page__main which was adding a visible gap between the topbar and shell."
     },
     {
@@ -1456,7 +1620,9 @@
       "message": "fix(playground): body padding from hub styles creates gap above shell",
       "scope": "playground/",
       "impact": "low",
-      "files": ["glass/style/modules/neural-uplink.css"],
+      "files": [
+        "glass/style/modules/neural-uplink.css"
+      ],
       "why": "base.css sets padding: 1.5rem 2.5rem on body for the hub layout — this leaked into the playground page as a visible gap above the topbar. body:has(.playground-page) now zeros body padding/margin/max-width when the playground is mounted."
     },
     {
@@ -1465,7 +1631,9 @@
       "message": "fix(playground): replace justify-content:flex-end with ::before flex spacer",
       "scope": "playground/",
       "impact": "low",
-      "files": ["glass/style/modules/neural-uplink.css"],
+      "files": [
+        "glass/style/modules/neural-uplink.css"
+      ],
       "why": "justify-content:flex-end caused a large empty block at the top of the shell on short conversations. The ::before flex:1 spacer achieves the same bottom-anchor effect but collapses naturally as messages fill the space, so there is never a visible empty gap."
     },
     {
@@ -1474,7 +1642,9 @@
       "message": "fix(playground): keybar child states both visible — [hidden] overridden by display:flex",
       "scope": "playground/",
       "impact": "low",
-      "files": ["glass/style/modules/neural-uplink.css"],
+      "files": [
+        "glass/style/modules/neural-uplink.css"
+      ],
       "why": "Both the input-wrap and locked-state divs were rendering simultaneously because their display:flex declarations beat the browser UA [hidden]=display:none — added explicit [hidden]{display:none} rules for both child elements."
     },
     {
@@ -1483,7 +1653,9 @@
       "message": "fix(playground): anchor messages to bottom of shell (justify-content: flex-end)",
       "scope": "playground/",
       "impact": "low",
-      "files": ["glass/style/modules/neural-uplink.css"],
+      "files": [
+        "glass/style/modules/neural-uplink.css"
+      ],
       "why": "Messages were top-aligned in the flex-1 container, leaving dead space below the last message. justify-content: flex-end on the playground-scoped messages rule pins content to the bottom so the shell reads like a terminal — messages grow upward as conversation fills."
     },
     {
@@ -1506,7 +1678,10 @@
       "message": "polish(dndm): Phase 9 — touch targets, reduced-motion, visual polish",
       "scope": "dndm/",
       "impact": "low",
-      "files": ["dndm/assets/style/style.css", "status/logs/logs.json"],
+      "files": [
+        "dndm/assets/style/style.css",
+        "status/logs/logs.json"
+      ],
       "why": "Touch target compliance (≥44px on coarse-pointer devices for all STORY/filter buttons) and prefers-reduced-motion extension to all new Phase 8/STORY animations — accessibility polish pass after major feature delivery."
     },
     {
@@ -1515,7 +1690,9 @@
       "message": "Changes",
       "scope": "glass/",
       "impact": "low",
-      "files": ["glass/data/apps.json"],
+      "files": [
+        "glass/data/apps.json"
+      ],
       "why": "Set Playground, Underdark, and Grimoire status from 'offline' to 'live' in the hub app manifest so the apps appear live on the hub."
     },
     {
@@ -1774,7 +1951,12 @@
       "message": "fix(underdark): terminal header 50px→36px, arena.css?v=10 + sidebar.css?v=2 cache-bust",
       "scope": "playground/characters — arena.css, sidebar.css, style.css, index.html",
       "impact": "low",
-      "files": ["playground/characters/style/arena.css", "playground/characters/style/sidebar.css", "playground/characters/style/style.css", "playground/characters/index.html"],
+      "files": [
+        "playground/characters/style/arena.css",
+        "playground/characters/style/sidebar.css",
+        "playground/characters/style/style.css",
+        "playground/characters/index.html"
+      ],
       "why": "Two persistent visual gaps: right sidebar header was 50px tall (matched arena header height but showed almost nothing), and thread top padding still appearing large because browsers were serving cached arena.css despite code change. Terminal header shrunk to 36px; all CSS modules now have explicit version query strings."
     },
     {
@@ -1813,7 +1995,9 @@
       "message": "fix(underdark): reduce thread top padding from 40px to 12px — arena.css",
       "scope": "playground/characters — arena.css",
       "impact": "low",
-      "files": ["playground/characters/style/arena.css"],
+      "files": [
+        "playground/characters/style/arena.css"
+      ],
       "why": "Thread top padding was var(--space-lg)=40px, creating a large dead zone before the first message. Reduced to var(--space-sm)=12px."
     },
     {
@@ -2265,7 +2449,10 @@
       "message": "fix: missing comma in index.json after Lady Jessica avatar_path update",
       "scope": "playground/characters — data/index.json",
       "impact": "critical",
-      "files": ["playground/characters/data/index.json", "status/logs/logs.json"],
+      "files": [
+        "playground/characters/data/index.json",
+        "status/logs/logs.json"
+      ],
       "why": "Previous session updated Lady Jessica's avatar_path but dropped the trailing comma, producing invalid JSON — loadManifest() silently swallowed the parse error so all manifest characters failed to load on both local and production."
     },
     {
@@ -2310,7 +2497,9 @@
       "message": "fix(ui): build all speech/thought regexes via RegExp constructor with \\uXXXX escapes",
       "scope": "playground/characters — ui.js",
       "impact": "high",
-      "files": ["playground/characters/script/modules/ui.js"],
+      "files": [
+        "playground/characters/script/modules/ui.js"
+      ],
       "why": "VSCode silently auto-curled straight \" into typographic \" in regex literals — RegExp constructor with \\uXXXX is the only safe way to include quote chars."
     },
     {
@@ -2319,7 +2508,9 @@
       "message": "refactor(ui): rewrite renderMarkdown — post-DOMPurify injection, no token system",
       "scope": "playground/characters — ui.js",
       "impact": "high",
-      "files": ["playground/characters/script/modules/ui.js"],
+      "files": [
+        "playground/characters/script/modules/ui.js"
+      ],
       "why": "Pre-tokenise approach had three failure points (editor curling, DOMPurify guillemet encoding, esc() double-encoding) — post-DOMPurify text-node injection eliminates all of them."
     },
     {
@@ -2328,7 +2519,9 @@
       "message": "debug(ui): decode DOMPurify-encoded guillemets before rpFlush; add token log",
       "scope": "playground/characters — ui.js",
       "impact": "low",
-      "files": ["playground/characters/script/modules/ui.js"],
+      "files": [
+        "playground/characters/script/modules/ui.js"
+      ],
       "why": "DOMPurify entity-encodes « (U+00AB) to &laquo; in text nodes — needed decode pass to restore placeholders before flush regex could match them."
     },
     {
@@ -2337,7 +2530,9 @@
       "message": "fix(ui): use RegExp constructor for speech quote detection — editor was auto-curling literals",
       "scope": "playground/characters — ui.js",
       "impact": "medium",
-      "files": ["playground/characters/script/modules/ui.js"],
+      "files": [
+        "playground/characters/script/modules/ui.js"
+      ],
       "why": "Speech detection regex with literal \" chars never matched because VS Code converted them to curly quotes on save."
     },
     {
@@ -3033,6 +3228,21 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-20",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Extracted the wallhaven gallery from playground/underdark/index.html into a fully standalone portal at playground/wallhaven/. The new page has its own index.html, script/app.js, and style/style.css — adapted from wallhaven.js and wallhaven.css with all underdark DOM dependencies removed. Assign-to-character flow is preserved verbatim (writes to underdark_chars_v4 → loadedCharacters[id].extensions.underdark.gallery), so wallhaven assignments automatically appear in the gallery page. From underdark, the overflow menu 'Wallhaven Gallery' item now opens the standalone portal as a link with ?q=charname&charId=x URL params; the character profile 'Wallhaven' button does the same. The wh-arena, wh-lightbox, and wallhaven.js script tag have been removed from underdark's index.html.",
+      "decisions": [
+        "Standalone wallhaven portal lives at /playground/wallhaven/ as a fully self-contained app (own HTML/CSS/JS) — no underdark DOM dependency.",
+        "Assign-to-gallery data path (underdark_chars_v4 → loadedCharacters[id].extensions.underdark.gallery) is preserved verbatim in wallhaven/script/app.js so assigned wallpapers appear in the gallery page automatically.",
+        "Assign UI (character select + assign button in lightbox) is gated behind nano_gpt_key localStorage presence — if no key, the Assigned tab and assign controls are hidden.",
+        "URL params ?q=charname&charId=x pre-fill search and pre-select the character in the assign select — underdark passes these when opening the portal.",
+        "underdark's wh-arena block replaced with a single hidden stub div; wh-lightbox block removed; wallhaven.js script tag removed — ~12k chars cleaved from underdark's HTML.",
+        "Overflow menu 'Wallhaven Gallery' item is now an <a> link (not a button with data-overflow-for), updated dynamically with the active character's params when the overflow menu opens.",
+        "Toast container is self-contained in wallhaven portal (id='wh-toast-container') — not shared with underdark's toast-container."
+      ]
+    },
     {
       "date": "2026-05-20",
       "agent": "Claude Sonnet 4.6",
@@ -5060,11 +5270,24 @@
       "Structure — files live where the ruleset says. Do not improvise locations."
     ],
     "files_to_read_before_working": {
-      "always": ["status/logs/data/logs.json — this file. Full read. Non-negotiable.", "status/logs/data/signal.json — the mutable companion. Check open issues and active tasks before starting work."],
-      "if_touching_glass_or_hub": ["glass/script/modules/core.js — loadCoreData() and what it fetches", "glass/script/modules/ui.js — all renderX() functions and what data they expect"],
-      "if_touching_underdark": ["underdark/script/modules/ui.js — the main 11k-line module", "underdark/script/modules/llm-engine.js — prompt assembly and context management"],
-      "if_creating_or_moving_files": ["status/logs/data/structure-ruleset.md — the canonical file placement rules"],
-      "if_adding_data_or_a_new_json": ["status/logs/data/logs.json → sources_of_truth — check if domain already exists before creating anything new"]
+      "always": [
+        "status/logs/data/logs.json — this file. Full read. Non-negotiable.",
+        "status/logs/data/signal.json — the mutable companion. Check open issues and active tasks before starting work."
+      ],
+      "if_touching_glass_or_hub": [
+        "glass/script/modules/core.js — loadCoreData() and what it fetches",
+        "glass/script/modules/ui.js — all renderX() functions and what data they expect"
+      ],
+      "if_touching_underdark": [
+        "underdark/script/modules/ui.js — the main 11k-line module",
+        "underdark/script/modules/llm-engine.js — prompt assembly and context management"
+      ],
+      "if_creating_or_moving_files": [
+        "status/logs/data/structure-ruleset.md — the canonical file placement rules"
+      ],
+      "if_adding_data_or_a_new_json": [
+        "status/logs/data/logs.json → sources_of_truth — check if domain already exists before creating anything new"
+      ]
     }
   },
   "pending_work": {
@@ -5078,7 +5301,18 @@
         "completed": null,
         "description": "The structure ruleset (status/logs/data/structure-ruleset.md §12) documents 10 known structural violations. These must be resolved in a dedicated session: move glass/data/formatter + formatter.go to services/, delete llmtemp.json and llm-gen.json, move tdo.txt to .ai/tdo.md, move void.json from assets/content/ to assets/data/, delete .ai/plan-css-refactor.md (already shipped), move dndm/ + radar/ + underdark/ under playground/ (per tdo.txt item 1). Tackle in order of risk: deletions first, moves second, restructure last.",
         "notes": "Do not tackle this during unrelated sessions. It requires full confirmation from trap before moving apps (dndm, radar, underdark) since those involve URL changes.",
-        "files_affected": ["glass/data/formatter", "glass/data/formatter.go", "glass/data/llmtemp.json", "glass/data/llm-gen.json", "tdo.txt", "void/assets/content/void.json", ".ai/plan-css-refactor.md", "dndm/", "radar/", "underdark/"]
+        "files_affected": [
+          "glass/data/formatter",
+          "glass/data/formatter.go",
+          "glass/data/llmtemp.json",
+          "glass/data/llm-gen.json",
+          "tdo.txt",
+          "void/assets/content/void.json",
+          ".ai/plan-css-refactor.md",
+          "dndm/",
+          "radar/",
+          "underdark/"
+        ]
       },
       {
         "id": "playground-history-bug",
@@ -5088,7 +5322,11 @@
         "completed": "2026-05-17",
         "description": "playground/index.html sends messages but gets no response. Root cause: history missing from ctx in llm.js. Also: redesign the playground page to match evolved site aesthetic.",
         "notes": "Fixed in 2c58076. history: state.history added to ctx in llm.js:142. HTML redesigned with scanline overlay, SVG back arrow, NEURAL UPLINK // SOVEREIGN INFERENCE identity, updated boot message.",
-        "files_affected": ["playground/index.html", "glass/script/modules/llm.js", "glass/style/modules/neural-uplink.css"]
+        "files_affected": [
+          "playground/index.html",
+          "glass/script/modules/llm.js",
+          "glass/style/modules/neural-uplink.css"
+        ]
       },
       {
         "id": "dndm-phase-5",
@@ -5098,7 +5336,11 @@
         "completed": "2026-05-17",
         "description": "Phase 5 of DM MATRIX (/dndm/): Campaign module (editable name/setting/banner/scratch pad), NPC tracker (add/edit/remove, role/location/relationship/alive), Lore Wiki (tabbed locations/factions/timeline), Session log (sessions with XP and summary), Export/Import campaign JSON, all persisted to localStorage['dndm_campaign'].",
         "notes": "Committed as 62e8517. Bug fix ba99cc1 followed immediately — Object.assign in campaignLoad() corrupted campaign.lore when stale localStorage data predated the lore sub-object; fixed with post-merge deep validation. Boot-time crash resolved.",
-        "files_affected": ["dndm/index.html", "dndm/assets/script/app.js", "dndm/assets/style/style.css"]
+        "files_affected": [
+          "dndm/index.html",
+          "dndm/assets/script/app.js",
+          "dndm/assets/style/style.css"
+        ]
       },
       {
         "id": "dndm-phase-6-atlas",
@@ -5108,7 +5350,11 @@
         "completed": "2026-05-17",
         "description": "Atlas: map image upload with fog-of-war toggle. Soundscape: ambient audio controls with volume. Player Screen: BroadcastChannel to push content to a second tab/window the players can see.",
         "notes": "Committed as d718e69. Full canvas fog-of-war with reveal/hide brush tools, pan+zoom viewport, DM marker pins, BroadcastChannel player screen push to second tab, per-map localStorage persistence via LZ-style ID keys.",
-        "files_affected": ["dndm/index.html", "dndm/assets/script/app.js", "dndm/assets/style/style.css"]
+        "files_affected": [
+          "dndm/index.html",
+          "dndm/assets/script/app.js",
+          "dndm/assets/style/style.css"
+        ]
       },
       {
         "id": "dndm-phase-8-sheet",
@@ -5118,7 +5364,11 @@
         "completed": "2026-05-17",
         "description": "Full 5e character sheet overlay per PC: 6 ability scores with live modifier display, saving throws with proficiency checkboxes, 18 skills with dot-cycling proficiency (none→prof→expert), spell slots per level 1-9 (used/max inputs), textareas for features/equipment/personality/bonds/flaws/backstory, meta fields (level, prof bonus, speed, alignment, languages, player name). Live localStorage persistence. ◈ SHEET button on each PC card.",
         "notes": "Committed in pending (this session). Party migrated from sessionStorage to localStorage to survive tab close.",
-        "files_affected": ["dndm/index.html", "dndm/assets/script/app.js", "dndm/assets/style/style.css"]
+        "files_affected": [
+          "dndm/index.html",
+          "dndm/assets/script/app.js",
+          "dndm/assets/style/style.css"
+        ]
       },
       {
         "id": "dndm-phase-8-partybar",
@@ -5128,7 +5378,11 @@
         "completed": "2026-05-17",
         "description": "Persistent sticky HP strip at top of .main visible only when session is active. Each PC card shows name, colour-coded HP bar (full/low/crit/ko), HP numbers, condition abbreviation badges. KO shown as skull. Click-to-jump to Party module and scroll to card.",
         "notes": "Committed in pending (this session). Wired into beginSession/endSession/refreshPCCard calls.",
-        "files_affected": ["dndm/index.html", "dndm/assets/script/app.js", "dndm/assets/style/style.css"]
+        "files_affected": [
+          "dndm/index.html",
+          "dndm/assets/script/app.js",
+          "dndm/assets/style/style.css"
+        ]
       },
       {
         "id": "dndm-phase-8-filters",
@@ -5138,7 +5392,11 @@
         "completed": "2026-05-17",
         "description": "Bestiary: CR min/max range inputs, 14 creature type pills, 6 size pills, all compound-stacking with name search. Spellbook: level 0-9 pills (cantrip + 1-9), 8 school pills, concentration/ritual toggles, 8 class pills. Clear button resets all filters. Filter state is module-scoped vars.",
         "notes": "Committed in pending (this session). Filters reset on source change because state.bestiary.monsters is replaced.",
-        "files_affected": ["dndm/index.html", "dndm/assets/script/app.js", "dndm/assets/style/style.css"]
+        "files_affected": [
+          "dndm/index.html",
+          "dndm/assets/script/app.js",
+          "dndm/assets/style/style.css"
+        ]
       },
       {
         "id": "dndm-story-module",
@@ -5148,7 +5406,11 @@
         "completed": "2026-05-17",
         "description": "Full narrative decision tree builder with pan/zoom canvas, 6 node types, bezier SVG edges, drag-to-place/move, connect/delete modes, node editor, Oracle contextual suggestions + sub-tree expansion, NOW PLAYING session strip, Off-Script wildcard spawner, Mark Done auto-advance, path-taken journey log. Persisted to campaign.narrative.",
         "notes": "Committed in pending (this session). Oracle Expand mode generates nodes and wires them directly to canvas on click.",
-        "files_affected": ["dndm/index.html", "dndm/assets/script/app.js", "dndm/assets/style/style.css"]
+        "files_affected": [
+          "dndm/index.html",
+          "dndm/assets/script/app.js",
+          "dndm/assets/style/style.css"
+        ]
       },
       {
         "id": "dndm-phase-9-polish",
@@ -5158,7 +5420,10 @@
         "completed": "2026-05-17",
         "description": "Touch target compliance (pointer: coarse media query, ≥44px min-height on all STORY/filter interactive elements). prefers-reduced-motion extended to STORY canvas nodes, Oracle loading animation, HP bar fill transitions, character sheet overlay fade. NOW PLAYING strip shadow polish.",
         "notes": "CSS-only changes — no JS modified. Committed as 8fcd4a9.",
-        "files_affected": ["dndm/assets/style/style.css", "status/logs/logs.json"]
+        "files_affected": [
+          "dndm/assets/style/style.css",
+          "status/logs/logs.json"
+        ]
       },
       {
         "id": "dndm-phase-8-oracleask",
@@ -5168,7 +5433,9 @@
         "completed": "2026-05-17",
         "description": "◈ Ask Oracle button on monster stat blocks (pre-fills tactics/CR question) and spell detail panels (pre-fills rules explanation question). Clicking switches to Oracle module and populates the prompt field — user reviews before sending.",
         "notes": "Committed in pending (this session).",
-        "files_affected": ["dndm/assets/script/app.js"]
+        "files_affected": [
+          "dndm/assets/script/app.js"
+        ]
       },
       {
         "id": "player-bubble-ufr",
@@ -5178,7 +5445,10 @@
         "completed": "2026-05-14",
         "description": "Apply UFR rp-* CSS classes to player messages at lighter intensity (78%) so bot responses stay visually dominant. Use monogram initial avatar instead of generic emoji.",
         "notes": "Done in 30c6c8b. arena.css: .message--user .message__content .rp-* at 78% intensity. appendMessage: playerInitial computed from userName, avatarHtml uses .message__avatar--monogram div for users without avatar.",
-        "files_affected": ["playground/characters/style/arena.css", "playground/characters/script/modules/ui.js"]
+        "files_affected": [
+          "playground/characters/style/arena.css",
+          "playground/characters/script/modules/ui.js"
+        ]
       },
       {
         "id": "scene-markers",
@@ -5188,7 +5458,11 @@
         "completed": "2026-05-14",
         "description": "sceneBreak field added to message schema, auto-set for all Overlord messages. renderFullHistory injects .scene-divider element before each Overlord block, numbered sequentially. _fireOverlord also injects divider in live mode.",
         "notes": "Done in 30c6c8b. state.js addMessage: sceneBreak: meta.sceneBreak ?? (meta.overlordMode ? true : false). renderFullHistory: _scenesRendered counter, scene-divider div injected before overlord render. arena.css: .scene-divider with gradient lines and purple pill label.",
-        "files_affected": ["playground/characters/script/modules/state.js", "playground/characters/script/modules/ui.js", "playground/characters/style/arena.css"]
+        "files_affected": [
+          "playground/characters/script/modules/state.js",
+          "playground/characters/script/modules/ui.js",
+          "playground/characters/style/arena.css"
+        ]
       },
       {
         "id": "message-variants",
@@ -5198,7 +5472,11 @@
         "completed": "2026-05-14",
         "description": "Retry appends current content to variants[] before removing message. appendMessage renders chevron prev/next navigator with turn counter when variants exist. State persisted via saveState.",
         "notes": "Done in 30c6c8b. state.js: variants: [], variantIdx: 0 in message schema. Retry handler saves to variants before history slice. appendMessage: .msg-variants nav rendered for bot messages with variants. Variant click handler rearranges variants/content array.",
-        "files_affected": ["playground/characters/script/modules/state.js", "playground/characters/script/modules/ui.js", "playground/characters/style/arena.css"]
+        "files_affected": [
+          "playground/characters/script/modules/state.js",
+          "playground/characters/script/modules/ui.js",
+          "playground/characters/style/arena.css"
+        ]
       },
       {
         "id": "structured-codex-digest",
@@ -5208,7 +5486,11 @@
         "completed": "2026-05-14",
         "description": "updateCodexDigest rebuilt to show active char rows (avatar, name, last line), Overlord mode badge, scene number. _countScenes() counts overlordMode history entries. cstat-scene stat added.",
         "notes": "Done in 30c6c8b. _countScenes() added. updateCodexDigest: builds .codex-digest__char rows per activeBotId with avatar/name/line; .codex-digest__meta-row with mode + scene labels. scene-codex.css: new codex-digest__char/av/name/line/meta-row styles.",
-        "files_affected": ["playground/characters/script/modules/ui.js", "playground/characters/style/scene-codex.css", "playground/characters/index.html"]
+        "files_affected": [
+          "playground/characters/script/modules/ui.js",
+          "playground/characters/style/scene-codex.css",
+          "playground/characters/index.html"
+        ]
       },
       {
         "id": "auto-entrance-on-join",
@@ -5218,7 +5500,10 @@
         "completed": "2026-05-16",
         "description": "When a character is added to a thread that already has message history, automatically fire an Overlord entrance narration describing their cinematic arrival. Controlled by autoEntrance narrative flag (default on).",
         "notes": "Done in this session. addCharacterToThread: else-if branch when history.length > 0 calls _fireOverlord('entrance', ..., 300). Guard: state.config.flags?.autoEntrance !== false. FLAG_KEYS array updated; HTML flag-autoEntrance checkbox added to Narrative Flags grid with checked attribute.",
-        "files_affected": ["playground/characters/script/modules/ui.js", "playground/characters/index.html"]
+        "files_affected": [
+          "playground/characters/script/modules/ui.js",
+          "playground/characters/index.html"
+        ]
       },
       {
         "id": "auto-overlord-transition",
@@ -5228,7 +5513,9 @@
         "completed": "2026-05-14",
         "description": "_maybeAutoTransition fires after each bot turn — if turns%N==0 and no Overlord block in last N messages, auto-fires transition narration. N=8 default, stored as state.config.autoTransitionEvery.",
         "notes": "Done in 30c6c8b. _maybeAutoTransition() checks turns%n and recent history for Overlord. Called after _generateAIQuickReplies in triggerBotResponse onDone.",
-        "files_affected": ["playground/characters/script/modules/ui.js"]
+        "files_affected": [
+          "playground/characters/script/modules/ui.js"
+        ]
       },
       {
         "id": "memory-horizon-ui",
@@ -5238,7 +5525,10 @@
         "completed": "2026-05-14",
         "description": "renderFullHistory computes context cut index from token budget. Injects .context-horizon divider at cut point. Messages above horizon get .message--horizon-past (opacity:0.35, sepia filter).",
         "notes": "Done in 30c6c8b. Token budget: (maxContext - maxOutput - 800t for system prompt) using text.length/4 estimate. context-horizon div has lock icon + label. arena.css: .context-horizon amber divider, .message--horizon-past faded+sepia.",
-        "files_affected": ["playground/characters/script/modules/ui.js", "playground/characters/style/arena.css"]
+        "files_affected": [
+          "playground/characters/script/modules/ui.js",
+          "playground/characters/style/arena.css"
+        ]
       },
       {
         "id": "scene-ledger",
@@ -5248,7 +5538,12 @@
         "completed": "2026-05-14",
         "description": "Codex arc input replaced with 4 structured slots: Arc, Secret, Reveal Pending, Relationship State. Stored in state.config._codexLedger. Injected into buildOverlordContext only.",
         "notes": "Done in 30c6c8b. index.html: .codex-ledger-grid with 4 label+input pairs. state.js not changed (stored in config). ui.js: 4 change listeners write to _codexLedger obj. syncConfigUI restores fields. buildOverlordContext: ledger param adds [Scene Ledger] block. scene-codex.css: .codex-ledger-grid 2-col grid.",
-        "files_affected": ["playground/characters/index.html", "playground/characters/script/modules/ui.js", "playground/characters/script/modules/llm-engine.js", "playground/characters/style/scene-codex.css"]
+        "files_affected": [
+          "playground/characters/index.html",
+          "playground/characters/script/modules/ui.js",
+          "playground/characters/script/modules/llm-engine.js",
+          "playground/characters/style/scene-codex.css"
+        ]
       },
       {
         "id": "char-targeted-directives",
@@ -5258,7 +5553,9 @@
         "completed": "2026-05-14",
         "description": "Codex inject and reinject tray buttons show showPickerModal with char list in group mode. Selected name replaces {CHAR} in directive. All characters option maps to generic string.",
         "notes": "Done in 30c6c8b. _pickTargetChar() helper: DM returns activeBotId name; group shows showPickerModal(['All characters', ...names]). Codex inject and reinject handlers made async, await _pickTargetChar().",
-        "files_affected": ["playground/characters/script/modules/ui.js"]
+        "files_affected": [
+          "playground/characters/script/modules/ui.js"
+        ]
       },
       {
         "id": "ai-contextual-quick-replies",
@@ -5268,7 +5565,10 @@
         "completed": "2026-05-14",
         "description": "Background fetchCompletion after each bot turn generates 4 contextual reply starters. Cached in _aiQRCache per history length. Shown as warm-gold italic chips above static presets when QR bar opens.",
         "notes": "Done in 30c6c8b. _generateAIQuickReplies(): fetches last 3 messages, LLM returns JSON array of 4 strings, stored in _aiQRCache. QR bar build: aiSection injected before static groups. .qr-btn--ai warm-gold italic style. Separate click handler for .qr-btn--ai.",
-        "files_affected": ["playground/characters/script/modules/ui.js", "playground/characters/style/arena.css"]
+        "files_affected": [
+          "playground/characters/script/modules/ui.js",
+          "playground/characters/style/arena.css"
+        ]
       },
       {
         "id": "structured-prompt-inspector",
@@ -5278,7 +5578,10 @@
         "completed": "2026-05-14",
         "description": "When showSystemPrompt flag is on, instead of raw <pre> dump, payload.messages are parsed into labelled <details> sections with role badge, section label, and token count. Total token count in summary.",
         "notes": "Done in 30c6c8b. estimateTok = s.length/4. Each message gets pi-section details with pi-section__role (colour-coded by role), label from [HEADER] match or role+index, tok badge. controls.css: pi-* styles.",
-        "files_affected": ["playground/characters/script/modules/ui.js", "playground/characters/style/controls.css"]
+        "files_affected": [
+          "playground/characters/script/modules/ui.js",
+          "playground/characters/style/controls.css"
+        ]
       },
       {
         "id": "memory-depth-20",
@@ -5288,7 +5591,9 @@
         "completed": "2026-05-14",
         "description": "getBotMemoriesFromReality default limit bumped from 10 to 20 so characters have twice as much cross-chat memory context.",
         "notes": "Done in 30c6c8b. state.js: getBotMemoriesFromReality(botId, currentChatId, limit = 20).",
-        "files_affected": ["playground/characters/script/modules/state.js"]
+        "files_affected": [
+          "playground/characters/script/modules/state.js"
+        ]
       },
       {
         "id": "rp-action-format-layer",
@@ -5298,7 +5603,11 @@
         "completed": "2026-05-14",
         "description": "Add a distinct visual rendering tier for physical actions wrapped in *asterisks*. marked.js converts these to <em>, then a post-sanitize pass converts <em> to <span class=rp-action> (blue-silver glow). UFR directive expanded to enumerate all 4 format layers explicitly.",
         "notes": "Done in f5653e0. renderMarkdown post-sanitize pass: replaces <em>text</em> → <span class=\"rp-action\">text</span>. Narration regex updated from <em>-exclusion to rp-action-exclusion. arena.css: .rp-action with rgba(147,197,253,0.92) color + hover glow. UFR directive in llm-engine.js rewritten to name 4 layers with examples.",
-        "files_affected": ["playground/characters/script/modules/ui.js", "playground/characters/script/modules/llm-engine.js", "playground/characters/style/arena.css"]
+        "files_affected": [
+          "playground/characters/script/modules/ui.js",
+          "playground/characters/script/modules/llm-engine.js",
+          "playground/characters/style/arena.css"
+        ]
       },
       {
         "id": "status-tag-meter-feedback",
@@ -5308,7 +5617,9 @@
         "completed": "2026-05-14",
         "description": "Bot responses containing [TENSION X%], [INTIMACY X%], [DANGER X%] tags directly update the codex meter DOM in real time, closing the feedback loop between LLM output and UI state.",
         "notes": "Done in f5653e0. _applyStatusTags(text) parses tags with regex, calls _setMeterDOM(t,i,d). Called in triggerBotResponse onDone before updateCodexDigest(). _setMeterDOM updates both the range input value and the .codex-meter__val span text.",
-        "files_affected": ["playground/characters/script/modules/ui.js"]
+        "files_affected": [
+          "playground/characters/script/modules/ui.js"
+        ]
       },
       {
         "id": "llm-scored-meters",
@@ -5318,7 +5629,9 @@
         "completed": "2026-05-14",
         "description": "Hybrid meter scoring system: keyword heuristic runs immediately after each turn for instant feedback; a background fetchCompletion call every 3 turns returns {tension,intimacy,danger} JSON and overwrites the keyword estimate. Result cached in sessionStorage per history length.",
         "notes": "Done in f5653e0. _keywordMeterScore(history) — expanded keyword arrays return {t,i,d}. _llmScoreMeters() — async, sessionStorage cache key = 'underdark_meters_' + history.length. updateCodexMeters() rebuilt as hybrid: applies keyword immediately, schedules LLM call via setTimeout(0) every 3 turns. _lastMeterScoredAt tracks last scored turn count.",
-        "files_affected": ["playground/characters/script/modules/ui.js"]
+        "files_affected": [
+          "playground/characters/script/modules/ui.js"
+        ]
       },
       {
         "id": "enriched-group-cue-card",
@@ -5328,7 +5641,10 @@
         "completed": "2026-05-14",
         "description": "The per-character turn anchor in group mode now includes the last spoken line from every other character and a live meter state string, giving the LLM full situational context at write time.",
         "notes": "Done in f5653e0. buildPayload in llm-engine.js: otherLastLines built by scanning history for other character messages. meterStr built from ctx.meters (read from DOM by triggerBotResponse). groupAnchor expanded: YOUR TURN header + Last lines in scene + Scene state + Write ONLY directive.",
-        "files_affected": ["playground/characters/script/modules/llm-engine.js", "playground/characters/script/modules/ui.js"]
+        "files_affected": [
+          "playground/characters/script/modules/llm-engine.js",
+          "playground/characters/script/modules/ui.js"
+        ]
       },
       {
         "id": "narrative-tone-dm-threads",
@@ -5338,7 +5654,11 @@
         "completed": "2026-05-14",
         "description": "Narrative tone fields (sexual energy, tone tags, amplify, avoid, pacing) moved from Group-only tab to Generation tab so DM threads can configure tone. llm-engine.js injects a [NARRATIVE TONE DIRECTIVE] system message for DM threads when any tone field is set.",
         "notes": "Done in f5653e0. index.html: ts-narrative-section moved from #ts-panel-group to #ts-panel-generation (always visible). llm-engine.js: after group block, DM branch injects tone system message if config._threadConfig.narrativeTone has any fields set. ui.js thread setup: tone collected once into tc.narrativeTone before group check; gc.narrativeTone mirrored from tc.",
-        "files_affected": ["playground/characters/index.html", "playground/characters/script/modules/llm-engine.js", "playground/characters/script/modules/ui.js"]
+        "files_affected": [
+          "playground/characters/index.html",
+          "playground/characters/script/modules/llm-engine.js",
+          "playground/characters/script/modules/ui.js"
+        ]
       },
       {
         "id": "continuity-prefix",
@@ -5348,7 +5668,10 @@
         "completed": "2026-05-14",
         "description": "All new continuity (reality) names must be auto-prefixed with '♾️ - ' when created. Existing names not yet changed.",
         "notes": "Done in 4c4df09. Auto-prefix applied in new-reality-create handler in ui.js (const CONT_PREFIX = '♾️ - '). Existing realities in localStorage are not retroactively renamed by design.",
-        "files_affected": ["playground/characters/script/modules/ui.js", "playground/characters/index.html"]
+        "files_affected": [
+          "playground/characters/script/modules/ui.js",
+          "playground/characters/index.html"
+        ]
       },
       {
         "id": "no-delete-continuity",
@@ -5358,7 +5681,10 @@
         "completed": "2026-05-14",
         "description": "The delete button for realities/continuities must be removed or permanently disabled. Trap wants continuities to be permanent.",
         "notes": "Done in 4c4df09. Verified: deleteReality() is imported in ui.js but no UI button wires to it. The reality editor modal has no delete action. deleteReality() remains in state.js for potential future internal use only.",
-        "files_affected": ["playground/characters/index.html", "playground/characters/script/modules/ui.js"]
+        "files_affected": [
+          "playground/characters/index.html",
+          "playground/characters/script/modules/ui.js"
+        ]
       },
       {
         "id": "no-delete-thread",
@@ -5368,7 +5694,9 @@
         "completed": "2026-05-14",
         "description": "The delete button for chat threads must be removed or disabled. Threads are permanent records.",
         "notes": "Done in 4c4df09. renderChats() context menu now only calls promptModal + renameChat (rename-only). No trash button rendered. deleteChat() remains in state.js unused by UI.",
-        "files_affected": ["playground/characters/script/modules/ui.js"]
+        "files_affected": [
+          "playground/characters/script/modules/ui.js"
+        ]
       },
       {
         "id": "sidebar-single-new-button",
@@ -5378,7 +5706,9 @@
         "completed": "2026-05-14",
         "description": "The left sidebar shows both 'New Thread' and 'New DM' buttons. Keep only one.",
         "notes": "Done — pre-existing state. Audit confirmed only one button (#chat-new-dm) exists in index.html and it already reads 'New Thread'. No duplicate button was present.",
-        "files_affected": ["playground/characters/index.html"]
+        "files_affected": [
+          "playground/characters/index.html"
+        ]
       },
       {
         "id": "group-emoji-avatar",
@@ -5388,7 +5718,11 @@
         "completed": "2026-05-14",
         "description": "When creating a group chat, show an emoji picker popup so the user can select an emoji as the group's icon/avatar. The chosen emoji is stored on the chat object and displayed as the group's avatar in the chat list.",
         "notes": "Done in 4c4df09. GROUP_EMOJIS array (55 emojis) + _initGroupEmojiPicker() IIFE. Hidden input #ts-group-icon + preview button #ts-group-icon-preview + popup #ts-group-icon-picker. CSS: .emoji-picker-popup, .ts-group-icon-btn. Renders as group avatar in renderChats().",
-        "files_affected": ["playground/characters/index.html", "playground/characters/script/modules/ui.js", "playground/characters/style/char-editor.css"]
+        "files_affected": [
+          "playground/characters/index.html",
+          "playground/characters/script/modules/ui.js",
+          "playground/characters/style/char-editor.css"
+        ]
       },
       {
         "id": "character-emoji-avatar-fallback",
@@ -5398,7 +5732,9 @@
         "completed": "2026-05-14",
         "description": "Characters that have no avatar_path or avatar field should display an appropriate emoji placeholder instead of a broken image or generic default.",
         "notes": "Done in 4c4df09. _CHAR_EMOJI_MAP regex lookup table (21 entries: vampire→🧛, dragon→🐉, elf→🧝, etc.) + _charEmoji(charMeta) derives emoji from tags/species/name. buildAvatarHtml() extended with charMeta param. Falls back to 👤 if no match.",
-        "files_affected": ["playground/characters/script/modules/ui.js"]
+        "files_affected": [
+          "playground/characters/script/modules/ui.js"
+        ]
       },
       {
         "id": "snapshot-progress-bar",
@@ -5408,7 +5744,10 @@
         "completed": "2026-05-14",
         "description": "When a snapshot/image is being generated, inject a placeholder message with an animated progress bar into the thread immediately. Replace it with the final image when generation completes.",
         "notes": "Done in 4c4df09. _injectImagePlaceholder() creates .message--image-loading with .img-loading-block (animated translateX bar). _doSnapshot() injects placeholder first, then on success calls replaceChild → _injectImageMessageInto($real, ...). On error, placeholder is removed. CSS: .img-loading-block with @keyframes imgBarSlide.",
-        "files_affected": ["playground/characters/script/modules/ui.js", "playground/characters/style/char-editor.css"]
+        "files_affected": [
+          "playground/characters/script/modules/ui.js",
+          "playground/characters/style/char-editor.css"
+        ]
       },
       {
         "id": "image-redo-style-picker",
@@ -5418,7 +5757,11 @@
         "completed": "2026-05-14",
         "description": "Add a 'redo' button to each generated image message. Clicking it opens a 5-question style picker (each question offers 3 choices). Questions cover visual style/mood/format (not character editing): e.g. film type, lighting, composition, palette, texture. Answers modify the next generation's prompt style suffix. This applies to that redo only — not a global setting.",
         "notes": "Done in 4c4df09. _STYLE_QUESTIONS (5 q × 3 opts, predetermined). _showStylePicker() loops through them via showPickerModal. Redo button in _injectImageMessageInto overlay calls _showStylePicker() then _doSnapshot(modifiers). Each mod is a prompt suffix string (e.g. 'polaroid film grain, vintage photograph, faded colours, light leak').",
-        "files_affected": ["playground/characters/script/modules/ui.js", "playground/characters/index.html", "playground/characters/style/char-editor.css"]
+        "files_affected": [
+          "playground/characters/script/modules/ui.js",
+          "playground/characters/index.html",
+          "playground/characters/style/char-editor.css"
+        ]
       },
       {
         "id": "scenario-recommendation-engine",
@@ -5428,7 +5771,11 @@
         "completed": "2026-05-14",
         "description": "Add a 'Find my scenario' option near the scenario preset selector. It runs a 3-step wizard where each question is generated by the LLM with the previous answer as context. After 3 answers, the LLM recommends 3 existing scenario presets from scenarios.json by ID. User picks one or skips.",
         "notes": "Done in 4c4df09. scenario-index.json created (31 entries, ~80 chars each). _loadScenarioIndex() fetches and caches it. 3-question wizard with AI-generated options per step (context-aware). LLM returns JSON array of 3 IDs. Final showPickerModal shows name+summary. Applies scenario text to #ts-scenario-text. Button: #ts-scenario-recommend.",
-        "files_affected": ["playground/characters/data/scenario-index.json", "playground/characters/script/modules/ui.js", "playground/characters/index.html"]
+        "files_affected": [
+          "playground/characters/data/scenario-index.json",
+          "playground/characters/script/modules/ui.js",
+          "playground/characters/index.html"
+        ]
       },
       {
         "id": "codex-god-panel-expansion",
@@ -5438,7 +5785,10 @@
         "completed": "2026-05-14",
         "description": "Expand the God Controls column in the Scene Codex panel with additional one-click scene directives and admin-level controls. Admin controls might include: force Overlord to re-describe scene, clear/reset scene meters, trigger a group chat recap, skip to next story beat, silence a character for N turns, etc.",
         "notes": "Done in 4c4df09. Inject buttons added: Redirect (data-ri=redirect), Raise Tension (data-ri=tension), Reveal (data-ri=reveal), Vulnerable (data-ri=vulnerability). Admin section: #codex-force-overlord (re-describes scene from last 12 msgs), #codex-recap (3-5 bullet recap from last 30 msgs), #codex-reset-meters (tension→40, intimacy→20, danger→15), #codex-snapshot-now (calls _runQuickSnapshot). CSS: .codex-admin-grid, .codex-admin-btn (amber palette).",
-        "files_affected": ["playground/characters/index.html", "playground/characters/script/modules/ui.js"]
+        "files_affected": [
+          "playground/characters/index.html",
+          "playground/characters/script/modules/ui.js"
+        ]
       },
       {
         "id": "overlord-auto-triggers",
@@ -5448,7 +5798,9 @@
         "completed": "2026-05-14",
         "description": "Overlord should automatically generate and inject a scene-setting block when: (1) a group chat is loaded/opened with no existing Overlord message, (2) the /scene command is run without specifying content, (3) a new group chat is created and characters are loaded. Also applicable to DM chats on first load if a world scenario is set.",
         "notes": "Done in 4c4df09. _autoFireOverlord() fires at end of renderFullHistory() when: isGroup && !hasOverlordBlock && hasHistory && getApiKey(). Uses fetchCompletion with 2-3 paragraph scene-setting prompt using charNames + scenario. addMessage('system', text) + _injectOverlordMessage(text). Silent catch — auto-trigger never breaks chat.",
-        "files_affected": ["playground/characters/script/modules/ui.js"]
+        "files_affected": [
+          "playground/characters/script/modules/ui.js"
+        ]
       },
       {
         "id": "export-import-full-instance",
@@ -5458,7 +5810,13 @@
         "completed": "2026-05-14",
         "description": "A button to export the entire characters/ sub-app state — all characters, chats, realities, lorebooks, settings — as a single JSON/ZIP file that can be imported on any browser or device. API keys excluded.",
         "notes": "Done in this session. storage.js gained idbGetAllEntries() (cursor walk) and idbSetBulk() (bulk tx). state.js: exportFullInstance() dumps realities+characters+socialData+telemetry+all IDB blobs; importFullInstance() overwrites state, bulk-writes IDB, sanitizes, saves. UI: 'Full Backup' section in settings panel with Export All (btn-export-full) and Import All (btn-import-full, red-tinted danger visual). Import triggers confirm() before overwriting. Format: underdark_full_v1 JSON.",
-        "files_affected": ["playground/characters/script/modules/state.js", "playground/characters/script/modules/storage.js", "playground/characters/script/modules/ui.js", "playground/characters/index.html", "playground/characters/style/char-editor.css"]
+        "files_affected": [
+          "playground/characters/script/modules/state.js",
+          "playground/characters/script/modules/storage.js",
+          "playground/characters/script/modules/ui.js",
+          "playground/characters/index.html",
+          "playground/characters/style/char-editor.css"
+        ]
       },
       {
         "id": "auto-save-backup-system",
@@ -5468,7 +5826,11 @@
         "completed": "2026-05-16",
         "description": "Automatic periodic backup system so if browser cache is cleared or a new device is used, the state can be restored.",
         "notes": "Done this session. _autoSaveInstance() fires every N turns (default 20, stored as state.config.autoSaveEvery, 0=off). Calls exportFullInstance(), stores JSON + timestamp in localStorage['underdark_autosave']. Shows 'Auto-saved' toast. Settings: #auto-save-every number input + #btn-download-autosave button. syncConfigUI restores the interval. controls.css?v=3.",
-        "files_affected": ["playground/characters/script/modules/ui.js", "playground/characters/index.html", "playground/characters/style/controls.css"]
+        "files_affected": [
+          "playground/characters/script/modules/ui.js",
+          "playground/characters/index.html",
+          "playground/characters/style/controls.css"
+        ]
       },
       {
         "id": "ctrl-k-command-palette",
@@ -5478,7 +5840,11 @@
         "completed": "2026-05-16",
         "description": "Fuzzy-search overlay over all defined commands, accessible via Ctrl+K / Cmd+K from anywhere in the app.",
         "notes": "Done this session. #cmdpalette HTML overlay with backdrop, search input, UL result list. 24 _CP_COMMANDS array covering all single-key shortcuts plus common actions. Arrow/Enter navigation, Escape/backdrop close. _renderCpList() uses data-cp-orig for original-index dispatch. controls.css?v=3 adds .cmdpalette* styles. Ctrl+K intercepted before inInput guard so it works from textareas too.",
-        "files_affected": ["playground/characters/script/modules/ui.js", "playground/characters/index.html", "playground/characters/style/controls.css"]
+        "files_affected": [
+          "playground/characters/script/modules/ui.js",
+          "playground/characters/index.html",
+          "playground/characters/style/controls.css"
+        ]
       },
       {
         "id": "better-llm-response-formatting",
@@ -5488,7 +5854,10 @@
         "completed": "2026-05-14",
         "description": "Improve the convention for how the app sends prompts to the LLM when requesting suggestions, examples, or generated context (not RP), and how it parses/formats the response for display. Currently ad hoc per feature.",
         "notes": "Done in this session. shared-utils.js gained three parse helpers: parseLLMArray (JSON array with markdown fence stripping + fallback), parseLLMJson (any JSON value), parseLLMLines (newline-delimited with bullet/number/quote stripping). All 7 inline parse patterns across ui.js replaced. All 3 helpers exported and imported in ui.js.",
-        "files_affected": ["playground/characters/script/modules/shared-utils.js", "playground/characters/script/modules/ui.js"]
+        "files_affected": [
+          "playground/characters/script/modules/shared-utils.js",
+          "playground/characters/script/modules/ui.js"
+        ]
       },
       {
         "id": "thread-config-gear",
@@ -5498,7 +5867,12 @@
         "completed": "2026-05-14",
         "description": "No way to view or edit a thread's threadConfig after creation. Header gear icon opens a compact modal with Core (scenario, model, temp, maxOutput, player name/persona, lorebooks) and Tone (full narrativeTone) tabs.",
         "notes": "Done in 2a04432. #btn-thread-config added to arena header (settings-2 icon). Modal #modal-thread-config with Core + Tone tabs. Gear shows accent dot-badge (.arena-action--active) when overrides are set. Saved to chat.threadConfig on Apply. _updateThreadConfigBadge() called in renderAll().",
-        "files_affected": ["playground/characters/index.html", "playground/characters/script/modules/ui.js", "playground/characters/style/arena.css", "playground/characters/style/controls.css"]
+        "files_affected": [
+          "playground/characters/index.html",
+          "playground/characters/script/modules/ui.js",
+          "playground/characters/style/arena.css",
+          "playground/characters/style/controls.css"
+        ]
       },
       {
         "id": "memory-compression-summaries",
@@ -5508,7 +5882,11 @@
         "completed": "2026-05-14",
         "description": "When messages drop past the context horizon, fire a background LLM call to summarise them into a compact digest block shown in the horizon divider.",
         "notes": "Done in 2a04432. summarizeDroppedMessages() added to llm-engine.js — 300-token background call, sessionStorage cache per chatId+horizonMsgId. Patches summary into .context-horizon__summary below the lock divider. arena.css: .context-horizon refactored to flex-column, new .context-horizon__summary/.summary-label/.summary-body styles.",
-        "files_affected": ["playground/characters/script/modules/llm-engine.js", "playground/characters/script/modules/ui.js", "playground/characters/style/arena.css"]
+        "files_affected": [
+          "playground/characters/script/modules/llm-engine.js",
+          "playground/characters/script/modules/ui.js",
+          "playground/characters/style/arena.css"
+        ]
       },
       {
         "id": "codex-meters-module",
@@ -5518,7 +5896,10 @@
         "completed": "2026-05-14",
         "description": "Move meter logic out of ui.js closure into a proper ES module for testability and code organisation.",
         "notes": "Done in 2a04432. codex-meters.js created with initCodexMeters() dependency injection. applyStatusTags, setMeterDOM, keywordMeterScore, llmScoreMeters, updateCodexMeters all moved. ui.js imports module and retains shim functions for backward-compatible call sites.",
-        "files_affected": ["playground/characters/script/modules/codex-meters.js", "playground/characters/script/modules/ui.js"]
+        "files_affected": [
+          "playground/characters/script/modules/codex-meters.js",
+          "playground/characters/script/modules/ui.js"
+        ]
       },
       {
         "id": "taggable-gallery",
@@ -5528,7 +5909,11 @@
         "completed": "2026-05-16",
         "description": "Gallery images had no metadata. Add per-image tag chips (hover overlay), inline tag-add input, tag-remove, and a filter bar that shows all tags across the character's gallery. Non-destructive — adds galleryMeta parallel store alongside flat gallery[].",
         "notes": "Done this session. ensureGalleryStore now also initialises galleryMeta: {}. _getGalleryMeta/_setGalleryMeta helpers. renderGalleryModal(id, tagFilter?) rebuilt: filter bar above grid, tag chip strip on each item, inline input for tag-add, tag remove. gallery-modal.css: .gallery-tag-filter, .gallery-tag-chip + --filter/--item/--add/--input variants.",
-        "files_affected": ["playground/characters/script/modules/ui.js", "playground/characters/style/gallery-modal.css", "playground/characters/script/main.js"]
+        "files_affected": [
+          "playground/characters/script/modules/ui.js",
+          "playground/characters/style/gallery-modal.css",
+          "playground/characters/script/main.js"
+        ]
       },
       {
         "id": "video-gallery",
@@ -5538,7 +5923,12 @@
         "completed": "2026-05-16",
         "description": "Generated videos are injected into the thread via _injectVideoMessage() but not persisted. Add a videoGallery store analogous to gallery[], show in a lightbox player, allow download. Batch F item 2.",
         "notes": "Done this session. videoGallery[] added to ensureGalleryStore. addToVideoGallery(charId, url) helper. vg-inject auto-saves; new vg-save-gallery button saves without injecting. Profile tab: video-strip (last 4 tiles) + btn-video-gallery → openVideoGalleryModal(). #modal-video-gallery with grid view + inline player. gallery-modal.css: .vgallery-*, .video-strip, .video-strip-item.",
-        "files_affected": ["playground/characters/script/modules/ui.js", "playground/characters/index.html", "playground/characters/style/gallery-modal.css", "playground/characters/script/main.js"]
+        "files_affected": [
+          "playground/characters/script/modules/ui.js",
+          "playground/characters/index.html",
+          "playground/characters/style/gallery-modal.css",
+          "playground/characters/script/main.js"
+        ]
       },
       {
         "id": "image-studio-overhaul",
@@ -5548,7 +5938,12 @@
         "completed": "2026-05-16",
         "description": "Image Studio has 7 tabs (Quick/Character/Outfit/Pose/Scene/Style/Model). Overhaul scope: generation history panel. Session-local _studioHistory[] records each successful generation; horizontal thumbnail strip #studio-history-strip renders between gallery strip and preview. Click restores image + prompt. Batch F item 3.",
         "notes": "Done this session. _studioHistory[] (max 20). _renderStudioHistory() called after each gen. #studio-history-wrap + #studio-history-strip HTML added to canvas section. img-studio.css: .studio-history-wrap/.strip/.item/.thumb. Gallery auto-save was already in place from prior session.",
-        "files_affected": ["playground/characters/script/modules/ui.js", "playground/characters/index.html", "playground/characters/style/img-studio.css", "playground/characters/script/main.js"]
+        "files_affected": [
+          "playground/characters/script/modules/ui.js",
+          "playground/characters/index.html",
+          "playground/characters/style/img-studio.css",
+          "playground/characters/script/main.js"
+        ]
       },
       {
         "id": "echoes-nsfw-support",
@@ -5558,7 +5953,12 @@
         "completed": "2026-05-17",
         "description": "metadata.nsfw boolean on detention.json artifacts. Frosted glass veil (backdrop-filter blur+saturate+brightness) with 'SENSITIVE' ribbon and click-to-reveal. Opacity+scale dissolve animation on reveal. 4th filter button 'nsfw' shows NSFW artifacts without veils; other filters keep veils intact. 4 DEE7A4 artifacts marked nsfw. Standalone toggle removed — replaced by filter button.",
         "notes": "Done across commits 1bd7040 and prior. Veil unwrap uses opacity+scale (not clip-path — clipped by overflow:hidden). NSFW filter sets nsfwUnlocked=true so makeCard() skips veil injection.",
-        "files_affected": ["art/assets/script/app.js", "art/assets/style/style.css", "art/index.html", "art/assets/data/detention.json"]
+        "files_affected": [
+          "art/assets/script/app.js",
+          "art/assets/style/style.css",
+          "art/index.html",
+          "art/assets/data/detention.json"
+        ]
       },
       {
         "id": "echoes-grid-stability",
@@ -5568,7 +5968,10 @@
         "completed": "2026-05-17",
         "description": "Replaced CSS columns with CSS grid + fixed grid-auto-rows. Orientation probed via Image() before DOM insertion. _gridColCursor tracks column position across batches. Landscape cards cap at span 2 max; promoted to span 3 only when landing in the last 1-col slot of a row (orphan prevention). Existing cards never reflow on pull.",
         "notes": "Done in commits 1bd7040, c7bf569, 9bd35d1. Landscape threshold > 1.15 (not >=) so squares go portrait.",
-        "files_affected": ["art/assets/script/app.js", "art/assets/style/style.css"]
+        "files_affected": [
+          "art/assets/script/app.js",
+          "art/assets/style/style.css"
+        ]
       },
       {
         "id": "echoes-filter-fix",
@@ -5578,7 +5981,9 @@
         "completed": "2026-05-17",
         "description": "Filter buttons were reading metadata.medium (always empty) instead of a.type. detention.json uses type:'digital' or 'traditional' at the artifact level. Fixed normalization to read a.type at loadData() flatMap.",
         "notes": "Done in 1bd7040. Filter values: all, digital, traditional, nsfw.",
-        "files_affected": ["art/assets/script/app.js"]
+        "files_affected": [
+          "art/assets/script/app.js"
+        ]
       },
       {
         "id": "echoes-flood-pull",
@@ -5588,7 +5993,9 @@
         "completed": "2026-05-17",
         "description": "Holding shift while clicking the gacha pull button triggers executeFloodPull() — loads all remaining unseen artifacts at once under an ABYSS tier divider, no roll animation. Undocumented secret mechanic.",
         "notes": "Done in 1bd7040. executePull checks e.shiftKey before rolling.",
-        "files_affected": ["art/assets/script/app.js"]
+        "files_affected": [
+          "art/assets/script/app.js"
+        ]
       },
       {
         "id": "echoes-multiselect-panel",
@@ -5598,7 +6005,11 @@
         "completed": "2026-05-17",
         "description": "Shift+click any revealed card toggles it into a fixed right-side selection panel. Panel shows thumbnail + composite ID per item with per-item remove. Copy button writes all IDs newline-separated to clipboard with 'Copied!' confirm flash. Cards show accent border+glow when selected plus spring-scale pulse on toggle.",
         "notes": "Done in 187213b. Selection state is a Map keyed by _id. Panel slides in from right edge.",
-        "files_affected": ["art/assets/script/app.js", "art/assets/style/style.css", "art/index.html"]
+        "files_affected": [
+          "art/assets/script/app.js",
+          "art/assets/style/style.css",
+          "art/index.html"
+        ]
       },
       {
         "id": "hard-reset-button",
@@ -5608,7 +6019,12 @@
         "completed": "2026-05-14",
         "description": "Subtle ghost icon button (#btn-hard-reset) in reality editor footer. Opens custom three-option inline dialog: Keep Images, Wipe Everything, Cancel. Wipes API keys, localStorage, sessionStorage, IDB (with optional img: key preservation).",
         "notes": "Done this session. HTML: #btn-hard-reset with .re-reset-btn class in reality editor footer. JS handler in ui.js after Danger Zone section — inline DOM-append dialog, not modal system. CSS: .re-reset-btn (opacity 0.35, red hover), .hard-reset-prompt* box (centered, fade-in animation). controls.css?v=2, style.css?v=71.",
-        "files_affected": ["playground/characters/index.html", "playground/characters/script/modules/ui.js", "playground/characters/style/controls.css", "playground/characters/style/style.css"]
+        "files_affected": [
+          "playground/characters/index.html",
+          "playground/characters/script/modules/ui.js",
+          "playground/characters/style/controls.css",
+          "playground/characters/style/style.css"
+        ]
       }
     ]
   },
@@ -5640,16 +6056,46 @@
           "Do NOT duplicate model data in logs.json, underdark data files, or agent configs"
         ],
         "used_by": [
-          { "file": "glass/script/modules/core.js", "how": "Fetches llm.json as part of loadCoreData(); exposes llmData to all other modules" },
-          { "file": "glass/script/modules/llm.js", "how": "Reads _index_matrix.text and routing_table to populate the model selector dropdown grouped by provider; reads default_routing for initial model selection" },
-          { "file": "glass/script/modules/ui.js", "how": "Reads routing_table to render the Uplink Launchpad telemetry; counts cost_tier='Basically Free' models for the sub counter" },
-          { "file": "playground/index.html", "how": "References llm.json indirectly via llm.js module; model dropdown is populated from routing_table" },
-          { "file": "underdark/script/modules/llm-engine.js", "how": "Fetches /glass/data/llm.json directly; uses routing_table keys for model selection in roleplay sessions" },
-          { "file": "underdark/script/modules/codex-meters.js", "how": "Reads scores.intelligence, scores.coding, scores.speed to render LLM capability meter bars in the model info panel" },
-          { "file": "underdark/script/modules/ui.js", "how": "Reads _index_matrix.text and routing_table to populate model selects (main + TC override + persona); groups options by provider" },
-          { "file": "underdark/script/modules/image-engine.js", "how": "References llm.json for model availability checks for multimodal image generation models" },
-          { "file": "underdark/script/modules/commands.js", "how": "Uses routing_table to support /model slash command for switching models mid-session" },
-          { "file": "status/logs/index.html", "how": "Reads llm.json meta to display model family count and default routing in the Architecture > Data Layer section" }
+          {
+            "file": "glass/script/modules/core.js",
+            "how": "Fetches llm.json as part of loadCoreData(); exposes llmData to all other modules"
+          },
+          {
+            "file": "glass/script/modules/llm.js",
+            "how": "Reads _index_matrix.text and routing_table to populate the model selector dropdown grouped by provider; reads default_routing for initial model selection"
+          },
+          {
+            "file": "glass/script/modules/ui.js",
+            "how": "Reads routing_table to render the Uplink Launchpad telemetry; counts cost_tier='Basically Free' models for the sub counter"
+          },
+          {
+            "file": "playground/index.html",
+            "how": "References llm.json indirectly via llm.js module; model dropdown is populated from routing_table"
+          },
+          {
+            "file": "underdark/script/modules/llm-engine.js",
+            "how": "Fetches /glass/data/llm.json directly; uses routing_table keys for model selection in roleplay sessions"
+          },
+          {
+            "file": "underdark/script/modules/codex-meters.js",
+            "how": "Reads scores.intelligence, scores.coding, scores.speed to render LLM capability meter bars in the model info panel"
+          },
+          {
+            "file": "underdark/script/modules/ui.js",
+            "how": "Reads _index_matrix.text and routing_table to populate model selects (main + TC override + persona); groups options by provider"
+          },
+          {
+            "file": "underdark/script/modules/image-engine.js",
+            "how": "References llm.json for model availability checks for multimodal image generation models"
+          },
+          {
+            "file": "underdark/script/modules/commands.js",
+            "how": "Uses routing_table to support /model slash command for switching models mid-session"
+          },
+          {
+            "file": "status/logs/index.html",
+            "how": "Reads llm.json meta to display model family count and default routing in the Architecture > Data Layer section"
+          }
         ]
       },
       "glass/data/config.json": {
@@ -5666,9 +6112,18 @@
           "Do NOT duplicate site metadata (title, tagline, author) in other JSON files"
         ],
         "used_by": [
-          { "file": "glass/script/modules/core.js", "how": "Fetches config.json FIRST (blocking boot step) — CDN shard URLs are required before any other module can load" },
-          { "file": "glass/script/modules/ui.js", "how": "Reads title, tagline, eyebrow, author, year for renderMeta() and renderHeader(); reads socials for renderSocialCluster()" },
-          { "file": "glass/script/modules/llm.js", "how": "Reads api_base, api_token, and system_prompt for the playground chat API calls" }
+          {
+            "file": "glass/script/modules/core.js",
+            "how": "Fetches config.json FIRST (blocking boot step) — CDN shard URLs are required before any other module can load"
+          },
+          {
+            "file": "glass/script/modules/ui.js",
+            "how": "Reads title, tagline, eyebrow, author, year for renderMeta() and renderHeader(); reads socials for renderSocialCluster()"
+          },
+          {
+            "file": "glass/script/modules/llm.js",
+            "how": "Reads api_base, api_token, and system_prompt for the playground chat API calls"
+          }
         ]
       },
       "glass/data/hosting.json": {
@@ -5682,9 +6137,18 @@
           "status must be 'online' or 'offline' — no other values"
         ],
         "used_by": [
-          { "file": "glass/script/modules/core.js", "how": "Fetched in parallel with other data JSONs during boot" },
-          { "file": "glass/script/modules/ui.js", "how": "renderHosting() reads manifest and renders Sovereign Nodes section on home page" },
-          { "file": "status/index.html", "how": "Probes each URL in manifest for uptime monitoring" }
+          {
+            "file": "glass/script/modules/core.js",
+            "how": "Fetched in parallel with other data JSONs during boot"
+          },
+          {
+            "file": "glass/script/modules/ui.js",
+            "how": "renderHosting() reads manifest and renders Sovereign Nodes section on home page"
+          },
+          {
+            "file": "status/index.html",
+            "how": "Probes each URL in manifest for uptime monitoring"
+          }
         ]
       },
       "glass/data/apps.json": {
@@ -5698,9 +6162,18 @@
           "status must be 'live' or 'planned' only"
         ],
         "used_by": [
-          { "file": "glass/script/modules/core.js", "how": "Fetched during boot" },
-          { "file": "glass/script/modules/ui.js", "how": "renderApps() renders the App Uplinks section; renderUplinkLaunchpad() renders the LLM quick-launch strip using apps marked as LLM-type" },
-          { "file": "status/index.html", "how": "App entries with a path are probed for uptime" }
+          {
+            "file": "glass/script/modules/core.js",
+            "how": "Fetched during boot"
+          },
+          {
+            "file": "glass/script/modules/ui.js",
+            "how": "renderApps() renders the App Uplinks section; renderUplinkLaunchpad() renders the LLM quick-launch strip using apps marked as LLM-type"
+          },
+          {
+            "file": "status/index.html",
+            "how": "App entries with a path are probed for uptime"
+          }
         ]
       },
       "glass/data/extlinks.json": {
@@ -5716,8 +6189,14 @@
           "visual_class must be one of: neon-cyan, neon-magenta, neon-green, neon-violet, neon-red"
         ],
         "used_by": [
-          { "file": "glass/script/modules/core.js", "how": "Fetched during boot" },
-          { "file": "glass/script/modules/ui.js", "how": "renderSignalMesh() iterates categories and renders grouped link cards" }
+          {
+            "file": "glass/script/modules/core.js",
+            "how": "Fetched during boot"
+          },
+          {
+            "file": "glass/script/modules/ui.js",
+            "how": "renderSignalMesh() iterates categories and renders grouped link cards"
+          }
         ]
       },
       "glass/data/bots.json": {
@@ -5729,8 +6208,14 @@
           "status must be 'online' or 'offline' only"
         ],
         "used_by": [
-          { "file": "glass/script/modules/core.js", "how": "Fetched during boot" },
-          { "file": "glass/script/modules/ui.js", "how": "renderBots() renders the Drone Fleet section" }
+          {
+            "file": "glass/script/modules/core.js",
+            "how": "Fetched during boot"
+          },
+          {
+            "file": "glass/script/modules/ui.js",
+            "how": "renderBots() renders the Drone Fleet section"
+          }
         ]
       },
       "glass/data/tools.json": {
@@ -5740,8 +6225,14 @@
           "install_cmd is the payload copied to clipboard when the shortcut is typed"
         ],
         "used_by": [
-          { "file": "glass/script/modules/core.js", "how": "Fetched during boot" },
-          { "file": "glass/script/modules/ui.js", "how": "renderTools() renders the Ordnance Depot section; install_cmd registered as copy-type shortcut" }
+          {
+            "file": "glass/script/modules/core.js",
+            "how": "Fetched during boot"
+          },
+          {
+            "file": "glass/script/modules/ui.js",
+            "how": "renderTools() renders the Ordnance Depot section; install_cmd registered as copy-type shortcut"
+          }
         ]
       },
       "glass/style/style.css": {
@@ -5759,13 +6250,34 @@
           "Self-contained apps (art/, radar/) have their own style.css and do NOT import this file"
         ],
         "used_by": [
-          { "file": "index.html", "how": "Linked as the main stylesheet for the hub" },
-          { "file": "playground/index.html", "how": "Base styles; extended by glass/style/modules/neural-uplink.css" },
-          { "file": "status/index.html", "how": "Full hub styles used for the status page" },
-          { "file": "status/logs/index.html", "how": "Full hub styles used as the base for the logs viewer" },
-          { "file": "status/observations/index.html", "how": "Full hub styles used as the base for the observations viewer" },
-          { "file": "underdark/index.html", "how": "Hub base styles loaded; Underdark has its own style layer on top" },
-          { "file": "guide/index.html", "how": "Full hub styles shared with the guide markdown reader" }
+          {
+            "file": "index.html",
+            "how": "Linked as the main stylesheet for the hub"
+          },
+          {
+            "file": "playground/index.html",
+            "how": "Base styles; extended by glass/style/modules/neural-uplink.css"
+          },
+          {
+            "file": "status/index.html",
+            "how": "Full hub styles used for the status page"
+          },
+          {
+            "file": "status/logs/index.html",
+            "how": "Full hub styles used as the base for the logs viewer"
+          },
+          {
+            "file": "status/observations/index.html",
+            "how": "Full hub styles used as the base for the observations viewer"
+          },
+          {
+            "file": "underdark/index.html",
+            "how": "Hub base styles loaded; Underdark has its own style layer on top"
+          },
+          {
+            "file": "guide/index.html",
+            "how": "Full hub styles shared with the guide markdown reader"
+          }
         ]
       },
       "art/assets/data/detention.json": {
@@ -5780,7 +6292,10 @@
           "Do NOT add new artwork to the hub's data files — all gallery content lives here"
         ],
         "used_by": [
-          { "file": "art/assets/script/app.js", "how": "The sole consumer — fetches detention.json, flattens collections, drives the entire gallery experience" }
+          {
+            "file": "art/assets/script/app.js",
+            "how": "The sole consumer — fetches detention.json, flattens collections, drives the entire gallery experience"
+          }
         ]
       },
       "glass/data/statstation.json": {
@@ -5795,8 +6310,14 @@
           "status must be 'live' or 'planned' only"
         ],
         "used_by": [
-          { "file": "glass/script/modules/core.js", "how": "Fetched in parallel with other data JSONs during boot" },
-          { "file": "glass/script/modules/ui.js", "how": "renderStatstation() reads manifest and renders Station section as .station-bar HUD rows" }
+          {
+            "file": "glass/script/modules/core.js",
+            "how": "Fetched in parallel with other data JSONs during boot"
+          },
+          {
+            "file": "glass/script/modules/ui.js",
+            "how": "renderStatstation() reads manifest and renders Station section as .station-bar HUD rows"
+          }
         ]
       },
       "glass/data/trap.json": {
@@ -5811,8 +6332,14 @@
           "status must be 'live' or 'planned' only"
         ],
         "used_by": [
-          { "file": "glass/script/modules/core.js", "how": "Fetched in parallel with other data JSONs during boot" },
-          { "file": "glass/script/modules/ui.js", "how": "renderTrapSection() reads manifest and renders Transmissions section as .tx-card bloom cards" }
+          {
+            "file": "glass/script/modules/core.js",
+            "how": "Fetched in parallel with other data JSONs during boot"
+          },
+          {
+            "file": "glass/script/modules/ui.js",
+            "how": "renderTrapSection() reads manifest and renders Transmissions section as .tx-card bloom cards"
+          }
         ]
       },
       "playground/void/assets/data/void.json": {
@@ -5833,7 +6360,10 @@
           "Do NOT add void entries to any other JSON file"
         ],
         "used_by": [
-          { "file": "playground/void/assets/script/app.js", "how": "The sole consumer — fetches void.json, renders entries via marked.js + DOMPurify, drives the full VOID page experience" }
+          {
+            "file": "playground/void/assets/script/app.js",
+            "how": "The sole consumer — fetches void.json, renders entries via marked.js + DOMPurify, drives the full VOID page experience"
+          }
         ]
       },
       "playground/underdark/data/index.json": {
@@ -5848,7 +6378,10 @@
           "Do NOT reference character IDs in other files unless they exist in this index"
         ],
         "used_by": [
-          { "file": "playground/underdark/script/modules/ui.js", "how": "loadCharacters() fetches index.json to build the character roster; charId in feed posts is resolved against this list" }
+          {
+            "file": "playground/underdark/script/modules/ui.js",
+            "how": "loadCharacters() fetches index.json to build the character roster; charId in feed posts is resolved against this list"
+          }
         ]
       },
       "playground/underdark/data/feed.json": {
@@ -5863,7 +6396,10 @@
           "charId must match an id in playground/underdark/data/index.json"
         ],
         "used_by": [
-          { "file": "playground/underdark/script/modules/ui.js", "how": "loadFeedPosts() fetches feed.json and merges with locally-generated posts for the social feed display" }
+          {
+            "file": "playground/underdark/script/modules/ui.js",
+            "how": "loadFeedPosts() fetches feed.json and merges with locally-generated posts for the social feed display"
+          }
         ]
       },
       "glass/data/llm-agents/": {
@@ -5878,8 +6414,14 @@
           "Do NOT create agent definitions outside this directory"
         ],
         "used_by": [
-          { "file": "glass/script/modules/llm.js", "how": "Loads index.json then each agent file asynchronously; populates the agent roster dropdown" },
-          { "file": "underdark/script/modules/llm-engine.js", "how": "May reference agent configs for Underdark persona initialisation" }
+          {
+            "file": "glass/script/modules/llm.js",
+            "how": "Loads index.json then each agent file asynchronously; populates the agent roster dropdown"
+          },
+          {
+            "file": "underdark/script/modules/llm-engine.js",
+            "how": "May reference agent configs for Underdark persona initialisation"
+          }
         ]
       },
       "status/logs/data/structure-ruleset.md": {
@@ -5901,9 +6443,18 @@
           "Do NOT move this file out of status/logs/data/ — it is co-located with the logs viewer that renders it"
         ],
         "used_by": [
-          { "file": "status/logs/index.html", "how": "Fetched at runtime by buildRuleset() and rendered via the inline markdown renderer in the Ruleset tab" },
-          { "file": "CLAUDE.md", "how": "Implicitly — CLAUDE.md defers to this file on all file structure questions" },
-          { "file": "status/logs/data/logs.json", "how": "Referenced in module_structure and sources_of_truth — LLMs are directed here for structure authority" }
+          {
+            "file": "status/logs/index.html",
+            "how": "Fetched at runtime by buildRuleset() and rendered via the inline markdown renderer in the Ruleset tab"
+          },
+          {
+            "file": "CLAUDE.md",
+            "how": "Implicitly — CLAUDE.md defers to this file on all file structure questions"
+          },
+          {
+            "file": "status/logs/data/logs.json",
+            "how": "Referenced in module_structure and sources_of_truth — LLMs are directed here for structure authority"
+          }
         ]
       },
       "status/logs/data/signal.json": {
@@ -5921,8 +6472,14 @@
           "Do NOT delete entries — mark done/resolved/irrelevant and leave the history intact"
         ],
         "used_by": [
-          { "file": "status/logs/index.html", "how": "Fetched at runtime by buildSignal() and rendered in the Signal tab with distinct teal visual treatment" },
-          { "file": "status/logs/data/logs.json", "how": "Referenced in _protocol.companion_file and files_to_read_before_working.always" }
+          {
+            "file": "status/logs/index.html",
+            "how": "Fetched at runtime by buildSignal() and rendered in the Signal tab with distinct teal visual treatment"
+          },
+          {
+            "file": "status/logs/data/logs.json",
+            "how": "Referenced in _protocol.companion_file and files_to_read_before_working.always"
+          }
         ]
       },
       "status/observations/data/observations.json": {
@@ -5939,7 +6496,10 @@
           "Do NOT embed this data in logs.json — it is a separate domain with its own protocol"
         ],
         "used_by": [
-          { "file": "status/observations/index.html", "how": "Fetched at runtime; drives all tabs: Overview, All Entries, per-category, and Protocol" }
+          {
+            "file": "status/observations/index.html",
+            "how": "Fetched at runtime; drives all tabs: Overview, All Entries, per-category, and Protocol"
+          }
         ]
       }
     }
