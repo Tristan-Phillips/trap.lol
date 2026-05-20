@@ -1,43 +1,13 @@
 {
   "manifest": {
     "0": {
-      "name": "RADAR",
-      "slug": "radar",
-      "path": "/playground/radar/",
-      "icon": "radar",
-      "description": "Torrent scanner and TorBox cache interface. Search, queue and pull direct links",
-      "tags": ["torrent", "media", "torbox"],
+      "name": "Playground",
+      "slug": "playground",
+      "path": "/playground/",
+      "icon": "layout-grid",
+      "description": "Sovereign app hub — Neural Uplink, Underdark, RADAR, Grimoire, and more. Keys stay in your browser.",
+      "tags": ["apps", "llm", "tools"],
       "keyed": true,
-      "status": "live"
-    },
-    "1": {
-      "name": "Neural Uplink",
-      "slug": "neural-uplink",
-      "path": "/playground/neural-uplink/",
-      "icon": "brain-circuit",
-      "description": "Multi-model LLM chat interface. Session management, agent personas, and streaming.",
-      "tags": ["ai", "llm", "chat"],
-      "keyed": true,
-      "status": "live"
-    },
-    "2": {
-      "name": "The Underdark",
-      "slug": "underdark",
-      "path": "/playground/underdark/",
-      "icon": "swords",
-      "description": "Advanced LLM roleplay interface. Cinematic multi-bot layout and Lorebooks.",
-      "tags": ["ai", "llm", "roleplay", "characters"],
-      "keyed": true,
-      "status": "live"
-    },
-    "3": {
-      "name": "Grimoire",
-      "slug": "dndm",
-      "path": "/playground/dndm/",
-      "icon": "swords",
-      "description": "Full Dungeon Master suite. Campaign manager, combat tracker, bestiary, atlas, oracle, and more.",
-      "tags": ["dnd", "tabletop", "campaign", "tools"],
-      "keyed": false,
       "status": "live"
     }
   }

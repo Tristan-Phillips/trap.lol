@@ -45,6 +45,23 @@
   },
   "tasks": [
     {
+      "id": "home-section-consolidation",
+      "title": "index.html: section cleanup, reorder, footer expansion",
+      "status": "done",
+      "requested": "2026-05-21",
+      "closed": "2026-05-21",
+      "closed_by": "trap",
+      "description": "Apps section → single Playground hub card. Transmissions → Signal (VOID only). Station section removed, replaced by footer links: Status, Logs, Observations, Archive. Render call order in ui.js updated to match DOM order.",
+      "notes": "Committed as pending (hash to be patched). ECHOES removed from trap.json, apps.json reduced to 1 entry (Playground), trap-section relabelled to Signal.",
+      "tags": ["home", "refactor", "structure"],
+      "files_affected": [
+        "index.html",
+        "glass/data/apps.json",
+        "glass/data/trap.json",
+        "glass/script/modules/ui.js"
+      ]
+    },
+    {
       "id": "playground-data-driven-hub",
       "title": "Playground: data-driven app grid + preset credentials panel",
       "status": "done",

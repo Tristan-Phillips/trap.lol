@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.58",
+    "schema_version": "1.5.59",
     "last_updated": "2026-05-21",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -659,6 +659,22 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-21",
+      "message": "refactor(home): consolidate sections, data-driven cleanup, footer nav expansion",
+      "scope": "index.html, glass/",
+      "impact": "medium",
+      "files": [
+        "index.html",
+        "glass/data/apps.json",
+        "glass/data/trap.json",
+        "glass/script/modules/ui.js",
+        "status/logs/data/logs.json",
+        "status/logs/data/signal.json"
+      ],
+      "why": "Home page had duplicated ECHOES (portal + tx-card), 4 sub-app cards that bypass the playground hub, a Station section that duplicated footer links, and Transmissions showing both ECHOES and VOID. Consolidated to: single Playground card, VOID-only Signal section, Station removed with its links absorbed into footer."
+    },
     {
       "hash": "b86c6e3",
       "date": "2026-05-21",
@@ -3450,6 +3466,19 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-21",
+      "agent": "Claude Sonnet 4.6",
+      "type": "refactor",
+      "summary": "Consolidated and cleaned up index.html section structure. Apps section now shows a single Playground hub card instead of 4 individual sub-app cards. Transmissions renamed to Signal and reduced to VOID only (ECHOES removed — it has its own portal). Station section removed, with Status/Logs/Observations added as footer nav links instead. Render order in ui.js updated to match DOM order.",
+      "decisions": [
+        "glass/data/apps.json now holds a single Playground entry — home page routes to the hub, not individual apps.",
+        "glass/data/trap.json reduced to VOID only — ECHOES duplication eliminated.",
+        "renderStatstation() is not called (target DOM element removed) but the function remains for possible future use.",
+        "Footer nav expanded: Status, Logs (/status/logs/), Observations (/status/observations/), Archive — replaces the Station section.",
+        "Section order: ECHOES → Playground → Signal → Drone Fleet → Sovereign Nodes → Ordnance Depot."
+      ]
+    },
     {
       "date": "2026-05-21",
       "agent": "Claude Sonnet 4.6",

@@ -8,14 +8,13 @@ export function renderUI() {
   renderMeta();
   renderHeader();
   renderFooter();
+  renderApps();
+  renderTrapSection();
+  renderBots();
   renderHosting();
   renderTools();
-  renderBots();
   renderSignalMesh();
   renderCodex();
-  renderApps();
-  renderStatstation();
-  renderTrapSection();
   renderUplinkLaunchpad();
   renderSocialStrip();
 
