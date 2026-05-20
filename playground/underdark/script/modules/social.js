@@ -53,7 +53,25 @@ export function initSocial(ctx, {
         openComposeModal(charId);
     });
 
+    function mergeLocalPostsFromDisk() {
+        try {
+            const raw = localStorage.getItem('underdark_v4');
+            if (!raw) return;
+            const disk = JSON.parse(raw);
+            const diskPosts = disk?.socialData?.localPosts || {};
+            if (!state.socialData) state.socialData = {};
+            if (!state.socialData.localPosts) state.socialData.localPosts = {};
+            Object.entries(diskPosts).forEach(([cid, arr]) => {
+                if (!Array.isArray(arr)) return;
+                if (!state.socialData.localPosts[cid]) state.socialData.localPosts[cid] = [];
+                const existing = new Set(state.socialData.localPosts[cid].map(p => p.id));
+                arr.forEach(p => { if (p.id && !existing.has(p.id)) state.socialData.localPosts[cid].push(p); });
+            });
+        } catch { /* non-critical */ }
+    }
+
     function renderSocialSidebar() {
+        mergeLocalPostsFromDisk();
         const $list = qs('#social-char-list');
         if (!$list) return;
 
@@ -191,6 +209,7 @@ export function initSocial(ctx, {
 
     async function renderSocialFeed(id) {
         if (!$feedList) return;
+        mergeLocalPostsFromDisk();
         const char = state.loadedCharacters[id];
         const meta = state.characters.find(c => c.id === id);
         const charName = char?.name || meta?.name || 'Unknown';
