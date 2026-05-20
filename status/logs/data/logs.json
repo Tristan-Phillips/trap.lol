@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.41",
+    "schema_version": "1.5.42",
     "last_updated": "2026-05-20",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -659,6 +659,17 @@
     ]
   },
   "commits": [
+    {
+      "hash": "1ef78f9",
+      "date": "2026-05-20",
+      "message": "fix(wallhaven): create loadedCharacters entry if missing on assign",
+      "scope": "playground/wallhaven/",
+      "impact": "high",
+      "files": [
+        "playground/wallhaven/script/app.js"
+      ],
+      "why": "Characters in the roster that had never been opened in an underdark session had no loadedCharacters[id] entry; addToCharacterGalleryInApp silently returned on the null guard, so assigned wallpapers were never persisted and never appeared in the gallery page."
+    },
     {
       "hash": "1b943e3",
       "date": "2026-05-20",
@@ -3231,12 +3242,26 @@
     {
       "date": "2026-05-20",
       "agent": "Claude Sonnet 4.6",
+      "type": "bug_fix",
+      "summary": "Fixed wallhaven-assigned images not appearing in the gallery page. Root cause: addToCharacterGalleryInApp had a silent return guard when loadedCharacters[charId] was missing — characters that had never been opened in an underdark session have no loadedCharacters entry, so the assign write was dropped silently. Fixed by creating the entry if absent before pushing the URL. Also corrected the assign UI gate — was checking nano_gpt_key (LLM API key, wrong) instead of whether underdark characters actually exist.",
+      "decisions": [
+        "addToCharacterGalleryInApp in wallhaven/script/app.js now creates data.loadedCharacters[charId] = {} if the entry does not exist, rather than returning early — this ensures any character in the roster can receive wallhaven assignments regardless of whether they've been loaded in underdark.",
+        "Assign UI (Assigned tab, assign controls in lightbox) is gated on hasUnderdarkChars() — checks underdark_chars_v4.characters.length > 0, not on nano_gpt_key which is the LLM API key and unrelated to character ownership.",
+        "Gallery read path (getCharData in gallery/script/app.js) was already correct — uses loaded[id] || {} fallback — so no changes needed there."
+      ],
+      "rules_reinforced": [
+        "The assign data path writes to underdark_chars_v4 → loadedCharacters[id].extensions.underdark.gallery[]. When writing to loadedCharacters[id], always create the entry if it is missing — never assume it exists just because the character is in data.characters[]."
+      ]
+    },
+    {
+      "date": "2026-05-20",
+      "agent": "Claude Sonnet 4.6",
       "type": "feature_development",
       "summary": "Extracted the wallhaven gallery from playground/underdark/index.html into a fully standalone portal at playground/wallhaven/. The new page has its own index.html, script/app.js, and style/style.css — adapted from wallhaven.js and wallhaven.css with all underdark DOM dependencies removed. Assign-to-character flow is preserved verbatim (writes to underdark_chars_v4 → loadedCharacters[id].extensions.underdark.gallery), so wallhaven assignments automatically appear in the gallery page. From underdark, the overflow menu 'Wallhaven Gallery' item now opens the standalone portal as a link with ?q=charname&charId=x URL params; the character profile 'Wallhaven' button does the same. The wh-arena, wh-lightbox, and wallhaven.js script tag have been removed from underdark's index.html.",
       "decisions": [
         "Standalone wallhaven portal lives at /playground/wallhaven/ as a fully self-contained app (own HTML/CSS/JS) — no underdark DOM dependency.",
         "Assign-to-gallery data path (underdark_chars_v4 → loadedCharacters[id].extensions.underdark.gallery) is preserved verbatim in wallhaven/script/app.js so assigned wallpapers appear in the gallery page automatically.",
-        "Assign UI (character select + assign button in lightbox) is gated behind nano_gpt_key localStorage presence — if no key, the Assigned tab and assign controls are hidden.",
+        "Assign UI (character select + assign button in lightbox) is gated behind hasUnderdarkChars() — checks underdark_chars_v4.characters.length > 0. Originally mistakenly gated on nano_gpt_key; corrected in follow-up session.",
         "URL params ?q=charname&charId=x pre-fill search and pre-select the character in the assign select — underdark passes these when opening the portal.",
         "underdark's wh-arena block replaced with a single hidden stub div; wh-lightbox block removed; wallhaven.js script tag removed — ~12k chars cleaved from underdark's HTML.",
         "Overflow menu 'Wallhaven Gallery' item is now an <a> link (not a button with data-overflow-for), updated dynamically with the active character's params when the overflow menu opens.",
