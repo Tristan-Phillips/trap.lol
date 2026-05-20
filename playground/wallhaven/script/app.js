@@ -14,8 +14,16 @@ const _urlParams  = new URLSearchParams(location.search);
 const _bootQuery  = _urlParams.get('q')      || '';
 const _bootCharId = _urlParams.get('charId') || null;
 
-// Gate: show assign UI only when a nano_gpt_key is present
-const HAS_CHARS = !!localStorage.getItem('nano_gpt_key');
+// Gate: show assign UI only when underdark characters exist
+function hasUnderdarkChars(){
+  try {
+    const raw = localStorage.getItem('underdark_chars_v4');
+    if (!raw) return false;
+    const data = JSON.parse(raw);
+    return Array.isArray(data.characters) && data.characters.length > 0;
+  } catch { return false; }
+}
+const HAS_CHARS = hasUnderdarkChars();
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // STATE
@@ -609,8 +617,10 @@ function assignToChar(w, charId){
 function addToCharacterGalleryInApp(charId, url, thumb, wallId){
   try {
     const raw=localStorage.getItem('underdark_chars_v4'); if(!raw)return;
-    const data=JSON.parse(raw); if(!data||!data.loadedCharacters)return;
-    const char=data.loadedCharacters[String(charId)]; if(!char)return;
+    const data=JSON.parse(raw); if(!data)return;
+    if(!data.loadedCharacters) data.loadedCharacters={};
+    if(!data.loadedCharacters[String(charId)]) data.loadedCharacters[String(charId)]={};
+    const char=data.loadedCharacters[String(charId)];
     if(!char.extensions)               char.extensions={};
     if(!char.extensions.underdark)     char.extensions.underdark={};
     if(!char.extensions.underdark.gallery) char.extensions.underdark.gallery=[];
