@@ -169,34 +169,37 @@ function renderBots() {
   const $container = document.getElementById("bots-container");
   if (!$container || !botsData?.manifest) return;
 
-  // Remove any stale tooltip nodes from a previous render
   document.querySelectorAll('[id^="bot-tip-"]').forEach(el => el.remove());
 
   try {
     $container.innerHTML = Object.values(botsData.manifest).map(bot => {
       if (bot.shortcut && bot.chat_url) globalRouter.set(bot.shortcut.toLowerCase(), { type: 'link', payload: bot.chat_url });
-      
+
       const botId = esc(bot.name.toLowerCase().replace(/\s+/g, '-'));
       const tipId = `bot-tip-${botId}`;
+      const isOnline = (bot.status || "online") === "online";
 
       const $tip = document.createElement('div');
       $tip.className = 'agent-tooltip';
       $tip.id = tipId;
       $tip.setAttribute('role', 'tooltip');
-      $tip.innerHTML = `<span class="agent-id">ID: ${esc(bot.name.toUpperCase())} ${bot.shortcut ? `[${esc(bot.shortcut)}]` : ""}</span><p>${esc(bot.description)}</p>`;
+      $tip.innerHTML = `<span class="agent-id">ID: ${esc(bot.name.toUpperCase())}${bot.shortcut ? ` [${esc(bot.shortcut)}]` : ""}</span><p>${esc(bot.description)}</p>`;
       document.body.appendChild($tip);
 
+      const kbd = bot.shortcut ? `<kbd class="drone-row__kbd">${esc(bot.shortcut)}</kbd>` : "";
+      const chatBtn = bot.chat_url
+        ? `<a href="${esc(bot.chat_url)}" target="_blank" rel="noopener" class="drone-row__btn drone-row__btn--chat" aria-label="Message ${esc(bot.name)}"><i data-lucide="message-circle"></i></a>`
+        : "";
+      const codeBtn = `<a href="${esc(bot.repo_url)}" target="_blank" rel="noopener" class="drone-row__btn drone-row__btn--code" aria-label="View ${esc(bot.name)} source"><i data-lucide="git-branch"></i></a>`;
+
       return `
-        <div class="bot-profile" data-tip-id="${tipId}">
-          <div class="bot-avatar" role="img" aria-label="${esc(bot.name)}" aria-describedby="${tipId}">
-            <i data-lucide="${esc(bot.icon)}"></i>
-            <div class="bot-status ${esc(bot.status)}"></div>
-          </div>
-          <span class="bot-name">${esc(bot.name)}</span>
-          <div class="bot-actions">
-            ${bot.chat_url ? `<a href="${esc(bot.chat_url)}" target="_blank" rel="noopener" class="bot-btn bot-btn--chat" aria-label="Message ${esc(bot.name)} on Telegram"><i data-lucide="message-circle"></i></a>` : ""}
-            <a href="${esc(bot.repo_url)}" target="_blank" rel="noopener" class="bot-btn bot-btn--code" aria-label="View ${esc(bot.name)} source code"><i data-lucide="git-branch"></i></a>
-          </div>
+        <div class="drone-row" data-tip-id="${tipId}" aria-describedby="${tipId}">
+          <span class="drone-row__status${isOnline ? "" : " offline"}" aria-label="${isOnline ? "online" : "offline"}"></span>
+          <i data-lucide="${esc(bot.icon)}" class="drone-row__icon" aria-hidden="true"></i>
+          <span class="drone-row__name">${esc(bot.name)}</span>
+          <span class="drone-row__desc">${esc(bot.description)}</span>
+          ${kbd}
+          <div class="drone-row__actions">${chatBtn}${codeBtn}</div>
         </div>`;
     }).join("");
   } catch (e) {
@@ -324,28 +327,26 @@ function renderApps() {
 
   try {
     $grid.innerHTML = Object.values(appsData.manifest).map(app => {
-      const status = app.status || "planned";
-      const isLive = status === "live";
-      const tags = (app.tags ?? []).map(t => `<span class="app-card__tag">${esc(t)}</span>`).join("");
-      const keyBadge = app.keyed
-        ? `<span class="app-card__keyed" title="Requires API key"><i data-lucide="key-round"></i> Key</span>`
-        : `<span class="app-card__keyed app-card__keyed--free" title="Free"><i data-lucide="unlock"></i> Free</span>`;
+      const isLive = (app.status || "planned") === "live";
+      const tags = (app.tags ?? []).map(t => `<span class="pg-feature__tag">${esc(t)}</span>`).join("");
 
       return `
-        <a href="${isLive ? esc(app.path) : "#"}" class="app-card app-card--${status}" ${!isLive ? 'aria-disabled="true" tabindex="0"' : ""}>
-          <div class="app-card__header">
-            <i data-lucide="${esc(app.icon)}" class="app-card__icon"></i>
-            <span class="app-card__name">${esc(app.name)}</span>
-            <span class="app-card__status app-card__status--${status}">${status.toUpperCase()}</span>
+        <a href="${isLive ? esc(app.path) : "#"}" class="pg-feature${isLive ? "" : ' pg-feature--disabled'}" ${!isLive ? 'aria-disabled="true"' : ""}>
+          <div class="pg-feature__left">
+            <div class="pg-feature__icon-wrap" aria-hidden="true">
+              <i data-lucide="${esc(app.icon)}" class="pg-feature__icon"></i>
+            </div>
+            <div class="pg-feature__body">
+              <div class="pg-feature__name">${esc(app.name)}</div>
+              <div class="pg-feature__desc">${esc(app.description)}</div>
+              <div class="pg-feature__tags">${tags}</div>
+            </div>
           </div>
-          <p class="app-card__desc">${esc(app.description)}</p>
-          <div class="app-card__footer"><div class="app-card__tags">${tags}</div>${keyBadge}</div>
+          <div class="pg-feature__right" aria-hidden="true">
+            <span class="pg-feature__enter">enter <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>
+          </div>
         </a>`;
     }).join("");
-
-    $grid.addEventListener("click", (e) => {
-      if (e.target.closest(".app-card[aria-disabled='true']")) e.preventDefault();
-    });
   } catch (e) {
     renderError($grid, "Apps offline.");
   }
@@ -394,11 +395,11 @@ function initBotTooltips() {
   };
   const hide = () => document.querySelectorAll('.agent-tooltip--visible').forEach(t => t.classList.remove('agent-tooltip--visible'));
 
-  document.addEventListener('mouseover', e => { const $p = e.target.closest('.bot-profile'); if ($p) show($p); });
-  document.addEventListener('mouseout', e => { if (e.target.closest('.bot-profile') && !e.relatedTarget?.closest('.bot-profile')) hide(); });
+  document.addEventListener('mouseover', e => { const $p = e.target.closest('.drone-row'); if ($p) show($p); });
+  document.addEventListener('mouseout', e => { if (e.target.closest('.drone-row') && !e.relatedTarget?.closest('.drone-row')) hide(); });
   document.addEventListener('click', e => {
-    if (e.target.closest('.bot-btn')) return;
-    const $p = e.target.closest('.bot-profile');
+    if (e.target.closest('.drone-row__btn')) return;
+    const $p = e.target.closest('.drone-row');
     if (!$p) hide(); else show($p);
   });
 }
@@ -625,27 +626,18 @@ function renderTrapSection() {
   if (!$wrap || !trapData?.manifest) return;
 
   try {
-    $wrap.innerHTML = `<div class="tx-grid">${
-      Object.values(trapData.manifest).map(item => {
-        return `
-          <a href="${esc(item.path)}" class="tx-card" aria-label="${esc(item.name)}">
-            <div class="tx-card__bloom" aria-hidden="true"></div>
-            <div class="tx-card__icon-wrap">
-              <i data-lucide="${esc(item.icon)}" class="tx-card__icon"></i>
-            </div>
-            <div class="tx-card__body">
-              <span class="tx-card__name">${esc(item.name)}</span>
-              <span class="tx-card__desc">${esc(item.description)}</span>
-            </div>
-            <div class="tx-card__signal" aria-hidden="true">
-              <div class="tx-card__signal-bar"></div>
-              <div class="tx-card__signal-bar"></div>
-              <div class="tx-card__signal-bar"></div>
-            </div>
-          </a>`;
-      }).join("")
+    $wrap.innerHTML = `<div class="signal-list">${
+      Object.values(trapData.manifest).map(item => `
+        <a href="${esc(item.path)}" class="signal-entry" aria-label="${esc(item.name)}">
+          <span class="signal-entry__dot" aria-hidden="true"></span>
+          <i data-lucide="${esc(item.icon)}" class="signal-entry__icon" aria-hidden="true"></i>
+          <span class="signal-entry__name">${esc(item.name)}</span>
+          <span class="signal-entry__desc">${esc(item.description)}</span>
+          <svg class="signal-entry__arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </a>`
+      ).join("")
     }</div>`;
   } catch (e) {
-    renderError($wrap, "Personal section offline.");
+    renderError($wrap, "Signal offline.");
   }
 }

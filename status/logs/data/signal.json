@@ -45,6 +45,22 @@
   },
   "tasks": [
     {
+      "id": "home-redesign-layout",
+      "title": "index.html: visual redesign post-consolidation — feature card, signal chip, drone rows, infra cluster",
+      "status": "done",
+      "requested": "2026-05-21",
+      "closed": "2026-05-21",
+      "closed_by": "trap",
+      "description": "Playground → full-width .pg-feature card. VOID → quiet .signal-entry inline chip. Drone Fleet → compact .drone-row horizontal bars. Infra sections wrapped in .infra-cluster with labeled subordinate divider.",
+      "notes": "Committed as pending (hash to be patched).",
+      "tags": ["home", "redesign", "ui"],
+      "files_affected": [
+        "index.html",
+        "glass/script/modules/ui.js",
+        "glass/style/modules/components.css"
+      ]
+    },
+    {
       "id": "home-section-consolidation",
       "title": "index.html: section cleanup, reorder, footer expansion",
       "status": "done",

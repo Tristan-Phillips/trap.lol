@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.59",
+    "schema_version": "1.5.60",
     "last_updated": "2026-05-21",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -659,6 +659,21 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-21",
+      "message": "redesign(home): playground feature card, signal entry, drone rows, infra cluster",
+      "scope": "index.html, glass/",
+      "impact": "medium",
+      "files": [
+        "index.html",
+        "glass/script/modules/ui.js",
+        "glass/style/modules/components.css",
+        "status/logs/data/logs.json",
+        "status/logs/data/signal.json"
+      ],
+      "why": "Home page felt sparse and scattered after section consolidation. Playground promoted to a full-width feature card; VOID/Signal demoted to a quiet inline chip; Drone Fleet restyled from circle avatars to compact row bars matching node density; infra sections wrapped in a subordinate cluster block."
+    },
     {
       "hash": "2dde8ba",
       "date": "2026-05-21",
@@ -3466,6 +3481,20 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-21",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Redesigned the home page visual layout after the section consolidation left it sparse. Playground promoted to a full-width .pg-feature card with icon, description, tag chips, and animated enter CTA. VOID demoted from a wide tx-card to a quiet .signal-entry inline chip. Drone Fleet restyled from circle avatars to compact .drone-row horizontal bars (matching station/node density). Infra sections (Fleet, Nodes, Depot) wrapped in an .infra-cluster with a faint labeled divider to visually signal subordinate hierarchy.",
+      "decisions": [
+        "Single Playground card rendered full-width via .pg-feature — a 280px grid card would look abandoned with one item.",
+        ".signal-entry is intentionally minimal — VOID is unlisted for a reason, the chip pattern gives it a quiet presence without featuring it.",
+        "Drone Fleet rows reuse the sweep-scan animation from .station-bar for visual consistency with other infra panels.",
+        ".infra-cluster__divider uses symmetric lines + a center label at 0.45 opacity — subordinate framing, not a strong break.",
+        "Bot tooltips updated to target .drone-row instead of .bot-profile — tooltip system otherwise unchanged.",
+        "Old .bots-grid flex rule commented out — new .bots-grid column layout in the drone-row block takes precedence."
+      ]
+    },
     {
       "date": "2026-05-21",
       "agent": "Claude Sonnet 4.6",
