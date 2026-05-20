@@ -45,6 +45,23 @@
   },
   "tasks": [
     {
+      "id": "home-redesign-pass-2",
+      "title": "index.html: second visual pass — pg-feature stats, void restyle, infra avatar chips, footer trim",
+      "status": "done",
+      "requested": "2026-05-21",
+      "closed": "2026-05-21",
+      "closed_by": "trap",
+      "description": "Playground card gets '4 apps' count badge + named app pills (Neural Uplink · Underdark · RADAR · Grimoire). VOID Signal becomes a ghost amber prose link (opacity 0.32→1, left border thread, VOID label via ::before). Drone Fleet + Sovereign Nodes merged into .infra-chips avatar pill row. Footer trimmed to Status + Archive only.",
+      "notes": "Committed across ed9e130, d83f4f0, e49a752, ccd3313. Multiple layout iterations — pg-feature needed grid layout (not flex) to avoid squish; infra chips needed horizontal pill format (not column) to avoid label collision.",
+      "tags": ["home", "redesign", "ui"],
+      "files_affected": [
+        "index.html",
+        "glass/data/apps.json",
+        "glass/script/modules/ui.js",
+        "glass/style/modules/components.css"
+      ]
+    },
+    {
       "id": "home-redesign-layout",
       "title": "index.html: visual redesign post-consolidation — feature card, signal chip, drone rows, infra cluster",
       "status": "done",
@@ -239,36 +256,36 @@
     {
       "id": "statstation-trap-json-views",
       "title": "Design views for statstation.json and trap.json on home page",
-      "status": "to_consider",
+      "status": "no_longer_relevant",
       "requested": "2026-05-18",
-      "closed": null,
-      "closed_by": null,
+      "closed": "2026-05-21",
+      "closed_by": "llm",
       "description": "From tdo.txt: statstation.json (non-public station services) and trap.json (personal transmissions: art, rants) need section designs on index.html. Currently fetched but not rendered.",
-      "notes": "Design pass needed before implementation.",
+      "notes": "Superseded by 2026-05-21 redesign: Station section removed entirely (links absorbed into footer nav). trap.json reduced to VOID only, rendered as .void-prose ghost link. renderStatstation() not called — target element removed.",
       "tags": ["glass", "home", "ui"],
       "files_affected": ["index.html", "glass/script/modules/ui.js"]
     },
     {
       "id": "social-button-rework",
       "title": "Remove radial hovering social button from index.html, relocate icons subtly",
-      "status": "to_consider",
+      "status": "no_longer_relevant",
       "requested": "2026-05-18",
-      "closed": null,
-      "closed_by": null,
+      "closed": "2026-05-21",
+      "closed_by": "llm",
       "description": "From tdo.txt: the floating radial social button on the home page should be removed. Social icons should be relocated to a more subtle fixed position.",
-      "notes": "UX/design decision — needs trap input on where the icons should land.",
+      "notes": "Resolved in prior session — social strip now renders as a flat icon row in the footer via renderSocialStrip(). Radial button removed.",
       "tags": ["glass", "home", "ui"],
       "files_affected": ["index.html", "glass/style/style.css"]
     },
     {
       "id": "sovereign-nodes-style",
       "title": "Style sovereign nodes more like Drone Fleet (smaller footprint)",
-      "status": "to_consider",
+      "status": "no_longer_relevant",
       "requested": "2026-05-18",
-      "closed": null,
-      "closed_by": null,
+      "closed": "2026-05-21",
+      "closed_by": "llm",
       "description": "From tdo.txt: bot/sovereign node cards on the home page should be styled to match the Drone Fleet section aesthetic with a smaller visual footprint.",
-      "notes": null,
+      "notes": "Superseded — Drone Fleet and Sovereign Nodes merged into a single .infra-chips avatar pill row in the 2026-05-21 redesign. Both sections now share one compact strip.",
       "tags": ["glass", "home", "ui"],
       "files_affected": ["index.html", "glass/script/modules/ui.js", "glass/style/style.css"]
     },
@@ -413,5 +430,54 @@
       "commit": "pending"
     }
   ],
-  "proposals": []
+  "proposals": [
+    {
+      "id": "infra-grid-style",
+      "context": "Drone Fleet and Sovereign Nodes merged — choosing display style for combined grid",
+      "options": [
+        { "summary": "Avatar-chip pill row: horizontal circle+name pills, flex-wrap", "chosen": true },
+        { "summary": "Hex/diamond icon-only grid, name on hover", "chosen": false },
+        { "summary": "Miniature instrument panel: two rows of small square tiles", "chosen": false }
+      ],
+      "why_guess": "Pill row is the most readable at small size and avoids hover-dependency for names.",
+      "session_date": "2026-05-21",
+      "tags": ["home", "infra", "ui"]
+    },
+    {
+      "id": "void-display-style",
+      "context": "VOID entry on home page — choosing aesthetic register for its display",
+      "options": [
+        { "summary": "Inline prose link, barely styled — italic muted text, clickable on hover", "chosen": true },
+        { "summary": "Single dim line with blinking cursor", "chosen": false },
+        { "summary": "Faint horizontal rule with centred text", "chosen": false }
+      ],
+      "why_guess": "Prose link matches VOID's private/unlisted nature — present but not featured.",
+      "session_date": "2026-05-21",
+      "tags": ["home", "void", "ui"]
+    },
+    {
+      "id": "pg-card-stats",
+      "context": "Playground card additional info beyond name and description",
+      "options": [
+        { "summary": "App count badge + named app pills", "chosen": true },
+        { "summary": "Key status indicators from localStorage", "chosen": false },
+        { "summary": "Last active timestamp from localStorage", "chosen": false }
+      ],
+      "why_guess": "Named pills give a concrete preview of what's inside without requiring localStorage reads at render time.",
+      "session_date": "2026-05-21",
+      "tags": ["home", "playground", "ui"]
+    },
+    {
+      "id": "pg-card-width",
+      "context": "Playground card width relative to ECHOES portal",
+      "options": [
+        { "summary": "Full width, shorter height than ECHOES", "chosen": true },
+        { "summary": "Two-thirds width, left-aligned", "chosen": false },
+        { "summary": "Full width, same height as ECHOES", "chosen": false }
+      ],
+      "why_guess": "Full-width secondary banner gives it presence without competing with ECHOES for visual weight.",
+      "session_date": "2026-05-21",
+      "tags": ["home", "playground", "ui"]
+    }
+  ]
 }

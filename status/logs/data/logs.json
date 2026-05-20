@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.62",
+    "schema_version": "1.5.63",
     "last_updated": "2026-05-21",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -181,8 +181,8 @@
       "guides.json": "Sacred Codex (currently commented out in index.html). Array of guide entries: title, description, icon, file (markdown filename), read_time. Logic and data maintained for when the section returns.",
       "llm.json": "LLM routing table and model catalog. Schema v9.1.0-multimodal-matrix. _index_matrix: nested dictionary modality → provider → [api_ids] for UI grouping. _endpoints: modality → nano-gpt API path. routing_table keyed by model ID — each entry: label, provider, modality, cost_tier ('Basically Free'|'Cheap'|'Fair'|'Extreme'), plus modality-specific constraints (max_input for text, resolution for image, dimensions for embedding, max_chars for audio). default_routing sets the boot-time selected model.",
       "statstation.json": "Station section on home page. Manifest of internal trap.lol tools/status pages rendered as HUD scan bars. Each entry: name, slug, path, icon, description, tags[], keyed, status (live|planned).",
-      "trap.json": "Transmissions section on home page. Manifest of personal/creative apps rendered as warm bloom cards (tx-card). Each entry: name, slug, path, icon, description, tags[], keyed, status (live|planned).",
-      "apps.json": "App Uplinks section. Full app manifest across all sub-apps. Each app: name, slug, path, icon, description, tags[], keyed (bool — requires API key), status (live|planned).",
+      "trap.json": "Signal section on home page. VOID only. Rendered as .void-prose — a ghost amber prose link (no icon, no chip, VOID label via ::before pseudo, left amber border thread). Each entry: name, slug, path, icon, description, keyed, status. ECHOES removed (it has its own portal block).",
+      "apps.json": "Playground Banner section on home page. Single-entry manifest — one Playground hub card. Each entry: name, slug, path, icon, description, apps[] (named sub-apps for pill display), tags[], keyed, status (live|planned). The apps[] array drives the pill chips and count badge on the .pg-feature card.",
       "art/assets/data/detention.json": "ECHOES gallery data. Collections of artwork artifacts. Each artifact: compositeId (collectionId::artifactId), src.small, src.original, uploadDate, tags[], type (digital|traditional), metadata (medium, description, verse, mood, chaos, nsfw bool). _meta.baseUrl prepended to all src paths.",
       "playground/void/assets/data/void.json": "VOID personal transmission log entries. Array under 'entries' (or root array). Each entry: id, date, title, body (markdown), tags[]. Rendered via marked.js + DOMPurify. New entries authored via playground/void/new/index.html (local-only authoring tool, not publicly linked). Moved from void/assets/content/ to this location 2026-05-18 (§11 anomaly resolved).",
       "playground/underdark/data/index.json": "Underdark character roster. characters[] array — each entry is a character card (id, name, etc.) plus lorebooks[]. The authoritative list of available RP characters.",
@@ -226,7 +226,7 @@
     "module_structure": {
       "glass/script/main.js": "Entry point. Calls loadCoreData() then renderUI(). DOMContentLoaded guard.",
       "glass/script/modules/core.js": "fetchJSON(), loadScript(), esc(), renderError(), loadCoreData() — fetches config.json then all data JSONs in parallel, loads shards. Exports globalRouter, IS_TOUCH, all data variables.",
-      "glass/script/modules/ui.js": "All render functions: renderMeta, renderHeader, renderFooter, renderHosting, renderTools, renderBots, renderSignalMesh, renderCodex (guarded — guides section commented out), renderApps, renderUplinkLaunchpad, renderSocialCluster. All event handlers: initClipboard, initBotTooltips, initScrollTop, initExtTooltips, initTerminal, initFlipCards. updateCarouselArrows.",
+      "glass/script/modules/ui.js": "All render functions: renderMeta, renderHeader, renderFooter, renderApps (pg-feature banner with count badge + pills), renderTrapSection (.void-prose ghost link), renderInfraGrid (merges hostingData + botsData into .infra-chips pill row), renderTools, renderSignalMesh, renderCodex (guarded — guides section commented out), renderUplinkLaunchpad, renderSocialStrip. Event handlers: initClipboard, initScrollTop, initExtTooltips, initTerminal, initFlipCards. updateCarouselArrows. Note: renderBots() and renderHosting() removed — replaced by renderInfraGrid(). initBotTooltips() removed — infra-chips are direct links.",
       "glass/script/modules/llm.js": "LLM playground orchestrator. Wires up all UI refs, manages state (history, turnCount, tokenCount), handles form submit, agent roster async loading.",
       "glass/script/modules/llm-transport.js": "Shared HTTP transport for all nano-gpt API calls. Exports streamChat (SSE streaming), fetchChat (non-streaming), extractThoughts (<think> tag stripping). No UI, no app logic — pure network layer. The canonical base for any app that calls the LLM API.",
       "glass/script/modules/llm-chat.js": "Message rendering, markdown sanitization (DOMPurify + marked), streaming response handler, clipboard copy for code blocks. Delegates raw HTTP to llm-transport.js.",
@@ -272,16 +272,17 @@
       "title": "trap.lol // uplink",
       "purpose": "The hub. Everything starts here. Renders all sections from JSON data.",
       "sections_in_order": [
-        "Sovereign Nodes (hosting.json)",
-        "Station (statstation.json) — status/logs links rendered as HUD scan bars",
-        "Transmissions (trap.json) — personal/creative apps rendered as bloom cards",
+        "ECHOES portal (static HTML — full-width art portal card)",
+        "Playground banner (apps.json) — full-width .pg-feature card with app count badge + named pills",
+        "Signal / VOID (trap.json) — .void-prose ghost amber link; no section title",
+        "[ infra-cluster divider ] — subordinate framing",
+        "Infra chips (hosting.json + bots.json) — merged .infra-chips avatar pill row; renderInfraGrid()",
+        "Ordnance Depot (tools.json) — sealed/open details accordion",
         "[ Signal Mesh (extlinks.json) — COMMENTED OUT in index.html ]",
-        "Ordnance Depot (tools.json)",
-        "Drone Fleet (bots.json)",
-        "App Uplinks (apps.json)",
         "[ Guides / Sacred Codex (guides.json) — COMMENTED OUT in index.html ]",
         "Uplink Launchpad (LLM quick-launch, llm.json + llm-agents/)",
-        "Social strip (config.json socials)"
+        "Social strip (config.json socials)",
+        "Footer nav: Status + Archive only"
       ],
       "script": "glass/script/main.js (type=module)"
     },
