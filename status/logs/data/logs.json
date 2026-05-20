@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.61",
+    "schema_version": "1.5.62",
     "last_updated": "2026-05-21",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -661,6 +661,21 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-21",
+      "message": "redesign(home): pg-feature stats+pills, void prose link, infra avatar chips, footer trim",
+      "scope": "index.html, glass/",
+      "impact": "medium",
+      "files": [
+        "index.html",
+        "glass/data/apps.json",
+        "glass/script/modules/ui.js",
+        "glass/style/modules/components.css",
+        "status/logs/data/logs.json"
+      ],
+      "why": "Home page visual density and character pass: Playground card gains app count badge + named app pills; VOID becomes a ghost prose link (almost invisible, surprise clickable); Drone Fleet + Sovereign Nodes merge into a single compact avatar-chip row; footer trimmed to Status + Archive only. Year auto-updates via Date().getFullYear()."
+    },
     {
       "hash": "31b814e",
       "date": "2026-05-21",
@@ -3506,6 +3521,24 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-21",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Second visual pass on the home page. Playground banner gains app count badge ('4 apps') and named app pills (Neural Uplink · Underdark · RADAR · Grimoire). VOID Signal entry replaced with a near-invisible ghost prose link — no icon, no dot, no label, opacity 0.28 at rest, underline and opacity lift on hover (surprise clickability). Drone Fleet and Sovereign Nodes merged into a single .infra-chips avatar-circle row — each service is a 48px circle with icon, coloured status dot, and label below. Footer trimmed to Status + Archive only (Forgejo, Payloads, Logs, Observations removed). Year in footer copyright already auto-updates via Date().getFullYear().",
+      "decisions": [
+        "pg-feature app pills use the 'apps' array field in glass/data/apps.json — the playground/data/apps.json app names are the source of truth; glass/data/apps.json duplicates them as a display list.",
+        "VOID prose link has opacity 0.28 at rest — below the threshold where most users notice it as interactive. The hover reveals both opacity 0.6 and an underline. This is intentional ambiguity.",
+        "infra-chips merges both hostingData and botsData into one row — nodes use accent (magenta) palette, bots use cyan. The distinction is colour, not section title.",
+        "renderBots() and renderHosting() removed; replaced by renderInfraGrid() writing to #infra-grid.",
+        "initBotTooltips() removed — infra-chips are direct links, no tooltip needed.",
+        "Footer: only Status (/status/) and Archive (/archive/) remain. Forgejo/Payloads/Logs/Observations considered clutter for the home footer."
+      ],
+      "rules_reinforced": [
+        "Section h2 titles should only exist when the section has ≥3 items or when the items don't self-label. A section with one item needs no title. A section with a merged grid of labelled chips needs no title.",
+        "Interactive elements can be intentionally subtle — the 'almost invisible surprise link' is a valid design pattern for personal/unlisted content."
+      ]
+    },
     {
       "date": "2026-05-21",
       "agent": "Claude Sonnet 4.6",

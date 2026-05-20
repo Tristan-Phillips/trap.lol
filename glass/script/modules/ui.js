@@ -10,8 +10,7 @@ export function renderUI() {
   renderFooter();
   renderApps();
   renderTrapSection();
-  renderBots();
-  renderHosting();
+  renderInfraGrid();
   renderTools();
   renderSignalMesh();
   renderCodex();
@@ -70,40 +69,49 @@ function renderFooter() {
   });
 }
 
-function renderHosting() {
-  const $wrap = document.getElementById("hosting-grid");
-  if (!$wrap || !hostingData?.manifest) return;
+function renderInfraGrid() {
+  const $wrap = document.getElementById("infra-grid");
+  if (!$wrap) return;
 
   try {
-    const tiles = Object.values(hostingData.manifest).map(node => {
-      if (node.shortcut) globalRouter.set(node.shortcut.toLowerCase(), { type: 'link', payload: node.url });
-      const domain = node.url.replace(/^https?:\/\//, '');
-      const isOffline = (node.status || "online") !== "online";
-      const srcBtn = node.source
-        ? `<a href="${esc(node.source)}" target="_blank" rel="noopener" class="node-tile__src" aria-label="View source" tabindex="0"><i data-lucide="git-branch"></i></a>`
-        : "";
-      const kbd = node.shortcut
-        ? `<kbd class="node-tile__kbd">${esc(node.shortcut)}</kbd>`
-        : "";
-      return `
-        <a href="${esc(node.url)}" target="_blank" rel="noopener"
-           class="node-tile"
-           aria-label="${esc(node.name)} — ${esc(node.hosting)}">
-          <span class="node-tile__status${isOffline ? " offline" : ""}" aria-hidden="true"></span>
-          <i data-lucide="${esc(node.icon)}" class="node-tile__icon" aria-hidden="true"></i>
-          <span class="node-tile__name">${esc(node.name)}</span>
-          <span class="node-tile__sw">${esc(node.hosting)}</span>
-          <span class="node-tile__foot">
-            <span class="node-tile__domain">${esc(domain)}</span>
-            ${kbd}
-            ${srcBtn}
-          </span>
-        </a>`;
-    }).join("");
+    const nodeChips = hostingData?.manifest
+      ? Object.values(hostingData.manifest).map(node => {
+          if (node.shortcut) globalRouter.set(node.shortcut.toLowerCase(), { type: 'link', payload: node.url });
+          const isOffline = (node.status || "online") !== "online";
+          return `
+            <a href="${esc(node.url)}" target="_blank" rel="noopener"
+               class="infra-chip infra-chip--node"
+               aria-label="${esc(node.name)} — ${esc(node.hosting)}">
+              <span class="infra-chip__ring${isOffline ? " offline" : ""}">
+                <i data-lucide="${esc(node.icon)}" class="infra-chip__icon" aria-hidden="true"></i>
+              </span>
+              <span class="infra-chip__label">${esc(node.name)}</span>
+              <span class="infra-chip__dot${isOffline ? " offline" : ""}" aria-hidden="true"></span>
+            </a>`;
+        }).join("")
+      : "";
 
-    $wrap.innerHTML = `<div class="node-panel">${tiles}</div>`;
+    const botChips = botsData?.manifest
+      ? Object.values(botsData.manifest).map(bot => {
+          if (bot.shortcut && bot.chat_url) globalRouter.set(bot.shortcut.toLowerCase(), { type: 'link', payload: bot.chat_url });
+          const isOnline = (bot.status || "online") === "online";
+          const href = bot.chat_url || bot.repo_url;
+          return `
+            <a href="${esc(href)}" target="_blank" rel="noopener"
+               class="infra-chip infra-chip--bot"
+               aria-label="${esc(bot.name)} — ${esc(bot.description)}">
+              <span class="infra-chip__ring${isOnline ? "" : " offline"}">
+                <i data-lucide="${esc(bot.icon)}" class="infra-chip__icon" aria-hidden="true"></i>
+              </span>
+              <span class="infra-chip__label">${esc(bot.name)}</span>
+              <span class="infra-chip__dot${isOnline ? "" : " offline"}" aria-hidden="true"></span>
+            </a>`;
+        }).join("")
+      : "";
+
+    $wrap.innerHTML = `<div class="infra-chips">${nodeChips}${botChips}</div>`;
   } catch (e) {
-    renderError($wrap, "Hosting nodes offline.");
+    renderError($wrap, "Infrastructure offline.");
   }
 }
 
@@ -165,47 +173,6 @@ function renderTools() {
   }
 }
 
-function renderBots() {
-  const $container = document.getElementById("bots-container");
-  if (!$container || !botsData?.manifest) return;
-
-  document.querySelectorAll('[id^="bot-tip-"]').forEach(el => el.remove());
-
-  try {
-    $container.innerHTML = Object.values(botsData.manifest).map(bot => {
-      if (bot.shortcut && bot.chat_url) globalRouter.set(bot.shortcut.toLowerCase(), { type: 'link', payload: bot.chat_url });
-
-      const botId = esc(bot.name.toLowerCase().replace(/\s+/g, '-'));
-      const tipId = `bot-tip-${botId}`;
-      const isOnline = (bot.status || "online") === "online";
-
-      const $tip = document.createElement('div');
-      $tip.className = 'agent-tooltip';
-      $tip.id = tipId;
-      $tip.setAttribute('role', 'tooltip');
-      $tip.innerHTML = `<span class="agent-id">ID: ${esc(bot.name.toUpperCase())}${bot.shortcut ? ` [${esc(bot.shortcut)}]` : ""}</span><p>${esc(bot.description)}</p>`;
-      document.body.appendChild($tip);
-
-      const kbd = bot.shortcut ? `<kbd class="drone-row__kbd">${esc(bot.shortcut)}</kbd>` : "";
-      const chatBtn = bot.chat_url
-        ? `<a href="${esc(bot.chat_url)}" target="_blank" rel="noopener" class="drone-row__btn drone-row__btn--chat" aria-label="Message ${esc(bot.name)}"><i data-lucide="message-circle"></i></a>`
-        : "";
-      const codeBtn = `<a href="${esc(bot.repo_url)}" target="_blank" rel="noopener" class="drone-row__btn drone-row__btn--code" aria-label="View ${esc(bot.name)} source"><i data-lucide="git-branch"></i></a>`;
-
-      return `
-        <div class="drone-row" data-tip-id="${tipId}" aria-describedby="${tipId}">
-          <span class="drone-row__status${isOnline ? "" : " offline"}" aria-label="${isOnline ? "online" : "offline"}"></span>
-          <i data-lucide="${esc(bot.icon)}" class="drone-row__icon" aria-hidden="true"></i>
-          <span class="drone-row__name">${esc(bot.name)}</span>
-          <span class="drone-row__desc">${esc(bot.description)}</span>
-          ${kbd}
-          <div class="drone-row__actions">${chatBtn}${codeBtn}</div>
-        </div>`;
-    }).join("");
-  } catch (e) {
-    renderError($container, "Drone fleet offline.");
-  }
-}
 
 function renderSignalMesh() {
   const $container = document.getElementById("extlinks-container");
@@ -328,6 +295,9 @@ function renderApps() {
   try {
     $grid.innerHTML = Object.values(appsData.manifest).map(app => {
       const isLive = (app.status || "planned") === "live";
+      const appList = Array.isArray(app.apps) ? app.apps : [];
+      const pills = appList.map(n => `<span class="pg-feature__pill">${esc(n)}</span>`).join("");
+      const countStr = appList.length ? `${appList.length} apps` : "";
 
       return `
         <a href="${isLive ? esc(app.path) : "#"}" class="pg-feature${isLive ? "" : ' pg-feature--disabled'}" ${!isLive ? 'aria-disabled="true"' : ""}>
@@ -335,8 +305,12 @@ function renderApps() {
             <i data-lucide="${esc(app.icon)}" class="pg-feature__icon"></i>
           </div>
           <div class="pg-feature__body">
-            <div class="pg-feature__name">${esc(app.name)}</div>
+            <div class="pg-feature__head">
+              <span class="pg-feature__name">${esc(app.name)}</span>
+              ${countStr ? `<span class="pg-feature__count">${esc(countStr)}</span>` : ""}
+            </div>
             <div class="pg-feature__desc">${esc(app.description)}</div>
+            ${pills ? `<div class="pg-feature__pills" aria-hidden="true">${pills}</div>` : ""}
           </div>
           <div class="pg-feature__right" aria-hidden="true">
             <span class="pg-feature__enter">enter <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>
@@ -349,9 +323,7 @@ function renderApps() {
 }
 
 function initGlobalListeners() {
-  // Tooltips, Clipboard, Scroll-to-top, Carousel, Terminal
   initClipboard();
-  initBotTooltips();
   initScrollTop();
   if (!IS_TOUCH) {
     initExtTooltips();
@@ -379,26 +351,6 @@ function initClipboard() {
   });
 }
 
-function initBotTooltips() {
-  const show = ($p) => {
-    const $tip = document.getElementById($p.dataset.tipId);
-    if (!$tip) return;
-    document.querySelectorAll('.agent-tooltip--visible').forEach(t => t.classList.remove('agent-tooltip--visible'));
-    $tip.classList.add('agent-tooltip--visible');
-    const r = $p.getBoundingClientRect();
-    $tip.style.left = `${Math.max(8, Math.min(r.left + r.width/2 - $tip.offsetWidth/2, window.innerWidth - $tip.offsetWidth - 8))}px`;
-    $tip.style.top = `${r.top - $tip.offsetHeight - 12}px`;
-  };
-  const hide = () => document.querySelectorAll('.agent-tooltip--visible').forEach(t => t.classList.remove('agent-tooltip--visible'));
-
-  document.addEventListener('mouseover', e => { const $p = e.target.closest('.drone-row'); if ($p) show($p); });
-  document.addEventListener('mouseout', e => { if (e.target.closest('.drone-row') && !e.relatedTarget?.closest('.drone-row')) hide(); });
-  document.addEventListener('click', e => {
-    if (e.target.closest('.drone-row__btn')) return;
-    const $p = e.target.closest('.drone-row');
-    if (!$p) hide(); else show($p);
-  });
-}
 
 function initScrollTop() {
   const $btn = document.getElementById("scroll-top");
@@ -622,17 +574,11 @@ function renderTrapSection() {
   if (!$wrap || !trapData?.manifest) return;
 
   try {
-    $wrap.innerHTML = `<div class="signal-list">${
-      Object.values(trapData.manifest).map(item => `
-        <a href="${esc(item.path)}" class="signal-entry" aria-label="${esc(item.name)}">
-          <span class="signal-entry__dot" aria-hidden="true"></span>
-          <i data-lucide="${esc(item.icon)}" class="signal-entry__icon" aria-hidden="true"></i>
-          <span class="signal-entry__name">${esc(item.name)}</span>
-          <span class="signal-entry__desc">${esc(item.description)}</span>
-          <svg class="signal-entry__arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-        </a>`
-      ).join("")
-    }</div>`;
+    $wrap.innerHTML = Object.values(trapData.manifest).map(item => `
+      <a href="${esc(item.path)}" class="void-prose" aria-label="${esc(item.name)} — ${esc(item.description)}">
+        ${esc(item.description)}
+      </a>`
+    ).join("");
   } catch (e) {
     renderError($wrap, "Signal offline.");
   }
