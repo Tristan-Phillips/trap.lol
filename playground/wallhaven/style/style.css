@@ -150,6 +150,28 @@ button { font-family: inherit; }
 }
 .wh-key-status--ok { color: #4ade80; }
 
+/* ── Vault ID ────────────────────────────────────────────────────────────── */
+.wh-vault-wrap {
+  display: flex; align-items: center; gap: 6px;
+}
+.wh-vault-wrap > svg { color: rgba(255,255,255,0.28); flex-shrink: 0; }
+.wh-vault-input {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px; padding: 6px 8px;
+  font-size: 0.63rem; font-family: var(--font-mono); letter-spacing: 0.06em;
+  color: var(--text-pri); width: 148px; outline: none;
+  transition: border-color 0.15s;
+}
+.wh-vault-input:focus { border-color: rgba(var(--accent-rgb), 0.4); }
+.wh-vault-input::placeholder { color: rgba(255,255,255,0.18); }
+.wh-vault-status {
+  font-size: 0.6rem; font-family: var(--font-mono);
+  color: rgba(255,255,255,0.28); white-space: nowrap;
+}
+.wh-vault-status--ok  { color: #4ade80; }
+.wh-vault-status--err { color: #f87171; }
+
 /* ── Body ────────────────────────────────────────────────────────────────── */
 .wh-body { display: flex; flex: 1; min-height: 0; overflow: hidden; }
 

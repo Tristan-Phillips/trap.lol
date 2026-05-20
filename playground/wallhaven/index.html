@@ -49,6 +49,14 @@
       <button id="wh-sidebar-toggle" class="wh-sidebar-toggle" aria-expanded="false" title="Filters">
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
       </button>
+      <!-- Vault ID field (desktop only) -->
+      <div class="wh-vault-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <input type="text" id="wh-vault-input" class="wh-vault-input" placeholder="XXXX-XXXX-XXXX-XXXX" autocomplete="off" spellcheck="false" maxlength="19">
+        <button id="wh-vault-save" class="wh-btn wh-btn--ghost wh-btn--sm">Set</button>
+        <button id="wh-vault-new" class="wh-btn wh-btn--ghost wh-btn--sm" title="Generate a new vault ID">New</button>
+        <span id="wh-vault-status" class="wh-vault-status"></span>
+      </div>
       <!-- API key (desktop only) -->
       <div class="wh-apikey-wrap">
         <input type="password" id="wh-apikey-input" class="wh-apikey-input" placeholder="Wallhaven API key…" autocomplete="off">

@@ -47,6 +47,15 @@ async function resolveUrl(ref) {
 }
 function isDataUrl(str) { return typeof str === 'string' && str.startsWith('data:'); }
 
+// Proxy wallhaven CDN URLs through our backend to bypass hotlink restrictions
+function whProxyUrl(raw) {
+    if (!raw || raw.startsWith('data:') || raw.startsWith('idb:') || raw.startsWith('blob:')) return raw;
+    if (raw.includes('wallhaven.cc') || raw.includes('whvn.cc')) {
+        return `https://wallhaven.trap.lol/img?url=${encodeURIComponent(raw)}`;
+    }
+    return raw;
+}
+
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // HELPERS
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -102,7 +111,7 @@ function getCharData() {
         // wh_char_gallery entries: [{url, thumb}] objects (or legacy strings)
         // Use thumb as the display ref so images always load without auth issues
         const { entries: whEntries, urls: whUrls } = getWhEntries(String(meta.id));
-        const whThumbRefs = whEntries.map(e => e.thumb);
+        const whThumbRefs = whEntries.map(e => whProxyUrl(e.thumb));
         // Deduplicate — only include wh thumbs not already in extGallery
         const merged = [...new Set([...extGallery, ...whThumbRefs.filter(t => !extGallery.includes(t))])];
         return {
@@ -147,7 +156,8 @@ function saveGallery(charId, galleryRefs, galleryMeta) {
     if (!char.extensions.underdark) char.extensions.underdark = {};
     // Exclude wh_char_gallery refs (both full URLs and thumb URLs) so ext.gallery stays underdark-native only
     const { urls: whUrls, entries: whEntries } = getWhEntries(charId);
-    const whThumbs = new Set(whEntries.map(e => e.thumb));
+    // Include both raw and proxied thumb URLs in the exclusion set
+    const whThumbs = new Set(whEntries.flatMap(e => [e.thumb, whProxyUrl(e.thumb)]));
     char.extensions.underdark.gallery     = galleryRefs.filter(r => !whUrls.has(r) && !whThumbs.has(r));
     char.extensions.underdark.galleryMeta = galleryMeta;
     writeStorage(data);
@@ -715,9 +725,11 @@ async function deleteItem(item) {
             const whKey = 'wh_char_gallery';
             let whStore; try { whStore = JSON.parse(localStorage.getItem(whKey) || '{}'); } catch { whStore = {}; }
             if (Array.isArray(whStore[ch.id])) {
-                whStore[ch.id] = whStore[ch.id].filter(e =>
-                    typeof e === 'string' ? e !== item.ref : (e.thumb !== item.ref && e.url !== item.ref)
-                );
+                whStore[ch.id] = whStore[ch.id].filter(e => {
+                    if (typeof e === 'string') return e !== item.ref && whProxyUrl(e) !== item.ref;
+                    const tProxy = whProxyUrl(e.thumb);
+                    return e.thumb !== item.ref && tProxy !== item.ref && e.url !== item.ref;
+                });
                 if (!whStore[ch.id].length) delete whStore[ch.id];
                 localStorage.setItem(whKey, JSON.stringify(whStore));
             }

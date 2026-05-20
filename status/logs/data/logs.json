@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.49",
+    "schema_version": "1.5.50",
     "last_updated": "2026-05-20",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -659,6 +659,26 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-20",
+      "message": "feat(wallhaven-proxy): vault ID system, image proxy, SQLite persistence",
+      "scope": "services/wallhaven-proxy/, playground/wallhaven/",
+      "impact": "high",
+      "files": [
+        "services/wallhaven-proxy/main.go",
+        "services/wallhaven-proxy/go.mod",
+        "services/wallhaven-proxy/go.sum",
+        "services/wallhaven-proxy/Dockerfile",
+        "services/wallhaven-proxy/compose.yaml",
+        "playground/wallhaven/index.html",
+        "playground/wallhaven/script/app.js",
+        "playground/wallhaven/style/style.css",
+        "playground/underdark/gallery/script/app.js",
+        "status/logs/data/logs.json"
+      ],
+      "why": "Expanded wallhaven-proxy from a stateless CORS proxy into a full stateful backend with SQLite persistence (modernc.org/sqlite, CGO_ENABLED=0), Mullvad-style opaque vault IDs (XXXX-XXXX-XXXX-XXXX) for data association without auth, an image proxy endpoint (/img?url=) that bypasses wallhaven hotlink restrictions, and REST vault API (POST/DELETE for assign/like/save, GET for full state). Frontend gains a vault ID field that persists and hydrates state from the backend on load."
+    },
     {
       "hash": "387c4bc",
       "date": "2026-05-20",
@@ -3329,6 +3349,22 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-20",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Full rewrite of services/wallhaven-proxy from a stateless CORS proxy into a stateful backend with SQLite persistence, vault IDs, and image proxying. The proxy now exposes: POST /vault/create (generates XXXX-XXXX-XXXX-XXXX opaque ID), GET /vault/{id}/data (full state), POST+DELETE /vault/{id}/assign, like, save endpoints, and GET /img?url= image proxy. Frontend gains a vault ID input field that validates, persists, and hydrates from the backend on boot. All tile/lightbox/gallery wallhaven image URLs now route through the /img proxy eliminating hotlink 403s in all contexts.",
+      "decisions": [
+        "SQLite via modernc.org/sqlite (pure Go, CGO_ENABLED=0 preserved) — single-file database at /data/wallhaven.db, WAL mode, max 1 open connection.",
+        "Vault IDs are Mullvad-style XXXX-XXXX-XXXX-XXXX (16 random hex chars). No auth beyond knowing the ID — possessing it grants full read/write access to the associated data.",
+        "compose.yaml: removed read_only constraint (DB needs to write), added wallhaven-data volume mounted at /data, bumped memory limit to 128M.",
+        "Dockerfile: switched runtime from scratch to alpine:3.20 (needed for CA certs and TZ data), added unprivileged proxy user.",
+        "Image proxy (/img?url=) sets User-Agent + Referer: wallhaven.cc headers — this bypasses hotlink protection for both thumbnails and full-res images. In-memory 5-min cache (sync.Map) avoids redundant upstream hits.",
+        "Frontend imgProxyUrl() helper wraps all wallhaven CDN URLs in the proxy path. Applied to: tile img src, lightbox initial load, full-res preload, assign log thumbnails. underdark gallery also gains whProxyUrl() for the same purpose.",
+        "Vault sync (syncFromVault) fires at boot if vault ID is set, merges backend state into localStorage — does not block the initial search fetch.",
+        "Vault API calls (vaultPost/vaultDelete) are fire-and-forget — failures are caught and swallowed since localStorage is the source of truth; backend is a persistence layer."
+      ]
+    },
     {
       "date": "2026-05-20",
       "agent": "Claude Sonnet 4.6",

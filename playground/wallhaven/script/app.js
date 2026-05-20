@@ -26,6 +26,11 @@ function hasUnderdarkChars(){
 const HAS_CHARS = hasUnderdarkChars();
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// VAULT CONFIG
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const PROXY_BASE = 'https://wallhaven.trap.lol';
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // STATE
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 (function(){
@@ -36,6 +41,7 @@ const _fp = window.__whFilters__ || {};
 
 const WH = {
   apiKey:       localStorage.getItem('wh_apikey') || '',
+  vaultId:      localStorage.getItem('wh_vault_id') || '',
   query:        _bootQuery,
   cats:         _fp.cats   || { general:true, anime:true, people:true },
   purity:       _fp.purity || { sfw:true, sketchy:false, nsfw:false },
@@ -89,6 +95,10 @@ const apikeyInput    = document.getElementById('wh-apikey-input');
 const apikeyToggle   = document.getElementById('wh-apikey-toggle');
 const apikeySave     = document.getElementById('wh-apikey-save');
 const keyStatus      = document.getElementById('wh-key-status');
+const vaultInput     = document.getElementById('wh-vault-input');
+const vaultSaveBtn   = document.getElementById('wh-vault-save');
+const vaultNewBtn    = document.getElementById('wh-vault-new');
+const vaultStatus    = document.getElementById('wh-vault-status');
 const statusText     = document.getElementById('wh-status-text');
 const resultCount    = document.getElementById('wh-result-count');
 const pageControls   = document.getElementById('wh-page-controls');
@@ -325,6 +335,129 @@ apikeySave.addEventListener('click',()=>{
 });
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// VAULT ID
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function setVaultStatus(msg, ok){
+  vaultStatus.textContent=msg;
+  vaultStatus.className='wh-vault-status'+(ok?' wh-vault-status--ok':ok===false?' wh-vault-status--err':'');
+}
+
+function applyVaultId(id){
+  WH.vaultId=id;
+  vaultInput.value=id;
+  localStorage.setItem('wh_vault_id',id);
+  if(id){ setVaultStatus('Active','ok'); } else { setVaultStatus('',''); }
+}
+
+// Restore saved vault ID on load
+if(WH.vaultId){ vaultInput.value=WH.vaultId; setVaultStatus('Active',true); }
+
+vaultSaveBtn.addEventListener('click',async()=>{
+  const id=vaultInput.value.trim().toUpperCase();
+  if(!id){ applyVaultId(''); showToast('Vault ID cleared.','info'); return; }
+  // Validate format XXXX-XXXX-XXXX-XXXX
+  if(!/^[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}$/.test(id)){
+    setVaultStatus('Invalid format',false); showToast('Expected format: XXXX-XXXX-XXXX-XXXX','warn'); return;
+  }
+  setVaultStatus('Verifying…','');
+  try{
+    const r=await fetch(`${PROXY_BASE}/vault/${id}/data`);
+    if(r.status===404){ setVaultStatus('Not found',false); showToast('Vault ID not found — use "New" to create one.','warn'); return; }
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    applyVaultId(id);
+    showToast('Vault connected!','success');
+    await syncFromVault();
+  }catch(e){ setVaultStatus('Error',false); showToast('Could not reach proxy: '+e.message,'warn'); }
+});
+
+vaultNewBtn.addEventListener('click',async()=>{
+  vaultNewBtn.disabled=true; setVaultStatus('Creating…','');
+  try{
+    const r=await fetch(`${PROXY_BASE}/vault/create`,{method:'POST'});
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const json=await r.json();
+    applyVaultId(json.vault_id);
+    vaultInput.value=json.vault_id;
+    showToast('New vault created! ID saved.','success');
+  }catch(e){ setVaultStatus('Error',false); showToast('Could not create vault: '+e.message,'warn'); }
+  finally{ vaultNewBtn.disabled=false; }
+});
+
+// Format input automatically as user types (XXXX-XXXX-XXXX-XXXX)
+vaultInput.addEventListener('input',()=>{
+  let v=vaultInput.value.replace(/[^0-9A-Fa-f]/g,'').toUpperCase().slice(0,16);
+  const parts=[v.slice(0,4),v.slice(4,8),v.slice(8,12),v.slice(12,16)].filter(Boolean);
+  vaultInput.value=parts.join('-');
+});
+
+// ── Vault API helpers ─────────────────────────────────────────────────────
+async function vaultPost(path, body){
+  if(!WH.vaultId)return;
+  return fetch(`${PROXY_BASE}/vault/${WH.vaultId}/${path}`,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(body),
+  }).catch(()=>{});
+}
+async function vaultDelete(path){
+  if(!WH.vaultId)return;
+  return fetch(`${PROXY_BASE}/vault/${WH.vaultId}/${path}`,{method:'DELETE'}).catch(()=>{});
+}
+
+// Sync full vault state from backend → hydrate local sets/maps
+async function syncFromVault(){
+  if(!WH.vaultId)return;
+  try{
+    const r=await fetch(`${PROXY_BASE}/vault/${WH.vaultId}/data`);
+    if(!r.ok)return;
+    const data=await r.json();
+
+    // Hydrate liked
+    (data.liked||[]).forEach(e=>{
+      WH.liked.add(e.wallId);
+      try{ WH.likedData.set(e.wallId,JSON.parse(typeof e.wallData==='string'?e.wallData:JSON.stringify(e.wallData))); }catch{}
+    });
+    saveSet('wh_liked',WH.liked); saveMap('wh_liked_data',WH.likedData);
+
+    // Hydrate saved
+    (data.saved||[]).forEach(e=>{
+      WH.saved.add(e.wallId);
+      try{ WH.savedData.set(e.wallId,JSON.parse(typeof e.wallData==='string'?e.wallData:JSON.stringify(e.wallData))); }catch{}
+    });
+    saveSet('wh_saved',WH.saved); saveMap('wh_saved_data',WH.savedData);
+
+    // Hydrate assignments
+    (data.assignments||[]).forEach(e=>{
+      const charIds=WH.assigned.get(e.wallId)||[];
+      if(!charIds.includes(e.charId))charIds.push(e.charId);
+      WH.assigned.set(e.wallId,charIds);
+      // Reconstruct minimal wall data for assigned view
+      if(!WH.assignedData.has(e.wallId)){
+        WH.assignedData.set(e.wallId,{
+          id:e.wallId, path:e.fullUrl, thumbs:{large:e.thumbUrl,small:e.thumbUrl},
+          resolution:'', purity:'sfw', category:'', views:0, favorites:0,
+          url:`https://wallhaven.cc/w/${e.wallId}`, file_type:'image/jpeg',
+        });
+      }
+      // Also hydrate wh_char_gallery so underdark gallery sees the assignments
+      try{
+        const store=JSON.parse(localStorage.getItem('wh_char_gallery')||'{}');
+        const cid=String(e.charId);
+        if(!Array.isArray(store[cid]))store[cid]=[];
+        if(!store[cid].some(x=>(typeof x==='string'?x:x.url)===e.fullUrl)){
+          store[cid].push({url:e.fullUrl,thumb:e.thumbUrl,wallId:e.wallId});
+          localStorage.setItem('wh_char_gallery',JSON.stringify(store));
+        }
+      }catch{}
+    });
+    saveMapArr('wh_assigned',WH.assigned); saveMap('wh_assigned_data',WH.assignedData);
+
+    updateBadges();
+    showToast('Vault synced.','success');
+  }catch{ /* non-critical */ }
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // FILTER CHIPS
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 (function restoreFilterChips(){
@@ -425,7 +558,7 @@ function renderAssignLog(){
     <div class="wh-assign-log__list">
       ${filtered.map(e=>`
         <div class="wh-assign-log__row wh-assign-log__row--${e.action}">
-          ${e.thumb?`<img src="${esc(e.thumb)}" class="wh-assign-log__thumb" loading="lazy" onerror="this.style.display='none'" alt="">`:``}
+          ${e.thumb?`<img src="${esc(imgProxyUrl(e.thumb))}" class="wh-assign-log__thumb" loading="lazy" onerror="this.style.display='none'" alt="">`:``}
           <div class="wh-assign-log__info">
             <span class="wh-assign-log__action">${e.action==='assign'?'↗ Assigned':'↙ Unassigned'}</span>
             <span class="wh-assign-log__char">${esc(e.charName)}</span>
@@ -589,7 +722,7 @@ function buildTile(w, idx, set){
 
   tile.innerHTML=`
     <div class="wh-tile__img-wrap">
-      <img class="wh-tile__img wh-tile__img--pending" data-src="${esc(w.thumbs.large)}" data-fallback="${esc(w.thumbs.small||w.thumbs.large)}" draggable="false" alt="">
+      <img class="wh-tile__img wh-tile__img--pending" data-src="${esc(imgProxyUrl(w.thumbs.large))}" data-fallback="${esc(imgProxyUrl(w.thumbs.small||w.thumbs.large))}" draggable="false" alt="">
       ${isAssigned?`<div class="wh-tile__char-badges">${charBadgesHtml(w.id)}</div>`:''}
       <div class="wh-tile__overlay">
         <div class="wh-tile__overlay-top">
@@ -637,15 +770,25 @@ function buildTile(w, idx, set){
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 function toggleLike(w,tile){
   const btn=tile.querySelector('[data-action="like"]');
-  if(WH.liked.has(w.id)){WH.liked.delete(w.id);WH.likedData.delete(w.id);btn.classList.remove('wh-tile-btn--active-heart');showToast('Unliked.','info');}
-  else{WH.liked.add(w.id);WH.likedData.set(w.id,w);btn.classList.add('wh-tile-btn--active-heart');showToast('Liked!','success');}
+  if(WH.liked.has(w.id)){
+    WH.liked.delete(w.id);WH.likedData.delete(w.id);btn.classList.remove('wh-tile-btn--active-heart');showToast('Unliked.','info');
+    vaultDelete(`like/${w.id}`);
+  }else{
+    WH.liked.add(w.id);WH.likedData.set(w.id,w);btn.classList.add('wh-tile-btn--active-heart');showToast('Liked!','success');
+    vaultPost('like',{wallId:w.id,wallData:w});
+  }
   saveSet('wh_liked',WH.liked);saveMap('wh_liked_data',WH.likedData);
   updateBadges();syncLbButtons();
 }
 function toggleSave(w,tile){
   const btn=tile.querySelector('[data-action="save"]');
-  if(WH.saved.has(w.id)){WH.saved.delete(w.id);WH.savedData.delete(w.id);btn.classList.remove('wh-tile-btn--active-save');showToast('Removed.','info');}
-  else{WH.saved.add(w.id);WH.savedData.set(w.id,w);btn.classList.add('wh-tile-btn--active-save');showToast('Saved!','success');}
+  if(WH.saved.has(w.id)){
+    WH.saved.delete(w.id);WH.savedData.delete(w.id);btn.classList.remove('wh-tile-btn--active-save');showToast('Removed.','info');
+    vaultDelete(`save/${w.id}`);
+  }else{
+    WH.saved.add(w.id);WH.savedData.set(w.id,w);btn.classList.add('wh-tile-btn--active-save');showToast('Saved!','success');
+    vaultPost('save',{wallId:w.id,wallData:w});
+  }
   saveSet('wh_saved',WH.saved);saveMap('wh_saved_data',WH.savedData);
   updateBadges();syncLbButtons();
 }
@@ -689,6 +832,7 @@ function assignToChar(w, charId){
         localStorage.setItem(whKey,JSON.stringify(store));
       }
     } catch(e){console.warn('WH unassign gallery error',e);}
+    vaultDelete(`assign/${w.id}/${charId}`);
     logAssignAction('unassign', w, charId);
     showToast('Unassigned from character.','info');
   } else {
@@ -696,6 +840,10 @@ function assignToChar(w, charId){
     WH.assigned.set(w.id,charIds);
     WH.assignedData.set(w.id,w);
     addToCharacterGalleryInApp(charId, w.path, w.thumbs.large, w.id);
+    vaultPost('assign',{
+      wallId:w.id, charId:String(charId), charName:getCharName(charId),
+      thumbUrl:w.thumbs?.large||w.thumbs?.small||'', fullUrl:w.path||'',
+    });
     logAssignAction('assign', w, charId);
     showToast(`Assigned to ${getCharName(charId)} — added to gallery & feed.`,'success');
   }
@@ -785,12 +933,19 @@ function lbCacheSet(id,url){
 }
 let _lbLoadToken=0, _lbPreloadTimer=null;
 
+function imgProxyUrl(raw){
+  // Route all wallhaven images through our proxy to avoid hotlink blocks
+  if(!raw)return raw;
+  return `${PROXY_BASE}/img?url=${encodeURIComponent(raw)}`;
+}
+
 function loadFullRes(w, token, onLoad){
   if(!w||!w.path)return;
   if(lbCacheGet(w.id)){onLoad&&onLoad(w.id,lbCacheGet(w.id),token);return;}
+  const proxyUrl=imgProxyUrl(w.path);
   const img=new Image();
-  img.onload=()=>{ lbCacheSet(w.id,w.path); onLoad&&onLoad(w.id,w.path,token); };
-  img.src=w.path;
+  img.onload=()=>{ lbCacheSet(w.id,proxyUrl); onLoad&&onLoad(w.id,proxyUrl,token); };
+  img.src=proxyUrl;
 }
 function scheduleNeighbourPreload(ds, centerIdx){
   clearTimeout(_lbPreloadTimer);
@@ -829,7 +984,7 @@ function renderLightbox(){
   const ds=lbDataset(), w=ds[WH.lbIndex]; if(!w)return;
   const token=++_lbLoadToken;
   clearTimeout(_lbPreloadTimer);
-  lbImg.src=w.thumbs.large||'';
+  lbImg.src=imgProxyUrl(w.thumbs.large)||'';
   lbImg.classList.remove('wh-lb-img--loading');
   const cached=lbCacheGet(w.id);
   if(cached){ lbImg.src=cached; }
@@ -1080,6 +1235,9 @@ function showToast(msg, type){
 
   updateBadges();
   window.lucide?.createIcons();
+
+  // Hydrate from vault if a vault ID is set (fire-and-forget, doesn't block search)
+  if(WH.vaultId) syncFromVault();
 
   if(_bootQuery){
     fetchWallpapers(false);

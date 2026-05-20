@@ -1,10 +1,9 @@
-# ── Build stage ─────────────────────────────────────────────────────────────
+# ── Build stage ───────────────────────────────────────────────────────────────
 FROM golang:1.22-alpine AS builder
 
 WORKDIR /src
 
-# Cache deps before copying source
-COPY go.mod ./
+COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
@@ -12,13 +11,17 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
     go build -trimpath -ldflags="-s -w" -o /wallhaven-proxy .
 
-# ── Runtime stage ────────────────────────────────────────────────────────────
-FROM scratch
+# ── Runtime stage ─────────────────────────────────────────────────────────────
+# alpine instead of scratch — needed for CA certs and timezone data
+FROM alpine:3.20
 
-# Pull in CA certs so we can reach wallhaven.cc over TLS
-COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+RUN apk add --no-cache ca-certificates tzdata && \
+    mkdir -p /data && \
+    addgroup -S proxy && adduser -S proxy -G proxy
 
 COPY --from=builder /wallhaven-proxy /wallhaven-proxy
+
+USER proxy
 
 EXPOSE 8080
 

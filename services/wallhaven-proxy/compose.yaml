@@ -10,25 +10,20 @@ services:
     restart: unless-stopped
 
     environment:
-      # Bind address inside the container
       LISTEN_ADDR: ":8080"
-
-      # Comma-separated list of allowed CORS origins.
-      # Lock this down to your actual frontend domain(s).
-      # Use * to allow all (fine while behind Cloudflare Access).
       ALLOWED_ORIGINS: "https://trap.lol,https://www.trap.lol"
+      DB_PATH: "/data/wallhaven.db"
 
     ports:
-      # Only bind to localhost — Cloudflare Tunnel reaches in directly,
-      # so we never need to expose this to the public internet.
+      # Only bind to localhost — Cloudflare Tunnel reaches in directly
       - "127.0.0.1:8080:8080"
+
+    volumes:
+      - wallhaven-data:/data
 
     networks:
       - default
       - cloudflare-gateway
-
-    # Read-only filesystem; the binary needs nothing writable
-    read_only: true
 
     # Drop every Linux capability
     cap_drop:
@@ -38,14 +33,13 @@ services:
     security_opt:
       - no-new-privileges:true
 
-    # Tiny resource envelope — the proxy is intentionally featherweight
     deploy:
       resources:
         limits:
           cpus: "0.25"
-          memory: 64M
+          memory: 128M
         reservations:
-          memory: 16M
+          memory: 32M
 
     logging:
       driver: "json-file"
@@ -55,7 +49,11 @@ services:
 
     labels:
       com.trap-lol.service: "wallhaven-proxy"
-      com.trap-lol.description: "Lightweight CORS proxy for the Wallhaven API"
+      com.trap-lol.description: "Wallhaven API proxy + image proxy + vault storage"
+
+volumes:
+  wallhaven-data:
+    driver: local
 
 networks:
   cloudflare-gateway:
