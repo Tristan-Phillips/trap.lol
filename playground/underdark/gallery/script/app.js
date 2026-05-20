@@ -104,8 +104,20 @@ function getCharData() {
             avatarRef:   meta.avatar_path || null,
             galleryRefs: ext.gallery      || [],
             galleryMeta: ext.galleryMeta  || {},
+            videoRefs:   ext.videoGallery || [],
         };
     });
+}
+function saveVideoRefs(charId, videoRefs) {
+    const data = readStorage();
+    if (!data) return;
+    if (!data.loadedCharacters) data.loadedCharacters = {};
+    if (!data.loadedCharacters[charId]) data.loadedCharacters[charId] = {};
+    const char = data.loadedCharacters[charId];
+    if (!char.extensions)           char.extensions = {};
+    if (!char.extensions.underdark) char.extensions.underdark = {};
+    char.extensions.underdark.videoGallery = videoRefs;
+    writeStorage(data);
 }
 function saveGallery(charId, galleryRefs, galleryMeta) {
     const data = readStorage();
@@ -152,6 +164,7 @@ async function boot() {
             allItems.push({
                 url,
                 ref,
+                type:     'image',
                 charId:   ch.id,
                 charName: ch.name,
                 charIdx:  chIdx,
@@ -161,12 +174,40 @@ async function boot() {
                 tags:     ch.galleryMeta[ref]?.tags || [],
             });
         }));
+        // Add videos
+        ch.videoRefs.forEach((ref, i) => {
+            allItems.push({
+                url:     ref,
+                ref,
+                type:    'video',
+                charId:  ch.id,
+                charName: ch.name,
+                charIdx: chIdx,
+                idx:     allRefs.length + i,
+                isAvatar: false,
+                ts:      baseTs - chIdx * 10000 - seqOffset++,
+                tags:    [],
+            });
+        });
     }));
 
     S.items = allItems;
     buildTagRoster();
     updateStats();
     showLoading(false);
+
+    // Apply ?char=id URL param to pre-filter to a specific character
+    const _bootChar = new URLSearchParams(location.search).get('char');
+    if (_bootChar && S.chars.find(c => c.id === _bootChar)) {
+        S.filterChar = _bootChar;
+        // Highlight the chip once the roster has rendered
+        requestAnimationFrame(() => {
+            qsa('.char-chip').forEach(b => b.classList.toggle('char-chip--active', b.dataset.charId === _bootChar));
+            const count = qs('#char-filter-count');
+            if (count) count.textContent = '1 active';
+        });
+    }
+
     render();
 }
 
@@ -185,7 +226,7 @@ async function buildCharRoster() {
 
     const items = [];
     for (const ch of S.chars) {
-        const count = [ch.avatarRef, ...ch.galleryRefs].filter(Boolean).length;
+        const count = [ch.avatarRef, ...ch.galleryRefs, ...ch.videoRefs].filter(Boolean).length;
         if (!count) continue;
         let avatarUrl = null;
         if (ch.avatarRef) avatarUrl = await resolveUrl(ch.avatarRef);
@@ -316,28 +357,30 @@ function renderGrid(items, $grid) {
     $grid.innerHTML = '';
     items.forEach((item, i) => {
         const $tile = document.createElement('div');
-        $tile.className = `vault-tile${item.isAvatar ? ' vault-tile--avatar' : ''}`;
+        const isVideo = item.type === 'video';
+        $tile.className = `vault-tile${item.isAvatar ? ' vault-tile--avatar' : ''}${isVideo ? ' vault-tile--video' : ''}`;
         $tile.dataset.i = i;
 
         const tagHtml = item.tags.length
             ? item.tags.map(t => `<span class="vault-tile__tag">${esc(t)}</span>`).join('')
             : '';
-
         $tile.innerHTML = `
             <div class="vault-tile__img-wrap">
-                <img src="${esc(item.url)}" alt="${esc(item.charName)}" class="vault-tile__img" loading="lazy" draggable="false">
+                ${isVideo
+                    ? `<div class="vault-tile__video-thumb"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>`
+                    : `<img src="${esc(item.url)}" alt="${esc(item.charName)}" class="vault-tile__img" loading="lazy" draggable="false">`}
                 ${item.isAvatar ? '<div class="vault-tile__avatar-badge"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>' : ''}
                 <div class="vault-tile__overlay">
                     <div class="vault-tile__char-label">${esc(item.charName)}</div>
                     ${tagHtml ? `<div class="vault-tile__tags">${tagHtml}</div>` : ''}
                     <div class="vault-tile__actions">
-                        <button class="vault-tile__btn" data-action="open" title="Open"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" x2="14" y1="3" y2="10"/><line x1="3" x2="10" y1="21" y2="14"/></svg></button>
+                        <button class="vault-tile__btn" data-action="open" title="${isVideo ? 'Play' : 'Open'}"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" x2="14" y1="3" y2="10"/><line x1="3" x2="10" y1="21" y2="14"/></svg></button>
                         <button class="vault-tile__btn" data-action="dl" title="Download"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg></button>
                         ${!item.isAvatar ? `<button class="vault-tile__btn vault-tile__btn--del" data-action="del" title="Delete"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>` : ''}
                     </div>
                 </div>
             </div>`;
-        $tile.querySelector('.vault-tile__img').addEventListener('error', () => { $tile.style.display = 'none'; });
+        if (!isVideo) $tile.querySelector('.vault-tile__img').addEventListener('error', () => { $tile.style.display = 'none'; });
 
         $tile.querySelector('[data-action="open"]').addEventListener('click', e => { e.stopPropagation(); openLightbox(i); });
         $tile.querySelector('[data-action="dl"]').addEventListener('click',   e => { e.stopPropagation(); downloadItem(item); });
@@ -540,6 +583,8 @@ function openLightbox(idx) {
     renderLightbox();
 }
 function closeLightbox() {
+    const $vid = qs('#lb-vid');
+    if ($vid) { $vid.pause(); $vid.src = ''; }
     qs('#vault-lb').hidden = true;
     document.body.classList.remove('lb-open');
     _drag.active = false;
@@ -548,19 +593,36 @@ function closeLightbox() {
 function renderLightbox() {
     const item = S.lbItems[S.lbIndex];
     if (!item) return;
-    const $img = qs('#lb-img');
-    lbtReset(false); // reset transform on image change
-    $img.onerror = null;
-    $img.src = item.url;
+    lbtReset(false);
+    const $wrap = qs('#lb-img-wrap');
+    // Swap between img and video based on item type
+    let $img = qs('#lb-img');
+    let $vid = qs('#lb-vid');
+    if (item.type === 'video') {
+        if ($img) $img.style.display = 'none';
+        if (!$vid) {
+            $vid = document.createElement('video');
+            $vid.id = 'lb-vid'; $vid.className = 'vault-lb__img';
+            $vid.controls = true; $vid.autoplay = false; $vid.loop = true;
+            $wrap.insertBefore($vid, $wrap.firstChild);
+        }
+        $vid.style.display = '';
+        $vid.src = item.url;
+    } else {
+        if ($vid) { $vid.pause(); $vid.src = ''; $vid.style.display = 'none'; }
+        if ($img) $img.style.display = '';
+        $img = $img || qs('#lb-img');
+        $img.onerror = null;
+        $img.src = item.url;
+        $img.onerror = () => {
+            const dir = S.lbIndex < S.lbItems.length - 1 ? 1 : -1;
+            const next = S.lbIndex + dir;
+            if (next >= 0 && next < S.lbItems.length) { S.lbIndex = next; renderLightbox(); }
+            else closeLightbox();
+        };
+    }
     const $ti = qs('#lb-tag-input');
     if ($ti) $ti.value = '';
-    $img.onerror = () => {
-        // Skip to next valid image automatically
-        const dir = S.lbIndex < S.lbItems.length - 1 ? 1 : -1;
-        const next = S.lbIndex + dir;
-        if (next >= 0 && next < S.lbItems.length) { S.lbIndex = next; renderLightbox(); }
-        else closeLightbox();
-    };
 
     qs('#lb-counter').textContent = `${S.lbIndex + 1} / ${S.lbItems.length}`;
     qs('#lb-char-pill').textContent = item.charName;
@@ -606,18 +668,25 @@ function downloadItem(item) {
 
 async function deleteItem(item) {
     if (item.isAvatar) { showToast('Cannot delete the avatar image — change avatar first', 'warn'); return; }
-    if (!confirm(`Remove this image from ${item.charName}'s gallery?`)) return;
+    const label = item.type === 'video' ? 'video' : 'image';
+    if (!confirm(`Remove this ${label} from ${item.charName}'s gallery?`)) return;
 
     const ch = S.chars.find(c => c.id === item.charId);
     if (!ch) return;
-    const idx = ch.galleryRefs.indexOf(item.ref);
-    if (idx === -1) return;
 
-    if (isIdbRef(item.ref)) await idbDelete(`img:${idbRefId(item.ref)}`).catch(() => {});
-    if (ch.galleryMeta[item.ref]) delete ch.galleryMeta[item.ref];
-    ch.galleryRefs.splice(idx, 1);
-
-    saveGallery(ch.id, ch.galleryRefs, ch.galleryMeta);
+    if (item.type === 'video') {
+        const vidIdx = ch.videoRefs.indexOf(item.ref);
+        if (vidIdx === -1) return;
+        ch.videoRefs.splice(vidIdx, 1);
+        saveVideoRefs(ch.id, ch.videoRefs);
+    } else {
+        const idx = ch.galleryRefs.indexOf(item.ref);
+        if (idx === -1) return;
+        if (isIdbRef(item.ref)) await idbDelete(`img:${idbRefId(item.ref)}`).catch(() => {});
+        if (ch.galleryMeta[item.ref]) delete ch.galleryMeta[item.ref];
+        ch.galleryRefs.splice(idx, 1);
+        saveGallery(ch.id, ch.galleryRefs, ch.galleryMeta);
+    }
 
     // Remove from S.items and re-render
     const siIdx = S.items.findIndex(it => it.ref === item.ref && it.charId === item.charId);

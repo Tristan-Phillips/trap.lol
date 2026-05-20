@@ -223,7 +223,9 @@ function getCharName(id){
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // ASSIGN UI GATING — hide Assigned tab + assign controls unless HAS_CHARS
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-if (!HAS_CHARS) {
+if (HAS_CHARS) {
+  lbAssignWrap.hidden = false;
+} else {
   if (assignedTab)  assignedTab.hidden  = true;
   if (assignedTabM) assignedTabM.hidden = true;
   lbAssignWrap.hidden = true;
@@ -558,8 +560,14 @@ function buildTile(w, idx, set){
   tile.querySelector('[data-action="like"]').addEventListener('click',e=>{e.stopPropagation();toggleLike(w,tile);});
   tile.querySelector('[data-action="save"]').addEventListener('click',e=>{e.stopPropagation();toggleSave(w,tile);});
   if(HAS_CHARS) tile.querySelector('[data-action="assign"]')?.addEventListener('click',e=>{
-    e.stopPropagation(); openLightbox(idx,set);
-    requestAnimationFrame(()=>lbAssignSel.focus());
+    e.stopPropagation();
+    // If there's an active character (from URL param), assign directly without opening lightbox
+    if(WH.charId){
+      assignToChar(w, WH.charId);
+    } else {
+      openLightbox(idx,set);
+      requestAnimationFrame(()=>lbAssignSel.focus());
+    }
   });
   tile.querySelector('[data-action="dl"]').addEventListener('click',e=>{e.stopPropagation();downloadWallpaper(w);});
 

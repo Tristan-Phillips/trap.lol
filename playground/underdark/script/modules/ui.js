@@ -3423,7 +3423,9 @@ export function initUI() {
         // Profile action buttons
         qs('#btn-add-to-thread').onclick = () => addCharacterToThread(id);
         qs('#btn-char-edit').onclick     = () => openCharEditor(id);
-        qs('#btn-gallery-add').onclick   = () => { switchSidebarTab('social'); openSocialFeed(id); renderSocialSidebar(); };
+        qs('#btn-gallery-add').onclick   = () => {
+            window.open(`/playground/underdark/gallery/?char=${encodeURIComponent(id)}`, '_blank', 'noopener');
+        };
         qs('#btn-wh-profile').onclick    = () => {
             const params = new URLSearchParams();
             if (char.name) params.set('q', char.name);
