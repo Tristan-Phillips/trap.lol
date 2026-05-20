@@ -662,7 +662,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "ed9e130",
       "date": "2026-05-21",
       "message": "redesign(home): pg-feature stats+pills, void prose link, infra avatar chips, footer trim",
       "scope": "index.html, glass/",
