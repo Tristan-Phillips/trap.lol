@@ -660,7 +660,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "c8592f5",
       "date": "2026-05-20",
       "message": "fix(gallery): sync vault assignments before first render to fix cold-load blank images",
       "scope": "playground/underdark/gallery/",
