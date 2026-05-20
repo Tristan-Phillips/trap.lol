@@ -660,7 +660,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "1b943e3",
       "date": "2026-05-20",
       "message": "feat(wallhaven): standalone portal — extract wallhaven from underdark into /playground/wallhaven/",
       "scope": "playground/wallhaven/, playground/underdark/",
