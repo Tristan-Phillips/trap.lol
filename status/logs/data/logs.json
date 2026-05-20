@@ -660,6 +660,15 @@
   },
   "commits": [
     {
+      "hash": "b31dfbb",
+      "date": "2026-05-21",
+      "message": "fix(home): pg-feature card layout — icon+body fill row, desc truncates, enter aligned",
+      "scope": "glass/style/",
+      "impact": "low",
+      "files": ["glass/style/modules/components.css"],
+      "why": "pg-feature card rendered squished — body had no flex:1, left wrapper used flex which clashed with icon sizing. Fixed: left uses display:contents, body gets flex:1, desc truncates with ellipsis, right CTA align-self:center."
+    },
+    {
       "hash": "0005f12",
       "date": "2026-05-21",
       "message": "redesign(home): playground feature card, signal entry, drone rows, infra cluster",
