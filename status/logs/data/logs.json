@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.42",
+    "schema_version": "1.5.43",
     "last_updated": "2026-05-20",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -659,6 +659,18 @@
     ]
   },
   "commits": [
+    {
+      "hash": "8e92f29",
+      "date": "2026-05-20",
+      "message": "fix(wallhaven+underdark): settings stays open on gallery link, assigned tab race condition",
+      "scope": "playground/wallhaven/, playground/underdark/",
+      "impact": "medium",
+      "files": [
+        "playground/wallhaven/script/app.js",
+        "playground/underdark/script/modules/ui.js"
+      ],
+      "why": "Two UX bugs: (1) clicking 'Image Vault' in settings nav opened the gallery in a new tab but left the settings modal open in the background tab — fixed by calling closeSettings() for <a> tag nav items; (2) the Assigned/Liked/Saved tab grid was wiped blank when a pending browse fetch completed while the user had switched views — fixed by guarding all fetchWallpapers grid mutations behind WH.view==='browse'."
+    },
     {
       "hash": "1ef78f9",
       "date": "2026-05-20",
@@ -3239,6 +3251,19 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-20",
+      "agent": "Claude Sonnet 4.6",
+      "type": "bug_fix",
+      "summary": "Three bugs fixed in the wallhaven standalone portal and underdark: (1) Settings modal left open when Image Vault link opened gallery in new tab — fixed by detecting <a> nav items and calling closeSettings() on click. (2) Assigned tab showing 'No wallpapers assigned' despite badge showing 4 — caused by a race condition where fetchWallpapers grid mutations fired after the user switched away from Browse view, wiping assigned tiles; fixed by guarding all grid writes behind WH.view==='browse'. (3) assignToChar silently failed for characters never loaded in underdark session — fixed in previous commit.",
+      "decisions": [
+        "fetchWallpapers now guards ALL grid mutations (innerHTML, buildTile, appendLoadMoreBtn, lucide refresh, status text, page controls) behind WH.view==='browse' — fetches that complete while the user is on another tab store their results in WH.results but do not touch the DOM.",
+        "settings-nav__item <a> links (external links in the settings nav) now close the modal on click; <button> items still switch tabs. Detection is by tagName check, not a data attribute, to avoid adding attributes to the HTML."
+      ],
+      "rules_reinforced": [
+        "Any async operation that writes to the shared grid DOM must check WH.view before touching innerHTML or appending tiles — view switches are synchronous but fetches are not."
+      ]
+    },
     {
       "date": "2026-05-20",
       "agent": "Claude Sonnet 4.6",
