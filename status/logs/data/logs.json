@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.46",
+    "schema_version": "1.5.47",
     "last_updated": "2026-05-20",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -659,6 +659,19 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-20",
+      "message": "fix(wallhaven+gallery): use wh_char_gallery key to avoid saveState race, add unassign cleanup",
+      "scope": "playground/wallhaven/, playground/underdark/gallery/",
+      "impact": "critical",
+      "files": [
+        "playground/wallhaven/script/app.js",
+        "playground/underdark/gallery/script/app.js",
+        "status/logs/data/logs.json"
+      ],
+      "why": "saveState() in underdark fires on every keystroke/message and owns underdark_chars_v4 — any gallery URL wallhaven wrote there was silently overwritten. Definitive fix: wallhaven writes assigned image URLs to a separate wh_char_gallery key that saveState() never touches; gallery page reads it additively alongside the underdark key. Unassign and unassign-all handlers also clean up wh_char_gallery."
+    },
     {
       "hash": "4c17ca3",
       "date": "2026-05-20",
@@ -3288,6 +3301,20 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-20",
+      "agent": "Claude Sonnet 4.6",
+      "type": "bug_fix",
+      "summary": "Definitive fix for wallhaven images not appearing in gallery or feed: abandoned the read-merge-write approach in saveState() (still present but now supplementary) in favor of a separate wh_char_gallery localStorage key owned exclusively by wallhaven — saveState() never touches it. Gallery page's getCharData() now reads both underdark_chars_v4 and wh_char_gallery and merges them additively. Unassign and unassign-all handlers also clean up wh_char_gallery so removals are consistent.",
+      "decisions": [
+        "wh_char_gallery is the canonical store for wallhaven-assigned image URLs. Schema: { [charId]: [url, url, ...] }. Only wallhaven writes it; only the gallery page reads it (additively merged with ext.gallery).",
+        "saveState() in underdark must never write to wh_char_gallery. Any future underdark code that reads 'assigned wallhaven images' should read wh_char_gallery directly.",
+        "The state.js read-merge-write and storage event listener added in the previous session remain but are now a secondary safety net, not the primary mechanism."
+      ],
+      "rules_reinforced": [
+        "External apps (wallhaven, future integrations) that write images to character records must use their own localStorage key, not underdark_chars_v4, because saveState() owns that key and runs constantly."
+      ]
+    },
     {
       "date": "2026-05-20",
       "agent": "Claude Sonnet 4.6",

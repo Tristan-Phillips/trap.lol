@@ -95,14 +95,20 @@ function getCharData() {
     if (!data) return [];
     const roster = data.characters || [];
     const loaded = data.loadedCharacters || {};
+    // Merge wallhaven-assigned images from the conflict-free wh_char_gallery key
+    let whGallery = {};
+    try { whGallery = JSON.parse(localStorage.getItem('wh_char_gallery') || '{}'); } catch {}
     return roster.map(meta => {
         const char    = loaded[String(meta.id)] || {};
         const ext     = char.extensions?.underdark || {};
+        const extGallery = ext.gallery || [];
+        const whExtra    = whGallery[String(meta.id)] || [];
+        const merged = [...new Set([...extGallery, ...whExtra])];
         return {
             id:          String(meta.id),
             name:        char.name || meta.name || 'Unknown',
             avatarRef:   meta.avatar_path || null,
-            galleryRefs: ext.gallery      || [],
+            galleryRefs: merged,
             galleryMeta: ext.galleryMeta  || {},
             videoRefs:   ext.videoGallery || [],
         };
