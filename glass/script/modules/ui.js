@@ -328,19 +328,15 @@ function renderApps() {
   try {
     $grid.innerHTML = Object.values(appsData.manifest).map(app => {
       const isLive = (app.status || "planned") === "live";
-      const tags = (app.tags ?? []).map(t => `<span class="pg-feature__tag">${esc(t)}</span>`).join("");
 
       return `
         <a href="${isLive ? esc(app.path) : "#"}" class="pg-feature${isLive ? "" : ' pg-feature--disabled'}" ${!isLive ? 'aria-disabled="true"' : ""}>
-          <div class="pg-feature__left">
-            <div class="pg-feature__icon-wrap" aria-hidden="true">
-              <i data-lucide="${esc(app.icon)}" class="pg-feature__icon"></i>
-            </div>
-            <div class="pg-feature__body">
-              <div class="pg-feature__name">${esc(app.name)}</div>
-              <div class="pg-feature__desc">${esc(app.description)}</div>
-              <div class="pg-feature__tags">${tags}</div>
-            </div>
+          <div class="pg-feature__icon-wrap" aria-hidden="true">
+            <i data-lucide="${esc(app.icon)}" class="pg-feature__icon"></i>
+          </div>
+          <div class="pg-feature__body">
+            <div class="pg-feature__name">${esc(app.name)}</div>
+            <div class="pg-feature__desc">${esc(app.description)}</div>
           </div>
           <div class="pg-feature__right" aria-hidden="true">
             <span class="pg-feature__enter">enter <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span>

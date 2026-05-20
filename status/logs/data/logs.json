@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.60",
+    "schema_version": "1.5.61",
     "last_updated": "2026-05-21",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -515,7 +515,9 @@
       "Re-observing already-visible cards in IntersectionObserver — use :not(.visible) selector",
       "Exposing .backup, .bk, .env files in the public directory — gitignored but double-check",
       "Adding path traversal vectors in URL param-driven fetch calls — always validate params with a strict regex whitelist",
-      "Letting logs.json go stale — it must be updated every session or the next agent starts blind"
+      "Letting logs.json go stale — it must be updated every session or the next agent starts blind",
+      "Section title above a single card — this pattern breaks page flow and adds no information that the card itself doesn't already convey. If a section has one item, let the item speak for itself or integrate the title into the card design.",
+      "Tag chips that echo the card description — tags should add orthogonal metadata, not rephrase what the description already says. Chips that duplicate visible text are noise."
     ]
   },
   "language_fingerprint": {
@@ -659,6 +661,20 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-21",
+      "message": "fix(home): remove apps section title, strip tags from pg-feature card",
+      "scope": "index.html, glass/",
+      "impact": "low",
+      "files": [
+        "index.html",
+        "glass/script/modules/ui.js",
+        "glass/style/modules/components.css",
+        "status/logs/data/logs.json"
+      ],
+      "why": "A verbose section title above a single card broke page flow. Removed the h2 entirely from #apps-section, stripped tag chips from the pg-feature render, and tightened CSS to produce a clean full-width banner with no preceding label."
+    },
     {
       "hash": "b31dfbb",
       "date": "2026-05-21",
@@ -3490,6 +3506,21 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-21",
+      "agent": "Claude Sonnet 4.6",
+      "type": "bug_fix",
+      "summary": "Removed the verbose section title from #apps-section and stripped tag chips from the pg-feature render. A wide h2 title bar above a single card read as broken and sparse — removing the title makes the banner self-describing. pg-feature CSS was also tightened: cleaner padding, no tags block, desc truncates with ellipsis.",
+      "decisions": [
+        "#apps-section needs no h2 — a single full-width card is self-labelling via its name and description.",
+        "Tag chips on pg-feature were noise: the description already carries the same information. Strip them entirely.",
+        "pg-feature__right gets border-left for visual separation from the body text — no border-left on the icon-wrap side."
+      ],
+      "rules_reinforced": [
+        "UI must not contain information that can be inferred — section titles above single cards, tag chips that echo the description, hint text that states the obvious are all anti-patterns.",
+        "Feedback flow and page rhythm matter as much as individual component design — a single well-proportioned banner reads better than a titled section with one card."
+      ]
+    },
     {
       "date": "2026-05-21",
       "agent": "Claude Sonnet 4.6",
