@@ -619,17 +619,17 @@ function renderPuritySplit(items, set) {
     grid.appendChild(el);
   }
 
-  let idx = 0;
+  // idx must be the item's position in the original flat items[] array (= lbDataset() order)
+  // so openLightbox(idx) resolves the correct wallpaper. Do NOT use a render counter.
   if (sfw.length) {
     if (hasBoth) insertSectionHead('SFW', sfw.length, false);
-    sfw.forEach(w => buildTile(w, idx++, set));
+    sfw.forEach(w => buildTile(w, items.indexOf(w), set));
   }
   if (adult.length) {
     if (hasBoth) insertSectionHead('Sketchy / NSFW', adult.length, true);
     const adultTiles = [];
     adult.forEach(w => {
-      buildTile(w, idx++, set);
-      // buildTile always appends as last child of grid
+      buildTile(w, items.indexOf(w), set);
       adultTiles.push(grid.lastElementChild);
     });
     if (hasBoth) adultTiles.forEach(t => t.classList.add('wh-tile--blurred'));
