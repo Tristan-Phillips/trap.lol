@@ -19,7 +19,7 @@ services:
       - "127.0.0.1:8080:8080"
 
     volumes:
-      - wallhaven-data:/data
+      - ./data:/data
 
     networks:
       - default
@@ -50,10 +50,6 @@ services:
     labels:
       com.trap-lol.service: "wallhaven-proxy"
       com.trap-lol.description: "Wallhaven API proxy + image proxy + vault storage"
-
-volumes:
-  wallhaven-data:
-    driver: local
 
 networks:
   cloudflare-gateway:
