@@ -662,7 +662,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "31b814e",
       "date": "2026-05-21",
       "message": "fix(home): remove apps section title, strip tags from pg-feature card",
       "scope": "index.html, glass/",
