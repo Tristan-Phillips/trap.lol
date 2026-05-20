@@ -14,11 +14,13 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
 # ── Runtime stage ─────────────────────────────────────────────────────────────
 FROM alpine:3.20
 
-RUN apk add --no-cache ca-certificates tzdata && \
+RUN apk add --no-cache ca-certificates tzdata su-exec && \
     mkdir -p /data
 
 COPY --from=builder /wallhaven-proxy /wallhaven-proxy
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 EXPOSE 8080
 
-ENTRYPOINT ["/wallhaven-proxy"]
+ENTRYPOINT ["/entrypoint.sh"]

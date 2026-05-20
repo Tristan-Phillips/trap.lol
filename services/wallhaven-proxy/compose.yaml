@@ -1,31 +1,49 @@
 name: wallhaven-proxy
 
+x-baseline: &baseline
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options:
+      max-size: 10m
+      max-file: "3"
+  security_opt:
+    - no-new-privileges:true
+
 services:
   proxy:
+    <<: *baseline
     build:
       context: .
       dockerfile: Dockerfile
     image: wallhaven-proxy:latest
     container_name: wallhaven-proxy
-    restart: unless-stopped
+
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETUID
+      - SETGID
 
     environment:
+      PUID: "1000"
+      PGID: "1000"
+      TZ: Africa/Johannesburg
       LISTEN_ADDR: ":8080"
       ALLOWED_ORIGINS: "https://trap.lol,https://www.trap.lol"
       DB_PATH: "/data/wallhaven.db"
 
+    volumes:
+      - wallhaven-data:/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+
     ports:
       - "127.0.0.1:8080:8080"
 
-    volumes:
-      - wallhaven-data:/data
-
     networks:
-      - default
       - cloudflare-gateway
-
-    security_opt:
-      - no-new-privileges:true
 
     deploy:
       resources:
@@ -34,12 +52,6 @@ services:
           memory: 128M
         reservations:
           memory: 32M
-
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
 
     labels:
       com.trap-lol.service: "wallhaven-proxy"
