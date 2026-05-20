@@ -1,8 +1,8 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.57",
-    "last_updated": "2026-05-20",
+    "schema_version": "1.5.58",
+    "last_updated": "2026-05-21",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
       "_protocol",
@@ -659,6 +659,21 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-21",
+      "message": "feat(playground): data-driven app grid + preset credentials panel",
+      "scope": "playground/",
+      "impact": "medium",
+      "files": [
+        "playground/data/apps.json",
+        "playground/data/credentials.json",
+        "playground/index.html",
+        "status/logs/data/logs.json",
+        "status/logs/data/signal.json"
+      ],
+      "why": "Playground hub was hard-coded HTML; app list and credential config are now driven by JSON files. Added a Preset Credentials section so shared keys (NanoGPT, Wallhaven, Vault ID) can be set once and picked up by all apps. VOID removed from the hub listing per user request."
+    },
     {
       "hash": "24533a2",
       "date": "2026-05-20",
@@ -3435,6 +3450,20 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-21",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Converted the playground hub from hard-coded HTML to a data-driven page. Two new JSON files: playground/data/apps.json (app manifest) and playground/data/credentials.json (pre-settable credentials config). playground/index.html now fetches and renders both at boot. Added a Preset Credentials section that lets the user set NanoGPT key, Wallhaven API key, and Vault ID once, with each group showing a filled indicator, save/clear actions, and feedback text. VOID removed from the app listing.",
+      "decisions": [
+        "playground/data/apps.json owns the app list for the hub — VOID is intentionally excluded (personal/unlisted).",
+        "playground/data/credentials.json defines all pre-settable config with storage type (localStorage vs cookie), placeholder, hint, and optional generate endpoint — the JS reads this and builds the UI entirely from data.",
+        "Cookie-backed RADAR credentials are listed in credentials.json for completeness (storage: cookie) but the hub only reads/writes localStorage keys — RADAR's cookie auth is handled by RADAR itself.",
+        "The vault generate button in the credentials panel calls the same endpoint as the underdark gate wizard — the vault ID is shared via wh_vault_id localStorage key.",
+        "Filled indicator (green dot) on each credential group shows at-a-glance whether any key in that group is already stored.",
+        "app.icon in apps.json is a raw SVG path/shape string injected into a 24x24 viewBox — the outer <svg> wrapper is produced by the renderer, not stored in data."
+      ]
+    },
     {
       "date": "2026-05-20",
       "agent": "Claude Sonnet 4.6",
