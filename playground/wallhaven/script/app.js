@@ -365,8 +365,10 @@ vaultSaveBtn.addEventListener('click',async()=>{
     if(r.status===404){ setVaultStatus('Not found',false); showToast('Vault ID not found — use "New" to create one.','warn'); return; }
     if(!r.ok) throw new Error('HTTP '+r.status);
     applyVaultId(id);
-    showToast('Vault connected!','success');
+    showToast('Vault connected — syncing…','success');
     await syncFromVault();
+    await pushToVault();
+    showToast('Local state uploaded to vault.','success');
   }catch(e){ setVaultStatus('Error',false); showToast('Could not reach proxy: '+e.message,'warn'); }
 });
 
@@ -402,6 +404,30 @@ async function vaultPost(path, body){
 async function vaultDelete(path){
   if(!WH.vaultId)return;
   return fetch(`${PROXY_BASE}/vault/${WH.vaultId}/${path}`,{method:'DELETE'}).catch(()=>{});
+}
+
+// Push existing localStorage state up to vault (runs once when vault ID is first set)
+async function pushToVault(){
+  if(!WH.vaultId)return;
+  const calls=[];
+  WH.liked.forEach(wallId=>{
+    const w=WH.likedData.get(wallId); if(!w)return;
+    calls.push(vaultPost('like',{wallId,wallData:w}));
+  });
+  WH.saved.forEach(wallId=>{
+    const w=WH.savedData.get(wallId); if(!w)return;
+    calls.push(vaultPost('save',{wallId,wallData:w}));
+  });
+  WH.assigned.forEach((charIds,wallId)=>{
+    const w=WH.assignedData.get(wallId); if(!w)return;
+    charIds.forEach(charId=>{
+      calls.push(vaultPost('assign',{
+        wallId, charId:String(charId), charName:getCharName(charId),
+        thumbUrl:w.thumbs?.large||w.thumbs?.small||'', fullUrl:w.path||'',
+      }));
+    });
+  });
+  await Promise.allSettled(calls);
 }
 
 // Sync full vault state from backend → hydrate local sets/maps

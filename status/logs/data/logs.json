@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.50",
+    "schema_version": "1.5.51",
     "last_updated": "2026-05-20",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -659,6 +659,18 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-20",
+      "message": "feat(wallhaven): pushToVault — upload existing localStorage state on vault connect",
+      "scope": "playground/wallhaven/",
+      "impact": "medium",
+      "files": [
+        "playground/wallhaven/script/app.js",
+        "status/logs/data/logs.json"
+      ],
+      "why": "Existing assigns/likes/saves made before a vault ID was set were only in localStorage and never reached the backend. pushToVault() fires after vault connect (Set button) to bulk-upload current local state, making the vault a true mirror from first use."
+    },
     {
       "hash": "86be894",
       "date": "2026-05-20",
