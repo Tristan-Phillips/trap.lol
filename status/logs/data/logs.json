@@ -660,7 +660,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "2dde8ba",
       "date": "2026-05-21",
       "message": "refactor(home): consolidate sections, data-driven cleanup, footer nav expansion",
       "scope": "index.html, glass/",
