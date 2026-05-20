@@ -409,6 +409,46 @@
 }
 .api-gate__error[hidden] { display: none; }
 
+.api-gate__field-hint {
+    font-size: 0.7rem;
+    color: rgba(125,110,146,0.6);
+    margin: 0;
+    line-height: 1.4;
+}
+.api-gate__link {
+    color: rgba(190,41,236,0.7);
+    text-decoration: none;
+    transition: color 0.15s;
+}
+.api-gate__link:hover { color: rgba(190,41,236,1); text-decoration: underline; }
+
+.api-gate__input--mono { font-family: ui-monospace, monospace; letter-spacing: 0.08em; }
+
+.api-gate__vault-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+.api-gate__vault-gen {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(190,41,236,0.3);
+    background: rgba(190,41,236,0.08);
+    color: rgba(190,41,236,0.8);
+    font-size: 0.72rem;
+    font-family: var(--font-mono, monospace);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.api-gate__vault-gen:hover { background: rgba(190,41,236,0.18); border-color: rgba(190,41,236,0.55); color: #EDE8F5; }
+.api-gate__vault-gen:disabled { opacity: 0.5; cursor: default; }
+.api-gate__vault-gen svg, .api-gate__vault-gen i { width: 13px; height: 13px; }
+
 /* ── Navigation row ── */
 .api-gate__nav-row {
     display: flex;

@@ -6,7 +6,7 @@
     <title>The Underdark // Reality Matrix</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2306040A'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%23ef4444' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23ef4444'/%3E%3C/svg%3E" />
     <link rel="stylesheet" href="/glass/style/style.css">
-    <link rel="stylesheet" href="./style/style.css?v=82">
+    <link rel="stylesheet" href="./style/style.css?v=83">
 </head>
 <body class="underdark-page">
 
@@ -28,6 +28,8 @@
         <span class="api-gate__rune" data-step="2" aria-hidden="true">⬡</span>
         <span class="api-gate__rune-line"></span>
         <span class="api-gate__rune" data-step="3" aria-hidden="true">⬡</span>
+        <span class="api-gate__rune-line"></span>
+        <span class="api-gate__rune" data-step="4" aria-hidden="true">⬡</span>
     </div>
 
     <div class="api-gate__panel">
@@ -80,8 +82,41 @@
             <a class="api-gate__hint" href="https://nano-gpt.com" target="_blank" rel="noopener">Get a key at nano-gpt.com ↗</a>
         </div>
 
-        <!-- ── Step 2: Entity Config ── -->
+        <!-- ── Step 2: Wallhaven Integration ── -->
         <div class="api-gate__step" data-gate-step="2" hidden>
+            <div class="api-gate__step-header">
+                <span class="api-gate__step-rune" aria-hidden="true">⬡</span>
+                <span class="api-gate__step-label">Image Vault</span>
+            </div>
+            <h2 class="api-gate__step-title">Wallhaven Integration</h2>
+            <p class="api-gate__sub">Optional — enables wallpaper search, character galleries, and cross-device sync.</p>
+            <div class="api-gate__form">
+                <div class="api-gate__field-group">
+                    <label class="api-gate__field-label" for="gate-wh-key">Wallhaven API Key <span class="api-gate__field-opt">(optional)</span></label>
+                    <div class="api-gate__input-row">
+                        <input type="password" id="gate-wh-key" class="api-gate__input" placeholder="Wallhaven API key" autocomplete="off" spellcheck="false">
+                        <button id="gate-wh-key-toggle" class="api-gate__toggle" type="button" aria-label="Toggle key visibility"><i data-lucide="eye"></i></button>
+                    </div>
+                    <p class="api-gate__field-hint">Unlocks NSFW filters and private collections. <a href="https://wallhaven.cc/settings/account" target="_blank" rel="noopener" class="api-gate__link">Get key ↗</a></p>
+                </div>
+                <div class="api-gate__field-group">
+                    <label class="api-gate__field-label" for="gate-vault-id">Vault ID <span class="api-gate__field-opt">(optional)</span></label>
+                    <div class="api-gate__vault-row">
+                        <input type="text" id="gate-vault-id" class="api-gate__input api-gate__input--mono" placeholder="XXXX-XXXX-XXXX-XXXX" autocomplete="off" spellcheck="false" maxlength="19">
+                        <button id="gate-vault-generate" class="api-gate__vault-gen" type="button" title="Generate a new vault ID"><i data-lucide="sparkles"></i> Generate</button>
+                    </div>
+                    <p id="gate-vault-status" class="api-gate__field-hint"></p>
+                    <p class="api-gate__field-hint">Syncs wallpaper assignments across devices. Treat it like a password.</p>
+                </div>
+            </div>
+            <div class="api-gate__nav-row">
+                <button id="gate-back-2" class="api-gate__back" type="button"><i data-lucide="arrow-left"></i> Back</button>
+                <button id="gate-next-2" class="api-gate__submit api-gate__submit--next" type="button"><i data-lucide="arrow-right"></i> Continue</button>
+            </div>
+        </div>
+
+        <!-- ── Step 3: Entity Config ── -->
+        <div class="api-gate__step" data-gate-step="3" hidden>
             <div class="api-gate__step-header">
                 <span class="api-gate__step-rune" aria-hidden="true">⬡</span>
                 <span class="api-gate__step-label">Entity Protocol</span>
@@ -115,13 +150,13 @@
                 </div>
             </div>
             <div class="api-gate__nav-row">
-                <button id="gate-back-2" class="api-gate__back" type="button"><i data-lucide="arrow-left"></i> Back</button>
-                <button id="gate-next-2" class="api-gate__submit api-gate__submit--next" type="button"><i data-lucide="arrow-right"></i> Continue</button>
+                <button id="gate-back-3" class="api-gate__back" type="button"><i data-lucide="arrow-left"></i> Back</button>
+                <button id="gate-next-3" class="api-gate__submit api-gate__submit--next" type="button"><i data-lucide="arrow-right"></i> Continue</button>
             </div>
         </div>
 
-        <!-- ── Step 3: Identity ── -->
-        <div class="api-gate__step" data-gate-step="3" hidden>
+        <!-- ── Step 4: Identity ── -->
+        <div class="api-gate__step" data-gate-step="4" hidden>
             <div class="api-gate__step-header">
                 <span class="api-gate__step-rune" aria-hidden="true">⬡</span>
                 <span class="api-gate__step-label">Identity Matrix</span>
@@ -157,7 +192,7 @@
                     </div>
                 </div>
                 <div class="api-gate__nav-row">
-                    <button id="gate-back-3" class="api-gate__back" type="button"><i data-lucide="arrow-left"></i> Back</button>
+                    <button id="gate-back-4" class="api-gate__back" type="button"><i data-lucide="arrow-left"></i> Back</button>
                     <button id="gate-finish" class="api-gate__submit api-gate__submit--finish" type="button">
                         <i data-lucide="door-open"></i> Enter the Underdark
                     </button>

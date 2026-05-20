@@ -547,7 +547,8 @@ export function initUI() {
 
         // Auto-focus relevant field
         if (next === 1) setTimeout(() => $gateInput?.focus(), 80);
-        if (next === 3) setTimeout(() => qs('#gate-user-name', $gate)?.focus(), 80);
+        if (next === 2) setTimeout(() => qs('#gate-wh-key', $gate)?.focus(), 80);
+        if (next === 4) setTimeout(() => qs('#gate-user-name', $gate)?.focus(), 80);
 
         if (window.lucide) window.lucide.createIcons({ nodes: [$gate] });
     }
@@ -636,6 +637,10 @@ export function initUI() {
         if ($uname) $uname.value = userName;
         if ($ubio)  $ubio.value  = userPersona;
 
+        // Persist wallhaven API key if entered
+        const whKey = (qs('#gate-wh-key', $gate)?.value || '').trim();
+        if (whKey) localStorage.setItem('wh_apikey', whKey);
+
         // Mark wizard complete so refresh doesn't re-show intro
         localStorage.setItem(GATE_DONE_KEY, '1');
 
@@ -667,7 +672,63 @@ export function initUI() {
         });
         $gateInput?.addEventListener('input', () => { if ($gateError) $gateError.hidden = true; });
 
-        // Step 2: model grid + threshold tier buttons
+        // Step 2: Wallhaven key toggle
+        const $whKeyInput  = qs('#gate-wh-key', $gate);
+        const $whKeyToggle = qs('#gate-wh-key-toggle', $gate);
+        $whKeyToggle?.addEventListener('click', () => {
+            const isPass = $whKeyInput.type === 'password';
+            $whKeyInput.type = isPass ? 'text' : 'password';
+            const icon = $whKeyToggle.querySelector('i');
+            if (icon) icon.dataset.lucide = isPass ? 'eye-off' : 'eye';
+            lucideRefresh($whKeyToggle);
+        });
+
+        // Step 2: Vault ID — auto-format and generate
+        const $vaultInput  = qs('#gate-vault-id', $gate);
+        const $vaultStatus = qs('#gate-vault-status', $gate);
+        const PROXY_BASE   = 'https://wallhaven.trap.lol';
+
+        // Pre-fill vault input if already saved
+        const _savedVault = localStorage.getItem('wh_vault_id') || '';
+        if ($vaultInput && _savedVault) $vaultInput.value = _savedVault;
+
+        function _vaultFmt(raw) {
+            const hex = raw.replace(/[^0-9a-fA-F]/g, '').toUpperCase().slice(0, 16);
+            return hex.match(/.{1,4}/g)?.join('-') || hex;
+        }
+        $vaultInput?.addEventListener('input', () => {
+            const cur = $vaultInput.value;
+            const fmt = _vaultFmt(cur);
+            if (fmt !== cur) { $vaultInput.value = fmt; }
+            if ($vaultStatus) $vaultStatus.textContent = '';
+        });
+
+        qs('#gate-vault-generate', $gate)?.addEventListener('click', async () => {
+            const $btn = qs('#gate-vault-generate', $gate);
+            if ($btn) { $btn.disabled = true; $btn.innerHTML = '<i data-lucide="loader-2"></i> Generating…'; lucideRefresh($btn); }
+            try {
+                const res = await fetch(`${PROXY_BASE}/vault/create`, { method: 'POST' });
+                if (!res.ok) throw new Error(res.status);
+                const { vault_id } = await res.json();
+                if ($vaultInput) $vaultInput.value = vault_id;
+                localStorage.setItem('wh_vault_id', vault_id);
+                if ($vaultStatus) { $vaultStatus.textContent = 'New vault created — save this ID.'; $vaultStatus.style.color = '#7dcc90'; }
+            } catch {
+                if ($vaultStatus) { $vaultStatus.textContent = 'Could not reach vault server — you can add this later.'; $vaultStatus.style.color = '#c8a03c'; }
+            } finally {
+                if ($btn) { $btn.disabled = false; $btn.innerHTML = '<i data-lucide="sparkles"></i> Generate'; lucideRefresh($btn); }
+            }
+        });
+
+        qs('#gate-back-2', $gate)?.addEventListener('click', () => _gateShowStep(1, 'back'));
+        qs('#gate-next-2', $gate)?.addEventListener('click', () => {
+            // Save vault ID if entered
+            const vid = ($vaultInput?.value || '').trim();
+            if (vid) localStorage.setItem('wh_vault_id', vid);
+            _gateShowStep(3);
+        });
+
+        // Step 3: model grid + threshold tier buttons
         const $badge = qs('#gate-threshold-value', $gate);
         qsa('.api-gate__tier-btn', $gate).forEach($btn => {
             $btn.addEventListener('click', () => {
@@ -680,11 +741,11 @@ export function initUI() {
                 }
             });
         });
-        qs('#gate-back-2', $gate)?.addEventListener('click', () => _gateShowStep(1, 'back'));
-        qs('#gate-next-2', $gate)?.addEventListener('click', () => _gateShowStep(3));
-
-        // Step 3: identity + finish
         qs('#gate-back-3', $gate)?.addEventListener('click', () => _gateShowStep(2, 'back'));
+        qs('#gate-next-3', $gate)?.addEventListener('click', () => _gateShowStep(4));
+
+        // Step 4: identity + finish
+        qs('#gate-back-4', $gate)?.addEventListener('click', () => _gateShowStep(3, 'back'));
         qs('#gate-finish', $gate)?.addEventListener('click', _gateFinish);
         qs('#gate-user-persona', $gate)?.addEventListener('keydown', e => {
             if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) _gateFinish();
@@ -788,17 +849,14 @@ export function initUI() {
         // Show gate if wizard was never fully completed OR key is missing
         const setupDone = localStorage.getItem(GATE_DONE_KEY) === '1';
         if (!setupDone || !isValidKeyFormat(getApiKey())) {
-            // If key exists but wizard never finished, skip the intro and
-            // pre-fill what we can, then land on the key step so they can
-            // verify/proceed
             const hasKey = isValidKeyFormat(getApiKey());
             if (hasKey && !setupDone) {
-                // Pre-fill identity fields from saved state
+                // Pre-fill identity fields from saved state, drop into wallhaven step
                 const $uname = qs('#gate-user-name', $gate);
                 const $ubio  = qs('#gate-user-persona', $gate);
                 if ($uname && state.config.userName)    $uname.value = state.config.userName;
                 if ($ubio  && state.config.userPersona) $ubio.value  = state.config.userPersona;
-                showGate(1);
+                showGate(2);
             } else {
                 showGate(0);
             }

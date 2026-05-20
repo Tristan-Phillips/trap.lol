@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.52",
+    "schema_version": "1.5.53",
     "last_updated": "2026-05-20",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -659,6 +659,21 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-20",
+      "message": "feat(underdark): add wallhaven + vault ID step to initiation gate",
+      "scope": "playground/underdark/",
+      "impact": "medium",
+      "files": [
+        "playground/underdark/index.html",
+        "playground/underdark/script/main.js",
+        "playground/underdark/script/modules/ui.js",
+        "playground/underdark/style/api-gate.css",
+        "status/logs/data/logs.json"
+      ],
+      "why": "First-time setup wizard only prompted for the NanoGPT key. Added a new step 2 so users can also enter their wallhaven API key and create or paste a vault ID during onboarding — both are optional and skip-friendly."
+    },
     {
       "hash": "46ad49f",
       "date": "2026-05-20",
@@ -3373,6 +3388,18 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-20",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Added a new step 2 to the underdark initiation gate wizard. The gate now flows 0→1(NanoGPT key)→2(Wallhaven+Vault)→3(Engine)→4(Identity). Step 2 has a wallhaven API key field with password toggle and a vault ID field with auto-hex-format, Generate button (calls POST /vault/create on the proxy), and pre-fills from existing localStorage if set. Both fields are optional. Vault ID is saved to wh_vault_id on Continue; wallhaven key is saved to wh_apikey on finish. The CSS adds .api-gate__vault-gen, .api-gate__vault-row, .api-gate__field-hint, .api-gate__link, and .api-gate__input--mono.",
+      "decisions": [
+        "Gate expanded from 4 steps to 5. Rune track gets a 5th node. All old step 2/3 become step 3/4.",
+        "Vault generation (sparkles button) fires immediately on click and shows status message below the field — no blocking the Continue button.",
+        "If vault server is unreachable during onboarding, a warning hint shows and the user proceeds; they can set the vault later in the wallhaven app settings.",
+        "wh_vault_id and wh_apikey are shared localStorage keys between underdark and the wallhaven app — setting them in onboarding means both apps are pre-configured."
+      ]
+    },
     {
       "date": "2026-05-20",
       "agent": "Claude Sonnet 4.6",
