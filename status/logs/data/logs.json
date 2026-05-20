@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.43",
+    "schema_version": "1.5.44",
     "last_updated": "2026-05-20",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -659,6 +659,18 @@
     ]
   },
   "commits": [
+    {
+      "hash": "8c0ab83",
+      "date": "2026-05-20",
+      "message": "fix(wallhaven): empty states bleed through, feed wrong storage key, [hidden] override",
+      "scope": "playground/wallhaven/",
+      "impact": "high",
+      "files": [
+        "playground/wallhaven/style/style.css",
+        "playground/wallhaven/script/app.js"
+      ],
+      "why": "Three bugs: (1) display:flex on .wh-empty-state overrode the browser [hidden] attribute so all empty states rendered simultaneously — fixed with [hidden]{display:none!important}; (2) addToCharacterFeedInApp wrote to feed_${charId} localStorage key which nothing in underdark reads — fixed to write to underdark_v4→socialData.localPosts[charId] which is the path social.js/getAllFeedPosts actually consumes; (3) the post object used imageUrl field but the schema expects src — corrected to match saveLocalPost's format."
+    },
     {
       "hash": "8e92f29",
       "date": "2026-05-20",
@@ -3251,6 +3263,20 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-20",
+      "agent": "Claude Sonnet 4.6",
+      "type": "bug_fix",
+      "summary": "Three more wallhaven bugs fixed: (1) All empty state divs (.wh-empty-state with display:flex) were showing simultaneously because CSS display:flex overrides the browser's [hidden] attribute display:none — added [hidden]{display:none!important} to the stylesheet. (2) addToCharacterFeedInApp wrote posts to the feed_${charId} localStorage key which is never read by underdark — rewrote to write to underdark_v4→socialData.localPosts[charId] to match getAllFeedPosts/saveLocalPost's schema. (3) Post object used imageUrl field but underdark expects src — corrected field name and removed unused fields.",
+      "decisions": [
+        "The underdark social feed data path is underdark_v4 (STORAGE_KEY) → socialData.localPosts[charId][], NOT a standalone feed_${charId} key. Any external writer (wallhaven, future integrations) must read/patch/write underdark_v4 atomically.",
+        "Post schema for localPosts: {id, charId, type:'image'|'text', src, caption, timestamp, permanent:false}. The src field holds the URL/ref; imageUrl is not a valid field.",
+        "[hidden] CSS override is now scoped to the wallhaven stylesheet only — underdark uses its own stylesheet which already handles this."
+      ],
+      "rules_reinforced": [
+        "Always check the actual read path before writing to localStorage from an external app. feed_${charId} is an orphaned key — the canonical social post store is underdark_v4→socialData.localPosts[charId]."
+      ]
+    },
     {
       "date": "2026-05-20",
       "agent": "Claude Sonnet 4.6",
