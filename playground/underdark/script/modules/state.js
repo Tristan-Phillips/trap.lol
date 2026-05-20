@@ -242,9 +242,41 @@ export function saveState() {
             socialData: state.socialData
         };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+        // Merge with on-disk loadedCharacters to preserve writes from other tabs
+        // (e.g. wallhaven assigning images). In-memory wins for all fields except
+        // extensions.underdark.gallery and videoGallery which are merged additively.
+        let mergedLoaded = state.loadedCharacters;
+        try {
+            const diskRaw = localStorage.getItem(CHARS_KEY);
+            if (diskRaw) {
+                const diskData = JSON.parse(diskRaw);
+                const diskLoaded = diskData.loadedCharacters || {};
+                mergedLoaded = { ...diskLoaded };
+                Object.entries(state.loadedCharacters).forEach(([id, memChar]) => {
+                    const diskChar = diskLoaded[id];
+                    if (!diskChar) { mergedLoaded[id] = memChar; return; }
+                    // Start from in-memory (authoritative for chat/persona fields)
+                    const merged = { ...diskChar, ...memChar };
+                    // Additively merge gallery arrays from disk (external writes)
+                    const mExt  = memChar?.extensions?.underdark;
+                    const dExt  = diskChar?.extensions?.underdark;
+                    if (dExt) {
+                        if (!merged.extensions)           merged.extensions = {};
+                        if (!merged.extensions.underdark) merged.extensions.underdark = {};
+                        const mG = mExt?.gallery || [];
+                        const dG = dExt.gallery  || [];
+                        merged.extensions.underdark.gallery = [...new Set([...mG, ...dG])];
+                        const mV = mExt?.videoGallery || [];
+                        const dV = dExt.videoGallery  || [];
+                        merged.extensions.underdark.videoGallery = [...new Set([...mV, ...dV])];
+                    }
+                    mergedLoaded[id] = merged;
+                });
+            }
+        } catch { /* ignore — fall back to in-memory */ }
         localStorage.setItem(CHARS_KEY, JSON.stringify({
             characters: state.characters,
-            loadedCharacters: state.loadedCharacters
+            loadedCharacters: mergedLoaded
         }));
     } catch (e) {
         console.warn('[state] Save failed:', e);
@@ -704,3 +736,35 @@ export async function importFullInstance(jsonString) {
 
     saveState();
 }
+
+// ── Cross-tab sync — merge loadedCharacters written by wallhaven or other tabs ──
+window.addEventListener('storage', e => {
+    if (e.key !== CHARS_KEY || !e.newValue) return;
+    try {
+        const incoming = JSON.parse(e.newValue);
+        if (!incoming?.loadedCharacters) return;
+        // Deep-merge each incoming loadedCharacters entry so we don't lose
+        // fields that underdark holds in memory (name, persona, etc.)
+        Object.entries(incoming.loadedCharacters).forEach(([id, inChar]) => {
+            if (!state.loadedCharacters[id]) {
+                state.loadedCharacters[id] = inChar;
+                return;
+            }
+            const local = state.loadedCharacters[id];
+            if (!inChar?.extensions?.underdark) return;
+            if (!local.extensions)           local.extensions = {};
+            if (!local.extensions.underdark) local.extensions.underdark = {};
+            const inExt = inChar.extensions.underdark;
+            const lExt  = local.extensions.underdark;
+            if (Array.isArray(inExt.gallery)) {
+                if (!Array.isArray(lExt.gallery)) lExt.gallery = [];
+                inExt.gallery.forEach(url => { if (!lExt.gallery.includes(url)) lExt.gallery.push(url); });
+            }
+            if (Array.isArray(inExt.videoGallery)) {
+                if (!Array.isArray(lExt.videoGallery)) lExt.videoGallery = [];
+                inExt.videoGallery.forEach(url => { if (!lExt.videoGallery.includes(url)) lExt.videoGallery.push(url); });
+            }
+            if (inExt.galleryMeta) Object.assign(lExt.galleryMeta || (lExt.galleryMeta = {}), inExt.galleryMeta);
+        });
+    } catch { /* ignore parse errors */ }
+});
