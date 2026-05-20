@@ -640,25 +640,27 @@ function addToCharacterGalleryInApp(charId, url, thumb, wallId){
 }
 
 function addToCharacterFeedInApp(charId, url, thumb, wallId){
+  // Writes to underdark_v4 → socialData.localPosts[charId]
+  // (same path that underdark's saveLocalPost uses — feeds appear in the social tab)
   try {
-    const key=`feed_${charId}`;
-    const raw=localStorage.getItem(key);
-    const feed=raw?JSON.parse(raw):[];
-    if(!Array.isArray(feed))return;
-    if(feed.find(p=>p.whId===wallId))return;
-    feed.unshift({
-      id:`wh_${wallId}_${Date.now()}`,
-      whId:wallId,
+    const raw=localStorage.getItem('underdark_v4'); if(!raw)return;
+    const data=JSON.parse(raw); if(!data)return;
+    if(!data.socialData)              data.socialData={};
+    if(!data.socialData.localPosts)   data.socialData.localPosts={};
+    if(!data.socialData.localPosts[String(charId)]) data.socialData.localPosts[String(charId)]=[];
+    const posts=data.socialData.localPosts[String(charId)];
+    if(posts.find(p=>p.id&&p.id.includes(wallId)))return;
+    posts.push({
+      id:`wh_${wallId}_${Date.now()}_${Math.random().toString(36).slice(2,6)}`,
+      charId:String(charId),
       type:'image',
-      imageUrl:url,
-      thumb:thumb||url,
-      caption:'',
-      likes:0,
-      ts:Date.now(),
+      src:url,
+      caption:null,
+      timestamp:Date.now(),
+      permanent:false,
       source:'wallhaven',
     });
-    localStorage.setItem(key,JSON.stringify(feed));
-    document.dispatchEvent(new CustomEvent('wh:feed-updated',{detail:{charId,url,thumb}}));
+    localStorage.setItem('underdark_v4',JSON.stringify(data));
   } catch(e){ console.warn('WH feed post error',e); }
 }
 
