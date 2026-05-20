@@ -2007,10 +2007,11 @@
 .apps-grid { margin-bottom: 0; }
 
 .pg-feature {
-  display: flex;
-  align-items: center;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: start;
   gap: 1.5rem;
-  padding: 1.25rem 1.75rem;
+  padding: 1.5rem 2rem;
   background: var(--glass-bg);
   border: 1px solid var(--glass-border-mute);
   border-radius: 10px;
@@ -2060,15 +2061,17 @@
 .pg-feature--disabled { opacity: 0.5; cursor: not-allowed; }
 
 .pg-feature__icon-wrap {
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
   background: rgba(var(--accent-rgb), 0.06);
   border: 1px solid rgba(var(--accent-rgb), 0.16);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  align-self: start;
+  margin-top: 0.1rem;
   transition: border-color var(--transition), background var(--transition), box-shadow var(--transition-med);
 }
 .pg-feature:hover .pg-feature__icon-wrap {
@@ -2168,6 +2171,7 @@
   flex-shrink: 0;
   padding-left: 1.5rem;
   border-left: 1px solid rgba(var(--accent-rgb), 0.08);
+  align-self: center;
   transition: border-color var(--transition);
 }
 .pg-feature:hover .pg-feature__right { border-left-color: rgba(var(--accent-rgb), 0.2); }
@@ -2228,88 +2232,91 @@
 .infra-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: 0.5rem;
   margin-bottom: 2.5rem;
 }
 
 .infra-chip {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.55rem;
   text-decoration: none;
   color: inherit;
-  position: relative;
-  width: 64px;
-  transition: transform var(--transition-med);
+  padding: 0.4rem 0.75rem 0.4rem 0.4rem;
+  border-radius: 50px;
+  border: 1px solid rgba(255,255,255,0.07);
+  background: rgba(255,255,255,0.02);
+  min-width: 0;
+  transition: transform var(--transition-med), border-color var(--transition), background var(--transition), box-shadow var(--transition-med);
 }
-.infra-chip:hover { transform: translateY(-3px); outline: none; }
+.infra-chip:hover { transform: translateY(-2px); outline: none; }
 .infra-chip:focus-visible { outline: none; }
+
+.infra-chip--node {
+  border-color: rgba(var(--accent-rgb), 0.14);
+  background: rgba(var(--accent-rgb), 0.03);
+}
+.infra-chip--node:hover {
+  border-color: rgba(var(--accent-rgb), 0.38);
+  background: rgba(var(--accent-rgb), 0.07);
+  box-shadow: 0 4px 16px rgba(var(--accent-rgb), 0.1);
+}
+
+.infra-chip--bot {
+  border-color: rgba(var(--cyan-rgb), 0.14);
+  background: rgba(var(--cyan-rgb), 0.02);
+}
+.infra-chip--bot:hover {
+  border-color: rgba(var(--cyan-rgb), 0.38);
+  background: rgba(var(--cyan-rgb), 0.06);
+  box-shadow: 0 4px 16px rgba(var(--cyan-rgb), 0.1);
+}
 
 .infra-chip__ring {
   position: relative;
-  width: 48px;
-  height: 48px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
-  background: rgba(255,255,255,0.03);
-  border: 1.5px solid rgba(255,255,255,0.1);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: border-color var(--transition), background var(--transition), box-shadow var(--transition-med);
+  flex-shrink: 0;
+  transition: box-shadow var(--transition-med);
 }
+.infra-chip--node .infra-chip__ring { background: rgba(var(--accent-rgb), 0.08); }
+.infra-chip--bot .infra-chip__ring { background: rgba(var(--cyan-rgb), 0.07); }
+.infra-chip--node:hover .infra-chip__ring { box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.2); }
+.infra-chip--bot:hover .infra-chip__ring { box-shadow: 0 0 10px rgba(var(--cyan-rgb), 0.2); }
 
-.infra-chip--node .infra-chip__ring {
-  border-color: rgba(var(--accent-rgb), 0.18);
-  background: rgba(var(--accent-rgb), 0.04);
-}
-.infra-chip--node:hover .infra-chip__ring {
-  border-color: rgba(var(--accent-rgb), 0.45);
-  background: rgba(var(--accent-rgb), 0.08);
-  box-shadow: 0 0 16px rgba(var(--accent-rgb), 0.12), 0 4px 12px rgba(0,0,0,0.3);
-}
-
-.infra-chip--bot .infra-chip__ring {
-  border-color: rgba(var(--cyan-rgb), 0.18);
-  background: rgba(var(--cyan-rgb), 0.03);
-}
-.infra-chip--bot:hover .infra-chip__ring {
-  border-color: rgba(var(--cyan-rgb), 0.45);
-  background: rgba(var(--cyan-rgb), 0.07);
-  box-shadow: 0 0 16px rgba(var(--cyan-rgb), 0.12), 0 4px 12px rgba(0,0,0,0.3);
-}
-
-.infra-chip__ring.offline {
-  border-color: rgba(var(--status-offline-rgb, 255,50,50), 0.2);
-  opacity: 0.5;
-}
+.infra-chip__ring.offline { opacity: 0.45; }
 
 .infra-chip__icon {
-  width: 1rem;
-  height: 1rem;
+  width: 0.85rem;
+  height: 0.85rem;
   transition: color var(--transition), filter var(--transition);
 }
-.infra-chip--node .infra-chip__icon { color: rgba(var(--accent-rgb), 0.45); }
+.infra-chip--node .infra-chip__icon { color: rgba(var(--accent-rgb), 0.55); }
 .infra-chip--node:hover .infra-chip__icon {
   color: var(--accent);
-  filter: drop-shadow(0 0 4px rgba(var(--accent-rgb), 0.4));
+  filter: drop-shadow(0 0 4px rgba(var(--accent-rgb), 0.45));
 }
-.infra-chip--bot .infra-chip__icon { color: rgba(var(--cyan-rgb), 0.45); }
+.infra-chip--bot .infra-chip__icon { color: rgba(var(--cyan-rgb), 0.55); }
 .infra-chip--bot:hover .infra-chip__icon {
   color: #00f0ff;
-  filter: drop-shadow(0 0 4px rgba(var(--cyan-rgb), 0.4));
+  filter: drop-shadow(0 0 4px rgba(var(--cyan-rgb), 0.45));
 }
 
 .infra-chip__dot {
   position: absolute;
-  bottom: 1px;
-  right: 1px;
-  width: 8px;
-  height: 8px;
+  bottom: -1px;
+  right: -1px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   border: 1.5px solid var(--bg-main, #06040a);
   background: var(--status-online);
-  box-shadow: 0 0 5px rgba(var(--green-rgb), 0.5);
+  box-shadow: 0 0 4px rgba(var(--green-rgb), 0.5);
   animation: node-pulse 3s ease-in-out infinite;
 }
 .infra-chip__dot.offline {
@@ -2320,17 +2327,19 @@
 
 .infra-chip__label {
   font-family: var(--font-mono);
-  font-size: 0.58rem;
-  letter-spacing: 0.06em;
+  font-size: 0.6rem;
+  letter-spacing: 0.07em;
   color: var(--text-muted);
-  text-align: center;
   white-space: nowrap;
-  opacity: 0.6;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 8rem;
+  opacity: 0.7;
   transition: opacity var(--transition), color var(--transition);
 }
 .infra-chip:hover .infra-chip__label { opacity: 1; }
-.infra-chip--node:hover .infra-chip__label { color: rgba(var(--accent-rgb), 0.8); }
-.infra-chip--bot:hover .infra-chip__label { color: rgba(var(--cyan-rgb), 0.8); }
+.infra-chip--node:hover .infra-chip__label { color: rgba(var(--accent-rgb), 0.9); }
+.infra-chip--bot:hover .infra-chip__label { color: rgba(var(--cyan-rgb), 0.9); }
 
 /* ══════════════════════════════════════════════════════════════
    INFRA CLUSTER — visual grouping for subordinate sections
