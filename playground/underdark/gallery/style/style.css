@@ -611,6 +611,7 @@ body {
 }
 .vault-tl-tile:hover { border-color: var(--accent-dim); box-shadow: 0 0 14px var(--accent-glow); }
 .vault-tl-tile--avatar { border-color: rgba(212, 168, 67, 0.3); }
+.vault-tl-tile--video { border-color: rgba(190, 41, 236, 0.25); display: flex; align-items: center; justify-content: center; }
 .vault-tl-tile__img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
 /* ── Lightbox ── */

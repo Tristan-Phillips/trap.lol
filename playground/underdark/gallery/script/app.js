@@ -125,6 +125,12 @@ function saveVideoRefs(charId, videoRefs) {
     char.extensions.underdark.videoGallery = videoRefs;
     writeStorage(data);
 }
+function getWhUrls(charId) {
+    try {
+        const store = JSON.parse(localStorage.getItem('wh_char_gallery') || '{}');
+        return new Set(store[String(charId)] || []);
+    } catch { return new Set(); }
+}
 function saveGallery(charId, galleryRefs, galleryMeta) {
     const data = readStorage();
     if (!data) return;
@@ -132,7 +138,9 @@ function saveGallery(charId, galleryRefs, galleryMeta) {
     if (!char) return;
     if (!char.extensions)           char.extensions = {};
     if (!char.extensions.underdark) char.extensions.underdark = {};
-    char.extensions.underdark.gallery     = galleryRefs;
+    // Exclude wh_char_gallery URLs so ext.gallery stays as underdark-native refs only
+    const whUrls = getWhUrls(charId);
+    char.extensions.underdark.gallery     = galleryRefs.filter(r => !whUrls.has(r));
     char.extensions.underdark.galleryMeta = galleryMeta;
     writeStorage(data);
 }
@@ -416,7 +424,7 @@ function renderTimeline(items, $tl) {
         $section.innerHTML = `
             <div class="vault-tl-header">
                 <div class="vault-tl-header__name">${esc(ch.name)}</div>
-                <div class="vault-tl-header__count">${charItems.length} image${charItems.length !== 1 ? 's' : ''}</div>
+                <div class="vault-tl-header__count">${charItems.length} item${charItems.length !== 1 ? 's' : ''}</div>
             </div>
             <div class="vault-tl-row"></div>`;
 
@@ -424,8 +432,11 @@ function renderTimeline(items, $tl) {
         const baseIdx = items.indexOf(charItems[0]);
         charItems.forEach((item, localI) => {
             const $tile = document.createElement('div');
-            $tile.className = `vault-tl-tile${item.isAvatar ? ' vault-tl-tile--avatar' : ''}`;
-            $tile.innerHTML = `<img src="${esc(item.url)}" alt="${esc(item.charName)}" class="vault-tl-tile__img" loading="lazy" onerror="this.closest('.vault-tl-tile').style.display='none'">`;
+            const isVideo = item.type === 'video';
+            $tile.className = `vault-tl-tile${item.isAvatar ? ' vault-tl-tile--avatar' : ''}${isVideo ? ' vault-tl-tile--video' : ''}`;
+            $tile.innerHTML = isVideo
+                ? `<div class="vault-tile__video-thumb"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>`
+                : `<img src="${esc(item.url)}" alt="${esc(item.charName)}" class="vault-tl-tile__img" loading="lazy" onerror="this.closest('.vault-tl-tile').style.display='none'">`;
             $tile.addEventListener('click', () => openLightbox(baseIdx + localI));
             $row.appendChild($tile);
         });
@@ -691,6 +702,17 @@ async function deleteItem(item) {
         if (isIdbRef(item.ref)) await idbDelete(`img:${idbRefId(item.ref)}`).catch(() => {});
         if (ch.galleryMeta[item.ref]) delete ch.galleryMeta[item.ref];
         ch.galleryRefs.splice(idx, 1);
+        // Remove from wh_char_gallery if it was a wallhaven-assigned URL
+        try {
+            const whKey = 'wh_char_gallery';
+            let whStore; try { whStore = JSON.parse(localStorage.getItem(whKey) || '{}'); } catch { whStore = {}; }
+            if (Array.isArray(whStore[ch.id])) {
+                whStore[ch.id] = whStore[ch.id].filter(u => u !== item.ref);
+                if (!whStore[ch.id].length) delete whStore[ch.id];
+                localStorage.setItem(whKey, JSON.stringify(whStore));
+            }
+        } catch { /* ignore */ }
+        // saveGallery filters wh URLs automatically — pass the full merged refs
         saveGallery(ch.id, ch.galleryRefs, ch.galleryMeta);
     }
 
@@ -1001,6 +1023,42 @@ async function handleFiles(files) {
     }
     if (added) showToast(`${added} image${added !== 1 ? 's' : ''} added`, 'success');
 }
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// CROSS-TAB SYNC — live-reload when wallhaven assigns images in another tab
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+let _syncDebounce = null;
+window.addEventListener('storage', e => {
+    if (e.key !== 'wh_char_gallery' && e.key !== 'underdark_chars_v4') return;
+    clearTimeout(_syncDebounce);
+    _syncDebounce = setTimeout(async () => {
+        // Reload char data and merge new items without full page refresh
+        const fresh = getCharData();
+        fresh.forEach(freshCh => {
+            const existing = S.chars.find(c => c.id === freshCh.id);
+            if (!existing) return;
+            const newRefs = freshCh.galleryRefs.filter(r => !existing.galleryRefs.includes(r));
+            if (!newRefs.length) return;
+            existing.galleryRefs = freshCh.galleryRefs;
+            // Resolve and push new items
+            newRefs.forEach(async ref => {
+                const url = await resolveUrl(ref);
+                if (!url) return;
+                S.items.push({
+                    url, ref, type: 'image',
+                    charId: existing.id, charName: existing.name,
+                    charIdx: S.chars.indexOf(existing),
+                    idx: existing.galleryRefs.length,
+                    isAvatar: false,
+                    ts: Date.now(),
+                    tags: [],
+                });
+                updateStats();
+                render();
+            });
+        });
+    }, 400);
+});
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // INIT

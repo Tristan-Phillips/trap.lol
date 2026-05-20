@@ -620,6 +620,7 @@ lbAssignBtn.addEventListener('click',()=>{
   const w=lbDataset()[WH.lbIndex]; if(!w)return;
   assignToChar(w,charId);
 });
+lbAssignSel.addEventListener('change',syncLbButtons);
 
 function assignToChar(w, charId){
   const charIds=WH.assigned.get(w.id)||[];
@@ -797,9 +798,10 @@ function syncLbButtons(){
   lbLike.classList.toggle('wh-lb-corner-btn--active-heart',WH.liked.has(w.id));
   lbSave.classList.toggle('wh-lb-corner-btn--active-save', WH.saved.has(w.id));
   if(HAS_CHARS){
-    const isAssigned=WH.assigned.has(w.id)&&(WH.assigned.get(w.id)||[]).length>0;
-    lbAssignBtn.classList.toggle('wh-lb-action-btn--active-assign',isAssigned);
-    lbAssignBtn.title=isAssigned?'Click to unassign':'Assign to selected character';
+    const selectedChar=lbAssignSel.value;
+    const assignedToSelected=selectedChar&&(WH.assigned.get(w.id)||[]).includes(selectedChar);
+    lbAssignBtn.classList.toggle('wh-lb-action-btn--active-assign',assignedToSelected);
+    lbAssignBtn.title=assignedToSelected?`Unassign from ${getCharName(selectedChar)}`:'Assign to selected character';
   }
 }
 

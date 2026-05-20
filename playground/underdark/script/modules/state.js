@@ -737,6 +737,28 @@ export async function importFullInstance(jsonString) {
     saveState();
 }
 
+// ── Cross-tab sync — merge socialData.localPosts written by wallhaven or other tabs ──
+window.addEventListener('storage', e => {
+    if (e.key !== STORAGE_KEY || !e.newValue) return;
+    try {
+        const incoming = JSON.parse(e.newValue);
+        const inPosts = incoming?.socialData?.localPosts;
+        if (!inPosts) return;
+        if (!state.socialData)             state.socialData = {};
+        if (!state.socialData.localPosts)  state.socialData.localPosts = {};
+        Object.entries(inPosts).forEach(([charId, arr]) => {
+            if (!Array.isArray(arr)) return;
+            if (!state.socialData.localPosts[charId]) {
+                state.socialData.localPosts[charId] = [...arr];
+                return;
+            }
+            const existing = state.socialData.localPosts[charId];
+            const existingIds = new Set(existing.map(p => p.id).filter(Boolean));
+            arr.forEach(p => { if (p.id && !existingIds.has(p.id)) existing.push(p); });
+        });
+    } catch { /* ignore parse errors */ }
+});
+
 // ── Cross-tab sync — merge loadedCharacters written by wallhaven or other tabs ──
 window.addEventListener('storage', e => {
     if (e.key !== CHARS_KEY || !e.newValue) return;
