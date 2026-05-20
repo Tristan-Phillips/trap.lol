@@ -660,9 +660,9 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "46ad49f",
       "date": "2026-05-20",
-      "message": "fix(gallery): lightbox full-res loading — pulse CSS for thumb→full-res upgrade",
+      "message": "fix(gallery): pulse CSS for lightbox thumb→full-res upgrade indicator",
       "scope": "playground/underdark/gallery/",
       "impact": "low",
       "files": [
