@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.53",
+    "schema_version": "1.5.54",
     "last_updated": "2026-05-20",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -659,6 +659,18 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-20",
+      "message": "fix(gallery): sync vault assignments before first render to fix cold-load blank images",
+      "scope": "playground/underdark/gallery/",
+      "impact": "medium",
+      "files": [
+        "playground/underdark/gallery/script/app.js",
+        "status/logs/data/logs.json"
+      ],
+      "why": "wh_char_gallery was only populated by the wallhaven app's syncFromVault(). Opening the gallery page before the wallhaven page on a fresh browser session left wh_char_gallery empty so all assigned images were invisible until the wallhaven tab ran."
+    },
     {
       "hash": "04c639c",
       "date": "2026-05-20",
@@ -3388,6 +3400,17 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-20",
+      "agent": "Claude Sonnet 4.6",
+      "type": "bug_fix",
+      "summary": "Fixed gallery page showing blank assigned images on fresh load before the wallhaven tab had been opened. Root cause: wh_char_gallery is populated by wallhaven's syncFromVault() on boot — if the wallhaven app page had never loaded in the session, wh_char_gallery was empty and the gallery saw no wallhaven assignments. Fix: gallery/script/app.js now calls syncVaultToGallery() at the start of boot(), which fetches from the vault backend and merges assignments into wh_char_gallery before getCharData() runs.",
+      "decisions": [
+        "syncVaultToGallery() is awaited before getCharData() — assignments must be in localStorage before the gallery builds its item list or they will be absent from the first render.",
+        "The function is non-blocking on error — if the vault is unreachable, gallery still renders whatever is already in wh_char_gallery (could be stale or empty).",
+        "GALLERY_PROXY_BASE mirrors the wallhaven app's PROXY_BASE constant, kept local to gallery/script/app.js since the gallery is self-contained."
+      ]
+    },
     {
       "date": "2026-05-20",
       "agent": "Claude Sonnet 4.6",

@@ -112,6 +112,8 @@ function getCharData() {
         // Use thumb as the display ref so images always load without auth issues
         const { entries: whEntries, urls: whUrls } = getWhEntries(String(meta.id));
         const whThumbRefs = whEntries.map(e => whProxyUrl(e.thumb));
+        // Map proxied thumb ref → proxied full-res URL (for lightbox full-res loading)
+        const whFullMap = new Map(whEntries.map(e => [whProxyUrl(e.thumb), whProxyUrl(e.url)]));
         // Deduplicate — only include wh thumbs not already in extGallery
         const merged = [...new Set([...extGallery, ...whThumbRefs.filter(t => !extGallery.includes(t))])];
         return {
@@ -122,6 +124,7 @@ function getCharData() {
             galleryMeta: ext.galleryMeta  || {},
             videoRefs:   ext.videoGallery || [],
             _whUrls:     whUrls,   // full URLs, used by saveGallery filter
+            _whFullMap:  whFullMap, // thumb→fullUrl map for lightbox
         };
     });
 }
@@ -173,10 +176,43 @@ function saveAvatar(charId, ref) {
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// VAULT SYNC — hydrate wh_char_gallery from backend before first render
+// Needed when gallery opens before the wallhaven app tab has run syncFromVault.
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const GALLERY_PROXY_BASE = 'https://wallhaven.trap.lol';
+
+async function syncVaultToGallery() {
+    const vaultId = localStorage.getItem('wh_vault_id') || '';
+    if (!vaultId) return;
+    try {
+        const r = await fetch(`${GALLERY_PROXY_BASE}/vault/${vaultId}/data`);
+        if (!r.ok) return;
+        const data = await r.json();
+        const assignments = data.assignments || [];
+        if (!assignments.length) return;
+
+        let store;
+        try { store = JSON.parse(localStorage.getItem('wh_char_gallery') || '{}'); } catch { store = {}; }
+        let changed = false;
+        assignments.forEach(e => {
+            const cid = String(e.charId);
+            if (!Array.isArray(store[cid])) store[cid] = [];
+            const alreadyStored = store[cid].some(x => (typeof x === 'string' ? x : x.url) === e.fullUrl);
+            if (!alreadyStored) {
+                store[cid].push({ url: e.fullUrl, thumb: e.thumbUrl, wallId: e.wallId });
+                changed = true;
+            }
+        });
+        if (changed) localStorage.setItem('wh_char_gallery', JSON.stringify(store));
+    } catch { /* non-critical, gallery still renders without vault data */ }
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // BOOT — load all images
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 async function boot() {
     showLoading(true);
+    await syncVaultToGallery();
     S.chars = getCharData();
     populateCharTarget();
     buildCharRoster();
@@ -193,8 +229,11 @@ async function boot() {
             if (!url) return;
             const isAvatar = ref === ch.avatarRef;
             const localOffset = seqOffset++;
+            // For wallhaven items, fullUrl is the proxied full-res; otherwise same as url
+            const fullUrl = ch._whFullMap?.get(ref) || ch._whFullMap?.get(url) || url;
             allItems.push({
                 url,
+                fullUrl,
                 ref,
                 type:     'image',
                 charId:   ch.id,
@@ -610,6 +649,8 @@ function wireTransform() {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // LIGHTBOX
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+let _lbLoadToken = 0;
+
 function openLightbox(idx) {
     S.lbIndex = Math.max(0, Math.min(S.lbItems.length - 1, idx));
     qs('#vault-lb').hidden = false;
@@ -618,6 +659,7 @@ function openLightbox(idx) {
     renderLightbox();
 }
 function closeLightbox() {
+    ++_lbLoadToken; // cancel any in-flight full-res preload
     const $vid = qs('#lb-vid');
     if ($vid) { $vid.pause(); $vid.src = ''; }
     qs('#vault-lb').hidden = true;
@@ -648,8 +690,24 @@ function renderLightbox() {
         if ($img) $img.style.display = '';
         $img = $img || qs('#lb-img');
         $img.onerror = null;
-        $img.src = item.url;
+        // Load thumbnail immediately, then swap to full-res if different
+        const thumbUrl = item.url;
+        const fullUrl  = item.fullUrl || item.url;
+        $img.src = thumbUrl;
+        $img.classList.toggle('vault-lb__img--loading', thumbUrl !== fullUrl);
+        if (thumbUrl !== fullUrl) {
+            const token = ++_lbLoadToken;
+            const preload = new Image();
+            preload.onload = () => {
+                if (token !== _lbLoadToken) return; // navigated away
+                $img.src = fullUrl;
+                $img.classList.remove('vault-lb__img--loading');
+            };
+            preload.onerror = () => $img.classList.remove('vault-lb__img--loading');
+            preload.src = fullUrl;
+        }
         $img.onerror = () => {
+            $img.classList.remove('vault-lb__img--loading');
             const dir = S.lbIndex < S.lbItems.length - 1 ? 1 : -1;
             const next = S.lbIndex + dir;
             if (next >= 0 && next < S.lbItems.length) { S.lbIndex = next; renderLightbox(); }
