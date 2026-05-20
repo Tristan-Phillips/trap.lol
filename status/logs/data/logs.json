@@ -660,7 +660,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "86be894",
       "date": "2026-05-20",
       "message": "feat(wallhaven-proxy): vault ID system, image proxy, SQLite persistence",
       "scope": "services/wallhaven-proxy/, playground/wallhaven/",
