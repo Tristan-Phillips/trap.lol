@@ -95,11 +95,16 @@ func initDB(path string) (*sql.DB, error) {
 		os.Remove(testFile)
 	}
 
-	conn, err := sql.Open("sqlite", path+"?_journal=WAL&_timeout=5000&_fk=1")
+	conn, err := sql.Open("sqlite", path+"?_journal=DELETE&_timeout=5000&_fk=1&_mutex=full")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("sql.Open: %w", err)
 	}
 	conn.SetMaxOpenConns(1) // SQLite is single-writer
+
+	// Ping to verify the file can actually be created/opened before running schema
+	if err := conn.Ping(); err != nil {
+		return nil, fmt.Errorf("ping (db open failed): %w", err)
+	}
 
 	schema := `
 	CREATE TABLE IF NOT EXISTS vaults (
