@@ -740,6 +740,12 @@ body {
 }
 /* Suppress transition during active drag/pinch for zero-lag feedback */
 .vault-lb__img.lb-no-transition { transition: none; }
+/* Pulse while full-res is being fetched to replace thumbnail */
+.vault-lb__img--loading { animation: lb-img-pulse 1.4s ease-in-out infinite; }
+@keyframes lb-img-pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.65; }
+}
 
 /* Zoom indicator — top-right corner so it doesn't clash with the bottom HUD */
 .lb-zoom-pill {

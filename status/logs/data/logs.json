@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.51",
+    "schema_version": "1.5.52",
     "last_updated": "2026-05-20",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -659,6 +659,18 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-20",
+      "message": "fix(gallery): lightbox full-res loading — pulse CSS for thumb→full-res upgrade",
+      "scope": "playground/underdark/gallery/",
+      "impact": "low",
+      "files": [
+        "playground/underdark/gallery/style/style.css",
+        "status/logs/data/logs.json"
+      ],
+      "why": "The JS thumb-then-upgrade logic was committed but the .vault-lb__img--loading pulse animation CSS class was missing, so the loading state had no visual indicator."
+    },
     {
       "hash": "90cc3f4",
       "date": "2026-05-20",
@@ -3361,6 +3373,15 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-20",
+      "agent": "Claude Sonnet 4.6",
+      "type": "bug_fix",
+      "summary": "Resumed from previous context compaction. Added the missing .vault-lb__img--loading CSS pulse animation to gallery/style/style.css — the JS logic for thumb-first-then-full-res lightbox loading was already committed (item.fullUrl, _lbLoadToken, renderLightbox preload+swap) but the CSS class that provides the visual loading indicator was absent. One-line CSS addition completes the feature.",
+      "decisions": [
+        "vault-lb__img--loading uses a subtle opacity pulse (1→0.65→1) at 1.4s — slow enough to not be jarring, fast enough to signal active loading rather than a stuck state."
+      ]
+    },
     {
       "date": "2026-05-20",
       "agent": "Claude Sonnet 4.6",
