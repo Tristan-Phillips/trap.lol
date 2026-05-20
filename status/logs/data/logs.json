@@ -660,7 +660,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "0005f12",
       "date": "2026-05-21",
       "message": "redesign(home): playground feature card, signal entry, drone rows, infra cluster",
       "scope": "index.html, glass/",

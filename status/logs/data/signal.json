@@ -52,7 +52,7 @@
       "closed": "2026-05-21",
       "closed_by": "trap",
       "description": "Playground → full-width .pg-feature card. VOID → quiet .signal-entry inline chip. Drone Fleet → compact .drone-row horizontal bars. Infra sections wrapped in .infra-cluster with labeled subordinate divider.",
-      "notes": "Committed as pending (hash to be patched).",
+      "notes": "Committed as 0005f12.",
       "tags": ["home", "redesign", "ui"],
       "files_affected": [
         "index.html",
