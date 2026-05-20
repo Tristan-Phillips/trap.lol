@@ -576,7 +576,7 @@ function renderTrapSection() {
   try {
     $wrap.innerHTML = Object.values(trapData.manifest).map(item => `
       <a href="${esc(item.path)}" class="void-prose" aria-label="${esc(item.name)} — ${esc(item.description)}">
-        ${esc(item.description)}
+        <span class="void-prose__text">${esc(item.description)}</span>
       </a>`
     ).join("");
   } catch (e) {
