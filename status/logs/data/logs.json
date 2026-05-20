@@ -660,7 +660,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "04c639c",
       "date": "2026-05-20",
       "message": "feat(underdark): add wallhaven + vault ID step to initiation gate",
       "scope": "playground/underdark/",
