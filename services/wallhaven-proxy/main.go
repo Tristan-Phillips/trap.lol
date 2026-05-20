@@ -81,12 +81,18 @@ func main() {
 // ── Database ──────────────────────────────────────────────────────────────────
 
 func initDB(path string) (*sql.DB, error) {
-	// Ensure parent directory exists
+	// Ensure parent directory exists and is writable
 	dir := path[:strings.LastIndex(path, "/")]
 	if dir != "" {
 		if err := os.MkdirAll(dir, 0755); err != nil {
 			return nil, fmt.Errorf("mkdir %s: %w", dir, err)
 		}
+		// Verify write permission explicitly so error is obvious
+		testFile := dir + "/.write_test"
+		if err := os.WriteFile(testFile, []byte{}, 0600); err != nil {
+			return nil, fmt.Errorf("data directory %s is not writable (check volume ownership): %w", dir, err)
+		}
+		os.Remove(testFile)
 	}
 
 	conn, err := sql.Open("sqlite", path+"?_journal=WAL&_timeout=5000&_fk=1")
