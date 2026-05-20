@@ -2613,7 +2613,10 @@ export function initUI() {
     $settingsModal?.querySelector('[data-close-settings]')?.addEventListener('click', closeSettings);
 
     qsa('.settings-nav__item', $settingsModal).forEach($btn => {
-        $btn.addEventListener('click', () => switchSettingsTab($btn.dataset.stab));
+        $btn.addEventListener('click', () => {
+            if ($btn.tagName === 'A') { closeSettings(); return; }
+            switchSettingsTab($btn.dataset.stab);
+        });
     });
 
     // Open from Config tab "Global Settings" button

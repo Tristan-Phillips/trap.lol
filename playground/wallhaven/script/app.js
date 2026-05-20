@@ -473,20 +473,26 @@ async function fetchWallpapers(append){
     if(append){
       const startIdx=WH.results.length;
       WH.results=WH.results.concat(json.data);
-      if(lmWrap)lmWrap.remove();
-      json.data.forEach((w,i)=>buildTile(w,startIdx+i,'browse'));
+      if(WH.view==='browse'){
+        if(lmWrap)lmWrap.remove();
+        json.data.forEach((w,i)=>buildTile(w,startIdx+i,'browse'));
+      }
     } else {
       WH.results=json.data;
-      grid.innerHTML='';
-      WH.results.forEach((w,i)=>buildTile(w,i,'browse'));
+      if(WH.view==='browse'){
+        grid.innerHTML='';
+        WH.results.forEach((w,i)=>buildTile(w,i,'browse'));
+      }
     }
-    appendLoadMoreBtn();
-    window.lucide?.createIcons({nodes:[grid]});
-    pageNum.textContent=WH.page; pageTotal.textContent=WH.totalPages;
-    statusText.textContent=q?`"${q}"`:'Top results';
-    resultCount.textContent=WH.total.toLocaleString()+' results';
-    pageControls.hidden=!WH.results.length;
-    if(!WH.results.length)emptyBrowse.hidden=false;
+    if(WH.view==='browse'){
+      appendLoadMoreBtn();
+      window.lucide?.createIcons({nodes:[grid]});
+      pageNum.textContent=WH.page; pageTotal.textContent=WH.totalPages;
+      statusText.textContent=q?`"${q}"`:'Top results';
+      resultCount.textContent=WH.total.toLocaleString()+' results';
+      pageControls.hidden=!WH.results.length;
+      if(!WH.results.length)emptyBrowse.hidden=false;
+    }
     setLoading(false,append);
   } catch(err){
     setLoading(false,append);
