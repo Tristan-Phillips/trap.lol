@@ -16,12 +16,9 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
 FROM alpine:3.20
 
 RUN apk add --no-cache ca-certificates tzdata && \
-    addgroup -S proxy && adduser -S proxy -G proxy && \
-    mkdir -p /data && chown proxy:proxy /data
+    mkdir -p /data
 
 COPY --from=builder /wallhaven-proxy /wallhaven-proxy
-
-USER proxy
 
 EXPOSE 8080
 

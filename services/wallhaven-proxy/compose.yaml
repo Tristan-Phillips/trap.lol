@@ -18,6 +18,9 @@ services:
       # Only bind to localhost — Cloudflare Tunnel reaches in directly
       - "127.0.0.1:8080:8080"
 
+    # Run as the host trap user so ./data bind mount is writable without sudo chown
+    user: "1000:1000"
+
     volumes:
       - ./data:/data
 
