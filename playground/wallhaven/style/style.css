@@ -319,6 +319,29 @@ button { font-family: inherit; }
   font-size: 0.6rem;
   color: rgba(255,255,255,0.2);
 }
+.wh-purity-section__reveal {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: transparent;
+  border: 1px solid rgba(var(--accent-rgb), 0.25);
+  border-radius: 5px;
+  color: rgba(var(--accent-rgb), 0.7);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  padding: 3px 9px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.wh-purity-section__reveal:hover { background: rgba(var(--accent-rgb), 0.12); color: #fff; border-color: rgba(var(--accent-rgb), 0.5); }
+
+/* ── Blurred adult tiles ─────────────────────────────────────────────────── */
+.wh-tile--blurred .wh-tile__img { filter: blur(18px); transform: scale(1.05); transition: filter 0.25s, transform 0.25s; }
+.wh-tile--blurred:hover .wh-tile__img { filter: blur(18px); }
+.wh-tile--blurred .wh-tile__overlay { display: none; }
+.wh-tile--blurred { cursor: default; }
 
 /* ── Empty / spinner / error states ──────────────────────────────────────── */
 .wh-empty-state, .wh-spinner, .wh-error-state {

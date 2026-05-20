@@ -604,21 +604,35 @@ function renderPuritySplit(items, set) {
   const adult = items.filter(w => w.purity !== 'sfw');
   const hasBoth = sfw.length && adult.length;
 
-  function insertSectionHead(label, count) {
+  function insertSectionHead(label, count, isAdult) {
     const el = document.createElement('div');
-    el.className = 'wh-purity-section';
-    el.innerHTML = `<span class="wh-purity-section__label">${label}</span><span class="wh-purity-section__count">${count}</span>`;
+    el.className = 'wh-purity-section' + (isAdult ? ' wh-purity-section--adult' : '');
+    el.innerHTML = isAdult
+      ? `<span class="wh-purity-section__label">${label}</span><span class="wh-purity-section__count">${count}</span><button class="wh-purity-section__reveal" title="Reveal adult images"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg> Reveal</button>`
+      : `<span class="wh-purity-section__label">${label}</span><span class="wh-purity-section__count">${count}</span>`;
+    if (isAdult) {
+      el.querySelector('.wh-purity-section__reveal').addEventListener('click', () => {
+        grid.querySelectorAll('.wh-tile--blurred').forEach(t => t.classList.remove('wh-tile--blurred'));
+        el.querySelector('.wh-purity-section__reveal').hidden = true;
+      });
+    }
     grid.appendChild(el);
   }
 
   let idx = 0;
   if (sfw.length) {
-    if (hasBoth) insertSectionHead('SFW', sfw.length);
+    if (hasBoth) insertSectionHead('SFW', sfw.length, false);
     sfw.forEach(w => buildTile(w, idx++, set));
   }
   if (adult.length) {
-    if (hasBoth) insertSectionHead('Sketchy / NSFW', adult.length);
-    adult.forEach(w => buildTile(w, idx++, set));
+    if (hasBoth) insertSectionHead('Sketchy / NSFW', adult.length, true);
+    const adultTiles = [];
+    adult.forEach(w => {
+      buildTile(w, idx++, set);
+      // buildTile always appends as last child of grid
+      adultTiles.push(grid.lastElementChild);
+    });
+    if (hasBoth) adultTiles.forEach(t => t.classList.add('wh-tile--blurred'));
   }
 }
 
@@ -794,7 +808,9 @@ function buildTile(w, idx, set){
     </div>`;
 
   tile.querySelector('.wh-tile__img-wrap').addEventListener('click',e=>{
-    if(e.target.closest('[data-action]'))return; openLightbox(idx,set);
+    if(e.target.closest('[data-action]'))return;
+    if(tile.classList.contains('wh-tile--blurred'))return;
+    openLightbox(idx,set);
   });
   tile.querySelector('[data-action="like"]').addEventListener('click',e=>{e.stopPropagation();toggleLike(w,tile);});
   tile.querySelector('[data-action="save"]').addEventListener('click',e=>{e.stopPropagation();toggleSave(w,tile);});

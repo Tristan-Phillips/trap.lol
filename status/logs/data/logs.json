@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.55",
+    "schema_version": "1.5.56",
     "last_updated": "2026-05-20",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -659,6 +659,19 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-20",
+      "message": "feat(wallhaven): auto-blur adult tiles in Liked/Saved with section reveal button",
+      "scope": "playground/wallhaven/",
+      "impact": "low",
+      "files": [
+        "playground/wallhaven/script/app.js",
+        "playground/wallhaven/style/style.css",
+        "status/logs/data/logs.json"
+      ],
+      "why": "Adult content (sketchy+nsfw) in Liked/Saved rendered in the open. Added auto-blur on all adult tiles until the 'Reveal' button in the section header is clicked, which unblurs the whole group at once."
+    },
     {
       "hash": "cbeb378",
       "date": "2026-05-20",
