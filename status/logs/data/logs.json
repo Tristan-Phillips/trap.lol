@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.48",
+    "schema_version": "1.5.49",
     "last_updated": "2026-05-20",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -659,6 +659,20 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-20",
+      "message": "feat(wallhaven): assign log panel + fix gallery image display via thumb URL",
+      "scope": "playground/wallhaven/",
+      "impact": "high",
+      "files": [
+        "playground/wallhaven/script/app.js",
+        "playground/wallhaven/style/style.css",
+        "playground/underdark/gallery/script/app.js",
+        "status/logs/data/logs.json"
+      ],
+      "why": "Gallery images were not displaying because wh_char_gallery stored full-res wallhaven URLs which may require auth — switched schema to {url, thumb, wallId} objects and use thumb (large thumbnail, always public) for display. Also added wh_assign_log localStorage key and a visible Assignment Log panel in the Assigned tab showing each assign/unassign action with thumbnail, character name, and timestamp."
+    },
     {
       "hash": "16a8d52",
       "date": "2026-05-20",
@@ -3315,6 +3329,18 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-20",
+      "agent": "Claude Sonnet 4.6",
+      "type": "bug_fix",
+      "summary": "User returned with screenshot evidence: gallery shows count=2 for Ada Wong but only renders 1 image (the avatar). Root cause: wh_char_gallery stored the full-res wallhaven URL (w.wallhaven.cc/full/...) which fails to load in <img> tags due to hotlink/auth restrictions. Fix: schema changed from [url] to [{url, thumb, wallId}]; gallery now displays the large thumbnail URL (always publicly accessible). Also added wh_assign_log localStorage key and a visible Assignment Log panel in the wallhaven Assigned tab.",
+      "decisions": [
+        "wh_char_gallery schema is now [{url, thumb, wallId}] not [url]. The thumb field holds the large thumbnail URL which is always publicly accessible without auth. The url field holds the full-res URL for download purposes.",
+        "Legacy string entries in wh_char_gallery are handled gracefully: all read/filter paths check typeof e === 'string' before accessing e.url.",
+        "wh_assign_log is a separate localStorage key (max 200 entries, prepended newest-first) recording every assign/unassign action with wallId, charId, charName, thumb, and timestamp.",
+        "The Assignment Log panel is rendered below the grid in the Assigned tab, hidden in all other views. Has a Clear Log button."
+      ]
+    },
     {
       "date": "2026-05-20",
       "agent": "Claude Sonnet 4.6",

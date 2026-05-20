@@ -769,3 +769,40 @@ kbd {
   .wh-lb-corner-btn { width: 42px; height: 42px; }
   .wh-lb-corner-btn svg { width: 17px; height: 17px; }
 }
+
+/* ── Assignment Log ───────────────────────────────────────────────────────── */
+.wh-assign-log {
+  margin: 24px 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(0,0,0,0.18);
+}
+.wh-assign-log__header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(255,255,255,0.03);
+}
+.wh-assign-log__title {
+  font-size: 0.65rem; font-weight: 600; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--text-sec);
+}
+.wh-assign-log__list { max-height: 280px; overflow-y: auto; }
+.wh-assign-log__row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.72rem;
+}
+.wh-assign-log__row:last-child { border-bottom: none; }
+.wh-assign-log__row--assign   { border-left: 2px solid rgba(190,41,236,0.5); }
+.wh-assign-log__row--unassign { border-left: 2px solid rgba(255,255,255,0.12); }
+.wh-assign-log__thumb {
+  width: 36px; height: 36px; object-fit: cover; border-radius: 4px;
+  border: 1px solid var(--border); flex-shrink: 0;
+}
+.wh-assign-log__info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.wh-assign-log__action { font-weight: 600; font-size: 0.68rem; color: var(--text-sec); }
+.wh-assign-log__char   { font-size: 0.72rem; color: var(--text-pri); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wh-assign-log__ts     { font-size: 0.6rem; color: var(--text-muted); font-family: var(--font-mono); }

@@ -189,7 +189,10 @@ function setLoading(on, isAppend=false){
     lmBtn.innerHTML=on?'<span class="wh-spin-icon">↻</span> Loading…':'+ Load More';
   }
 }
-function hideAllStates(){ emptyBrowse.hidden=true;likedEmpty.hidden=true;savedEmpty.hidden=true;assignedEmpty.hidden=true;errorBox.hidden=true;spinner.hidden=true; }
+function hideAllStates(){
+  emptyBrowse.hidden=true;likedEmpty.hidden=true;savedEmpty.hidden=true;assignedEmpty.hidden=true;errorBox.hidden=true;spinner.hidden=true;
+  const logEl=document.getElementById('wh-assign-log'); if(logEl)logEl.hidden=true;
+}
 function showError(msg){ errorBox.hidden=false;errorMsg.textContent=msg;spinner.hidden=true; }
 
 function updateBadges(){
@@ -401,6 +404,42 @@ function closeWhSidebarOnEsc(e){ if(e.key==='Escape') closeWhSidebar(); }
 whSidebarToggle.addEventListener('click',()=>whSidebar.classList.contains('wh-sidebar--open')?closeWhSidebar():openWhSidebar());
 whSidebarBack.addEventListener('click',closeWhSidebar);
 
+function renderAssignLog(){
+  const LOG_KEY='wh_assign_log';
+  let log; try{log=JSON.parse(localStorage.getItem(LOG_KEY)||'[]');}catch{log=[];}
+  // Filter by active char filter if set
+  const filtered=WH.assignedCharFilter?log.filter(e=>e.charId===WH.assignedCharFilter):log;
+  let el=document.getElementById('wh-assign-log');
+  if(!el){
+    el=document.createElement('div'); el.id='wh-assign-log'; el.className='wh-assign-log';
+    grid.parentElement.appendChild(el);
+  }
+  if(!filtered.length){el.hidden=true;return;}
+  el.hidden=false;
+  const fmtDate=ts=>{const d=new Date(ts);return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});};
+  el.innerHTML=`
+    <div class="wh-assign-log__header">
+      <span class="wh-assign-log__title">Assignment Log</span>
+      <button class="wh-btn wh-btn--ghost wh-btn--sm" id="wh-log-clear-btn">Clear Log</button>
+    </div>
+    <div class="wh-assign-log__list">
+      ${filtered.map(e=>`
+        <div class="wh-assign-log__row wh-assign-log__row--${e.action}">
+          ${e.thumb?`<img src="${esc(e.thumb)}" class="wh-assign-log__thumb" loading="lazy" onerror="this.style.display='none'" alt="">`:``}
+          <div class="wh-assign-log__info">
+            <span class="wh-assign-log__action">${e.action==='assign'?'↗ Assigned':'↙ Unassigned'}</span>
+            <span class="wh-assign-log__char">${esc(e.charName)}</span>
+            <span class="wh-assign-log__ts">${fmtDate(e.ts)}</span>
+          </div>
+        </div>`).join('')}
+    </div>`;
+  document.getElementById('wh-log-clear-btn')?.addEventListener('click',()=>{
+    if(!confirm('Clear the full assignment log?'))return;
+    localStorage.removeItem(LOG_KEY); el.hidden=true;
+    showToast('Log cleared.','info');
+  });
+}
+
 function renderCurrentView(){
   hideAllStates(); grid.innerHTML='';
   if(WH.view==='liked'){
@@ -420,8 +459,9 @@ function renderCurrentView(){
     if(WH.assignedCharFilter){
       items=items.filter(w=>(WH.assigned.get(w.id)||[]).includes(WH.assignedCharFilter));
     }
-    if(!items.length){assignedEmpty.hidden=false;return;}
+    if(!items.length){assignedEmpty.hidden=false; renderAssignLog(); return;}
     items.forEach((w,i)=>buildTile(w,i,'assigned'));
+    renderAssignLog();
     window.lucide?.createIcons({nodes:[grid]});
     const label=WH.assignedCharFilter?`Assigned — ${getCharName(WH.assignedCharFilter)}`:'Assigned';
     statusText.textContent=label; resultCount.textContent=items.length+' images';
@@ -622,6 +662,16 @@ lbAssignBtn.addEventListener('click',()=>{
 });
 lbAssignSel.addEventListener('change',syncLbButtons);
 
+function logAssignAction(action, w, charId){
+  try {
+    const LOG_KEY='wh_assign_log', MAX=200;
+    let log; try{log=JSON.parse(localStorage.getItem(LOG_KEY)||'[]');}catch{log=[];}
+    log.unshift({ action, wallId:w.id, charId:String(charId), charName:getCharName(charId), thumb:w.thumbs?.large||w.thumbs?.small||'', ts:Date.now() });
+    if(log.length>MAX)log.length=MAX;
+    localStorage.setItem(LOG_KEY,JSON.stringify(log));
+  } catch { /* non-critical */ }
+}
+
 function assignToChar(w, charId){
   const charIds=WH.assigned.get(w.id)||[];
   if(charIds.includes(charId)){
@@ -639,12 +689,14 @@ function assignToChar(w, charId){
         localStorage.setItem(whKey,JSON.stringify(store));
       }
     } catch(e){console.warn('WH unassign gallery error',e);}
+    logAssignAction('unassign', w, charId);
     showToast('Unassigned from character.','info');
   } else {
     charIds.push(charId);
     WH.assigned.set(w.id,charIds);
     WH.assignedData.set(w.id,w);
     addToCharacterGalleryInApp(charId, w.path, w.thumbs.large, w.id);
+    logAssignAction('assign', w, charId);
     showToast(`Assigned to ${getCharName(charId)} — added to gallery & feed.`,'success');
   }
   saveMapArr('wh_assigned',WH.assigned);
