@@ -660,7 +660,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "90cc3f4",
       "date": "2026-05-20",
       "message": "feat(wallhaven): pushToVault — upload existing localStorage state on vault connect",
       "scope": "playground/wallhaven/",
