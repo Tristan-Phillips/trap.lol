@@ -297,6 +297,29 @@ button { font-family: inherit; }
 .wh-grid--masonry { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
 .wh-grid--large   { grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); }
 
+/* ── Purity section divider (Liked / Saved split) ──────────────────────── */
+.wh-purity-section {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 2px 2px;
+  border-bottom: 1px solid rgba(var(--accent-rgb), 0.12);
+  margin-bottom: 2px;
+}
+.wh-purity-section__label {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(var(--accent-rgb), 0.6);
+}
+.wh-purity-section__count {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: rgba(255,255,255,0.2);
+}
+
 /* ── Empty / spinner / error states ──────────────────────────────────────── */
 .wh-empty-state, .wh-spinner, .wh-error-state {
   position: absolute; inset: 0;

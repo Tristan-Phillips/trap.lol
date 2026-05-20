@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.54",
+    "schema_version": "1.5.55",
     "last_updated": "2026-05-20",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -659,6 +659,19 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-20",
+      "message": "feat(wallhaven): purity split sections in Liked and Saved views",
+      "scope": "playground/wallhaven/",
+      "impact": "low",
+      "files": [
+        "playground/wallhaven/script/app.js",
+        "playground/wallhaven/style/style.css",
+        "status/logs/data/logs.json"
+      ],
+      "why": "Liked and Saved were a flat unsorted grid mixing SFW and explicit content. User wants SFW separated from Sketchy+NSFW with a visible section header."
+    },
     {
       "hash": "c8592f5",
       "date": "2026-05-20",

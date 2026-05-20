@@ -599,18 +599,41 @@ function renderAssignLog(){
   });
 }
 
+function renderPuritySplit(items, set) {
+  const sfw   = items.filter(w => w.purity === 'sfw');
+  const adult = items.filter(w => w.purity !== 'sfw');
+  const hasBoth = sfw.length && adult.length;
+
+  function insertSectionHead(label, count) {
+    const el = document.createElement('div');
+    el.className = 'wh-purity-section';
+    el.innerHTML = `<span class="wh-purity-section__label">${label}</span><span class="wh-purity-section__count">${count}</span>`;
+    grid.appendChild(el);
+  }
+
+  let idx = 0;
+  if (sfw.length) {
+    if (hasBoth) insertSectionHead('SFW', sfw.length);
+    sfw.forEach(w => buildTile(w, idx++, set));
+  }
+  if (adult.length) {
+    if (hasBoth) insertSectionHead('Sketchy / NSFW', adult.length);
+    adult.forEach(w => buildTile(w, idx++, set));
+  }
+}
+
 function renderCurrentView(){
   hideAllStates(); grid.innerHTML='';
   if(WH.view==='liked'){
     const items=[...WH.likedData.values()];
     if(!items.length){likedEmpty.hidden=false;return;}
-    items.forEach((w,i)=>buildTile(w,i,'liked'));
+    renderPuritySplit(items,'liked');
     window.lucide?.createIcons({nodes:[grid]});
     statusText.textContent='Liked'; resultCount.textContent=items.length+' images';
   } else if(WH.view==='saved'){
     const items=[...WH.savedData.values()];
     if(!items.length){savedEmpty.hidden=false;return;}
-    items.forEach((w,i)=>buildTile(w,i,'saved'));
+    renderPuritySplit(items,'saved');
     window.lucide?.createIcons({nodes:[grid]});
     statusText.textContent='Saved'; resultCount.textContent=items.length+' images';
   } else if(WH.view==='assigned'){
