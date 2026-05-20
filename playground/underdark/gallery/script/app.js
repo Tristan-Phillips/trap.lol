@@ -95,15 +95,16 @@ function getCharData() {
     if (!data) return [];
     const roster = data.characters || [];
     const loaded = data.loadedCharacters || {};
-    // Merge wallhaven-assigned images from the conflict-free wh_char_gallery key
-    let whGallery = {};
-    try { whGallery = JSON.parse(localStorage.getItem('wh_char_gallery') || '{}'); } catch {}
     return roster.map(meta => {
         const char    = loaded[String(meta.id)] || {};
         const ext     = char.extensions?.underdark || {};
         const extGallery = ext.gallery || [];
-        const whExtra    = whGallery[String(meta.id)] || [];
-        const merged = [...new Set([...extGallery, ...whExtra])];
+        // wh_char_gallery entries: [{url, thumb}] objects (or legacy strings)
+        // Use thumb as the display ref so images always load without auth issues
+        const { entries: whEntries, urls: whUrls } = getWhEntries(String(meta.id));
+        const whThumbRefs = whEntries.map(e => e.thumb);
+        // Deduplicate — only include wh thumbs not already in extGallery
+        const merged = [...new Set([...extGallery, ...whThumbRefs.filter(t => !extGallery.includes(t))])];
         return {
             id:          String(meta.id),
             name:        char.name || meta.name || 'Unknown',
@@ -111,6 +112,7 @@ function getCharData() {
             galleryRefs: merged,
             galleryMeta: ext.galleryMeta  || {},
             videoRefs:   ext.videoGallery || [],
+            _whUrls:     whUrls,   // full URLs, used by saveGallery filter
         };
     });
 }
@@ -125,12 +127,17 @@ function saveVideoRefs(charId, videoRefs) {
     char.extensions.underdark.videoGallery = videoRefs;
     writeStorage(data);
 }
-function getWhUrls(charId) {
+// Returns { urls: Set<string>, entries: [{url, thumb}] } for wh_char_gallery entries
+// Handles both legacy string entries and new {url, thumb, wallId} objects
+function getWhEntries(charId) {
     try {
         const store = JSON.parse(localStorage.getItem('wh_char_gallery') || '{}');
-        return new Set(store[String(charId)] || []);
-    } catch { return new Set(); }
+        const raw = store[String(charId)] || [];
+        const entries = raw.map(e => typeof e === 'string' ? { url: e, thumb: e } : { url: e.url, thumb: e.thumb || e.url });
+        return { urls: new Set(entries.map(e => e.url)), entries };
+    } catch { return { urls: new Set(), entries: [] }; }
 }
+function getWhUrls(charId) { return getWhEntries(charId).urls; }
 function saveGallery(charId, galleryRefs, galleryMeta) {
     const data = readStorage();
     if (!data) return;
@@ -138,9 +145,10 @@ function saveGallery(charId, galleryRefs, galleryMeta) {
     if (!char) return;
     if (!char.extensions)           char.extensions = {};
     if (!char.extensions.underdark) char.extensions.underdark = {};
-    // Exclude wh_char_gallery URLs so ext.gallery stays as underdark-native refs only
-    const whUrls = getWhUrls(charId);
-    char.extensions.underdark.gallery     = galleryRefs.filter(r => !whUrls.has(r));
+    // Exclude wh_char_gallery refs (both full URLs and thumb URLs) so ext.gallery stays underdark-native only
+    const { urls: whUrls, entries: whEntries } = getWhEntries(charId);
+    const whThumbs = new Set(whEntries.map(e => e.thumb));
+    char.extensions.underdark.gallery     = galleryRefs.filter(r => !whUrls.has(r) && !whThumbs.has(r));
     char.extensions.underdark.galleryMeta = galleryMeta;
     writeStorage(data);
 }
@@ -702,12 +710,14 @@ async function deleteItem(item) {
         if (isIdbRef(item.ref)) await idbDelete(`img:${idbRefId(item.ref)}`).catch(() => {});
         if (ch.galleryMeta[item.ref]) delete ch.galleryMeta[item.ref];
         ch.galleryRefs.splice(idx, 1);
-        // Remove from wh_char_gallery if it was a wallhaven-assigned URL
+        // Remove from wh_char_gallery if it was a wallhaven-assigned ref (match by thumb or full URL)
         try {
             const whKey = 'wh_char_gallery';
             let whStore; try { whStore = JSON.parse(localStorage.getItem(whKey) || '{}'); } catch { whStore = {}; }
             if (Array.isArray(whStore[ch.id])) {
-                whStore[ch.id] = whStore[ch.id].filter(u => u !== item.ref);
+                whStore[ch.id] = whStore[ch.id].filter(e =>
+                    typeof e === 'string' ? e !== item.ref : (e.thumb !== item.ref && e.url !== item.ref)
+                );
                 if (!whStore[ch.id].length) delete whStore[ch.id];
                 localStorage.setItem(whKey, JSON.stringify(whStore));
             }

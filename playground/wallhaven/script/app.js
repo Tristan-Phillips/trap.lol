@@ -279,7 +279,7 @@ unassignAllBtn.addEventListener('click',()=>{
       affectedChars.forEach(cid=>{
         const k=String(cid);
         if(Array.isArray(store[k])){
-          store[k]=store[k].filter(u=>u!==wData.path);
+          store[k]=store[k].filter(e=>typeof e==='string'?e!==wData.path:e.url!==wData.path);
           if(!store[k].length)delete store[k];
         }
       });
@@ -628,13 +628,13 @@ function assignToChar(w, charId){
     const next=charIds.filter(id=>id!==charId);
     if(next.length===0){WH.assigned.delete(w.id);WH.assignedData.delete(w.id);}
     else{WH.assigned.set(w.id,next);}
-    // Remove from wh_char_gallery
+    // Remove from wh_char_gallery (entries may be {url,thumb,wallId} objects or legacy strings)
     try {
       const whKey='wh_char_gallery';
       let store; try{store=JSON.parse(localStorage.getItem(whKey)||'{}');}catch{store={};}
       const cid=String(charId);
       if(Array.isArray(store[cid])){
-        store[cid]=store[cid].filter(u=>u!==w.path);
+        store[cid]=store[cid].filter(e=>typeof e==='string'?e!==w.path:e.url!==w.path);
         if(!store[cid].length)delete store[cid];
         localStorage.setItem(whKey,JSON.stringify(store));
       }
@@ -662,16 +662,19 @@ function addToCharacterGalleryInApp(charId, url, thumb, wallId){
     // Write to wh_char_gallery — a wallhaven-owned key that never gets
     // overwritten by underdark's saveState(). The gallery page reads this
     // additively alongside underdark_chars_v4. No race conditions possible.
+    // Schema: { [charId]: [{ url, thumb, wallId }, ...] }
+    // url = full-res (may require auth), thumb = large thumbnail (always accessible)
     const whKey = 'wh_char_gallery';
     let store;
     try { store = JSON.parse(localStorage.getItem(whKey) || '{}'); } catch { store = {}; }
     const cid = String(charId);
     if (!Array.isArray(store[cid])) store[cid] = [];
-    if (!store[cid].includes(url)) {
-      store[cid].push(url);
+    const alreadyStored = store[cid].some(e => (typeof e === 'string' ? e === url : e.url === url));
+    if (!alreadyStored) {
+      store[cid].push({ url, thumb: thumb || url, wallId: String(wallId) });
       localStorage.setItem(whKey, JSON.stringify(store));
     }
-    addToCharacterFeedInApp(charId, url, thumb, wallId);
+    addToCharacterFeedInApp(charId, thumb || url, thumb, wallId);
   } catch(e){ console.warn('WH assign gallery error',e); }
 }
 
