@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.56",
+    "schema_version": "1.5.57",
     "last_updated": "2026-05-20",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -659,6 +659,15 @@
     ]
   },
   "commits": [
+    {
+      "hash": "24533a2",
+      "date": "2026-05-20",
+      "message": "fix(wallhaven): lightbox opening wrong image after purity split — use original dataset idx",
+      "scope": "playground/wallhaven/",
+      "impact": "medium",
+      "files": ["playground/wallhaven/script/app.js"],
+      "why": "renderPuritySplit used a render-order counter for tile idx, but lbDataset() resolves items by insertion-order index — mismatch caused lightbox to open a different image than the one clicked. Fixed by passing items.indexOf(w) to buildTile so idx always matches the flat dataset position."
+    },
     {
       "hash": "7fc3fd3",
       "date": "2026-05-20",
@@ -3426,6 +3435,27 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-20",
+      "agent": "Claude Sonnet 4.6",
+      "type": "bug_fix",
+      "summary": "Fixed lightbox opening the wrong image after the purity split was introduced. Root cause: renderPuritySplit used a local render-order counter for tile idx, while lbDataset() resolves items by their position in the insertion-order flat array — the two orderings diverged as soon as SFW and adult were separated. Fixed by using items.indexOf(w) so each tile's idx always maps to its correct position in the lbDataset array.",
+      "decisions": [
+        "idx passed to buildTile must always be the item's position in the flat lbDataset() array, not a render-order counter. This is now the established invariant — any future purity split or grouping logic must preserve it."
+      ]
+    },
+    {
+      "date": "2026-05-20",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Added purity split sections to Liked and Saved views in the wallhaven app (SFW vs Sketchy/NSFW with a section header divider), then added auto-blur on all adult tiles with a single 'Reveal' button in the section header that unblurs the whole group at once. Clicking a blurred tile is disabled — it does not open the lightbox.",
+      "decisions": [
+        "Sketchy and NSFW are grouped together in one 'adult' bucket — the distinction matters in search results but not in personal collections.",
+        "Blur is applied at render time by tagging tiles with .wh-tile--blurred — no JS state needed, CSS does the visual work.",
+        "The reveal is a one-way action per render cycle: unblurring is permanent until the view re-renders (e.g. switching tabs and back).",
+        "If all items in a view are the same purity, no section header is shown and no blur is applied — the flat grid persists."
+      ]
+    },
     {
       "date": "2026-05-20",
       "agent": "Claude Sonnet 4.6",

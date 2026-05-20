@@ -1,7 +1,7 @@
 {
   "_meta": {
     "schema_version": "1.0.0",
-    "last_updated": "2026-05-18",
+    "last_updated": "2026-05-20",
     "subject": "trap",
     "purpose": "A living psychological profile of the subject, built incrementally by LLMs across sessions. Not a diagnosis. Not authoritative. A record of how different AI systems perceive and interpret one human over time — for the subject's own curiosity. Read by the viewer at /status/observations/.",
     "viewer": "status/observations/index.html",
@@ -91,12 +91,74 @@
     "handle": "trap",
     "real_name": "Tristan Phillips",
     "first_observed": "2026-05-18",
-    "total_entries": 12,
+    "total_entries": 15,
     "last_assessor": "Claude Sonnet 4.6",
     "note": "Entry count is manually maintained — update when you add entries."
   },
 
   "entries": [
+
+    {
+      "entry_id": "behavioural-20260520-s46",
+      "category": "behavioural",
+      "label": "Screenshot-as-specification — visual evidence over verbal description",
+      "assessor": "Claude Sonnet 4.6",
+      "assessed_on": "2026-05-20",
+      "confidence": 0.82,
+      "observation": "The subject consistently communicates desired changes and bug reports via screenshot rather than verbal description of the problem. This is not laziness — the screenshots are targeted and paired with a precise one-line instruction ('clicking on the image does not open the correct one'). The visual evidence is treated as the primary source of truth; the words are secondary context. This pattern suggests the subject's internal representation of UI problems is spatial and visual, and they prefer to transmit it at the same fidelity rather than translating it into prose.",
+      "evidence": [
+        "Purity split request: two screenshots showing the Liked view before and after, with a single-line instruction",
+        "Blur request: screenshot of the working purity split as baseline, plus one-line feature request",
+        "Lightbox bug: screenshot of an incorrect image open in the lightbox, one-line bug description",
+        "Gallery lightbox full-res bug earlier in session: screenshot showing thumbnail vs expected full-res, brief description",
+        "Pattern consistent across multiple sessions — screenshots precede or replace extended verbal problem descriptions"
+      ],
+      "tags": ["behavioural", "communication", "visual-thinking", "specification"]
+    },
+
+    {
+      "entry_id": "values-20260520-s46",
+      "category": "values",
+      "label": "Privacy instinct applied to personal collections, not just infrastructure",
+      "assessor": "Claude Sonnet 4.6",
+      "assessed_on": "2026-05-20",
+      "confidence": 0.73,
+      "observation": "The request to auto-blur adult content in personal Liked/Saved collections is not a safety feature for others — the wallhaven app is personal infrastructure, not a public-facing page. The blur is a deliberate choice to require intentional action before explicit content is visible, even in a private context. This extends the subject's documented privacy/sovereignty ethic inward: the same instinct that keeps API keys out of client-side code and routes wallhaven images through a proxy also applies a soft gate to their own visual consumption. The subject appears to value intentionality over convenience in their own experience.",
+      "evidence": [
+        "Blur requested specifically for Liked and Saved views — personal collections only, not Browse",
+        "The wallhaven app is private personal infrastructure, not shared — the blur is not for others' benefit",
+        "The reveal mechanism is a single-click group action, not per-image — the gate is intentional but not onerous",
+        "Same session: vault IDs added to onboarding gate — deliberate friction added to data sync",
+        "Consistent with existing values entry: 'Distrust of external dependency as ethical stance' (values-20260518-s46)"
+      ],
+      "counter_to": null,
+      "tags": ["values", "privacy", "intentionality", "personal-ethics"]
+    },
+
+    {
+      "entry_id": "cognitive-20260520-s46",
+      "category": "cognitive",
+      "label": "Tight feedback loops — ships, observes, corrects in one session",
+      "assessor": "Claude Sonnet 4.6",
+      "assessed_on": "2026-05-20",
+      "confidence": 0.78,
+      "observation": "This session exhibited a consistent pattern: feature is requested, built, and shown to the subject via screenshot, and the subject returns immediately with the next iteration — often a bug or refinement observed from that same screenshot. The loop from 'purity split' to 'add blur' to 'lightbox opens wrong image' to 'fix' happened within a single session, each step visible in the screenshot evidence. The subject does not batch feedback — they test immediately and route observations back. This is a tightly coupled development style: the subject is simultaneously the user, the QA function, and the product owner.",
+      "evidence": [
+        "Purity split shipped → subject opened it, tested it, returned with blur request immediately",
+        "Blur shipped → subject clicked an adult tile, saw wrong image in lightbox, returned with screenshot",
+        "Lightbox idx bug found, fixed, and the fix verified — all within the same session",
+        "Gallery cold-load bug found via user report ('on brand new load if gallery is opened before wallhaven') — tested and reported immediately after prior fix was shipped",
+        "Pattern across prior sessions: Docker portability issues were found by actually deploying the container, not by code review"
+      ],
+      "annotations": [
+        {
+          "assessor": "Claude Sonnet 4.6",
+          "assessed_on": "2026-05-20",
+          "note": "This contrasts with the existing 'deferred execution' entry (cognitive-20260518-s46-b). Deferral applies to architectural/design decisions. Functional bugs are addressed immediately. The subject operates on two speeds: slow for design choices, fast for observable failures."
+        }
+      ],
+      "tags": ["cognitive", "feedback-loops", "iteration", "qa-as-user"]
+    },
 
     {
       "entry_id": "personality-20260518-s46",

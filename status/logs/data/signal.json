@@ -1,7 +1,7 @@
 {
   "_meta": {
     "schema_version": "1.0.0",
-    "last_updated": "2026-05-18",
+    "last_updated": "2026-05-20",
     "companion_to": "status/logs/data/logs.json",
     "viewer": "status/logs/index.html — Signal tab"
   },
@@ -44,6 +44,54 @@
     }
   },
   "tasks": [
+    {
+      "id": "wallhaven-purity-split-blur",
+      "title": "Wallhaven Liked/Saved: purity section split + adult blur reveal",
+      "status": "done",
+      "requested": "2026-05-20",
+      "closed": "2026-05-20",
+      "closed_by": "trap",
+      "description": "Liked and Saved views now split SFW vs Sketchy+NSFW into labelled sections with a divider. Adult tiles auto-blur on render; a 'Reveal' button in the section header unblurs the whole group at once. Clicking a blurred tile is suppressed.",
+      "notes": "Committed as cbeb378 (split) + 7fc3fd3 (blur). Lightbox idx bug introduced and immediately fixed as 24533a2.",
+      "tags": ["wallhaven", "ui", "privacy"],
+      "files_affected": ["playground/wallhaven/script/app.js", "playground/wallhaven/style/style.css"]
+    },
+    {
+      "id": "wallhaven-vault-proxy-backend",
+      "title": "wallhaven-proxy: vault IDs, SQLite persistence, image proxy",
+      "status": "done",
+      "requested": "2026-05-20",
+      "closed": "2026-05-20",
+      "closed_by": "trap",
+      "description": "Full stateful backend: modernc.org/sqlite (CGO_ENABLED=0), vault IDs (XXXX-XXXX-XXXX-XXXX), REST API for assign/like/save, /img?url= image proxy that bypasses wallhaven hotlink restrictions. Docker: su-exec entrypoint, cap_drop ALL + cap_add CHOWN/SETUID/SETGID, named volume, PUID/PGID env vars.",
+      "notes": "Committed as 86be894. Multiple Docker fix iterations before portable container pattern stabilised.",
+      "tags": ["wallhaven-proxy", "backend", "docker"],
+      "files_affected": ["services/wallhaven-proxy/main.go", "services/wallhaven-proxy/Dockerfile", "services/wallhaven-proxy/compose.yaml", "services/wallhaven-proxy/entrypoint.sh"]
+    },
+    {
+      "id": "underdark-gate-wallhaven-step",
+      "title": "Underdark initiation gate: add wallhaven + vault ID step",
+      "status": "done",
+      "requested": "2026-05-20",
+      "closed": "2026-05-20",
+      "closed_by": "trap",
+      "description": "Gate wizard expanded from 4 to 5 steps. New step 2: wallhaven API key (optional, password-toggle) + vault ID (auto-formats XXXX-XXXX-XXXX-XXXX, pre-fills from localStorage, Generate button calls proxy). Both written to shared wh_apikey/wh_vault_id keys on continue/finish.",
+      "notes": "Committed as 04c639c. CSS additions: .api-gate__vault-gen, .api-gate__vault-row, .api-gate__field-hint, .api-gate__link, .api-gate__input--mono.",
+      "tags": ["underdark", "onboarding", "wallhaven"],
+      "files_affected": ["playground/underdark/index.html", "playground/underdark/script/modules/ui.js", "playground/underdark/style/api-gate.css"]
+    },
+    {
+      "id": "gallery-cold-load-blank",
+      "title": "Gallery page: cold-load blank images when wallhaven tab not yet open",
+      "status": "done",
+      "requested": "2026-05-20",
+      "closed": "2026-05-20",
+      "closed_by": "trap",
+      "description": "Gallery now calls syncVaultToGallery() at boot before getCharData(). Fetches vault assignments and merges into wh_char_gallery so images appear on first load even without the wallhaven tab having run.",
+      "notes": "Committed as c8592f5.",
+      "tags": ["gallery", "vault", "bug"],
+      "files_affected": ["playground/underdark/gallery/script/app.js"]
+    },
     {
       "id": "observations-page",
       "title": "Create /status/observations/ — living LLM cognitive profile",
@@ -285,6 +333,21 @@
     }
   ],
   "issues": [
+    {
+      "id": "wallhaven-lightbox-wrong-image",
+      "title": "Liked/Saved lightbox opens wrong image after purity split",
+      "severity": "critical",
+      "status": "resolved",
+      "scope": "playground/wallhaven/script/app.js — renderPuritySplit, buildTile, openLightbox",
+      "flagged": "2026-05-20",
+      "flagged_by": "llm",
+      "description": "Purity split render used a local counter (0→N) as the tile idx. lbDataset() returns items in insertion order — a completely different sequence. Clicking any tile in the adult section opened a different image (off by the number of SFW items).",
+      "reproduction_note": "Open Liked with mixed SFW and NSFW items — click the first adult tile, lightbox shows a SFW image instead.",
+      "fix_summary": "buildTile is now called with items.indexOf(w) so each tile's idx is its actual position in the flat lbDataset() array. Render order and dataset order are now independent.",
+      "prevention": "Any code that renders tiles from a reordered/grouped subset of a dataset must preserve the original flat-array index as the tile idx. Never use a render counter as idx when lbDataset() is the source of truth.",
+      "resolved": "2026-05-20",
+      "commit": "24533a2"
+    },
     {
       "id": "llm-json-schema-migration",
       "title": "llm.json v9.1.0: _index array removed, _index_matrix replaces it",
