@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.45",
+    "schema_version": "1.5.46",
     "last_updated": "2026-05-20",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -659,6 +659,17 @@
     ]
   },
   "commits": [
+    {
+      "hash": "4c17ca3",
+      "date": "2026-05-20",
+      "message": "fix(underdark): preserve wallhaven gallery writes across saveState calls",
+      "scope": "playground/underdark/",
+      "impact": "critical",
+      "files": [
+        "playground/underdark/script/modules/state.js"
+      ],
+      "why": "saveState() blindly serialized state.loadedCharacters from memory, silently erasing gallery[] and videoGallery[] entries written by the wallhaven tab to underdark_chars_v4. Fixed with a read-merge-write in saveState (gallery arrays merged additively, in-memory wins for all other fields) and a cross-tab storage event listener that immediately merges incoming loadedCharacters extensions into the in-memory state."
+    },
     {
       "hash": "bcb5a1b",
       "date": "2026-05-20",
@@ -3277,6 +3288,20 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-20",
+      "agent": "Claude Sonnet 4.6",
+      "type": "bug_fix",
+      "summary": "Root cause of gallery/feed not showing wallhaven assignments: underdark's saveState() was overwriting underdark_chars_v4 from in-memory state on every keystroke/message, erasing gallery entries written by the wallhaven tab. Fixed with a read-merge-write in saveState() (gallery/videoGallery arrays merged additively from disk; in-memory wins for all other fields) and a cross-tab storage event listener in state.js that merges incoming loadedCharacters extensions into in-memory state immediately when wallhaven writes.",
+      "decisions": [
+        "saveState() now reads disk before writing underdark_chars_v4 — performs an additive merge of gallery[] and videoGallery[] arrays. This makes saveState safe to call with external writes in flight.",
+        "The storage event listener on CHARS_KEY is the fast-path: when wallhaven writes the key in another tab, underdark's in-memory state is updated immediately so the next saveState() carries the merged data forward rather than overwriting it.",
+        "In-memory state is authoritative for all non-gallery fields (name, persona, system_prompt, etc.). Only gallery-type arrays are merged additively from disk."
+      ],
+      "rules_reinforced": [
+        "Any code that calls saveState() implicitly owns underdark_chars_v4. External writers (wallhaven, future integrations) must treat their gallery writes as advisory — they may be overwritten unless underdark merges on save."
+      ]
+    },
     {
       "date": "2026-05-20",
       "agent": "Claude Sonnet 4.6",
