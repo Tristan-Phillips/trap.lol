@@ -660,7 +660,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "b86c6e3",
       "date": "2026-05-21",
       "message": "feat(playground): data-driven app grid + preset credentials panel",
       "scope": "playground/",

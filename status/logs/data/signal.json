@@ -52,7 +52,7 @@
       "closed": "2026-05-21",
       "closed_by": "trap",
       "description": "playground/index.html now fetches playground/data/apps.json and playground/data/credentials.json to render the app grid and a new Preset Credentials section. Apps are rendered from JSON (VOID excluded). Credentials panel lets the user set NanoGPT, Wallhaven API key, Vault ID (with generate button) once — shared via localStorage with all apps. Each group has save/clear actions and a filled indicator.",
-      "notes": "Committed as pending (hash to be patched). Cookie-backed RADAR keys listed in credentials.json but not pre-filled by the panel — RADAR handles its own cookie auth.",
+      "notes": "Committed as b86c6e3. Cookie-backed RADAR keys listed in credentials.json but not pre-filled by the panel — RADAR handles its own cookie auth.",
       "tags": ["playground", "ui", "credentials"],
       "files_affected": [
         "playground/data/apps.json",
