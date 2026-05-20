@@ -18,21 +18,16 @@ services:
       # Only bind to localhost — Cloudflare Tunnel reaches in directly
       - "127.0.0.1:8080:8080"
 
-    # Run as the host trap user so ./data bind mount is writable without sudo chown
-    user: "1000:1000"
-
     volumes:
-      - ./data:/data
+      - wallhaven-data:/data
 
     networks:
       - default
       - cloudflare-gateway
 
-    # Drop every Linux capability
     cap_drop:
       - ALL
 
-    # No privilege escalation
     security_opt:
       - no-new-privileges:true
 
@@ -53,6 +48,10 @@ services:
     labels:
       com.trap-lol.service: "wallhaven-proxy"
       com.trap-lol.description: "Wallhaven API proxy + image proxy + vault storage"
+
+volumes:
+  wallhaven-data:
+    driver: local
 
 networks:
   cloudflare-gateway:

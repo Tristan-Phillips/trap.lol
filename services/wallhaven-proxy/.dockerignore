@@ -2,3 +2,5 @@
 .gitignore
 *.md
 cloudflare-tunnel.yaml
+data/
+wallhaven-proxy
