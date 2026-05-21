@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.64",
+    "schema_version": "1.5.65",
     "last_updated": "2026-05-21",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -662,6 +662,18 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-21",
+      "message": "content(underdark): expand Legoshi card v2.0 — full accuracy pass, 5 mes_example exchanges, 4 alternate greetings, canon relationships, fighting style, dietary regimen, Gosha/Louis/Haru/Jack/Juno/Bill lore, half-Komodo lineage",
+      "scope": "playground/underdark/",
+      "impact": "medium",
+      "files": [
+        "playground/underdark/data/cards/legoshi-beastars.json",
+        "status/logs/data/logs.json"
+      ],
+      "why": "User requested expansion for accuracy and immersive roleplay quality. v2.0 adds: 2 new mes_example exchanges (post-fight control scene, love confession trigger), 4th alternate greeting (post-fight hands shaking), full canonRelationships map, fightingStyle/dietaryRegimen/scent fields, enneagram annotation, half-Komodo lineage note, Gosha as named moral architect, Black Market and Shishi-gumi arc context expanded, system_prompt deepened with scent-processing specifics and fight shame mechanic."
+    },
     {
       "hash": "f392bb4",
       "date": "2026-05-21",
@@ -3535,6 +3547,24 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-21",
+      "agent": "Claude Sonnet 4.6",
+      "type": "content",
+      "summary": "Full expansion pass on the Legoshi (BEASTARS) character card — bumped to v2.0. mes_example expanded from 3 to 5 exchanges (added: post-fight control question with honest answer about violence, love confession trigger). 4th alternate greeting added (post-fight, hands shaking). system_prompt deepened with scent-processing specifics, fight shame mechanic, Gosha as named moral architect, Black Market and Shishi-gumi arc context. ext object gained canonRelationships map (Haru/Louis/Gosha/Jack/Juno/Bill/Els), fightingStyle field, dietaryRegimen field, scent field, full enneagram 9w1 annotation with tension explanation. Half-Komodo dragon lineage (maternal, through Gosha) noted in species/ethnicity fields and system_prompt.",
+      "decisions": [
+        "Legoshi is canonically half-Komodo dragon on his maternal side (Gosha's lineage) — this is a manga reveal that the v1.0 card missed and is an important identity complexity the character is working through.",
+        "The 5th mes_example (love confession trigger) deliberately ends with him arriving at 'Yes' after four increasingly bad attempts — the joke is structural, the honesty is the point.",
+        "4th alternate greeting (post-fight, hands shaking) fills the gap between the quiet-meeting and the rooftop contemplation greetings — gives an entry point for scenarios that begin with something already having happened.",
+        "canonRelationships field added to ext as a named map rather than inline prose — this keeps the system_prompt readable while making lore lookups structured.",
+        "fightingStyle field explicitly captures the shame-after-efficiency detail, which is core to his character and was previously only implied.",
+        "enneagram annotation expanded with the 9w1 tension explanation because that tension IS his arc: the 9's conflict avoidance vs the 1's moral insistence."
+      ],
+      "rules_reinforced": [
+        "Character cards should name canon relationships with structured entries, not just prose mentions — makes lore accurate and provides roleplay anchors.",
+        "A <think> block that ends with the character saying something simple and honest after failing at complexity is a valid and often superior structure to a think block that leads to a perfect articulate answer."
+      ]
+    },
     {
       "date": "2026-05-21",
       "agent": "Claude Sonnet 4.6",
