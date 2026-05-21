@@ -663,7 +663,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "9e375bb",
       "date": "2026-05-21",
       "message": "content(underdark): expand Legoshi card v2.0 — full accuracy pass, 5 mes_example exchanges, 4 alternate greetings, canon relationships, fighting style, dietary regimen, Gosha/Louis/Haru/Jack/Juno/Bill lore, half-Komodo lineage",
       "scope": "playground/underdark/",
