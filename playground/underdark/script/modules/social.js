@@ -17,7 +17,7 @@
 import { qs, qsa, esc, debounce } from './shared-utils.js?v=4';
 import { state, saveState } from './state.js?v=2';
 import { resolveImageUrl } from './storage.js?v=3';
-import { buildPayload, streamCompletion, fetchCompletion } from './llm-engine.js?v=15';
+import { buildPayload, streamCompletion, fetchCompletion } from './llm-engine.js?v=16';
 import { getApiKey } from '/glass/script/modules/llm-auth.js?v=3';
 import { getAllFeedPosts, saveLocalPost } from './gallery.js?v=1';
 

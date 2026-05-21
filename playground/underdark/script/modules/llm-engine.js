@@ -562,6 +562,7 @@ function buildSystemPrompt(character, config, override, { isGroup = false, other
             + buildImpersonationBlock(userName, flags).replace(/\{C\}/g, charName)
             + (isGroup && otherChars.length ? buildGroupIsolationBlock(charName, otherChars) : '')
             + buildImmersionLock(charName, override)
+            + (character.system_prompt_suffix?.trim() ? `\n\n${character.system_prompt_suffix.trim()}` : '')
             + (override.appendToSystem ? `\n\n${override.appendToSystem}` : '')
             + (config.nsfwBypass ? `\n\n${config.nsfwBypass}` : '');
     }
@@ -612,6 +613,7 @@ function buildSystemPrompt(character, config, override, { isGroup = false, other
         + buildImpersonationBlock(userName, flags).replace(/\{C\}/g, charName)
         + (isGroup && otherChars.length ? buildGroupIsolationBlock(charName, otherChars) : '')
         + buildImmersionLock(charName, override)
+        + (character.system_prompt_suffix?.trim() ? `\n\n${character.system_prompt_suffix.trim()}` : '')
         + (override.appendToSystem ? `\n\n${override.appendToSystem}` : '')
         + (config.nsfwBypass ? `\n\n${config.nsfwBypass}` : '');
 
@@ -917,6 +919,24 @@ export function buildPayload(ctx) {
         messages.push({ role: 'system', content: loreBlock });
     }
 
+    // 3b. Exemplar dialogue (mes_example) — inject as a system block so the model
+    // treats it as demonstrated voice, not live history. Caps at 1200 chars so it
+    // doesn't crowd context. Only injected when history is short (≤ 4 messages) —
+    // once the session has real examples the model should follow those instead.
+    if (character.mes_example?.trim() && history.length <= 4) {
+        const exLen = 1200;
+        const excerpt = character.mes_example.trim().length > exLen
+            ? character.mes_example.trim().slice(0, exLen) + '\n…'
+            : character.mes_example.trim();
+        const resolved = excerpt
+            .replace(/\{\{char\}\}/gi, charName)
+            .replace(/\{\{user\}\}/gi, userName);
+        messages.push({
+            role: 'system',
+            content: `[EXEMPLAR DIALOGUE — voice reference only, not live history]\n${resolved}`
+        });
+    }
+
     // 3. Context-windowed history
     const systemTokens = estimateTokens(systemContent)
         + (activeLore.length ? estimateTokens(activeLore.map(e => e.content).join('')) : 0);
@@ -1108,11 +1128,11 @@ export function detectAffectTone(text) {
         .toLowerCase();
 
     const signals = {
-        tension:  /\b(silence|still|quiet|tense|rigid|held|watching|wait|breath|edge|tight|coiled|dangerous|threat|careful|wary|notice|study|track|wrong|wrong|shift|sudden|freeze|cold|careful)\b/g,
-        intimacy: /\b(close|near|warm|touch|soft|gentle|tender|hand|fingers|breath|skin|pulse|lean|hold|gaze|look|eyes|feel|heart|chest|together|quiet|safe|trust|yours|mine|stay|please)\b/g,
-        grief:    /\b(loss|lost|gone|miss|alone|empty|hollow|break|broke|tear|tears|cry|ache|hurt|pain|grief|mourn|never|too late|silence|nothing|cold|hollow|shadow|dark|sorrow|fade)\b/g,
-        menace:   /\b(blood|blade|knife|dark|shadow|threat|power|control|force|fear|warn|danger|crawl|hunt|prey|stalk|punish|obey|kneel|beg|suffer|rage|fury|cruel|hard|iron|fist|grip|squeeze)\b/g,
-        wonder:   /\b(strange|never|impossible|new|discover|ancient|vast|glow|light|shimmer|magical|beautiful|awe|sky|stars|wind|breathtaking|radiant|wonder|marvel|extraordinary|luminous|horizon)\b/g,
+        tension:  /\b(tense|rigid|coiled|held breath|stillness|jaw|clench|wary|guarded|flinch|hesitate|poised|watching|measuring|calculating|cornered|braced|standoff|impasse|unspoken|uneasy|apprehension|suspended|threshold|precipice|trembling|restraint|barely|almost|nearly|about to)\b/g,
+        intimacy: /\b(tender|warmth|cradl|nestle|press|forehead|cheek|nuzzle|intertwined|pulse|heartbeat|breath on|close enough|exhale|inhale|fingertips|brushed|traced|whispered|murmured|vulnerable|confess|reveal|trust|lean into|yielded|surrender|soft|gentle|bare|undone|seen|cherish|belonging|home)\b/g,
+        grief:    /\b(lost|absence|hollow|ache|mourning|grief|bereaved|void|irreplaceable|gone forever|never again|what was|what could have been|too late|eulogy|memorial|elegy|weight of|carry|burden|sorrow|desolate|inconsolable|shattered|fractured|wept|sobbed|tears fell|broke|ruins)\b/g,
+        menace:   /\b(stalking|circling|predatory|threatening|lethal|violence|blood|blade|fangs|claws|bared|snarl|growl|cornered|closing in|no escape|punish|destroy|ruin|crush|snap|slit|wound|brutality|merciless|ruthless|dominance|submission|obey|consequence|suffering|hunt|prey)\b/g,
+        wonder:   /\b(marvel|astonish|bewildered|breathtaking|celestial|ancient|vast|infinite|luminous|radiant|shimmering|iridescent|impossible|transcendent|revelation|awe|sacred|ethereal|inexplicable|unfathomable|magnificent|extraordinary|sublime|glowing|aurora|cosmic|mythic)\b/g,
     };
 
     const scores = {};
@@ -1157,6 +1177,14 @@ function buildRhythmDirective(override, charName) {
         hints.push(`${charName} speaks in flowing, unhurried prose — attentive to detail, warmth in every clause.`);
     else if (is('broken', 'traumatised', 'hollow', 'damaged', 'fragile', 'shattered', 'survivor'))
         hints.push(`${charName}'s internal rhythm is fractured — thoughts interrupt themselves, sentences trail off or circle back.`);
+    else if (is('seducer', 'lover', 'temptress', 'charmer', 'flirt', 'romantic', 'passionate'))
+        hints.push(`${charName}'s prose lingers — long sentences that slow down at the wrong (or right) moment, attentive to body language, never in a hurry.`);
+    else if (is('child', 'innocent', 'naive', 'pure', 'childlike', 'wonder'))
+        hints.push(`${charName}'s sentences are shorter and more direct than adults — concrete observations, sudden digressions, the kind of honesty that has no filter.`);
+    else if (is('exile', 'wanderer', 'outcast', 'loner', 'drifter', 'nomad', 'ghost'))
+        hints.push(`${charName}'s prose is spare and observational — someone who has spent a long time watching rather than participating. Brief sentences. No wasted sentiment.`);
+    else if (is('anti-hero', 'vigilante', 'rebel', 'cynic', 'jaded', 'bitter', 'morally grey'))
+        hints.push(`${charName}'s rhythm is cutting — short declaratives, dark humour as punctuation, a bone-dry delivery that rarely softens.`);
 
     if (!hints.length) return '';
     return `\n\n[Character Rhythm]\n${hints.join('\n')}`;

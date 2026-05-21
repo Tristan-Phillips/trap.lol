@@ -12,7 +12,7 @@
  */
 
 import { qs, qsa, esc, parseLLMArray } from './shared-utils.js?v=4';
-import { fetchCompletion } from './llm-engine.js?v=15';
+import { fetchCompletion } from './llm-engine.js?v=16';
 import { getApiKey } from '/glass/script/modules/llm-auth.js?v=3';
 
 // ── Direct tab — chips that fire the character immediately (no player message) ──

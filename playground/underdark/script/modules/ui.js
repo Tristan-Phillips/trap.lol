@@ -18,11 +18,11 @@ import {
     exportFullInstance, importFullInstance
 } from './state.js?v=2';
 import { resolveImageUrl, saveImageBlob, deleteImageBlob, isIdbImageRef, idbImageRefId, isDataUrl } from './storage.js?v=3';
-import { buildPayload, streamCompletion, fetchCompletion, buildOverlordContext, summarizeDroppedMessages, sanitizeRpResponse, detectAffectTone } from './llm-engine.js?v=15';
+import { buildPayload, streamCompletion, fetchCompletion, buildOverlordContext, summarizeDroppedMessages, sanitizeRpResponse, detectAffectTone } from './llm-engine.js?v=16';
 import { parseCommand, executeCommand, filterCommands, COMMANDS } from './commands.js?v=3';
 import { VIDEO_MODELS, generateVideo, generateVideoPromptWithLLM } from './image-engine.js?v=3';
 import { addBook, removeBook, addEntry, updateEntry, removeEntry, createBook, scanLorebooks } from './lorebook.js?v=3';
-import { parseCharacterCard, buildCard, normalizeData } from './parser-v2.js?v=3';
+import { parseCharacterCard, buildCard, normalizeData } from './parser-v2.js?v=4';
 import { getApiKey, setApiKey, clearApiKey, isValidKeyFormat, restoreKeyFromCookie } from '/glass/script/modules/llm-auth.js?v=3';
 import { initCharEditor } from './char-editor.js?v=3';
 import { qs, qsa, esc, debounce, parseLLMArray, parseLLMJson, parseLLMLines } from './shared-utils.js?v=4';

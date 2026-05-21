@@ -6,7 +6,7 @@
  */
 
 import { state, saveCharacter, deleteCharacter, getCharOverride, setCharOverride, defaultCharOverride, saveState } from './state.js?v=2';
-import { normalizeData } from './parser-v2.js?v=3';
+import { normalizeData } from './parser-v2.js?v=4';
 import { saveAvatar, loadAvatar, isDataUrl } from './storage.js?v=3';
 import { qs, qsa, esc, debounce, slugify, generateId, pick, showToast } from './shared-utils.js?v=4';
 
@@ -1071,7 +1071,7 @@ export function initCharEditor() {
         const file = e.target.files[0];
         if (!file) return;
         try {
-            const { parseCharacterCard } = await import('./parser-v2.js');
+            const { parseCharacterCard } = await import('./parser-v2.js?v=4');
             const card = await parseCharacterCard(file);
             await populateForm(null, card, null);
             showToast('Card imported — review and save.', 'info');

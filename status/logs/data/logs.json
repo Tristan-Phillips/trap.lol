@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.66",
+    "schema_version": "1.5.67",
     "last_updated": "2026-05-21",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -662,6 +662,23 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-21",
+      "message": "feat(underdark): immersion pass — mes_example injection, system_prompt_suffix, expanded affect tone + rhythm archetypes",
+      "scope": "playground/underdark/",
+      "impact": "high",
+      "files": [
+        "playground/underdark/script/modules/llm-engine.js",
+        "playground/underdark/script/modules/parser-v2.js",
+        "playground/underdark/script/modules/ui.js",
+        "playground/underdark/script/modules/director.js",
+        "playground/underdark/script/modules/social.js",
+        "playground/underdark/script/modules/char-editor.js",
+        "status/logs/data/logs.json"
+      ],
+      "why": "User requested the roleplay experience be immersive beyond belief. Research identified four concrete gaps: mes_example never injected into context (strongest voice-lock signal was being discarded), system_prompt_suffix at card root level not read by parser or injected by engine, detectAffectTone word lists too thin and cross-contaminating, buildRhythmDirective leaving ~half of character archetypes without a rhythm hint."
+    },
     {
       "hash": "c5fc333",
       "date": "2026-05-21",
@@ -3560,6 +3577,22 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-21",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Immersion improvement pass on the Underdark RP engine. Read all 1333 lines of llm-engine.js, 8092 lines of ui.js, and both character cards to identify genuine gaps before touching anything. Four concrete improvements implemented: (1) mes_example now injected as an exemplar dialogue system block when history is short (≤4 messages) — the single most powerful voice-lock signal was previously being discarded entirely. (2) system_prompt_suffix now parsed by parser-v2.js and injected by buildSystemPrompt in both code paths — the Gojo and Legoshi cards both had rich suffix fields that were silently ignored. (3) detectAffectTone word lists replaced with denser, more precise vocabulary per register, reducing cross-contamination between registers. (4) buildRhythmDirective extended with five new archetype matches (seducer/lover, child/innocent, exile/wanderer, anti-hero/vigilante, morally grey) — previously roughly half of character archetypes fell through with no rhythm directive at all. All module version strings bumped (llm-engine v15→v16, parser-v2 v3→v4).",
+      "decisions": [
+        "mes_example injected as a system block labelled 'EXEMPLAR DIALOGUE — voice reference only, not live history' and capped at 1200 chars so it does not crowd context. Only injected when history.length ≤ 4 — once the session has real exchanges the model should follow those instead.",
+        "system_prompt_suffix injection placed after buildImmersionLock() and before appendToSystem — it is character-level permanent voice instruction, not a session note, so it anchors at the deepest layer of the prompt.",
+        "detectAffectTone redesigned around RP-specific vocabulary (tense, coiled, threshold, precipice rather than just 'quiet' and 'cold') — the old lists were too general and caused frequent false neutrals on high-affect prose.",
+        "Four new rhythm archetypes added to buildRhythmDirective. The morally grey / anti-hero archetype is particularly high value as it covers a large class of popular RP characters (vigilantes, cynics, dark protagonists) that previously had no rhythm signal at all."
+      ],
+      "rules_reinforced": [
+        "mes_example is not display-only metadata — it is the primary voice fingerprint signal and must be injected into the LLM context on new threads.",
+        "system_prompt_suffix at the card root level is distinct from extensions.underdark.appendToSystem — it is permanent identity-level instruction, not a session override."
+      ]
+    },
     {
       "date": "2026-05-21",
       "agent": "Claude Sonnet 4.6",

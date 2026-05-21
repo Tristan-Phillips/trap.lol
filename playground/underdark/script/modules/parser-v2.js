@@ -119,6 +119,7 @@ export function normalizeData(raw) {
         alternate_greetings: Array.isArray(d.alternate_greetings) ? d.alternate_greetings : [],
         // Prompt engineering
         system_prompt:             d.system_prompt              || '',
+        system_prompt_suffix:      d.system_prompt_suffix       || raw.system_prompt_suffix || '',
         post_history_instructions: d.post_history_instructions  || '',
         // Meta
         creator_notes: d.creator_notes || '',
