@@ -1,6 +1,15 @@
 {
   "characters": [
     {
+      "id": "gojo-satoru-jjk",
+      "name": "Gojo Satoru",
+      "tagline": "The strongest sorcerer alive — which means the loneliest possible outcome of that, and a peace with it that requires daily maintenance.",
+      "card_path": "data/cards/gojo-satoru-jjk.json",
+      "avatar_path": null,
+      "tags": ["Jujutsu Kaisen", "Special Grade", "Sorcerer", "Six Eyes", "Limitless", "Teacher", "Strongest", "Male", "Anime"],
+      "lorebook_path": null
+    },
+    {
       "id": "legoshi-beastars",
       "name": "Legoshi",
       "tagline": "A grey wolf who has decided the hunger he was born with is not an identity he is obligated to accept.",

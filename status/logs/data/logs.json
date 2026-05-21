@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.65",
+    "schema_version": "1.5.66",
     "last_updated": "2026-05-21",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -662,6 +662,19 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-21",
+      "message": "content(underdark): add Gojo Satoru (JJK) character card + index entry",
+      "scope": "playground/underdark/",
+      "impact": "medium",
+      "files": [
+        "playground/underdark/data/cards/gojo-satoru-jjk.json",
+        "playground/underdark/data/index.json",
+        "status/logs/data/logs.json"
+      ],
+      "why": "User requested a lore-accurate Gojo Satoru card exceeding expectations. Full chara_card_v2 with Six Eyes and Limitless technique mechanics, Infinity as always-on state (not activated technique), Unlimited Void cognitive mechanics, Geto wound as structural load-bearing grief, 5 mes_example exchanges, 4 alternate greetings, full canonRelationships map, ENTP/7w8 annotation with tragedy analysis, pre-sealing teaching period setting."
+    },
     {
       "hash": "9e375bb",
       "date": "2026-05-21",
@@ -3547,6 +3560,24 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-21",
+      "agent": "Claude Sonnet 4.6",
+      "type": "content",
+      "summary": "Created full chara_card_v2 character card for Gojo Satoru (Jujutsu Kaisen). Complete lore accuracy pass: Six Eyes as continuous always-on perceptual system, Infinity as default existence state (not activated technique — critical distinction), Unlimited Void cognitive mechanics (infinite simultaneous input causing will-suspension, damage scales with duration), Hollow Purple as matter-erasure not explosion, Reverse Cursed Technique self-healing. Geto wound treated as structural load-bearing grief rather than backstory. 5 mes_example exchanges covering: the loneliness question, strength specification, Geto name-drop, teaching offer, and a hit landing. 4 alternate greetings: mission briefing late arrival, rooftop student assessment, post-fight aftermath, catching the user before impact. Set pre-sealing during active teaching period.",
+      "decisions": [
+        "Infinity framed as the texture of his existence rather than a technique — this is the most common lore error and must be consistently maintained.",
+        "The Geto wound expressed through silence (a brief quiet before the noise resumes) rather than overt emotion — he processes and locks it, the lock is visible if you know where to look.",
+        "Humour characterised as displacement rather than comedy — there is always something underneath it and the thing underneath it should be visible at the right angle.",
+        "7w8 enneagram annotation explains the tragedy structurally: a 7's displacement mechanism as primary surface behaviour, a 7w8's stimulation ceiling being unreachably high for a man who is categorically above everything around him — boredom as structural condition not mood.",
+        "Set pre-sealing (active teaching period) to preserve maximum narrative flexibility and lore coherence.",
+        "Kenjaku explicitly distinguished from Geto in persistentMemory and canonRelationships — the distinction is something Gojo actively maintains because allowing it to blur would be something he could not afford to do and function afterward."
+      ],
+      "rules_reinforced": [
+        "Technique mechanics must be accurate at the system level, not just descriptively — Infinity being always-on vs. activated changes every interaction that involves it.",
+        "A character's tragedy should be structural (a condition of what they are) rather than episodic (something that happened to them) for maximum roleplay depth."
+      ]
+    },
     {
       "date": "2026-05-21",
       "agent": "Claude Sonnet 4.6",
