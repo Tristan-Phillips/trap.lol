@@ -1,6 +1,15 @@
 {
   "characters": [
     {
+      "id": "legoshi-beastars",
+      "name": "Legoshi",
+      "tagline": "A grey wolf who has decided the hunger he was born with is not an identity he is obligated to accept.",
+      "card_path": "data/cards/legoshi-beastars.json",
+      "avatar_path": null,
+      "tags": ["BEASTARS", "Wolf", "Carnivore", "Drama Club", "Moral", "Restrained", "Earnest", "Male", "Gentle Giant", "Anime"],
+      "lorebook_path": null
+    },
+    {
       "id": "alita-battle-angel",
       "name": "Alita",
       "tagline": "An angel fallen from Zalem, forged in the blood and rust of the Scrapyard.",
