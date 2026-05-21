@@ -663,7 +663,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "c5fc333",
       "date": "2026-05-21",
       "message": "content(underdark): add Gojo Satoru (JJK) character card + index entry",
       "scope": "playground/underdark/",
