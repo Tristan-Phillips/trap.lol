@@ -663,7 +663,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "f392bb4",
       "date": "2026-05-21",
       "message": "content(underdark): add Legoshi (BEASTARS) character card + index entry",
       "scope": "playground/underdark/",
