@@ -663,7 +663,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "ae018a8",
       "date": "2026-05-21",
       "message": "feat(underdark): immersion pass — mes_example injection, system_prompt_suffix, expanded affect tone + rhythm archetypes",
       "scope": "playground/underdark/",
