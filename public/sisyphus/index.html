@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>—</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #0f0f0f;
+      --text:    #e8e8e8;
+      --muted:   #555;
+      --dim:     #2a2a2a;
+      --mono:    ui-monospace, "Cascadia Code", Menlo, Consolas, monospace;
+      --font:    system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --effort:  0; /* 0–1, updated by JS */
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden;
+    }
+
+    /* ── Hill ─────────────────────────────────────────────── */
+    .hill {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      padding-bottom: 0;
+    }
+
+    .hill__slope {
+      width: 100%;
+      height: 55vh;
+      position: relative;
+      overflow: visible;
+    }
+
+    /* SVG hill path */
+    .hill__svg {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+
+    .hill__path {
+      fill: none;
+      stroke: #1e1e1e;
+      stroke-width: 1.5;
+    }
+
+    /* ── Stone ────────────────────────────────────────────── */
+    .stone {
+      position: absolute;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 38% 35%, #3a3a3a, #111);
+      border: 1px solid #2e2e2e;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.04);
+      cursor: pointer;
+      touch-action: none;
+      user-select: none;
+      transform: translate(-50%, -50%);
+      transition: box-shadow 0.15s ease;
+    }
+
+    .stone:active, .stone.dragging {
+      box-shadow: 0 4px 16px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.06);
+    }
+
+    /* ── Counter ──────────────────────────────────────────── */
+    .counter {
+      position: fixed;
+      top: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--muted);
+      letter-spacing: 0.12em;
+      user-select: none;
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    .counter__label {
+      display: block;
+      opacity: 0.5;
+    }
+
+    /* ── Reveal panel ─────────────────────────────────────── */
+    #reveal {
+      position: fixed;
+      inset: 0;
+      background: rgba(10,10,10,0.96);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s ease;
+      padding: 2rem;
+    }
+
+    #reveal.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    #reveal-img {
+      max-width: min(80vw, 480px);
+      max-height: 60vh;
+      object-fit: contain;
+      display: block;
+      border-radius: 4px;
+    }
+
+    /* First time — clean */
+    #reveal-img.reveal--new {
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.08), 0 8px 40px rgba(0,0,0,0.6);
+      animation: none;
+    }
+
+    /* Duplicate — the game knows. And it wants you to know it knows. */
+    #reveal-img.reveal--duplicate {
+      animation: dupe-pulse 1.8s ease-in-out infinite;
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.06),
+        0 0 24px 4px rgba(190,41,236,0.18),
+        0 8px 40px rgba(0,0,0,0.6);
+    }
+
+    @keyframes dupe-pulse {
+      0%, 100% { box-shadow: 0 0 0 1px rgba(255,255,255,0.06), 0 0 20px 2px rgba(190,41,236,0.14), 0 8px 40px rgba(0,0,0,0.6); }
+      50%       { box-shadow: 0 0 0 1px rgba(255,255,255,0.1),  0 0 36px 8px rgba(190,41,236,0.28), 0 8px 40px rgba(0,0,0,0.6); }
+    }
+
+    #reveal-tag {
+      margin-top: 1.25rem;
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.8;
+    }
+
+    #reveal-tag.is-duplicate {
+      color: #6a3a8a;
+    }
+
+    #reveal-dismiss {
+      margin-top: 2rem;
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: #333;
+      letter-spacing: 0.14em;
+      cursor: pointer;
+      border: none;
+      background: none;
+      padding: 0.5rem 1rem;
+      min-height: 44px;
+      min-width: 80px;
+    }
+
+    #reveal-dismiss:hover { color: var(--muted); }
+
+    /* ── Hill bottom floor ────────────────────────────────── */
+    .floor {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: #1a1a1a;
+    }
+
+    /* ── Back ─────────────────────────────────────────────── */
+    .back {
+      position: fixed;
+      top: 1.2rem;
+      left: 1.5rem;
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: #2a2a2a;
+      text-decoration: none;
+      letter-spacing: 0.06em;
+      transition: color 0.2s;
+    }
+    .back:hover { color: var(--muted); }
+
+    /* ── Instruction ──────────────────────────────────────── */
+    .instruction {
+      position: fixed;
+      bottom: 2.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      color: #252525;
+      letter-spacing: 0.1em;
+      white-space: nowrap;
+      user-select: none;
+      pointer-events: none;
+      transition: opacity 0.6s ease;
+    }
+
+    .instruction.hidden { opacity: 0; }
+  </style>
+</head>
+<body>
+
+  <a class="back" href="/">←</a>
+
+  <div class="counter">
+    <span id="counter-pushes">0</span>
+    <span class="counter__label">pushes</span>
+  </div>
+
+  <div class="hill">
+    <div class="hill__slope" id="slope">
+      <svg class="hill__svg" id="hill-svg" viewBox="0 0 1000 400" preserveAspectRatio="none">
+        <path class="hill__path" id="hill-path" d="M-50,400 Q250,380 500,100 Q750,380 1050,400" />
+      </svg>
+      <div class="stone" id="stone"></div>
+    </div>
+  </div>
+
+  <div class="floor"></div>
+
+  <p class="instruction" id="instruction">push the stone</p>
+
+  <div id="reveal" aria-hidden="true">
+    <img id="reveal-img" src="" alt="" />
+    <p id="reveal-tag"></p>
+    <button id="reveal-dismiss" aria-label="Continue">push again</button>
+  </div>
+
+  <script>
+    const GLOBAL   = '/public/data/global.json';
+    let artBase    = 'https://file.trap.lol/get/';
+    let works      = [];
+    let seen       = new Set();
+    let pushCount  = 0;
+    let threshold  = 1; // pushes needed for next reveal
+    let progress   = 0; // pushes toward threshold
+
+    // Load art
+    fetch(GLOBAL).then(r => r.json()).then(g => {
+      if (g.art && g.art.base_url) artBase = g.art.base_url + '/';
+      return fetch(g.art && g.art.data ? g.art.data : '/public/data/art.json');
+    }).then(r => r.json()).then(d => {
+      works = d.works || [];
+    }).catch(() => {});
+
+    // ── Hill geometry ─────────────────────────────────────────────
+    const $slope  = document.getElementById('slope');
+    const $stone  = document.getElementById('stone');
+    const $svg    = document.getElementById('hill-svg');
+    const $path   = document.getElementById('hill-path');
+
+    // Get point on the hill curve at t (0=left base, 0.5=peak, 1=right base)
+    function getHillPoint(t) {
+      const w = $slope.offsetWidth;
+      const h = $slope.offsetHeight;
+      // Quadratic bezier: P0=(0,h) CP=(w/2,0) P2=(w,h)
+      const x = (1-t)*(1-t)*0 + 2*(1-t)*t*(w/2) + t*t*w;
+      const y = (1-t)*(1-t)*h + 2*(1-t)*t*0      + t*t*h;
+      return { x, y };
+    }
+
+    // t=0: bottom left, t=0.5: top, then rolls back down
+    // We map push progress to t: goes up from 0→0.5, resets back
+    let stoneT = 0.05; // start near base
+
+    function placeStone(t) {
+      const pt = getHillPoint(t);
+      $stone.style.left = pt.x + 'px';
+      $stone.style.top  = pt.y + 'px';
+    }
+
+    placeStone(stoneT);
+
+    // ── Push mechanic ─────────────────────────────────────────────
+    const $counter     = document.getElementById('counter-pushes');
+    const $instruction = document.getElementById('instruction');
+    const $reveal      = document.getElementById('reveal');
+    const $revealImg   = document.getElementById('reveal-img');
+    const $revealTag   = document.getElementById('reveal-tag');
+    const $dismiss     = document.getElementById('reveal-dismiss');
+
+    let instructionHidden = false;
+
+    function hideInstruction() {
+      if (!instructionHidden) {
+        instructionHidden = true;
+        $instruction.classList.add('hidden');
+      }
+    }
+
+    function rollBack() {
+      // Animate stone rolling back to base
+      const startT = stoneT;
+      const duration = 600;
+      const start = Date.now();
+      const tick = () => {
+        const p = Math.min((Date.now() - start) / duration, 1);
+        const eased = p < 0.5 ? 2*p*p : -1+(4-2*p)*p;
+        stoneT = startT * (1 - eased) + 0.05 * eased;
+        placeStone(stoneT);
+        if (p < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    }
+
+    function revealArt() {
+      if (!works.length) return;
+      const idx = Math.floor(Math.random() * works.length);
+      const w   = works[idx];
+      const isDupe = seen.has(w.id);
+      seen.add(w.id);
+
+      $revealImg.src = artBase + (w.src.full || w.src.thumb);
+      $revealImg.className = isDupe ? 'reveal--duplicate' : 'reveal--new';
+
+      if (isDupe) {
+        $revealTag.textContent = 'you have seen this one before.\nand yet.';
+        $revealTag.className = 'is-duplicate';
+      } else {
+        $revealTag.textContent = '';
+        $revealTag.className = '';
+      }
+
+      $reveal.classList.add('open');
+      $reveal.removeAttribute('aria-hidden');
+    }
+
+    function doPush() {
+      hideInstruction();
+      pushCount++;
+      progress++;
+      $counter.textContent = pushCount;
+
+      // Move stone up proportionally
+      const step = 0.45 / threshold;
+      stoneT = Math.min(0.5, stoneT + step);
+      placeStone(stoneT);
+
+      if (progress >= threshold) {
+        progress = 0;
+        // Next reveal costs more
+        threshold = Math.ceil(threshold * 1.6);
+        setTimeout(() => {
+          revealArt();
+          rollBack();
+        }, 300);
+      }
+    }
+
+    // ── Input: click / tap stone ──────────────────────────────────
+    $stone.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      $stone.classList.add('dragging');
+      doPush();
+    });
+
+    $stone.addEventListener('pointerup', () => {
+      $stone.classList.remove('dragging');
+    });
+
+    // Also allow clicking anywhere on the slope
+    $slope.addEventListener('pointerdown', (e) => {
+      if (e.target === $stone) return;
+      e.preventDefault();
+      doPush();
+    });
+
+    // ── Dismiss reveal ────────────────────────────────────────────
+    $dismiss.addEventListener('click', () => {
+      $reveal.classList.remove('open');
+      $reveal.setAttribute('aria-hidden', 'true');
+      $revealImg.src = '';
+    });
+
+    $reveal.addEventListener('click', (e) => {
+      if (e.target === $reveal) {
+        $reveal.classList.remove('open');
+        $reveal.setAttribute('aria-hidden', 'true');
+        $revealImg.src = '';
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && $reveal.classList.contains('open')) {
+        $reveal.classList.remove('open');
+        $reveal.setAttribute('aria-hidden', 'true');
+        $revealImg.src = '';
+      }
+      if (e.key === ' ' && !$reveal.classList.contains('open')) {
+        e.preventDefault();
+        doPush();
+      }
+    });
+
+    // ── Resize: reposition stone ──────────────────────────────────
+    window.addEventListener('resize', () => placeStone(stoneT));
+  </script>
+</body>
+</html>

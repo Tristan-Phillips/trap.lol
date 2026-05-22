@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>—</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:   #0a0a0a;
+      --text: #e8e8e8;
+      --dim:  #3a3a3a;
+      --mono: ui-monospace, "Cascadia Code", Menlo, Consolas, monospace;
+      --font: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100dvh;
+      padding: 3rem 1.5rem;
+      text-align: center;
+    }
+
+    .void-body {
+      max-width: 520px;
+      width: 100%;
+    }
+
+    /* The main statement */
+    .void-statement {
+      font-size: clamp(1.05rem, 3vw, 1.3rem);
+      font-weight: 400;
+      line-height: 1.85;
+      color: var(--text);
+      letter-spacing: 0.01em;
+    }
+
+    .void-statement em {
+      font-style: normal;
+      opacity: 0.45;
+    }
+
+    /* The break — breathing space between the two halves */
+    .void-break {
+      display: block;
+      height: 3.5rem;
+    }
+
+    /* The secondary line — quieter */
+    .void-secondary {
+      font-size: 0.82rem;
+      color: var(--dim);
+      font-family: var(--mono);
+      letter-spacing: 0.06em;
+      margin-top: 3rem;
+      line-height: 1.7;
+    }
+
+    /* The signature — barely there */
+    .void-sig {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: #222;
+      letter-spacing: 0.1em;
+      user-select: none;
+    }
+
+    /* Fade in — slow, like waking */
+    @keyframes surface {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .void-body {
+      animation: surface 2.4s ease forwards;
+    }
+
+    .void-secondary {
+      animation: surface 2.4s 0.6s ease both;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="void-body">
+
+    <p class="void-statement">
+      You kept building.<br>
+      <em>Even when you were certain it was for no one.</em><br>
+      <span class="void-break"></span>
+      You documented everything.<br>
+      <em>As if proof would make it real.</em><br>
+      <span class="void-break"></span>
+      You hid what mattered most.<br>
+      <em>And built a door for it anyway.</em>
+    </p>
+
+    <p class="void-secondary">
+      Not hope. Not courage.<br>
+      Simply the stubbornness of someone<br>
+      who hasn't stopped yet.
+    </p>
+
+  </div>
+
+  <span class="void-sig">VOID // you found it</span>
+
+</body>
+</html>

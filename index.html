@@ -14,6 +14,8 @@
 </head>
 <body>
 
+  <!-- if you are reading this: /public/sisyphus/ -->
+
   <!-- Quote tattoo — barely visible background scripture -->
   <div id="quote-tattoo" aria-hidden="true"></div>
 
@@ -110,9 +112,12 @@
       });
 
     // ── Knock system ──────────────────────────────────────────────
-    const PHRASE_HASH = '03331f71dcf83f417134f6c19ac2ef4615fd1a715989e518111b7a9cdad4ece9';
-    const SEQ         = 'spice';
-    const HUB         = '/hub/';
+    const PHRASE_HASH  = '03331f71dcf83f417134f6c19ac2ef4615fd1a715989e518111b7a9cdad4ece9';
+    const PHRASE_HASH2 = '445be54d48a2e6294369c84c61cd0929209d4e1084536159bdf7002bddfe094b';
+    const SEQ          = 'spice';
+    const SEQ2         = 'void';
+    const HUB          = '/hub/';
+    const HIDDEN       = '/public/void/';
 
     // SHA-256 via SubtleCrypto (no deps)
     async function sha256(str) {
@@ -177,6 +182,13 @@
       });
     }
 
+    function triggerVoid() {
+      closeGate();
+      document.body.style.transition = 'opacity 1.8s ease';
+      document.body.style.opacity = '0';
+      setTimeout(() => { window.location.href = HIDDEN; }, 1900);
+    }
+
     // ── Passphrase validation ─────────────────────────────────────
     $input.addEventListener('keydown', async (e) => {
       if (e.key !== 'Enter') return;
@@ -185,6 +197,8 @@
       const hash = await sha256(val);
       if (hash === PHRASE_HASH) {
         triggerGlitch();
+      } else if (hash === PHRASE_HASH2) {
+        triggerVoid();
       } else {
         $err.textContent = 'denied.';
         $input.value = '';
@@ -201,9 +215,10 @@
       if (e.key === 'Escape' && gateOpen) closeGate();
     });
 
-    // ── Desktop: type 'spice' silently ────────────────────────────
+    // ── Desktop: type 'spice' or 'void' silently ─────────────────
     let seqBuf = '';
     let seqTimer;
+    const SEQ_MAX = Math.max(SEQ.length, SEQ2.length);
 
     document.addEventListener('keydown', (e) => {
       if (gateOpen) return;
@@ -214,14 +229,19 @@
       seqBuf += e.key.toLowerCase();
       clearTimeout(seqTimer);
 
+      if (seqBuf.endsWith(SEQ2)) {
+        seqBuf = '';
+        openGate();
+        return;
+      }
+
       if (seqBuf.endsWith(SEQ)) {
         seqBuf = '';
         openGate();
         return;
       }
 
-      // Trim buffer — keep only the last N chars needed
-      if (seqBuf.length > SEQ.length) seqBuf = seqBuf.slice(-SEQ.length);
+      if (seqBuf.length > SEQ_MAX) seqBuf = seqBuf.slice(-SEQ_MAX);
 
       seqTimer = setTimeout(() => { seqBuf = ''; }, 3000);
     });
