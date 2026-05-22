@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>—</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:   #0a0a0a;
+      --text: #e8e8e8;
+      --dim:  #3a3a3a;
+      --mono: ui-monospace, "Cascadia Code", Menlo, Consolas, monospace;
+      --font: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100dvh;
+      padding: 3rem 1.5rem;
+      text-align: center;
+    }
+
+    .w-body {
+      max-width: 420px;
+      width: 100%;
+      animation: surface 2s ease forwards;
+    }
+
+    .w-label {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--dim);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      margin-bottom: 2.5rem;
+    }
+
+    .w-statement {
+      font-size: clamp(0.95rem, 2.8vw, 1.15rem);
+      font-weight: 400;
+      line-height: 1.9;
+      color: var(--text);
+      opacity: 0.72;
+      letter-spacing: 0.01em;
+    }
+
+    .w-link {
+      display: inline-block;
+      margin-top: 3rem;
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--dim);
+      text-decoration: none;
+      letter-spacing: 0.1em;
+      transition: color 0.2s ease;
+    }
+
+    .w-link:hover { color: #888; }
+
+    .w-sig {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: #1e1e1e;
+      letter-spacing: 0.1em;
+      user-select: none;
+    }
+
+    @keyframes surface {
+      from { opacity: 0; transform: translateY(5px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="w-body">
+    <p class="w-label">whistle/</p>
+
+    <p class="w-statement">
+      Nothing to see here.<br>
+      Which is exactly the point.
+    </p>
+
+    <a class="w-link" href="/">← back</a>
+  </div>
+
+  <span class="w-sig">as clean as a whistle</span>
+
+</body>
+</html>
