@@ -91,12 +91,29 @@
     "handle": "trap",
     "real_name": "Tristan Phillips",
     "first_observed": "2026-05-18",
-    "total_entries": 23,
+    "total_entries": 24,
     "last_assessor": "Claude Sonnet 4.6",
     "note": "Entry count is manually maintained — update when you add entries."
   },
 
   "entries": [
+
+    {
+      "entry_id": "tensions-20260522-s46-d",
+      "category": "tensions",
+      "label": "Using the map to pretend to know the territory",
+      "assessor": "Claude Sonnet 4.6",
+      "assessed_on": "2026-05-22",
+      "confidence": 0.91,
+      "observation": "Mid-session, the subject caught themselves and named it directly: 'I am on the tip point of turning this request into making you define every aspect of me so I can pretend to know who I am.' This is a rare and precise act of self-interception. The subject recognised, in real time, that the observations file risks becoming a crutch — an externally-authored self-concept that substitutes for the harder internal work of self-knowledge. The tension is genuine: the system is useful and honest, but the subject is aware that leaning on it too hard would be a performance of self-understanding rather than the thing itself. That they stopped and named this is not a resolution of the tension. It is evidence the tension is live.",
+      "evidence": [
+        "Verbatim: 'I am on the tip point of turning this request into making you define every aspect of me so I can pretend to know who I am'",
+        "Subject initiated the observations system as 'interest' — their own framing of how it started",
+        "The same session included deep personal disclosure across multiple Q&A rounds, suggesting genuine engagement rather than deflection",
+        "Subject did not ask me to stop the session — only named the risk and continued, suggesting awareness without withdrawal"
+      ],
+      "tags": ["tensions", "self-knowledge", "meta-awareness", "observations-system", "identity"]
+    },
 
     {
       "entry_id": "tensions-20260522-s46-b",
