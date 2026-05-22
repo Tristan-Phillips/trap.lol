@@ -14,6 +14,9 @@
 </head>
 <body>
 
+  <!-- Quote tattoo — barely visible background scripture -->
+  <div id="quote-tattoo" aria-hidden="true"></div>
+
   <!-- Glitch overlay — activated on successful knock -->
   <div id="glitch-veil" aria-hidden="true">
     <div class="gv__scanlines"></div>
@@ -42,8 +45,11 @@
   <main class="pf">
     <div class="pf__card">
 
-      <div class="pf__avatar" aria-hidden="true">
-        <img class="pf__avatar-img" src="/public/img/pp.png" alt="" />
+      <div class="pf__avatar-ring" aria-hidden="true">
+        <div class="pf__avatar-glow"></div>
+        <div class="pf__avatar">
+          <img class="pf__avatar-img" src="/public/img/pp.png" alt="" />
+        </div>
       </div>
 
       <h1 class="pf__name" id="pf-name"></h1>
@@ -235,6 +241,36 @@
       }
       tapTimer = setTimeout(() => { tapCount = 0; }, 3000);
     });
+
+    // ── Quote tattoo ──────────────────────────────────────────────
+    fetch('/public/data/quotes.json')
+      .then(r => r.json())
+      .then(({ quotes }) => {
+        if (!quotes || !quotes.length) return;
+        const el = document.getElementById('quote-tattoo');
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        const count = Math.min(quotes.length, 55);
+        const shuffled = quotes.slice().sort(() => Math.random() - 0.5);
+
+        for (let i = 0; i < count; i++) {
+          const q = shuffled[i % shuffled.length];
+          const span = document.createElement('span');
+          span.textContent = q.text;
+
+          const top   = Math.random() * 105 - 2;
+          const left  = Math.random() * 108 - 4;
+          const fade  = 0.018 + Math.random() * 0.022;
+
+          span.style.cssText = `
+            top:${top}%;
+            left:${left}%;
+            opacity:${fade};
+          `;
+          el.appendChild(span);
+        }
+      })
+      .catch(() => {});
   </script>
 
 </body>

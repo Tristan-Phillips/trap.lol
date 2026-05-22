@@ -35,6 +35,28 @@ html, body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* ── Quote tattoo ─────────────────────────────────────────── */
+
+#quote-tattoo {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  user-select: none;
+  overflow: hidden;
+}
+
+#quote-tattoo span {
+  position: absolute;
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  line-height: 1.5;
+  color: #e8e8e8;
+  opacity: 0.028;
+  white-space: nowrap;
+  letter-spacing: 0.04em;
+}
+
 /* ── Layout ───────────────────────────────────────────────── */
 
 .pf {
@@ -43,6 +65,8 @@ html, body {
   align-items: center;
   justify-content: center;
   padding: 2rem 1.25rem;
+  position: relative;
+  z-index: 1;
 }
 
 .pf__card {
@@ -57,14 +81,89 @@ html, body {
 
 /* ── Avatar ───────────────────────────────────────────────── */
 
+.pf__avatar-ring {
+  position: relative;
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  margin-bottom: 0.75rem;
+  flex-shrink: 0;
+}
+
+/* layer 1 — spins forward, breathes */
+.pf__avatar-ring::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    hsla(322,60%,45%,0.0),
+    hsla(322,60%,45%,0.45),
+    hsla(300,50%,40%,0.45),
+    hsla(270,50%,45%,0.45),
+    hsla(240,55%,50%,0.45),
+    hsla(322,60%,45%,0.0)
+  );
+  filter: blur(8px);
+  animation: ring-spin-fwd 12s linear infinite, ring-breathe 5s ease-in-out infinite;
+  z-index: 0;
+}
+
+/* layer 2 — counter-spins, offset hues, slower beat */
+.pf__avatar-glow {
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 180deg,
+    hsla(240,55%,50%,0.0),
+    hsla(240,55%,50%,0.35),
+    hsla(270,50%,45%,0.35),
+    hsla(300,50%,40%,0.35),
+    hsla(322,60%,45%,0.35),
+    hsla(240,55%,50%,0.0)
+  );
+  filter: blur(10px);
+  mix-blend-mode: screen;
+  animation: ring-spin-rev 17s linear infinite, ring-breathe-alt 8s ease-in-out infinite;
+  z-index: 0;
+}
+
+/* mask — cuts the glow into a ring shape */
+.pf__avatar-ring::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background: var(--bg);
+  z-index: 1;
+}
+
+@keyframes ring-spin-fwd {
+  to { transform: rotate(360deg); }
+}
+@keyframes ring-spin-rev {
+  to { transform: rotate(-360deg); }
+}
+@keyframes ring-breathe {
+  0%, 100% { opacity: 0.3; }
+  50%       { opacity: 0.55; }
+}
+@keyframes ring-breathe-alt {
+  0%, 100% { opacity: 0.15; }
+  33%       { opacity: 0.4; }
+  66%       { opacity: 0.1; }
+}
+
 .pf__avatar {
-  width: 80px;
-  height: 80px;
+  position: absolute;
+  inset: 3px;
   border-radius: 50%;
   background: var(--surface);
-  border: 1px solid var(--border);
   overflow: hidden;
-  margin-bottom: 0.75rem;
+  z-index: 2;
+  border: none;
 }
 
 .pf__avatar-img {
@@ -72,7 +171,7 @@ html, body {
   height: 100%;
   object-fit: cover;
   display: block;
-  opacity: 0.28;
+  opacity: 0.4;
   filter: grayscale(40%);
 }
 
@@ -191,17 +290,23 @@ html, body {
   bottom: 0;
   left: 0;
   right: 0;
+  z-index: 2;
   padding: 0.75rem 1.5rem;
   text-align: center;
   font-size: 0.78rem;
   color: #3a3a3a;
   user-select: none;
+  -webkit-user-select: none;
   cursor: default;
-  /* Invisible tap target on mobile — min touch area */
   min-height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.pf-footer * {
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 /* ── Passphrase gate ──────────────────────────────────────── */
@@ -361,7 +466,7 @@ html, body {
 
 @media (max-width: 480px) {
   .pf__card { gap: 0.4rem; }
-  .pf__avatar { width: 60px; height: 60px; }
+  .pf__avatar-ring { width: 68px; height: 68px; }
   .pf__links { flex-direction: column; align-items: center; }
   .pf__link { width: 180px; justify-content: center; }
 }
