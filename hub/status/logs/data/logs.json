@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.69",
+    "schema_version": "1.5.70",
     "last_updated": "2026-05-22",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -648,7 +648,7 @@
         ]
       }
     ],
-    "current_state": "Production — all pages live. URL structure restructured 2026-05-18: dndm/, radar/, underdark/, void/ moved under playground/ as sub-apps. playground/ is now a hub (index.html lists all sub-apps). Neural Uplink (formerly playground/index.html) now lives at /playground/neural-uplink/. All §12 structural violations resolved. Routable pages: /, /playground/, /playground/neural-uplink/, /playground/underdark/, /playground/dndm/, /playground/radar/, /playground/void/, /art/, /status/, /status/logs/, /status/observations/, /archive/, /archive/uplink-sentinel/. /guide/ planned but not yet built. Core hub stable. The Underdark is the most actively developed sub-app — ~11k-line roleplay system. Grimoire is a full DM suite. ECHOES and VOID stable. The site has a mutable working layer (signal.json) and a living LLM cognitive profile (/status/observations/).",
+    "current_state": "Production — two-layer site live. Public face: trap.lol/index.html (neutral portfolio cover — Tristan Phillips / Software Engineer, GitHub + YouTube links, no neon, no Dune). Real site: trap.lol/hub/ (the rave — gated by Cloudflare Zero Trust + client-side knock system). Knock: desktop types 'spice' silently → passphrase gate; mobile taps footer 5× → passphrase gate. Passphrase SHA-256 verified client-side, triggers glitch transition → /hub/. All hub content physically lives under hub/: glass/, playground/, art/, status/, archive/. All internal paths are absolute and /hub/-prefixed. robots.txt disallows /hub/ and /pf/. Routable pages inside hub/: /hub/, /hub/playground/, /hub/playground/neural-uplink/, /hub/playground/underdark/, /hub/playground/dndm/, /hub/playground/radar/, /hub/playground/void/, /hub/art/, /hub/status/, /hub/status/logs/, /hub/status/observations/, /hub/archive/, /hub/archive/uplink-sentinel/. /guide/ planned but not yet built. The Underdark is the most actively developed sub-app — full RP system with Scene Codex, Social Feed, Image Studio. Grimoire is a full DM suite. ECHOES has 2 collections (40+ digital, 40+ traditional). VOID has 45 entries (Feb 2025–May 2026).",
     "intended_future": [
       "Sacred Codex (guides section) reactivation when enough .md content exists",
       "More ECHOES collections as artwork is created/curated",
@@ -663,37 +663,36 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "02656b4",
       "date": "2026-05-22",
-      "message": "refactor(structure): move all hub content into /hub/ — full path surgery",
-      "scope": "hub/",
+      "message": "more honest",
+      "scope": "index.html, hub/playground/void/",
+      "impact": "low",
+      "files": [
+        "hub/playground/void/index.html",
+        "index.html"
+      ],
+      "why": "Minor copy/UX honesty pass on the portfolio cover and VOID page — exact changes not fully specified in commit message."
+    },
+    {
+      "hash": "46f12e3",
+      "date": "2026-05-22",
+      "message": "Lets hide again who we are",
+      "scope": "hub/, index.html, pf/, robots.txt",
       "impact": "high",
       "files": [
+        "index.html",
+        "hub/index.html",
         "hub/glass/",
         "hub/playground/",
         "hub/art/",
         "hub/status/",
         "hub/archive/",
-        "hub/index.html",
+        "pf/style.css",
         "robots.txt",
         "hub/status/logs/data/logs.json"
       ],
-      "why": "User requested all hub-related folders move inside /hub/ for clean organisation — required full absolute-path surgery across 13 HTML files, 13 JS files, and 4 JSON data files to prefix /glass/, /playground/, /art/, /status/, /archive/ with /hub/."
-    },
-    {
-      "hash": "pending",
-      "date": "2026-05-22",
-      "message": "feat(cover): public portfolio face + secret knock system",
-      "scope": "index.html, hub/, pf/, robots.txt",
-      "impact": "high",
-      "files": [
-        "index.html",
-        "hub/index.html",
-        "pf/style.css",
-        "robots.txt",
-        "status/logs/data/logs.json"
-      ],
-      "why": "Security audit revealed the real site was fully public — needed a neutral cover page with a hidden trigger system so sensitive apps (Underdark, RADAR, VOID) are unreachable without knowing the knock."
+      "why": "Combined commit: public portfolio cover with secret knock system (SHA-256 passphrase, desktop 'spice' sequence, mobile 5-tap footer) + full /hub/ restructure moving glass/, playground/, art/, status/, archive/ inside hub/ with complete absolute-path surgery across 13 HTML, 13 JS, and 4 JSON files. .gitignore updated for new hub/ paths; accidentally committed 5etools JSONs removed via git rm --cached + amend."
     },
     {
       "hash": "ae018a8",
@@ -3610,6 +3609,22 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-22",
+      "agent": "Claude Sonnet 4.6",
+      "type": "discussion",
+      "summary": "Site critique session. Full read of codebase after two-layer restructure — cover page, hub architecture, VOID (45 entries), ECHOES (2 collections, 80+ artifacts), Underdark (Scene Codex, Social Feed, Image Studio), Neural Uplink, Grimoire, observations profile. Delivered structured critique identifying what works (architecture discipline, knock system, Underdark depth, ECHOES content volume), and concrete gaps (portfolio bio is placeholder, VOID lacks framing, ECHOES has no titles/descriptions/content warnings, VOID data committed to public git repo). Patched two pending commit hashes in logs.json to 46f12e3, added commit record for 02656b4, updated current_state to reflect /hub/ live structure.",
+      "decisions": [
+        "Portfolio cover bio ('Software Engineer / Systems, infrastructure, and tooling.') identified as placeholder — does not reflect actual scope of work. No change made this session — flagged for future revision.",
+        "VOID committed to git (hub/playground/void/assets/data/void.json) — readable on GitHub raw URLs if repo is public. Flagged as risk. Mitigation: private repo or move to file.trap.lol like art assets.",
+        "ECHOES collection names are internal IDs leaking as display text. No content warnings present for explicit work. Flagged for future metadata enrichment pass.",
+        "The two-layer architecture is confirmed correct. The cover → knock → hub flow is the right design for this content surface."
+      ],
+      "rules_reinforced": [
+        "logs.json session entries must be prepended, not appended — always front of the array.",
+        "Pending commit hashes must be patched to real 7-char hashes before the session closes."
+      ]
+    },
     {
       "date": "2026-05-22",
       "agent": "Claude Sonnet 4.6",

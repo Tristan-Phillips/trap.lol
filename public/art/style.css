@@ -1,0 +1,244 @@
+/* ─────────────────────────────────────────────────────────────
+   trap.lol — Public art gallery
+   Same palette as /pf/style.css. No neon. No Dune.
+───────────────────────────────────────────────────────────── */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:       #0f0f0f;
+  --surface:  #191919;
+  --border:   #2a2a2a;
+  --text:     #e8e8e8;
+  --muted:    #888;
+  --link:     #bbb;
+  --link-h:   #e8e8e8;
+  --font:     system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --mono:     ui-monospace, "Cascadia Code", Menlo, Consolas, monospace;
+  --radius:   10px;
+  --trans:    0.18s ease;
+}
+
+html, body {
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Header ───────────────────────────────────────────────── */
+
+.art-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 10;
+}
+
+.art-header__back {
+  font-size: 0.85rem;
+  color: var(--muted);
+  text-decoration: none;
+  font-family: var(--mono);
+  letter-spacing: 0.02em;
+  transition: color var(--trans);
+}
+
+.art-header__back:hover { color: var(--link-h); }
+
+.art-header__label {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: #3a3a3a;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* ── Main / Grid ──────────────────────────────────────────── */
+
+.art-main {
+  padding: 2rem 1.5rem 4rem;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.art-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.art-empty {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin-top: 4rem;
+}
+
+/* ── Card ─────────────────────────────────────────────────── */
+
+.art-card {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  transition: border-color var(--trans), transform 0.22s ease;
+}
+
+.art-card:hover,
+.art-card:focus-visible {
+  border-color: #444;
+  transform: translateY(-2px);
+  outline: none;
+}
+
+.art-card:focus-visible {
+  outline: 2px solid #555;
+  outline-offset: 2px;
+}
+
+.art-card__img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  display: block;
+  background: #111;
+}
+
+.art-card__label {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.78rem;
+  color: var(--muted);
+  font-family: var(--mono);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-top: 1px solid var(--border);
+}
+
+/* ── Lightbox ─────────────────────────────────────────────── */
+
+.lb {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0, 0, 0, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s ease;
+}
+
+.lb.lb--open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.lb__stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: min(90vw, 900px);
+  max-height: 90dvh;
+  gap: 0.75rem;
+}
+
+.lb__img {
+  max-width: 100%;
+  max-height: calc(90dvh - 3rem);
+  object-fit: contain;
+  border-radius: 6px;
+  display: block;
+}
+
+.lb__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.lb__type {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: #444;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.lb__title {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.lb__close {
+  position: fixed;
+  top: 1.25rem;
+  right: 1.25rem;
+  background: none;
+  border: 1px solid #333;
+  border-radius: 6px;
+  color: var(--muted);
+  font-size: 1.25rem;
+  line-height: 1;
+  padding: 0.3rem 0.6rem;
+  cursor: pointer;
+  transition: color var(--trans), border-color var(--trans);
+  z-index: 201;
+}
+
+.lb__close:hover { color: var(--link-h); border-color: #555; }
+
+.lb__nav {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: 1px solid #333;
+  border-radius: 6px;
+  color: var(--muted);
+  font-size: 1.1rem;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  transition: color var(--trans), border-color var(--trans);
+  z-index: 201;
+}
+
+.lb__nav:hover { color: var(--link-h); border-color: #555; }
+.lb__nav--prev { left: 1.25rem; }
+.lb__nav--next { right: 1.25rem; }
+
+/* ── Footer ───────────────────────────────────────────────── */
+
+.art-footer {
+  padding: 1.25rem 1.5rem;
+  border-top: 1px solid var(--border);
+  text-align: center;
+  font-size: 0.78rem;
+  color: #3a3a3a;
+  font-family: var(--mono);
+}
+
+/* ── Responsive ───────────────────────────────────────────── */
+
+@media (max-width: 480px) {
+  .art-grid { grid-template-columns: repeat(2, 1fr); gap: 0.6rem; }
+  .art-main  { padding: 1.25rem 1rem 4rem; }
+  .lb__nav--prev { left: 0.5rem; }
+  .lb__nav--next { right: 0.5rem; }
+}

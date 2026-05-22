@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title id="page-title">Art</title>
+  <meta name="description" id="page-desc" content="Selected works." />
+  <meta property="og:title" id="og-title" content="Art" />
+  <meta property="og:description" id="og-desc" content="Selected works." />
+  <meta property="og:type" content="website" />
+  <link rel="icon" type="image/svg+xml"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230f0f0f'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%23555' stroke-width='1.5'/%3E%3Ccircle cx='16' cy='16' r='2.5' fill='%23555'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+
+  <div id="lb" class="lb" aria-hidden="true" role="dialog" aria-label="Image viewer">
+    <button class="lb__close" id="lb-close" aria-label="Close">&times;</button>
+    <button class="lb__nav lb__nav--prev" id="lb-prev" aria-label="Previous">&#8592;</button>
+    <button class="lb__nav lb__nav--next" id="lb-next" aria-label="Next">&#8594;</button>
+    <div class="lb__stage">
+      <img class="lb__img" id="lb-img" src="" alt="" />
+      <div class="lb__meta">
+        <span class="lb__type" id="lb-type"></span>
+        <span class="lb__title" id="lb-title"></span>
+      </div>
+    </div>
+  </div>
+
+  <header class="art-header">
+    <a href="/" class="art-header__back" id="art-back">&#8592;</a>
+    <span class="art-header__label">Art</span>
+  </header>
+
+  <main class="art-main">
+    <div class="art-grid" id="art-grid"></div>
+    <p class="art-empty" id="art-empty" hidden>No works yet.</p>
+  </main>
+
+  <footer class="art-footer">
+    <span id="art-copy"></span>
+  </footer>
+
+  <script>
+    const GLOBAL = '/public/data/global.json';
+
+    const $grid  = document.getElementById('art-grid');
+    const $empty = document.getElementById('art-empty');
+    const $lb    = document.getElementById('lb');
+    const $lbImg = document.getElementById('lb-img');
+    const $lbType  = document.getElementById('lb-type');
+    const $lbTitle = document.getElementById('lb-title');
+
+    let works = [];
+    let lbIndex = 0;
+
+    let artBase = 'https://file.trap.lol/get/';
+
+    fetch(GLOBAL)
+      .then(r => r.json())
+      .then(g => {
+        const year = new Date().getFullYear();
+        const name = g.name || '';
+        document.getElementById('art-back').textContent   = `← ${name}`;
+        document.getElementById('art-copy').textContent   = `© ${year} ${g.copyright || name}`;
+        document.getElementById('page-title').textContent = `${name} — Art`;
+        document.getElementById('og-title').content       = `${name} — Art`;
+        document.getElementById('page-desc').content      = `Selected works by ${name}.`;
+        document.getElementById('og-desc').content        = `Selected works by ${name}.`;
+        if (g.art && g.art.base_url) artBase = g.art.base_url + '/';
+        const artData = (g.art && g.art.data) ? g.art.data : '/public/data/art.json';
+        return fetch(artData);
+      })
+      .then(r => r.json())
+      .then(data => {
+        works = data.works || [];
+        if (!works.length) { $empty.hidden = false; return; }
+        works.forEach((w, i) => {
+          const card = document.createElement('button');
+          card.className = 'art-card';
+          card.setAttribute('aria-label', w.title || 'View artwork');
+          card.dataset.index = i;
+          const img = document.createElement('img');
+          img.className = 'art-card__img';
+          img.src = artBase + w.src.thumb;
+          img.alt = w.title || '';
+          img.loading = 'lazy';
+          img.decoding = 'async';
+          card.appendChild(img);
+          if (w.title) {
+            const label = document.createElement('span');
+            label.className = 'art-card__label';
+            label.textContent = w.title;
+            card.appendChild(label);
+          }
+          card.addEventListener('click', () => openLightbox(i));
+          $grid.appendChild(card);
+        });
+      })
+      .catch(() => {
+        $empty.hidden = false;
+        document.getElementById('art-copy').textContent = '© ' + new Date().getFullYear();
+      });
+
+    function openLightbox(i) {
+      lbIndex = i;
+      const w = works[i];
+      $lbImg.src = artBase + (w.src.full || w.src.thumb);
+      $lbImg.alt = w.title || '';
+      $lbType.textContent  = w.type || '';
+      $lbTitle.textContent = w.title || '';
+      $lb.classList.add('lb--open');
+      $lb.removeAttribute('aria-hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeLightbox() {
+      $lb.classList.remove('lb--open');
+      $lb.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+      $lbImg.src = '';
+    }
+
+    function navLightbox(dir) {
+      if (!works.length) return;
+      lbIndex = (lbIndex + dir + works.length) % works.length;
+      const w = works[lbIndex];
+      $lbImg.src = '';
+      requestAnimationFrame(() => {
+        $lbImg.src = artBase + (w.src.full || w.src.thumb);
+        $lbType.textContent  = w.type || '';
+        $lbTitle.textContent = w.title || '';
+      });
+    }
+
+    document.getElementById('lb-close').addEventListener('click', closeLightbox);
+    document.getElementById('lb-prev').addEventListener('click', () => navLightbox(-1));
+    document.getElementById('lb-next').addEventListener('click', () => navLightbox(1));
+
+    $lb.addEventListener('click', e => {
+      if (e.target === $lb) closeLightbox();
+    });
+
+    document.addEventListener('keydown', e => {
+      if (!$lb.classList.contains('lb--open')) return;
+      if (e.key === 'Escape') closeLightbox();
+      if (e.key === 'ArrowLeft')  navLightbox(-1);
+      if (e.key === 'ArrowRight') navLightbox(1);
+    });
+  </script>
+
+</body>
+</html>

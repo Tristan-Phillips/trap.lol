@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tristan Phillips</title>
-  <meta name="description" content="Software engineer. Systems, infrastructure, and tooling." />
-  <meta property="og:title" content="Tristan Phillips" />
-  <meta property="og:description" content="Software engineer. Systems, infrastructure, and tooling." />
+  <title id="page-title">Tristan Phillips</title>
+  <meta name="description" id="page-desc" content="" />
+  <meta property="og:title" id="og-title" content="Tristan Phillips" />
+  <meta property="og:description" id="og-desc" content="" />
   <meta property="og:type" content="website" />
   <link rel="icon" type="image/svg+xml"
     href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230f0f0f'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%23555' stroke-width='1.5'/%3E%3Ccircle cx='16' cy='16' r='2.5' fill='%23555'/%3E%3C/svg%3E" />
@@ -43,37 +43,65 @@
     <div class="pf__card">
 
       <div class="pf__avatar" aria-hidden="true">
-        <span class="pf__avatar-glyph">TP</span>
+        <img class="pf__avatar-img" src="/public/img/pp.png" alt="" />
       </div>
 
-      <h1 class="pf__name" id="pf-name">Tristan Phillips</h1>
-      <p class="pf__title">Hobbyist</p>
-      <p class="pf__bio">Computers, Pshychology and Art</p>
-
-      <nav class="pf__links" aria-label="External profiles">
-        <a href="https://github.com/Tristan-Phillips" target="_blank" rel="noopener" class="pf__link">
-          <svg class="pf__link-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M12 2C6.477 2 2 6.484 2 12.021c0 4.428 2.865 8.185 6.839 9.504.5.092.682-.217.682-.483 0-.237-.009-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482C19.138 20.2 22 16.447 22 12.021 22 6.484 17.523 2 12 2z"/>
-          </svg>
-          GitHub
-        </a>
-        <a href="https://www.youtube.com/@tphips" target="_blank" rel="noopener" class="pf__link">
-          <svg class="pf__link-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-          </svg>
-          YouTube
-        </a>
-      </nav>
+      <h1 class="pf__name" id="pf-name"></h1>
+      <p class="pf__title" id="pf-title"></p>
+      <p class="pf__bio" id="pf-bio"></p>
+      <nav class="pf__links" id="pf-links" aria-label="External profiles"></nav>
 
     </div>
   </main>
 
   <footer class="pf-footer" id="pf-footer">
-    <span id="pf-copy">&copy; <span id="pf-year"></span> Tristan Phillips</span>
+    <span id="pf-copy"></span>
   </footer>
 
   <script>
-    document.getElementById('pf-year').textContent = new Date().getFullYear();
+    // ── Icon map (no external dep) ────────────────────────────
+    const ICONS = {
+      github:   `<svg class="pf__link-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>`,
+      forgejo:  `<svg class="pf__link-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="6" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="9" r="2"/><line x1="6" y1="8" x2="6" y2="16"/><path d="M6 8a6 6 0 0 0 6 6h2"/></svg>`,
+      youtube:  `<svg class="pf__link-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="14" rx="3"/><polygon points="10,10 16,13 10,16" fill="currentColor" stroke="none"/></svg>`,
+      image:    `<svg class="pf__link-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor" stroke="none"/><polyline points="21 15 16 10 5 21"/></svg>`,
+      telegram: `<svg class="pf__link-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2" fill="none"/></svg>`
+    };
+
+    // ── Boot: fetch global.json, render identity ──────────────
+    fetch('/public/data/global.json')
+      .then(r => r.json())
+      .then(g => {
+        const year = new Date().getFullYear();
+        document.getElementById('pf-name').textContent  = g.name  || '';
+        document.getElementById('pf-title').textContent = g.title || '';
+        document.getElementById('pf-bio').textContent   = g.bio   || '';
+        document.getElementById('pf-copy').textContent  = `© ${year} ${g.copyright || g.name || ''}`;
+        document.getElementById('page-title').textContent = g.name || '';
+        document.getElementById('og-title').content       = g.name || '';
+        document.getElementById('page-desc').content      = g.bio  || '';
+        document.getElementById('og-desc').content        = g.bio  || '';
+
+        const $nav = document.getElementById('pf-links');
+        (g.links || []).forEach(link => {
+          const a = document.createElement('a');
+          a.href = link.url;
+          const isCircle = link.style === 'circle';
+          a.className = 'pf__link' + (isCircle ? ' pf__link--circle' : '');
+          if (link.external) { a.target = '_blank'; a.rel = 'noopener'; }
+          if (isCircle) {
+            a.title = link.label;
+            a.setAttribute('aria-label', link.label);
+            a.innerHTML = ICONS[link.icon] || '';
+          } else {
+            a.innerHTML = (ICONS[link.icon] || '') + link.label;
+          }
+          $nav.appendChild(a);
+        });
+      })
+      .catch(() => {
+        document.getElementById('pf-copy').textContent = '© ' + new Date().getFullYear();
+      });
 
     // ── Knock system ──────────────────────────────────────────────
     const PHRASE_HASH = '03331f71dcf83f417134f6c19ac2ef4615fd1a715989e518111b7a9cdad4ece9';

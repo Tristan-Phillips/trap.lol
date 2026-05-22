@@ -1,0 +1,34 @@
+{
+    "site_name": "Trap.lol",
+    "name": "Tristan Phillips",
+    "title": "Art , Psychology , Computers",
+    "bio": "",
+    "copyright": "Tristan Phillips",
+    "links": [
+        {
+            "label": "Forgejo",
+            "url": "https://git.trap.lol/",
+            "external": true,
+            "icon": "forgejo",
+            "style": "circle"
+        },
+        {
+            "label": "Art",
+            "url": "/public/art/",
+            "external": false,
+            "icon": "image",
+            "style": "circle"
+        },
+        {
+            "label": "Telegram",
+            "url": "https://t.me/yourusername",
+            "external": true,
+            "icon": "telegram",
+            "style": "circle"
+        }
+    ],
+    "art": {
+        "base_url": "https://file.trap.lol/get",
+        "data": "/public/data/art.json"
+    }
+}
