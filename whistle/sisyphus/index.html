@@ -252,7 +252,7 @@
   </div>
 
   <script>
-    const GLOBAL   = '/public/data/global.json';
+    const GLOBAL   = '/whistle/data/global.json';
     let artBase    = 'https://file.trap.lol/get/';
     let works      = [];
     let seen       = new Set();
@@ -263,7 +263,7 @@
     // Load art
     fetch(GLOBAL).then(r => r.json()).then(g => {
       if (g.art && g.art.base_url) artBase = g.art.base_url + '/';
-      return fetch(g.art && g.art.data ? g.art.data : '/public/data/art.json');
+      return fetch(g.art && g.art.data ? g.art.data : '/whistle/data/art.json');
     }).then(r => r.json()).then(d => {
       works = d.works || [];
     }).catch(() => {});
@@ -372,7 +372,7 @@
       }
     }
 
-    // ── Input: click / tap stone ──────────────────────────────────
+    // ── Input: click / tap stone only ────────────────────────────
     $stone.addEventListener('pointerdown', (e) => {
       e.preventDefault();
       $stone.classList.add('dragging');
@@ -381,13 +381,6 @@
 
     $stone.addEventListener('pointerup', () => {
       $stone.classList.remove('dragging');
-    });
-
-    // Also allow clicking anywhere on the slope
-    $slope.addEventListener('pointerdown', (e) => {
-      if (e.target === $stone) return;
-      e.preventDefault();
-      doPush();
     });
 
     // ── Dismiss reveal ────────────────────────────────────────────

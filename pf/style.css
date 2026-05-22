@@ -52,7 +52,6 @@ html, body {
   font-size: 0.62rem;
   line-height: 1.5;
   color: #e8e8e8;
-  opacity: 0.028;
   white-space: nowrap;
   letter-spacing: 0.04em;
 }
@@ -94,7 +93,7 @@ html, body {
 .pf__avatar-ring::before {
   content: '';
   position: absolute;
-  inset: -6px;
+  inset: -3px;
   border-radius: 50%;
   background: conic-gradient(
     from 0deg,
@@ -105,7 +104,7 @@ html, body {
     hsla(240,55%,50%,0.45),
     hsla(322,60%,45%,0.0)
   );
-  filter: blur(8px);
+  filter: blur(5px);
   animation: ring-spin-fwd 12s linear infinite, ring-breathe 5s ease-in-out infinite;
   z-index: 0;
 }
@@ -113,7 +112,7 @@ html, body {
 /* layer 2 — counter-spins, offset hues, slower beat */
 .pf__avatar-glow {
   position: absolute;
-  inset: -6px;
+  inset: -3px;
   border-radius: 50%;
   background: conic-gradient(
     from 180deg,
@@ -124,7 +123,7 @@ html, body {
     hsla(322,60%,45%,0.35),
     hsla(240,55%,50%,0.0)
   );
-  filter: blur(10px);
+  filter: blur(7px);
   mix-blend-mode: screen;
   animation: ring-spin-rev 17s linear infinite, ring-breathe-alt 8s ease-in-out infinite;
   z-index: 0;
@@ -171,8 +170,8 @@ html, body {
   height: 100%;
   object-fit: cover;
   display: block;
-  opacity: 0.4;
-  filter: grayscale(40%);
+  opacity: 0.52;
+  filter: grayscale(25%);
 }
 
 /* ── Identity ─────────────────────────────────────────────── */
@@ -467,6 +466,7 @@ html, body {
 @media (max-width: 480px) {
   .pf__card { gap: 0.4rem; }
   .pf__avatar-ring { width: 68px; height: 68px; }
-  .pf__links { flex-direction: column; align-items: center; }
-  .pf__link { width: 180px; justify-content: center; }
+  .pf__links { flex-direction: row; flex-wrap: wrap; justify-content: center; }
+  .pf__link { width: auto; }
+  .pf__link--circle { width: 52px; height: 52px; }
 }

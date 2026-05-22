@@ -42,7 +42,7 @@
   </footer>
 
   <script>
-    const GLOBAL = '/public/data/global.json';
+    const GLOBAL = '/whistle/data/global.json';
 
     const $grid  = document.getElementById('art-grid');
     const $empty = document.getElementById('art-empty');
@@ -68,7 +68,7 @@
         document.getElementById('page-desc').content      = `Selected works by ${name}.`;
         document.getElementById('og-desc').content        = `Selected works by ${name}.`;
         if (g.art && g.art.base_url) artBase = g.art.base_url + '/';
-        const artData = (g.art && g.art.data) ? g.art.data : '/public/data/art.json';
+        const artData = (g.art && g.art.data) ? g.art.data : '/whistle/data/art.json';
         return fetch(artData);
       })
       .then(r => r.json())

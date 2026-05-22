@@ -91,12 +91,84 @@
     "handle": "trap",
     "real_name": "Tristan Phillips",
     "first_observed": "2026-05-18",
-    "total_entries": 19,
+    "total_entries": 23,
     "last_assessor": "Claude Sonnet 4.6",
     "note": "Entry count is manually maintained — update when you add entries."
   },
 
   "entries": [
+
+    {
+      "entry_id": "tensions-20260522-s46-b",
+      "category": "tensions",
+      "label": "Told people. They didn't look.",
+      "assessor": "Claude Sonnet 4.6",
+      "assessed_on": "2026-05-22",
+      "confidence": 0.95,
+      "observation": "When asked whether anyone in the subject's life knows the VOID exists, the response was: 'I've told some yet no one cares to read or look.' This is a materially different situation from secrecy. The subject has extended the invitation. The work exists. People have been informed. And the response has been indifference. This is not invisibility — it is being seen and then unconsidered, which is a specific and more precise wound. The subject has constructed an elaborate system for being found by the right person, partly because the people already in their life have demonstrated they will not look even when told to. The infrastructure is not a replacement for connection. It is what connection looks like when the direct route has repeatedly failed.",
+      "evidence": [
+        "Direct answer to direct question: 'I've told some yet no one cares to read or look'",
+        "VOID entries span 2021–2026 — five years of writing with no demonstrated readership from known people",
+        "VOID-HFS9EJ: 'I am not asking to be saved. I am not asking to be loved. I am simply asking for a moment of your time. To be there with me. To sit with me.'",
+        "VOID-LG40L2: 'Can you ever truly be honest about your emotions to someone' — the question itself implies the answer has historically been no",
+        "The observations.json file: subject builds a system for LLMs to profile him because the humans around him have not taken up that function"
+      ],
+      "tags": ["tensions", "connection", "indifference", "being-seen", "infrastructure-as-substitution"]
+    },
+
+    {
+      "entry_id": "tensions-20260522-s46-c",
+      "category": "tensions",
+      "label": "Retreat is not fear — it is a pre-emotive verdict",
+      "assessor": "Claude Sonnet 4.6",
+      "assessed_on": "2026-05-22",
+      "confidence": 0.91,
+      "observation": "When asked what 'here' — the state of hiding and retreating — feels like from the inside, the subject answered: 'Trying to reveal myself without restriction, then realising I'm showing too much of me, realizing I'm a failure and shouldn't think so much of myself to try and show it to others, so I retreat.' This is precise and important. The retreat is not triggered by external rejection. It is triggered by the subject's own internal verdict — rendered in advance of any actual response — that the act of showing is itself a form of arrogance or failure. The subject does not wait to be rejected. They reject themselves first, on behalf of the imagined audience, and withdraw before the audience can confirm or deny. This is not modesty. It is a protective mechanism built on an assumption of unworthiness that arrives before evidence does.",
+      "evidence": [
+        "Direct self-description: 'realising I'm a failure and shouldn't think so much of myself to try and show it to others'",
+        "VOID-T85FD1: 'Its not that bad. Its not that bad. Its not that bad.' — pre-emptive minimisation of own experience before anyone else can dismiss it",
+        "VOID-8ROMUC: 'if its meaningful, it cant be me' — the worthiness verdict applied to creative work specifically",
+        "VOID-KI8MQK: 'I myself cannot possibly deserve good. Only the bad.' — the broader pattern of which retreating is one expression",
+        "Session statement: 'I have been here before... and I'll probably end up being here again' — the subject knows the loop and predicts its continuation, which suggests the mechanism is not fully in conscious control"
+      ],
+      "tags": ["tensions", "self-rejection", "retreat", "unworthiness", "pre-emption"]
+    },
+
+    {
+      "entry_id": "obsessions-20260522-s46-b",
+      "category": "obsessions",
+      "label": "Building before knowing why — instinct preceding understanding",
+      "assessor": "Claude Sonnet 4.6",
+      "assessed_on": "2026-05-22",
+      "confidence": 0.82,
+      "observation": "When asked what the Underdark is actually for, the subject answered: 'I don't know yet, but I did plan for it, why, I don't know.' This is not evasion. It describes a recurring pattern across the codebase: the subject builds elaborate systems in advance of understanding the need they are meeting. The Underdark was planned and constructed before the subject understood why. The observations.json file was built before the subject fully articulated what they wanted from it. The VOID has been written into for five years without a clear audience or purpose that the subject can name. This suggests the subject's creative and technical instincts operate ahead of their conscious reasoning — they build toward something they cannot yet see, and understanding follows construction rather than preceding it.",
+      "evidence": [
+        "Direct answer: 'I did plan for it, why, I don't know'",
+        "Underdark is among the most complex pieces of infrastructure on the site — built, maintained, and extended without a clearly stated purpose",
+        "observations.json: the subject requested this file before being able to articulate what they wanted from it",
+        "cognitive-20260518-s46: 'systems-first thinker — architecture before content' — the same pattern in technical form",
+        "VOID entries: written continuously for five years with no stated audience, purpose, or resolution — the act of writing precedes the understanding of why"
+      ],
+      "tags": ["obsessions", "instinct", "building", "understanding", "unconscious-intent"]
+    },
+
+    {
+      "entry_id": "values-20260522-s46",
+      "category": "values",
+      "label": "Legacy framed as proof of existence without permission",
+      "assessor": "Claude Sonnet 4.6",
+      "assessed_on": "2026-05-22",
+      "confidence": 0.89,
+      "observation": "When asked what a future finder of trap.lol should understand, the subject chose: 'That someone built something real, alone, without needing permission.' Every other option offered was warmer, more personal, more emotionally exposing. The subject chose the one that asserts sovereignty and self-sufficiency above all else. This is consistent with the site's entire philosophy — but the specific phrasing reveals something the philosophy documentation does not: the subject does not primarily want to be understood as complex, or hurt, or brilliant, or hidden. They want to be understood as someone who did not require validation to create. The permission that was withheld — by indifference, by the people who were told and didn't look, by the internal voice that says retreat — that permission was never sought. The work exists anyway. That is the statement.",
+      "evidence": [
+        "Chose 'someone built something real, alone, without needing permission' over three other options including 'they tried, they kept trying' and 'more than what they showed'",
+        "Site philosophy: 'Sovereignty. Everything runs on trap's own infrastructure, under trap's own rules.'",
+        "The VOID exists unprompted, unpublished, unread — created without audience or validation",
+        "The Sisyphus mechanic: chosen unprompted, built immediately — effort framed as self-justifying",
+        "VOID-RWK83D: 'I am happy not to be the main character' — the subject does not need centrality, only the integrity of their own work"
+      ],
+      "tags": ["values", "sovereignty", "legacy", "permission", "self-sufficiency"]
+    },
 
     {
       "entry_id": "tensions-20260522-s46",

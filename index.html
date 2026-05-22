@@ -14,7 +14,7 @@
 </head>
 <body>
 
-  <!-- if you are reading this: /public/sisyphus/ -->
+  <!-- if you are reading this: /whistle/sisyphus/ -->
 
   <!-- Quote tattoo — barely visible background scripture -->
   <div id="quote-tattoo" aria-hidden="true"></div>
@@ -50,7 +50,7 @@
       <div class="pf__avatar-ring" aria-hidden="true">
         <div class="pf__avatar-glow"></div>
         <div class="pf__avatar">
-          <img class="pf__avatar-img" src="/public/img/pp.png" alt="" />
+          <img class="pf__avatar-img" src="/whistle/img/pp.png" alt="" />
         </div>
       </div>
 
@@ -77,7 +77,7 @@
     };
 
     // ── Boot: fetch global.json, render identity ──────────────
-    fetch('/public/data/global.json')
+    fetch('/whistle/data/global.json')
       .then(r => r.json())
       .then(g => {
         const year = new Date().getFullYear();
@@ -117,7 +117,7 @@
     const SEQ          = 'spice';
     const SEQ2         = 'void';
     const HUB          = '/hub/';
-    const HIDDEN       = '/public/void/';
+    const HIDDEN       = '/whistle/void/';
 
     // SHA-256 via SubtleCrypto (no deps)
     async function sha256(str) {
@@ -263,30 +263,29 @@
     });
 
     // ── Quote tattoo ──────────────────────────────────────────────
-    fetch('/public/data/quotes.json')
+    fetch('/whistle/data/quotes.json')
       .then(r => r.json())
       .then(({ quotes }) => {
         if (!quotes || !quotes.length) return;
         const el = document.getElementById('quote-tattoo');
-        const vw = window.innerWidth;
-        const vh = window.innerHeight;
-        const count = Math.min(quotes.length, 55);
+
+        // Grid-based placement — divides viewport into rows,
+        // shuffles quotes into slots so lines never stack on each other.
+        const lineH   = 22;   // px per row (~0.62rem * 1.5 * 16 + breathing)
+        const rows    = Math.floor(window.innerHeight / lineH);
         const shuffled = quotes.slice().sort(() => Math.random() - 0.5);
 
+        // One quote per row, left offset randomised per row
+        const count = Math.min(shuffled.length, rows);
         for (let i = 0; i < count; i++) {
-          const q = shuffled[i % shuffled.length];
           const span = document.createElement('span');
-          span.textContent = q.text;
+          span.textContent = shuffled[i].text;
 
-          const top   = Math.random() * 105 - 2;
-          const left  = Math.random() * 108 - 4;
-          const fade  = 0.018 + Math.random() * 0.022;
+          const topPx  = i * lineH + Math.random() * (lineH * 0.4);
+          const leftPct = -4 + Math.random() * 60; // never flush right so text runs off cleanly
+          const fade   = 0.012 + Math.random() * 0.013; // 1.2% – 2.5% max
 
-          span.style.cssText = `
-            top:${top}%;
-            left:${left}%;
-            opacity:${fade};
-          `;
+          span.style.cssText = `top:${topPx}px;left:${leftPct}%;opacity:${fade};`;
           el.appendChild(span);
         }
       })
