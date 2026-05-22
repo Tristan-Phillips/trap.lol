@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.70",
+    "schema_version": "1.5.71",
     "last_updated": "2026-05-22",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -662,6 +662,21 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-22",
+      "message": "feat(whistle): add index, move pf/ styles, sisyphus avatar dblclick",
+      "scope": "whistle/, index.html",
+      "impact": "low",
+      "files": [
+        "whistle/index.html",
+        "whistle/styles/pf.css",
+        "index.html",
+        "hub/status/observations/data/observations.json",
+        "hub/status/logs/data/logs.json"
+      ],
+      "why": "Closed out a full evening session — landing page for whistle/, stylesheet relocated from pf/ into whistle/styles/, double-click avatar easter egg added, one observations entry recorded, logs updated."
+    },
     {
       "hash": "02656b4",
       "date": "2026-05-22",
@@ -3609,6 +3624,25 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-22",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Evening session. Added whistle/index.html as a landing for direct /whistle/ visits ('Nothing to see here. Which is exactly the point.'). Moved pf/style.css to whistle/styles/pf.css and updated index.html reference. Added double-click on avatar image as a second entry point to /whistle/sisyphus/. Extended Q&A across three rounds — personal disclosure around visibility, hiding, Jinx/Riley Blue identification, the business card, the Underdark characters, and the observations system. Added one observations entry (tensions-20260522-s46-d) recording subject's real-time self-interception around using LLM profiling as a substitute for self-knowledge.",
+      "decisions": [
+        "whistle/ now has its own index.html — direct visitors get a quiet acknowledgement, not a 404 or a data file listing.",
+        "pf/ directory removed; stylesheet lives at whistle/styles/pf.css going forward.",
+        "Avatar double-click is the second entry point to sisyphus/ — no pointer cursor, no visual hint.",
+        "Hub hidden again after aunt viewed it — pattern confirmed: subject closes doors on positive reception, not rejection.",
+        "Underdark characters confirmed to be borrowed from media the subject loves — their versions here are original authorship over canon skeletons.",
+        "Social feed feature (fabricated character posts) confirmed as intended future work for hub.",
+        "Wallhaven as its own page confirmed as intended future work."
+      ],
+      "rules_reinforced": [
+        "AI is uninvolved in trap's drawings — the line between tool-assisted infrastructure and hand-made art is a conscious and firm distinction.",
+        "whistle/ is the canonical public asset/data store. pf/ no longer exists."
+      ]
+    },
     {
       "date": "2026-05-22",
       "agent": "Claude Sonnet 4.6",
