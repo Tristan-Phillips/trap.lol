@@ -1,0 +1,1051 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Grimoire // Campaign Suite</title>
+  <meta name="robots" content="noindex" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230A0705'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%238B1A1A' stroke-width='1.5'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%238B1A1A'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="/hub/playground/dndm/assets/style/style.css" />
+</head>
+<body>
+
+  <!-- ── Welcome Screen ─────────────────────────────────────── -->
+  <div id="welcome" class="welcome" aria-label="Grimoire welcome screen">
+    <div class="welcome__bg" aria-hidden="true"></div>
+
+    <div class="welcome__stage" aria-hidden="true">
+      <svg class="welcome__ring" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="120" cy="120" r="100" stroke="rgba(139,26,26,0.25)" stroke-width="1"/>
+        <circle class="welcome__ring-draw" cx="120" cy="120" r="100"
+          stroke="#8B1A1A" stroke-width="1.5"
+          stroke-dasharray="628" stroke-dashoffset="628"
+          stroke-linecap="round"/>
+        <circle cx="120" cy="120" r="72" stroke="rgba(196,146,42,0.12)" stroke-width="1" stroke-dasharray="3 6"/>
+        <circle class="welcome__ring-inner" cx="120" cy="120" r="72"
+          stroke="rgba(196,146,42,0.35)" stroke-width="1"
+          stroke-dasharray="452" stroke-dashoffset="452"
+          stroke-linecap="round"/>
+      </svg>
+
+      <!-- 8 runes placed around the circle via CSS -->
+      <span class="welcome__rune" data-i="0">ᚠ</span>
+      <span class="welcome__rune" data-i="1">ᚢ</span>
+      <span class="welcome__rune" data-i="2">ᚦ</span>
+      <span class="welcome__rune" data-i="3">ᚨ</span>
+      <span class="welcome__rune" data-i="4">ᚱ</span>
+      <span class="welcome__rune" data-i="5">ᚲ</span>
+      <span class="welcome__rune" data-i="6">ᚷ</span>
+      <span class="welcome__rune" data-i="7">ᚹ</span>
+
+      <div class="welcome__orb" aria-hidden="true"></div>
+    </div>
+
+    <div class="welcome__text">
+      <h1 class="welcome__title">Grimoire</h1>
+      <p class="welcome__sub">Campaign Suite &nbsp;//&nbsp; 5th Edition</p>
+    </div>
+
+    <div class="welcome__actions">
+      <button class="welcome__btn welcome__btn--primary" id="welcome-new" type="button">
+        <span class="welcome__btn-glyph">᛫</span> New Campaign
+      </button>
+      <button class="welcome__btn welcome__btn--secondary" id="welcome-load" type="button">
+        <span class="welcome__btn-glyph">᛭</span> Load Campaign
+      </button>
+    </div>
+
+    <p class="welcome__version">v1.0 &nbsp;·&nbsp; SRD 5.1</p>
+  </div>
+
+  <!-- ── App Shell (hidden until campaign loaded) ────────────── -->
+  <div id="app" class="app" hidden>
+
+    <!-- Sidebar -->
+    <nav id="sidebar" class="sidebar" aria-label="Module navigation">
+      <div class="sidebar__head">
+        <span class="sidebar__brand">DM<span class="sidebar__brand-dot">·</span>M</span>
+        <div class="sidebar__mode" id="sidebar-mode">
+          <span class="sidebar__mode-dot" aria-hidden="true"></span>
+          <span class="sidebar__mode-label" id="mode-label">PREP</span>
+        </div>
+      </div>
+
+      <ul class="sidebar__nav" role="list">
+        <li>
+          <button class="sidebar__item sidebar__item--active" data-module="campaign" aria-label="Campaign Overview">
+            <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            <span class="sidebar__label">CAMPAIGN</span>
+          </button>
+        </li>
+        <li>
+          <button class="sidebar__item" data-module="sessions" aria-label="Session Manager">
+            <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <span class="sidebar__label">SESSIONS</span>
+          </button>
+        </li>
+        <li>
+          <button class="sidebar__item" data-module="story" aria-label="Story Builder">
+            <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="5" cy="6" r="2"/><circle cx="19" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><line x1="7" y1="6" x2="17" y2="6"/><line x1="5" y1="8" x2="12" y2="16"/><line x1="19" y1="8" x2="12" y2="16"/></svg>
+            <span class="sidebar__label">STORY</span>
+          </button>
+        </li>
+        <li>
+          <button class="sidebar__item" data-module="party" aria-label="Party Tracker">
+            <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <span class="sidebar__label">PARTY</span>
+          </button>
+        </li>
+        <li>
+          <button class="sidebar__item sidebar__item--session-only" data-module="combat" aria-label="Combat Tracker">
+            <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m14.5 17.5-5-5 5-5"/><path d="m9.5 17.5 5-5-5-5"/></svg>
+            <span class="sidebar__label">COMBAT</span>
+          </button>
+        </li>
+        <li>
+          <button class="sidebar__item" data-module="bestiary" aria-label="Bestiary">
+            <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/><path d="M8 12c0-2.2 1.8-4 4-4s4 1.8 4 4-1.8 4-4 4"/></svg>
+            <span class="sidebar__label">BESTIARY</span>
+          </button>
+        </li>
+        <li>
+          <button class="sidebar__item" data-module="spellbook" aria-label="Spellbook">
+            <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <span class="sidebar__label">SPELLBOOK</span>
+          </button>
+        </li>
+        <li>
+          <button class="sidebar__item" data-module="atlas" aria-label="Atlas — Maps">
+            <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
+            <span class="sidebar__label">ATLAS</span>
+          </button>
+        </li>
+        <li>
+          <button class="sidebar__item sidebar__item--session-only" data-module="soundscape" aria-label="Soundscape">
+            <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+            <span class="sidebar__label">SOUNDSCAPE</span>
+          </button>
+        </li>
+        <li>
+          <button class="sidebar__item" data-module="oracle" aria-label="Oracle — Rules Assistant">
+            <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span class="sidebar__label">ORACLE</span>
+          </button>
+        </li>
+        <li>
+          <button class="sidebar__item sidebar__item--session-only" data-module="dice" aria-label="Dice Roller">
+            <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="20" height="20" rx="4"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/><circle cx="16" cy="8" r="1.5" fill="currentColor"/><circle cx="8" cy="16" r="1.5" fill="currentColor"/><circle cx="16" cy="16" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg>
+            <span class="sidebar__label">DICE</span>
+          </button>
+        </li>
+        <li>
+          <button class="sidebar__item" data-module="cheatsheet" aria-label="Cheat Sheet">
+            <svg class="sidebar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            <span class="sidebar__label">CHEAT SHEET</span>
+          </button>
+        </li>
+      </ul>
+
+      <div class="sidebar__foot">
+        <button class="sidebar__session-toggle" id="session-toggle" type="button" aria-label="Begin or end session">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          <span id="session-toggle-label">BEGIN SESSION</span>
+        </button>
+        <button class="sidebar__settings" id="settings-btn" type="button" aria-label="Settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Main content area -->
+    <div class="main" id="main-content" role="main">
+
+      <!-- ── Party Status Bar (visible during session) ────── -->
+      <div class="party-bar" id="party-bar" aria-label="Party status"></div>
+
+      <!-- ── Campaign Overview ─────────────────────────────── -->
+      <section class="module" id="module-campaign" data-module="campaign">
+        <div class="module__banner" id="campaign-banner">
+          <div class="module__banner-overlay" aria-hidden="true"></div>
+          <div class="module__banner-content">
+            <span class="module__eyebrow">ACTIVE CAMPAIGN</span>
+            <h1 class="module__campaign-name" id="campaign-name">Unnamed Campaign</h1>
+            <p class="module__campaign-setting" id="campaign-setting">No setting defined.</p>
+          </div>
+          <button class="module__banner-edit" type="button" id="campaign-meta-btn" aria-label="Edit campaign details" title="Edit campaign details">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Edit
+          </button>
+          <button class="module__banner-upload" type="button" aria-label="Upload campaign banner">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          </button>
+        </div>
+
+        <div class="module__body">
+          <div class="module__cols">
+            <div class="module__col module__col--wide">
+              <div class="panel">
+                <div class="panel__head">
+                  <span class="panel__title">NPCs</span>
+                  <button class="panel__add" type="button">+ Add NPC</button>
+                </div>
+                <div class="npc-grid" id="npc-grid">
+                  <!-- NPC cards rendered by JS -->
+                  <div class="npc-card npc-card--empty">
+                    <span class="npc-card__empty-text">No NPCs yet. Add your first character.</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="panel">
+                <div class="panel__head">
+                  <span class="panel__title">LORE WIKI</span>
+                  <nav class="panel__tabs" aria-label="Lore sections">
+                    <button class="panel__tab panel__tab--active" data-tab="locations">Locations</button>
+                    <button class="panel__tab" data-tab="factions">Factions</button>
+                    <button class="panel__tab" data-tab="timeline">Timeline</button>
+                  </nav>
+                  <button class="panel__add" type="button">+ Add Entry</button>
+                </div>
+                <div class="lore-list" id="lore-list">
+                  <div class="lore-empty">No entries. The world is yet unwritten.</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="module__col module__col--narrow">
+              <div class="panel">
+                <div class="panel__head">
+                  <span class="panel__title">SCRATCH PAD</span>
+                  <button class="panel__add" type="button" id="scratch-expand" title="Open in full composer">⤢ Expand</button>
+                </div>
+                <textarea class="scratch-pad" id="scratch-pad" placeholder="In-session notes, loose thoughts, reminders…" rows="6"></textarea>
+              </div>
+
+              <div class="panel panel--stats">
+                <div class="panel__head"><span class="panel__title">CAMPAIGN STATS</span></div>
+                <div class="stat-row">
+                  <span class="stat-row__label">Sessions</span>
+                  <span class="stat-row__val" id="stat-sessions">0</span>
+                </div>
+                <div class="stat-row">
+                  <span class="stat-row__label">Total XP</span>
+                  <span class="stat-row__val" id="stat-xp">0</span>
+                </div>
+                <div class="stat-row">
+                  <span class="stat-row__label">Party Level</span>
+                  <span class="stat-row__val" id="stat-level">1</span>
+                </div>
+                <div class="stat-row">
+                  <span class="stat-row__label">NPCs</span>
+                  <span class="stat-row__val" id="stat-npcs">0</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Sessions ──────────────────────────────────────── -->
+      <section class="module module--hidden" id="module-sessions" data-module="sessions">
+        <div class="module__header">
+          <h2 class="module__title">SESSION LOG</h2>
+          <button class="module__action" type="button">+ New Session</button>
+        </div>
+        <div class="module__body">
+          <div class="session-list" id="session-list">
+            <div class="session-empty">No sessions recorded. Begin your first session to start logging.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Story Builder ────────────────────────────────── -->
+      <section class="module module--hidden story-module" id="module-story" data-module="story">
+
+        <!-- NOW PLAYING strip — shown during session when a current node is set -->
+        <div class="story-now" id="story-now" hidden>
+          <span class="story-now__eyebrow">NOW PLAYING</span>
+          <div class="story-now__body">
+            <span class="story-now__type-dot" id="story-now-dot"></span>
+            <span class="story-now__title" id="story-now-title">—</span>
+            <span class="story-now__desc" id="story-now-desc"></span>
+          </div>
+          <div class="story-now__actions">
+            <button class="story-now__btn story-now__btn--offscript" id="story-offscript" title="Party went off-script — spawn an improvisation node">⚡ Off-Script</button>
+            <button class="story-now__btn story-now__btn--complete" id="story-mark-done" title="Mark this scene as played and advance">✓ Mark Done</button>
+          </div>
+        </div>
+
+        <!-- Main 3-pane layout -->
+        <div class="story-shell" id="story-shell">
+
+          <!-- Left: Tree canvas -->
+          <div class="story-canvas-wrap" id="story-canvas-wrap">
+            <!-- Toolbar -->
+            <div class="story-toolbar" id="story-toolbar">
+              <div class="story-toolbar__group">
+                <button class="story-tool story-tool--add" id="story-add-root" title="Add root node (start a new tree or branch)">+ Root</button>
+                <div class="story-node-type-picker" id="story-type-picker">
+                  <button class="story-type-btn story-type-btn--scene   story-type-btn--active" data-type="scene"       title="Scene">⬡ Scene</button>
+                  <button class="story-type-btn story-type-btn--decision" data-type="decision"  title="Decision fork">◈ Decision</button>
+                  <button class="story-type-btn story-type-btn--event"    data-type="event"     title="World event">⚡ Event</button>
+                  <button class="story-type-btn story-type-btn--reveal"   data-type="revelation" title="Revelation / clue">◎ Reveal</button>
+                  <button class="story-type-btn story-type-btn--combat"   data-type="combat"    title="Combat encounter">⚔ Combat</button>
+                  <button class="story-type-btn story-type-btn--wild"     data-type="wildcard"  title="Wildcard / improvisation">? Wild</button>
+                </div>
+              </div>
+              <div class="story-toolbar__group story-toolbar__group--right">
+                <button class="story-tool" id="story-zoom-in"  title="Zoom in">+</button>
+                <button class="story-tool" id="story-zoom-out" title="Zoom out">−</button>
+                <button class="story-tool" id="story-fit"      title="Fit all nodes in view">⊞ Fit</button>
+                <button class="story-tool story-tool--connect" id="story-connect-toggle" title="Connection mode: click source then target">⤳ Connect</button>
+                <button class="story-tool story-tool--delete-mode" id="story-delete-toggle" title="Delete mode: click node or edge to remove">✕ Delete</button>
+                <button class="story-tool" id="story-clear-all" title="Clear entire tree (with confirmation)">⊘ Clear</button>
+              </div>
+            </div>
+            <!-- Hint bar -->
+            <div class="story-hint" id="story-hint">Click canvas to place a node. Shift+drag to pan. Scroll to zoom.</div>
+            <!-- SVG edge layer + node layer (both inside the pan/zoom container) -->
+            <div class="story-viewport" id="story-viewport">
+              <div class="story-stage" id="story-stage">
+                <svg class="story-edges" id="story-edges" xmlns="http://www.w3.org/2000/svg"></svg>
+                <div class="story-nodes" id="story-nodes"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Node detail + Oracle suggestions -->
+          <div class="story-panel" id="story-panel">
+            <!-- Node editor -->
+            <div class="story-editor" id="story-editor">
+              <div class="story-editor__empty" id="story-editor-empty">
+                <span class="story-editor__empty-icon">◈</span>
+                <p>Select a node to edit it, or click canvas to place a new one.</p>
+              </div>
+              <div class="story-editor__form" id="story-editor-form" hidden>
+                <div class="story-editor__head">
+                  <span class="story-editor__type-badge" id="story-editor-type"></span>
+                  <button class="story-editor__close" id="story-editor-close" title="Deselect">✕</button>
+                </div>
+                <input class="story-editor__title" id="story-editor-title" placeholder="Node title…" maxlength="80" />
+                <div class="story-editor__expand-wrap">
+                  <div class="story-editor__expand-label">DESCRIPTION <span class="story-editor__expand-hint">⤢ click to expand</span></div>
+                  <textarea class="story-editor__desc" id="story-editor-desc" placeholder="Click to write in Composer…" rows="3" title="Click to open full-screen editor" readonly></textarea>
+                </div>
+                <div class="story-editor__expand-wrap">
+                  <div class="story-editor__expand-label">PRIVATE NOTES <span class="story-editor__expand-hint">⤢ click to expand</span></div>
+                  <textarea class="story-editor__notes" id="story-editor-notes" placeholder="Click to write in Composer…" rows="2" title="Click to open full-screen editor" readonly></textarea>
+                </div>
+                <div class="story-editor__tags-row">
+                  <label class="story-editor__field-label">TAGS</label>
+                  <input class="story-editor__tags-inp" id="story-editor-tags" placeholder="e.g. Act 2, Boss, Optional…" />
+                </div>
+                <div class="story-editor__status-row">
+                  <label class="story-editor__field-label">STATUS</label>
+                  <select class="story-editor__status" id="story-editor-status">
+                    <option value="planned">Planned</option>
+                    <option value="current">Current</option>
+                    <option value="played">Played</option>
+                    <option value="skipped">Skipped</option>
+                    <option value="altered">Altered (went off-script)</option>
+                  </select>
+                </div>
+                <div class="story-editor__color-row" id="story-editor-color-row">
+                  <label class="story-editor__field-label">NODE COLOR</label>
+                  <div class="story-editor__swatches" id="story-editor-swatches"></div>
+                </div>
+                <div class="story-editor__monster-row" id="story-editor-monster-row">
+                  <label class="story-editor__field-label">ENCOUNTER</label>
+                  <input class="story-editor__monster-inp" id="story-editor-monsters" placeholder="e.g. 3× Goblin, 1× Bugbear…" />
+                  <button class="story-editor__launch-combat" id="story-launch-combat" title="Send this encounter to the combat tracker">⚔ Launch Combat</button>
+                </div>
+                <div class="story-editor__actions">
+                  <button class="story-editor__btn story-editor__btn--primary" id="story-set-current" title="Set as the current active scene during session">◉ Set as Now Playing</button>
+                  <button class="story-editor__btn story-editor__btn--child" id="story-add-child" title="Add a child node branching from this one">+ Branch</button>
+                  <button class="story-editor__btn story-editor__btn--danger" id="story-delete-node" title="Delete this node (edges removed too)">✕ Delete Node</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Oracle suggestions -->
+            <div class="story-oracle" id="story-oracle">
+              <div class="story-oracle__head">
+                <span class="story-oracle__title">◈ ORACLE SUGGESTIONS</span>
+                <div class="story-oracle__controls">
+                  <button class="story-oracle__btn" id="story-oracle-suggest" title="Ask Oracle for what might happen next">⟳ Suggest</button>
+                  <button class="story-oracle__btn story-oracle__btn--expand" id="story-oracle-expand" title="Generate a full sub-tree of child nodes from this scene">⊕ Expand Tree</button>
+                </div>
+              </div>
+              <div class="story-oracle__body" id="story-oracle-body">
+                <div class="story-oracle__intro">Select a node then click Suggest for contextual ideas, or Expand Tree to auto-generate branches.</div>
+              </div>
+            </div>
+
+            <!-- Journey log — breadcrumb of played path -->
+            <div class="story-journey" id="story-journey">
+              <div class="story-journey__head">
+                <span class="story-journey__title">PATH TAKEN</span>
+                <button class="story-journey__clear" id="story-journey-clear" title="Clear path history">✕</button>
+              </div>
+              <div class="story-journey__list" id="story-journey-list">
+                <div class="story-journey__empty">No scenes played yet. Begin session and mark scenes done to build the campaign's actual path.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Party ─────────────────────────────────────────── -->
+      <section class="module module--hidden" id="module-party" data-module="party">
+        <div class="module__header">
+          <h2 class="module__title">PARTY TRACKER</h2>
+          <div class="module__actions">
+            <button class="module__action module__action--ghost" type="button" id="add-character">+ Add Character</button>
+            <button class="module__action module__action--ghost" type="button" id="send-all-to-combat" title="Send whole party to combat initiative">⚔ Send to Combat</button>
+          </div>
+        </div>
+        <div class="module__body">
+          <div class="party-grid" id="party-grid">
+            <div class="party-empty" id="party-empty">
+              <p class="party-empty__text">No characters yet.</p>
+              <button class="party-empty__btn" id="add-character-empty">+ Add First Character</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Combat ────────────────────────────────────────── -->
+      <section class="module module--hidden" id="module-combat" data-module="combat">
+        <div class="module__header">
+          <h2 class="module__title">
+            COMBAT
+            <span class="combat-round" id="combat-round" aria-label="Round number">ROUND <span id="round-num">—</span></span>
+          </h2>
+          <div class="module__actions">
+            <button class="module__action module__action--ghost" type="button" id="add-combatant">+ Add</button>
+            <button class="module__action module__action--danger" type="button" id="end-combat" disabled>End Combat</button>
+          </div>
+        </div>
+        <div class="module__body">
+          <div class="combat-shell">
+            <div class="combat-track" id="combat-track">
+              <div class="combat-empty">
+                <p>No active encounter.</p>
+                <p class="combat-empty__sub">Add combatants to begin initiative tracking.</p>
+              </div>
+            </div>
+            <div class="combat-sidebar">
+              <button class="combat-next" id="combat-next" type="button" disabled>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                NEXT TURN
+              </button>
+              <div class="combat-info panel">
+                <div class="panel__head"><span class="panel__title">QUICK REF</span></div>
+                <div class="combat-info__item">
+                  <span class="combat-info__label">Grapple</span>
+                  <span class="combat-info__val">Athletics vs Athletics/Acrobatics</span>
+                </div>
+                <div class="combat-info__item">
+                  <span class="combat-info__label">Shove</span>
+                  <span class="combat-info__val">Athletics vs Athletics/Acrobatics</span>
+                </div>
+                <div class="combat-info__item">
+                  <span class="combat-info__label">Half Cover</span>
+                  <span class="combat-info__val">+2 AC and DEX saves</span>
+                </div>
+                <div class="combat-info__item">
+                  <span class="combat-info__label">¾ Cover</span>
+                  <span class="combat-info__val">+5 AC and DEX saves</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Bestiary ───────────────────────────────────────── -->
+      <section class="module module--hidden" id="module-bestiary" data-module="bestiary">
+        <div class="module__header">
+          <h2 class="module__title">BESTIARY</h2>
+          <div class="module__actions">
+            <input class="module__search" type="search" placeholder="Search monsters…" aria-label="Search monsters" id="bestiary-search" />
+            <button class="module__action module__action--ghost" type="button">+ Custom Monster</button>
+          </div>
+        </div>
+        <div class="module__body">
+          <div class="bestiary-filters" id="bestiary-filters"></div>
+          <div class="bestiary-adv-filters" id="bestiary-adv-filters"></div>
+          <div class="bestiary-shell">
+            <div class="bestiary-list" id="bestiary-list">
+              <div class="bestiary-loading">Loading SRD monsters…</div>
+            </div>
+            <div class="stat-block-panel" id="stat-block-panel">
+              <div class="stat-block-empty">Select a creature to view its stat block.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Spellbook ──────────────────────────────────────── -->
+      <section class="module module--hidden" id="module-spellbook" data-module="spellbook">
+        <div class="module__header">
+          <h2 class="module__title">SPELLBOOK</h2>
+          <div class="module__actions">
+            <input class="module__search" type="search" placeholder="Search spells…" aria-label="Search spells" id="spell-search" />
+            <button class="module__action module__action--ghost" type="button">+ Custom Spell</button>
+          </div>
+        </div>
+        <div class="module__body">
+          <div class="bestiary-filters" id="spell-filters"></div>
+          <div class="bestiary-adv-filters" id="spell-adv-filters"></div>
+          <div class="bestiary-shell">
+            <div class="bestiary-list" id="spell-list">
+              <div class="bestiary-loading">Loading SRD spells…</div>
+            </div>
+            <div class="stat-block-panel" id="spell-detail-panel">
+              <div class="stat-block-empty">Select a spell to view its description.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Atlas ──────────────────────────────────────────── -->
+      <section class="module module--hidden" id="module-atlas" data-module="atlas">
+        <div class="module__header">
+          <h2 class="module__title">ATLAS</h2>
+          <div class="module__actions">
+            <button class="module__action module__action--ghost" type="button" id="launch-player-screen">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:14px;height:14px;display:inline;vertical-align:middle;margin-right:4px"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+              Player Screen
+            </button>
+            <button class="module__action" type="button" id="upload-map">+ Upload Map</button>
+          </div>
+        </div>
+        <div class="module__body">
+          <div class="atlas-shell">
+            <div class="atlas-sidebar">
+              <div class="panel">
+                <div class="panel__head"><span class="panel__title">MAPS</span></div>
+                <div class="atlas-map-list" id="atlas-map-list">
+                  <div class="atlas-empty">No maps uploaded.</div>
+                </div>
+              </div>
+            </div>
+            <div class="atlas-canvas-area" id="atlas-canvas-area">
+              <div class="atlas-placeholder">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" opacity="0.2" width="64" height="64"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
+                <p>Upload a map to begin.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Soundscape ─────────────────────────────────────── -->
+      <section class="module module--hidden" id="module-soundscape" data-module="soundscape">
+        <div class="module__header">
+          <h2 class="module__title">SOUNDSCAPE</h2>
+        </div>
+        <div class="module__body">
+          <div class="soundscape-grid">
+            <button class="scene-card" data-scene="tavern">
+              <span class="scene-card__glyph">᛭</span>
+              <span class="scene-card__name">TAVERN</span>
+              <span class="scene-card__sub">Warm crowd · fire · lute</span>
+            </button>
+            <button class="scene-card" data-scene="dungeon">
+              <span class="scene-card__glyph">ᚦ</span>
+              <span class="scene-card__name">DUNGEON</span>
+              <span class="scene-card__sub">Dripping water · echoes · stone</span>
+            </button>
+            <button class="scene-card" data-scene="forest">
+              <span class="scene-card__glyph">ᚠ</span>
+              <span class="scene-card__name">FOREST</span>
+              <span class="scene-card__sub">Wind · birdsong · leaves</span>
+            </button>
+            <button class="scene-card" data-scene="combat">
+              <span class="scene-card__glyph">ᚱ</span>
+              <span class="scene-card__name">COMBAT</span>
+              <span class="scene-card__sub">Tense percussion · metal</span>
+            </button>
+            <button class="scene-card" data-scene="silence">
+              <span class="scene-card__glyph">᛫</span>
+              <span class="scene-card__name">SILENCE</span>
+              <span class="scene-card__sub">No audio</span>
+            </button>
+            <button class="scene-card scene-card--upload" data-scene="custom">
+              <span class="scene-card__glyph">+</span>
+              <span class="scene-card__name">CUSTOM</span>
+              <span class="scene-card__sub">Upload your own audio</span>
+            </button>
+          </div>
+          <div class="panel soundscape-mixer">
+            <div class="panel__head"><span class="panel__title">ACTIVE SCENE</span></div>
+            <div class="soundscape-mixer__body">
+              <span class="soundscape-mixer__none">No scene playing.</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Oracle ─────────────────────────────────────────── -->
+      <section class="module module--hidden" id="module-oracle" data-module="oracle">
+        <div class="module__header">
+          <h2 class="module__title">ORACLE</h2>
+          <span class="module__subtitle">5e Rules Consultant</span>
+        </div>
+        <div class="module__body module__body--oracle">
+          <div class="oracle-shell">
+            <div class="oracle-history" id="oracle-history" aria-live="polite">
+              <div class="oracle-intro">
+                <div class="oracle-intro__rune" aria-hidden="true">ᚦ</div>
+                <p class="oracle-intro__text">Ask me anything about the rules of 5th Edition Dungeons &amp; Dragons. I am here to assist, not to judge.</p>
+                <div class="oracle-chips" id="oracle-chips">
+                  <button class="oracle-chip">How does grappling work?</button>
+                  <button class="oracle-chip">What is a concentration spell?</button>
+                  <button class="oracle-chip">How do death saves work?</button>
+                  <button class="oracle-chip">Explain advantage/disadvantage</button>
+                  <button class="oracle-chip">What actions can I take in combat?</button>
+                  <button class="oracle-chip">How does cover work?</button>
+                </div>
+              </div>
+            </div>
+            <form class="oracle-input" id="oracle-form" autocomplete="off">
+              <input class="oracle-input__field" type="text" id="oracle-field" placeholder="Ask the Oracle…" aria-label="Ask a D&D rules question" />
+              <button class="oracle-input__send" type="submit" aria-label="Send">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              </button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Dice ───────────────────────────────────────────── -->
+      <section class="module module--hidden" id="module-dice" data-module="dice">
+        <div class="module__header">
+          <h2 class="module__title">DICE VAULT</h2>
+        </div>
+        <div class="module__body">
+          <div class="dice-shell">
+            <div class="dice-tray" id="dice-tray" aria-label="Dice tray">
+              <canvas id="dice-canvas" width="480" height="280" aria-hidden="true"></canvas>
+              <div class="dice-result" id="dice-result" aria-live="polite">
+                <span class="dice-result__num" id="dice-result-num">—</span>
+                <span class="dice-result__label" id="dice-result-label"></span>
+              </div>
+            </div>
+            <div class="dice-controls">
+              <div class="dice-set" id="dice-set">
+                <button class="die-btn" data-die="4" aria-label="Roll d4">d4</button>
+                <button class="die-btn" data-die="6" aria-label="Roll d6">d6</button>
+                <button class="die-btn" data-die="8" aria-label="Roll d8">d8</button>
+                <button class="die-btn" data-die="10" aria-label="Roll d10">d10</button>
+                <button class="die-btn" data-die="12" aria-label="Roll d12">d12</button>
+                <button class="die-btn die-btn--d20" data-die="20" aria-label="Roll d20">d20</button>
+                <button class="die-btn" data-die="100" aria-label="Roll percentile">d%</button>
+              </div>
+              <div class="dice-mod-row">
+                <label class="dice-mod-label" for="dice-mod">Modifier</label>
+                <input class="dice-mod-input" type="number" id="dice-mod" value="0" min="-20" max="20" />
+              </div>
+              <div class="dice-adv-row">
+                <button class="adv-btn" id="adv-btn" type="button">ADVANTAGE</button>
+                <button class="adv-btn adv-btn--dis" id="dis-btn" type="button">DISADVANTAGE</button>
+              </div>
+              <div class="dice-history-panel panel">
+                <div class="panel__head"><span class="panel__title">ROLL HISTORY</span></div>
+                <ul class="dice-history" id="dice-history" aria-label="Roll history"></ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Cheatsheet ──────────────────────────────────────── -->
+      <section class="module module--hidden" id="module-cheatsheet" data-module="cheatsheet">
+        <div class="module__header">
+          <h2 class="module__title">CHEAT SHEET</h2>
+          <span class="module__subtitle">Conditions &amp; Combat Actions — 5e SRD</span>
+        </div>
+        <div class="module__body">
+          <div id="cheatsheet-content">
+            <div class="bestiary-loading">Loading reference data…</div>
+          </div>
+        </div>
+      </section>
+
+    </div><!-- /main -->
+  </div><!-- /app -->
+
+  <!-- ── Add Character Modal ───────────────────────────────── -->
+  <div id="char-modal" class="modal-overlay" hidden aria-modal="true" role="dialog" aria-labelledby="char-modal-title">
+    <div class="char-sheet-modal">
+
+      <!-- Header -->
+      <div class="csm__header">
+        <div class="csm__rune" aria-hidden="true">ᚹ</div>
+        <div class="csm__header-text">
+          <h2 class="csm__title" id="char-modal-title">CHARACTER SHEET</h2>
+          <p class="csm__subtitle">New party member</p>
+        </div>
+      </div>
+
+      <!-- ── Section 1: Identity ── -->
+      <div class="csm__section">
+        <div class="csm__section-label">IDENTITY</div>
+        <div class="csm__identity-grid">
+          <div class="csm__field csm__field--span2">
+            <label class="csm__label" for="char-name">Character Name <span class="csm__req">*</span></label>
+            <input class="csm__input" type="text" id="char-name" placeholder="Aelindra Brightmantle…" autocomplete="off" />
+          </div>
+          <div class="csm__field">
+            <label class="csm__label" for="char-class">Class</label>
+            <select class="csm__input csm__input--select" id="char-class">
+              <option value="">— Select —</option>
+              <option value="Barbarian">Barbarian</option>
+              <option value="Bard">Bard</option>
+              <option value="Cleric">Cleric</option>
+              <option value="Druid">Druid</option>
+              <option value="Fighter">Fighter</option>
+              <option value="Monk">Monk</option>
+              <option value="Paladin">Paladin</option>
+              <option value="Ranger">Ranger</option>
+              <option value="Rogue">Rogue</option>
+              <option value="Sorcerer">Sorcerer</option>
+              <option value="Warlock">Warlock</option>
+              <option value="Wizard">Wizard</option>
+              <option value="Artificer">Artificer</option>
+            </select>
+          </div>
+          <div class="csm__field">
+            <label class="csm__label" for="char-subclass">Subclass</label>
+            <select class="csm__input csm__input--select" id="char-subclass">
+              <option value="">— Select —</option>
+              <!-- Populated dynamically via JS or kept generic -->
+              <option value="Path of the Berserker">Path of the Berserker (Barbarian)</option>
+              <option value="Path of the Totem Warrior">Path of the Totem Warrior (Barbarian)</option>
+              <option value="College of Lore">College of Lore (Bard)</option>
+              <option value="College of Valor">College of Valor (Bard)</option>
+              <option value="Life Domain">Life Domain (Cleric)</option>
+              <option value="Light Domain">Light Domain (Cleric)</option>
+              <option value="Circle of the Land">Circle of the Land (Druid)</option>
+              <option value="Circle of the Moon">Circle of the Moon (Druid)</option>
+              <option value="Champion">Champion (Fighter)</option>
+              <option value="Battle Master">Battle Master (Fighter)</option>
+              <option value="Way of the Open Hand">Way of the Open Hand (Monk)</option>
+              <option value="Way of Shadow">Way of Shadow (Monk)</option>
+              <option value="Oath of Devotion">Oath of Devotion (Paladin)</option>
+              <option value="Oath of the Ancients">Oath of the Ancients (Paladin)</option>
+              <option value="Hunter">Hunter (Ranger)</option>
+              <option value="Beast Master">Beast Master (Ranger)</option>
+              <option value="Thief">Thief (Rogue)</option>
+              <option value="Assassin">Assassin (Rogue)</option>
+              <option value="Draconic Bloodline">Draconic Bloodline (Sorcerer)</option>
+              <option value="Wild Magic">Wild Magic (Sorcerer)</option>
+              <option value="The Fiend">The Fiend (Warlock)</option>
+              <option value="The Archfey">The Archfey (Warlock)</option>
+              <option value="School of Evocation">School of Evocation (Wizard)</option>
+              <option value="School of Abjuration">School of Abjuration (Wizard)</option>
+              <option value="Alchemist">Alchemist (Artificer)</option>
+              <option value="Artillerist">Artillerist (Artificer)</option>
+            </select>
+          </div>
+          <div class="csm__field">
+            <label class="csm__label" for="char-race">Race / Species</label>
+            <select class="csm__input csm__input--select" id="char-race">
+              <option value="">— Select —</option>
+              <option value="Dragonborn">Dragonborn</option>
+              <option value="Dwarf">Dwarf</option>
+              <option value="Elf">Elf</option>
+              <option value="Gnome">Gnome</option>
+              <option value="Half-Elf">Half-Elf</option>
+              <option value="Halfling">Halfling</option>
+              <option value="Half-Orc">Half-Orc</option>
+              <option value="Human">Human</option>
+              <option value="Tiefling">Tiefling</option>
+            </select>
+          </div>
+          <div class="csm__field">
+            <label class="csm__label" for="char-background">Background</label>
+            <input class="csm__input" type="text" id="char-background" placeholder="Sage…" autocomplete="off" />
+          </div>
+          <div class="csm__field">
+            <label class="csm__label" for="char-align">Alignment</label>
+            <select class="csm__input csm__input--select" id="char-align">
+              <option value="">— Select —</option>
+              <option>Lawful Good</option><option>Neutral Good</option><option>Chaotic Good</option>
+              <option>Lawful Neutral</option><option>True Neutral</option><option>Chaotic Neutral</option>
+              <option>Lawful Evil</option><option>Neutral Evil</option><option>Chaotic Evil</option>
+            </select>
+          </div>
+          <div class="csm__field">
+            <label class="csm__label" for="char-player">Player Name</label>
+            <input class="csm__input" type="text" id="char-player" placeholder="Sarah…" autocomplete="off" />
+          </div>
+          <div class="csm__field csm__field--narrow">
+            <label class="csm__label" for="char-level">Level</label>
+            <input class="csm__input" type="number" id="char-level" min="1" max="20" value="1" />
+          </div>
+          <div class="csm__field csm__field--narrow">
+            <label class="csm__label" for="char-xp">Experience</label>
+            <input class="csm__input" type="number" id="char-xp" placeholder="0" min="0" value="0" />
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Section 2: Ability Scores ── -->
+      <div class="csm__section">
+        <div class="csm__section-label" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>ABILITY SCORES</span>
+          <button type="button" id="char-randomize-stats" style="background:transparent;border:1px solid #8B1A1A;color:#8B1A1A;cursor:pointer;padding:2px 8px;border-radius:4px;font-size:0.8rem;text-transform:uppercase;letter-spacing:1px;" title="Roll 4d6 drop lowest for all stats">⚄ Randomize</button>
+        </div>
+        <div class="csm__ability-grid">
+          <div class="csm__ability-box" data-stat="str">
+            <div class="csm__ability-name">STR</div>
+            <input class="csm__ability-score" type="number" id="char-str" min="1" max="30" value="10" />
+            <div class="csm__ability-mod" id="mod-str">+0</div>
+          </div>
+          <div class="csm__ability-box" data-stat="dex">
+            <div class="csm__ability-name">DEX</div>
+            <input class="csm__ability-score" type="number" id="char-dex" min="1" max="30" value="10" />
+            <div class="csm__ability-mod" id="mod-dex">+0</div>
+          </div>
+          <div class="csm__ability-box" data-stat="con">
+            <div class="csm__ability-name">CON</div>
+            <input class="csm__ability-score" type="number" id="char-con" min="1" max="30" value="10" />
+            <div class="csm__ability-mod" id="mod-con">+0</div>
+          </div>
+          <div class="csm__ability-box" data-stat="int">
+            <div class="csm__ability-name">INT</div>
+            <input class="csm__ability-score" type="number" id="char-int" min="1" max="30" value="10" />
+            <div class="csm__ability-mod" id="mod-int">+0</div>
+          </div>
+          <div class="csm__ability-box" data-stat="wis">
+            <div class="csm__ability-name">WIS</div>
+            <input class="csm__ability-score" type="number" id="char-wis" min="1" max="30" value="10" />
+            <div class="csm__ability-mod" id="mod-wis">+0</div>
+          </div>
+          <div class="csm__ability-box" data-stat="cha">
+            <div class="csm__ability-name">CHA</div>
+            <input class="csm__ability-score" type="number" id="char-cha" min="1" max="30" value="10" />
+            <div class="csm__ability-mod" id="mod-cha">+0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Section 3: Combat Stats ── -->
+      <div class="csm__section">
+        <div class="csm__section-label">COMBAT</div>
+        <div class="csm__combat-grid">
+          <div class="csm__stat-box">
+            <div class="csm__stat-label">Max HP</div>
+            <input class="csm__stat-input" type="number" id="char-hp-max" placeholder="52" min="1" max="999" />
+          </div>
+          <div class="csm__stat-box">
+            <div class="csm__stat-label">Armour Class</div>
+            <input class="csm__stat-input" type="number" id="char-ac" placeholder="15" min="1" max="99" />
+          </div>
+          <div class="csm__stat-box">
+            <div class="csm__stat-label">Initiative</div>
+            <input class="csm__stat-input" type="number" id="char-init-bonus" placeholder="+0" min="-5" max="20" />
+          </div>
+          <div class="csm__stat-box">
+            <div class="csm__stat-label">Speed (ft)</div>
+            <input class="csm__stat-input" type="number" id="char-speed" placeholder="30" min="0" value="30" />
+          </div>
+          <div class="csm__stat-box">
+            <div class="csm__stat-label">Prof. Bonus</div>
+            <input class="csm__stat-input" type="number" id="char-prof-bonus" placeholder="+2" min="2" max="6" value="2" />
+          </div>
+          <div class="csm__stat-box">
+            <div class="csm__stat-label">Passive Perc.</div>
+            <div class="csm__stat-derived" id="char-passive-perc">10</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Section 4: Languages & Traits ── -->
+      <div class="csm__section">
+        <div class="csm__section-label">LANGUAGES &amp; TRAITS</div>
+        <div class="csm__traits-grid">
+          <div class="csm__field csm__field--span2">
+            <label class="csm__label" for="char-languages">Languages</label>
+            <input class="csm__input" type="text" id="char-languages" placeholder="Common, Elvish, Draconic…" autocomplete="off" />
+          </div>
+          <div class="csm__field">
+            <label class="csm__label" for="char-personality">Personality Traits</label>
+            <textarea class="csm__textarea" id="char-personality" rows="2" placeholder="I speak eloquently and prefer books over people…"></textarea>
+          </div>
+          <div class="csm__field">
+            <label class="csm__label" for="char-bonds">Bonds</label>
+            <textarea class="csm__textarea" id="char-bonds" rows="2" placeholder="I seek the lost tome of Ioun…"></textarea>
+          </div>
+          <div class="csm__field">
+            <label class="csm__label" for="char-ideals">Ideals</label>
+            <textarea class="csm__textarea" id="char-ideals" rows="2" placeholder="Knowledge is the greatest treasure…"></textarea>
+          </div>
+          <div class="csm__field">
+            <label class="csm__label" for="char-flaws">Flaws</label>
+            <textarea class="csm__textarea" id="char-flaws" rows="2" placeholder="I overlook obvious solutions in favour of complex ones…"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Section 5: Backstory ── -->
+      <div class="csm__section">
+        <div class="csm__section-label">BACKSTORY</div>
+        <div class="csm__field">
+          <textarea class="csm__textarea csm__textarea--tall" id="char-backstory" rows="4" placeholder="History, motivation, secrets…"></textarea>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="csm__actions">
+        <button class="csm__btn csm__btn--cancel" id="char-modal-cancel" type="button">Cancel</button>
+        <button class="csm__btn csm__btn--confirm" id="char-modal-confirm" type="button">Add to Party</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Add Combatant Modal ────────────────────────────────── -->
+  <div id="combatant-modal" class="modal-overlay" hidden aria-modal="true" role="dialog" aria-labelledby="combatant-modal-title">
+    <div class="modal modal--wide">
+      <div class="modal__rune" aria-hidden="true">ᚦ</div>
+      <h2 class="modal__title" id="combatant-modal-title">ADD COMBATANT</h2>
+      <div class="modal__fields modal__fields--grid">
+        <label class="modal__label" for="comb-name">Name</label>
+        <input class="modal__input" type="text" id="comb-name" placeholder="Goblin Warchief…" autocomplete="off" />
+
+        <label class="modal__label" for="comb-init">Initiative Roll</label>
+        <input class="modal__input modal__input--short" type="number" id="comb-init" placeholder="14" min="1" max="30" />
+
+        <label class="modal__label" for="comb-hp">Max HP</label>
+        <input class="modal__input modal__input--short" type="number" id="comb-hp" placeholder="26" min="1" max="9999" />
+
+        <label class="modal__label" for="comb-ac">AC</label>
+        <input class="modal__input modal__input--short" type="number" id="comb-ac" placeholder="13" min="1" max="99" />
+
+        <label class="modal__label" for="comb-type">Type</label>
+        <select class="modal__input modal__input--select" id="comb-type">
+          <option value="enemy">Enemy</option>
+          <option value="ally">Ally / Friendly NPC</option>
+          <option value="pc">Player Character</option>
+          <option value="neutral">Neutral</option>
+        </select>
+      </div>
+      <div class="modal__actions">
+        <button class="modal__btn modal__btn--secondary" id="combatant-modal-cancel">Cancel</button>
+        <button class="modal__btn modal__btn--primary" id="combatant-modal-confirm">Add to Initiative</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Begin Session Modal ─────────────────────────────── -->
+  <div id="session-modal" class="modal-overlay" hidden aria-modal="true" role="dialog" aria-labelledby="session-modal-title">
+    <div class="modal">
+      <div class="modal__rune" aria-hidden="true">ᚱ</div>
+      <h2 class="modal__title" id="session-modal-title">BEGIN SESSION</h2>
+      <p class="modal__sub" id="session-modal-sub">Session 1 commences.</p>
+      <div class="modal__fields">
+        <label class="modal__label" for="session-title-input">Session Title <span class="modal__optional">(optional)</span></label>
+        <input class="modal__input" type="text" id="session-title-input" placeholder="The Sunken Crypt…" />
+      </div>
+      <div class="modal__actions">
+        <button class="modal__btn modal__btn--secondary" id="session-modal-cancel">Cancel</button>
+        <button class="modal__btn modal__btn--primary" id="session-modal-confirm">Begin</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Settings Modal ─────────────────────────────────── -->
+  <div id="settings-modal" class="modal-overlay" hidden aria-modal="true" role="dialog" aria-labelledby="settings-modal-title">
+    <div class="modal modal--wide">
+      <h2 class="modal__title" id="settings-modal-title">SETTINGS</h2>
+      <div class="settings-grid">
+        <div class="settings-section">
+          <h3 class="settings-section__title">Oracle API Key</h3>
+          <p class="settings-section__hint">nano-gpt key — used by the Oracle for story suggestions.</p>
+          <input class="modal__input" type="password" id="api-key-input" placeholder="nano-gpt API key…" autocomplete="off" />
+          <button class="modal__btn modal__btn--secondary" id="api-key-save">Save Key</button>
+        </div>
+        <div class="settings-section">
+          <h3 class="settings-section__title">Campaign Data</h3>
+          <button class="modal__btn modal__btn--secondary" id="export-btn">Export Campaign JSON</button>
+          <button class="modal__btn modal__btn--secondary" id="import-btn">Import Campaign JSON</button>
+          <input type="file" id="import-file" accept=".json" hidden />
+        </div>
+        <div class="settings-section">
+          <h3 class="settings-section__title">Display</h3>
+          <label class="settings-toggle">
+            <input type="checkbox" id="sidebar-labels-toggle" checked />
+            <span>Show sidebar labels</span>
+          </label>
+        </div>
+      </div>
+      <div class="modal__actions">
+        <button class="modal__btn modal__btn--primary" id="settings-modal-close">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Load Campaign Modal ───────────────────────────────── -->
+  <div id="load-campaign-modal" class="modal-overlay" hidden aria-modal="true" role="dialog" aria-labelledby="load-modal-title">
+    <div class="modal modal--wide">
+      <div class="modal__rune" aria-hidden="true">᛭</div>
+      <h2 class="modal__title" id="load-modal-title">LOAD CAMPAIGN</h2>
+      <div class="load-modal__list" id="load-modal-list">
+        <!-- slots injected by JS -->
+      </div>
+      <div class="load-modal__footer">
+        <label class="modal__btn modal__btn--secondary load-modal__import-label" title="Import a saved .json file">
+          ↑ Import from File
+          <input type="file" id="load-import-file" accept=".json" hidden />
+        </label>
+        <button class="modal__btn modal__btn--secondary" id="load-modal-cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Composer Overlay ──────────────────────────────────── -->
+  <div id="composer" class="composer" hidden aria-modal="true" role="dialog" aria-label="Composer">
+
+    <!-- Top bar -->
+    <div class="composer__bar">
+      <div class="composer__bar-left">
+        <span class="composer__context-icon" id="composer-icon" aria-hidden="true">◈</span>
+        <span class="composer__context-label" id="composer-label">ENTRY</span>
+        <span class="composer__sep" aria-hidden="true">//</span>
+        <span class="composer__context-sub" id="composer-sub"></span>
+      </div>
+      <div class="composer__bar-right">
+        <span class="composer__wordcount" id="composer-wordcount" aria-live="polite"></span>
+        <span class="composer__autosave" id="composer-autosave" aria-live="polite"></span>
+        <button class="composer__bar-btn composer__bar-btn--save" id="composer-save" title="Save (Ctrl+S)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Save
+        </button>
+        <button class="composer__bar-btn composer__bar-btn--discard" id="composer-discard" title="Discard changes (Esc)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          Discard
+        </button>
+      </div>
+    </div>
+
+    <!-- Body — fields injected by JS per mode -->
+    <div class="composer__body" id="composer-body"></div>
+
+  </div>
+
+  <!-- ── Story canvas context menu ──────────────────────────── -->
+  <div id="story-ctx-menu" class="story-ctx-menu" hidden role="menu" aria-label="Place node"></div>
+
+  <!-- ── Story node context menu ────────────────────────────── -->
+  <div id="story-node-ctx-menu" class="story-ctx-menu story-ctx-menu--node" hidden role="menu" aria-label="Node actions"></div>
+
+  <!-- ── Story edge popup ────────────────────────────────────── -->
+  <div id="story-edge-popup" class="story-edge-popup" hidden role="dialog" aria-label="Edit connection"></div>
+
+  <script src="/hub/playground/dndm/assets/script/app.js" defer></script>
+</body>
+</html>

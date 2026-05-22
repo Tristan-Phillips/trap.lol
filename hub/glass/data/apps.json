@@ -1,0 +1,15 @@
+{
+  "manifest": {
+    "0": {
+      "name": "Playground",
+      "slug": "playground",
+      "path": "/hub/playground/",
+      "icon": "layout-grid",
+      "description": "Sovereign app hub — keys stay in your browser.",
+      "apps": ["Neural Uplink", "Underdark", "RADAR", "Grimoire"],
+      "tags": ["apps", "llm", "tools"],
+      "keyed": true,
+      "status": "live"
+    }
+  }
+}

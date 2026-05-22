@@ -1,0 +1,649 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>trap.lol // playground</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2306040A'/%3E%3Ccircle cx='16' cy='16' r='8' fill='none' stroke='%23BE29EC' stroke-width='1.5' stroke-dasharray='3 2' opacity='0.6'/%3E%3Ccircle cx='16' cy='16' r='3.5' fill='%23BE29EC'/%3E%3Ccircle cx='16' cy='16' r='1.2' fill='%23F4A830'/%3E%3C/svg%3E" />
+    <meta name="description" content="trap.lol playground — sovereign apps and LLM interfaces." />
+    <link rel="stylesheet" href="/hub/glass/style/style.css" />
+    <style>
+      /* ══════════════════════════════════════════════════
+         PLAYGROUND HUB — trap.lol/playground/
+         ══════════════════════════════════════════════════ */
+
+      .back-nav {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-family: var(--font-mono);
+        font-size: var(--text-xs);
+        color: var(--text-muted);
+        text-decoration: none;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        transition: color var(--transition), gap var(--transition-med);
+        margin-bottom: var(--space-md);
+      }
+      .back-nav:hover { color: var(--accent-warm); gap: 0.65rem; }
+      .back-nav svg   { width: 0.75rem; height: 0.75rem; flex-shrink: 0; }
+
+      /* ─── App grid ─── */
+      .app-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 0.75rem;
+      }
+
+      .app-card {
+        display: flex;
+        flex-direction: column;
+        background: var(--glass-bg);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid var(--glass-border-mute);
+        border-radius: 8px;
+        padding: 1.4rem 1.5rem 1.2rem;
+        text-decoration: none;
+        transition:
+          border-color var(--transition),
+          background   var(--transition),
+          transform    var(--transition-med),
+          box-shadow   var(--transition-med);
+        position: relative;
+        overflow: hidden;
+        animation: card-rise 0.4s cubic-bezier(0.25, 0, 0, 1) both;
+      }
+      .app-card::before {
+        content: '';
+        position: absolute;
+        inset: 0 0 auto 0;
+        height: 2px;
+        background: linear-gradient(90deg, var(--theme-accent), transparent 70%);
+        opacity: 0;
+        transition: opacity var(--transition);
+      }
+      .app-card:hover::before { opacity: 1; }
+      .app-card::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        background: radial-gradient(ellipse at 50% 0%, rgba(var(--accent-warm-rgb), 0.04), transparent 70%);
+        opacity: 0;
+        transition: opacity var(--transition-med);
+        pointer-events: none;
+      }
+      .app-card:hover::after { opacity: 1; }
+      .app-card:hover {
+        border-color: rgba(var(--accent-warm-rgb), 0.25);
+        background: var(--glass-bg-warm);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 32px rgba(var(--accent-warm-rgb), 0.07);
+      }
+
+      @keyframes card-rise {
+        from { opacity: 0; transform: translateY(8px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+
+      .app-card__header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 0.85rem;
+      }
+      .app-card__sigil {
+        width: 44px; height: 44px;
+        border-radius: 8px;
+        background: rgba(125, 110, 146, 0.08);
+        border: 1px solid rgba(125, 110, 146, 0.15);
+        display: flex; align-items: center; justify-content: center;
+        color: var(--text-muted);
+        flex-shrink: 0;
+        transition: background var(--transition), border-color var(--transition), color var(--transition);
+      }
+      .app-card:hover .app-card__sigil {
+        background: rgba(var(--accent-warm-rgb), 0.09);
+        border-color: rgba(var(--accent-warm-rgb), 0.22);
+        color: var(--accent-warm);
+      }
+      .app-card__meta { text-align: right; }
+      .app-card__tag {
+        display: inline-block;
+        font-family: var(--font-mono);
+        font-size: 0.6rem; letter-spacing: 0.14em; text-transform: uppercase;
+        color: var(--text-muted);
+        background: rgba(125, 110, 146, 0.06);
+        border: 1px solid rgba(125, 110, 146, 0.12);
+        border-radius: 3px; padding: 0.15rem 0.4rem; margin-bottom: 0.35rem;
+      }
+      .app-card__key-badge {
+        display: block;
+        font-family: var(--font-mono);
+        font-size: 0.55rem; letter-spacing: 0.12em; text-transform: uppercase;
+        color: rgba(var(--accent-warm-rgb), 0.55);
+      }
+      .app-card__name {
+        font-family: var(--font-mono);
+        font-size: var(--text-base); font-weight: 700;
+        color: var(--text-main);
+        margin-bottom: 0.4rem; letter-spacing: 0.04em;
+        transition: color var(--transition);
+      }
+      .app-card:hover .app-card__name { color: #fff; }
+      .app-card__desc {
+        font-family: var(--font-mono);
+        font-size: var(--text-xs); color: var(--text-muted);
+        line-height: 1.65; flex: 1;
+      }
+      .app-card__footer {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-top: 1.1rem; padding-top: 0.8rem;
+        border-top: 1px solid rgba(125, 110, 146, 0.08);
+      }
+      .app-card__status {
+        display: flex; align-items: center; gap: 0.4rem;
+        font-family: var(--font-mono); font-size: 0.6rem;
+        letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted);
+      }
+      .app-card__status-dot {
+        width: 5px; height: 5px; border-radius: 50%;
+        background: #4ade80; box-shadow: 0 0 5px rgba(74, 222, 128, 0.6);
+        flex-shrink: 0;
+      }
+      .app-card__launch {
+        font-family: var(--font-mono); font-size: 0.6rem;
+        letter-spacing: 0.14em; text-transform: uppercase;
+        color: var(--text-muted);
+        display: flex; align-items: center; gap: 0.3rem;
+        transition: color var(--transition), gap var(--transition-med);
+      }
+      .app-card:hover .app-card__launch { color: var(--accent-warm); gap: 0.5rem; }
+      .app-card__launch svg { width: 0.65rem; height: 0.65rem; }
+
+      /* ─── Keyed notice ─── */
+      .keyed-note {
+        display: flex; align-items: center; gap: 0.5rem;
+        font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-muted);
+        background: rgba(125, 110, 146, 0.04);
+        border: 1px solid rgba(125, 110, 146, 0.1);
+        border-radius: 5px; padding: 0.6rem 0.9rem;
+        margin-bottom: var(--space-md);
+      }
+      .keyed-note svg { flex-shrink: 0; opacity: 0.5; }
+
+      /* ─── Credentials section ─── */
+      .creds-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 0.75rem;
+      }
+
+      .creds-group {
+        background: var(--glass-bg);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid var(--glass-border-mute);
+        border-radius: 8px;
+        padding: 1.2rem 1.4rem 1rem;
+        animation: card-rise 0.4s cubic-bezier(0.25, 0, 0, 1) both;
+      }
+
+      .creds-group__header {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-bottom: 0.2rem;
+      }
+      .creds-group__title {
+        font-family: var(--font-mono); font-size: var(--text-xs);
+        font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+        color: var(--text-main);
+        display: flex; align-items: center; gap: 0.45rem;
+      }
+      .creds-group__filled {
+        width: 6px; height: 6px; border-radius: 50%;
+        background: #4ade80; box-shadow: 0 0 5px rgba(74, 222, 128, 0.55);
+        flex-shrink: 0; display: none;
+      }
+      .creds-group__filled--show { display: block; }
+
+      .creds-group__desc {
+        font-family: var(--font-mono); font-size: 0.65rem;
+        color: var(--text-muted); margin-bottom: 0.9rem; line-height: 1.5;
+      }
+
+      .creds-field { margin-bottom: 0.65rem; }
+      .creds-field:last-of-type { margin-bottom: 0; }
+
+      .creds-field__label {
+        font-family: var(--font-mono); font-size: 0.62rem;
+        letter-spacing: 0.1em; text-transform: uppercase;
+        color: var(--text-muted); margin-bottom: 0.3rem;
+        display: flex; align-items: center; gap: 0.35rem;
+      }
+      .creds-field__hint-link {
+        color: rgba(var(--accent-warm-rgb), 0.6);
+        text-decoration: none; font-size: 0.6rem;
+        transition: color var(--transition);
+      }
+      .creds-field__hint-link:hover { color: var(--accent-warm); }
+
+      .creds-field__row {
+        display: flex; align-items: center; gap: 6px;
+      }
+      .creds-field__input {
+        flex: 1;
+        background: rgba(125, 110, 146, 0.06);
+        border: 1px solid rgba(125, 110, 146, 0.15);
+        border-radius: 5px;
+        padding: 0.4rem 0.6rem;
+        font-family: var(--font-mono); font-size: 0.72rem;
+        color: var(--text-main);
+        outline: none;
+        transition: border-color var(--transition), background var(--transition);
+        min-width: 0;
+      }
+      .creds-field__input:focus {
+        border-color: rgba(var(--accent-warm-rgb), 0.35);
+        background: rgba(125, 110, 146, 0.1);
+      }
+      .creds-field__input--mono {
+        letter-spacing: 0.08em;
+      }
+      .creds-field__toggle, .creds-field__gen {
+        background: rgba(125, 110, 146, 0.07);
+        border: 1px solid rgba(125, 110, 146, 0.14);
+        border-radius: 5px;
+        color: var(--text-muted);
+        cursor: pointer; padding: 0.4rem 0.55rem;
+        font-family: var(--font-mono); font-size: 0.65rem;
+        transition: border-color var(--transition), color var(--transition), background var(--transition);
+        white-space: nowrap; flex-shrink: 0;
+      }
+      .creds-field__toggle:hover, .creds-field__gen:hover {
+        border-color: rgba(var(--accent-warm-rgb), 0.28);
+        color: var(--accent-warm);
+        background: rgba(var(--accent-warm-rgb), 0.06);
+      }
+      .creds-field__gen:disabled { opacity: 0.45; cursor: default; }
+
+      .creds-field__hint {
+        font-family: var(--font-mono); font-size: 0.6rem;
+        color: rgba(125, 110, 146, 0.5); margin-top: 0.25rem;
+        line-height: 1.4;
+      }
+
+      .creds-group__actions {
+        display: flex; gap: 6px;
+        margin-top: 1rem; padding-top: 0.75rem;
+        border-top: 1px solid rgba(125, 110, 146, 0.08);
+      }
+      .creds-group__save {
+        flex: 1;
+        background: rgba(var(--accent-warm-rgb), 0.1);
+        border: 1px solid rgba(var(--accent-warm-rgb), 0.22);
+        border-radius: 5px;
+        color: var(--accent-warm);
+        cursor: pointer; padding: 0.4rem 0.7rem;
+        font-family: var(--font-mono); font-size: 0.65rem;
+        letter-spacing: 0.1em; text-transform: uppercase;
+        transition: background var(--transition), border-color var(--transition);
+      }
+      .creds-group__save:hover {
+        background: rgba(var(--accent-warm-rgb), 0.18);
+        border-color: rgba(var(--accent-warm-rgb), 0.4);
+      }
+      .creds-group__clear {
+        background: rgba(125, 110, 146, 0.06);
+        border: 1px solid rgba(125, 110, 146, 0.13);
+        border-radius: 5px;
+        color: var(--text-muted);
+        cursor: pointer; padding: 0.4rem 0.7rem;
+        font-family: var(--font-mono); font-size: 0.65rem;
+        letter-spacing: 0.1em; text-transform: uppercase;
+        transition: background var(--transition), border-color var(--transition), color var(--transition);
+      }
+      .creds-group__clear:hover {
+        border-color: rgba(220, 80, 80, 0.3);
+        color: rgba(220, 80, 80, 0.75);
+        background: rgba(220, 80, 80, 0.05);
+      }
+
+      .creds-group__feedback {
+        font-family: var(--font-mono); font-size: 0.6rem;
+        letter-spacing: 0.08em; text-transform: uppercase;
+        color: #4ade80; margin-top: 0.45rem;
+        min-height: 1em; transition: opacity 0.3s;
+      }
+      .creds-group__feedback:empty { min-height: 0; }
+
+      @media (max-width: 480px) {
+        .app-grid, .creds-grid { grid-template-columns: 1fr; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .app-card, .creds-group { animation: none; opacity: 1; }
+        .app-card:hover { transform: none; }
+      }
+    </style>
+  </head>
+  <body>
+
+    <a href="/hub/" class="back-nav" aria-label="Return to trap.lol">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+      trap.lol
+    </a>
+
+    <header>
+      <div class="header__eyebrow">[ PLAYGROUND // SOVEREIGN APPS &amp; INTERFACES ]</div>
+      <h1 class="header__title" data-text="PLAYGROUND">PLAYGROUND</h1>
+      <p class="header__subtitle">sovereign interfaces — keys stay in your browser</p>
+    </header>
+
+    <main>
+
+      <div class="keyed-note" aria-label="Key notice">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21 2-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+        API-keyed apps store credentials client-side only — nothing is transmitted to trap.lol servers.
+      </div>
+
+      <!-- Apps section -->
+      <section aria-labelledby="apps-title">
+        <h2 id="apps-title" class="section-title">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
+          Apps
+        </h2>
+        <div id="app-grid" class="app-grid" aria-live="polite"></div>
+      </section>
+
+      <!-- Credentials section -->
+      <section aria-labelledby="creds-title" style="margin-top: var(--space-lg);">
+        <h2 id="creds-title" class="section-title">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Preset Credentials
+        </h2>
+        <p style="font-family:var(--font-mono);font-size:var(--text-xs);color:var(--text-muted);margin-bottom:var(--space-md);line-height:1.6;">
+          Set keys once here and any app that shares them will pick them up automatically. All values are stored only in your browser.
+        </p>
+        <div id="creds-grid" class="creds-grid" aria-live="polite"></div>
+      </section>
+
+    </main>
+
+    <footer class="site-footer">
+      <div class="site-footer__bar">
+        <span>trap.lol // playground</span>
+        <span class="site-footer__bar-sep">//</span>
+        <span>Sovereign Inference. Keys Stay Local.</span>
+      </div>
+    </footer>
+
+    <a id="uplink-node" href="/hub/" class="uplink-node" aria-label="Return to trap.lol hub">
+      <span class="uplink-node__sigil" aria-hidden="true">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 2" opacity="0.45"/>
+          <circle cx="12" cy="12" r="3.5" fill="currentColor"/>
+        </svg>
+        <span class="uplink-node__drain" aria-hidden="true"></span>
+      </span>
+      <span class="uplink-node__label">uplink</span>
+    </a>
+
+    <script>
+    (function () {
+      'use strict';
+
+      /* ── uplink node ── */
+      var node = document.getElementById('uplink-node');
+      node.addEventListener('click', function (e) {
+        e.preventDefault();
+        node.classList.add('uplink-node--firing');
+        setTimeout(function () { window.location.href = node.getAttribute('href'); }, 310);
+      });
+
+      /* ── escape helper ── */
+      function esc(s) {
+        return String(s)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      /* ── arrow SVG ── */
+      var ARROW_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>';
+
+      /* ═══════════════════════════════════════════════════
+         APPS
+         ═══════════════════════════════════════════════════ */
+      function renderApps(apps) {
+        var grid = document.getElementById('app-grid');
+        var html = '';
+        apps.forEach(function (app, i) {
+          var delay = i * 60;
+          html += '<a href="' + esc(app.path) + '" class="app-card" style="animation-delay:' + delay + 'ms">';
+          html += '<div class="app-card__header">';
+          html += '<div class="app-card__sigil" aria-hidden="true">';
+          html += '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + app.icon + '</svg>';
+          html += '</div>';
+          html += '<div class="app-card__meta">';
+          html += '<span class="app-card__tag">' + esc(app.tag) + '</span>';
+          if (app.keyed) html += '<span class="app-card__key-badge">key required</span>';
+          html += '</div></div>';
+          html += '<div class="app-card__name">' + esc(app.name) + '</div>';
+          html += '<div class="app-card__desc">' + esc(app.desc) + '</div>';
+          html += '<div class="app-card__footer">';
+          html += '<span class="app-card__status"><span class="app-card__status-dot" aria-hidden="true"></span>' + esc(app.status) + '</span>';
+          html += '<span class="app-card__launch">launch ' + ARROW_SVG + '</span>';
+          html += '</div></a>';
+        });
+        grid.innerHTML = html;
+      }
+
+      /* ═══════════════════════════════════════════════════
+         CREDENTIALS
+         ═══════════════════════════════════════════════════ */
+
+      var VAULT_ENDPOINT = 'https://wallhaven.trap.lol/vault/create';
+
+      function vaultFmt(raw) {
+        var hex = raw.replace(/[^0-9a-fA-F]/g, '').toUpperCase().slice(0, 16);
+        var parts = hex.match(/.{1,4}/g);
+        return parts ? parts.join('-') : hex;
+      }
+
+      function readStorage(cred) {
+        if (cred.storage === 'localStorage') return localStorage.getItem(cred.key) || '';
+        return '';
+      }
+
+      function writeStorage(cred, val) {
+        if (cred.storage === 'localStorage') {
+          if (val) localStorage.setItem(cred.key, val);
+          else localStorage.removeItem(cred.key);
+        }
+      }
+
+      function groupIsFilled(group) {
+        return group.credentials.some(function (c) { return !!readStorage(c); });
+      }
+
+      function renderCredentials(groups) {
+        var grid = document.getElementById('creds-grid');
+
+        groups.forEach(function (group, gi) {
+          var card = document.createElement('div');
+          card.className = 'creds-group';
+          card.style.animationDelay = (gi * 60) + 'ms';
+
+          /* header */
+          var filled = groupIsFilled(group);
+          card.innerHTML = '<div class="creds-group__header">'
+            + '<div class="creds-group__title">'
+            + '<span class="creds-group__filled' + (filled ? ' creds-group__filled--show' : '') + '" title="Credentials set"></span>'
+            + esc(group.label)
+            + '</div>'
+            + '</div>'
+            + '<div class="creds-group__desc">' + esc(group.desc) + '</div>';
+
+          /* fields */
+          var fieldEls = [];
+
+          group.credentials.forEach(function (cred) {
+            var fieldWrap = document.createElement('div');
+            fieldWrap.className = 'creds-field';
+
+            var labelHTML = '<div class="creds-field__label">' + esc(cred.label);
+            if (cred.get_key_url) {
+              labelHTML += ' <a class="creds-field__hint-link" href="' + esc(cred.get_key_url) + '" target="_blank" rel="noopener">get key ↗</a>';
+            }
+            labelHTML += '</div>';
+
+            var rowHTML = '<div class="creds-field__row">';
+            var inputType = cred.type === 'password' ? 'password' : 'text';
+            var monoClass = (cred.id === 'wh_vault_id') ? ' creds-field__input--mono' : '';
+            var maxLen = cred.id === 'wh_vault_id' ? ' maxlength="19"' : '';
+            var storedVal = readStorage(cred);
+            rowHTML += '<input type="' + inputType + '" class="creds-field__input' + monoClass + '" id="cred-' + esc(cred.id) + '" placeholder="' + esc(cred.placeholder) + '" value="' + esc(storedVal) + '" autocomplete="off" spellcheck="false"' + maxLen + '>';
+            if (cred.type === 'password') {
+              rowHTML += '<button class="creds-field__toggle" type="button" data-for="cred-' + esc(cred.id) + '" title="Show/hide">show</button>';
+            }
+            if (cred.generate) {
+              rowHTML += '<button class="creds-field__gen" type="button" id="gen-' + esc(cred.id) + '">generate</button>';
+            }
+            rowHTML += '</div>';
+
+            if (cred.hint) {
+              rowHTML += '<div class="creds-field__hint">' + esc(cred.hint) + '</div>';
+            }
+
+            fieldWrap.innerHTML = labelHTML + rowHTML;
+            card.appendChild(fieldWrap);
+            fieldEls.push({ cred: cred, fieldWrap: fieldWrap });
+          });
+
+          /* actions */
+          var actionsEl = document.createElement('div');
+          actionsEl.className = 'creds-group__actions';
+          actionsEl.innerHTML = '<button class="creds-group__save" type="button">Save</button>'
+            + '<button class="creds-group__clear" type="button">Clear</button>';
+          card.appendChild(actionsEl);
+
+          var feedbackEl = document.createElement('div');
+          feedbackEl.className = 'creds-group__feedback';
+          feedbackEl.setAttribute('aria-live', 'polite');
+          card.appendChild(feedbackEl);
+
+          grid.appendChild(card);
+
+          /* ── wire events ── */
+          var filledDot = card.querySelector('.creds-group__filled');
+
+          function updateFilledDot() {
+            var anySet = fieldEls.some(function (f) {
+              var el = card.querySelector('#cred-' + f.cred.id);
+              return el && el.value.trim();
+            });
+            filledDot.classList.toggle('creds-group__filled--show', anySet);
+          }
+
+          /* toggle show/hide */
+          card.querySelectorAll('.creds-field__toggle').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+              var inp = card.querySelector('#' + btn.dataset.for);
+              if (!inp) return;
+              var isPass = inp.type === 'password';
+              inp.type = isPass ? 'text' : 'password';
+              btn.textContent = isPass ? 'hide' : 'show';
+            });
+          });
+
+          /* vault id formatting */
+          fieldEls.forEach(function (f) {
+            if (f.cred.id !== 'wh_vault_id') return;
+            var inp = card.querySelector('#cred-' + f.cred.id);
+            if (!inp) return;
+            inp.addEventListener('input', function () {
+              var cur = inp.value;
+              var fmt = vaultFmt(cur);
+              if (fmt !== cur) inp.value = fmt;
+              updateFilledDot();
+            });
+          });
+
+          /* generate vault id */
+          fieldEls.forEach(function (f) {
+            if (!f.cred.generate) return;
+            var btn = card.querySelector('#gen-' + f.cred.id);
+            var inp = card.querySelector('#cred-' + f.cred.id);
+            if (!btn || !inp) return;
+            btn.addEventListener('click', function () {
+              btn.disabled = true;
+              btn.textContent = '…';
+              fetch(VAULT_ENDPOINT, { method: 'POST' })
+                .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
+                .then(function (d) {
+                  var vid = d.vault_id || d.id || '';
+                  inp.value = vaultFmt(vid.replace(/-/g, ''));
+                  updateFilledDot();
+                  btn.textContent = 'done';
+                  setTimeout(function () { btn.textContent = 'generate'; btn.disabled = false; }, 2000);
+                })
+                .catch(function () {
+                  btn.textContent = 'error';
+                  btn.disabled = false;
+                  setTimeout(function () { btn.textContent = 'generate'; }, 2000);
+                });
+            });
+          });
+
+          /* save */
+          actionsEl.querySelector('.creds-group__save').addEventListener('click', function () {
+            fieldEls.forEach(function (f) {
+              var inp = card.querySelector('#cred-' + f.cred.id);
+              if (!inp) return;
+              writeStorage(f.cred, inp.value.trim());
+            });
+            updateFilledDot();
+            feedbackEl.textContent = 'Saved.';
+            setTimeout(function () { feedbackEl.textContent = ''; }, 2200);
+          });
+
+          /* clear */
+          actionsEl.querySelector('.creds-group__clear').addEventListener('click', function () {
+            fieldEls.forEach(function (f) {
+              var inp = card.querySelector('#cred-' + f.cred.id);
+              if (inp) inp.value = '';
+              writeStorage(f.cred, '');
+            });
+            updateFilledDot();
+            feedbackEl.textContent = 'Cleared.';
+            setTimeout(function () { feedbackEl.textContent = ''; }, 2200);
+          });
+
+          /* live dot update on typing */
+          card.querySelectorAll('.creds-field__input').forEach(function (inp) {
+            inp.addEventListener('input', updateFilledDot);
+          });
+        });
+      }
+
+      /* ═══════════════════════════════════════════════════
+         BOOT
+         ═══════════════════════════════════════════════════ */
+      Promise.all([
+        fetch('./data/apps.json').then(function (r) { return r.json(); }),
+        fetch('./data/credentials.json').then(function (r) { return r.json(); })
+      ]).then(function (results) {
+        renderApps(results[0].apps);
+        renderCredentials(results[1].groups);
+      }).catch(function (err) {
+        console.error('[playground] boot failed', err);
+      });
+
+    })();
+    </script>
+
+  </body>
+</html>

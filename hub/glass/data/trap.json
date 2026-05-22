@@ -1,0 +1,18 @@
+{
+    "manifest": {
+        "0": {
+            "name": "VOID",
+            "slug": "void",
+            "path": "/hub/playground/void/",
+            "icon": "radio",
+            "description": "Personal transmission log. Raw entries — unfiltered and unguarded.",
+            "tags": [
+                "personal",
+                "writing",
+                "journal"
+            ],
+            "keyed": false,
+            "status": "live"
+        }
+    }
+}
