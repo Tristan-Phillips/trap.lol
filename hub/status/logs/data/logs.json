@@ -679,7 +679,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "ext:grim",
       "date": "2026-05-23",
       "message": "feat(grimoire): gesture rewrite, vp-lock, fit, orientation, curtain, HUD icons, grid v2",
       "scope": "ext:grimoire",
