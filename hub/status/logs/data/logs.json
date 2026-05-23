@@ -679,7 +679,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "717a0c5",
       "date": "2026-05-23",
       "message": "feat(grimoire): rename Cartomancer → Grimoire, rune intro on DM gate, move garden/dnd/maps → garden/dnd/",
       "scope": "ext:grimoire, garden/dnd/",
