@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.77",
+    "schema_version": "1.5.78",
     "last_updated": "2026-05-23",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -678,6 +678,23 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-23",
+      "message": "feat(grimoire): gesture rewrite, vp-lock, fit, orientation, curtain, HUD icons, grid v2",
+      "scope": "ext:grimoire",
+      "impact": "high",
+      "files": [
+        "cartomancer/static/dm/script/dm.js",
+        "cartomancer/static/dm/style/dm.css",
+        "cartomancer/static/dm/index.html",
+        "cartomancer/static/table/script/table.js",
+        "cartomancer/static/table/style/table.css",
+        "cartomancer/static/table/index.html",
+        "hub/status/logs/data/logs.json"
+      ],
+      "why": "Complete gesture system rewrite using mathematically correct screenToMap/mapToScreen anchoring for pinch zoom+rotate; added viewport lock, fit-to-screen with easing, orientation toggle, dramatic animated curtain, SVG HUD time-of-day icons, larger tap zones, and brighter grid — all at v=4."
+    },
     {
       "hash": "717a0c5",
       "date": "2026-05-23",
@@ -3812,6 +3829,22 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-23",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Complete overhaul of Grimoire's DM + Table live map system at /opt/stacks/cartomancer/static/. Gesture system rewritten from scratch using correct screenToMap/mapToScreen anchor math so pinch-zoom and rotate pivot around the finger midpoint. Six new capabilities added: viewport lock (DM manipulates freely while table stays frozen), fit-to-screen with 300ms easeOutCubic tween, orientation toggle (landscape/portrait with auto-rotate on table), animated ink-wash curtain with SVG rune draw, SVG HUD time-of-day icons, brighter grid. Tap zones enlarged, version bumped to v=4.",
+      "decisions": [
+        "Gesture math: screenToMap converts screen→map by undoing rotate→pan→scale; mapToScreen is the forward pass. Both applied around canvas center (w/2, h/2). Anchor map point stays fixed under finger midpoint throughout pinch.",
+        "activeTouches Map (not object) tracks all live touch points with pre-move snapshot for correct delta. Single-finger pan reads delta directly from Map before updating.",
+        "Viewport lock: throttleSend() returns early if dm.vpLocked; on unlock, sends current vp immediately. VPLockBadge pill shown top-center when locked.",
+        "Fit button animates with requestAnimationFrame + easeOutCubic over 300ms, throttle-sends during animation.",
+        "Orientation command sends 'orientation' type to table; table.js applyOrientation() refits map. Portrait mode sets vp.rotation=PI/2 and swaps naturalWidth/naturalHeight for scale calc.",
+        "Curtain now uses CSS classes: curtain--active triggers ink-flood + content-in animations. hideCurtain() removes class and delays hidden=true by 900ms for exit animation.",
+        "HUD tod: textContent replaced with innerHTML using TOD_ICONS map of 14×14 SVG strings with inline color styles per mode.",
+        "All v=3 references bumped to v=4 across all 6 files including shared rtc.js import."
+      ]
+    },
     {
       "date": "2026-05-23",
       "agent": "Claude Sonnet 4.6",
