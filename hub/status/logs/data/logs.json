@@ -679,7 +679,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "519e72c",
       "date": "2026-05-23",
       "message": "feat(cartomancer): Phase 1 — Go server, WebSocket relay, DM portal, table display, garden landing page",
       "scope": "garden/dnd/map-share/, ext:cartomancer",
