@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Garden — Tristan Phillips</title>
+  <meta name="description" content="A collection of publicly showcaseable projects by Tristan Phillips." />
+  <meta property="og:title" content="Garden — Tristan Phillips" />
+  <meta property="og:description" content="Art, tools, and experiments — built in public." />
+  <meta property="og:type" content="website" />
+  <link rel="icon" type="image/svg+xml"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230f0f0f'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%23555' stroke-width='1.5'/%3E%3Ccircle cx='16' cy='16' r='2.5' fill='%23555'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="/garden/public/style/style.css" />
+</head>
+<body>
+
+  <!-- ── Detail overlay ───────────────────────────────────── -->
+  <div id="detail-overlay" role="dialog" aria-modal="true" aria-label="Project detail" aria-hidden="true">
+    <div class="detail" id="detail-panel">
+
+      <button class="detail__close" id="detail-close" aria-label="Close">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        close
+      </button>
+
+      <div class="detail__masthead">
+        <h2 class="detail__name" id="detail-name"></h2>
+        <span class="detail__year" id="detail-year"></span>
+      </div>
+
+      <div class="detail__meta" id="detail-meta"></div>
+
+      <div class="detail__screenshot-wrap" id="detail-shot-wrap"></div>
+
+      <p class="detail__section-label">About</p>
+      <p class="detail__story" id="detail-story"></p>
+
+      <p class="detail__section-label" id="detail-evo-label" style="display:none">Evolution</p>
+      <ul class="detail__evolution" id="detail-evolution"></ul>
+
+      <a class="detail__cta" id="detail-cta" href="#" target="_blank" rel="noopener" aria-label="Visit site">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        Visit site
+      </a>
+
+    </div>
+  </div>
+
+  <!-- ── Main page ─────────────────────────────────────────── -->
+  <div class="garden">
+
+    <header class="garden__header">
+      <a href="/" class="garden__back" aria-label="Back to trap.lol">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M19 12H5"/><path d="m12 5-7 7 7 7"/>
+        </svg>
+        trap.lol
+      </a>
+      <h1 class="garden__title">Garden</h1>
+      <p class="garden__sub">Things I've built.</p>
+    </header>
+
+    <div id="garden-content" aria-live="polite"></div>
+
+    <footer class="garden__footer">trap.lol // garden</footer>
+
+  </div>
+
+  <script>
+    // ── Icons ────────────────────────────────────────────────
+    const ICONS = {
+      image: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor" stroke="none"/><polyline points="21 15 16 10 5 21"/></svg>`,
+      book:  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>`,
+      wrench:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>`,
+      brush: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9.06 11.9l8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.08"/><path d="M7.07 14.94c-1.66 0-3 1.35-3 3.02 0 1.33-2.5 1.52-2 2.02 1 1 2.48 1.02 3.5 1.02 2.19 0 4-1.8 4-4.04 0-1.66-1.34-3.02-2.5-3.02z"/></svg>`
+    };
+
+    const ARROW    = `<svg class="garden__card-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>`;
+    const EXT_ICON = `<svg class="garden__card-ext" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>`;
+    const INFO_ICON= `<svg class="garden__card-ext" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
+
+    function esc(s) {
+      return String(s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // ── Card rendering ───────────────────────────────────────
+    function renderCard(p) {
+      const wip  = p.status === 'wip';
+      const icon = ICONS[p.icon] || ICONS.image;
+
+      if (wip) {
+        return `
+          <div class="garden__card garden__card--wip" aria-hidden="true">
+            <div class="garden__card-icon" aria-hidden="true">${icon}</div>
+            <div class="garden__card-body">
+              <div class="garden__card-name">${esc(p.name)}<span class="garden__wip-badge">wip</span></div>
+              <div class="garden__card-desc">${esc(p.description)}</div>
+            </div>
+          </div>`;
+      }
+
+      if (p.detail) {
+        return `
+          <button class="garden__card garden__card--detail" data-project='${JSON.stringify(p).replace(/'/g, "&#39;")}' aria-label="View details for ${esc(p.name)}">
+            <div class="garden__card-icon" aria-hidden="true">${icon}</div>
+            <div class="garden__card-body">
+              <div class="garden__card-name">${esc(p.name)}</div>
+              <div class="garden__card-desc">${esc(p.description)}</div>
+            </div>
+            ${INFO_ICON}
+          </button>`;
+      }
+
+      const extAttrs = p.external ? ' target="_blank" rel="noopener"' : '';
+      const arrow    = p.external ? EXT_ICON : ARROW;
+      return `
+        <a href="${esc(p.url)}"${extAttrs} class="garden__card" aria-label="${esc(p.name)}">
+          <div class="garden__card-icon" aria-hidden="true">${icon}</div>
+          <div class="garden__card-body">
+            <div class="garden__card-name">${esc(p.name)}</div>
+            <div class="garden__card-desc">${esc(p.description)}</div>
+          </div>
+          ${arrow}
+        </a>`;
+    }
+
+    function renderCategory(cat) {
+      return `
+        <section class="garden__category" aria-label="${esc(cat.label)}">
+          <span class="garden__category-label">${esc(cat.label)}</span>
+          ${cat.projects.map(renderCard).join('')}
+        </section>`;
+    }
+
+    // ── Overlay ──────────────────────────────────────────────
+    const $overlay = document.getElementById('detail-overlay');
+    const $close   = document.getElementById('detail-close');
+
+    function openDetail(p) {
+      const d = p.detail;
+
+      document.getElementById('detail-name').textContent  = p.name;
+      document.getElementById('detail-year').textContent  = d.year || '';
+      document.getElementById('detail-story').textContent = d.story || '';
+      document.getElementById('detail-cta').href          = d.link || p.url || '#';
+
+      // Meta
+      const metaItems = [];
+      if (d.client) metaItems.push(['Client', d.client]);
+      if (d.role)   metaItems.push(['Role',   d.role]);
+      document.getElementById('detail-meta').innerHTML = metaItems.map(([label, val]) =>
+        `<div class="detail__meta-item">
+          <span class="detail__meta-label">${esc(label)}</span>
+          <span class="detail__meta-value">${esc(val)}</span>
+        </div>`
+      ).join('');
+
+      // Screenshot
+      const $sw = document.getElementById('detail-shot-wrap');
+      if (d.screenshot) {
+        $sw.innerHTML = `<img class="detail__screenshot" src="${esc(d.screenshot)}" alt="${esc(p.name)} screenshot" loading="lazy" />`;
+        $sw.style.display = '';
+      } else {
+        $sw.innerHTML = `<div class="detail__screenshot-placeholder">no screenshot</div>`;
+        $sw.style.display = '';
+      }
+
+      // Evolution
+      const $evoLabel = document.getElementById('detail-evo-label');
+      const $evo      = document.getElementById('detail-evolution');
+      if (d.evolution && d.evolution.length) {
+        $evoLabel.style.display = '';
+        $evo.innerHTML = d.evolution.map(e =>
+          `<li class="detail__evo-item">${esc(e)}</li>`
+        ).join('');
+      } else {
+        $evoLabel.style.display = 'none';
+        $evo.innerHTML = '';
+      }
+
+      $overlay.removeAttribute('aria-hidden');
+      $overlay.classList.add('is-open');
+      $overlay.scrollTop = 0;
+      document.body.style.overflow = 'hidden';
+      $close.focus();
+    }
+
+    function closeDetail() {
+      $overlay.classList.remove('is-open');
+      $overlay.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+    }
+
+    $close.addEventListener('click', closeDetail);
+
+    $overlay.addEventListener('click', (e) => {
+      if (e.target === $overlay) closeDetail();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && $overlay.classList.contains('is-open')) closeDetail();
+    });
+
+    // ── Delegate card clicks ─────────────────────────────────
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('.garden__card--detail');
+      if (!btn) return;
+      const p = JSON.parse(btn.dataset.project);
+      openDetail(p);
+    });
+
+    // ── Boot ─────────────────────────────────────────────────
+    fetch('/garden/public/data/projects.json')
+      .then(r => r.json())
+      .then(({ categories }) => {
+        document.getElementById('garden-content').innerHTML =
+          categories.map(renderCategory).join('');
+      })
+      .catch(() => {
+        document.getElementById('garden-content').innerHTML =
+          '<p style="color:#555;font-size:0.85rem;padding:1rem 0;">Could not load projects.</p>';
+      });
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,72 @@
+{
+  "categories": [
+    {
+      "key": "art",
+      "label": "Art",
+      "projects": [
+        {
+          "name": "Artwork",
+          "description": "Personal artwork collection.",
+          "url": "/garden/art/",
+          "icon": "image",
+          "status": "live"
+        }
+      ]
+    },
+    {
+      "key": "tools",
+      "label": "Tools",
+      "projects": [
+        {
+          "name": "Grimoire",
+          "description": "A D&D Dungeon Master utility suite.",
+          "url": "/garden/dnd/dm-manager/",
+          "icon": "book",
+          "status": "live"
+        },
+        {
+          "name": "Map Share",
+          "description": "A tool for sharing and annotating dnd maps via a two device setup.",
+          "url": "/garden/dnd/map-share/",
+          "icon": "map",
+          "status": "live"
+        },
+        {
+          "name": "Partfinder",
+          "description": "Automotive parts research and compatibility tool.",
+          "url": "/garden/automotive/partfinder/",
+          "icon": "wrench",
+          "status": "wip"
+        }
+      ]
+    },
+    {
+      "key": "sites",
+      "label": "Sites",
+      "projects": [
+        {
+          "name": "paintedd.art",
+          "description": "An artists portfolio website built as art in itself.",
+          "url": "https://paintedd.art",
+          "icon": "brush",
+          "status": "live",
+          "external": true,
+          "detail": {
+            "client": "Paintedd",
+            "role": "Design, development and maintenance",
+            "year": "2022 - Present",
+            "story": "Full creative freedom, to observe the artist, learn about them and their work, and create a website that reflects their unique style and personality. The site is ever evloving as living art does.",
+            "evolution": [
+              "Initial brief: Linktree Alternative on a custom domain",
+              "Added a full catcha style gallery",
+              "Added an events page to share upcoming shows and exhibitions",
+              "Designed a pipeline to auto compress images into 3 tiers, thumbnail, medium and high res original with reduced file size, all with burned in watermarks"
+            ],
+            "screenshot": "https://api.trap.lol/share/27a7bf6a0114/165370_m.jpg",
+            "link": "https://paintedd.art"
+          }
+        }
+      ]
+    }
+  ]
+}
