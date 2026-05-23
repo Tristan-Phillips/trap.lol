@@ -75,7 +75,7 @@ These use `script/` and `style/` directly at app root (not inside `assets/`) bec
 
 | Rule | Correct | Wrong |
 |------|---------|-------|
-| All directory names: lowercase, no spaces | `glass/`, `art/`, `dndm/` | `Art/`, `DnDM/`, `my app/` |
+| All directory names: lowercase, no spaces | `glass/`, `art/`, `dm-manager/` | `Art/`, `DnDM/`, `my app/` |
 | Multi-word dirs: kebab-case | `llm-agents/`, `scene-codex/` | `llmAgents/`, `SceneCodex/` |
 | Internal dirs use semantic names, not generic | `cards/`, `lorebooks/` | `items/`, `stuff/` |
 | Subdirectory for large collections | `underdark/data/cards/` | `underdark/data/card-2b.json` (flat) |
@@ -138,8 +138,8 @@ hub/playground/ /hub/playground/               — Playground hub (index lists a
   ├── neural-uplink/  /hub/playground/neural-uplink/  — LLM chat interface
   ├── underdark/      /hub/playground/underdark/       — Roleplay interface
   ├── radar/          /hub/playground/radar/           — Torrent scanner
-  ├── dndm/           /hub/playground/dndm/            — D&D manager (Grimoire)
   └── void/           /hub/playground/void/            — Personal transmission log
+garden/dnd/dm-manager/  /garden/dnd/dm-manager/      — D&D manager (Grimoire) — public
 hub/status/     /hub/status/                   — Status hub + logs + observations
 hub/archive/    /hub/archive/                  — Archive
 ```

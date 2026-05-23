@@ -204,7 +204,7 @@ html, body {
 .pf__links {
   display: flex;
   gap: 0.75rem;
-  margin-top: 1.5rem;
+  margin-top: 0.85rem;
   flex-wrap: wrap;
   justify-content: center;
 }
@@ -462,6 +462,82 @@ html, body {
 @keyframes gv-signal-in {
   from { opacity: 0; transform: translateY(4px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Kagi search ──────────────────────────────────────────── */
+
+.pf__search {
+  position: fixed;
+  bottom: 2.8rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(78%, 300px);
+  z-index: 3;
+  opacity: 0.5;
+  transition: opacity 0.22s ease;
+}
+
+.pf__search:focus-within {
+  opacity: 1;
+}
+
+.pf__search-box {
+  width: 100%;
+  min-height: 36px;
+  max-height: 120px;
+  padding: 0.45rem 2.6rem 0.45rem 0.85rem;
+  resize: none;
+  overflow: hidden;
+  background: transparent;
+  border-radius: 10px;
+  border: 0.5px solid rgba(255,255,255,0.08);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  outline: none;
+  transition: border-color 0.22s ease;
+  display: block;
+  -webkit-appearance: none;
+}
+
+.pf__search-box::placeholder {
+  color: rgba(255,255,255,0.2);
+}
+
+.pf__search-box:focus {
+  border-color: rgba(245,167,30,0.3);
+}
+
+.pf__search-btn {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: opacity var(--trans);
+  flex-shrink: 0;
+  opacity: 0.4;
+}
+
+.pf__search:focus-within .pf__search-btn,
+.pf__search-btn:hover {
+  opacity: 1;
+}
+
+.pf__search-btn svg {
+  width: 13px;
+  height: 13px;
+  color: rgba(245,167,30,0.9);
+  flex-shrink: 0;
 }
 
 /* ── Responsive ───────────────────────────────────────────── */

@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.73",
+    "schema_version": "1.5.74",
     "last_updated": "2026-05-23",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -337,14 +337,21 @@
         "playground/void/new/index.html": "Local-only VOID entry authoring tool. Live markdown preview, ID generator, JSON fragment export. Not publicly linked. EXISTS on disk."
       }
     },
-    "/hub/playground/dndm/": {
-      "file": "playground/dndm/index.html",
+    "/garden/art/": {
+      "file": "garden/art/index.html",
+      "title": "Art",
+      "purpose": "Public art gallery. Grid of works loaded from assets/data/art.json via file.trap.lol CDN. Lightbox with prev/next navigation. Back link returns to root. Publicly crawlable.",
+      "data": "assets/data/art.json (via global.json art.data pointer)",
+      "css": "garden/art/public/style/style.css (self-contained — no glass/ or assets/styles/ dependency)"
+    },
+    "/garden/dnd/dm-manager/": {
+      "file": "garden/dnd/dm-manager/index.html",
       "title": "Grimoire // Campaign Suite",
-      "purpose": "DM campaign management tool. Tabbed single-page app with: Party Tracker (5e character sheets, HP bars, conditions, death saves, combat initiative), Atlas (fog-of-war map canvas, pan/zoom, marker pins, player screen push via BroadcastChannel), Soundscape (ambient audio with volume/loop), Oracle (nano-gpt streaming rules assistant), Bestiary (D&D 5e monsters with advanced filters), Spellbook (D&D 5e spells with advanced filters), Campaign overview (NPCs, Lore Wiki, Session log, export/import), and Story (narrative decision tree canvas with node types, bezier edges, Oracle suggestions, journey log).",
-      "data": "No external JSON data files — all campaign state persists to localStorage (dndm_campaigns index + per-slot dndm_campaign_<id> keys). Bestiary and Spellbook data is bundled inline in app.js.",
-      "script": "playground/dndm/assets/script/app.js (self-contained vanilla JS, single DOMContentLoaded closure)",
-      "css": "playground/dndm/assets/style/style.css (self-contained)",
-      "note": "Multi-campaign slot system: dndm_campaigns[] index array, individual slots at dndm_campaign_<uuid>. Legacy single-slot data auto-migrates to 'camp_legacy' on first load. Oracle uses nano-gpt API key stored in localStorage."
+      "purpose": "DM campaign management tool. Tabbed single-page app with: Party Tracker (5e character sheets, HP bars, conditions, death saves, combat initiative), Atlas (fog-of-war map canvas, pan/zoom, marker pins, player screen push via BroadcastChannel), Soundscape (ambient audio with volume/loop), Oracle (nano-gpt streaming rules assistant), Bestiary (D&D 5e monsters with advanced filters), Spellbook (D&D 5e spells with advanced filters), Campaign overview (NPCs, Lore Wiki, Session log, export/import), and Story (narrative decision tree canvas with node types, bezier edges, Oracle suggestions, journey log). Moved from /hub/playground/dndm/ — now public-facing in garden/.",
+      "data": "No external JSON data files — all campaign state persists to localStorage (dndm_campaigns index + per-slot dndm_campaign_<id> keys). 5etools reference data served from cdn.trap.lol/dndm/5etools.",
+      "script": "garden/dnd/dm-manager/assets/script/app.js (self-contained vanilla JS, single DOMContentLoaded closure)",
+      "css": "garden/dnd/dm-manager/assets/style/style.css (self-contained)",
+      "note": "Multi-campaign slot system: dndm_campaigns[] index array, individual slots at dndm_campaign_<uuid>. Legacy single-slot data auto-migrates to 'camp_legacy' on first load. Oracle uses nano-gpt API key stored in localStorage. Player screen popup opens /garden/dnd/dm-manager/?view=player."
     },
     "/hub/playground/radar/": {
       "file": "playground/radar/index.html",
@@ -648,7 +655,7 @@
         ]
       }
     ],
-    "current_state": "Production — two-layer site live. Public face: trap.lol/index.html (neutral portfolio cover — Tristan Phillips / Software Engineer, GitHub + YouTube links, no neon, no Dune). Real site: trap.lol/hub/ (the rave — gated by Cloudflare Zero Trust + client-side knock system). Knock: desktop types 'spice' silently → passphrase gate; mobile taps footer 5× → passphrase gate. Passphrase SHA-256 verified client-side, triggers glitch transition → /hub/. All hub content physically lives under hub/: glass/, playground/, art/, status/, archive/. All internal paths are absolute and /hub/-prefixed. robots.txt disallows /hub/ and /pf/. Routable pages inside hub/: /hub/, /hub/playground/, /hub/playground/neural-uplink/, /hub/playground/underdark/, /hub/playground/dndm/, /hub/playground/radar/, /hub/playground/void/, /hub/art/, /hub/status/, /hub/status/logs/, /hub/status/observations/, /hub/archive/, /hub/archive/uplink-sentinel/. /guide/ planned but not yet built. The Underdark is the most actively developed sub-app — full RP system with Scene Codex, Social Feed, Image Studio. Grimoire is a full DM suite. ECHOES has 2 collections (40+ digital, 40+ traditional). VOID has 45 entries (Feb 2025–May 2026).",
+    "current_state": "Production — three-layer site live. Public face: trap.lol/index.html (neutral portfolio cover — Tristan Phillips, GitHub + art + Telegram links, Kagi search bar at bottom, no neon, no Dune). Garden: trap.lol/garden/ (publicly showcaseable projects — art gallery at /garden/art/, Grimoire DM suite at /garden/dnd/dm-manager/, crawlable). Real site: trap.lol/hub/ (the rave — gated by Cloudflare Zero Trust + client-side knock system). Knock: desktop types 'spice' silently → passphrase gate; mobile taps footer 5× → passphrase gate. Passphrase SHA-256 verified client-side, triggers glitch transition → /hub/. Whistle layer: /whistle/ (hidden, noindex — sisyphus push-stone game, void landing, index page). Assets layer: /assets/ (shared public-face static files — data, img, styles, shards). All hub content physically lives under hub/: glass/, playground/, art/, status/, archive/. robots.txt disallows /hub/, /whistle/, /assets/. Routable pages inside hub/: /hub/, /hub/playground/, /hub/playground/neural-uplink/, /hub/playground/underdark/, /hub/playground/radar/, /hub/playground/void/, /hub/art/, /hub/status/, /hub/status/logs/, /hub/status/observations/, /hub/archive/, /hub/archive/uplink-sentinel/. Grimoire moved from /hub/playground/dndm/ to /garden/dnd/dm-manager/ (public). /guide/ planned but not yet built.",
     "intended_future": [
       "Sacred Codex (guides section) reactivation when enough .md content exists",
       "More ECHOES collections as artwork is created/curated",
@@ -662,6 +669,37 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-23",
+      "message": "refactor(structure): garden/ + assets/ reorganisation, dndm → garden/dnd/dm-manager, Kagi search bar",
+      "scope": "index.html, assets/, garden/, whistle/, .gitignore, CLAUDE.md, README.md",
+      "impact": "high",
+      "files": [
+        "index.html",
+        "assets/data/global.json",
+        "assets/data/quotes.json",
+        "assets/data/art.json",
+        "assets/img/pp.png",
+        "assets/styles/pf.css",
+        "assets/shards/",
+        "garden/art/index.html",
+        "garden/art/public/style/style.css",
+        "garden/dnd/dm-manager/index.html",
+        "garden/dnd/dm-manager/assets/script/app.js",
+        "hub/playground/data/apps.json",
+        "hub/glass/script/modules/core.js",
+        "hub/art/assets/script/app.js",
+        "hub/status/logs/data/structure-ruleset.md",
+        "whistle/sisyphus/index.html",
+        "robots.txt",
+        ".gitignore",
+        "CLAUDE.md",
+        "README.md",
+        "hub/status/logs/data/logs.json"
+      ],
+      "why": "Major structural reorganisation: whistle/data|img|styles moved to assets/, shards/ moved to assets/shards/, whistle/art moved to garden/art/, dndm moved and renamed to garden/dnd/dm-manager/ (public-facing, no hub exposure), services/ deleted (source of truth is /opt/stacks/), hub refs removed from apps.json, all internal paths updated across 8+ files, robots.txt updated, .gitignore cleaned, CLAUDE.md and README.md rewritten. Kagi search bar added to index.html — fixed-position bottom, glass-minimal styling, desktop keystroke router, knock-sequence safe."
+    },
     {
       "hash": "pending",
       "date": "2026-05-23",
@@ -3638,6 +3676,26 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-23",
+      "agent": "Claude Sonnet 4.6",
+      "type": "refactor",
+      "summary": "Full public-facing restructure of trap.lol. whistle/data|img|styles moved to assets/, shards/ moved to assets/shards/, whistle/art moved to garden/art/, dndm fully relocated and renamed to garden/dnd/dm-manager/ (now public-facing, no hub dependency, robots indexable). services/ directory deleted — source of truth is /opt/stacks/. All internal path references updated across 8+ files. Kagi search bar added to index.html (fixed-position bottom, ghost styling, desktop keystroke router that respects knock-sequence buffer). README.md and CLAUDE.md rewritten to reflect new structure.",
+      "decisions": [
+        "garden/ is the public showcase layer — projects here are intentionally separated from hub/ so sharing a garden/ URL does not expose the hub.",
+        "assets/ holds all shared public-face static files (data, img, styles, shards) — a clean split from whistle/ which is now purely the hidden layer (sisyphus, void, index).",
+        "services/ deleted — all service source code lives at /opt/stacks/ on the VPS. Keeping a copy in the repo was a stale-code risk with no benefit.",
+        "Grimoire renamed from dndm/ to dm-manager/ — the old name was an internal shorthand, dm-manager is descriptive and appropriate for a public audience.",
+        "dm-manager meta robots changed from noindex to index,follow — it is now a public garden project.",
+        "Kagi search bar intentionally does NOT auto-focus on page load — preserves the knock sequence UX. Keystrokes only route to search after seqBuf is empty (not mid-knock).",
+        "assets/shards/ is gitignored — local dev copies only, CDN paths (cdn.trap.lol) used in production.",
+        "robots.txt updated: now disallows /hub/, /whistle/, /assets/ — garden/ is intentionally crawlable."
+      ],
+      "rules_reinforced": [
+        "The knock sequence guard (seqBuf check) must be preserved whenever adding any global keydown listener — routing keystrokes to UI elements must not intercept the knock buffer.",
+        "garden/ apps must have no dependency on hub/ paths — they must be fully self-contained or use assets/ paths only."
+      ]
+    },
     {
       "date": "2026-05-23",
       "agent": "Claude Sonnet 4.6",

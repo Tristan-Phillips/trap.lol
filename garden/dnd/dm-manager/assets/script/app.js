@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Data files are gitignored locally and served from the CDN in production.
   // To develop locally: drop the 5etools/ folder into assets/data/ and set this to
-  // '/playground/dndm/assets/data/5etools'
+  // '/garden/dnd/dm-manager/assets/data/5etools'
   var DATA_BASE = 'https://cdn.trap.lol/dndm/5etools';
 
   // ── Helpers ────────────────────────────────────────────────
@@ -3189,7 +3189,7 @@ document.addEventListener('DOMContentLoaded', function () {
   var $launchPlayer = document.getElementById('launch-player-screen');
   if ($launchPlayer) {
     $launchPlayer.addEventListener('click', function() {
-      window.open('/hub/playground/dndm/?view=player', 'grimoire-player');
+      window.open('/garden/dnd/dm-manager/?view=player', 'grimoire-player');
     });
   }
 

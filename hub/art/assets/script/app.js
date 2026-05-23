@@ -5,7 +5,7 @@
 const DATA_PATH = "assets/data/detention.json";
 
 const LUCIDE_CDN   = "https://cdn.trap.lol/shards/lucide.min.js";
-const LUCIDE_LOCAL = "/shards/lucide.min.js";
+const LUCIDE_LOCAL = "/assets/shards/lucide.min.js";
 const LUCIDE_PUB   = "https://unpkg.com/lucide@latest/dist/umd/lucide.min.js";
 
 /* ── State ── */

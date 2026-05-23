@@ -1,6 +1,5 @@
 .claude
 .ai
-glass/markdown/*.bk
 hub/glass/markdown/*.bk
 **/*.backup
 CLAUDE.md
@@ -8,10 +7,7 @@ CLAUDE.md
 .env
 .bin
 shared/*
-playground/dndm/assets/data/5etools/*
-playground/dndm/assets/data/5etools/5e-SRD-classes.json
-hub/playground/dndm/assets/data/5etools/*
-hub/playground/dndm/assets/data/5etools/5e-SRD-classes.json
-services/nano-gpt-models/formatter
-shards/
+garden/dnd/dm-manager/assets/data/5etools/*
+!garden/dnd/dm-manager/assets/data/5etools/5e-SRD-classes.json
+assets/shards/
 services/

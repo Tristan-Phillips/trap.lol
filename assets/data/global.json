@@ -14,7 +14,7 @@
         },
         {
             "label": "Art",
-            "url": "/whistle/art/",
+            "url": "/garden/art/",
             "external": false,
             "icon": "image",
             "style": "circle"
@@ -29,6 +29,6 @@
     ],
     "art": {
         "base_url": "https://file.trap.lol/get",
-        "data": "/whistle/data/art.json"
+        "data": "/assets/data/art.json"
     }
 }

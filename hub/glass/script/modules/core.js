@@ -76,7 +76,7 @@ export async function loadCoreData() {
       await loadScript(primary);
     } catch {
       try {
-        await loadScript(`/shards/${local}`);
+        await loadScript(`/assets/shards/${local}`);
       } catch {
         try {
           await loadScript(pub);

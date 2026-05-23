@@ -8212,33 +8212,26 @@ export function initUI() {
     });
 }
 
+const MEDIA_API = 'https://api.trap.lol';
+
 // ── Manifest Loader ───────────────────────────────────────────────────────────
 async function loadManifest() {
-    try {
-        const res  = await fetch('./data/index.json');
-        const data = await res.json();
-        // Merge manifest chars into state (don't overwrite local/imported)
-        const existingIds = new Set(state.characters.map(c => c.id));
-        (data.characters || []).forEach(c => {
-            if (!existingIds.has(c.id)) {
-                state.characters.push(c);
-            }
-        });
-        saveState();
-    } catch (_) {
-        // Silently ignore — user may have no manifest chars
-    }
+    const res  = await fetch(`${MEDIA_API}/pallet/data/index.json`);
+    if (!res.ok) throw new Error(`index.json fetch failed: ${res.status}`);
+    const data = await res.json();
+    const existingIds = new Set(state.characters.map(c => c.id));
+    (data.characters || []).forEach(c => {
+        if (!existingIds.has(c.id)) state.characters.push(c);
+    });
+    saveState();
 }
 
 // ── Feed.json Loader ──────────────────────────────────────────────────────────
-// Loads permanent posts from data/feed.json into the module-level cache.
-// Called in parallel with loadManifest at startup.
 async function loadFeedJson() {
     try {
-        const res  = await fetch('./data/feed.json');
+        const res  = await fetch(`${MEDIA_API}/pallet/data/feed.json`);
+        if (!res.ok) throw new Error(`feed.json fetch failed: ${res.status}`);
         const data = await res.json();
-        // Exposed via the closure variable ctx.permanentFeedPosts inside initUI
-        // We store on the module level and initUI reads it before first render
         _feedJsonCache = data.posts || [];
     } catch (_) {
         _feedJsonCache = [];
