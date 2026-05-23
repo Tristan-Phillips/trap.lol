@@ -19,6 +19,70 @@
 </head>
 
 <body>
+
+  <!-- ── Direct-access guard ─────────────────────────────────────────────── -->
+  <div id="hub-gate" style="
+    display:none;position:fixed;inset:0;z-index:9999;
+    background:#06040A;
+    align-items:center;justify-content:center;flex-direction:column;gap:1rem;
+  " aria-modal="true" role="dialog" aria-label="Authentication required">
+    <label for="hub-gate-input" style="color:#555;font-family:monospace;font-size:0.78rem;letter-spacing:0.12em;">—</label>
+    <input id="hub-gate-input" type="password"
+      autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+      placeholder="passphrase"
+      style="
+        background:transparent;border:none;border-bottom:1px solid #333;
+        color:#ccc;font-family:monospace;font-size:1rem;letter-spacing:0.1em;
+        text-align:center;outline:none;padding:0.4rem 0.6rem;width:220px;
+      "
+      aria-label="Enter passphrase" />
+    <span id="hub-gate-err" style="color:#BE29EC;font-family:monospace;font-size:0.75rem;min-height:1em;" aria-live="polite"></span>
+  </div>
+
+  <script>
+    (function () {
+      const ref = document.referrer;
+      const origin = location.origin; // https://trap.lol in production
+      const fromSelf = ref.startsWith(origin);
+
+      // Allow through if coming from trap.lol (same origin) or if already authenticated this session
+      if (fromSelf || sessionStorage.getItem('hub_auth') === '1') return;
+
+      // Block render — show gate
+      const gate  = document.getElementById('hub-gate');
+      const input = document.getElementById('hub-gate-input');
+      const err   = document.getElementById('hub-gate-err');
+
+      gate.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+      requestAnimationFrame(() => input.focus());
+
+      const HASH = '03331f71dcf83f417134f6c19ac2ef4615fd1a715989e518111b7a9cdad4ece9';
+
+      async function sha256(s) {
+        const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+        return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+      }
+
+      input.addEventListener('keydown', async (e) => {
+        if (e.key === 'Escape') { location.href = '/'; return; }
+        if (e.key !== 'Enter') return;
+        const val = input.value.trim().toLowerCase().replace(/\s+/g, '');
+        if (!val) return;
+        const hash = await sha256(val);
+        if (hash === HASH) {
+          sessionStorage.setItem('hub_auth', '1');
+          gate.style.display = 'none';
+          document.body.style.overflow = '';
+        } else {
+          err.textContent = 'denied.';
+          input.value = '';
+          setTimeout(() => { location.href = '/'; }, 900);
+        }
+      });
+    })();
+  </script>
+
   <div id="cmd-overlay" class="cmd-overlay hidden" aria-live="polite" aria-label="Shortcut buffer">
     <span id="cmd-text"></span><span class="cursor">_</span>
   </div>
