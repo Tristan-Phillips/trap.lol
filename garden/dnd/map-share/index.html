@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cartomancer // D&D Live Map</title>
+  <meta name="description" content="Cartomancer — a self-hostable live map control system for D&D. DM controls the table display in real time from any device." />
+  <meta name="robots" content="index, follow" />
+  <link rel="stylesheet" href="/garden/dnd/map-share/public/style/style.css" />
+</head>
+<body>
+
+  <div class="grain" aria-hidden="true"></div>
+
+  <header class="header">
+    <a href="/garden/" class="header__back" aria-label="Back to Garden">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      garden
+    </a>
+    <span class="header__badge">GPL v3</span>
+  </header>
+
+  <main class="main">
+
+    <section class="hero">
+      <div class="hero__rune" aria-hidden="true">&#x16B7;</div>
+      <div class="hero__title-group">
+        <h1 class="hero__title">CARTOMANCER</h1>
+        <p class="hero__tagline">Live map control for the table</p>
+      </div>
+      <p class="hero__desc">A self-hostable D&amp;D map display system. The DM controls everything from a tablet — the table screen follows in real time. No apps. No accounts. Just a browser, a map, and a session key.</p>
+      <div class="hero__actions">
+        <a class="hero__btn hero__btn--primary" href="https://cartomancer.trap.lol/dm/">DM Portal</a>
+        <a class="hero__btn hero__btn--ghost" href="https://github.com/Tristan-Phillips/cartomancer" rel="noopener noreferrer" target="_blank">Source</a>
+      </div>
+    </section>
+
+    <section class="how">
+      <h2 class="how__title">How it works</h2>
+      <div class="how__steps">
+        <div class="how__step"><span class="how__step-num">01</span><div><h3 class="how__step-title">DM logs in</h3><p class="how__step-desc">Enter your account key on the DM portal. Upload your maps. Create a session and get a 6-character session ID.</p></div></div>
+        <div class="how__step"><span class="how__step-num">02</span><div><h3 class="how__step-title">Table connects</h3><p class="how__step-desc">Open the table URL on the display device. Type the session ID. The table is now slaved to the DM portal.</p></div></div>
+        <div class="how__step"><span class="how__step-num">03</span><div><h3 class="how__step-title">Play</h3><p class="how__step-desc">Select a map. Place tokens. Drop a movement ring. Adjust color grade for the TV. Everything updates on the table in real time.</p></div></div>
+      </div>
+    </section>
+
+    <section class="features">
+      <div class="feat"><div class="feat__icon" aria-hidden="true">&#x2B21;</div><h3 class="feat__title">Grid calibration</h3><p class="feat__desc">Tap two corners of a cell on the map preview. The grid snaps to the physical map instantly.</p></div>
+      <div class="feat"><div class="feat__icon" aria-hidden="true">&#x25CE;</div><h3 class="feat__title">Movement rings</h3><p class="feat__desc">Right-tap any point to project an animated radius ring showing movement range.</p></div>
+      <div class="feat"><div class="feat__icon" aria-hidden="true">&#x25D1;</div><h3 class="feat__title">Day / night</h3><p class="feat__desc">Simulate time of day with real-time color overlays. Dawn, dusk, and night — no second asset needed.</p></div>
+      <div class="feat"><div class="feat__icon" aria-hidden="true">&#x25C8;</div><h3 class="feat__title">Color grading</h3><p class="feat__desc">Live contrast, saturation, and brightness sliders. Compensate for any TV colour profile on the fly.</p></div>
+      <div class="feat"><div class="feat__icon" aria-hidden="true">&#x27F3;</div><h3 class="feat__title">Auto-reconnect</h3><p class="feat__desc">Both devices reconnect automatically. Session state is persisted to disk on every change.</p></div>
+      <div class="feat"><div class="feat__icon" aria-hidden="true">&#x229E;</div><h3 class="feat__title">Self-hostable</h3><p class="feat__desc">One Go binary, one Docker container, flat JSON files. Clone, configure, run.</p></div>
+    </section>
+
+    <section class="self-host">
+      <h2 class="self-host__title">Self-host in 5 minutes</h2>
+      <pre class="code-block"><code>git clone https://github.com/Tristan-Phillips/cartomancer
+cd cartomancer &amp;&amp; cp config.example.json data/config.json
+# edit data/config.json — set admin_key
+docker compose up -d</code></pre>
+      <p class="self-host__note">Runs behind a Cloudflare Tunnel or reverse proxy. No public ports. All data on your machine.</p>
+    </section>
+
+    <section class="license">
+      <p class="license__text">Released under the <strong>GNU General Public License v3</strong>. Clone it. Modify it. Run it at your table. Keep it free.</p>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <span>Cartomancer</span>
+    <span class="footer__sep">&#xB7;</span>
+    <a href="https://trap.lol" class="footer__link">trap.lol</a>
+    <span class="footer__sep">&#xB7;</span>
+    <span>GPL v3</span>
+  </footer>
+
+</body>
+</html>

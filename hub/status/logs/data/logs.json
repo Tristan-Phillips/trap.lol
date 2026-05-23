@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.75",
+    "schema_version": "1.5.76",
     "last_updated": "2026-05-23",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -344,6 +344,14 @@
       "data": "assets/data/art.json (via global.json art.data pointer)",
       "css": "garden/art/public/style/style.css (self-contained — no glass/ or assets/styles/ dependency)"
     },
+    "/garden/dnd/map-share/": {
+      "file": "garden/dnd/map-share/index.html",
+      "title": "Cartomancer // D&D Live Map",
+      "purpose": "Public landing page for Cartomancer — a self-hostable GPL v3 D&D live map control system. Documents the project, links to the DM portal at cartomancer.trap.lol/dm/ and to the GitHub source. Describes self-host steps. The actual DM portal and table display are served by the Go binary at /opt/stacks/cartomancer/data/static/.",
+      "css": "garden/dnd/map-share/public/style/style.css (self-contained, neutral palette — no neon, no glass/ dependency)",
+      "script": "garden/dnd/map-share/public/script/app.js (no-op — page is static)",
+      "note": "The Cartomancer Go service lives at /opt/stacks/cartomancer/. DM portal: cartomancer.trap.lol/dm/. Table display: cartomancer.trap.lol/table/. WebSocket relay: cartomancer.trap.lol/ws/. Source of truth for service code is /opt/stacks/cartomancer/ on the VPS."
+    },
     "/garden/dnd/dm-manager/": {
       "file": "garden/dnd/dm-manager/index.html",
       "title": "Grimoire // Campaign Suite",
@@ -657,7 +665,7 @@
     ],
     "current_state": "Production — three-layer site live. Public face: trap.lol/index.html (neutral portfolio cover — Tristan Phillips, GitHub + art + Telegram links, Kagi search bar at bottom, no neon, no Dune). Garden: trap.lol/garden/ (publicly showcaseable projects index — JSON-driven cards, Watchmen overlay for external site detail, art gallery at /garden/art/, Grimoire DM suite at /garden/dnd/dm-manager/, map-share stub at /garden/dnd/map-share/ — in development, crawlable). Real site: trap.lol/hub/ (the rave — gated by Cloudflare Zero Trust + client-side knock system + direct-access passphrase guard). Knock: desktop types 'spice' silently → passphrase gate; mobile taps footer 5× → passphrase gate. hub/index.html also has a secondary SHA-256 gate for direct URL access (no trap.lol referrer). Passphrase SHA-256 verified client-side, triggers glitch transition → /hub/. Whistle layer: /whistle/ (hidden, noindex). Assets layer: /assets/ (shared public-face static files). api.trap.lol admin panel: multi-profile (Underdark / Light Side), Media Library with albums, pending AI image review, /share/{12hex}/{6hex}.jpg URL scheme. trap-media-api source of truth: /opt/stacks/trap-media-api/.",
     "intended_future": [
-      "Map Share (/garden/dnd/map-share/) — next active project: D&D map sharing tool, stub scaffolded, implementation starting next session",
+      "Cartomancer (/garden/dnd/map-share/) — Phase 1 complete (Go server, WebSocket relay, DM portal, table display). Phase 2: deploy to VPS (docker compose up --build), Cloudflare tunnel to cartomancer.trap.lol, create first admin key, smoke-test end-to-end with real iPad + TV",
       "Sacred Codex (guides section) reactivation when enough .md content exists",
       "More ECHOES collections as artwork is created/curated",
       "ECHOES metadata enrichment (descriptions, verses, mood/chaos values populated)",
@@ -670,6 +678,20 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-23",
+      "message": "feat(cartomancer): Phase 1 — Go server, WebSocket relay, DM portal, table display, garden landing page",
+      "scope": "garden/dnd/map-share/, ext:cartomancer",
+      "impact": "high",
+      "files": [
+        "garden/dnd/map-share/index.html",
+        "garden/dnd/map-share/public/style/style.css",
+        "garden/dnd/map-share/public/script/app.js",
+        "hub/status/logs/data/logs.json"
+      ],
+      "why": "Cartomancer Phase 1: full Go microservice at /opt/stacks/cartomancer/ — WebSocket relay hub, DM auth (Mullvad-style account keys), session persistence to JSON, map upload + WebP processing, admin account CRUD. Table display: fullscreen canvas renderer (map, grid, tokens, movement ring, day/night, color grade). DM portal: login, session manager, map library, command center with all control tabs. Garden landing page documents the project for public discovery and GPL forks."
+    },
     {
       "hash": "a4f587e",
       "date": "2026-05-23",
@@ -3774,6 +3796,29 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-23",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Cartomancer Phase 1 built from scratch. Full requirements gathering established the tool as a GPL v3 self-hostable D&D live map system: two-screen (DM tablet + TV-in-table), WebSocket relay, Mullvad-style opaque account keys, session persistence, map upload with WebP conversion, grid calibration, movement rings, day/night simulation, color grading, token placement. Go binary at /opt/stacks/cartomancer/, all static files on disk (not embedded). Garden landing page at /garden/dnd/map-share/ documents the project for public discovery.",
+      "decisions": [
+        "Project named CARTOMANCER. Go module: cartomancer. Docker stack: /opt/stacks/cartomancer/. Cloudflare tunnel subdomain: cartomancer.trap.lol.",
+        "WebSocket-first transport. DM connects to /ws/dm/:sessionId, table connects to /ws/table/:sessionId. Server relays DM messages directly to paired table client. WebRTC is a future upgrade path — session state protocol is transport-agnostic.",
+        "Session IDs are 6 uppercase hex characters (3 random bytes). Mullvad-style account keys are 32 hex chars formatted as 8 groups of 4 (xxxx-xxxx-xxxx-xxxx-xxxx-xxxx-xxxx-xxxx).",
+        "Session state is persisted to /data/sessions/{id}.json on every mutation — table reconnect gets full state immediately via session_state message.",
+        "Map uploads: PNG/JPG in, WebP out. Three variants per map: full.webp, med.webp (max 1920px), thumb.webp (max 400px). Served from /maps/{id}/.",
+        "Table display is 100% passive — it ignores all incoming WebSocket messages from the browser. DM controls everything.",
+        "Grid calibration: two-tap corner method on the DM map preview. Computes cellPx from the distance between the two tapped points. offsetX/offsetY derived from first point position.",
+        "Movement ring: right-tap the DM map preview to place at map coordinates. Animated dashed circle rendered on overlay canvas. Radius configurable in cells via slider.",
+        "Day/night: CSS filter simulation (night=deep blue overlay, dusk/dawn=warm overlays) at adjustable intensity. No second asset needed.",
+        "Admin account management requires a separate admin_key (different from account keys). Admin key set in config.json.",
+        "GPL v3 license. garden/dnd/map-share/index.html is the public-facing project page with self-host instructions."
+      ],
+      "rules_reinforced": [
+        "All static files served from /data/static/ on disk — directly editable without rebuild. Only Go source changes require docker compose up --build.",
+        "Flat JSON files for all data (accounts.json, maps.json, sessions/*.json) — no database."
+      ]
+    },
     {
       "date": "2026-05-23",
       "agent": "Claude Sonnet 4.6",
