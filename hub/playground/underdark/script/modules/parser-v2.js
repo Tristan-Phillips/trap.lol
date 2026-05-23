@@ -127,7 +127,8 @@ export function normalizeData(raw) {
         creator:       d.creator  || '',
         version:       d.character_version || d.version || '1.0',
         // Extensions (Chub / extra fields)
-        extensions:    d.extensions || {},
+        // chara_card_v2 puts extensions at top-level raw, not inside raw.data
+        extensions:    d.extensions || raw.extensions || {},
         // Visuals — may be base64 data URL or path
         avatar: d.avatar || raw.avatar || null
     };

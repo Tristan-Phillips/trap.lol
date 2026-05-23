@@ -53,6 +53,7 @@ export function defaultConfig() {
             impersonationBlock:  true,
             jailbreakResistance: false,
             povFirst:            true,
+            autoMemory:          true,
         }
     };
 }

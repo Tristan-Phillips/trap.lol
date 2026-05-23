@@ -1,8 +1,8 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.71",
-    "last_updated": "2026-05-22",
+    "schema_version": "1.5.73",
+    "last_updated": "2026-05-23",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
       "_protocol",
@@ -662,6 +662,20 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-23",
+      "message": "feat(underdark): memory badge, LW weighting, group turn indicator",
+      "scope": "underdark/",
+      "impact": "medium",
+      "files": [
+        "hub/playground/underdark/script/modules/ui.js",
+        "hub/playground/underdark/script/modules/social.js",
+        "hub/playground/underdark/style/arena.css",
+        "hub/status/logs/data/logs.json"
+      ],
+      "why": "Three UX features to deepen immersion: memory dot on bot chip signals which characters have accumulated facts; inverse-count LW weighting ensures quieter characters speak more often; pulsing ring on the next-up chip visualises group turn order in real time."
+    },
     {
       "hash": "pending",
       "date": "2026-05-22",
@@ -3624,6 +3638,49 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-23",
+      "agent": "Claude Sonnet 4.6",
+      "type": "content",
+      "summary": "Seeded data/feed.json with 244 permanent in-character text posts across all 45 Underdark characters. Each character has 3–9 posts spanning March 2023 to April 2026 — character arcs with progression, dark moments, good moments, lore-grounded events, and cross-character references. Posts written from card data: description, personality, scenario, and lore. No image posts (can't commit base64); text-only for permanent seed layer.",
+      "decisions": [
+        "All seed posts are type 'text' — permanent image posts require a public URL which doesn't exist for generated content.",
+        "Timestamps span 2023-03-14 to 2026-04-14 — three full years of organic-feeling backlog, not a batch import.",
+        "Post depth varies by character voice richness — Jinx gets 9, core characters get 6–7, more niche characters get 3–4. Every character in index.json has at least 3 posts.",
+        "Cross-character references included: Vi/Jinx tension, Caitlyn/Vi relationship, Maelle/Lune dynamic, Gojo/students/Geto, Makima/Denji, Ada/Leon, Revy/Rock, Rebecca/David/Pilar, Riley/Will, Harley/Cass, Yumeko/Kirari, Touka/Ayato, etc.",
+        "Character arcs are present: Caitlyn resigning from Enforcers (2025-11), Lucy Kushinada reaching the Moon (2026-01), Shadowheart losing and questioning Shar, A2 finding machines building houses."
+      ]
+    },
+    {
+      "date": "2026-05-23",
+      "agent": "Claude Sonnet 4.6",
+      "type": "bug_fix",
+      "summary": "Afternoon session (continued from morning). Root-cause fixed all Underdark image generation character accuracy failures: parser-v2.js normalizeData() was discarding extensions for all chara_card_v2 cards because extensions sits at raw top-level, not inside raw.data. Fixed with extensions: d.extensions || raw.extensions || {}. Also fixed image-engine.js in three functions (buildImagePrompt, _buildCharContext, generateVideoPromptWithLLM) to read cardExt as fallback when localStorage overrides are empty. Additional features: social feed living-world image posts (~15% chance per LW tick), redo-image modal with art style grid and in-place DOM replacement, API gate pre-fill for all five fields (nano-gpt key, wallhaven key, vault ID, username, persona), nano-gpt referral link. Comprehensive mobile UX overhaul across 6 CSS files (settings bottom-tab nav, char editor topbar wrapping, image studio column layout, modals as bottom-sheets, scene codex 2-col inject grid). Wallhaven search alias strip. ~19 files, ~1400 insertions.",
+      "decisions": [
+        "parser-v2 extensions fix is the root cause — all character image inaccuracy traces back here. All character cards must have their extensions read from raw root, not raw.data.",
+        "Three-candidate field resolution chain [override[f], cardExt[f], cardExt.ext?.[f]] is now the standard for image prompt character field reading.",
+        "Gate pre-fill includes the actual NanoGPT API key value (from cookie, already plaintext) — user explicitly confirmed this.",
+        "Modals on mobile use bottom-sheet pattern (position fixed bottom:0, border-radius top corners) — confirmed as the correct mobile pattern for this app.",
+        "Settings nav flips from left sidebar to bottom tab bar on <=640px — confirmed as the correct mobile nav pattern.",
+        "LW image posts use SFW/NSFW model routing based on art style selection in redo modal."
+      ],
+      "rules_reinforced": [
+        "chara_card_v2 format stores extensions at raw root, never inside raw.data — always fall back to raw.extensions in the parser.",
+        "All character field reads in image-engine must use the three-candidate chain, never localStorage-only."
+      ]
+    },
+    {
+      "date": "2026-05-23",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Morning session. Implemented three Underdark quality-of-life features: (1) memory badge — a small accent-coloured dot appears on active bot chips when a character has non-empty persistentMemory, updating live after save/clear/auto-distill; (2) Living World inverse-count character weighting — characters with fewer feed posts are more likely to be picked next, preventing dominant characters from dominating the feed; (3) group turn indicator — in round-robin and auto modes a pulsing ring marks which bot responds next, advancing after each sequential response.",
+      "decisions": [
+        "Memory badge uses top-left position to avoid conflict with existing remove (top-right) and force (bottom-right) overlays.",
+        "LW weighting uses 1/(postCount+1) — simple inverse, avoids division by zero, decays gracefully as output accumulates.",
+        "Turn indicator uses a ::before pseudo-ring animation (next-bot-pulse) rather than a solid border so it reads as pending/anticipatory rather than active/selected.",
+        "renderActiveBots() called after auto-distill saves memory so chip reflects new state without manual refresh."
+      ]
+    },
     {
       "date": "2026-05-22",
       "agent": "Claude Sonnet 4.6",

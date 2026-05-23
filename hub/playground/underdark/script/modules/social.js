@@ -20,6 +20,7 @@ import { resolveImageUrl } from './storage.js?v=3';
 import { buildPayload, streamCompletion, fetchCompletion } from './llm-engine.js?v=16';
 import { getApiKey } from '/hub/glass/script/modules/llm-auth.js?v=3';
 import { getAllFeedPosts, saveLocalPost } from './gallery.js?v=1';
+import { buildImagePrompt, generateImage, generateImagePromptWithLLM } from './image-engine.js?v=1';
 
 export function initSocial(ctx, {
     lucideRefresh,
@@ -47,6 +48,8 @@ export function initSocial(ctx, {
     qs('#feed-back-btn')?.addEventListener('click', () => {
         switchSidebarTab('chats');
     });
+
+    qs('#feed-hot-btn')?.addEventListener('click', () => openHotFeed());
 
     qs('#feed-add-post-btn')?.addEventListener('click', () => {
         const charId = (ctx.feedMode !== 'hot') ? ctx.feedMode : (ctx.galleryCharId || state.characters[0]?.id || null);
@@ -133,6 +136,8 @@ export function initSocial(ctx, {
         if ($name)    $name.textContent    = 'Hot Feed';
         if ($tagline) $tagline.textContent = 'All characters';
         if ($avEl) { $avEl.style.backgroundImage = ''; $avEl.textContent = '🔥'; }
+        const $hotBtn  = qs('#feed-hot-btn');
+        if ($hotBtn) $hotBtn.hidden = true;
         renderHotFeed();
         renderFeedSidebar(null);
     }
@@ -200,6 +205,8 @@ export function initSocial(ctx, {
             }
         }
 
+        const $hotBtn = qs('#feed-hot-btn');
+        if ($hotBtn) $hotBtn.hidden = false;
         qsa('.social-char-item').forEach(el => el.classList.toggle('active', el.dataset.id === id));
         qs('#social-hot-btn')?.classList.remove('active');
 
@@ -293,7 +300,9 @@ export function initSocial(ctx, {
 
             const avHtml    = av && !isEmoji(av) ? `style="background-image:url('${esc(av)}')"` : '';
             const avContent = av && !isEmoji(av) ? '' : (av || '👤');
-            const draftBadge = !permanent ? `<span class="feed-post__draft-badge" title="Local only — not yet pushed">draft</span>` : '';
+            const draftBadge = '';
+            const charWorld  = char?.world || meta?.world || '';
+            const locationStr = [charWorld, 'The Underdark'].filter(Boolean).join(' / ');
 
             const visibleComments = comments.slice(-4);
             const hiddenCount = comments.length - visibleComments.length;
@@ -322,11 +331,12 @@ export function initSocial(ctx, {
                     <div class="feed-post__header-avatar" ${avHtml}>${avContent}</div>
                     <div class="feed-post__header-info">
                         <span class="feed-post__header-name">${esc(charName)}</span>
-                        <span class="feed-post__header-sub">Night City / The Underdark ${draftBadge}</span>
+                        <span class="feed-post__header-sub">${esc(locationStr)}</span>
                     </div>
                     <button class="feed-post__header-dm btn-icon btn-icon--small" data-dm-char="${esc(charId)}" title="Open DM with ${esc(charName)}"><i data-lucide="message-circle"></i></button>
                 </header>
                 ${mediaHtml}
+                ${type !== 'text' && src ? `<div class="feed-post__redo-row"><button class="feed-post__redo-btn btn btn--ghost btn--sm" data-redo-char="${esc(charId)}" data-redo-caption="${esc(caption)}" data-redo-post="${esc(postId)}" title="Regenerate image"><i data-lucide="refresh-cw"></i> Redo</button></div>` : ''}
                 <div class="feed-post__toolbar">
                     <button class="feed-post__act-btn feed-post__act-btn--like ${isLiked ? 'liked' : ''}" data-like-char="${esc(charId)}" data-like-id="${esc(postId)}">
                         <i data-lucide="heart"></i>
@@ -410,7 +420,217 @@ export function initSocial(ctx, {
             };
         });
 
+        qsa('.feed-post__redo-btn', $feedList).forEach($btn => {
+            $btn.addEventListener('click', () => openImageRedoModal($btn.dataset.redoChar, $btn.dataset.redoCaption, $btn.dataset.redoPost));
+        });
+
         lucideRefresh($feedList);
+    }
+
+    // ── Image Redo Modal ──────────────────────────────────────────────────────
+    // Three quick questions to guide the regeneration, then fires LLM prompt
+    // generation + image generation for the same character.
+    function openImageRedoModal(charId, existingCaption, postId) {
+        const char     = state.loadedCharacters[charId];
+        const meta     = state.characters.find(c => c.id === charId);
+        const charName = char?.name || meta?.name || 'Unknown';
+
+        const rawAv   = meta?.avatar_path || char?.avatar;
+        const av      = getAvatarUrlSync(charId, rawAv) || rawAv;
+        const avStyle = av && !isEmoji(av) ? `style="background-image:url('${esc(av)}')"` : '';
+        const avText  = av && !isEmoji(av) ? '' : (av || '👤');
+        const charWorld = char?.world || meta?.world || 'The Underdark';
+
+        const $modal = document.createElement('div');
+        $modal.className = 'modal';
+        $modal.innerHTML = `
+            <div class="modal__backdrop"></div>
+            <div class="redo-modal">
+                <button class="redo-modal__close" id="redo-modal-close"><i data-lucide="x"></i></button>
+
+                <div class="redo-modal__hero">
+                    <div class="redo-modal__avatar" ${avStyle}>${avText}</div>
+                    <div class="redo-modal__hero-info">
+                        <span class="redo-modal__char-name">${esc(charName)}</span>
+                        <span class="redo-modal__char-world">${esc(charWorld)}</span>
+                    </div>
+                    <div class="redo-modal__hero-label"><i data-lucide="refresh-cw"></i> Regenerate</div>
+                </div>
+
+                <div class="redo-modal__body">
+                    <div class="redo-modal__field">
+                        <div class="redo-modal__field-label"><i data-lucide="sunset"></i> Mood / Vibe</div>
+                        <input id="redo-q-mood" class="redo-modal__input" placeholder="melancholic, fierce, serene, tender…">
+                        <div class="redo-modal__chips">
+                            ${['Melancholic','Fierce','Serene','Playful','Dark','Romantic'].map(v =>
+                                `<button class="redo-chip" data-target="redo-q-mood" data-val="${v.toLowerCase()}">${v}</button>`
+                            ).join('')}
+                        </div>
+                    </div>
+
+                    <div class="redo-modal__field">
+                        <div class="redo-modal__field-label"><i data-lucide="map-pin"></i> Setting</div>
+                        <input id="redo-q-env" class="redo-modal__input" placeholder="rainy rooftop, candlelit room, forest…">
+                        <div class="redo-modal__chips">
+                            ${['Rooftop','Forest','Bedroom','City Alley','Dungeon','Onsen'].map(v =>
+                                `<button class="redo-chip" data-target="redo-q-env" data-val="${v.toLowerCase()}">${v}</button>`
+                            ).join('')}
+                        </div>
+                    </div>
+
+                    <div class="redo-modal__field">
+                        <div class="redo-modal__field-label"><i data-lucide="sliders-horizontal"></i> Direction <span class="redo-modal__optional">optional</span></div>
+                        <input id="redo-q-hint" class="redo-modal__input" placeholder="close-up portrait, action pose, more dramatic…">
+                        <div class="redo-modal__chips">
+                            ${['Portrait','Full body','Action pose','Cinematic','Rear view','Low angle'].map(v =>
+                                `<button class="redo-chip" data-target="redo-q-hint" data-val="${v.toLowerCase()}">${v}</button>`
+                            ).join('')}
+                        </div>
+                    </div>
+
+                    <div class="redo-modal__field">
+                        <div class="redo-modal__field-label"><i data-lucide="palette"></i> Art Style</div>
+                        <div class="redo-modal__style-grid">
+                            ${[
+                                { id: 'photorealistic', label: 'Photorealistic', icon: '📷' },
+                                { id: 'anime',          label: 'Anime',          icon: '🎌' },
+                                { id: 'stylized',       label: 'Stylized',       icon: '✦' },
+                                { id: 'realistic',      label: 'Realistic',      icon: '🎨' },
+                            ].map(s => `
+                                <button class="redo-style-btn" data-style="${s.id}">
+                                    <span class="redo-style-btn__icon">${s.icon}</span>
+                                    <span class="redo-style-btn__label">${s.label}</span>
+                                </button>`
+                            ).join('')}
+                        </div>
+                        <input type="hidden" id="redo-q-style" value="">
+                    </div>
+
+                    <label class="redo-modal__nsfw-row">
+                        <span class="redo-modal__nsfw-toggle">
+                            <input type="checkbox" id="redo-q-nsfw" class="redo-modal__nsfw-check">
+                            <span class="redo-modal__nsfw-slider"></span>
+                        </span>
+                        <span class="redo-modal__nsfw-label">Allow NSFW</span>
+                        <span class="redo-modal__nsfw-hint">Model picks appropriately</span>
+                    </label>
+                </div>
+
+                <div class="redo-modal__footer">
+                    <button class="btn btn--ghost btn--sm" id="redo-modal-cancel">Cancel</button>
+                    <button class="btn btn--accent" id="redo-modal-go"><i data-lucide="sparkles"></i> Generate Image</button>
+                </div>
+            </div>`;
+
+        document.body.appendChild($modal);
+        lucideRefresh($modal);
+        qs('#redo-q-mood', $modal)?.focus();
+
+        // Style button selection
+        qsa('.redo-style-btn', $modal).forEach($sb => {
+            $sb.addEventListener('click', () => {
+                const val = $sb.dataset.style;
+                const $hidden = qs('#redo-q-style', $modal);
+                const already = $hidden?.value === val;
+                if ($hidden) $hidden.value = already ? '' : val;
+                qsa('.redo-style-btn', $modal).forEach(b => b.classList.toggle('redo-style-btn--active', !already && b.dataset.style === val));
+            });
+        });
+
+        // Chip clicks fill/toggle the associated input
+        qsa('.redo-chip', $modal).forEach($chip => {
+            $chip.addEventListener('click', () => {
+                const $inp = qs(`#${$chip.dataset.target}`, $modal);
+                if (!$inp) return;
+                const val = $chip.dataset.val;
+                $inp.value = $inp.value === val ? '' : val;
+                qsa(`.redo-chip[data-target="${$chip.dataset.target}"]`, $modal)
+                    .forEach(c => c.classList.toggle('redo-chip--active', c.dataset.val === $inp.value));
+            });
+        });
+
+        const close = () => $modal.remove();
+        qs('#redo-modal-close', $modal)?.addEventListener('click', close);
+        qs('#redo-modal-cancel', $modal)?.addEventListener('click', close);
+        qs('.modal__backdrop', $modal)?.addEventListener('click', close);
+
+        qs('#redo-modal-go', $modal)?.addEventListener('click', async () => {
+            const mood        = qs('#redo-q-mood', $modal)?.value.trim()  || '';
+            const env         = qs('#redo-q-env', $modal)?.value.trim()   || '';
+            const hint        = qs('#redo-q-hint', $modal)?.value.trim()  || '';
+            const artStyle    = qs('#redo-q-style', $modal)?.value        || '';
+            const includeNsfw = qs('#redo-q-nsfw', $modal)?.checked       || false;
+
+            const $goBtn = qs('#redo-modal-go', $modal);
+            if ($goBtn) { $goBtn.disabled = true; $goBtn.innerHTML = '<i data-lucide="loader-circle"></i> Generating…'; lucideRefresh($goBtn); }
+
+            // Map art style selection to prompt keyword + preferred model
+            const styleMap = {
+                photorealistic: { keyword: 'photorealistic photography, 8k, hyperrealistic', models: { sfw: ['hidream','flux-schnell'], nsfw: ['nano-banana','hidream'] } },
+                anime:          { keyword: 'anime style illustration, detailed anime art',   models: { sfw: ['hidream','flux-schnell'], nsfw: ['SDXL-ArliMix-v1','bagel'] } },
+                stylized:       { keyword: 'stylized digital art, painterly, concept art',   models: { sfw: ['hidream','flux-schnell'], nsfw: ['bagel','nano-banana'] } },
+                realistic:      { keyword: 'realistic digital painting, lifelike, detailed',  models: { sfw: ['hidream','flux-schnell'], nsfw: ['nano-banana','hidream'] } },
+            };
+            const styleEntry  = styleMap[artStyle] || null;
+            const styleKw     = styleEntry?.keyword || '';
+            const pick1       = (arr) => arr[Math.floor(Math.random() * arr.length)];
+            const modelPool   = styleEntry
+                ? (includeNsfw ? styleEntry.models.nsfw : styleEntry.models.sfw)
+                : (includeNsfw ? ['nano-banana','bagel','SDXL-ArliMix-v1'] : ['flux-schnell','hidream']);
+
+            const userHint = [
+                mood && `Mood: ${mood}`,
+                env  && `Setting: ${env}`,
+                hint,
+                styleKw && `Art style: ${styleKw}`,
+            ].filter(Boolean).join('. ');
+
+            try {
+                const { positive, negative } = await generateImagePromptWithLLM({
+                    charId,
+                    userHint,
+                    scene: styleKw ? { style: styleKw } : {},
+                    includeNsfw,
+                    withNegative: true,
+                    historyDepth: 0,
+                });
+
+                const model      = pick1(modelPool);
+                const imgDataUrl = await generateImage({ model, prompt: positive, negativePrompt: negative, size: '1024x1024' });
+                if (!imgDataUrl) throw new Error('No image returned.');
+
+                // Replace the image in the existing post element if it's still in the DOM
+                if (postId) {
+                    const $article = qs(`[data-post-id="${postId}"]`, $feedList);
+                    const $img = $article?.querySelector('.feed-post__media-img');
+                    if ($img) {
+                        $img.src = imgDataUrl;
+                        // Also update localStorage so the new src persists
+                        const lp = state.socialData?.localPosts?.[charId];
+                        if (lp) {
+                            const entry = lp.find(p => `local-${charId}-${p.id || ''}` === postId || p.id === postId);
+                            if (entry) entry.src = imgDataUrl;
+                            saveState();
+                        }
+                        close();
+                        showToast('Image replaced.', 'info', 1800);
+                        return;
+                    }
+                }
+
+                // Fallback: save as new post if article not found
+                saveLocalPost(charId, { type: 'image', src: imgDataUrl, caption: existingCaption || '' });
+
+                if (ctx.feedMode === 'hot') renderHotFeed();
+                else if (ctx.feedMode === charId) renderSocialFeed(charId);
+                renderSocialSidebar();
+                close();
+                showToast(`New image posted for ${charName}.`, 'info', 2000);
+            } catch (err) {
+                showToast(`Failed: ${err.message || 'unknown error'}`, 'error', 3500);
+                if ($goBtn) { $goBtn.disabled = false; $goBtn.innerHTML = '<i data-lucide="image"></i> Generate'; lucideRefresh($goBtn); }
+            }
+        });
     }
 
     function renderFeedSidebar(charId) {
@@ -493,7 +713,7 @@ export function initSocial(ctx, {
             renderAll();
         });
 
-        const others = state.characters.filter(c => c.id !== charId).slice(0, 5);
+        const others = state.characters.filter(c => c.id !== charId);
         if ($sg) $sg.innerHTML = others.length ? `
             <div class="feed-suggested__label">More Characters</div>
             ${others.map(c => {
@@ -707,6 +927,7 @@ export function initSocial(ctx, {
     function lwUpdateUI() {
         const $bar   = qs('#lw-stream-bar');
         const $start = qs('#lw-start-btn');
+        const $feedLw = qs('#feed-lw-btn');
         if ($bar)   $bar.hidden   = !ctx.streamActive;
         if ($start) {
             $start.classList.toggle('active', ctx.streamActive);
@@ -715,32 +936,142 @@ export function initSocial(ctx, {
                 : `<i data-lucide="radio"></i> Living World`;
             lucideRefresh($start);
         }
+        if ($feedLw) {
+            $feedLw.classList.toggle('active', ctx.streamActive);
+            $feedLw.innerHTML = ctx.streamActive
+                ? `<i data-lucide="pause-circle"></i> Pause`
+                : `<i data-lucide="radio"></i> Live`;
+            lucideRefresh($feedLw);
+        }
     }
 
     async function lwGeneratePost() {
         if (!state.characters.length || !getApiKey()) return;
-        const pick = state.characters[Math.floor(Math.random() * state.characters.length)];
+        // Inverse-count weighting: characters with fewer posts post more frequently
+        const weights = state.characters.map(c =>
+            1 / (getAllFeedPosts(c.id, ctx.permanentFeedPosts).length + 1)
+        );
+        const total = weights.reduce((s, w) => s + w, 0);
+        let r = Math.random() * total;
+        let pick = state.characters[state.characters.length - 1];
+        for (let i = 0; i < state.characters.length; i++) {
+            r -= weights[i];
+            if (r <= 0) { pick = state.characters[i]; break; }
+        }
         const charId  = pick.id;
         const char    = state.loadedCharacters[charId];
         const meta    = pick;
         const charName = char?.name || meta?.name || 'Unknown';
         const scenario = state.reality?.worldConfig?.scenario || '';
-        const recentPosts = getAllFeedPosts(charId, ctx.permanentFeedPosts).slice(0, 3).map(p => p.caption).filter(Boolean).join(' | ');
+        const recentPosts = getAllFeedPosts(charId, ctx.permanentFeedPosts).slice(0, 3).map(p => p.caption).filter(Boolean).join('\n- ');
+
+        // Build a distilled character context from the card for the system prompt
+        const desc        = (char?.description || '').slice(0, 400);
+        const personality = (char?.personality  || '').slice(0, 300);
+        const ext         = char?.extensions?.underdark || {};
+        const voice       = ext.voiceTone       ? `Voice: ${ext.voiceTone.slice(0, 120)}` : '';
+        const speech      = ext.speechPatterns  ? `Speech: ${ext.speechPatterns.slice(0, 120)}` : '';
+        const charScenario = (char?.scenario    || '').slice(0, 200);
+
+        const systemLines = [
+            `You are ${charName}. Write exactly as this character — not as a narrator describing them.`,
+            desc        && `Character: ${desc}`,
+            personality && `Personality: ${personality}`,
+            voice       && voice,
+            speech      && speech,
+            charScenario && `Current setting: ${charScenario}`,
+            scenario    && `World context: ${scenario.slice(0, 200)}`,
+        ].filter(Boolean).join('\n\n');
+
+        const userLines = [
+            `Write a short, in-character social media post (1–3 sentences) as ${charName}.`,
+            `No hashtags. No quotes around the post. No "Post:" prefix. Just the post text.`,
+            `Be specific and evocative — rooted in this character's voice, world, and current state of mind.`,
+            recentPosts && `Recent posts (do not repeat or echo these):\n- ${recentPosts}`,
+        ].filter(Boolean).join('\n');
 
         try {
             const { text } = await fetchCompletion({
-                messages: [{
-                    role: 'user',
-                    content: `You are ${charName}. Write a short, in-character social media post (1–3 sentences). No hashtags. No quotes. Be specific and evocative — reference your world, mood, or something you just witnessed.\n${scenario ? `World context: ${scenario.slice(0, 200)}\n` : ''}${recentPosts ? `Your recent posts (don't repeat): ${recentPosts}\n` : ''}Post:`
-                }],
+                messages: [
+                    { role: 'system', content: systemLines },
+                    { role: 'user',   content: userLines },
+                ],
                 model: state.config?.model || 'claude-haiku-4-5-20251001',
-                max_tokens: 120,
+                max_tokens: 140,
                 apiKey: getApiKey(),
             });
 
             if (!text?.trim() || !ctx.streamActive) return;
 
-            saveLocalPost(charId, { type: 'text', src: null, caption: text.trim() });
+            // Strip any "Post:" / "Name:" prefix the model may prepend despite instructions
+            const clean = text.trim()
+                .replace(/^(post|reply|update|status)\s*:\s*/i, '')
+                .replace(/^["']|["']$/g, '')
+                .trim();
+            if (!clean) return;
+
+            // ~15% chance of generating an image post alongside the caption
+            const doImage = Math.random() < 0.15;
+
+            if (doImage) {
+                // Text post saves immediately so the feed has content while image generates
+                saveLocalPost(charId, { type: 'text', src: null, caption: clean });
+                renderSocialSidebar();
+                try {
+                    // Lazy-load presets once, cache on ctx
+                    if (!ctx._lwPresets) {
+                        const r = await fetch('./data/rp-gen-presets.json');
+                        ctx._lwPresets = await r.json();
+                    }
+                    const presets = ctx._lwPresets;
+                    const pick1 = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+                    // Pull all scene entries flat from all groups
+                    const allSceneEntries = (presets.scenes?.groups || []).flatMap(g => g.entries || []);
+                    // Pick a random scene preset and use its fields as the scene object
+                    const scenePreset = pick1(allSceneEntries);
+                    // Also pick a random mood preset and merge it
+                    const moodPreset  = pick1(presets.mood_presets?.entries || [{ fields: {} }]);
+                    const scene = { ...(moodPreset.fields || {}), ...(scenePreset?.fields || {}) };
+
+                    // Build a "don't repeat" hint from the character's recent image post captions
+                    const recentImgCaptions = getAllFeedPosts(charId, ctx.permanentFeedPosts)
+                        .filter(p => p.type === 'image' && p.caption)
+                        .slice(-4)
+                        .map(p => p.caption)
+                        .join('; ');
+                    const userHint = [
+                        `Scene context: ${scenePreset?.label || ''}, ${moodPreset?.label || ''}`,
+                        recentImgCaptions && `Avoid repeating these recent scenes: ${recentImgCaptions}`,
+                        `Caption written for this post: "${clean}"`,
+                    ].filter(Boolean).join('. ');
+
+                    const includeNsfw = Math.random() < 0.5;
+                    const { positive, negative } = await generateImagePromptWithLLM({
+                        charId,
+                        userHint,
+                        scene,
+                        includeNsfw,
+                        withNegative: true,
+                        historyDepth: 0,
+                    });
+
+                    const nsfwModels = ['nano-banana', 'bagel', 'SDXL-ArliMix-v1'];
+                    const sfwModels  = ['flux-schnell', 'hidream'];
+                    const model      = pick1(includeNsfw ? nsfwModels : sfwModels);
+
+                    const imgDataUrl = await generateImage({ model, prompt: positive, negativePrompt: negative, size: '1024x1024' });
+                    if (imgDataUrl && ctx.streamActive) {
+                        saveLocalPost(charId, { type: 'image', src: imgDataUrl, caption: clean });
+                        if (ctx.feedMode === 'hot') renderHotFeed();
+                        else if (ctx.feedMode === charId) renderSocialFeed(charId);
+                        renderSocialSidebar();
+                    }
+                } catch (_) { /* image gen failed — text post already saved */ }
+                return;
+            }
+
+            saveLocalPost(charId, { type: 'text', src: null, caption: clean });
 
             if ($feedList && !$feedList.hidden) {
                 const av       = getAvatarUrlSync(charId, meta?.avatar_path || char?.avatar) || meta?.avatar_path || char?.avatar;
@@ -769,7 +1100,7 @@ export function initSocial(ctx, {
 
                 const $text   = qs('.lw-typing-text', article);
                 const $cursor = qs('.lw-cursor', article);
-                const chars   = [...text.trim()];
+                const chars   = [...clean];
                 let i = 0;
                 const type = () => {
                     if (i < chars.length) {
@@ -819,9 +1150,94 @@ export function initSocial(ctx, {
         showToast('Living World paused.', 'info', 1500);
     }
 
+    // ── Manual image post request ─────────────────────────────────────────────
+    // Picks a random character, randomly decides SFW/NSFW, uses the LLM to
+    // write a detailed character-accurate image prompt, then generates the image.
+    async function lwRequestImagePost() {
+        if (!state.characters.length) { showToast('No characters loaded.', 'warn'); return; }
+        if (!getApiKey())             { showToast('API key required.', 'warn'); return; }
+
+        const $btn = qs('#feed-req-image-btn');
+        if ($btn) { $btn.disabled = true; $btn.innerHTML = '<i data-lucide="loader-circle"></i> Generating…'; lucideRefresh($btn); }
+
+        try {
+            // Random character — weighted by inverse post count same as LW
+            const weights = state.characters.map(c =>
+                1 / (getAllFeedPosts(c.id, ctx.permanentFeedPosts).length + 1)
+            );
+            const total = weights.reduce((s, w) => s + w, 0);
+            let r = Math.random() * total;
+            let pick = state.characters[state.characters.length - 1];
+            for (let i = 0; i < state.characters.length; i++) {
+                r -= weights[i];
+                if (r <= 0) { pick = state.characters[i]; break; }
+            }
+            const charId   = pick.id;
+            const char     = state.loadedCharacters[charId];
+            const charName = char?.name || pick.name || 'Unknown';
+
+            // 50/50 SFW vs NSFW
+            const includeNsfw = Math.random() < 0.5;
+
+            showToast(`Generating image for ${charName}…`, 'info', 3000);
+
+            // Lazy-load presets, pick a random scene + mood for variety
+            if (!ctx._lwPresets) {
+                const r = await fetch('./data/rp-gen-presets.json');
+                ctx._lwPresets = await r.json();
+            }
+            const _p1 = (arr) => arr[Math.floor(Math.random() * arr.length)];
+            const _allScenes = (ctx._lwPresets.scenes?.groups || []).flatMap(g => g.entries || []);
+            const _scenePreset = _p1(_allScenes);
+            const _moodPreset  = _p1(ctx._lwPresets.mood_presets?.entries || [{ fields: {} }]);
+            const _scene = { ...(_moodPreset.fields || {}), ...(_scenePreset?.fields || {}) };
+
+            const _recentImgCaptions = getAllFeedPosts(charId, ctx.permanentFeedPosts)
+                .filter(p => p.type === 'image' && p.caption).slice(-4).map(p => p.caption).join('; ');
+            const _userHint = [
+                `Scene: ${_scenePreset?.label || ''}, ${_moodPreset?.label || ''}`,
+                _recentImgCaptions && `Avoid repeating these recent scenes: ${_recentImgCaptions}`,
+            ].filter(Boolean).join('. ');
+
+            // LLM writes a detailed, character-accurate image prompt
+            const { positive, negative } = await generateImagePromptWithLLM({
+                charId,
+                userHint: _userHint,
+                scene: _scene,
+                includeNsfw,
+                withNegative: true,
+                historyDepth: 0,
+            });
+
+            // Pick model: NSFW-capable models when allowed, flux-schnell for SFW
+            const nsfwModels  = ['nano-banana', 'bagel', 'SDXL-ArliMix-v1'];
+            const sfwModels   = ['flux-schnell', 'hidream'];
+            const modelPool   = includeNsfw ? nsfwModels : sfwModels;
+            const model       = modelPool[Math.floor(Math.random() * modelPool.length)];
+
+            const imgDataUrl  = await generateImage({ model, prompt: positive, negativePrompt: negative, size: '1024x1024' });
+            if (!imgDataUrl) throw new Error('No image returned.');
+
+            saveLocalPost(charId, { type: 'image', src: imgDataUrl, caption: '' });
+
+            if (ctx.feedMode === 'hot') renderHotFeed();
+            else if (ctx.feedMode === charId) renderSocialFeed(charId);
+            renderSocialSidebar();
+            showToast(`${charName} posted an image.`, 'info', 2000);
+        } catch (err) {
+            showToast(`Image failed: ${err.message || 'unknown error'}`, 'error', 3500);
+        } finally {
+            if ($btn) { $btn.disabled = false; $btn.innerHTML = '<i data-lucide="image"></i> Image'; lucideRefresh($btn); }
+        }
+    }
+
     qs('#lw-start-btn')?.addEventListener('click', () => {
         if (ctx.streamActive) pauseLivingWorld(); else startLivingWorld();
     });
+    qs('#feed-lw-btn')?.addEventListener('click', () => {
+        if (ctx.streamActive) pauseLivingWorld(); else startLivingWorld();
+    });
+    qs('#feed-req-image-btn')?.addEventListener('click', () => lwRequestImagePost());
     qs('#lw-pause-btn')?.addEventListener('click', pauseLivingWorld);
     qs('#lw-speed-select')?.addEventListener('change', e => {
         ctx.streamSpeed = parseInt(e.target.value, 10) || 30;

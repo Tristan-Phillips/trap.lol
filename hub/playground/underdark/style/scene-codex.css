@@ -994,6 +994,17 @@ body.focus-mode .message__model-badge { display: none; }
     .scene-codex__inner { padding-top: 10px; }
 }
 
+@media (max-width: 430px) {
+    /* Director panel: 2-col inject grid — buttons are readable */
+    .codex-inject-grid { grid-template-columns: 1fr 1fr; }
+    .codex-admin-grid  { grid-template-columns: 1fr 1fr; }
+    .codex-inject-btn  { font-size: 0.62rem; padding: 7px 7px; min-height: 36px; }
+    /* Codex cast strip: slightly taller tap targets */
+    .codex-cast { min-height: 52px; padding: 8px 10px 7px; }
+    /* Codex inner: remove padding so it isn't pushed off-screen */
+    .scene-codex__inner { padding: 8px 10px 10px; }
+}
+
 /* ── Relationship Map ── */
 .codex-relmap {
     position: absolute;

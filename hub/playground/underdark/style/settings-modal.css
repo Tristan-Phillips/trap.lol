@@ -279,23 +279,67 @@
 @media (max-width: 640px) {
     .settings-modal {
         width: 100vw;
-        height: 100vh;
+        height: 100dvh;
         border-radius: 0;
         top: 0;
         left: 0;
         transform: none;
+        /* account for notch + home indicator */
+        padding-top:    env(safe-area-inset-top,    0px);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        box-sizing: border-box;
     }
     @keyframes settingsIn {
         from { opacity: 0; transform: translateY(8px); }
         to   { opacity: 1; transform: translateY(0); }
     }
-    .settings-nav {
-        width: 42px;
-        padding: 10px 4px;
+
+    /* Flip nav from left sidebar → bottom tab bar */
+    .settings-modal__body {
+        flex-direction: column-reverse;
     }
-    .settings-nav__item span { display: none; }
-    .settings-nav__item { justify-content: center; padding: 10px 0; }
-    .settings-nav__item.active { border-left: none; border-bottom: 2px solid #BE29EC; padding-left: 0; }
+    .settings-nav {
+        width: 100%;
+        flex-direction: row;
+        height: 56px;
+        flex-shrink: 0;
+        padding: 0 8px;
+        gap: 0;
+        border-right: none;
+        border-top: 1px solid rgba(255, 255, 255, 0.07);
+        overflow-x: auto;
+        justify-content: space-around;
+        align-items: stretch;
+    }
+    .settings-nav__item {
+        flex-direction: column;
+        gap: 3px;
+        padding: 6px 8px;
+        flex: 1;
+        border-left: none !important;
+        border-bottom: none !important;
+        border-top: 2px solid transparent;
+        justify-content: center;
+        font-size: 0.5rem;
+        min-width: 0;
+    }
+    .settings-nav__item span {
+        display: block;
+        font-size: 0.5rem;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
+        opacity: 0.7;
+    }
+    .settings-nav__item svg { width: 16px; height: 16px; opacity: 0.8; }
+    .settings-nav__item.active {
+        border-left: none;
+        border-top: 2px solid #BE29EC;
+        color: #BE29EC;
+        background: rgba(190, 41, 236, 0.08);
+    }
+    .settings-nav__item.active span { opacity: 1; }
+    .settings-panels { flex: 1; overflow: hidden; }
     .settings-gallery__toolbar { flex-direction: column; }
     .settings-gallery__toolbar .control-select { width: 100%; }
 }

@@ -620,6 +620,72 @@ function buildSystemPrompt(character, config, override, { isGroup = false, other
     return fullPrompt;
 }
 
+// ── Persistent memory distillation ───────────────────────────────────────────
+// Extracts new concrete facts from recent history and merges them into the
+// character's existing persistentMemory. Called non-blocking every N turns.
+// Returns the updated memory string, or null if nothing new was found.
+export async function distillMemory({ charName, userName, recentHistory, existingMemory, config }) {
+    const apiKey = getApiKey();
+    if (!apiKey) return null;
+
+    const transcript = recentHistory
+        .filter(m => m.role === 'user' || m.role === 'bot')
+        .slice(-16)
+        .map(m => {
+            const speaker = m.role === 'user' ? (userName || 'User') : charName;
+            return `${speaker}: ${(m.content || '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 300)}`;
+        })
+        .join('\n');
+
+    if (!transcript.trim()) return null;
+
+    const existingBlock = existingMemory?.trim()
+        ? `Existing memory (do not repeat or contradict unless corrected in the exchange):\n${existingMemory.trim()}\n\n`
+        : '';
+
+    try {
+        const result = await fetchChat({
+            model: config?.model || 'claude-haiku-4-5-20251001',
+            messages: [
+                {
+                    role: 'system',
+                    content: `You are a continuity keeper for an immersive roleplay. Your job is to extract the concrete, durable facts from a conversation excerpt that ${charName} should permanently remember about their relationship with ${userName}. Output ONLY a bullet list of facts. Each bullet is one short sentence. Rules: only include facts that are specific and durable (names revealed, wounds shared, promises made, secrets disclosed, boundaries crossed, feelings confessed, physical events that occurred). Do NOT include generic observations, vibes, or things that are implied by the character's base personality. Do NOT exceed 12 bullets total. If nothing new is worth remembering, output the single word UNCHANGED.`
+                },
+                {
+                    role: 'user',
+                    content: `${existingBlock}Recent exchange:\n${transcript}\n\nWhat should ${charName} permanently remember from this?`
+                }
+            ],
+            temperature: 0.2,
+            max_tokens: 300,
+            stream: false,
+        }, { apiKey });
+
+        const raw = result.text?.trim() || '';
+        if (!raw || raw === 'UNCHANGED') return null;
+
+        // Merge: keep existing memory, append new bullets, deduplicate, cap at ~800 chars
+        const existingLines = (existingMemory || '').split('\n').map(l => l.trim()).filter(l => l.startsWith('•') || l.startsWith('-'));
+        const newLines = raw.split('\n').map(l => l.trim()).filter(Boolean).map(l => l.startsWith('•') || l.startsWith('-') ? l : `• ${l}`);
+
+        // Simple dedup: drop new lines whose first 40 chars match an existing line
+        const existingKeys = new Set(existingLines.map(l => l.slice(0, 40).toLowerCase()));
+        const unique = newLines.filter(l => !existingKeys.has(l.slice(0, 40).toLowerCase()));
+        if (!unique.length) return null;
+
+        const merged = [...existingLines, ...unique].join('\n');
+        // Cap at ~800 chars by dropping oldest lines from the front
+        if (merged.length <= 800) return merged;
+        const lines = merged.split('\n');
+        let trimmed = lines;
+        while (trimmed.join('\n').length > 800 && trimmed.length > 1) trimmed = trimmed.slice(1);
+        return trimmed.join('\n');
+    } catch (err) {
+        console.warn('[llm] distillMemory error:', err.message);
+        return null;
+    }
+}
+
 // ── Background summarization of dropped messages ──────────────────────────────
 async function summarizeDropped(messages, config) {
     const apiKey = getApiKey();

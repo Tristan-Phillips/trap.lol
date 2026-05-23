@@ -143,6 +143,47 @@ kbd {
     flex-shrink: 0;
 }
 
+/* ── Character Memory Modal ── */
+.char-memory__subtitle {
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    opacity: 0.6;
+    margin-bottom: var(--space-md) !important;
+    font-family: var(--font-mono);
+    letter-spacing: 0.04em;
+}
+.char-memory__textarea {
+    width: 100%;
+    min-height: 220px;
+    resize: vertical;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    line-height: 1.7;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--glass-border-mute);
+    border-radius: 8px;
+    color: var(--text-main);
+    padding: var(--space-md);
+    outline: none;
+    transition: border-color 0.15s ease;
+}
+.char-memory__textarea:focus { border-color: var(--glass-border); }
+.char-memory__hint {
+    font-size: 0.62rem;
+    color: var(--text-muted);
+    opacity: 0.4;
+    margin-top: var(--space-sm) !important;
+    line-height: 1.5;
+}
+.modal__header-left {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+.modal__header-left svg { width: 16px; height: 16px; color: var(--theme-accent); }
+.btn--danger-text { color: var(--color-danger, #ef4444); }
+.btn--danger-text:hover { background: rgba(239,68,68,0.1); }
+
 /* ── Creator Modal layout ── */
 .modal__body--creator {
     display: grid;
@@ -195,3 +236,43 @@ kbd {
 .creator-tab.active { color: var(--theme-accent); border-bottom-color: var(--theme-accent); }
 .creator-tab-panel  { display: none; }
 .creator-tab-panel.active { display: block; }
+
+/* ── Mobile: bottom-sheet modals ─────────────────────────────────────────── */
+@media (max-width: 600px) {
+    /* Standard content modals slide up from bottom */
+    .modal__content,
+    .modal__content--sm {
+        max-width: 100%;
+        width: 100%;
+        max-height: 90dvh;
+        border-radius: 20px 20px 0 0;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        margin: 0;
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    /* Drag handle indicator */
+    .modal__header::before {
+        content: '';
+        display: block;
+        width: 36px;
+        height: 4px;
+        background: rgba(255,255,255,0.12);
+        border-radius: 2px;
+        position: absolute;
+        top: 8px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+    .modal__header { position: relative; padding-top: 20px; }
+
+    /* Character memory textarea: shorter so Save is always visible */
+    .char-memory__textarea { min-height: 140px; max-height: 30dvh; resize: none; }
+
+    /* Footer always pinned at bottom */
+    .modal__footer { padding: 10px 16px; }
+    .modal__footer .btn { flex: 1; }
+}

@@ -1071,9 +1071,12 @@ if(whOpenBtn){
 
 window.openWallhavenGallery = function(charName, charId){
   const prevName = WH.charName;
+  // Strip parenthetical aliases (e.g. "Blonde Blazer (Mandy)" → "Blonde Blazer")
+  // so the search query has a better chance of returning results on Wallhaven.
+  const searchName = charName ? charName.replace(/\s*\([^)]*\)\s*/g, '').trim() : '';
   WH.charName=charName||''; WH.charId=charId||null;
   charLabel.textContent=charName||'Visual Archive';
-  searchInput.value=charName||''; searchClear.hidden=!charName;
+  searchInput.value=searchName||''; searchClear.hidden=!searchName;
   apikeyInput.value=WH.apiKey;
   arena.hidden=false;
   updateBadges(); populateCharSelects(); window.lucide?.createIcons();
@@ -1081,7 +1084,7 @@ window.openWallhavenGallery = function(charName, charId){
   WH.view='browse'; filtersPanel.style.display=''; charFilterWrap.hidden=true;
   const nameChanged=charName&&charName!==prevName;
   if(charName&&(WH.results.length===0||nameChanged)){
-    WH.results=[]; WH.query=charName; WH.page=1; WH.seed=null; fetchWallpapers(false);
+    WH.results=[]; WH.query=searchName; WH.page=1; WH.seed=null; fetchWallpapers(false);
   } else if(!charName&&WH.results.length===0){
     // No char, no prior results — auto-fetch top results so it never opens empty
     WH.query=''; WH.page=1; WH.seed=null; fetchWallpapers(false);

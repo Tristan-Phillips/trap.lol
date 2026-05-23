@@ -145,7 +145,7 @@ function renderThreadLog() {
 }
 
 // ── initThreadConfig — wire all thread config event listeners ─────────────────
-export function initThreadConfig({ confirm, showModal, hideModal, showToast, lucideRefresh, buildModelOptHtml }) {
+export function initThreadConfig({ confirm, showModal, hideModal, showToast, lucideRefresh, buildModelOptHtml, updateToneBadge }) {
 
     function openThreadConfig() {
         const chat = state.chat;
@@ -418,6 +418,7 @@ export function initThreadConfig({ confirm, showModal, hideModal, showToast, luc
         if (tc.behavior?.prose) _changes.push(`prose → ${tc.behavior.prose.split(' ')[0]}`);
         if (_changes.length) tcLogPush('event', `Thread settings updated: ${_changes.join(', ')}`);
         updateThreadConfigBadge();
+        updateToneBadge?.();
     });
 
     qs('#btn-thread-config')?.addEventListener('click', openThreadConfig);

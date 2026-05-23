@@ -196,7 +196,8 @@ export function buildImagePrompt(opts = {}) {
 
     const char     = charId ? state.loadedCharacters[charId] : null;
     const override = charId ? getCharOverride(charId) : {};
-    const charName = override.nickname || char?.name || 'a person';
+    const cardExt  = char?.extensions?.underdark || char?.data?.extensions?.underdark || {};
+    const charName = override.nickname || cardExt.nickname || char?.name || 'a person';
 
     // Resolve a single-select scene field (handles __custom__ indirection)
     const sv = (k) => {
@@ -213,10 +214,12 @@ export function buildImagePrompt(opts = {}) {
         if (Array.isArray(v))  return v.filter(Boolean).join(', ');
         return String(v);
     };
-    // Resolve override field — skips empty / 'n/a'
+    // Resolve override field — user override takes precedence over card extension
     const ov = (f) => {
-        const v = override[f];
-        return (v && String(v).trim() && String(v).toLowerCase() !== 'n/a') ? String(v).trim() : '';
+        for (const v of [override[f], cardExt[f], cardExt.ext?.[f]]) {
+            if (v && String(v).trim() && String(v).toLowerCase() !== 'n/a') return String(v).trim();
+        }
+        return '';
     };
     // Clean visual field — strips prose/parentheticals from an override field
     const cv = (f, maxWords = 8) => _cleanVisualField(ov(f), maxWords);
@@ -412,11 +415,20 @@ function _buildCharContext(charId, opts = {}) {
     const { includeNsfw = true, includeHistory = false, historyDepth = 8 } = opts;
     const char     = charId ? state.loadedCharacters[charId] : null;
     const override = charId ? getCharOverride(charId) : {};
-    const charName = override.nickname || char?.name || 'a character';
+    // Card's extensions.underdark is the canonical source; user overrides take precedence
+    const cardExt  = char?.extensions?.underdark || char?.data?.extensions?.underdark || {};
+    const charName = override.nickname || cardExt.nickname || char?.name || 'a character';
     const userName = state.config.userName || 'User';
 
     const clean = (v) => v ? String(v).replace(/\([^)]*\)/g, '').replace(/;/g, ',').trim() : '';
-    const ov    = (f) => { const v = override[f]; return (v && String(v).trim() && String(v).toLowerCase() !== 'n/a') ? clean(String(v)) : ''; };
+    // ov() reads override first, falls back to card's extensions.underdark, then card's ext sub-object
+    const ov = (f) => {
+        const candidates = [override[f], cardExt[f], cardExt.ext?.[f]];
+        for (const v of candidates) {
+            if (v && String(v).trim() && String(v).toLowerCase() !== 'n/a') return clean(String(v));
+        }
+        return '';
+    };
 
     const lines = [`CHARACTER: ${charName}`];
 
@@ -459,6 +471,15 @@ function _buildCharContext(charId, opts = {}) {
         const v = ov(f); if (v) style.push(`${f}: ${v.slice(0, 80)}`);
     });
     if (style.length) lines.push('DEFAULT STYLE:\n' + style.map(s => `  ${s}`).join('\n'));
+
+    // Prose fallback — if structured fields are sparse, inject card description/personality
+    // so the LLM has real character data instead of inventing a generic person.
+    if (phys.length < 3 && char?.description) {
+        lines.push('CHARACTER DESCRIPTION (use for visual traits):\n  ' + char.description.slice(0, 500));
+    }
+    if (char?.personality) {
+        lines.push('PERSONALITY / VIBE:\n  ' + char.personality.slice(0, 200));
+    }
 
     // Recent conversation history (for scene context)
     if (includeHistory && state.history.length) {
@@ -937,16 +958,20 @@ export async function generateVideoPromptWithLLM(opts = {}) {
 
     const char     = charId ? state.loadedCharacters[charId] : null;
     const override = charId ? getCharOverride(charId) : {};
-    const charName = override.nickname || char?.name || 'the character';
+    const cardExt  = char?.extensions?.underdark || char?.data?.extensions?.underdark || {};
+    const charName = override.nickname || cardExt.nickname || char?.name || 'the character';
     const userName = state.config.userName || 'User';
     const llmModel = override.modelOverride || state.config.model || 'deepseek-r1';
 
+    const _pick = (f) => { for (const v of [override[f], cardExt[f], cardExt.ext?.[f]]) { if (v && String(v).trim()) return String(v).trim(); } return ''; };
     const parts = [];
     const physFields = [];
-    const addPh = (...keys) => keys.forEach(k => { const v = override[k]; if (v && String(v).trim()) physFields.push(String(v).trim()); });
+    const addPh = (...keys) => keys.forEach(k => { const v = _pick(k); if (v) physFields.push(v); });
     addPh('species','gender','age','height','bodyType','skinTone');
-    if (override.hairColor) physFields.push(`${override.hairColor}${override.hairStyle ? ` ${override.hairStyle}` : ''} hair`);
-    if (override.eyeColor)  physFields.push(`${override.eyeColor} eyes`);
+    const hc = _pick('hairColor'), hs = _pick('hairStyle');
+    if (hc) physFields.push(`${hc}${hs ? ` ${hs}` : ''} hair`);
+    const ec = _pick('eyeColor');
+    if (ec) physFields.push(`${ec} eyes`);
     if (physFields.length) parts.push(`Character: ${charName}\nPhysical: ${physFields.join(', ')}`);
 
     const worldScenario = state.reality?.worldConfig?.scenario || '';

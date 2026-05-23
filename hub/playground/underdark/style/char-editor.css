@@ -903,6 +903,19 @@
     .ce-nav         { width: 60px; }
     .ce-bodymap-zone { display: none; }
     .ce-panels      { padding: 14px; }
+
+    /* Topbar: stack title and actions vertically so nothing clips */
+    .ce-topbar {
+        height: auto;
+        padding: 10px 14px 8px;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+    .ce-topbar__left  { width: 100%; }
+    .ce-topbar__right { width: 100%; justify-content: flex-end; gap: 4px; }
+    /* Hide non-essential topbar text labels — keep icons only */
+    .ce-topbar__right .btn span { display: none; }
+    .ce-topbar__title { font-size: 13px; }
 }
 
 

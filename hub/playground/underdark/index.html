@@ -79,7 +79,7 @@
                     <button id="gate-key-submit" class="api-gate__submit api-gate__submit--next" type="button"><i data-lucide="arrow-right"></i> Continue</button>
                 </div>
             </div>
-            <a class="api-gate__hint" href="https://nano-gpt.com" target="_blank" rel="noopener">Get a key at nano-gpt.com ↗</a>
+            <a class="api-gate__hint" href="https://nano-gpt.com/subscription/ACDtKPdM" target="_blank" rel="noopener">Get a key at nano-gpt.com ↗</a>
         </div>
 
         <!-- ── Step 2: Wallhaven Integration ── -->
@@ -324,6 +324,7 @@
             <header class="arena__header">
                 <div id="active-bots" class="arena__active-bots"></div>
                 <button id="add-char-btn" class="btn-icon" title="Add fragment"><i data-lucide="user-plus"></i></button>
+                <div id="tone-badge" class="tone-badge" hidden title="Narrative tone active — click to edit"></div>
                 <div class="arena__actions">
                     <!-- Primary: always visible -->
                     <button id="scene-codex-btn" class="btn-icon arena-action--primary" title="Scene Codex [C]"><i data-lucide="compass"></i></button>
@@ -351,6 +352,7 @@
                         <button class="header-overflow-item" data-overflow-for="chat-bg-btn"><i data-lucide="palette"></i> Chat Tint</button>
                         <a id="wh-overflow-link" class="header-overflow-item" href="/hub/playground/wallhaven/" target="_blank" rel="noopener"><i data-lucide="image-plus"></i> Wallhaven Gallery</a>
                         <button class="header-overflow-item" data-overflow-for="export-chat"><i data-lucide="download"></i> Export Session</button>
+                        <button class="header-overflow-item" id="overflow-memory-view"><i data-lucide="brain"></i> Character Memory</button>
                         <button class="header-overflow-item header-overflow-item--danger" data-overflow-for="clear-thread"><i data-lucide="trash-2"></i> Clear Thread</button>
                     </div>
                     <button id="toggle-roster-mobile" class="btn-icon sidebar-mobile-toggle" title="Roster"><i data-lucide="users"></i></button>
@@ -578,18 +580,23 @@
 
         <!-- ARENA: SOCIAL FEED -->
         <main id="feed-arena" class="arena arena--feed" hidden>
-            <header class="arena__header">
-                <button id="feed-back-btn" class="btn btn--ghost btn--sm"><i data-lucide="chevron-left"></i> Back to Thread</button>
-                <div class="feed-header__title">
-                    <div id="feed-char-avatar" class="feed-char-avatar"></div>
-                    <div class="feed-header__title-text">
-                        <span id="feed-user-name" class="feed-header__name">Insta-Shard</span>
-                        <span id="feed-char-tagline" class="feed-char-tagline"></span>
+            <header class="arena__header feed-header">
+                <div class="feed-header__row feed-header__row--nav">
+                    <button id="feed-back-btn" class="btn btn--ghost btn--sm"><i data-lucide="chevron-left"></i><span class="feed-btn-label"> Back</span></button>
+                    <button id="feed-hot-btn" class="btn btn--ghost btn--sm" hidden><i data-lucide="flame"></i><span class="feed-btn-label"> Hot Feed</span></button>
+                    <div class="feed-header__title">
+                        <div id="feed-char-avatar" class="feed-char-avatar"></div>
+                        <div class="feed-header__title-text">
+                            <span id="feed-user-name" class="feed-header__name">Insta-Shard</span>
+                            <span id="feed-char-tagline" class="feed-char-tagline"></span>
+                        </div>
                     </div>
-                </div>
-                <div class="feed-header__actions">
-                    <button id="feed-export-btn" class="btn btn--ghost btn--sm" title="Export local posts as feed.json fragment"><i data-lucide="download"></i> Export</button>
-                    <button id="feed-add-post-btn" class="btn btn--accent btn--sm"><i data-lucide="plus-square"></i> Post</button>
+                    <div class="feed-header__actions">
+                        <button id="feed-lw-btn" class="btn btn--ghost btn--sm" title="Start Living World — characters post autonomously"><i data-lucide="radio"></i><span class="feed-btn-label"> Live</span></button>
+                        <button id="feed-req-image-btn" class="btn btn--ghost btn--sm" title="Request a random character image post"><i data-lucide="image"></i><span class="feed-btn-label"> Image</span></button>
+                        <button id="feed-export-btn" class="btn btn--ghost btn--sm" title="Export local posts as feed.json fragment"><i data-lucide="download"></i></button>
+                        <button id="feed-add-post-btn" class="btn btn--accent btn--sm"><i data-lucide="plus-square"></i><span class="feed-btn-label"> Post</span></button>
+                    </div>
                 </div>
             </header>
             <div id="lw-stream-bar" class="lw-stream-bar" hidden>
@@ -1006,6 +1013,7 @@
               <label class="config-flag-toggle"><input type="checkbox" id="flag-impersonationBlock"> Block impersonation</label>
               <label class="config-flag-toggle"><input type="checkbox" id="flag-povFirst"> POV first person</label>
               <label class="config-flag-toggle"><input type="checkbox" id="flag-jailbreakResistance"> Jailbreak resistance</label>
+              <label class="config-flag-toggle"><input type="checkbox" id="flag-autoMemory" checked> Auto memory distillation</label>
               <label class="config-flag-toggle"><input type="checkbox" id="flag-autoEntrance" checked> Auto entrance on join</label>
             </div>
           </div>
@@ -3529,6 +3537,34 @@
     <footer class="modal__footer">
       <button id="choice-picker-cancel" class="btn btn--ghost">Cancel</button>
       <button id="choice-picker-ok" class="btn btn--accent">Use this</button>
+    </footer>
+  </div>
+</div>
+
+<!-- ── Character Memory Modal ── -->
+<div id="modal-char-memory" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="char-memory-title">
+  <div class="modal__backdrop"></div>
+  <div class="modal__content modal__content--sm">
+    <header class="modal__header">
+      <div class="modal__header-left">
+        <i data-lucide="brain"></i>
+        <h3 id="char-memory-title" class="modal__title">Character Memory</h3>
+      </div>
+      <button class="btn-icon" id="char-memory-close"><i data-lucide="x"></i></button>
+    </header>
+    <div class="modal__body">
+      <p id="char-memory-subtitle" class="char-memory__subtitle"></p>
+      <textarea
+        id="char-memory-textarea"
+        class="char-memory__textarea control-input"
+        placeholder="No memories recorded yet. Memory builds automatically every 10 exchanges when Auto Memory is enabled."
+        spellcheck="false"
+      ></textarea>
+      <p class="char-memory__hint">Each bullet is a fact this character permanently remembers. Edit freely — changes save immediately.</p>
+    </div>
+    <footer class="modal__footer">
+      <button id="char-memory-clear" class="btn btn--ghost btn--danger-text">Clear Memory</button>
+      <button id="char-memory-save" class="btn btn--accent">Save</button>
     </footer>
   </div>
 </div>

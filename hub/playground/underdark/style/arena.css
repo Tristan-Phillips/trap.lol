@@ -55,6 +55,34 @@
     flex-shrink: 0;
 }
 
+/* Narrative tone badge — compact pill between bots and actions */
+.tone-badge {
+    display: inline-flex;
+    align-items: center;
+    height: 22px;
+    padding: 0 8px;
+    border-radius: 11px;
+    background: rgba(var(--accent-rgb), 0.08);
+    border: 1px solid rgba(var(--accent-rgb), 0.2);
+    color: var(--theme-accent);
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 160px;
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+    user-select: none;
+}
+.tone-badge:hover {
+    background: rgba(var(--accent-rgb), 0.15);
+    border-color: rgba(var(--accent-rgb), 0.35);
+}
+.tone-badge[hidden] { display: none; }
+
 /* Thread config gear — active state when overrides are set */
 .arena-action--active {
     position: relative;
@@ -146,6 +174,34 @@
 .active-bot__force svg { width: 8px; height: 8px; color: #e9d5ff; }
 .active-bot:hover .active-bot__force { display: flex; }
 .active-bot__force:hover { background: #9b57ff; transform: scale(1.15); }
+
+/* ── Memory dot — top-left pip on chip when character has persistent memory ── */
+.active-bot__mem-dot {
+    position: absolute;
+    top: -1px; left: -1px;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--theme-accent);
+    border: 1px solid var(--bg-main);
+    pointer-events: none;
+    z-index: 3;
+    box-shadow: 0 0 4px rgba(var(--accent-rgb), 0.7);
+}
+
+/* ── Up-next indicator — subtle pulsing ring for the next bot in queue ── */
+.active-bot--next:not(.active-bot--selected)::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 50%;
+    border: 2px solid rgba(var(--accent-rgb), 0.45);
+    animation: next-bot-pulse 1.8s ease-in-out infinite;
+    z-index: -1;
+}
+@keyframes next-bot-pulse {
+    0%, 100% { opacity: 0.3; transform: scale(1); }
+    50%       { opacity: 0.8; transform: scale(1.06); }
+}
 
 /* ── Thread container (wraps .arena__thread) ── */
 .arena__content {

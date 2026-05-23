@@ -14,3 +14,4 @@ hub/playground/dndm/assets/data/5etools/*
 hub/playground/dndm/assets/data/5etools/5e-SRD-classes.json
 services/nano-gpt-models/formatter
 shards/
+services/

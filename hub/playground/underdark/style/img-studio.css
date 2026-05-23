@@ -1380,3 +1380,46 @@
         height: 45vh;
     }
 }
+
+@media (max-width: 600px) {
+    /* Safe-area padding on full-screen studio */
+    .img-studio {
+        padding-top:    env(safe-area-inset-top,    0px);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        box-sizing: border-box;
+    }
+
+    /* Nav: icon-only, flex row that scrolls */
+    .img-studio__nav { padding: 0 2px; }
+    .img-studio__nav-btn {
+        padding: 10px 10px;
+        flex-direction: column;
+        gap: 3px;
+        font-size: 0.5rem;
+        min-width: 48px;
+    }
+    .img-studio__nav-btn svg,
+    .img-studio__nav-btn [data-lucide] { width: 16px; height: 16px; }
+
+    /* NSFW bar pills — fill width evenly */
+    .studio-nsfw-bar {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 4px;
+        padding: 6px 10px;
+    }
+    .studio-nsfw-pill {
+        font-size: 0.58rem;
+        padding: 6px 4px;
+        text-align: center;
+        border-radius: 6px;
+    }
+
+    /* Config panel fills full height on mobile column layout */
+    .img-studio__config { height: 60vh; }
+    .img-studio__canvas { height: 40vh; }
+
+    /* Prompt bar — stack vertically */
+    .studio-prompt-bar { flex-direction: column; gap: 6px; }
+    .studio-prompt-bar .btn { width: 100%; justify-content: center; }
+}

@@ -18,7 +18,7 @@ import {
     exportFullInstance, importFullInstance
 } from './state.js?v=2';
 import { resolveImageUrl, saveImageBlob, deleteImageBlob, isIdbImageRef, idbImageRefId, isDataUrl } from './storage.js?v=3';
-import { buildPayload, streamCompletion, fetchCompletion, buildOverlordContext, summarizeDroppedMessages, sanitizeRpResponse, detectAffectTone } from './llm-engine.js?v=16';
+import { buildPayload, streamCompletion, fetchCompletion, buildOverlordContext, summarizeDroppedMessages, sanitizeRpResponse, detectAffectTone, distillMemory } from './llm-engine.js?v=16';
 import { parseCommand, executeCommand, filterCommands, COMMANDS } from './commands.js?v=3';
 import { VIDEO_MODELS, generateVideo, generateVideoPromptWithLLM } from './image-engine.js?v=3';
 import { addBook, removeBook, addEntry, updateEntry, removeEntry, createBook, scanLorebooks } from './lorebook.js?v=3';
@@ -420,7 +420,7 @@ const FLAG_KEYS = [
     'showThoughts', 'showSystemPrompt', 'injectConsistency', 'injectSliders',
     'injectAppearance', 'injectAdult', 'injectPersonality', 'injectVoice',
     'injectStyle', 'injectAIDirectives', 'impersonationBlock', 'povFirst',
-    'jailbreakResistance', 'autoEntrance'
+    'jailbreakResistance', 'autoEntrance', 'autoMemory'
 ];
 
 // ── Main Init ─────────────────────────────────────────────────────────────────
@@ -609,6 +609,11 @@ export function initUI() {
 
     function _trySubmitKey() {
         const val = ($gateInput?.value || '').trim();
+        // If field is empty but a valid key is already saved, accept it as-is
+        if (!val && isValidKeyFormat(getApiKey())) {
+            if ($gateError) $gateError.hidden = true;
+            return true;
+        }
         if (!isValidKeyFormat(val)) {
             if ($gateError) $gateError.hidden = false;
             $gateInput?.classList.add('shake');
@@ -846,16 +851,38 @@ export function initUI() {
             }
         });
 
+        // Pre-fill all gate fields from saved state so returning users only enter what's missing
+        function _prefillGateFromState() {
+            // Step 1 — NanoGPT key: pre-fill from cookie so user doesn't have to retype
+            const existingKey = getApiKey();
+            if (existingKey && isValidKeyFormat(existingKey) && $gateInput) {
+                $gateInput.value = existingKey;
+                $gateInput.type  = 'password';
+                if ($gateError) $gateError.hidden = true;
+            }
+
+            // Step 2 — Wallhaven key + vault ID
+            const savedWhKey   = localStorage.getItem('wh_apikey')   || '';
+            const savedVaultId = localStorage.getItem('wh_vault_id') || '';
+            const $whKey   = qs('#gate-wh-key',   $gate);
+            const $vaultIn = qs('#gate-vault-id',  $gate);
+            if ($whKey   && savedWhKey)   $whKey.value   = savedWhKey;
+            if ($vaultIn && savedVaultId) $vaultIn.value = savedVaultId;
+
+            // Step 4 — Identity
+            const $uname = qs('#gate-user-name',    $gate);
+            const $ubio  = qs('#gate-user-persona', $gate);
+            if ($uname && state.config.userName)    $uname.value = state.config.userName;
+            if ($ubio  && state.config.userPersona) $ubio.value  = state.config.userPersona;
+        }
+
         // Show gate if wizard was never fully completed OR key is missing
         const setupDone = localStorage.getItem(GATE_DONE_KEY) === '1';
         if (!setupDone || !isValidKeyFormat(getApiKey())) {
+            _prefillGateFromState();
             const hasKey = isValidKeyFormat(getApiKey());
             if (hasKey && !setupDone) {
-                // Pre-fill identity fields from saved state, drop into wallhaven step
-                const $uname = qs('#gate-user-name', $gate);
-                const $ubio  = qs('#gate-user-persona', $gate);
-                if ($uname && state.config.userName)    $uname.value = state.config.userName;
-                if ($ubio  && state.config.userPersona) $ubio.value  = state.config.userPersona;
+                // Key present but wizard incomplete — drop into wallhaven step
                 showGate(2);
             } else {
                 showGate(0);
@@ -954,6 +981,52 @@ export function initUI() {
             clearGroupTimers();
             await triggerBotResponse(state.activeBotId);
         });
+        // Character Memory overflow item
+        qs('#overflow-memory-view')?.addEventListener('click', () => {
+            closeOverflow();
+            const botId = state.activeBotId;
+            const char  = botId ? state.loadedCharacters[botId] : null;
+            if (!botId || !char) { showToast('No active character in thread', 'warn'); return; }
+            const override  = getCharOverride(botId);
+            const charName  = override.nickname || char.name || 'Character';
+            const memory    = override.persistentMemory || char.persistentMemory || '';
+            const $modal    = qs('#modal-char-memory');
+            const $subtitle = qs('#char-memory-subtitle');
+            const $textarea = qs('#char-memory-textarea');
+            if (!$modal || !$textarea) return;
+            if ($subtitle) $subtitle.textContent = `${charName} — persistent facts injected into every conversation`;
+            $textarea.value = memory;
+            $modal.hidden   = false;
+            lucideRefresh($modal);
+            $textarea.focus();
+
+            const closeMemory = () => { $modal.hidden = true; };
+
+            qs('#char-memory-close', $modal)?.addEventListener('click', closeMemory, { once: true });
+            qs('.modal__backdrop', $modal)?.addEventListener('click', closeMemory, { once: true });
+
+            qs('#char-memory-save', $modal)?.addEventListener('click', () => {
+                const updated = $textarea.value.trim();
+                setCharOverride(botId, { persistentMemory: updated });
+                // Sync char editor if open
+                const $editorMem = qs('#ce-persistent-memory');
+                if ($editorMem && !qs('#modal-char-editor[hidden]')) $editorMem.value = updated;
+                renderActiveBots();
+                closeMemory();
+                showToast(`Memory saved for ${charName}`, 'info', 2000);
+            }, { once: true });
+
+            qs('#char-memory-clear', $modal)?.addEventListener('click', () => {
+                $textarea.value = '';
+                setCharOverride(botId, { persistentMemory: '' });
+                const $editorMem = qs('#ce-persistent-memory');
+                if ($editorMem && !qs('#modal-char-editor[hidden]')) $editorMem.value = '';
+                renderActiveBots();
+                closeMemory();
+                showToast(`Memory cleared for ${charName}`, 'info', 2000);
+            }, { once: true });
+        });
+
         document.addEventListener('click', e => {
             if (!$overflowMenu.hidden && !$overflowMenu.contains(e.target) && e.target !== $overflowBtn) {
                 closeOverflow();
@@ -3129,16 +3202,30 @@ export function initUI() {
 
         const isGroup = state.chat?.type === 'group' && state.activeBotIds.length > 1;
 
-        $container.innerHTML = state.activeBotIds.map(id => {
+        const sid = state.chat?.id;
+        const mode = state.chat?.threadConfig?.groupTurnMode || state.config.groupTurnMode || 'auto';
+        const nextIdx = (isGroup && mode === 'round-robin' && sid !== undefined)
+            ? ((_rrIndex[sid] ?? 0) % state.activeBotIds.length)
+            : -1;
+
+        $container.innerHTML = state.activeBotIds.map((id, i) => {
             const char = state.loadedCharacters[id];
             const meta = state.characters.find(c => c.id === id);
             const name = char?.name || '?';
             const isActive = id === state.activeBotId;
             const rawAv    = meta?.avatar_path || char?.avatar;
             const avatar   = getAvatarUrlSync(id, rawAv);
+            const hasMem   = !!(getCharOverride(id).persistentMemory || char?.persistentMemory);
+            const isNext   = isGroup && (mode === 'auto' || (mode === 'round-robin' && i === nextIdx));
+            const classes  = [
+                'active-bot',
+                isActive ? 'active-bot--selected' : '',
+                isNext && !isActive ? 'active-bot--next' : '',
+            ].filter(Boolean).join(' ');
             return `
-            <div class="active-bot ${isActive ? 'active-bot--selected' : ''}" data-id="${esc(id)}" title="${esc(name)}">
+            <div class="${classes}" data-id="${esc(id)}" title="${esc(name)}">
                 ${buildAvatarHtml(avatar, 'active-bot__avatar')}
+                ${hasMem ? `<span class="active-bot__mem-dot" title="${esc(name)} has persistent memory"></span>` : ''}
                 ${isGroup ? `<button class="active-bot__force" data-force="${esc(id)}" title="Force ${esc(name)} to respond"><i data-lucide="zap"></i></button>` : ''}
                 <button class="active-bot__remove" data-remove="${esc(id)}" title="Remove ${esc(name)}">
                     <i data-lucide="x"></i>
@@ -5534,6 +5621,7 @@ export function initUI() {
         updateTelemetry();
         applyChatBackground();
         updateThreadConfigBadge();
+        updateToneBadge();
 
         // Pre-load all active bot cards then render history + profile in the correct order.
         (async () => {
@@ -5660,6 +5748,47 @@ export function initUI() {
             _acIndex = -1;
         }
     }, true);
+
+    // ── Persistent Memory Distillation ───────────────────────────────────────
+    // Fires non-blocking every MEMORY_DISTILL_INTERVAL bot turns per character.
+    // Extracts durable facts from recent history and patches persistentMemory
+    // via setCharOverride so they survive context resets and future sessions.
+    const MEMORY_DISTILL_INTERVAL = 10;
+    const _memoryTurnCount = {}; // { charId: turnCount }
+
+    async function _maybeDistillMemory(botId, char) {
+        if (!state.config.flags?.autoMemory) return; // opt-in flag
+        _memoryTurnCount[botId] = (_memoryTurnCount[botId] || 0) + 1;
+        if (_memoryTurnCount[botId] % MEMORY_DISTILL_INTERVAL !== 0) return;
+
+        const override = getCharOverride(botId);
+        const charName = override.nickname || char?.name || 'Character';
+        const userName = state.config.userName || 'User';
+        const existing = override.persistentMemory || char?.persistentMemory || '';
+
+        const updated = await distillMemory({
+            charName,
+            userName,
+            recentHistory: state.history,
+            existingMemory: existing,
+            config: state.config,
+        }).catch(() => null);
+
+        if (!updated) return;
+
+        setCharOverride(botId, { persistentMemory: updated });
+
+        // Refresh the persistent-memory field in the char editor if it's open for this char
+        const $editorMem = qs('#ce-persistent-memory');
+        if ($editorMem && qs('#modal-char-editor:not([hidden])')) {
+            $editorMem.value = updated;
+        }
+
+        // Refresh memory badge on bot chip
+        renderActiveBots();
+
+        console.debug(`[memory] distilled for ${charName} (${updated.split('\n').length} facts)`);
+    }
 
     // ── Streaming Bot Response ────────────────────────────────────────────────
     async function triggerBotResponse(botId, pendingReinject = '') {
@@ -5893,6 +6022,8 @@ export function initUI() {
                     _maybeAutoRecap();
                     // Auto-save every N turns to localStorage rolling backup
                     _autoSaveInstance().catch(() => {});
+                    // Non-blocking memory distillation — extracts durable facts every N turns
+                    _maybeDistillMemory(botId, char).catch(() => {});
                 },
                 (err) => {
                     $thinkingAside?.remove();
@@ -6190,6 +6321,7 @@ export function initUI() {
                     const ri = rejectConsumed ? '' : pendingReinject;
                     await triggerBotResponse(botId, ri);
                     rejectConsumed = true;
+                    renderActiveBots(); // advance "up next" indicator
                 }
             })();
         }
@@ -6236,7 +6368,7 @@ export function initUI() {
 
     // ── Thread Config Editor ─────────────────────────────────────────────────
     // Extracted to thread-config.js. Exports: tcLogPush, updateThreadConfigBadge.
-    initThreadConfig({ confirm, showModal, hideModal, showToast, lucideRefresh, buildModelOptHtml });
+    initThreadConfig({ confirm, showModal, hideModal, showToast, lucideRefresh, buildModelOptHtml, updateToneBadge });
 
     // ── Header Actions ────────────────────────────────────────────────────────
     qs('#clear-thread')?.addEventListener('click', async () => {
@@ -6728,6 +6860,30 @@ export function initUI() {
             $model.textContent = activeModel.split('/').pop();
         }
     }
+
+    // ── Tone badge — shows active narrative tone in arena header ─────────────
+    function updateToneBadge() {
+        const $badge = qs('#tone-badge');
+        if (!$badge) return;
+        const nt = state.chat?.threadConfig?.narrativeTone;
+        const hasAnything = nt && Object.values(nt).some(v => v && v.toString().trim());
+        if (!hasAnything) { $badge.hidden = true; $badge.textContent = ''; return; }
+
+        // Build a compact label from whatever fields are set
+        const parts = [
+            nt.toneTags     && nt.toneTags.trim(),
+            nt.sexualEnergy && nt.sexualEnergy.trim(),
+        ].filter(Boolean);
+        const label = parts.length ? parts.join(' · ') : 'Tone active';
+        // Truncate so it stays compact in the header
+        const display = label.length > 32 ? label.slice(0, 30) + '…' : label;
+
+        $badge.textContent = display;
+        $badge.hidden = false;
+    }
+
+    // Wire tone badge click → open thread settings
+    qs('#tone-badge')?.addEventListener('click', () => qs('#btn-thread-config')?.click());
 
     // ── Model quick-picker ────────────────────────────────────────────────────
     function _buildModelPicker() {
