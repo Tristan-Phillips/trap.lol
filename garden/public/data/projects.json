@@ -25,9 +25,9 @@
           "status": "live"
         },
         {
-          "name": "Map Share",
-          "description": "A tool for sharing and annotating dnd maps via a two device setup.",
-          "url": "/garden/dnd/map-share/",
+          "name": "Grimoire Live Map",
+          "description": "Self-hostable live map control for D&D. DM controls the table display in real time.",
+          "url": "/garden/dnd/",
           "icon": "map",
           "status": "live"
         },

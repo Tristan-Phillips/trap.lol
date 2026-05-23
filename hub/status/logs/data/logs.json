@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.76",
+    "schema_version": "1.5.77",
     "last_updated": "2026-05-23",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -663,9 +663,9 @@
         ]
       }
     ],
-    "current_state": "Production — three-layer site live. Public face: trap.lol/index.html (neutral portfolio cover — Tristan Phillips, GitHub + art + Telegram links, Kagi search bar at bottom, no neon, no Dune). Garden: trap.lol/garden/ (publicly showcaseable projects index — JSON-driven cards, Watchmen overlay for external site detail, art gallery at /garden/art/, Grimoire DM suite at /garden/dnd/dm-manager/, map-share stub at /garden/dnd/map-share/ — in development, crawlable). Real site: trap.lol/hub/ (the rave — gated by Cloudflare Zero Trust + client-side knock system + direct-access passphrase guard). Knock: desktop types 'spice' silently → passphrase gate; mobile taps footer 5× → passphrase gate. hub/index.html also has a secondary SHA-256 gate for direct URL access (no trap.lol referrer). Passphrase SHA-256 verified client-side, triggers glitch transition → /hub/. Whistle layer: /whistle/ (hidden, noindex). Assets layer: /assets/ (shared public-face static files). api.trap.lol admin panel: multi-profile (Underdark / Light Side), Media Library with albums, pending AI image review, /share/{12hex}/{6hex}.jpg URL scheme. trap-media-api source of truth: /opt/stacks/trap-media-api/.",
+    "current_state": "Production — three-layer site live. Public face: trap.lol/index.html (neutral portfolio cover — Tristan Phillips, GitHub + art + Telegram links, Kagi search bar at bottom, no neon, no Dune). Garden: trap.lol/garden/ (publicly showcaseable projects index — JSON-driven cards, Watchmen overlay for external site detail, art gallery at /garden/art/, Grimoire DM suite at /garden/dnd/dm-manager/, Grimoire live map landing at /garden/dnd/ — crawlable). Real site: trap.lol/hub/ (the rave — gated by Cloudflare Zero Trust + client-side knock system + direct-access passphrase guard). Knock: desktop types 'spice' silently → passphrase gate; mobile taps footer 5× → passphrase gate. hub/index.html also has a secondary SHA-256 gate for direct URL access (no trap.lol referrer). Passphrase SHA-256 verified client-side, triggers glitch transition → /hub/. Whistle layer: /whistle/ (hidden, noindex). Assets layer: /assets/ (shared public-face static files). api.trap.lol admin panel: multi-profile (Underdark / Light Side), Media Library with albums, pending AI image review, /share/{12hex}/{6hex}.jpg URL scheme. trap-media-api source of truth: /opt/stacks/trap-media-api/. Grimoire live at dnd.trap.lol (formerly Cartomancer at cartomancer.trap.lol) — Go binary at /opt/stacks/cartomancer/, full Procreate-inspired DM cockpit with rune intro, floating toolbar, pinch-rotate, curtain mode, atmospheric table display.",
     "intended_future": [
-      "Cartomancer (/garden/dnd/map-share/) — Phase 1 complete (Go server, WebSocket relay, DM portal, table display). Phase 2: deploy to VPS (docker compose up --build), Cloudflare tunnel to cartomancer.trap.lol, create first admin key, smoke-test end-to-end with real iPad + TV",
+      "Grimoire (/garden/dnd/) — Phase 2+ complete: Procreate-style DM portal with floating toolbar, pinch-rotate, curtain, atmospheric table display, animated rune intro. Next: Apple Pencil support, token system rework",
       "Sacred Codex (guides section) reactivation when enough .md content exists",
       "More ECHOES collections as artwork is created/curated",
       "ECHOES metadata enrichment (descriptions, verses, mood/chaos values populated)",
@@ -678,6 +678,22 @@
     ]
   },
   "commits": [
+    {
+      "hash": "pending",
+      "date": "2026-05-23",
+      "message": "feat(grimoire): rename Cartomancer → Grimoire, rune intro on DM gate, move garden/dnd/maps → garden/dnd/",
+      "scope": "ext:grimoire, garden/dnd/",
+      "impact": "medium",
+      "files": [
+        "garden/dnd/index.html",
+        "garden/dnd/public/style/style.css",
+        "garden/dnd/public/script/app.js",
+        "garden/dnd/maps/index.html",
+        "garden/public/data/projects.json",
+        "hub/status/logs/data/logs.json"
+      ],
+      "why": "Renamed the project from Cartomancer to Grimoire across all dnd.trap.lol pages and the trap.lol garden; ported the animated rune circle intro sequence from the Grimoire DM suite to the DM gate login screen; moved the garden landing page from /garden/dnd/maps/ to /garden/dnd/ and updated all links."
+    },
     {
       "hash": "519e72c",
       "date": "2026-05-23",
@@ -3796,6 +3812,19 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-23",
+      "agent": "Claude Sonnet 4.6",
+      "type": "refactor",
+      "summary": "Renamed Cartomancer to Grimoire across all dnd.trap.lol static files and the trap.lol garden. Ported the animated rune circle intro (SVG ring draw animation, 8 runes placed around circle, pulsing orb) from the Grimoire DM suite welcome screen onto the DM gate login. Moved the garden landing page from /garden/dnd/maps/ to /garden/dnd/ and seeded /garden/dnd/public/ with CSS/JS. Updated projects.json garden card, added redirect at old /maps/ path.",
+      "decisions": [
+        "Project is now officially Grimoire everywhere — dnd.trap.lol titles, page headings, CSS comments, footer, garden card, logs.json state.",
+        "Rune intro is inline CSS+HTML in /static/dm/index.html (no external dependency on dungeon-master's style.css). Self-contained in a <style> block — dm.css unchanged.",
+        "Garden landing moved to /garden/dnd/index.html with assets at /garden/dnd/public/style/ and /garden/dnd/public/script/. Old /garden/dnd/maps/index.html is now a meta-refresh redirect.",
+        "GitHub repo will be renamed from Tristan-Phillips/cartomancer to Tristan-Phillips/grimoire when applicable.",
+        "dnd.trap.lol subdomain stays as-is (Cloudflare tunnel, no change needed)."
+      ]
+    },
     {
       "date": "2026-05-23",
       "agent": "Claude Sonnet 4.6",
