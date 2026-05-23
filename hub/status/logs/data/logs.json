@@ -671,7 +671,7 @@
   },
   "commits": [
     {
-      "hash": "pending",
+      "hash": "a4f587e",
       "date": "2026-05-23",
       "message": "feat(admin): pending review album, char name pills, profile-scoped visibility",
       "scope": "trap-media-api/admin",
@@ -684,7 +684,7 @@
       "why": "Pending AI-generated images now surface in a dedicated virtual album in the Media Library so they can be reviewed visually; each card shows the character it was generated for; Pending album is hidden from non-underdark profiles."
     },
     {
-      "hash": "pending",
+      "hash": "ext:api",
       "date": "2026-05-23",
       "message": "feat(admin): share URL scheme /share/{12hex}/{6hex}.jpg replaces verbose /uploads/ paths",
       "scope": "trap-media-api/internal, trap-media-api/admin",
@@ -697,7 +697,7 @@
       "why": "New uploads now use crypto-random flat URLs (api.trap.lol/share/bucket/file.jpg) instead of the verbose namespace/subId/size/slug-timestamp path; legacy /uploads/ route kept for backwards compat."
     },
     {
-      "hash": "pending",
+      "hash": "ext:api",
       "date": "2026-05-23",
       "message": "feat(admin): module picker per profile, overview stats scoped to active profile, Overlord context bar scoped",
       "scope": "trap-media-api/admin",
@@ -711,7 +711,7 @@
       "why": "Profiles now have configurable module sets via a chip-picker modal; overview stat cards and Overlord LLM context bar dynamically reflect only the active profile's enabled modules; PUT /api/namespaces persists changes."
     },
     {
-      "hash": "pending",
+      "hash": "ext:api",
       "date": "2026-05-23",
       "message": "feat(admin): profile dropdown switcher, namespace-scoped uploads/media/overview, albums API",
       "scope": "trap-media-api/admin, trap-media-api/internal",
@@ -762,8 +762,15 @@
       "scope": "index.html, assets/, garden/, whistle/, .gitignore, CLAUDE.md, README.md",
       "impact": "high",
       "files": [
-        "index.html", "assets/", "garden/", "whistle/", ".gitignore", "CLAUDE.md", "README.md",
-        "hub/status/logs/data/logs.json", "hub/status/logs/data/structure-ruleset.md"
+        "index.html",
+        "assets/",
+        "garden/",
+        "whistle/",
+        ".gitignore",
+        "CLAUDE.md",
+        "README.md",
+        "hub/status/logs/data/logs.json",
+        "hub/status/logs/data/structure-ruleset.md"
       ],
       "why": "Major structural reorganisation: whistle/data|img|styles → assets/, shards/ → assets/shards/, whistle/art → garden/art/, dndm → garden/dnd/dm-manager/ (public); services/ deleted; all internal paths updated; Kagi search bar added to index.html."
     },
@@ -938,7 +945,9 @@
       "message": "fix(home): pg-feature card layout — icon+body fill row, desc truncates, enter aligned",
       "scope": "glass/style/",
       "impact": "low",
-      "files": ["glass/style/modules/components.css"],
+      "files": [
+        "glass/style/modules/components.css"
+      ],
       "why": "pg-feature card rendered squished — body had no flex:1, left wrapper used flex which clashed with icon sizing. Fixed: left uses display:contents, body gets flex:1, desc truncates with ellipsis, right CTA align-self:center."
     },
     {
@@ -993,7 +1002,9 @@
       "message": "fix(wallhaven): lightbox opening wrong image after purity split — use original dataset idx",
       "scope": "playground/wallhaven/",
       "impact": "medium",
-      "files": ["playground/wallhaven/script/app.js"],
+      "files": [
+        "playground/wallhaven/script/app.js"
+      ],
       "why": "renderPuritySplit used a render-order counter for tile idx, but lbDataset() resolves items by insertion-order index — mismatch caused lightbox to open a different image than the one clicked. Fixed by passing items.indexOf(w) to buildTile so idx always matches the flat dataset position."
     },
     {
