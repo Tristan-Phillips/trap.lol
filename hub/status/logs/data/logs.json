@@ -1,7 +1,7 @@
 {
   "_meta": {
     "purpose": "Master knowledge base for trap.lol. This file lives at status/logs/data/logs.json in the root of the trap.lol repository and is viewable at trap.lol/status/logs/. It is the single source of truth for any LLM, AI agent, or new context window that needs to understand this project — its history, architecture, philosophy, rules, aesthetic, goals, and the mind behind it. It is machine-readable AND human-readable. It must be read in full before making any decisions about this codebase.",
-    "schema_version": "1.5.74",
+    "schema_version": "1.5.75",
     "last_updated": "2026-05-23",
     "maintained_by": "trap + Claude Sonnet 4.6",
     "reading_order": [
@@ -655,8 +655,9 @@
         ]
       }
     ],
-    "current_state": "Production — three-layer site live. Public face: trap.lol/index.html (neutral portfolio cover — Tristan Phillips, GitHub + art + Telegram links, Kagi search bar at bottom, no neon, no Dune). Garden: trap.lol/garden/ (publicly showcaseable projects — art gallery at /garden/art/, Grimoire DM suite at /garden/dnd/dm-manager/, crawlable). Real site: trap.lol/hub/ (the rave — gated by Cloudflare Zero Trust + client-side knock system). Knock: desktop types 'spice' silently → passphrase gate; mobile taps footer 5× → passphrase gate. Passphrase SHA-256 verified client-side, triggers glitch transition → /hub/. Whistle layer: /whistle/ (hidden, noindex — sisyphus push-stone game, void landing, index page). Assets layer: /assets/ (shared public-face static files — data, img, styles, shards). All hub content physically lives under hub/: glass/, playground/, art/, status/, archive/. robots.txt disallows /hub/, /whistle/, /assets/. Routable pages inside hub/: /hub/, /hub/playground/, /hub/playground/neural-uplink/, /hub/playground/underdark/, /hub/playground/radar/, /hub/playground/void/, /hub/art/, /hub/status/, /hub/status/logs/, /hub/status/observations/, /hub/archive/, /hub/archive/uplink-sentinel/. Grimoire moved from /hub/playground/dndm/ to /garden/dnd/dm-manager/ (public). /guide/ planned but not yet built.",
+    "current_state": "Production — three-layer site live. Public face: trap.lol/index.html (neutral portfolio cover — Tristan Phillips, GitHub + art + Telegram links, Kagi search bar at bottom, no neon, no Dune). Garden: trap.lol/garden/ (publicly showcaseable projects index — JSON-driven cards, Watchmen overlay for external site detail, art gallery at /garden/art/, Grimoire DM suite at /garden/dnd/dm-manager/, map-share stub at /garden/dnd/map-share/ — in development, crawlable). Real site: trap.lol/hub/ (the rave — gated by Cloudflare Zero Trust + client-side knock system + direct-access passphrase guard). Knock: desktop types 'spice' silently → passphrase gate; mobile taps footer 5× → passphrase gate. hub/index.html also has a secondary SHA-256 gate for direct URL access (no trap.lol referrer). Passphrase SHA-256 verified client-side, triggers glitch transition → /hub/. Whistle layer: /whistle/ (hidden, noindex). Assets layer: /assets/ (shared public-face static files). api.trap.lol admin panel: multi-profile (Underdark / Light Side), Media Library with albums, pending AI image review, /share/{12hex}/{6hex}.jpg URL scheme. trap-media-api source of truth: /opt/stacks/trap-media-api/.",
     "intended_future": [
+      "Map Share (/garden/dnd/map-share/) — next active project: D&D map sharing tool, stub scaffolded, implementation starting next session",
       "Sacred Codex (guides section) reactivation when enough .md content exists",
       "More ECHOES collections as artwork is created/curated",
       "ECHOES metadata enrichment (descriptions, verses, mood/chaos values populated)",
@@ -672,33 +673,119 @@
     {
       "hash": "pending",
       "date": "2026-05-23",
-      "message": "refactor(structure): garden/ + assets/ reorganisation, dndm → garden/dnd/dm-manager, Kagi search bar",
+      "message": "feat(admin): pending review album, char name pills, profile-scoped visibility",
+      "scope": "trap-media-api/admin",
+      "impact": "medium",
+      "files": [
+        "data/admin/panel/script/admin.js",
+        "data/admin/panel/style/admin.css",
+        "data/admin/index.html"
+      ],
+      "why": "Pending AI-generated images now surface in a dedicated virtual album in the Media Library so they can be reviewed visually; each card shows the character it was generated for; Pending album is hidden from non-underdark profiles."
+    },
+    {
+      "hash": "pending",
+      "date": "2026-05-23",
+      "message": "feat(admin): share URL scheme /share/{12hex}/{6hex}.jpg replaces verbose /uploads/ paths",
+      "scope": "trap-media-api/internal, trap-media-api/admin",
+      "impact": "medium",
+      "files": [
+        "internal/images/resize.go",
+        "internal/server/routes.go",
+        "data/admin/panel/script/api.js"
+      ],
+      "why": "New uploads now use crypto-random flat URLs (api.trap.lol/share/bucket/file.jpg) instead of the verbose namespace/subId/size/slug-timestamp path; legacy /uploads/ route kept for backwards compat."
+    },
+    {
+      "hash": "pending",
+      "date": "2026-05-23",
+      "message": "feat(admin): module picker per profile, overview stats scoped to active profile, Overlord context bar scoped",
+      "scope": "trap-media-api/admin",
+      "impact": "medium",
+      "files": [
+        "data/admin/panel/script/admin.js",
+        "data/admin/panel/style/admin.css",
+        "data/admin/index.html",
+        "internal/server/routes.go"
+      ],
+      "why": "Profiles now have configurable module sets via a chip-picker modal; overview stat cards and Overlord LLM context bar dynamically reflect only the active profile's enabled modules; PUT /api/namespaces persists changes."
+    },
+    {
+      "hash": "pending",
+      "date": "2026-05-23",
+      "message": "feat(admin): profile dropdown switcher, namespace-scoped uploads/media/overview, albums API",
+      "scope": "trap-media-api/admin, trap-media-api/internal",
+      "impact": "high",
+      "files": [
+        "data/admin/panel/script/admin.js",
+        "data/admin/panel/style/admin.css",
+        "data/admin/index.html",
+        "data/admin/panel/namespaces.json",
+        "internal/data/albums.go",
+        "internal/server/routes.go",
+        "internal/server/server.go",
+        "cmd/trap-media-api/main.go"
+      ],
+      "why": "Admin panel now supports multiple profiles (Underdark / Light Side) as a dropdown switcher; switching scopes all data views by namespace; Media Library section added with album CRUD and image upload/copy-URL; albums.go + /api/albums routes added."
+    },
+    {
+      "hash": "8b030bd",
+      "date": "2026-05-23",
+      "message": "Changes",
+      "scope": "garden/",
+      "impact": "high",
+      "files": [
+        "garden/index.html",
+        "garden/public/data/projects.json",
+        "garden/public/style/style.css",
+        "garden/dnd/map-share/index.html",
+        "garden/dnd/map-share/public/script/app.js",
+        "garden/dnd/map-share/public/style/style.css"
+      ],
+      "why": "garden/index.html created as public project index (neutral palette, JSON-driven); projects.json seeds art, tools, and external sites entries; Watchmen-aesthetic overlay for external site details; map-share stub files scaffolded."
+    },
+    {
+      "hash": "89f804c",
+      "date": "2026-05-23",
+      "message": "Access Guard",
+      "scope": "hub/",
+      "impact": "high",
+      "files": [
+        "hub/index.html"
+      ],
+      "why": "hub/index.html now gates direct URL access (no trap.lol referrer) with a SHA-256 passphrase prompt; wrong password redirects to /; correct password sets sessionStorage and dismisses the gate."
+    },
+    {
+      "hash": "86efa99",
+      "date": "2026-05-23",
+      "message": "Architectural Structural Changes",
       "scope": "index.html, assets/, garden/, whistle/, .gitignore, CLAUDE.md, README.md",
       "impact": "high",
       "files": [
-        "index.html",
-        "assets/data/global.json",
-        "assets/data/quotes.json",
-        "assets/data/art.json",
-        "assets/img/pp.png",
-        "assets/styles/pf.css",
-        "assets/shards/",
-        "garden/art/index.html",
-        "garden/art/public/style/style.css",
-        "garden/dnd/dm-manager/index.html",
-        "garden/dnd/dm-manager/assets/script/app.js",
-        "hub/playground/data/apps.json",
-        "hub/glass/script/modules/core.js",
-        "hub/art/assets/script/app.js",
-        "hub/status/logs/data/structure-ruleset.md",
-        "whistle/sisyphus/index.html",
-        "robots.txt",
-        ".gitignore",
-        "CLAUDE.md",
-        "README.md",
-        "hub/status/logs/data/logs.json"
+        "index.html", "assets/", "garden/", "whistle/", ".gitignore", "CLAUDE.md", "README.md",
+        "hub/status/logs/data/logs.json", "hub/status/logs/data/structure-ruleset.md"
       ],
-      "why": "Major structural reorganisation: whistle/data|img|styles moved to assets/, shards/ moved to assets/shards/, whistle/art moved to garden/art/, dndm moved and renamed to garden/dnd/dm-manager/ (public-facing, no hub exposure), services/ deleted (source of truth is /opt/stacks/), hub refs removed from apps.json, all internal paths updated across 8+ files, robots.txt updated, .gitignore cleaned, CLAUDE.md and README.md rewritten. Kagi search bar added to index.html — fixed-position bottom, glass-minimal styling, desktop keystroke router, knock-sequence safe."
+      "why": "Major structural reorganisation: whistle/data|img|styles → assets/, shards/ → assets/shards/, whistle/art → garden/art/, dndm → garden/dnd/dm-manager/ (public); services/ deleted; all internal paths updated; Kagi search bar added to index.html."
+    },
+    {
+      "hash": "4565e4f",
+      "date": "2026-05-23",
+      "message": "UI UX changes",
+      "scope": "underdark/",
+      "impact": "medium",
+      "files": [
+        "hub/playground/underdark/index.html",
+        "hub/playground/underdark/script/modules/image-engine.js",
+        "hub/playground/underdark/script/modules/llm-engine.js",
+        "hub/playground/underdark/script/modules/social.js",
+        "hub/playground/underdark/script/modules/state.js",
+        "hub/playground/underdark/script/modules/thread-config.js",
+        "hub/playground/underdark/script/modules/ui.js",
+        "hub/playground/underdark/style/arena.css",
+        "hub/playground/underdark/style/modals.css",
+        "hub/playground/underdark/style/social.css"
+      ],
+      "why": "Comprehensive session: parser-v2 extensions fix (cardExt fallback), social feed LW image posts, redo-image modal, API gate pre-fill, mobile UX overhaul (settings bottom-tab, char editor topbar, image studio, bottom-sheet modals)."
     },
     {
       "hash": "pending",
@@ -3676,6 +3763,25 @@
     }
   ],
   "sessions": [
+    {
+      "date": "2026-05-23",
+      "agent": "Claude Sonnet 4.6",
+      "type": "feature_development",
+      "summary": "Full admin panel infrastructure session on trap-media-api. Added: hub/index.html direct-access passphrase guard; garden/index.html public project index with JSON-driven cards, Watchmen overlay for external sites; profile/namespace switcher in admin with dropdown, module picker, and per-profile scoped data views; Media Library section (albums CRUD, image upload, copy-URL); /api/albums + /api/namespaces routes in Go; share URL scheme (/share/{12hex}/{6hex}.jpg) replacing verbose upload paths; Pending Review virtual album in Media Library for AI-generated image approval with multi-select, char name pills, profile-gated visibility.",
+      "decisions": [
+        "hub/index.html passphrase gate uses SHA-256 via SubtleCrypto client-side; wrong answer → redirect to /; escape → redirect to /; sessionStorage tracks auth per-tab.",
+        "garden/index.html is data-driven from projects.json — no hardcoded project HTML. Status: wip → non-interactive div, external+detail → button opening Watchmen overlay, live → anchor.",
+        "Admin profiles (namespaces) are config-driven from namespaces.json — not hardcoded. Profiles define namespace, color, and sections[] (module list). Persisted via PUT /api/namespaces.",
+        "ALL_MODULES registry is single source of truth for available admin sections; MODULE_STATS maps module ids to stat card DOM ids. Both drive the overview and module picker.",
+        "New upload URL scheme: /share/{12hex}/{6hex}.jpg — crypto/rand, no slug, no timestamp suffix. Three variants: .jpg (original), _m.jpg (medium), _t.jpg (thumb). Legacy /uploads/ route kept for existing manifest entries.",
+        "Pending Review is a virtual album (not a real albums.json entry) — always fetches /api/uploads/pending?ns=underdark. Only visible when active profile namespace === 'underdark'.",
+        "Character name on pending cards resolved from characters[] (lazy-loaded on first open) via img.subId === char.id."
+      ],
+      "rules_reinforced": [
+        "No framework, no build step — all admin UI is vanilla JS/CSS served as static files from the Go binary's data dir.",
+        "Profile-scoped filtering must propagate to every data fetch that accepts a namespace parameter — uploads, albums, overview stats, Overlord context bar."
+      ]
+    },
     {
       "date": "2026-05-23",
       "agent": "Claude Sonnet 4.6",
