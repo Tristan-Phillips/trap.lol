@@ -3816,8 +3816,9 @@ export function initUI() {
         const chars = state.characters.filter(c => {
             if (_welcomeGenderFilter === 'all') return true;
             const g = (c.gender || '').toLowerCase();
-            if (_welcomeGenderFilter === 'female') return g === 'woman' || g === 'female';
-            if (_welcomeGenderFilter === 'male')   return g === 'man'   || g === 'male';
+            const p = (c.pronouns || '').toLowerCase();
+            if (_welcomeGenderFilter === 'female') return g === 'woman' || g === 'female' || p.startsWith('she');
+            if (_welcomeGenderFilter === 'male')   return g === 'man'   || g === 'male'   || p.startsWith('he');
             return true;
         });
 
