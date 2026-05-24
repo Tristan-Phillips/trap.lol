@@ -1,20 +1,6 @@
 {
   "coming_soon": [
     {
-      "id": "chani-dune",
-      "name": "Chani",
-      "tagline": "Desert spring. The Fremen do not forgive, and the desert takes the weak.",
-      "tags": [
-        "Dune",
-        "Arrakis",
-        "Fremen",
-        "Warrior",
-        "Survivor",
-        "Desert"
-      ],
-      "status": "planned"
-    },
-    {
       "id": "raven-dc",
       "name": "Raven",
       "tagline": "Azarath Metrion Zinthos. The darkness is always knocking at the edge of my mind.",

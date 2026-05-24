@@ -1,6 +1,62 @@
 {
   "categories": [
     {
+      "key": "self-hosted",
+      "label": "Self-Hosted",
+      "projects": [
+        {
+          "name": "iTools",
+          "description": "Online developer tools hub — converters, encoders, formatters, and utilities.",
+          "url": "https://itools.trap.lol",
+          "icon": "terminal",
+          "status": "live",
+          "external": true,
+          "tags": ["deployed", "vps"],
+          "source": "https://github.com/nicolo-ribaudo/it-tools"
+        },
+        {
+          "name": "PDF Workbench",
+          "description": "Browser-based PDF manipulation — merge, split, compress, convert.",
+          "url": "https://pdf.trap.lol",
+          "icon": "file-text",
+          "status": "live",
+          "external": true,
+          "tags": ["deployed", "vps"],
+          "source": "https://github.com/Stirling-Tools/Stirling-PDF"
+        },
+        {
+          "name": "The List",
+          "description": "Personal media tracking — films, series, and everything queued.",
+          "url": "https://thelist.trap.lol",
+          "icon": "list",
+          "status": "live",
+          "external": true,
+          "tags": ["deployed", "vps"],
+          "source": "#"
+        },
+        {
+          "name": "Draw",
+          "description": "Collaborative whiteboard and diagramming canvas.",
+          "url": "https://draw.trap.lol",
+          "icon": "pen-tool",
+          "status": "live",
+          "external": true,
+          "tags": ["deployed", "vps"],
+          "source": "https://github.com/excalidraw/excalidraw"
+        },
+        {
+          "name": "D&D Live Map",
+          "description": "Self-hosted Cartomancer — DM-controlled live map pushed to the table display via WebSocket.",
+          "url": "https://dnd.trap.lol",
+          "icon": "map",
+          "status": "live",
+          "external": true,
+          "tags": ["built", "vps"],
+          "source": "#"
+        }
+      ]
+    },
+    {
       "key": "art",
       "label": "Art",
       "projects": [
@@ -9,7 +65,9 @@
           "description": "Personal artwork collection.",
           "url": "/garden/art/",
           "icon": "image",
-          "status": "live"
+          "status": "live",
+          "tags": ["built", "static"],
+          "source": "#"
         }
       ]
     },
@@ -18,18 +76,13 @@
       "label": "Tools",
       "projects": [
         {
-          "name": "Grimoire Live Map",
-          "description": "Self-hostable live map control for D&D. DM controls the table display in real time.",
-          "url": "/garden/dnd/",
-          "icon": "map",
-          "status": "live"
-        },
-        {
           "name": "Partfinder",
           "description": "Automotive parts research and compatibility tool.",
           "url": "/garden/automotive/partfinder/",
           "icon": "wrench",
-          "status": "wip"
+          "status": "wip",
+          "tags": ["built", "static"],
+          "source": "#"
         }
       ]
     },
@@ -39,21 +92,23 @@
       "projects": [
         {
           "name": "paintedd.art",
-          "description": "An artists portfolio website built as art in itself.",
+          "description": "An artist's portfolio website built as art in itself.",
           "url": "https://paintedd.art",
           "icon": "brush",
           "status": "live",
           "external": true,
+          "tags": ["built", "static"],
+          "source": "#",
           "detail": {
             "client": "Paintedd",
             "role": "Design, development and maintenance",
-            "year": "2022 - Present",
-            "story": "Full creative freedom, to observe the artist, learn about them and their work, and create a website that reflects their unique style and personality. The site is ever evloving as living art does.",
+            "year": "2022 – Present",
+            "story": "Full creative freedom — observe the artist, learn about them and their work, and create a website that reflects their unique style and personality. The site is ever evolving as living art does.",
             "evolution": [
-              "Initial brief: Linktree Alternative on a custom domain",
-              "Added a full catcha style gallery",
+              "Initial brief: Linktree alternative on a custom domain",
+              "Added a full gacha-style gallery",
               "Added an events page to share upcoming shows and exhibitions",
-              "Designed a pipeline to auto compress images into 3 tiers, thumbnail, medium and high res original with reduced file size, all with burned in watermarks"
+              "Designed a pipeline to auto-compress images into 3 tiers (thumbnail, medium, high-res) with burned-in watermarks"
             ],
             "screenshot": "https://api.trap.lol/share/27a7bf6a0114/165370_m.jpg",
             "link": "https://paintedd.art"

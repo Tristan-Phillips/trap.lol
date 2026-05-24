@@ -1,228 +1,630 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Garden — Tristan Phillips</title>
-  <meta name="description" content="A collection of publicly showcaseable projects by Tristan Phillips." />
-  <meta property="og:title" content="Garden — Tristan Phillips" />
-  <meta property="og:description" content="Art, tools, and experiments — built in public." />
-  <meta property="og:type" content="website" />
-  <link rel="icon" type="image/svg+xml"
-    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230f0f0f'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%23555' stroke-width='1.5'/%3E%3Ccircle cx='16' cy='16' r='2.5' fill='%23555'/%3E%3C/svg%3E" />
-  <link rel="stylesheet" href="/garden/public/style/style.css" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Garden — Tristan Phillips</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #0a0a0a;
+  color: #c8c8c8;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; text-decoration: none; }
+
+.page {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 48px 28px 96px;
+}
+
+/* back */
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: .05em;
+  color: #444;
+  margin-bottom: 40px;
+  transition: color .15s;
+}
+.back:hover { color: #888; }
+
+/* header */
+h1 {
+  font-size: 40px;
+  font-weight: 700;
+  letter-spacing: -.03em;
+  color: #fff;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+.sub {
+  font-size: 13px;
+  color: #444;
+  margin-bottom: 32px;
+}
+
+/* legend */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+  padding: 12px 16px;
+  border: 1px solid #1a1a1a;
+  border-radius: 8px;
+  margin-bottom: 48px;
+}
+.leg { display: flex; align-items: center; gap: 7px; font-family: ui-monospace, monospace; font-size: 11px; color: #444; }
+
+/* tags */
+.tag {
+  display: inline-block;
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 3px;
+  border: 1px solid;
+  line-height: 1.7;
+}
+.tag-built    { color: #999; border-color: rgba(255,255,255,.12); background: rgba(255,255,255,.04); }
+.tag-deployed { color: #363636; border-color: rgba(255,255,255,.06); background: rgba(255,255,255,.015); }
+.tag-vps      { color: #7a5e22; border-color: rgba(200,150,50,.18); background: rgba(200,150,50,.06); }
+.tag-static   { color: #2e5c74; border-color: rgba(50,130,200,.14); background: rgba(50,130,200,.05); }
+
+/* section */
+.section { margin-bottom: 44px; }
+
+.sec-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #171717;
+}
+.sec-label {
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: #444;
+}
+.sec-count {
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  color: #222;
+}
+
+/* grid — simple, nothing clever */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+@media (max-width: 640px) { .grid { grid-template-columns: 1fr; } }
+@media (min-width: 641px) and (max-width: 780px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+
+/* card */
+.card {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  background: #111;
+  border: 1px solid #1c1c1c;
+  border-radius: 10px;
+  padding: 16px;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  transition: border-color .15s, background .15s;
+}
+.card:hover { border-color: #2a2a2a; background: #141414; }
+.card:focus-visible { outline: 2px solid #333; outline-offset: 2px; }
+
+.card-wip { opacity: .25; pointer-events: none; }
+
+/* card inner rows — each a separate block element */
+.card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.card-icon {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #1c1c1c;
+  border-radius: 8px;
+  background: #0a0a0a;
+  flex-shrink: 0;
+}
+.card-icon svg { width: 15px; height: 15px; color: #363636; }
+.card:hover .card-icon { border-color: #2a2a2a; }
+
+.card-actions {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.src-btn {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #1c1c1c;
+  border-radius: 4px;
+  color: #444;
+  flex-shrink: 0;
+  transition: border-color .15s, color .15s;
+}
+.src-btn svg { width: 9px; height: 9px; }
+.src-btn:hover { border-color: #2a2a2a; color: #888; }
+.src-btn-none { opacity: .12; pointer-events: none; }
+
+.wip-badge {
+  font-family: ui-monospace, monospace;
+  font-size: 9px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: #2a2a2a;
+  border: 1px solid #1c1c1c;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.card-name {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #ddd;
+  letter-spacing: -.01em;
+  line-height: 1.3;
+  margin-bottom: 6px;
+}
+
+.card-desc {
+  font-size: 12px;
+  color: #484848;
+  line-height: 1.65;
+  margin-bottom: 14px;
+  flex: 1;
+}
+
+.card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid #171717;
+}
+
+.card-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+
+.card-arrow { width: 12px; height: 12px; flex-shrink: 0; color: #222; transition: color .15s; }
+.card:hover .card-arrow { color: #555; }
+
+/* overlay */
+#overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: #000;
+  overflow-y: auto;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s;
+}
+#overlay.open { opacity: 1; pointer-events: auto; }
+
+.detail {
+  width: 100%;
+  max-width: 600px;
+  padding: 48px 28px 96px;
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-close {
+  align-self: flex-end;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: #333;
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  cursor: pointer;
+  padding: 4px 0;
+  margin-bottom: 48px;
+  transition: color .15s;
+}
+.detail-close:hover { color: #aaa; }
+.detail-close svg { width: 10px; height: 10px; }
+
+.detail-masthead {
+  border-top: 2px solid #fff;
+  border-bottom: 1px solid #1a1a1a;
+  padding: 16px 0;
+  margin-bottom: 28px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.detail-name {
+  font-size: clamp(22px, 5vw, 36px);
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -.03em;
+  line-height: 1.1;
+}
+
+.detail-year {
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  color: #2a2a2a;
+  letter-spacing: .12em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.detail-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  margin-bottom: 28px;
+}
+.detail-meta-item { display: flex; flex-direction: column; gap: 2px; }
+.detail-meta-label { font-family: ui-monospace, monospace; font-size: 9px; letter-spacing: .18em; text-transform: uppercase; color: #2a2a2a; }
+.detail-meta-value { font-size: 12px; color: #777; }
+
+.detail-shot {
+  position: relative;
+  border: 1px solid #161616;
+  overflow: hidden;
+  background: #080808;
+  margin-bottom: 28px;
+}
+.detail-shot img { display: block; width: 100%; height: auto; filter: grayscale(100%) contrast(1.05); opacity: .9; }
+.detail-shot-empty {
+  aspect-ratio: 16/9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: .12em;
+  color: #1a1a1a;
+  text-transform: uppercase;
+}
+
+.detail-section-label {
+  font-family: ui-monospace, monospace;
+  font-size: 9px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: #2a2a2a;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #111;
+  margin-bottom: 12px;
+}
+
+.detail-story {
+  font-size: 13px;
+  color: #666;
+  line-height: 1.85;
+  margin-bottom: 28px;
+  white-space: pre-line;
+}
+
+.detail-evo { list-style: none; margin-bottom: 40px; }
+.detail-evo li {
+  display: flex;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #0d0d0d;
+  font-size: 12px;
+  color: #555;
+  line-height: 1.6;
+}
+.detail-evo li::before {
+  content: '';
+  flex-shrink: 0;
+  width: 4px;
+  height: 4px;
+  border: 1px solid #252525;
+  border-radius: 50%;
+  margin-top: 7px;
+}
+
+.detail-cta {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: 1px solid #fff;
+  color: #fff;
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  transition: background .15s, color .15s;
+}
+.detail-cta:hover { background: #fff; color: #000; }
+.detail-cta svg { width: 10px; height: 10px; }
+
+/* footer */
+.page-footer {
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  color: #1c1c1c;
+  letter-spacing: .1em;
+  text-align: center;
+  padding-top: 16px;
+}
+</style>
 </head>
 <body>
 
-  <!-- ── Detail overlay ───────────────────────────────────── -->
-  <div id="detail-overlay" role="dialog" aria-modal="true" aria-label="Project detail" aria-hidden="true">
-    <div class="detail" id="detail-panel">
-
-      <button class="detail__close" id="detail-close" aria-label="Close">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        close
-      </button>
-
-      <div class="detail__masthead">
-        <h2 class="detail__name" id="detail-name"></h2>
-        <span class="detail__year" id="detail-year"></span>
-      </div>
-
-      <div class="detail__meta" id="detail-meta"></div>
-
-      <div class="detail__screenshot-wrap" id="detail-shot-wrap"></div>
-
-      <p class="detail__section-label">About</p>
-      <p class="detail__story" id="detail-story"></p>
-
-      <p class="detail__section-label" id="detail-evo-label" style="display:none">Evolution</p>
-      <ul class="detail__evolution" id="detail-evolution"></ul>
-
-      <a class="detail__cta" id="detail-cta" href="#" target="_blank" rel="noopener" aria-label="Visit site">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-        Visit site
-      </a>
-
+<!-- detail overlay -->
+<div id="overlay" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="detail">
+    <button class="detail-close" id="overlay-close">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      close
+    </button>
+    <div class="detail-masthead">
+      <h2 class="detail-name" id="d-name"></h2>
+      <span class="detail-year" id="d-year"></span>
     </div>
+    <div class="detail-meta" id="d-meta"></div>
+    <div class="detail-shot" id="d-shot"></div>
+    <p class="detail-section-label">About</p>
+    <p class="detail-story" id="d-story"></p>
+    <p class="detail-section-label" id="d-evo-label" style="display:none">Evolution</p>
+    <ul class="detail-evo" id="d-evo"></ul>
+    <a class="detail-cta" id="d-cta" href="#" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+      Visit site
+    </a>
+  </div>
+</div>
+
+<div class="page">
+
+  <a href="/" class="back">
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 5-7 7 7 7"/></svg>
+    trap.lol
+  </a>
+
+  <h1>Garden</h1>
+  <p class="sub">Things I've built — and things I run.</p>
+
+  <div class="legend">
+    <span class="leg"><span class="tag tag-built">built</span> authored by me</span>
+    <span class="leg"><span class="tag tag-deployed">deployed</span> I operate it</span>
+    <span class="leg"><span class="tag tag-vps">vps</span> server backend</span>
+    <span class="leg"><span class="tag tag-static">static</span> no server</span>
   </div>
 
-  <!-- ── Main page ─────────────────────────────────────────── -->
-  <div class="garden">
+  <main id="out"></main>
 
-    <header class="garden__header">
-      <a href="/" class="garden__back" aria-label="Back to trap.lol">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M19 12H5"/><path d="m12 5-7 7 7 7"/>
-        </svg>
-        trap.lol
-      </a>
-      <h1 class="garden__title">Garden</h1>
-      <p class="garden__sub">Things I've built.</p>
-    </header>
+  <footer class="page-footer">trap.lol // garden</footer>
 
-    <div id="garden-content" aria-live="polite"></div>
+</div>
 
-    <footer class="garden__footer">trap.lol // garden</footer>
+<script>
+// ── icons ──────────────────────────────────────────────────────────────────
+var ICONS = {
+  terminal:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>',
+  'file-text': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
+  list:        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>',
+  'pen-tool':  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>',
+  map:         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>',
+  image:       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor" stroke="none"/><polyline points="21 15 16 10 5 21"/></svg>',
+  wrench:      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>',
+  brush:       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.06 11.9l8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.08"/><path d="M7.07 14.94c-1.66 0-3 1.35-3 3.02 0 1.33-2.5 1.52-2 2.02 1 1 2.48 1.02 3.5 1.02 2.19 0 4-1.8 4-4.04 0-1.66-1.34-3.02-2.5-3.02z"/></svg>'
+};
 
-  </div>
+var CODE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>';
 
-  <script>
-    // ── Icons ────────────────────────────────────────────────
-    const ICONS = {
-      image: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor" stroke="none"/><polyline points="21 15 16 10 5 21"/></svg>`,
-      book:  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>`,
-      wrench:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>`,
-      brush: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9.06 11.9l8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.08"/><path d="M7.07 14.94c-1.66 0-3 1.35-3 3.02 0 1.33-2.5 1.52-2 2.02 1 1 2.48 1.02 3.5 1.02 2.19 0 4-1.8 4-4.04 0-1.66-1.34-3.02-2.5-3.02z"/></svg>`
-    };
+var ARROW_EXT = '<svg class="card-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>';
+var ARROW_INT = '<svg class="card-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>';
+var ARROW_DET = '<svg class="card-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
 
-    const ARROW    = `<svg class="garden__card-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>`;
-    const EXT_ICON = `<svg class="garden__card-ext" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>`;
-    const INFO_ICON= `<svg class="garden__card-ext" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
+// ── helpers ────────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
 
-    function esc(s) {
-      return String(s)
-        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    }
+function renderTags(arr) {
+  return (arr || []).map(function(t) {
+    return '<span class="tag tag-' + esc(t) + '">' + esc(t) + '</span>';
+  }).join('');
+}
 
-    // ── Card rendering ───────────────────────────────────────
-    function renderCard(p) {
-      const wip  = p.status === 'wip';
-      const icon = ICONS[p.icon] || ICONS.image;
+function renderSrcBtn(p) {
+  if (p.source && p.source !== '#') {
+    return '<span class="src-btn js-src" role="link" tabindex="0" data-src="' + esc(p.source) + '" title="Source code">' + CODE_ICON + '</span>';
+  }
+  return '<span class="src-btn src-btn-none">' + CODE_ICON + '</span>';
+}
 
-      if (wip) {
-        return `
-          <div class="garden__card garden__card--wip" aria-hidden="true">
-            <div class="garden__card-icon" aria-hidden="true">${icon}</div>
-            <div class="garden__card-body">
-              <div class="garden__card-name">${esc(p.name)}<span class="garden__wip-badge">wip</span></div>
-              <div class="garden__card-desc">${esc(p.description)}</div>
-            </div>
-          </div>`;
-      }
+// ── card ──────────────────────────────────────────────────────────────────
+function renderCard(p) {
+  var wip  = p.status === 'wip';
+  var icon = ICONS[p.icon] || ICONS.image;
+  var arrow = wip ? '' : (p.detail ? ARROW_DET : (p.external ? ARROW_EXT : ARROW_INT));
 
-      if (p.detail) {
-        return `
-          <button class="garden__card garden__card--detail" data-project='${JSON.stringify(p).replace(/'/g, "&#39;")}' aria-label="View details for ${esc(p.name)}">
-            <div class="garden__card-icon" aria-hidden="true">${icon}</div>
-            <div class="garden__card-body">
-              <div class="garden__card-name">${esc(p.name)}</div>
-              <div class="garden__card-desc">${esc(p.description)}</div>
-            </div>
-            ${INFO_ICON}
-          </button>`;
-      }
+  var topRow = '<div class="card-top">'
+    + '<div class="card-icon">' + icon + '</div>'
+    + '<div class="card-actions">'
+    + renderSrcBtn(p)
+    + (wip ? '<span class="wip-badge">wip</span>' : '')
+    + '</div>'
+    + '</div>';
 
-      const extAttrs = p.external ? ' target="_blank" rel="noopener"' : '';
-      const arrow    = p.external ? EXT_ICON : ARROW;
-      return `
-        <a href="${esc(p.url)}"${extAttrs} class="garden__card" aria-label="${esc(p.name)}">
-          <div class="garden__card-icon" aria-hidden="true">${icon}</div>
-          <div class="garden__card-body">
-            <div class="garden__card-name">${esc(p.name)}</div>
-            <div class="garden__card-desc">${esc(p.description)}</div>
-          </div>
-          ${arrow}
-        </a>`;
-    }
+  var nameRow = '<div class="card-name">' + esc(p.name) + '</div>';
+  var descRow = '<div class="card-desc">' + esc(p.description) + '</div>';
 
-    function renderCategory(cat) {
-      return `
-        <section class="garden__category" aria-label="${esc(cat.label)}">
-          <span class="garden__category-label">${esc(cat.label)}</span>
-          ${cat.projects.map(renderCard).join('')}
-        </section>`;
-    }
+  var foot = '<div class="card-foot">'
+    + '<div class="card-tags">' + renderTags(p.tags) + '</div>'
+    + arrow
+    + '</div>';
 
-    // ── Overlay ──────────────────────────────────────────────
-    const $overlay = document.getElementById('detail-overlay');
-    const $close   = document.getElementById('detail-close');
+  var inner = topRow + nameRow + descRow + foot;
 
-    function openDetail(p) {
-      const d = p.detail;
+  // All cards are <button> — <a> wrapping <div> is invalid HTML and browsers eject the divs
+  if (wip) {
+    return '<button class="card card-wip" type="button" disabled>' + inner + '</button>';
+  }
 
-      document.getElementById('detail-name').textContent  = p.name;
-      document.getElementById('detail-year').textContent  = d.year || '';
-      document.getElementById('detail-story').textContent = d.story || '';
-      document.getElementById('detail-cta').href          = d.link || p.url || '#';
+  if (p.detail) {
+    var encoded = esc(JSON.stringify(p));
+    return '<button class="card js-card" type="button" data-p="' + encoded + '">' + inner + '</button>';
+  }
 
-      // Meta
-      const metaItems = [];
-      if (d.client) metaItems.push(['Client', d.client]);
-      if (d.role)   metaItems.push(['Role',   d.role]);
-      document.getElementById('detail-meta').innerHTML = metaItems.map(([label, val]) =>
-        `<div class="detail__meta-item">
-          <span class="detail__meta-label">${esc(label)}</span>
-          <span class="detail__meta-value">${esc(val)}</span>
-        </div>`
-      ).join('');
+  var nav = p.url + '|' + (p.external ? '1' : '0');
+  return '<button class="card js-nav" type="button" data-nav="' + esc(nav) + '">' + inner + '</button>';
+}
 
-      // Screenshot
-      const $sw = document.getElementById('detail-shot-wrap');
-      if (d.screenshot) {
-        $sw.innerHTML = `<img class="detail__screenshot" src="${esc(d.screenshot)}" alt="${esc(p.name)} screenshot" loading="lazy" />`;
-        $sw.style.display = '';
-      } else {
-        $sw.innerHTML = `<div class="detail__screenshot-placeholder">no screenshot</div>`;
-        $sw.style.display = '';
-      }
+// ── section ───────────────────────────────────────────────────────────────
+function renderSection(cat) {
+  var cards = cat.projects.map(renderCard).join('');
+  return '<div class="section">'
+    + '<div class="sec-head">'
+    + '<span class="sec-label">' + esc(cat.label) + '</span>'
+    + '<span class="sec-count">' + cat.projects.length + '</span>'
+    + '</div>'
+    + '<div class="grid">' + cards + '</div>'
+    + '</div>';
+}
 
-      // Evolution
-      const $evoLabel = document.getElementById('detail-evo-label');
-      const $evo      = document.getElementById('detail-evolution');
-      if (d.evolution && d.evolution.length) {
-        $evoLabel.style.display = '';
-        $evo.innerHTML = d.evolution.map(e =>
-          `<li class="detail__evo-item">${esc(e)}</li>`
-        ).join('');
-      } else {
-        $evoLabel.style.display = 'none';
-        $evo.innerHTML = '';
-      }
+// ── overlay ───────────────────────────────────────────────────────────────
+var overlay  = document.getElementById('overlay');
+var closeBtn = document.getElementById('overlay-close');
 
-      $overlay.removeAttribute('aria-hidden');
-      $overlay.classList.add('is-open');
-      $overlay.scrollTop = 0;
-      document.body.style.overflow = 'hidden';
-      $close.focus();
-    }
+function openDetail(p) {
+  var d = p.detail;
 
-    function closeDetail() {
-      $overlay.classList.remove('is-open');
-      $overlay.setAttribute('aria-hidden', 'true');
-      document.body.style.overflow = '';
-    }
+  document.getElementById('d-name').textContent  = p.name;
+  document.getElementById('d-year').textContent  = d.year || '';
+  document.getElementById('d-story').textContent = d.story || '';
+  document.getElementById('d-cta').href          = d.link || p.url || '#';
 
-    $close.addEventListener('click', closeDetail);
+  var metaItems = [];
+  if (d.client) metaItems.push(['Client', d.client]);
+  if (d.role)   metaItems.push(['Role',   d.role]);
+  document.getElementById('d-meta').innerHTML = metaItems.map(function(m) {
+    return '<div class="detail-meta-item">'
+      + '<span class="detail-meta-label">' + esc(m[0]) + '</span>'
+      + '<span class="detail-meta-value">'  + esc(m[1]) + '</span>'
+      + '</div>';
+  }).join('');
 
-    $overlay.addEventListener('click', (e) => {
-      if (e.target === $overlay) closeDetail();
-    });
+  var shotEl = document.getElementById('d-shot');
+  if (d.screenshot) {
+    shotEl.innerHTML = '<img src="' + esc(d.screenshot) + '" alt="' + esc(p.name) + '" loading="lazy">';
+  } else {
+    shotEl.innerHTML = '<div class="detail-shot-empty">no screenshot</div>';
+  }
 
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && $overlay.classList.contains('is-open')) closeDetail();
-    });
+  var evoLabel = document.getElementById('d-evo-label');
+  var evoList  = document.getElementById('d-evo');
+  if (d.evolution && d.evolution.length) {
+    evoLabel.style.display = '';
+    evoList.innerHTML = d.evolution.map(function(e) {
+      return '<li>' + esc(e) + '</li>';
+    }).join('');
+  } else {
+    evoLabel.style.display = 'none';
+    evoList.innerHTML = '';
+  }
 
-    // ── Delegate card clicks ─────────────────────────────────
-    document.addEventListener('click', (e) => {
-      const btn = e.target.closest('.garden__card--detail');
-      if (!btn) return;
-      const p = JSON.parse(btn.dataset.project);
-      openDetail(p);
-    });
+  overlay.classList.add('open');
+  overlay.removeAttribute('aria-hidden');
+  overlay.scrollTop = 0;
+  document.body.style.overflow = 'hidden';
+  closeBtn.focus();
+}
 
-    // ── Boot ─────────────────────────────────────────────────
-    fetch('/garden/public/data/projects.json')
-      .then(r => r.json())
-      .then(({ categories }) => {
-        document.getElementById('garden-content').innerHTML =
-          categories.map(renderCategory).join('');
-      })
-      .catch(() => {
-        document.getElementById('garden-content').innerHTML =
-          '<p style="color:#555;font-size:0.85rem;padding:1rem 0;">Could not load projects.</p>';
-      });
-  </script>
+function closeDetail() {
+  overlay.classList.remove('open');
+  overlay.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+}
 
+closeBtn.addEventListener('click', closeDetail);
+
+overlay.addEventListener('click', function(e) {
+  if (e.target === overlay) closeDetail();
+});
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape' && overlay.classList.contains('open')) closeDetail();
+});
+
+document.addEventListener('click', function(e) {
+  var src = e.target.closest('.js-src');
+  if (src) {
+    e.stopPropagation();
+    window.open(src.getAttribute('data-src'), '_blank', 'noopener');
+    return;
+  }
+  var det = e.target.closest('.js-card');
+  if (det) {
+    var p = JSON.parse(det.getAttribute('data-p'));
+    openDetail(p);
+    return;
+  }
+  var nav = e.target.closest('.js-nav');
+  if (nav) {
+    var parts = nav.getAttribute('data-nav').split('|');
+    var url = parts[0], external = parts[1] === '1';
+    if (external) window.open(url, '_blank', 'noopener');
+    else window.location.href = url;
+  }
+});
+
+// ── boot ──────────────────────────────────────────────────────────────────
+fetch('/garden/public/data/projects.json')
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    document.getElementById('out').innerHTML = data.categories.map(renderSection).join('');
+  })
+  .catch(function() {
+    document.getElementById('out').innerHTML = '<p style="color:#333;font-size:13px;padding:24px 0">Failed to load projects.</p>';
+  });
+</script>
 </body>
 </html>

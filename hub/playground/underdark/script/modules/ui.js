@@ -8219,9 +8219,19 @@ async function loadManifest() {
     const res  = await fetch(`${MEDIA_API}/pallet/data/index.json`);
     if (!res.ok) throw new Error(`index.json fetch failed: ${res.status}`);
     const data = await res.json();
-    const existingIds = new Set(state.characters.map(c => c.id));
-    (data.characters || []).forEach(c => {
-        if (!existingIds.has(c.id)) state.characters.push(c);
+    (data.characters || []).forEach(remote => {
+        const idx = state.characters.findIndex(c => c.id === remote.id);
+        if (idx < 0) {
+            state.characters.push(remote);
+        } else {
+            // Always sync avatar_path and card_path from remote — local state may be stale
+            const local = state.characters[idx];
+            if (remote.avatar_path) local.avatar_path = remote.avatar_path;
+            if (remote.card_path)   local.card_path   = remote.card_path;
+            if (remote.lorebook_path) local.lorebook_path = remote.lorebook_path;
+            if (remote.tagline)     local.tagline     = remote.tagline;
+            if (remote.tags?.length) local.tags       = remote.tags;
+        }
     });
     saveState();
 }
