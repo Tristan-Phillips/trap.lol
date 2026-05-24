@@ -3817,7 +3817,7 @@ export function initUI() {
             if (_welcomeGenderFilter === 'all') return true;
             const ud = state.loadedCharacters[c.id]?.data?.extensions?.underdark || state.loadedCharacters[c.id]?.extensions?.underdark || {};
             const g = (c.gender || ud.gender || '').toLowerCase();
-            const p = (c.pronouns || ud.pronouns || '').toLowerCase();
+            const p = (c.pronouns || ud.pronouns || ud.ext?.pronouns || '').toLowerCase();
             if (_welcomeGenderFilter === 'female') return g === 'woman' || g === 'female' || p.startsWith('she');
             if (_welcomeGenderFilter === 'male')   return g === 'man'   || g === 'male'   || p.startsWith('he');
             return true;
