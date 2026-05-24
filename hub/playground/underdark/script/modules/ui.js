@@ -3815,9 +3815,12 @@ export function initUI() {
 
         const chars = state.characters.filter(c => {
             if (_welcomeGenderFilter === 'all') return true;
-            const ud = state.loadedCharacters[c.id]?.data?.extensions?.underdark || state.loadedCharacters[c.id]?.extensions?.underdark || {};
-            const g = (c.gender || ud.gender || '').toLowerCase();
-            const p = (c.pronouns || ud.pronouns || ud.ext?.pronouns || '').toLowerCase();
+            const lc = state.loadedCharacters[c.id] || {};
+            // normalizeData flattens the card — extensions is top-level on lc.
+            // Raw un-normalized cards (session imports) may still have lc.data.extensions.
+            const ud = lc.extensions?.underdark || lc.data?.extensions?.underdark || {};
+            const g  = (ud.gender || c.gender || '').toLowerCase();
+            const p  = (ud.ext?.pronouns || ud.pronouns || c.pronouns || '').toLowerCase();
             if (_welcomeGenderFilter === 'female') return g === 'woman' || g === 'female' || p.startsWith('she');
             if (_welcomeGenderFilter === 'male')   return g === 'man'   || g === 'male'   || p.startsWith('he');
             return true;
