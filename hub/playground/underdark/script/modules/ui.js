@@ -472,6 +472,7 @@ export function initUI() {
 
     // ── Picker mode — closure variable, not window global ────────────────────
     let _pickerMode = null;
+    let _welcomeGenderFilter = localStorage.getItem('welcome_gender_filter') || 'all';
 
     // ── Gallery / Lightbox module ─────────────────────────────────────────────
     const { openLightbox, openGalleryModal, renderGalleryStrip, openVideoGalleryModal, renderVideoStrip } =
@@ -3802,12 +3803,30 @@ export function initUI() {
         const $grid = qs('#welcome-char-grid');
         if (!$grid) return;
 
+        // Sync filter tab active state
+        qsa('.welcome-gender-tab').forEach(t => {
+            t.classList.toggle('welcome-gender-tab--active', t.dataset.filter === _welcomeGenderFilter);
+        });
+
         if (!state.characters.length) {
             $grid.innerHTML = '<p style="color:var(--text-muted);font-size:.8rem;text-align:center;width:100%;padding:.5rem 0;">No characters yet — create or import one below.</p>';
             return;
         }
 
-        $grid.innerHTML = state.characters.map(c => {
+        const chars = state.characters.filter(c => {
+            if (_welcomeGenderFilter === 'all') return true;
+            const g = (c.gender || '').toLowerCase();
+            if (_welcomeGenderFilter === 'female') return g === 'woman' || g === 'female';
+            if (_welcomeGenderFilter === 'male')   return g === 'man'   || g === 'male';
+            return true;
+        });
+
+        if (!chars.length) {
+            $grid.innerHTML = '<p style="color:var(--text-muted);font-size:.8rem;text-align:center;width:100%;grid-column:1/-1;padding:.5rem 0;">No characters match this filter.</p>';
+            return;
+        }
+
+        $grid.innerHTML = chars.map(c => {
             const rawAv = c.avatar_path || state.loadedCharacters[c.id]?.avatar || null;
             const av = getAvatarUrlSync(c.id, rawAv);
             const inThread = state.activeBotIds.includes(c.id);
@@ -3824,7 +3843,7 @@ export function initUI() {
         });
 
         // Patch IDB avatars
-        state.characters.forEach(async c => {
+        chars.forEach(async c => {
             const rawAv = c.avatar_path || state.loadedCharacters[c.id]?.avatar || null;
             if (rawAv?.startsWith('idb:')) {
                 const url = await getAvatarUrl(c.id, rawAv);
@@ -5074,6 +5093,11 @@ export function initUI() {
                             <h2>Begin Synchronization</h2>
                             <p>Choose a fragment to inhabit this thread.</p>
                         </div>
+                        <div class="welcome-gender-filter">
+                            <button class="welcome-gender-tab" data-filter="all">All</button>
+                            <button class="welcome-gender-tab" data-filter="female">Female</button>
+                            <button class="welcome-gender-tab" data-filter="male">Male</button>
+                        </div>
                         <div id="welcome-char-grid" class="welcome-char-grid"></div>
                         <div class="welcome-screen__actions">
                             <button id="welcome-create" class="btn btn--ghost">
@@ -5089,6 +5113,13 @@ export function initUI() {
                     document.dispatchEvent(new CustomEvent('char-editor:open'));
                 });
                 qs('#welcome-import', welcome)?.addEventListener('click', () => qs('#card-input').click());
+                qsa('.welcome-gender-tab', welcome).forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        _welcomeGenderFilter = tab.dataset.filter;
+                        localStorage.setItem('welcome_gender_filter', _welcomeGenderFilter);
+                        renderWelcomeGrid();
+                    });
+                });
                 lucideRefresh(welcome);
             }
             renderWelcomeGrid();
