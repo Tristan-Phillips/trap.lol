@@ -237,6 +237,7 @@ html, body {
 }
 
 .pf__link--circle {
+  position: relative;
   width: 52px;
   height: 52px;
   padding: 0;
@@ -282,6 +283,17 @@ html, body {
 
 .pf__link--circle:hover .pf__link-icon {
   opacity: 0.95;
+}
+
+.pf__link-ext {
+  position: absolute;
+  top: 3px;
+  right: 4px;
+  font-size: 0.55rem;
+  line-height: 1;
+  color: rgba(255,255,255,0.55);
+  pointer-events: none;
+  letter-spacing: 0;
 }
 
 /* ── Footer ───────────────────────────────────────────────── */

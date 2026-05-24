@@ -18,13 +18,6 @@
       "label": "Tools",
       "projects": [
         {
-          "name": "Grimoire",
-          "description": "A D&D Dungeon Master utility suite.",
-          "url": "/garden/dnd/dm-manager/",
-          "icon": "book",
-          "status": "live"
-        },
-        {
           "name": "Grimoire Live Map",
           "description": "Self-hostable live map control for D&D. DM controls the table display in real time.",
           "url": "/garden/dnd/",

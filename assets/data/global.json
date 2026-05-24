@@ -25,6 +25,13 @@
             "external": true,
             "icon": "telegram",
             "style": "circle"
+        },
+        {
+            "label": "Garden",
+            "url": "/garden/",
+            "external": false,
+            "icon": "garden",
+            "style": "circle"
         }
     ],
     "art": {
