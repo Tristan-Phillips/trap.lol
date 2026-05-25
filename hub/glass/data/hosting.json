@@ -10,24 +10,6 @@
       "icon": "git-branch",
       "url": "https://git.trap.lol",
       "status": "online"
-    },
-    "1": {
-      "name": "PDF Manipulation",
-      "hosting": "Stirling PDF",
-      "shortcut": "N2",
-      "source": "https://github.com/Stirling-Tools/Stirling-PDF",
-      "icon": "file-text",
-      "url": "https://pdf.trap.lol",
-      "status": "online"
-    },
-    "2": {
-      "name": "Online Dev Tools",
-      "hosting": "IT-Tools",
-      "shortcut": "N3",
-      "source": "https://github.com/CorentinTh/it-tools",
-      "icon": "wrench",
-      "url": "https://itools.trap.lol",
-      "status": "online"
     }
   }
 }

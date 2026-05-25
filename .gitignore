@@ -1,13 +1,38 @@
+# ── Tool / editor artefacts ──────────────────────────────────────────────────
 .claude
 .ai
-hub/glass/markdown/*.bk
-**/*.backup
-CLAUDE.md
 .vscode
 .env
 .bin
+
+# ── Backup / scratch files ────────────────────────────────────────────────────
+hub/glass/markdown/*.bk
+**/*.backup
+**/_drafts/
+
+# ── Claude Code context (not for deployment) ─────────────────────────────────
+CLAUDE.md
+
+# ── Shared / service dirs (managed outside this repo) ────────────────────────
 shared/*
+services/
+
+# ── Local dev CDN shards (never commit — use cdn.trap.lol in production) ─────
+assets/shards/
+**/shards/
+
+# ── D&D Manager — 5etools data too large for git (SRD exception kept) ────────
 garden/dnd/dm-manager/assets/data/5etools/*
 !garden/dnd/dm-manager/assets/data/5etools/5e-SRD-classes.json
-assets/shards/
-services/
+
+# ── Underdark — cards / lorebooks / data are served from api.trap.lol ─────────
+# These files are legacy local copies. Source of truth: /opt/stacks/trap-media-api/data/
+hub/playground/underdark/data/cards/
+hub/playground/underdark/data/lorebooks/
+hub/playground/underdark/data/index.json
+hub/playground/underdark/data/feed.json
+hub/playground/underdark/data/personas.json
+hub/playground/underdark/data/persona-builder.json
+hub/playground/underdark/data/rp-gen-presets.json
+hub/playground/underdark/data/scenario-index.json
+hub/playground/underdark/data/scenarios.json
