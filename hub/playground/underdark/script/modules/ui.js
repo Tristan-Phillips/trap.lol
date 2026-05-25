@@ -29,7 +29,7 @@ import { qs, qsa, esc, debounce, parseLLMArray, parseLLMJson, parseLLMLines } fr
 import { initCodexMeters, applyStatusTags, updateCodexMeters as _updateCodexMeters } from './codex-meters.js?v=2';
 import { initDirector, getActiveTone, getSceneDirective, clearSceneDirective, generateAIQuickReplies } from './director.js?v=2';
 import { initThreadConfig, tcLogPush, updateThreadConfigBadge } from './thread-config.js?v=2';
-import { initGallery, addToGallery, addToVideoGallery, getAllFeedPosts, getAllGalleryImages, ensureGalleryStore, saveLocalPost, removeLocalPostBySrc } from './gallery.js?v=1';
+import { initGallery, addToGallery, addToVideoGallery, getAllFeedPosts, getAllGalleryImages, ensureGalleryStore, saveLocalPost, removeLocalPostBySrc, loadApiGallery } from './gallery.js?v=2';
 import { initSocial } from './social.js?v=2';
 import { initImageStudio } from './image-studio.js?v=1';
 
@@ -3542,7 +3542,7 @@ export function initUI() {
         if ($addBtn)    $addBtn.hidden    = inThread;
         if ($removeBtn) $removeBtn.hidden = !inThread;
         
-        renderGalleryStrip(id);
+        loadApiGallery(id).then(() => renderGalleryStrip(id));
         renderVideoStrip(id);
         qs('#btn-video-gallery').onclick = () => openVideoGalleryModal(id);
 

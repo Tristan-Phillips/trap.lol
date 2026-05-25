@@ -16,6 +16,37 @@ import { qs, qsa, esc } from './shared-utils.js?v=4';
 import { state, saveState } from './state.js?v=2';
 import { resolveImageUrl, saveImageBlob, deleteImageBlob, isIdbImageRef, idbImageRefId, isDataUrl } from './storage.js?v=3';
 
+const MEDIA_API = 'https://api.trap.lol';
+const _apiGalleryFetched = new Set(); // per-session: don't re-fetch same charId twice
+
+/**
+ * Fetch the character's media library gallery from api.trap.lol and merge the
+ * medium-res URLs into the local gallery store. Idempotent — skips on re-call.
+ * Does NOT save to localStorage (URLs are small but this keeps gallery clean).
+ */
+export async function loadApiGallery(charId) {
+    if (_apiGalleryFetched.has(charId)) return;
+    _apiGalleryFetched.add(charId);
+    try {
+        const res = await fetch(`${MEDIA_API}/pallet/data/gallery/${charId}.json`);
+        if (!res.ok) return;
+        const items = await res.json();
+        if (!Array.isArray(items) || !items.length) return;
+        const charObj = ensureGalleryStore(charId);
+        if (!charObj) return;
+        const gallery = charObj.extensions.underdark.gallery;
+        let added = 0;
+        for (const item of items) {
+            const url = item.medium || item.original;
+            if (url && !gallery.includes(url)) {
+                gallery.push(url);
+                added++;
+            }
+        }
+        // Don't saveState() — API URLs are re-fetched each session, not persisted
+    } catch (_) {}
+}
+
 // ── Lightbox state ────────────────────────────────────────────────────────────
 let lbImages = [];
 let lbRefs   = [];
