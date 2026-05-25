@@ -78,7 +78,7 @@ h1 {
   line-height: 1.7;
 }
 .tag-built    { color: #999; border-color: rgba(255,255,255,.12); background: rgba(255,255,255,.04); }
-.tag-deployed { color: #363636; border-color: rgba(255,255,255,.06); background: rgba(255,255,255,.015); }
+.tag-hosted   { color: #363636; border-color: rgba(255,255,255,.06); background: rgba(255,255,255,.015); }
 .tag-vps      { color: #7a5e22; border-color: rgba(200,150,50,.18); background: rgba(200,150,50,.06); }
 .tag-static   { color: #2e5c74; border-color: rgba(50,130,200,.14); background: rgba(50,130,200,.05); }
 
@@ -86,12 +86,15 @@ h1 {
 .section { margin-bottom: 44px; }
 
 .sec-head {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
   margin-bottom: 14px;
   padding-bottom: 10px;
   border-bottom: 1px solid #171717;
+}
+.sec-head-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 3px;
 }
 .sec-label {
   font-family: ui-monospace, monospace;
@@ -105,6 +108,12 @@ h1 {
   font-size: 10px;
   color: #222;
 }
+.sec-desc {
+  font-size: 11px;
+  color: #282828;
+}
+.section-pending .sec-label { color: #2a2a2a; }
+.section-pending .card-wip  { opacity: .18; }
 
 /* grid — simple, nothing clever */
 .grid {
@@ -427,10 +436,10 @@ h1 {
   <p class="sub">Things I've built — and things I run.</p>
 
   <div class="legend">
-    <span class="leg"><span class="tag tag-built">built</span> authored by me</span>
-    <span class="leg"><span class="tag tag-deployed">deployed</span> I operate it</span>
+    <span class="leg"><span class="tag tag-built">built</span> I wrote it</span>
+    <span class="leg"><span class="tag tag-hosted">hosted</span> I operate it</span>
     <span class="leg"><span class="tag tag-vps">vps</span> server backend</span>
-    <span class="leg"><span class="tag tag-static">static</span> no server</span>
+    <span class="leg"><span class="tag tag-static">static</span> runs offline</span>
   </div>
 
   <main id="out"></main>
@@ -520,11 +529,16 @@ function renderCard(p) {
 
 // ── section ───────────────────────────────────────────────────────────────
 function renderSection(cat) {
+  var isPending = cat.key === 'pending';
   var cards = cat.projects.map(renderCard).join('');
-  return '<div class="section">'
+  var desc = cat.description ? '<div class="sec-desc">' + esc(cat.description) + '</div>' : '';
+  return '<div class="section' + (isPending ? ' section-pending' : '') + '">'
     + '<div class="sec-head">'
+    + '<div class="sec-head-row">'
     + '<span class="sec-label">' + esc(cat.label) + '</span>'
     + '<span class="sec-count">' + cat.projects.length + '</span>'
+    + '</div>'
+    + desc
     + '</div>'
     + '<div class="grid">' + cards + '</div>'
     + '</div>';
@@ -620,7 +634,13 @@ document.addEventListener('click', function(e) {
 fetch('/garden/public/data/projects.json')
   .then(function(r) { return r.json(); })
   .then(function(data) {
-    document.getElementById('out').innerHTML = data.categories.map(renderSection).join('');
+    var cats = data.categories.slice();
+    cats.sort(function(a, b) {
+      if (a.key === 'pending') return 1;
+      if (b.key === 'pending') return -1;
+      return 0;
+    });
+    document.getElementById('out').innerHTML = cats.map(renderSection).join('');
   })
   .catch(function() {
     document.getElementById('out').innerHTML = '<p style="color:#333;font-size:13px;padding:24px 0">Failed to load projects.</p>';

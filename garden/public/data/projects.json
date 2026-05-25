@@ -1,29 +1,10 @@
 {
   "categories": [
     {
-      "key": "self-hosted",
-      "label": "Self-Hosted",
+      "key": "apps",
+      "label": "Apps",
+      "description": "Things I built that need a server to run.",
       "projects": [
-        {
-          "name": "iTools",
-          "description": "Online developer tools hub — converters, encoders, formatters, and utilities.",
-          "url": "https://itools.trap.lol",
-          "icon": "terminal",
-          "status": "live",
-          "external": true,
-          "tags": ["deployed", "vps"],
-          "source": "https://github.com/nicolo-ribaudo/it-tools"
-        },
-        {
-          "name": "PDF Workbench",
-          "description": "Browser-based PDF manipulation — merge, split, compress, convert.",
-          "url": "https://pdf.trap.lol",
-          "icon": "file-text",
-          "status": "live",
-          "external": true,
-          "tags": ["deployed", "vps"],
-          "source": "https://github.com/Stirling-Tools/Stirling-PDF"
-        },
         {
           "name": "The List",
           "description": "Personal media tracking — films, series, and everything queued.",
@@ -31,22 +12,12 @@
           "icon": "list",
           "status": "live",
           "external": true,
-          "tags": ["deployed", "vps"],
+          "tags": ["built", "vps"],
           "source": "#"
         },
         {
-          "name": "Draw",
-          "description": "Collaborative whiteboard and diagramming canvas.",
-          "url": "https://draw.trap.lol",
-          "icon": "pen-tool",
-          "status": "live",
-          "external": true,
-          "tags": ["deployed", "vps"],
-          "source": "https://github.com/excalidraw/excalidraw"
-        },
-        {
-          "name": "D&D Live Map",
-          "description": "Self-hosted Cartomancer — DM-controlled live map pushed to the table display via WebSocket.",
+          "name": "Grimoire",
+          "description": "Self-hosted DM tool — live map pushed to the table display via WebSocket.",
           "url": "https://dnd.trap.lol",
           "icon": "map",
           "status": "live",
@@ -57,8 +28,9 @@
       ]
     },
     {
-      "key": "art",
-      "label": "Art",
+      "key": "static",
+      "label": "Static Tools",
+      "description": "Fully client-side — no server required, could run offline.",
       "projects": [
         {
           "name": "Artwork",
@@ -72,23 +44,46 @@
       ]
     },
     {
-      "key": "tools",
-      "label": "Tools",
+      "key": "deployed",
+      "label": "Deployed",
+      "description": "Third-party software I self-host and operate.",
       "projects": [
         {
-          "name": "Partfinder",
-          "description": "Automotive parts research and compatibility tool.",
-          "url": "/garden/automotive/partfinder/",
-          "icon": "wrench",
-          "status": "wip",
-          "tags": ["built", "static"],
-          "source": "#"
+          "name": "iTools",
+          "description": "Online developer tools hub — converters, encoders, formatters, and utilities.",
+          "url": "https://itools.trap.lol",
+          "icon": "terminal",
+          "status": "live",
+          "external": true,
+          "tags": ["hosted", "vps"],
+          "source": "https://github.com/nicolo-ribaudo/it-tools"
+        },
+        {
+          "name": "PDF Workbench",
+          "description": "Browser-based PDF manipulation — merge, split, compress, convert.",
+          "url": "https://pdf.trap.lol",
+          "icon": "file-text",
+          "status": "live",
+          "external": true,
+          "tags": ["hosted", "vps"],
+          "source": "https://github.com/Stirling-Tools/Stirling-PDF"
+        },
+        {
+          "name": "Draw",
+          "description": "Collaborative whiteboard and diagramming canvas.",
+          "url": "https://draw.trap.lol",
+          "icon": "pen-tool",
+          "status": "live",
+          "external": true,
+          "tags": ["hosted", "static"],
+          "source": "https://github.com/excalidraw/excalidraw"
         }
       ]
     },
     {
       "key": "sites",
       "label": "Sites",
+      "description": "Client work.",
       "projects": [
         {
           "name": "paintedd.art",
@@ -113,6 +108,22 @@
             "screenshot": "https://api.trap.lol/share/27a7bf6a0114/165370_m.jpg",
             "link": "https://paintedd.art"
           }
+        }
+      ]
+    },
+    {
+      "key": "pending",
+      "label": "Pending",
+      "description": "Work in progress — not yet ready.",
+      "projects": [
+        {
+          "name": "Partfinder",
+          "description": "Automotive parts research and compatibility tool.",
+          "url": "/garden/automotive/partfinder/",
+          "icon": "wrench",
+          "status": "wip",
+          "tags": ["built", "static"],
+          "source": "#"
         }
       ]
     }
