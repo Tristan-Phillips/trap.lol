@@ -13,14 +13,14 @@
  */
 
 import { qs, qsa, esc, debounce } from './shared-utils.js?v=4';
-import { state, saveState, getCharOverride, defaultCharOverride, addMessage } from './state.js?v=3';
+import { state, saveState, getCharOverride, setCharOverride, defaultCharOverride, addMessage } from './state.js?v=3';
 import { resolveImageUrl, saveImageBlob, isDataUrl } from './storage.js?v=3';
 import {
     IMAGE_MODELS, DEFAULT_MODEL, buildImagePrompt,
     generateImagePromptWithLLM, describeSceneWithLLM, generateImage
 } from './image-engine.js?v=3';
 import { getApiKey } from '/hub/glass/script/modules/llm-auth.js?v=3';
-import { addToGallery, ensureGalleryStore, getAllGalleryImages } from './gallery.js?v=1';
+import { addToGallery, ensureGalleryStore, getAllGalleryImages } from './gallery.js?v=2';
 
 export function initImageStudio(ctx, {
     lucideRefresh,
