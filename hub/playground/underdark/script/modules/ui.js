@@ -1411,6 +1411,54 @@ export function initUI() {
         return new Date(ts).toLocaleDateString([], { month: 'short', day: 'numeric' });
     }
 
+    // ── Chat context menu (right-click) ───────────────────────────────────────
+    let _chatCtxMenu = null;
+    function _dismissChatContextMenu() {
+        if (_chatCtxMenu) { _chatCtxMenu.remove(); _chatCtxMenu = null; }
+    }
+    document.addEventListener('click', _dismissChatContextMenu, { capture: true });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') _dismissChatContextMenu(); });
+
+    function _showChatContextMenu(x, y, chatId, chat) {
+        _dismissChatContextMenu();
+        const $m = document.createElement('div');
+        $m.className = 'chat-ctx-menu';
+        $m.innerHTML = `
+            <button class="chat-ctx-item" data-action="rename">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Rename
+            </button>
+            <div class="chat-ctx-sep"></div>
+            <button class="chat-ctx-item chat-ctx-item--danger" data-action="delete">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                Delete
+            </button>`;
+
+        // Position — keep within viewport
+        document.body.appendChild($m);
+        const rect = $m.getBoundingClientRect();
+        $m.style.left = `${Math.min(x, window.innerWidth  - rect.width  - 8)}px`;
+        $m.style.top  = `${Math.min(y, window.innerHeight - rect.height - 8)}px`;
+        _chatCtxMenu = $m;
+
+        $m.querySelector('[data-action="rename"]').addEventListener('click', async () => {
+            _dismissChatContextMenu();
+            const newName = await promptModal('Rename Thread', chat.name || '', 'Thread name…');
+            if (!newName?.trim()) return;
+            renameChat(chatId, newName.trim());
+            renderChats(qs('#chat-search-input')?.value || '');
+            showToast('Thread renamed', 'info', 1400);
+        });
+        $m.querySelector('[data-action="delete"]').addEventListener('click', async () => {
+            _dismissChatContextMenu();
+            const ok = await confirm('Delete Thread', `Delete "${chat.name || 'this thread'}"? This cannot be undone.`, { danger: true });
+            if (!ok) return;
+            deleteChat(chatId);
+            renderAll();
+            showToast('Thread deleted', 'info', 1400);
+        });
+    }
+
     function renderChats(filterQuery = '') {
         const $chatList = qs('#chat-list');
         if (!$chatList) return;
@@ -1529,16 +1577,12 @@ export function initUI() {
                 renderChats(qs('#chat-search-input')?.value || '');
                 showToast('Conversation renamed', 'info', 1400);
             });
-            el.addEventListener('contextmenu', async (e) => {
+            el.addEventListener('contextmenu', (e) => {
                 e.preventDefault();
                 const chatId = el.dataset.id;
                 const chat = allChats.find(c => c.id === chatId);
                 if (!chat) return;
-                const newName = await promptModal('Rename Thread', chat.name || '', 'Thread name…');
-                if (!newName?.trim()) return;
-                renameChat(chatId, newName.trim());
-                renderChats(qs('#chat-search-input')?.value || '');
-                showToast('Thread renamed', 'info', 1400);
+                _showChatContextMenu(e.clientX, e.clientY, chatId, chat);
             });
         });
     }

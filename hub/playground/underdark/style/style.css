@@ -10,7 +10,7 @@
 @import './sidebar.css?v=2';
 @import './arena.css?v=10';
 @import './terminal.css?v=3';
-@import './chat.css';
+@import './chat.css?v=2';
 
 /* ── Controls & Utilities ── */
 @import './controls.css?v=3';

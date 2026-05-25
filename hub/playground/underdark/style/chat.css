@@ -496,3 +496,42 @@
 .message__avatar.avatar--emoji { font-size: 1.2rem; }
 .welcome-char__avatar.avatar--emoji { font-size: 2.5rem; }
 .chat-item__avatar.avatar--emoji { font-size: 1.2rem; }
+
+/* ── Chat context menu ── */
+.chat-ctx-menu {
+    position: fixed;
+    z-index: 9999;
+    background: var(--glass-bg, #1a1a2e);
+    border: 1px solid var(--glass-border, rgba(255,255,255,.1));
+    border-radius: 8px;
+    padding: 4px;
+    min-width: 140px;
+    box-shadow: 0 8px 32px rgba(0,0,0,.6);
+    backdrop-filter: blur(12px);
+    animation: ctx-in .1s ease;
+}
+@keyframes ctx-in {
+    from { opacity: 0; transform: scale(.95); }
+    to   { opacity: 1; transform: scale(1); }
+}
+.chat-ctx-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 7px 10px;
+    background: none;
+    border: none;
+    border-radius: 5px;
+    color: var(--text-muted, #aaa);
+    font-size: 0.78rem;
+    font-family: var(--font-mono, monospace);
+    letter-spacing: .02em;
+    cursor: pointer;
+    text-align: left;
+    transition: background .1s, color .1s;
+}
+.chat-ctx-item:hover { background: rgba(255,255,255,.07); color: #fff; }
+.chat-ctx-item--danger { color: #e06060; }
+.chat-ctx-item--danger:hover { background: rgba(220,60,60,.15); color: #ff8080; }
+.chat-ctx-sep { height: 1px; background: var(--glass-border, rgba(255,255,255,.08)); margin: 3px 0; }
