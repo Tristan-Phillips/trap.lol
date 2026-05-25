@@ -1150,7 +1150,7 @@ export function initUI() {
 
     function _loadScenarioCache() {
         if (_scenarioLoadPromise) return _scenarioLoadPromise;
-        _scenarioLoadPromise = fetch('data/scenarios.json')
+        _scenarioLoadPromise = fetch(`${MEDIA_API}/pallet/data/scenarios.json`)
             .then(r => r.json())
             .then(data => { _scenarioPresets = data.scenarios || []; })
             .catch(e => { console.warn('[underdark] Failed to load scenarios.json', e); });
@@ -2512,7 +2512,7 @@ export function initUI() {
     async function _loadScenarioIndex() {
         if (_scenarioIndex) return _scenarioIndex;
         try {
-            const data = await fetch('data/scenario-index.json').then(r => r.json());
+            const data = await fetch(`${MEDIA_API}/pallet/data/scenario-index.json`).then(r => r.json());
             _scenarioIndex = data.scenarios || [];
         } catch { _scenarioIndex = []; }
         return _scenarioIndex;
@@ -8252,18 +8252,20 @@ async function loadManifest() {
     const res  = await fetch(`${MEDIA_API}/pallet/data/index.json`);
     if (!res.ok) throw new Error(`index.json fetch failed: ${res.status}`);
     const data = await res.json();
+    const abs = p => (p && !p.startsWith('http') ? `${MEDIA_API}/pallet/${p}` : p);
     (data.characters || []).forEach(remote => {
+        remote.card_path     = abs(remote.card_path);
+        remote.lorebook_path = abs(remote.lorebook_path);
         const idx = state.characters.findIndex(c => c.id === remote.id);
         if (idx < 0) {
             state.characters.push(remote);
         } else {
-            // Always sync avatar_path and card_path from remote — local state may be stale
             const local = state.characters[idx];
-            if (remote.avatar_path) local.avatar_path = remote.avatar_path;
-            if (remote.card_path)   local.card_path   = remote.card_path;
+            if (remote.avatar_path)   local.avatar_path   = remote.avatar_path;
+            if (remote.card_path)     local.card_path     = remote.card_path;
             if (remote.lorebook_path) local.lorebook_path = remote.lorebook_path;
-            if (remote.tagline)     local.tagline     = remote.tagline;
-            if (remote.tags?.length) local.tags       = remote.tags;
+            if (remote.tagline)       local.tagline       = remote.tagline;
+            if (remote.tags?.length)  local.tags          = remote.tags;
         }
     });
     saveState();
