@@ -291,7 +291,7 @@ export function initImageStudio(ctx, {
     async function _loadStudioPresets() {
         if (ctx.studioPresets) return ctx.studioPresets;
         try {
-            const res  = await fetch('./data/rp-gen-presets.json');
+            const res  = await fetch('https://api.trap.lol/pallet/data/rp-gen-presets.json');
             ctx.studioPresets = await res.json();
         } catch (_) {
             ctx.studioPresets = {};
@@ -544,7 +544,8 @@ export function initImageStudio(ctx, {
     // times — user edits stored in _userEdits are always preferred over card defaults.
     function _ensureOverrideSeededFromCard(charId) {
         const card = state.loadedCharacters[charId];
-        if (!card?.extensions?.underdark) return;
+        if (!card) { console.warn('[studio] _ensureOverride: no loaded card for', charId); return; }
+        if (!card.extensions?.underdark) { console.warn('[studio] _ensureOverride: no underdark ext on card', charId, Object.keys(card.extensions || {})); return; }
 
         const ud = card.extensions.underdark;
         const { ext: cardExt, ...cardCore } = ud;
@@ -586,14 +587,14 @@ export function initImageStudio(ctx, {
         // does this on open, but the studio may be opened without ever opening
         // the editor, leaving override fields blank.
         if (!state.loadedCharacters[charId]) {
-            await loadCharacterCard(charId).catch(() => null);
+            await loadCharacterCard(charId).catch(e => console.error('[studio] card load failed:', e));
         }
         _ensureOverrideSeededFromCard(charId);
 
         const char     = state.loadedCharacters[charId];
         const override = getCharOverride(charId);
         const meta     = state.characters.find(c => c.id === charId);
-        const charName = override.nickname || char?.name || 'Character';
+        const charName = override.nickname || char?.name || meta?.name || 'Character';
 
         if ($name) $name.textContent = charName;
         if ($badge) { $badge.hidden = false; }

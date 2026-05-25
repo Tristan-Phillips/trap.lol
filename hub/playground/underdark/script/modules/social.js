@@ -1030,7 +1030,7 @@ export function initSocial(ctx, {
                 try {
                     // Lazy-load presets once, cache on ctx
                     if (!ctx._lwPresets) {
-                        const r = await fetch('./data/rp-gen-presets.json');
+                        const r = await fetch('https://api.trap.lol/pallet/data/rp-gen-presets.json');
                         ctx._lwPresets = await r.json();
                     }
                     const presets = ctx._lwPresets;
@@ -1193,7 +1193,7 @@ export function initSocial(ctx, {
 
             // Lazy-load presets, pick a random scene + mood for variety
             if (!ctx._lwPresets) {
-                const r = await fetch('./data/rp-gen-presets.json');
+                const r = await fetch('https://api.trap.lol/pallet/data/rp-gen-presets.json');
                 ctx._lwPresets = await r.json();
             }
             const _p1 = (arr) => arr[Math.floor(Math.random() * arr.length)];
