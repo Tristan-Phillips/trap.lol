@@ -319,7 +319,11 @@ export function loadState() {
         const chars = localStorage.getItem(CHARS_KEY) || localStorage.getItem('underdark_chars_v3');
         if (chars) {
             const data = JSON.parse(chars);
-            state.characters = data.characters || [];
+            const raw = data.characters || [];
+            // Dedup by id — keep last occurrence so the most-recently synced entry wins
+            const seen = new Map();
+            raw.forEach(c => { if (c?.id) seen.set(c.id, c); });
+            state.characters = [...seen.values()];
             state.loadedCharacters = data.loadedCharacters || {};
         }
     } catch (e) {
@@ -708,7 +712,10 @@ export async function importFullInstance(jsonString) {
     // Restore state
     state.realities         = data.realities     || [];
     state.activeRealityId   = data.activeRealityId || null;
-    state.characters        = data.characters    || [];
+    const _rawImport = data.characters || [];
+    const _seenImport = new Map();
+    _rawImport.forEach(c => { if (c?.id) _seenImport.set(c.id, c); });
+    state.characters        = [..._seenImport.values()];
     state.loadedCharacters  = data.loadedCharacters || {};
     state.socialData        = data.socialData    || {};
     state.telemetry         = data.telemetry     || { turns: 0, totalTokens: 0, sessionTokens: 0 };

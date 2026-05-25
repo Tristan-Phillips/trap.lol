@@ -14,7 +14,7 @@
 
 import { getApiKey } from '/hub/glass/script/modules/llm-auth.js?v=3';
 import { scanLorebooks } from './lorebook.js?v=3';
-import { getCharOverride, getBotMemoriesFromReality } from './state.js?v=2';
+import { getCharOverride, getBotMemoriesFromReality } from './state.js?v=3';
 import { streamChat, fetchChat, extractThoughts as _extractThoughts } from '/hub/glass/script/modules/llm-transport.js';
 
 // ── Rough token estimator (4 chars ≈ 1 token) ────────────────────────────────

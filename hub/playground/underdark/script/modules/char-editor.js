@@ -5,7 +5,7 @@
  * Right area: vertical tab nav + detail panels covering all card + override fields.
  */
 
-import { state, saveCharacter, deleteCharacter, getCharOverride, setCharOverride, defaultCharOverride, saveState } from './state.js?v=2';
+import { state, saveCharacter, deleteCharacter, getCharOverride, setCharOverride, defaultCharOverride, saveState } from './state.js?v=3';
 import { normalizeData } from './parser-v2.js?v=4';
 import { saveAvatar, loadAvatar, isDataUrl } from './storage.js?v=3';
 import { qs, qsa, esc, debounce, slugify, generateId, pick, showToast } from './shared-utils.js?v=4';

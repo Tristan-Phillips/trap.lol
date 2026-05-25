@@ -16,7 +16,7 @@ import {
     defaultCharOverride, defaultThreadConfig, defaultGroupConfig, resolveCharAvatar,
     addReaction, getReactions, exportSessionJson, importSessionJson,
     exportFullInstance, importFullInstance
-} from './state.js?v=2';
+} from './state.js?v=3';
 import { resolveImageUrl, saveImageBlob, deleteImageBlob, isIdbImageRef, idbImageRefId, isDataUrl } from './storage.js?v=3';
 import { buildPayload, streamCompletion, fetchCompletion, buildOverlordContext, summarizeDroppedMessages, sanitizeRpResponse, detectAffectTone, distillMemory } from './llm-engine.js?v=16';
 import { parseCommand, executeCommand, filterCommands, COMMANDS } from './commands.js?v=3';

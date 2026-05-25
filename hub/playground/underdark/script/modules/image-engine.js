@@ -12,7 +12,7 @@
  * Returns the generated image as a data URL for local storage (no expiry).
  */
 
-import { state, getCharOverride } from './state.js?v=2';
+import { state, getCharOverride } from './state.js?v=3';
 import { getApiKey }               from '/hub/glass/script/modules/llm-auth.js?v=3';
 
 const API_BASE = 'https://nano-gpt.com/v1/images/generations';

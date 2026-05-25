@@ -13,7 +13,7 @@
  */
 
 import { qs, qsa, esc, debounce } from './shared-utils.js?v=4';
-import { state, saveState, getCharOverride, defaultCharOverride, addMessage } from './state.js?v=2';
+import { state, saveState, getCharOverride, defaultCharOverride, addMessage } from './state.js?v=3';
 import { resolveImageUrl, saveImageBlob, isDataUrl } from './storage.js?v=3';
 import {
     IMAGE_MODELS, DEFAULT_MODEL, buildImagePrompt,

@@ -8,7 +8,7 @@
  */
 
 import { qs, qsa, esc } from './shared-utils.js?v=4';
-import { state, saveState, defaultThreadConfig } from './state.js?v=2';
+import { state, saveState, defaultThreadConfig } from './state.js?v=3';
 
 // ── Module-level tone-tags state (mirrors _tcToneTags in the old closure) ─────
 let _tcToneTags = '';

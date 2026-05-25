@@ -13,7 +13,7 @@
  */
 
 import { qs, qsa, esc } from './shared-utils.js?v=4';
-import { state, saveState } from './state.js?v=2';
+import { state, saveState } from './state.js?v=3';
 import { resolveImageUrl, saveImageBlob, deleteImageBlob, isIdbImageRef, idbImageRefId, isDataUrl } from './storage.js?v=3';
 
 const MEDIA_API = 'https://api.trap.lol';
