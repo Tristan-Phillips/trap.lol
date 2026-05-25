@@ -3815,13 +3815,13 @@ export function initUI() {
 
         const chars = state.characters.filter(c => {
             if (_welcomeGenderFilter === 'all') return true;
-            const lc = state.loadedCharacters[c.id] || {};
-            const ud = lc.extensions?.underdark || lc.data?.extensions?.underdark || {};
-            const g  = (ud.gender || c.gender || '').toLowerCase();
-            const p  = (ud.ext?.pronouns || ud.pronouns || c.pronouns || '').toLowerCase();
-            console.log('[gender-filter]', c.name, { g, p, ud, lcKeys: Object.keys(lc) });
-            if (_welcomeGenderFilter === 'female') return g === 'woman' || g === 'female' || p.startsWith('she');
-            if (_welcomeGenderFilter === 'male')   return g === 'man'   || g === 'male'   || p.startsWith('he');
+            const lc   = state.loadedCharacters[c.id] || {};
+            const ud   = lc.extensions?.underdark || lc.data?.extensions?.underdark || {};
+            const tags = (c.tags || []).map(t => t.toLowerCase());
+            const g    = (ud.gender || c.gender || '').toLowerCase();
+            const p    = (ud.ext?.pronouns || ud.pronouns || c.pronouns || '').toLowerCase();
+            if (_welcomeGenderFilter === 'female') return g === 'woman' || g === 'female' || p.startsWith('she') || tags.includes('female') || tags.includes('woman');
+            if (_welcomeGenderFilter === 'male')   return g === 'man'   || g === 'male'   || p.startsWith('he') || tags.includes('male') || tags.includes('man');
             return true;
         });
 
