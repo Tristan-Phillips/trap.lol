@@ -31,7 +31,7 @@ import { initDirector, getActiveTone, getSceneDirective, clearSceneDirective, ge
 import { initThreadConfig, tcLogPush, updateThreadConfigBadge } from './thread-config.js?v=2';
 import { initGallery, addToGallery, addToVideoGallery, getAllFeedPosts, getAllGalleryImages, ensureGalleryStore, saveLocalPost, removeLocalPostBySrc, loadApiGallery } from './gallery.js?v=2';
 import { initSocial } from './social.js?v=3';
-import { initImageStudio } from './image-studio.js?v=3';
+import { initImageStudio } from './image-studio.js?v=4';
 
 // Light markdown renderer for profile details — bold, italic, headers, line breaks only.
 // Does NOT use marked.js to avoid dependency — covers the common character-card patterns.
@@ -4899,7 +4899,7 @@ export function initUI() {
             await _studioDoSnapshot?.(modifiers).catch(err => showToast(`Redo failed: ${err.message}`, 'error', 5000));
         });
 
-        lucideRefresh($el);
+        // lucideRefresh must be called after $el is in the DOM — callers handle this
     }
 
     function _injectImageMessage(dataUrl, prompt, model, existingMsgId) {
@@ -4912,8 +4912,9 @@ export function initUI() {
 
         const $el = document.createElement('div');
         $el.className = 'message message--image';
-        _injectImageMessageInto($el, dataUrl, prompt, model, msgId);
         $thread.appendChild($el);
+        _injectImageMessageInto($el, dataUrl, prompt, model, msgId);
+        lucideRefresh($el);
         $thread.scrollTop = $thread.scrollHeight;
         return $el;
     }

@@ -183,6 +183,7 @@ export function initImageStudio(ctx, {
                 $real.className = 'message message--image';
                 $placeholder.parentNode.replaceChild($real, $placeholder);
                 _injectImageMessageInto($real, dataUrl, prompt, model, persistedMsg.id);
+                if (window.lucide) window.lucide.createIcons({ nodes: [$real] });
                 const $t = qs('#message-thread'); if ($t) $t.scrollTop = $t.scrollHeight;
             } else {
                 _injectImageMessage(dataUrl, prompt, model, persistedMsg.id);
