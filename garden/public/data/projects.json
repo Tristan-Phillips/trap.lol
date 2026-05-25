@@ -6,16 +6,6 @@
       "description": "Things I built that need a server to run.",
       "projects": [
         {
-          "name": "The List",
-          "description": "Personal media tracking — films, series, and everything queued.",
-          "url": "https://thelist.trap.lol",
-          "icon": "list",
-          "status": "live",
-          "external": true,
-          "tags": ["built", "vps"],
-          "source": "#"
-        },
-        {
           "name": "Grimoire",
           "description": "Self-hosted DM tool — live map pushed to the table display via WebSocket.",
           "url": "https://dnd.trap.lol",
@@ -28,35 +18,29 @@
       ]
     },
     {
-      "key": "static",
-      "label": "Static Tools",
-      "description": "Fully client-side — no server required, could run offline.",
-      "projects": [
-        {
-          "name": "Artwork",
-          "description": "Personal artwork collection.",
-          "url": "/garden/art/",
-          "icon": "image",
-          "status": "live",
-          "tags": ["built", "static"],
-          "source": "#"
-        }
-      ]
-    },
-    {
       "key": "deployed",
       "label": "Deployed",
       "description": "Third-party software I self-host and operate.",
       "projects": [
         {
-          "name": "iTools",
-          "description": "Online developer tools hub — converters, encoders, formatters, and utilities.",
-          "url": "https://itools.trap.lol",
-          "icon": "terminal",
+          "name": "The List",
+          "description": "Anime, Movies, Series tracking and discovery.",
+          "url": "https://thelist.trap.lol",
+          "icon": "eye",
           "status": "live",
           "external": true,
           "tags": ["hosted", "vps"],
-          "source": "https://github.com/nicolo-ribaudo/it-tools"
+          "source": "https://github.com/sbondCo/Watcharr"
+        },
+        {
+          "name": "Draw",
+          "description": "Collaborative whiteboard and diagramming canvas.",
+          "url": "https://draw.trap.lol",
+          "icon": "pen-tool",
+          "status": "live",
+          "external": true,
+          "tags": ["hosted", "static"],
+          "source": "https://github.com/excalidraw/excalidraw"
         },
         {
           "name": "PDF Workbench",
@@ -69,14 +53,14 @@
           "source": "https://github.com/Stirling-Tools/Stirling-PDF"
         },
         {
-          "name": "Draw",
-          "description": "Collaborative whiteboard and diagramming canvas.",
-          "url": "https://draw.trap.lol",
-          "icon": "pen-tool",
+          "name": "iTools",
+          "description": "Online developer tools hub — converters, encoders, formatters, and utilities.",
+          "url": "https://itools.trap.lol",
+          "icon": "terminal",
           "status": "live",
           "external": true,
-          "tags": ["hosted", "static"],
-          "source": "https://github.com/excalidraw/excalidraw"
+          "tags": ["hosted", "vps"],
+          "source": "https://github.com/nicolo-ribaudo/it-tools"
         }
       ]
     },
@@ -97,7 +81,7 @@
           "detail": {
             "client": "Paintedd",
             "role": "Design, development and maintenance",
-            "year": "2022 – Present",
+            "year": "2022 - Present",
             "story": "Full creative freedom — observe the artist, learn about them and their work, and create a website that reflects their unique style and personality. The site is ever evolving as living art does.",
             "evolution": [
               "Initial brief: Linktree alternative on a custom domain",
