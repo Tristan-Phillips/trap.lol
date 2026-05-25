@@ -1543,27 +1543,62 @@ export function initUI() {
                 : '';
 
             return `
-            <div class="chat-item ${c.id === state.reality.activeChatId ? 'active' : ''}"
-                 data-id="${esc(c.id)}"
-                 role="listitem"
-                 style="animation-delay:${i * 0.025}s">
-                ${avHtml}
-                <div class="chat-item__info">
-                    <div class="chat-item__top">
-                        <span class="chat-item__name">${esc(name)}</span>
-                        <span class="chat-item__time">${time}</span>
-                    </div>
-                    <div class="chat-item__preview">${cleanPreview}</div>
+            <div class="chat-item-wrap" data-id="${esc(c.id)}" style="animation-delay:${i * 0.025}s">
+                <div class="chat-item-swipe-actions">
+                    <button class="chat-item-swipe-btn chat-item-swipe-btn--delete" data-id="${esc(c.id)}" title="Delete">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                    </button>
                 </div>
-                ${typeBadge}
+                <div class="chat-item ${c.id === state.reality.activeChatId ? 'active' : ''}"
+                     data-id="${esc(c.id)}"
+                     role="listitem">
+                    ${avHtml}
+                    <div class="chat-item__info">
+                        <div class="chat-item__top">
+                            <span class="chat-item__name">${esc(name)}</span>
+                            <span class="chat-item__time">${time}</span>
+                        </div>
+                        <div class="chat-item__preview">${cleanPreview}</div>
+                    </div>
+                    ${typeBadge}
+                </div>
             </div>`;
         });
 
         $chatList.innerHTML = htmls.join('');
         if (window.lucide) window.lucide.createIcons({ nodes: [$chatList] });
 
+        // Swipe-to-delete: close any open wrap when user interacts elsewhere
+        let _openSwipeWrap = null;
+        function _closeSwipe() {
+            if (_openSwipeWrap) {
+                _openSwipeWrap.classList.remove('chat-item-wrap--swiped');
+                _openSwipeWrap = null;
+            }
+        }
+        $chatList.addEventListener('click', e => {
+            if (!e.target.closest('.chat-item-swipe-btn')) _closeSwipe();
+        }, { capture: true });
+
+        qsa('.chat-item-swipe-btn--delete', $chatList).forEach(btn => {
+            btn.addEventListener('click', async e => {
+                e.stopPropagation();
+                const chatId = btn.dataset.id;
+                const chat = allChats.find(c => c.id === chatId);
+                _closeSwipe();
+                const ok = await confirm('Delete Thread', `Delete "${chat?.name || 'this thread'}"? This cannot be undone.`, { danger: true });
+                if (!ok) return;
+                deleteChat(chatId);
+                renderAll();
+                showToast('Thread deleted', 'info', 1400);
+            });
+        });
+
         qsa('.chat-item', $chatList).forEach(el => {
+            const wrap = el.closest('.chat-item-wrap');
+
             el.addEventListener('click', () => {
+                if (wrap?.classList.contains('chat-item-wrap--swiped')) { _closeSwipe(); return; }
                 switchChat(el.dataset.id);
                 renderAll();
             });
@@ -1583,6 +1618,39 @@ export function initUI() {
                 const chat = allChats.find(c => c.id === chatId);
                 if (!chat) return;
                 _showChatContextMenu(e.clientX, e.clientY, chatId, chat);
+            });
+
+            // Touch: swipe-left to reveal delete, long-press for context menu
+            let _tx0 = 0, _ty0 = 0, _longPressTimer = null;
+            el.addEventListener('touchstart', e => {
+                _tx0 = e.touches[0].clientX;
+                _ty0 = e.touches[0].clientY;
+                _longPressTimer = setTimeout(async () => {
+                    _longPressTimer = null;
+                    const chatId = el.dataset.id;
+                    const chat = allChats.find(c => c.id === chatId);
+                    if (!chat || !wrap) return;
+                    // vibrate briefly if supported
+                    navigator.vibrate?.(30);
+                    _showChatContextMenu(_tx0, _ty0, chatId, chat);
+                }, 550);
+            }, { passive: true });
+            el.addEventListener('touchmove', e => {
+                if (!_longPressTimer && !wrap) return;
+                const dx = e.touches[0].clientX - _tx0;
+                const dy = Math.abs(e.touches[0].clientY - _ty0);
+                if (dy > 10) { clearTimeout(_longPressTimer); _longPressTimer = null; return; }
+                if (dx < -18) { clearTimeout(_longPressTimer); _longPressTimer = null; }
+            }, { passive: true });
+            el.addEventListener('touchend', e => {
+                if (_longPressTimer) { clearTimeout(_longPressTimer); _longPressTimer = null; return; }
+                const dx = e.changedTouches[0].clientX - _tx0;
+                if (dx < -48 && wrap) {
+                    e.preventDefault();
+                    if (_openSwipeWrap && _openSwipeWrap !== wrap) _closeSwipe();
+                    wrap.classList.toggle('chat-item-wrap--swiped');
+                    _openSwipeWrap = wrap.classList.contains('chat-item-wrap--swiped') ? wrap : null;
+                }
             });
         });
     }
