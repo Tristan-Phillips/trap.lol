@@ -19,7 +19,7 @@ import { state, saveState } from './state.js?v=3';
 import { resolveImageUrl } from './storage.js?v=3';
 import { buildPayload, streamCompletion, fetchCompletion } from './llm-engine.js?v=16';
 import { getApiKey } from '/hub/glass/script/modules/llm-auth.js?v=3';
-import { getAllFeedPosts, saveLocalPost } from './gallery.js?v=1';
+import { getAllFeedPosts, saveLocalPost } from './gallery.js?v=2';
 import { buildImagePrompt, generateImage, generateImagePromptWithLLM } from './image-engine.js?v=1';
 
 export function initSocial(ctx, {
@@ -161,7 +161,17 @@ export function initSocial(ctx, {
             lucideRefresh($feedList);
             return;
         }
-        allPosts.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+        // Timestamps may be ISO strings ("2026-04-14T11:45:00Z") or numeric ms.
+        // Numeric subtraction on ISO strings produces NaN — use string compare instead,
+        // which works correctly for ISO dates and degrades gracefully to stable order.
+        allPosts.sort((a, b) => {
+            const ta = a.timestamp, tb = b.timestamp;
+            if (!ta && !tb) return 0;
+            if (!ta) return 1;
+            if (!tb) return -1;
+            if (typeof ta === 'number' && typeof tb === 'number') return tb - ta;
+            return String(tb).localeCompare(String(ta));
+        });
         await _renderPostList(allPosts);
     }
 
