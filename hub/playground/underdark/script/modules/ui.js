@@ -474,6 +474,32 @@ export function initUI() {
     let _pickerMode = null;
     let _welcomeGenderFilter = localStorage.getItem('welcome_gender_filter') || 'all';
 
+    // Hydrate gender/pronouns onto meta for characters whose loadedCharacters entry
+    // is absent (cards exist on disk but were never loaded into localStorage).
+    // Reads card_path, fetches once, writes gender+pronouns into meta, then re-renders.
+    (async () => {
+        const needsHydration = state.characters.filter(c => {
+            if (c.gender || c.pronouns) return false;
+            const lc = state.loadedCharacters[c.id] || {};
+            const ud = lc.extensions?.underdark || {};
+            return !ud.gender && !ud.ext?.pronouns && c.card_path;
+        });
+        if (!needsHydration.length) return;
+        let changed = false;
+        await Promise.all(needsHydration.map(async c => {
+            try {
+                const res = await fetch(c.card_path);
+                if (!res.ok) return;
+                const card = await res.json();
+                const ud = card.data?.extensions?.underdark || {};
+                const g  = ud.gender || '';
+                const p  = ud.ext?.pronouns || ud.pronouns || '';
+                if (g || p) { c.gender = g; c.pronouns = p; changed = true; }
+            } catch { /* ignore fetch errors */ }
+        }));
+        if (changed) { saveState(); renderWelcomeGrid(); }
+    })();
+
     // ── Gallery / Lightbox module ─────────────────────────────────────────────
     const { openLightbox, openGalleryModal, renderGalleryStrip, openVideoGalleryModal, renderVideoStrip } =
         initGallery(ctx, {
@@ -3815,13 +3841,10 @@ export function initUI() {
 
         const chars = state.characters.filter(c => {
             if (_welcomeGenderFilter === 'all') return true;
-            const lc   = state.loadedCharacters[c.id] || {};
-            const ud   = lc.extensions?.underdark || lc.data?.extensions?.underdark || {};
-            const tags = (c.tags || []).map(t => t.toLowerCase());
-            const g    = (ud.gender || c.gender || '').toLowerCase();
-            const p    = (ud.ext?.pronouns || ud.pronouns || c.pronouns || '').toLowerCase();
-            if (_welcomeGenderFilter === 'female') return g === 'woman' || g === 'female' || p.startsWith('she') || tags.includes('female') || tags.includes('woman');
-            if (_welcomeGenderFilter === 'male')   return g === 'man'   || g === 'male'   || p.startsWith('he') || tags.includes('male') || tags.includes('man');
+            const g = (c.gender || '').toLowerCase();
+            const p = (c.pronouns || '').toLowerCase();
+            if (_welcomeGenderFilter === 'female') return g === 'woman' || g === 'female' || p.startsWith('she');
+            if (_welcomeGenderFilter === 'male')   return g === 'man'   || g === 'male'   || p.startsWith('he');
             return true;
         });
 
