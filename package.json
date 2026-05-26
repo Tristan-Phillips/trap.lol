@@ -1,8 +1,0 @@
-{
-  "name": "trap-lol",
-  "private": true,
-  "scripts": {
-    "dev": "npx serve . -p 3000 --no-clipboard",
-    "start": "npx serve . -p 3000 --no-clipboard"
-  }
-}
