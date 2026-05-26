@@ -43,7 +43,7 @@ export const IS_TOUCH = "ontouchstart" in window;
 export const globalRouter = new Map();
 
 export let config;
-export let hostingData, extData, guideData, botsData, toolsData, llmData, appsData, statstationData, trapData;
+export let hostingData, botsData, llmData, appsData, statstationData, trapData;
 
 export async function loadCoreData() {
   try {
@@ -58,12 +58,9 @@ export async function loadCoreData() {
     return null;
   });
 
-  [hostingData, extData, guideData, botsData, toolsData, llmData, appsData, statstationData, trapData] = await Promise.all([
+  [hostingData, botsData, llmData, appsData, statstationData, trapData] = await Promise.all([
     safeJSON(`/hub/glass/data/hosting.json`),
-    safeJSON(`/hub/glass/data/extlinks.json`),
-    safeJSON(`/hub/glass/data/guides.json`),
     safeJSON(`/hub/glass/data/bots.json`),
-    safeJSON(`/hub/glass/data/tools.json`),
     safeJSON(`/hub/glass/data/llm.json`),
     safeJSON(`/hub/glass/data/apps.json`),
     safeJSON(`/hub/glass/data/statstation.json`),

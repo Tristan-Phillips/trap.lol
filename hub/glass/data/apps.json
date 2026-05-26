@@ -6,7 +6,7 @@
       "path": "/hub/playground/",
       "icon": "layout-grid",
       "description": "Sovereign app hub — keys stay in your browser.",
-      "apps": ["Neural Uplink", "Underdark", "RADAR", "Grimoire"],
+      "apps": ["Neural Uplink", "Underdark", "Wallhaven"],
       "tags": ["apps", "llm", "tools"],
       "keyed": true,
       "status": "live"

@@ -2,43 +2,6 @@
 
 /* ─── Tablets & Small Laptops (900px) ─── */
 @media (max-width: 900px) {
-  .ext-container {
-    display: flex;
-    flex-direction: column;
-    grid-template-columns: unset;
-  }
-
-  .ext-list { 
-    grid-template-columns: 1fr; 
-    gap: var(--space-sm); 
-  }
-
-  .item-ext { 
-    min-height: var(--touch-min); 
-  }
-
-  .ext-category__body {
-    display: none;
-    position: static !important;
-    transform: none !important;
-    width: 100% !important;
-    left: 0 !important;
-    top: auto !important;
-    max-height: 70vh;
-    overflow-y: auto;
-    opacity: 1;
-    pointer-events: auto;
-    border: 1px solid var(--theme-accent);
-    border-top: none;
-    border-radius: 0 0 5px 5px;
-    padding: 0;
-    backdrop-filter: none;
-    box-shadow: none;
-  }
-
-  .ext-category--open .ext-category__body {
-    display: block;
-  }
 }
 
 /* ─── Tablets (768px) ─── */
@@ -64,9 +27,8 @@
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); 
   }
 
-  .apps-grid,
-  .tools-grid { 
-    grid-template-columns: 1fr; 
+  .apps-grid {
+    grid-template-columns: 1fr;
   }
 
   .bots-grid { 
@@ -91,10 +53,6 @@
     align-items: flex-start; 
   }
   
-  .flip-card { 
-    min-width: 240px; 
-  }
-
   /* Shell Components */
   .llm-shell__messages { 
     min-height: 260px; 
@@ -114,14 +72,6 @@
 @media (max-width: 480px) {
   .grid-primary { 
     grid-template-columns: 1fr; 
-  }
-
-  .carousel__arrow { 
-    display: none; 
-  }
-
-  .flip-card { 
-    min-width: min(260px, calc(100vw - 3rem)); 
   }
 
   .llm-shell__messages { 

@@ -30,13 +30,6 @@
 .card-primary:hover::after,
 .card-primary:focus-visible::after { animation: none; }
 
-.tool-entry::before {
-  animation: bl-arc-crawl-v 22s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-.tool-entry:nth-child(2)::before { animation-delay: -7s; }
-.tool-entry:nth-child(3)::before { animation-delay: -14s; }
-
 @media (prefers-reduced-motion: reduce) {
-  .card-primary::after,
-  .tool-entry::before { animation: none; }
+  .card-primary::after { animation: none; }
 }

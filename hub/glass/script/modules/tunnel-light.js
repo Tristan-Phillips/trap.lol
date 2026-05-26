@@ -9,10 +9,10 @@ export function initTunnelLight() {
     "#echoes-section .echoes-portal",
     ".section-title",
     ".card-primary-wrap",
-    ".ext-category",
+
     ".bots-grid",
     ".app-card",
-    ".tool-entry",
+
     ".site-footer",
   ].join(", ");
 

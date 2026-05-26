@@ -1,8 +1,8 @@
 {
   "categories": [
     {
-      "key": "apps",
-      "label": "Apps",
+      "key": "web-apps",
+      "label": "Web Apps",
       "description": "Things I built that need a server to run.",
       "projects": [
         {
@@ -14,53 +14,6 @@
           "external": true,
           "tags": ["built", "vps"],
           "source": "#"
-        }
-      ]
-    },
-    {
-      "key": "deployed",
-      "label": "Deployed",
-      "description": "Third-party software I self-host and operate.",
-      "projects": [
-        {
-          "name": "The List",
-          "description": "Anime, Movies, Series tracking and discovery.",
-          "url": "https://thelist.trap.lol",
-          "icon": "eye",
-          "status": "live",
-          "external": true,
-          "tags": ["hosted", "vps"],
-          "source": "https://github.com/sbondCo/Watcharr"
-        },
-        {
-          "name": "Draw",
-          "description": "Collaborative whiteboard and diagramming canvas.",
-          "url": "https://draw.trap.lol",
-          "icon": "pen-tool",
-          "status": "live",
-          "external": true,
-          "tags": ["hosted", "static"],
-          "source": "https://github.com/excalidraw/excalidraw"
-        },
-        {
-          "name": "PDF Workbench",
-          "description": "Browser-based PDF manipulation — merge, split, compress, convert.",
-          "url": "https://pdf.trap.lol",
-          "icon": "file-text",
-          "status": "live",
-          "external": true,
-          "tags": ["hosted", "vps"],
-          "source": "https://github.com/Stirling-Tools/Stirling-PDF"
-        },
-        {
-          "name": "iTools",
-          "description": "Online developer tools hub — converters, encoders, formatters, and utilities.",
-          "url": "https://itools.trap.lol",
-          "icon": "terminal",
-          "status": "live",
-          "external": true,
-          "tags": ["hosted", "vps"],
-          "source": "https://github.com/nicolo-ribaudo/it-tools"
         }
       ]
     },
@@ -92,6 +45,53 @@
             "screenshot": "https://api.trap.lol/share/27a7bf6a0114/165370_m.jpg",
             "link": "https://paintedd.art"
           }
+        }
+      ]
+    },
+    {
+      "key": "deployed",
+      "label": "Deployed",
+      "description": "Third-party software I self-host and operate.",
+      "projects": [
+        {
+          "name": "The List",
+          "description": "Anime, Movies, Series tracking and discovery.",
+          "url": "https://thelist.trap.lol",
+          "icon": "eye",
+          "status": "live",
+          "external": true,
+          "tags": ["hosted", "vps"],
+          "source": "https://github.com/sbondCo/Watcharr"
+        },
+        {
+          "name": "PDF Workbench",
+          "description": "Browser-based PDF manipulation — merge, split, compress, convert.",
+          "url": "https://pdf.trap.lol",
+          "icon": "file-text",
+          "status": "live",
+          "external": true,
+          "tags": ["hosted", "vps"],
+          "source": "https://github.com/Stirling-Tools/Stirling-PDF"
+        },
+        {
+          "name": "iTools",
+          "description": "Online developer tools hub — converters, encoders, formatters, and utilities.",
+          "url": "https://itools.trap.lol",
+          "icon": "terminal",
+          "status": "live",
+          "external": true,
+          "tags": ["hosted", "vps"],
+          "source": "https://github.com/nicolo-ribaudo/it-tools"
+        },
+        {
+          "name": "Forgejo",
+          "description": "Self-hosted git forge — repositories, issues, and version control.",
+          "url": "https://git.trap.lol",
+          "icon": "git-branch",
+          "status": "live",
+          "external": true,
+          "tags": ["hosted", "vps"],
+          "source": "https://codeberg.org/forgejo/forgejo"
         }
       ]
     },

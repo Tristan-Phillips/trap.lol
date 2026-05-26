@@ -3,7 +3,19 @@
 .ai
 .vscode
 .env
+.env.*
 .bin
+
+# ── OS artefacts ──────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+thumbs.db
+
+# ── Editor swap / temp files ──────────────────────────────────────────────────
+*.swp
+*.swo
+*~
+*.orig
 
 # ── Backup / scratch files ────────────────────────────────────────────────────
 hub/glass/markdown/*.bk
