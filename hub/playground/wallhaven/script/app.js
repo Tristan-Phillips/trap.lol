@@ -45,9 +45,9 @@ const WH = {
   query:        _bootQuery,
   cats:         _fp.cats   || { general:true, anime:true, people:true },
   purity:       _fp.purity || { sfw:true, sketchy:false, nsfw:false },
-  sort:         _fp.sort    || 'toplist',
+  sort:         _fp.sort    || 'random',
   topRange:     _fp.topRange|| '1M',
-  layout:       _fp.layout  || 'grid',
+  layout:       _fp.layout  || 'masonry',
   page:         1,
   totalPages:   1,
   total:        0,
@@ -95,10 +95,20 @@ const apikeyInput    = document.getElementById('wh-apikey-input');
 const apikeyToggle   = document.getElementById('wh-apikey-toggle');
 const apikeySave     = document.getElementById('wh-apikey-save');
 const keyStatus      = document.getElementById('wh-key-status');
+const apikeyInputSb  = document.getElementById('wh-apikey-input-sb');
+const apikeyToggleSb = document.getElementById('wh-apikey-toggle-sb');
+const apikeySaveSb   = document.getElementById('wh-apikey-save-sb');
+const keyStatusSb    = document.getElementById('wh-key-status-sb');
 const vaultInput     = document.getElementById('wh-vault-input');
 const vaultSaveBtn   = document.getElementById('wh-vault-save');
 const vaultNewBtn    = document.getElementById('wh-vault-new');
 const vaultStatus    = document.getElementById('wh-vault-status');
+const vaultInputSb   = document.getElementById('wh-vault-input-sb');
+const vaultSaveBtnSb = document.getElementById('wh-vault-save-sb');
+const vaultNewBtnSb  = document.getElementById('wh-vault-new-sb');
+const vaultStatusSb  = document.getElementById('wh-vault-status-sb');
+const settingsToggle = document.getElementById('wh-settings-toggle');
+const settingsBody   = document.getElementById('wh-settings-body');
 const statusText     = document.getElementById('wh-status-text');
 const resultCount    = document.getElementById('wh-result-count');
 const pageControls   = document.getElementById('wh-page-controls');
@@ -315,47 +325,74 @@ unassignAllBtn.addEventListener('click',()=>{
 });
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// SETTINGS TOGGLE
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+settingsToggle.addEventListener('click',()=>{
+  const open=settingsBody.hidden;
+  settingsBody.hidden=!open;
+  settingsToggle.setAttribute('aria-expanded', open?'true':'false');
+});
+// Auto-expand settings if no API key is set (first-run hint)
+if(!WH.apiKey){ settingsBody.hidden=false; settingsToggle.setAttribute('aria-expanded','true'); }
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // API KEY
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-apikeyInput.value=WH.apiKey;
-if(WH.apiKey){ keyStatus.textContent='Connected'; keyStatus.className='wh-key-status wh-key-status--ok'; }
+function setKeyStatus(msg, ok){
+  [keyStatus, keyStatusSb].forEach(el=>{ if(!el) return; el.textContent=msg; el.className='wh-key-status'+(ok?' wh-key-status--ok':''); });
+}
+function syncApikeyInputs(val){
+  if(apikeyInput)  apikeyInput.value=val;
+  if(apikeyInputSb) apikeyInputSb.value=val;
+}
+syncApikeyInputs(WH.apiKey);
+if(WH.apiKey) setKeyStatus('Connected', true);
 
-apikeyToggle.addEventListener('click',()=>{
-  const show=apikeyInput.type==='password';
-  apikeyInput.type=show?'text':'password';
-  apikeyToggle.innerHTML=show
-    ?'<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" x2="23" y1="1" y2="23"/></svg>'
-    :'<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>';
-});
-apikeySave.addEventListener('click',()=>{
-  WH.apiKey=apikeyInput.value.trim();
+const EYE_OPEN='<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>';
+const EYE_OFF='<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" x2="23" y1="1" y2="23"/></svg>';
+
+function toggleApiKeyVisibility(inputEl, btnEl){
+  const show=inputEl.type==='password';
+  inputEl.type=show?'text':'password';
+  btnEl.innerHTML=show?EYE_OFF:EYE_OPEN;
+}
+function saveApiKey(inputEl){
+  WH.apiKey=inputEl.value.trim();
   localStorage.setItem('wh_apikey',WH.apiKey);
-  keyStatus.textContent=WH.apiKey?'Connected':'Cleared';
-  keyStatus.className='wh-key-status'+(WH.apiKey?' wh-key-status--ok':'');
-});
+  syncApikeyInputs(WH.apiKey);
+  setKeyStatus(WH.apiKey?'Connected':'Cleared', !!WH.apiKey);
+}
+
+apikeyToggle.addEventListener('click',()=>toggleApiKeyVisibility(apikeyInput, apikeyToggle));
+apikeySave.addEventListener('click',()=>saveApiKey(apikeyInput));
+if(apikeyToggleSb) apikeyToggleSb.addEventListener('click',()=>toggleApiKeyVisibility(apikeyInputSb, apikeyToggleSb));
+if(apikeySaveSb)   apikeySaveSb.addEventListener('click',()=>saveApiKey(apikeyInputSb));
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // VAULT ID
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 function setVaultStatus(msg, ok){
-  vaultStatus.textContent=msg;
-  vaultStatus.className='wh-vault-status'+(ok?' wh-vault-status--ok':ok===false?' wh-vault-status--err':'');
+  [vaultStatus, vaultStatusSb].forEach(el=>{ if(!el) return; el.textContent=msg; el.className='wh-vault-status'+(ok?' wh-vault-status--ok':ok===false?' wh-vault-status--err':''); });
+}
+
+function syncVaultInputs(val){
+  if(vaultInput)   vaultInput.value=val;
+  if(vaultInputSb) vaultInputSb.value=val;
 }
 
 function applyVaultId(id){
   WH.vaultId=id;
-  vaultInput.value=id;
+  syncVaultInputs(id);
   localStorage.setItem('wh_vault_id',id);
   if(id){ setVaultStatus('Active','ok'); } else { setVaultStatus('',''); }
 }
 
 // Restore saved vault ID on load
-if(WH.vaultId){ vaultInput.value=WH.vaultId; setVaultStatus('Active',true); }
+if(WH.vaultId){ syncVaultInputs(WH.vaultId); setVaultStatus('Active',true); }
 
-vaultSaveBtn.addEventListener('click',async()=>{
-  const id=vaultInput.value.trim().toUpperCase();
+async function doVaultSave(inputEl){
+  const id=inputEl.value.trim().toUpperCase();
   if(!id){ applyVaultId(''); showToast('Vault ID cleared.','info'); return; }
-  // Validate format XXXX-XXXX-XXXX-XXXX
   if(!/^[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}$/.test(id)){
     setVaultStatus('Invalid format',false); showToast('Expected format: XXXX-XXXX-XXXX-XXXX','warn'); return;
   }
@@ -370,27 +407,33 @@ vaultSaveBtn.addEventListener('click',async()=>{
     await pushToVault();
     showToast('Local state uploaded to vault.','success');
   }catch(e){ setVaultStatus('Error',false); showToast('Could not reach proxy: '+e.message,'warn'); }
-});
+}
 
-vaultNewBtn.addEventListener('click',async()=>{
-  vaultNewBtn.disabled=true; setVaultStatus('Creating…','');
+async function doVaultNew(btnEl){
+  btnEl.disabled=true; setVaultStatus('Creating…','');
   try{
     const r=await fetch(`${PROXY_BASE}/vault/create`,{method:'POST'});
     if(!r.ok)throw new Error('HTTP '+r.status);
     const json=await r.json();
     applyVaultId(json.vault_id);
-    vaultInput.value=json.vault_id;
     showToast('New vault created! ID saved.','success');
   }catch(e){ setVaultStatus('Error',false); showToast('Could not create vault: '+e.message,'warn'); }
-  finally{ vaultNewBtn.disabled=false; }
-});
+  finally{ btnEl.disabled=false; }
+}
 
-// Format input automatically as user types (XXXX-XXXX-XXXX-XXXX)
-vaultInput.addEventListener('input',()=>{
-  let v=vaultInput.value.replace(/[^0-9A-Fa-f]/g,'').toUpperCase().slice(0,16);
+function formatVaultInput(inputEl){
+  let v=inputEl.value.replace(/[^0-9A-Fa-f]/g,'').toUpperCase().slice(0,16);
   const parts=[v.slice(0,4),v.slice(4,8),v.slice(8,12),v.slice(12,16)].filter(Boolean);
-  vaultInput.value=parts.join('-');
-});
+  inputEl.value=parts.join('-');
+}
+
+vaultSaveBtn.addEventListener('click',()=>doVaultSave(vaultInput));
+vaultNewBtn.addEventListener('click',()=>doVaultNew(vaultNewBtn));
+vaultInput.addEventListener('input',()=>formatVaultInput(vaultInput));
+
+if(vaultSaveBtnSb) vaultSaveBtnSb.addEventListener('click',()=>doVaultSave(vaultInputSb));
+if(vaultNewBtnSb)  vaultNewBtnSb.addEventListener('click',()=>doVaultNew(vaultNewBtnSb));
+if(vaultInputSb)   vaultInputSb.addEventListener('input',()=>formatVaultInput(vaultInputSb));
 
 // ── Vault API helpers ─────────────────────────────────────────────────────
 async function vaultPost(path, body){
