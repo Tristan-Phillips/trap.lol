@@ -28,19 +28,21 @@ export async function loadApiGallery(charId) {
     if (_apiGalleryFetched.has(charId)) return;
     _apiGalleryFetched.add(charId);
     try {
-        const res = await fetch(`${MEDIA_API}/pallet/data/gallery/${charId}.json`);
+        const vaultId = localStorage.getItem('wh_vault_id') || '';
+        const url = vaultId
+            ? `${MEDIA_API}/pallet/data/vault-gallery/${charId}.json?vault=${encodeURIComponent(vaultId)}`
+            : `${MEDIA_API}/pallet/data/gallery/${charId}.json`;
+        const res = await fetch(url);
         if (!res.ok) return;
         const items = await res.json();
         if (!Array.isArray(items) || !items.length) return;
         const charObj = ensureGalleryStore(charId);
         if (!charObj) return;
         const gallery = charObj.extensions.underdark.gallery;
-        let added = 0;
         for (const item of items) {
-            const url = item.medium || item.original;
-            if (url && !gallery.includes(url)) {
-                gallery.push(url);
-                added++;
+            const imgUrl = item.medium || item.original;
+            if (imgUrl && !gallery.includes(imgUrl)) {
+                gallery.push(imgUrl);
             }
         }
         // Don't saveState() — API URLs are re-fetched each session, not persisted

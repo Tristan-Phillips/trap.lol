@@ -59,6 +59,18 @@ function whProxyUrl(raw) {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // HELPERS
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const _VAULT_PIN_ID   = '8D9E-F69D-3894-A040';
+const _VAULT_PIN_NAME = 'jinx';
+function charSortFn(a, b) {
+    const isOwner = (localStorage.getItem('wh_vault_id') || '') === _VAULT_PIN_ID;
+    if (isOwner) {
+        const aPin = (a.name || '').toLowerCase() === _VAULT_PIN_NAME;
+        const bPin = (b.name || '').toLowerCase() === _VAULT_PIN_NAME;
+        if (aPin && !bPin) return -1;
+        if (bPin && !aPin) return  1;
+    }
+    return (a.name || '').localeCompare(b.name || '');
+}
 const qs  = (sel, ctx = document) => ctx.querySelector(sel);
 const qsa = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
 function esc(s) {
@@ -212,11 +224,15 @@ async function syncVaultToGallery() {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 const MEDIA_API_BASE = 'https://api.trap.lol';
 
-// Returns array of {thumbnail, medium, original} for a char — non-hidden only.
-// Falls back to [] on any error (public endpoint, no auth needed).
+// Returns array of {thumbnail, medium, original} for a char.
+// Uses vault endpoint (includes hidden) when vault ID is set, otherwise public endpoint.
 async function fetchApiGallery(charId) {
     try {
-        const r = await fetch(`${MEDIA_API_BASE}/pallet/data/gallery/${encodeURIComponent(charId)}.json`);
+        const vaultId = localStorage.getItem('wh_vault_id') || '';
+        const url = vaultId
+            ? `${MEDIA_API_BASE}/pallet/data/vault-gallery/${encodeURIComponent(charId)}.json?vault=${encodeURIComponent(vaultId)}`
+            : `${MEDIA_API_BASE}/pallet/data/gallery/${encodeURIComponent(charId)}.json`;
+        const r = await fetch(url);
         if (!r.ok) return [];
         const items = await r.json();
         return Array.isArray(items) ? items : [];
@@ -231,7 +247,6 @@ async function boot() {
     await syncVaultToGallery();
     S.chars = getCharData();
     populateCharTarget();
-    buildCharRoster();
 
     const allItems = [];
     const baseTs = Date.now();
@@ -319,6 +334,7 @@ async function boot() {
 
     S.items = allItems;
     buildTagRoster();
+    buildCharRoster(); // after S.items is populated so counts include API images
     updateStats();
     showLoading(false);
 
@@ -352,12 +368,16 @@ async function buildCharRoster() {
 
     const items = [];
     for (const ch of S.chars) {
-        const count = [ch.avatarRef, ...ch.galleryRefs, ...ch.videoRefs].filter(Boolean).length;
+        // Count from S.items (includes API images) if already populated, else fall back to local refs
+        const count = S.items.length
+            ? S.items.filter(it => it.charId === ch.id).length
+            : [ch.avatarRef, ...ch.galleryRefs, ...ch.videoRefs].filter(Boolean).length;
         if (!count) continue;
         let avatarUrl = null;
         if (ch.avatarRef) avatarUrl = await resolveUrl(ch.avatarRef);
         items.push({ ch, count, avatarUrl });
     }
+    items.sort((a, b) => charSortFn(a.ch, b.ch));
 
     if (!items.length) {
         $roster.innerHTML = `<div class="char-roster__empty">No characters with images</div>`;

@@ -33,6 +33,20 @@ import { initGallery, addToGallery, addToVideoGallery, getAllFeedPosts, getAllGa
 import { initSocial } from './social.js?v=3';
 import { initImageStudio } from './image-studio.js?v=4';
 
+// Character sort — Jinx pinned first when vault ID matches, then alphabetical.
+const _VAULT_PIN_ID  = '8D9E-F69D-3894-A040';
+const _VAULT_PIN_NAME = 'jinx';
+function charSortFn(a, b) {
+    const isOwner = (localStorage.getItem('wh_vault_id') || '') === _VAULT_PIN_ID;
+    if (isOwner) {
+        const aPin = (a.name || '').toLowerCase() === _VAULT_PIN_NAME;
+        const bPin = (b.name || '').toLowerCase() === _VAULT_PIN_NAME;
+        if (aPin && !bPin) return -1;
+        if (bPin && !aPin) return  1;
+    }
+    return (a.name || '').localeCompare(b.name || '');
+}
+
 // Light markdown renderer for profile details — bold, italic, headers, line breaks only.
 // Does NOT use marked.js to avoid dependency — covers the common character-card patterns.
 function renderMarkdownSafe(text) {
@@ -1794,7 +1808,7 @@ export function initUI() {
         if (!$grid) return;
         const q = query.toLowerCase();
         const chars = state.characters.filter(c =>
-            !q || c.name.toLowerCase().includes(q)).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+            !q || c.name.toLowerCase().includes(q)).sort(charSortFn);
 
         if (!chars.length) {
             $grid.innerHTML = '<div style="color:rgba(180,160,210,0.4);font-size:.8rem;grid-column:1/-1;padding:16px 0;">No characters found.</div>';
@@ -3000,6 +3014,28 @@ export function initUI() {
         showToast('Wallhaven API key saved', 'success');
     });
 
+    // ── Vault ID (Settings > Neural) ─────────────────────────────────────────
+    const $vaultIdInput = qs('#settings-vault-id');
+    const $vaultIdSave  = qs('#settings-vault-id-save');
+
+    if ($vaultIdInput) $vaultIdInput.value = localStorage.getItem('wh_vault_id') || '';
+
+    $vaultIdInput?.addEventListener('input', () => {
+        // Auto-format: uppercase, insert hyphens at correct positions
+        let v = $vaultIdInput.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        if (v.length > 4)  v = v.slice(0, 4)  + '-' + v.slice(4);
+        if (v.length > 9)  v = v.slice(0, 9)  + '-' + v.slice(9);
+        if (v.length > 14) v = v.slice(0, 14) + '-' + v.slice(14);
+        $vaultIdInput.value = v.slice(0, 19);
+    });
+
+    $vaultIdSave?.addEventListener('click', () => {
+        if (!$vaultIdInput) return;
+        const val = $vaultIdInput.value.trim();
+        localStorage.setItem('wh_vault_id', val);
+        showToast('Vault ID saved', 'success');
+    });
+
     // ── Character Roster ──────────────────────────────────────────────────────
     const $charList = qs('#character-list');
     const $charSearch = qs('#character-search');
@@ -3027,7 +3063,7 @@ export function initUI() {
             return c.name.toLowerCase().includes(q)
                 || (c.tagline || '').toLowerCase().includes(q)
                 || (c.tags || []).some(t => t.toLowerCase().includes(q));
-        }).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+        }).sort(charSortFn);
 
         if (!filtered.length) {
             $charList.innerHTML = `
@@ -3996,7 +4032,7 @@ export function initUI() {
         const chars = state.characters.filter(c => {
             if (!q) return true;
             return c.name.toLowerCase().includes(q) || (c.tagline || '').toLowerCase().includes(q);
-        }).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+        }).sort(charSortFn);
         if (!chars.length) {
             $grid.innerHTML = '<p style="color:var(--text-muted);font-size:.8rem;text-align:center;padding:1rem;grid-column:1/-1;">No characters found</p>';
             return;
