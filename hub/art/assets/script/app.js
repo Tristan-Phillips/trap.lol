@@ -1414,9 +1414,7 @@ function revealVeil($card, $veil) {
   $veil.classList.add("art-card__veil--unwrapping");
   $veil.addEventListener("animationend", () => {
     $veil.remove();
-    /* Not auto — user explicitly clicked, so survives re-lock */
     $card.classList.add("art-card--nsfw-revealed");
-    $card.classList.remove("art-card--nsfw-auto");
   }, { once: true });
 }
 

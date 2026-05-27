@@ -834,14 +834,15 @@ export function initUI() {
                         role: 'user',
                         content: `Write a 2-sentence brief persona for a roleplay character based on these traits: ${summary}. Be vivid and specific. No intro, no labels — just the persona directly, written in third person. Max 2 sentences.`
                     }],
-                    model: state.config?.model || _gateModel || 'claude-haiku-4-5-20251001',
+                    model: 'claude-haiku-4-5-20251001',
                     max_tokens: 120,
-                    apiKey: getApiKey(),
                 });
                 if (text?.trim()) {
                     $ta.value = text.trim();
                     qs('#qc-panel', $gate).hidden = true;
                     showToast('Persona generated.', 'info', 1500);
+                } else {
+                    showToast('Got an empty response — try again.', 'warn');
                 }
             } catch (err) {
                 showToast('Generation failed — try again.', 'error');
