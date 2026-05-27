@@ -18,6 +18,7 @@ const LEGACY_STORAGE_KEY = 'underdark_v3';
 export function defaultConfig() {
     return {
         model: '',
+        toolModel: '',
         contextStrategy: 'sliding',
         temperature: 0.80,
         topP: 0.95,
@@ -658,15 +659,23 @@ export function exportSessionJson(chatId) {
 
 export async function importSessionJson(jsonString) {
     const data = JSON.parse(jsonString);
-    const chat = data.chat || data.session;
-    if (!chat) throw new Error('Invalid import format');
+    if (typeof data !== 'object' || data === null || Array.isArray(data))
+        throw new Error('Invalid format — expected a JSON object');
 
-    chat.id = `chat-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
-    chat.name = `${chat.name} (imported)`;
+    const chat = data.chat || data.session;
+    if (!chat || typeof chat !== 'object')
+        throw new Error('Invalid export — missing chat data. Is this an Underdark session export?');
+    if (!Array.isArray(chat.history))
+        throw new Error('Invalid export — chat has no history array');
+
+    chat.id   = `chat-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    chat.name = `${chat.name || 'Imported'} (imported)`;
+
+    if (!state.reality) throw new Error('No active reality — create one before importing');
     state.reality.chats.unshift(chat);
     state.reality.activeChatId = chat.id;
 
-    if (data.characters) {
+    if (data.characters && typeof data.characters === 'object') {
         Object.entries(data.characters).forEach(([id, card]) => {
             if (!state.loadedCharacters[id]) {
                 state.loadedCharacters[id] = card;

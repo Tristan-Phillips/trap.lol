@@ -24,7 +24,7 @@ import { VIDEO_MODELS, generateVideo, generateVideoPromptWithLLM } from './image
 import { addBook, removeBook, addEntry, updateEntry, removeEntry, createBook, scanLorebooks } from './lorebook.js?v=3';
 import { parseCharacterCard, buildCard, normalizeData } from './parser-v2.js?v=4';
 import { getApiKey, setApiKey, clearApiKey, isValidKeyFormat, restoreKeyFromCookie } from '/hub/glass/script/modules/llm-auth.js?v=3';
-import { initCharEditor } from './char-editor.js?v=3';
+import { initCharEditor } from './char-editor.js?v=4';
 import { qs, qsa, esc, debounce, parseLLMArray, parseLLMJson, parseLLMLines } from './shared-utils.js?v=4';
 import { initCodexMeters, applyStatusTags, updateCodexMeters as _updateCodexMeters } from './codex-meters.js?v=2';
 import { initDirector, getActiveTone, getSceneDirective, clearSceneDirective, generateAIQuickReplies } from './director.js?v=2';
@@ -418,7 +418,7 @@ function clearGroupTimers() {
 // ── Narrative flag keys (shared between syncConfigUI and init bindings) ────────
 const FLAG_KEYS = [
     'showThoughts', 'showSystemPrompt', 'injectConsistency', 'injectSliders',
-    'injectAppearance', 'injectAdult', 'injectPersonality', 'injectVoice',
+    'injectAdult', 'injectPersonality', 'injectVoice',
     'injectStyle', 'injectAIDirectives', 'impersonationBlock', 'povFirst',
     'jailbreakResistance', 'autoEntrance', 'autoMemory'
 ];
@@ -757,6 +757,57 @@ export function initUI() {
             if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) _gateFinish();
         });
 
+        // ── Craft / Rewrite persona button ────────────────────────────────────
+        const $craftBtn   = qs('#qc-craft-btn',   $gate);
+        const $craftLabel = qs('#qc-craft-label',  $gate);
+        const $craftHint  = qs('#qc-craft-hint',   $gate);
+        const $craftTa    = qs('#gate-user-persona', $gate);
+
+        function _updateCraftLabel() {
+            if (!$craftLabel || !$craftTa) return;
+            $craftLabel.textContent = $craftTa.value.trim() ? 'Rewrite' : 'Craft';
+        }
+        $craftTa?.addEventListener('input', _updateCraftLabel);
+        _updateCraftLabel();
+
+        $craftBtn?.addEventListener('click', async () => {
+            if (!getApiKey()) { showToast('API key required to craft a persona.', 'warn'); return; }
+            const raw = $craftTa?.value.trim();
+            if (!raw) { showToast('Write something first — notes, a name, a vibe.', 'warn'); return; }
+
+            const isRewrite = raw.length > 30 && !/^persona of|^write|^create|^make/i.test(raw);
+            const prompt = isRewrite
+                ? `Rewrite the following as a vivid, specific 2–3 sentence roleplay persona, written in third person. Keep the core identity but make it rich and evocative. No intro, no labels — just the persona:\n\n${raw}`
+                : `Write a vivid, specific 2–3 sentence roleplay persona based on this description, written in third person. No intro, no labels — just the persona directly:\n\n${raw}`;
+
+            $craftBtn.disabled = true;
+            $craftBtn.innerHTML = `<i data-lucide="loader-2"></i> <span>Working…</span>`;
+            lucideRefresh($craftBtn);
+            if ($craftHint) $craftHint.textContent = 'Crafting…';
+
+            try {
+                const { text } = await fetchCompletion({
+                    messages: [{ role: 'user', content: prompt }],
+                    model: state.config.toolModel || state.config.model || 'claude-haiku-4-5-20251001',
+                    max_tokens: 120,
+                });
+                if (text?.trim()) {
+                    $craftTa.value = text.trim();
+                    _updateCraftLabel();
+                    if ($craftHint) $craftHint.textContent = 'Done — edit freely or craft again.';
+                    showToast('Persona crafted.', 'info', 1500);
+                } else {
+                    showToast('Got an empty response — try again.', 'warn');
+                }
+            } catch {
+                showToast('Craft failed — check your key or try again.', 'error');
+            } finally {
+                $craftBtn.disabled = false;
+                $craftBtn.innerHTML = `<i data-lucide="sparkles"></i> <span>${$craftTa?.value.trim() ? 'Rewrite' : 'Craft'}</span>`;
+                lucideRefresh($craftBtn);
+            }
+        });
+
         // ── Quick Create persona builder ──────────────────────────────────────
         let _qcAnswers = {};  // { questionId: value | value[] }
 
@@ -764,7 +815,7 @@ export function initUI() {
             const $questions = qs('#qc-questions', $gate);
             if (!$questions || $questions.dataset.loaded) return;
             try {
-                const data = await fetch(`${MEDIA_API}/pallet/data/persona-builder.json`).then(r => r.json());
+                const data = await fetch('/hub/playground/underdark/data/persona-builder.json').then(r => r.json());
                 $questions.innerHTML = data.questions.map(q => `
                     <div class="qc-question" data-qid="${esc(q.id)}">
                         <div class="qc-question__label">${esc(q.label)}</div>
@@ -834,8 +885,8 @@ export function initUI() {
                         role: 'user',
                         content: `Write a 2-sentence brief persona for a roleplay character based on these traits: ${summary}. Be vivid and specific. No intro, no labels — just the persona directly, written in third person. Max 2 sentences.`
                     }],
-                    model: 'claude-haiku-4-5-20251001',
-                    max_tokens: 120,
+                    model: state.config.toolModel || state.config.model || 'claude-haiku-4-5-20251001',
+                    max_tokens: 80,
                 });
                 if (text?.trim()) {
                     $ta.value = text.trim();
@@ -1301,7 +1352,6 @@ export function initUI() {
         // Flags tab
         const flagMap = {
             'injectConsistency':   're-flag-injectConsistency',
-            'injectAppearance':    're-flag-injectAppearance',
             'injectPersonality':   're-flag-injectPersonality',
             'injectVoice':         're-flag-injectVoice',
             'injectStyle':         're-flag-injectStyle',
@@ -1354,7 +1404,6 @@ export function initUI() {
         // Flags
         const flagMap = {
             'injectConsistency':   're-flag-injectConsistency',
-            'injectAppearance':    're-flag-injectAppearance',
             'injectPersonality':   're-flag-injectPersonality',
             'injectVoice':         're-flag-injectVoice',
             'injectStyle':         're-flag-injectStyle',
@@ -5590,14 +5639,22 @@ export function initUI() {
 
     // ── Session Export / Import ───────────────────────────────────────────────
     qs('#btn-export-session')?.addEventListener('click', () => {
-        const json = exportSessionJson(state.chat.id);
-        const blob = new Blob([json], { type: 'application/json' });
-        const url  = URL.createObjectURL(blob);
-        const a    = document.createElement('a');
-        a.href     = url;
-        a.download = `underdark-session-${state.chat.name.replace(/\s+/g,'-')}-${Date.now()}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
+        try {
+            if (!state.chat?.id) { showToast('No active session to export', 'error'); return; }
+            const json     = exportSessionJson(state.chat.id);
+            const safeName = (state.chat.name || 'session').replace(/[^a-z0-9_-]/gi, '-').toLowerCase();
+            const filename = `underdark-session-${safeName}-${Date.now()}.json`;
+            const blob = new Blob([json], { type: 'application/json' });
+            const url  = URL.createObjectURL(blob);
+            const a    = document.createElement('a');
+            a.href     = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast(`Session exported: ${filename}`, 'success', 3000);
+        } catch (err) {
+            showToast(`Export failed: ${err.message}`, 'error');
+        }
     });
 
     qs('#btn-import-session')?.addEventListener('click', () => {
@@ -5608,14 +5665,27 @@ export function initUI() {
         const file = e.target.files[0];
         if (!file) return;
         e.target.value = '';
+        const btn = qs('#btn-import-session');
+        const origHtml = btn?.innerHTML;
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i data-lucide="loader-2" class="spin"></i> Importing…'; lucideRefresh(btn); }
         try {
+            if (!file.name.endsWith('.json') && file.type !== 'application/json')
+                throw new Error('File must be a .json export from Underdark');
+            if (file.size > 50 * 1024 * 1024)
+                throw new Error('File is too large (max 50 MB)');
             const text = await file.text();
-            await importSessionJson(text);
+            const imported = await importSessionJson(text);
             renderRealities();
             renderChats();
             renderAll();
+            showToast(`Session "${imported.name}" imported`, 'success', 3000);
         } catch (err) {
-            showToast(`Import failed: ${err.message}`, 'error');
+            const msg = err instanceof SyntaxError
+                ? 'Invalid JSON — file may be corrupt or not an Underdark export'
+                : err.message || 'Unknown error';
+            showToast(`Import failed: ${msg}`, 'error', 6000);
+        } finally {
+            if (btn) { btn.disabled = false; btn.innerHTML = origHtml; lucideRefresh(btn); }
         }
     });
 
@@ -6556,15 +6626,12 @@ export function initUI() {
         set('nsfw-bypass',     c.nsfwBypass);
         set('user-name-input',       c.userName        ?? '');
         set('user-persona-input',    c.userPersona     ?? '');
-        set('player-appearance',     c.playerAppearance ?? '');
-        set('player-mood',           c.playerMood      ?? '');
-        set('player-role',           c.playerRole      ?? '');
-        set('player-status',         c.playerStatus    ?? '');
         set('an-depth-input',  c.authorsNoteDepth);   setBadge('an-depth-val',  c.authorsNoteDepth);
         set('group-delay-input', c.groupAutoDelay);   setBadge('group-delay-val', `${c.groupAutoDelay}ms`);
         set('context-strategy', c.contextStrategy);
         set('group-turn-mode',  c.groupTurnMode);
         if (qs('#model-select') && c.model) qs('#model-select').value = c.model;
+        if (qs('#tool-model-select')) qs('#tool-model-select').value = c.toolModel || '';
         if (qs('#stream-toggle')) qs('#stream-toggle').checked = c.stream;
 
         // Scene ledger fields
@@ -6657,11 +6724,6 @@ export function initUI() {
     bindText('nsfw-bypass',           'nsfwBypass');
     bindText('user-name-input',       'userName');
     bindText('user-persona-input',    'userPersona');
-    // Player sheet extended fields
-    bindText('player-appearance',     'playerAppearance');
-    bindText('player-mood',           'playerMood');
-    bindText('player-role',           'playerRole');
-    bindText('player-status',         'playerStatus');
 
     qs('#stream-toggle')?.addEventListener('change', e => setConfig({ stream: e.target.checked }));
     qs('#context-strategy')?.addEventListener('change', e => setConfig({ contextStrategy: e.target.value }));
@@ -6673,6 +6735,181 @@ export function initUI() {
             setConfig({ flags: { ...state.config.flags, [key]: e.target.checked } });
         });
     });
+
+    // ── Narrative Wizard ──────────────────────────────────────────────────────
+    (function initNarrativeWizard() {
+        const $modal    = qs('#modal-narrative-wizard');
+        const $back     = qs('#nw-back');
+        const $next     = qs('#nw-next');
+        const $generate = qs('#nw-generate');
+        const $error    = qs('#nw-error');
+        const $summary  = qs('#nw-summary');
+        if (!$modal) return;
+
+        const STEPS = 5;
+        let currentStep = 0;
+
+        // chip group configs: [containerId, allowMultiple]
+        const CHIP_GROUPS = [
+            'nw-chips-tone',
+            'nw-chips-themes',
+            'nw-chips-rules',
+            'nw-chips-style',
+        ];
+
+        function getStepEl(n) { return qs(`[data-nw-step="${n}"]`, $modal); }
+        function getDotEl(n)  { return qs(`.nw-step-dot[data-step="${n}"]`, $modal); }
+
+        // Wire chip toggles
+        CHIP_GROUPS.forEach(id => {
+            qs(`#${id}`, $modal)?.addEventListener('click', e => {
+                const chip = e.target.closest('.qc-chip');
+                if (chip) chip.classList.toggle('active');
+            });
+        });
+
+        function getChipValues(id) {
+            return [...qsa(`.qc-chip.active`, qs(`#${id}`, $modal))].map(c => c.dataset.val);
+        }
+
+        function showStep(n) {
+            for (let i = 0; i < STEPS; i++) {
+                const el  = getStepEl(i);
+                const dot = getDotEl(i);
+                if (el)  el.hidden  = i !== n;
+                if (dot) dot.classList.toggle('active', i === n);
+            }
+            currentStep = n;
+            $back.hidden     = n === 0;
+            $next.hidden     = n === STEPS - 1;
+            $generate.hidden = n !== STEPS - 1;
+            if (n === STEPS - 1) buildSummary();
+        }
+
+        function buildSummary() {
+            const tone    = getChipValues('nw-chips-tone');
+            const themes  = getChipValues('nw-chips-themes');
+            const rules   = getChipValues('nw-chips-rules');
+            const style   = getChipValues('nw-chips-style');
+            const toneN   = qs('#nw-tone-notes',   $modal)?.value.trim();
+            const themesN = qs('#nw-themes-notes',  $modal)?.value.trim();
+            const rulesN  = qs('#nw-rules-notes',   $modal)?.value.trim();
+            const styleN  = qs('#nw-style-notes',   $modal)?.value.trim();
+
+            const lines = [];
+            if (tone.length   || toneN)   lines.push(`<b>Tone:</b> ${[...tone,   toneN  ].filter(Boolean).join(', ')}`);
+            if (themes.length || themesN) lines.push(`<b>Themes:</b> ${[...themes, themesN].filter(Boolean).join(', ')}`);
+            if (rules.length  || rulesN)  lines.push(`<b>Rules:</b> ${[...rules,  rulesN ].filter(Boolean).join(', ')}`);
+            if (style.length  || styleN)  lines.push(`<b>Style:</b> ${[...style,  styleN ].filter(Boolean).join(', ')}`);
+
+            $summary.innerHTML = lines.length
+                ? lines.map(l => `<div class="nw-summary__line">${l}</div>`).join('')
+                : '<span class="nw-summary__empty">No selections made — AI will generate a default narrative framework.</span>';
+        }
+
+        function buildPrompt() {
+            const tone    = getChipValues('nw-chips-tone');
+            const themes  = getChipValues('nw-chips-themes');
+            const rules   = getChipValues('nw-chips-rules');
+            const style   = getChipValues('nw-chips-style');
+            const toneN   = qs('#nw-tone-notes',   $modal)?.value.trim();
+            const themesN = qs('#nw-themes-notes',  $modal)?.value.trim();
+            const rulesN  = qs('#nw-rules-notes',   $modal)?.value.trim();
+            const styleN  = qs('#nw-style-notes',   $modal)?.value.trim();
+
+            const all = {
+                tone:    [...tone,   toneN  ].filter(Boolean),
+                themes:  [...themes, themesN].filter(Boolean),
+                rules:   [...rules,  rulesN ].filter(Boolean),
+                style:   [...style,  styleN ].filter(Boolean),
+            };
+
+            return `You are configuring narrative directives for an AI roleplay session on Underdark (trap.lol — a dark adult platform).
+
+Creative choices:
+- Tone: ${all.tone.join(', ')   || 'no preference'}
+- Themes: ${all.themes.join(', ') || 'no preference'}
+- Rules: ${all.rules.join(', ')  || 'no preference'}
+- Style: ${all.style.join(', ')  || 'no preference'}
+
+Generate exactly two fields:
+1. author_note — 2–4 sentences injected periodically into context. Present tense, atmospheric, specific. Shapes feel and tone. Not generic.
+2. sys_directive — 3–6 terse imperative rules prepended to every system prompt. Hard constraints. Each rule on its own line starting with a verb.
+
+Respond with ONLY valid JSON, no markdown, no explanation:
+{"author_note":"...","sys_directive":"..."}`;
+        }
+
+        function openWizard() {
+            if ($modal.parentNode !== document.body) document.body.appendChild($modal);
+            currentStep = 0;
+            qsa('.qc-chip', $modal).forEach(c => c.classList.remove('active'));
+            qsa('.nw-free-textarea', $modal).forEach(ta => { ta.value = ''; });
+            $error.hidden = true;
+            showStep(0);
+            hideModal('modal-settings');
+            showModal('modal-narrative-wizard');
+            lucideRefresh($modal);
+        }
+
+        function closeWizard() {
+            hideModal('modal-narrative-wizard');
+            showModal('modal-settings');
+        }
+
+        qs('#narrative-wizard-btn')?.addEventListener('click', openWizard);
+        qs('#nw-close', $modal)?.addEventListener('click', closeWizard);
+        qs('.modal__backdrop[data-close]', $modal)?.addEventListener('click', closeWizard);
+
+        $back?.addEventListener('click', () => showStep(currentStep - 1));
+        $next?.addEventListener('click', () => showStep(currentStep + 1));
+
+        $generate?.addEventListener('click', async () => {
+            if (!getApiKey()) { showToast('API key required.', 'warn'); return; }
+            $generate.disabled = true;
+            $generate.innerHTML = '<i data-lucide="loader-2" class="nw-spin"></i> Generating…';
+            lucideRefresh($generate);
+            $error.hidden = true;
+
+            try {
+                const { text } = await fetchCompletion({
+                    model: state.config.toolModel || state.config.model || 'claude-haiku-4-5-20251001',
+                    max_tokens: 400,
+                    messages: [{ role: 'user', content: buildPrompt() }],
+                });
+
+                const raw = text?.trim() || '';
+                const jsonStr = raw.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '').trim();
+                let parsed;
+                try { parsed = JSON.parse(jsonStr); } catch { throw new Error('Could not parse AI response.'); }
+
+                const authorNote = (parsed.author_note || '').trim();
+                const sysDir     = (parsed.sys_directive || '').trim();
+
+                if (!authorNote && !sysDir) throw new Error('AI returned empty directives.');
+
+                const applyField = (ids, value) => {
+                    setConfig(ids.configKey ? { [ids.configKey]: value } : {});
+                    ids.domIds.forEach(id => {
+                        const el = qs(`#${id}`);
+                        if (el) { el.value = value; el.dispatchEvent(new Event('input', { bubbles: true })); }
+                    });
+                };
+                if (authorNote) applyField({ configKey: 'authorsNote',  domIds: ['authors-note', 're-authors-note'] }, authorNote);
+                if (sysDir)     applyField({ configKey: 'sysDirective', domIds: ['sys-directive', 're-sys-directive'] }, sysDir);
+
+                closeWizard();
+                showToast('Narrative directives applied.', 'ok');
+            } catch (err) {
+                $error.textContent = err.message;
+                $error.hidden = false;
+            } finally {
+                $generate.disabled = false;
+                $generate.innerHTML = '<i data-lucide="sparkles"></i> Generate &amp; Apply';
+                lucideRefresh($generate);
+            }
+        });
+    })();
 
     // ── Scenario Presets (World tab) ──────────────────────────────────────────
     async function loadScenarioPresets() {
@@ -6715,16 +6952,41 @@ export function initUI() {
     }
 
     // ── Persona Presets ───────────────────────────────────────────────────────
-    let _personaPresets = [];
+    let _personaPresets = [];        // merged: remote (read-only) + user (local)
     let _personaLoadPromise = null;
+    const _PERSONA_LS_KEY = 'underdark_persona_presets';
 
-    // Loads personas.json once; returns promise that resolves when cache is ready
+    function _getUserPersonas() {
+        try { return JSON.parse(localStorage.getItem(_PERSONA_LS_KEY) || '[]'); }
+        catch { return []; }
+    }
+
+    function _saveUserPersonas(list) {
+        localStorage.setItem(_PERSONA_LS_KEY, JSON.stringify(list));
+    }
+
+    function _mergePersonas(remote, user) {
+        // Remote personas are base (read-only). User personas are appended.
+        // Filter out any user entry whose id collides with a remote one.
+        const remoteIds = new Set(remote.map(p => p.id));
+        const userOnly  = user.filter(p => !remoteIds.has(p.id)).map(p => ({ ...p, _user: true }));
+        return [...remote, ...userOnly];
+    }
+
+    // Loads remote personas.json then merges with localStorage user presets.
     function _ensurePersonasLoaded() {
         if (_personaLoadPromise) return _personaLoadPromise;
         _personaLoadPromise = fetch(`${MEDIA_API}/pallet/data/personas.json`)
-            .then(r => r.json())
-            .then(data => { _personaPresets = data.personas || []; })
-            .catch(() => { _personaPresets = []; });
+            .then(r => r.ok ? r.json() : { personas: [] })
+            .then(data => {
+                const remote = data.personas || [];
+                const user   = _getUserPersonas();
+                _personaPresets = _mergePersonas(remote, user);
+            })
+            .catch(() => {
+                // Remote failed — fall back to user presets only
+                _personaPresets = _getUserPersonas().map(p => ({ ...p, _user: true }));
+            });
         return _personaLoadPromise;
     }
 
@@ -6739,21 +7001,132 @@ export function initUI() {
         $sel.innerHTML = opts.join('');
     }
 
-    // Config-panel persona preset (writes directly to reality config)
+    // Config-panel persona preset — remote (read-only) + localStorage user presets, craft button
     async function loadPersonaPresets() {
         await _ensurePersonasLoaded();
-        const $sel = qs('#persona-preset-select');
-        if (!$sel) return;
+
+        const $sel        = qs('#persona-preset-select');
+        const $saveBtn    = qs('#persona-preset-save');
+        const $delBtn     = qs('#persona-preset-delete');
+        const $craftBtn   = qs('#persona-craft-btn');
+        const $craftLabel = qs('#persona-craft-label');
+        const $craftHint  = qs('#persona-craft-hint');
+        const $bioInput   = qs('#user-persona-input');
+        const $nameInput  = qs('#user-name-input');
+
+        // Auto-fill from gate config if fields are currently blank
+        if ($nameInput && !$nameInput.value.trim() && state.config?.userName) {
+            $nameInput.value = state.config.userName;
+        }
+        if ($bioInput && !$bioInput.value.trim() && state.config?.userPersona) {
+            $bioInput.value = state.config.userPersona;
+        }
+
+        function _syncDeleteBtn() {
+            if (!$delBtn || !$sel) return;
+            const id    = $sel.value;
+            const entry = _personaPresets.find(p => p.id === id);
+            // Only user-created presets can be deleted
+            $delBtn.hidden = !entry?._user;
+        }
+
+        function _refreshAllSelects() {
+            _populatePersonaSelect($sel, { blankLabel: '— Custom / None —' });
+            _populatePersonaSelect(qs('#re-persona-preset'), { blankLabel: '— Custom / None —' });
+            _populatePersonaSelect(qs('#ts-persona-preset'), { blankLabel: '— Inherit from Reality —' });
+        }
+
         _populatePersonaSelect($sel, { blankLabel: '— Custom / None —' });
+        _syncDeleteBtn();
+
+        if (!$sel) return;
+
         $sel.addEventListener('change', () => {
             const id = $sel.value;
+            _syncDeleteBtn();
             if (!id || id === 'blank') return;
             const entry = _personaPresets.find(p => p.id === id);
             if (!entry) return;
-            const $name = qs('#user-name-input');
-            const $bio  = qs('#user-persona-input');
-            if ($name) { $name.value = entry.userName;    setConfig({ userName:    entry.userName    }); }
-            if ($bio)  { $bio.value  = entry.userPersona; setConfig({ userPersona: entry.userPersona }); }
+            if ($nameInput) { $nameInput.value = entry.userName || '';    setConfig({ userName:    entry.userName    || '' }); }
+            if ($bioInput)  { $bioInput.value  = entry.userPersona || ''; setConfig({ userPersona: entry.userPersona || '' }); }
+            if ($craftLabel) $craftLabel.textContent = $bioInput?.value.trim() ? 'Rewrite' : 'Craft';
+            if ($craftHint)  $craftHint.textContent  = entry._user ? 'Your preset — edit freely or hit Rewrite.' : 'Loaded — edit freely or Save as your own.';
+        });
+
+        // Save current name + bio as a new user preset
+        $saveBtn?.addEventListener('click', () => {
+            const name    = $nameInput?.value.trim() || 'User';
+            const persona = $bioInput?.value.trim()  || '';
+            const label   = prompt('Preset name:', name);
+            if (!label) return;
+            const id = `custom_${Date.now()}`;
+            const newEntry = { id, name: label, userName: name, userPersona: persona, _user: true };
+            _personaPresets.push(newEntry);
+            _saveUserPersonas(_getUserPersonas().concat([newEntry]));
+            _refreshAllSelects();
+            $sel.value = id;
+            _syncDeleteBtn();
+            showToast(`Preset "${label}" saved.`, 'info', 1800);
+        });
+
+        // Delete selected user preset
+        $delBtn?.addEventListener('click', () => {
+            const id    = $sel.value;
+            const entry = _personaPresets.find(p => p.id === id);
+            if (!entry?._user) return;
+            if (!confirm(`Delete preset "${entry.name}"?`)) return;
+            _personaPresets = _personaPresets.filter(p => p.id !== id);
+            _saveUserPersonas(_getUserPersonas().filter(p => p.id !== id));
+            _refreshAllSelects();
+            _syncDeleteBtn();
+            showToast('Preset deleted.', 'info', 1500);
+        });
+
+        // Craft / Rewrite button
+        function _updateCraftLabel() {
+            if ($craftLabel) $craftLabel.textContent = $bioInput?.value.trim() ? 'Rewrite' : 'Craft';
+        }
+        $bioInput?.addEventListener('input', _updateCraftLabel);
+        _updateCraftLabel();
+
+        $craftBtn?.addEventListener('click', async () => {
+            if (!getApiKey()) { showToast('API key required to craft a persona.', 'warn'); return; }
+            const raw = $bioInput?.value.trim();
+            if (!raw) { showToast('Write something first — notes, a name, a vibe.', 'warn'); return; }
+
+            const craftPrompt = raw.length > 30 && !/^persona of|^write|^create|^make/i.test(raw)
+                ? `Rewrite the following as a vivid, specific 2–3 sentence roleplay persona, written in third person. Keep the core identity but make it rich and evocative. No intro, no labels — just the persona:\n\n${raw}`
+                : `Write a vivid, specific 2–3 sentence roleplay persona based on this description, written in third person. No intro, no labels — just the persona directly:\n\n${raw}`;
+
+            $craftBtn.disabled = true;
+            $craftBtn.innerHTML = `<i data-lucide="loader-2"></i> <span>Working…</span>`;
+            lucideRefresh($craftBtn);
+            if ($craftHint) $craftHint.textContent = 'Crafting…';
+
+            try {
+                const { text } = await fetchCompletion({
+                    messages: [{ role: 'user', content: craftPrompt }],
+                    model: state.config.toolModel || state.config.model || 'claude-haiku-4-5-20251001',
+                    max_tokens: 120,
+                });
+                if (text?.trim()) {
+                    $bioInput.value = text.trim();
+                    setConfig({ userPersona: text.trim() });
+                    _updateCraftLabel();
+                    if ($craftHint) $craftHint.textContent = 'Done — edit freely or save as a preset.';
+                    showToast('Persona crafted.', 'info', 1500);
+                } else {
+                    showToast('Got an empty response — try again.', 'warn');
+                    if ($craftHint) $craftHint.textContent = 'Empty response — try rephrasing.';
+                }
+            } catch {
+                showToast('Craft failed — check your key or try again.', 'error');
+                if ($craftHint) $craftHint.textContent = 'Failed — try again.';
+            } finally {
+                $craftBtn.disabled = false;
+                $craftBtn.innerHTML = `<i data-lucide="sparkles"></i> <span>${$bioInput?.value.trim() ? 'Rewrite' : 'Craft'}</span>`;
+                lucideRefresh($craftBtn);
+            }
         });
     }
 
@@ -6784,9 +7157,46 @@ export function initUI() {
         return html;
     }
 
+    // Curated tool-model list: fast + capable + includes uncensored RP options
+    const TOOL_MODELS = [
+        { group: 'Fast & Capable',  id: 'claude-haiku-4-5-20251001',                          label: 'Claude Haiku 4.5' },
+        { group: 'Fast & Capable',  id: 'gemini-2.5-flash',                                   label: 'Gemini 2.5 Flash' },
+        { group: 'Fast & Capable',  id: 'mistralai/Mistral-Small-3.2-24B-Instruct-2506',      label: 'Mistral Small 3.2 24B' },
+        { group: 'Fast & Capable',  id: 'nousresearch/hermes-4-70b',                          label: 'Hermes 4 70B' },
+        { group: 'Fast & Capable',  id: 'meta-llama/llama-3.3-70b-instruct',                  label: 'Llama 3.3 70B Instruct' },
+        { group: 'Creative / RP',   id: 'anthracite-org/magnum-v4-72b',                       label: 'Magnum v4 72B' },
+        { group: 'Creative / RP',   id: 'Sao10K/L3.3-70B-Euryale-v2.3',                      label: 'Euryale v2.3 70B' },
+        { group: 'Creative / RP',   id: 'EVA-UNIT-01/EVA-Qwen2.5-72B-v0.2',                  label: 'EVA Qwen2.5 72B' },
+        { group: 'Creative / RP',   id: 'EVA-UNIT-01/EVA-LLaMA-3.33-70B-v0.1',               label: 'EVA LLaMA 3.33 70B' },
+        { group: 'Creative / RP',   id: 'Envoid/Llama-3.05-Nemotron-Tenyxchat-Storybreaker-70B', label: 'Storybreaker 70B' },
+        { group: 'Uncensored',      id: 'huihui-ai/Llama-3.3-70B-Instruct-abliterated',       label: 'Llama 3.3 70B Abliterated' },
+        { group: 'Uncensored',      id: 'huihui-ai/Qwen2.5-32B-Instruct-abliterated',         label: 'Qwen2.5 32B Abliterated' },
+        { group: 'Uncensored',      id: 'huihui-ai/DeepSeek-R1-Distill-Qwen-32B-abliterated', label: 'DeepSeek R1 32B Abliterated' },
+        { group: 'Uncensored',      id: 'cognitivecomputations/dolphin-2.9.2-qwen2-72b',      label: 'Dolphin 2.9 Qwen2 72B' },
+        { group: 'Uncensored',      id: 'Qwen3.5-27B-Marvin-DPO-V2-Derestricted',             label: 'Marvin 27B Derestricted' },
+    ];
+
+    function buildToolModelOptHtml() {
+        const groups = {};
+        for (const m of TOOL_MODELS) {
+            (groups[m.group] = groups[m.group] || []).push(m);
+        }
+        return Object.entries(groups).map(([g, items]) =>
+            `<optgroup label="${esc(g)}">${items.map(m => `<option value="${esc(m.id)}">${esc(m.label)}</option>`).join('')}</optgroup>`
+        ).join('');
+    }
+
     // Load models
     async function loadModels() {
         const selects = qsa('#model-select, #persona-model-select');
+        const $toolSel = qs('#tool-model-select');
+
+        // Populate curated tool-model select independently
+        if ($toolSel) {
+            $toolSel.innerHTML = '<option value="">— Same as chat model —</option>' + buildToolModelOptHtml();
+            $toolSel.value = state.config.toolModel || '';
+        }
+
         try {
             const res  = await fetch('/hub/glass/data/llm.json');
             const data = await res.json();
@@ -6816,6 +7226,10 @@ export function initUI() {
     qs('#model-select')?.addEventListener('change', e => {
         setConfig({ model: e.target.value });
         updateTelemetry();
+    });
+
+    qs('#tool-model-select')?.addEventListener('change', e => {
+        setConfig({ toolModel: e.target.value });
     });
 
     // ── Persona / Override Editor ─────────────────────────────────────────────

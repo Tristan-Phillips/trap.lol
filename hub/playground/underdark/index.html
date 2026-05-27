@@ -6,7 +6,7 @@
     <title>The Underdark // Reality Matrix</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2306040A'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%23ef4444' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23ef4444'/%3E%3C/svg%3E" />
     <link rel="stylesheet" href="/hub/glass/style/style.css">
-    <link rel="stylesheet" href="./style/style.css?v=86">
+    <link rel="stylesheet" href="./style/style.css?v=87">
 </head>
 <body class="underdark-page">
 
@@ -171,9 +171,15 @@
                 <div class="api-gate__field-group">
                     <div class="api-gate__persona-label-row">
                         <label class="api-gate__field-label" for="gate-user-persona">Brief persona <span class="api-gate__field-opt">(optional)</span></label>
-                        <button type="button" id="qc-open-btn" class="api-gate__qc-btn"><i data-lucide="wand-sparkles"></i> Quick Create</button>
+                        <button type="button" id="qc-open-btn" class="api-gate__qc-btn"><i data-lucide="list"></i> Trait picker</button>
                     </div>
-                    <textarea id="gate-user-persona" class="api-gate__input api-gate__input--textarea" placeholder="e.g. A wandering mage who values honesty above all. Prefers dry wit and hates being called 'my lord'." rows="3" maxlength="512"></textarea>
+                    <textarea id="gate-user-persona" class="api-gate__input api-gate__input--textarea" placeholder="Write anything — notes, a rough description, or a full persona. Hit Craft to have the AI shape it." rows="3" maxlength="1500"></textarea>
+                    <div class="api-gate__craft-row">
+                        <span class="api-gate__craft-hint" id="qc-craft-hint">Type a description or rough notes above, then let the AI craft it into a persona.</span>
+                        <button type="button" id="qc-craft-btn" class="api-gate__qc-btn api-gate__qc-btn--craft">
+                            <i data-lucide="sparkles"></i> <span id="qc-craft-label">Craft</span>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Quick Create persona builder sub-panel -->
@@ -845,6 +851,11 @@
               <select id="model-select" class="control-select control-select--sm"></select>
             </div>
             <div class="config-group">
+              <label>AI Tools Model <span class="config-hint" style="font-weight:400;display:inline">(craft, generate, wizard)</span></label>
+              <select id="tool-model-select" class="control-select control-select--sm"></select>
+              <span class="config-group__hint">Model used for persona craft, random generate, narrative wizard, and other inline AI buttons. Defaults to the chat model if unset.</span>
+            </div>
+            <div class="config-group">
               <label>Context Strategy</label>
               <select id="context-strategy" class="control-select control-select--sm">
                 <option value="sliding">Sliding Window</option>
@@ -978,7 +989,11 @@
 
         <!-- ── Narrative ── -->
         <div class="settings-panel" data-stab="narrative">
-          <div class="settings-panel__title">Narrative Injection &amp; Flags</div>
+          <div class="settings-panel__title">Narrative Injection &amp; Flags
+            <button type="button" id="narrative-wizard-btn" class="btn btn--ai btn--xs nw-open-btn" title="Build narrative directives with AI">
+              <i data-lucide="wand-2"></i> Build with AI
+            </button>
+          </div>
           <div class="config-section">
             <div class="config-group">
               <label>Author's Note <span class="config-hint" style="font-weight:400">(injected at depth)</span></label>
@@ -1004,7 +1019,6 @@
               <label class="config-flag-toggle"><input type="checkbox" id="flag-showSystemPrompt"> Debug system prompt</label>
               <label class="config-flag-toggle"><input type="checkbox" id="flag-injectConsistency"> Inject consistency</label>
               <label class="config-flag-toggle"><input type="checkbox" id="flag-injectSliders"> Inject sliders</label>
-              <label class="config-flag-toggle"><input type="checkbox" id="flag-injectAppearance"> Inject appearance</label>
               <label class="config-flag-toggle"><input type="checkbox" id="flag-injectAdult" checked> Inject adult content</label>
               <label class="config-flag-toggle"><input type="checkbox" id="flag-injectPersonality"> Inject personality</label>
               <label class="config-flag-toggle"><input type="checkbox" id="flag-injectVoice"> Inject voice</label>
@@ -1025,7 +1039,11 @@
           <div class="config-section">
             <div class="config-group">
               <label>Preset</label>
-              <select id="persona-preset-select" class="control-select control-select--sm"></select>
+              <div class="persona-preset-row">
+                <select id="persona-preset-select" class="control-select control-select--sm"></select>
+                <button type="button" id="persona-preset-save" class="btn btn--ghost btn--xs" title="Save current as new preset"><i data-lucide="save"></i></button>
+                <button type="button" id="persona-preset-delete" class="btn btn--ghost btn--xs btn--danger-ghost" title="Delete selected preset" hidden><i data-lucide="trash-2"></i></button>
+              </div>
             </div>
             <div class="config-group">
               <label>Name</label>
@@ -1033,23 +1051,13 @@
             </div>
             <div class="config-group">
               <label>Bio / Persona</label>
-              <textarea id="user-persona-input" class="control-textarea control-textarea--sm" rows="4" placeholder="Who you are in this world…"></textarea>
-            </div>
-            <div class="config-group">
-              <label>Appearance <span class="config-group__hint">how characters see you</span></label>
-              <input type="text" id="player-appearance" class="control-input control-input--sm" placeholder="e.g. Tall, dark-haired, a scar under the left eye…">
-            </div>
-            <div class="config-group">
-              <label>Current mood <span class="config-group__hint">emotional state right now</span></label>
-              <input type="text" id="player-mood" class="control-input control-input--sm" placeholder="e.g. Guarded but curious, barely concealing exhaustion…">
-            </div>
-            <div class="config-group">
-              <label>Role in scene <span class="config-group__hint">narrative function</span></label>
-              <input type="text" id="player-role" class="control-input control-input--sm" placeholder="e.g. The outsider who knows too much, the handler…">
-            </div>
-            <div class="config-group">
-              <label>Status <span class="config-group__hint">current state tags</span></label>
-              <input type="text" id="player-status" class="control-input control-input--sm" placeholder="e.g. Injured, armed, disguised…">
+              <textarea id="user-persona-input" class="control-textarea control-textarea--sm" rows="4" placeholder="Write a description or rough notes, then hit Craft — or type a full persona directly."></textarea>
+              <div class="persona-craft-row">
+                <span class="persona-craft-hint" id="persona-craft-hint">Describe yourself or paste rough notes — AI will shape it into a persona.</span>
+                <button type="button" id="persona-craft-btn" class="btn btn--ghost btn--xs persona-craft-btn">
+                  <i data-lucide="sparkles"></i> <span id="persona-craft-label">Craft</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1358,7 +1366,6 @@
           <label class="ts-label">Narrative Injections</label>
           <div class="config-flags-grid re-flags-grid">
             <label class="config-flag-toggle"><input type="checkbox" id="re-flag-injectConsistency"> Consistency</label>
-            <label class="config-flag-toggle"><input type="checkbox" id="re-flag-injectAppearance"> Appearance</label>
             <label class="config-flag-toggle"><input type="checkbox" id="re-flag-injectPersonality"> Personality</label>
             <label class="config-flag-toggle"><input type="checkbox" id="re-flag-injectVoice"> Voice</label>
             <label class="config-flag-toggle"><input type="checkbox" id="re-flag-injectStyle"> Style</label>
@@ -3579,6 +3586,155 @@
       <kbd class="cmdpalette__esc">esc</kbd>
     </div>
     <ul id="cmdpalette-list" class="cmdpalette__list" role="listbox"></ul>
+  </div>
+</div>
+
+<!-- ── Narrative Wizard Modal ───────────────────────────────────────────────── -->
+<div id="modal-narrative-wizard" class="modal nw-modal" hidden role="dialog" aria-modal="true" aria-labelledby="nw-title">
+  <div class="modal__backdrop" data-close></div>
+  <div class="modal__content nw-content">
+    <header class="modal__header nw-header">
+      <div class="modal__header-left">
+        <i data-lucide="wand-2"></i>
+        <h3 id="nw-title" class="modal__title">Narrative Builder</h3>
+      </div>
+      <button class="btn-icon" id="nw-close"><i data-lucide="x"></i></button>
+    </header>
+
+    <!-- Step indicator -->
+    <div class="nw-steps-bar">
+      <div class="nw-step-dot active" data-step="0"></div>
+      <div class="nw-step-dot" data-step="1"></div>
+      <div class="nw-step-dot" data-step="2"></div>
+      <div class="nw-step-dot" data-step="3"></div>
+      <div class="nw-step-dot" data-step="4"></div>
+    </div>
+
+    <div class="nw-body">
+
+      <!-- Step 0: Tone & Register -->
+      <div class="nw-step" data-nw-step="0">
+        <div class="nw-step__label">01 / 04 — Tone &amp; Register</div>
+        <div class="nw-step__title">How should the narrative feel?</div>
+        <div class="nw-step__hint">Select all that apply. This shapes the Author's Note voice.</div>
+        <div class="nw-chips" id="nw-chips-tone">
+          <button class="qc-chip" data-val="dark and unflinching">Dark &amp; Unflinching</button>
+          <button class="qc-chip" data-val="slow burn tension">Slow Burn</button>
+          <button class="qc-chip" data-val="visceral and sensory">Visceral &amp; Sensory</button>
+          <button class="qc-chip" data-val="psychologically intimate">Psychologically Intimate</button>
+          <button class="qc-chip" data-val="morally ambiguous">Morally Ambiguous</button>
+          <button class="qc-chip" data-val="cold and clinical">Cold &amp; Clinical</button>
+          <button class="qc-chip" data-val="lyrical and literary">Lyrical &amp; Literary</button>
+          <button class="qc-chip" data-val="raw and explicit">Raw &amp; Explicit</button>
+          <button class="qc-chip" data-val="comedic undertow">Comedic Undertow</button>
+          <button class="qc-chip" data-val="dreamlike and surreal">Dreamlike &amp; Surreal</button>
+          <button class="qc-chip" data-val="brutal efficiency">Brutal Efficiency</button>
+          <button class="qc-chip" data-val="quietly devastating">Quietly Devastating</button>
+          <button class="qc-chip" data-val="oppressive atmosphere">Oppressive Atmosphere</button>
+          <button class="qc-chip" data-val="romantic and charged">Romantic &amp; Charged</button>
+        </div>
+        <div class="nw-free-row">
+          <textarea id="nw-tone-notes" class="control-textarea control-textarea--sm nw-free-textarea" rows="2" placeholder="Anything else about tone, register, or feel…"></textarea>
+        </div>
+      </div>
+
+      <!-- Step 1: Themes & Content -->
+      <div class="nw-step" data-nw-step="1" hidden>
+        <div class="nw-step__label">02 / 04 — Themes &amp; Content</div>
+        <div class="nw-step__title">What territory are we in?</div>
+        <div class="nw-step__hint">What subject matter, dynamics, or content should be present or emphasized.</div>
+        <div class="nw-chips" id="nw-chips-themes">
+          <button class="qc-chip" data-val="power and submission">Power &amp; Submission</button>
+          <button class="qc-chip" data-val="trauma and recovery">Trauma &amp; Recovery</button>
+          <button class="qc-chip" data-val="obsession and desire">Obsession &amp; Desire</button>
+          <button class="qc-chip" data-val="violence and consequence">Violence &amp; Consequence</button>
+          <button class="qc-chip" data-val="loyalty and betrayal">Loyalty &amp; Betrayal</button>
+          <button class="qc-chip" data-val="body and identity">Body &amp; Identity</button>
+          <button class="qc-chip" data-val="grief and memory">Grief &amp; Memory</button>
+          <button class="qc-chip" data-val="political intrigue">Political Intrigue</button>
+          <button class="qc-chip" data-val="explicit adult content">Explicit Adult Content</button>
+          <button class="qc-chip" data-val="forbidden attraction">Forbidden Attraction</button>
+          <button class="qc-chip" data-val="horror and dread">Horror &amp; Dread</button>
+          <button class="qc-chip" data-val="redemption and corruption">Redemption &amp; Corruption</button>
+          <button class="qc-chip" data-val="survival and instinct">Survival &amp; Instinct</button>
+          <button class="qc-chip" data-val="mythology and ritual">Mythology &amp; Ritual</button>
+          <button class="qc-chip" data-val="class and hierarchy">Class &amp; Hierarchy</button>
+          <button class="qc-chip" data-val="found family">Found Family</button>
+        </div>
+        <div class="nw-free-row">
+          <textarea id="nw-themes-notes" class="control-textarea control-textarea--sm nw-free-textarea" rows="2" placeholder="Specific themes, content inclusions, or things to emphasize…"></textarea>
+        </div>
+      </div>
+
+      <!-- Step 2: Rules & Constraints -->
+      <div class="nw-step" data-nw-step="2" hidden>
+        <div class="nw-step__label">03 / 04 — Rules &amp; Constraints</div>
+        <div class="nw-step__title">What rules should the AI follow?</div>
+        <div class="nw-step__hint">These go into the System Directive — hard rules enforced every turn.</div>
+        <div class="nw-chips" id="nw-chips-rules">
+          <button class="qc-chip" data-val="never break character">Never Break Character</button>
+          <button class="qc-chip" data-val="no OOC commentary">No OOC Commentary</button>
+          <button class="qc-chip" data-val="no unsolicited plot resolution">No Unsolicited Plot Resolution</button>
+          <button class="qc-chip" data-val="allow graphic violence">Allow Graphic Violence</button>
+          <button class="qc-chip" data-val="allow explicit sexual content">Allow Explicit Content</button>
+          <button class="qc-chip" data-val="maintain moral ambiguity — no heroes">Maintain Moral Ambiguity</button>
+          <button class="qc-chip" data-val="react to the player's emotional state">React to Player Emotion</button>
+          <button class="qc-chip" data-val="do not soften consequences">No Softened Consequences</button>
+          <button class="qc-chip" data-val="characters may lie, manipulate, withhold">Characters May Deceive</button>
+          <button class="qc-chip" data-val="pacing is player-controlled">Player-Controlled Pacing</button>
+          <button class="qc-chip" data-val="short responses — match player length">Match Player Length</button>
+          <button class="qc-chip" data-val="no purple prose — spare and precise">No Purple Prose</button>
+          <button class="qc-chip" data-val="use second-person narration">Second-Person Narration</button>
+          <button class="qc-chip" data-val="no healing without cost">No Free Healing</button>
+        </div>
+        <div class="nw-free-row">
+          <textarea id="nw-rules-notes" class="control-textarea control-textarea--sm nw-free-textarea" rows="2" placeholder="Additional rules, hard limits, or specific instructions…"></textarea>
+        </div>
+      </div>
+
+      <!-- Step 3: Writing Style -->
+      <div class="nw-step" data-nw-step="3" hidden>
+        <div class="nw-step__label">04 / 04 — Writing Style</div>
+        <div class="nw-step__title">How should the prose be written?</div>
+        <div class="nw-step__hint">Technical and stylistic preferences for the AI's output.</div>
+        <div class="nw-chips" id="nw-chips-style">
+          <button class="qc-chip" data-val="present tense">Present Tense</button>
+          <button class="qc-chip" data-val="past tense">Past Tense</button>
+          <button class="qc-chip" data-val="close third person">Close Third Person</button>
+          <button class="qc-chip" data-val="first person character voice">First Person</button>
+          <button class="qc-chip" data-val="short punchy paragraphs">Short Paragraphs</button>
+          <button class="qc-chip" data-val="long immersive prose blocks">Long Prose Blocks</button>
+          <button class="qc-chip" data-val="dialogue-heavy">Dialogue-Heavy</button>
+          <button class="qc-chip" data-val="action and interiority balanced">Action &amp; Interiority Balanced</button>
+          <button class="qc-chip" data-val="rich sensory detail">Rich Sensory Detail</button>
+          <button class="qc-chip" data-val="sparse and efficient">Sparse &amp; Efficient</button>
+          <button class="qc-chip" data-val="show don't tell strictly">Show Don't Tell</button>
+          <button class="qc-chip" data-val="literary metaphor and subtext">Literary Subtext</button>
+        </div>
+        <div class="nw-free-row">
+          <textarea id="nw-style-notes" class="control-textarea control-textarea--sm nw-free-textarea" rows="2" placeholder="Any other stylistic preferences or references…"></textarea>
+        </div>
+      </div>
+
+      <!-- Step 4: Review & Generate -->
+      <div class="nw-step" data-nw-step="4" hidden>
+        <div class="nw-step__label">Review &amp; Generate</div>
+        <div class="nw-step__title">Ready to build?</div>
+        <div class="nw-step__hint">AI will generate an Author's Note and System Directive from your choices and apply them directly.</div>
+        <div id="nw-summary" class="nw-summary"></div>
+        <div id="nw-error" class="nw-error" hidden></div>
+      </div>
+
+    </div>
+
+    <footer class="nw-footer">
+      <button id="nw-back" class="btn btn--ghost btn--sm" hidden><i data-lucide="arrow-left"></i> Back</button>
+      <div class="nw-footer__spacer"></div>
+      <button id="nw-next" class="btn btn--accent btn--sm">Next <i data-lucide="arrow-right"></i></button>
+      <button id="nw-generate" class="btn btn--ai btn--sm" hidden>
+        <i data-lucide="sparkles"></i> Generate &amp; Apply
+      </button>
+    </footer>
   </div>
 </div>
 

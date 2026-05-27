@@ -841,25 +841,41 @@ function validate() {
 
 // ── Save ──────────────────────────────────────────────────────────────────────
 
+let _saving = false;
 async function saveCard(activate = false) {
+    if (_saving) return;
     if (!validate()) return;
-    _flushChanges();
-    const { card, meta } = buildCardFromForm();
-    if (_editId) meta.id = _editId;
+    _saving = true;
+    _setSaveStatus('Saving…');
 
-    await saveCharacter(meta, card.data);
+    const $saveBtns = qsa('#ce-save, #ce-save-activate');
+    $saveBtns.forEach(b => { b.disabled = true; });
 
-    const ud  = card.data.extensions?.underdark || {};
-    const ext = ud.ext || {};
-    const existing = state.config?.charOverrides?.[meta.id] || {};
-    const existingExt = existing.ext || {};
-    const mergedExt = { ...existingExt, ...ext };
-    const { ext: _e, gallery: _g, ...coreFromCard } = ud;
-    setCharOverride(meta.id, { ...existing, ...coreFromCard, ext: mergedExt });
+    try {
+        _flushChanges();
+        const { card, meta } = buildCardFromForm();
+        if (_editId) meta.id = _editId;
 
-    closeEditor();
-    document.dispatchEvent(new CustomEvent('char-editor:saved', { detail: { id: meta.id, activate } }));
-    showToast(`${meta.name} ${_editId ? 'updated' : 'created'}.`, 'info');
+        await saveCharacter(meta, card.data);
+
+        const ud  = card.data.extensions?.underdark || {};
+        const ext = ud.ext || {};
+        const existing = state.config?.charOverrides?.[meta.id] || {};
+        const existingExt = existing.ext || {};
+        const mergedExt = { ...existingExt, ...ext };
+        const { ext: _e, gallery: _g, ...coreFromCard } = ud;
+        setCharOverride(meta.id, { ...existing, ...coreFromCard, ext: mergedExt });
+
+        closeEditor();
+        document.dispatchEvent(new CustomEvent('char-editor:saved', { detail: { id: meta.id, activate } }));
+        showToast(`${meta.name} ${_editId ? 'updated' : 'created'}.`, 'success');
+    } catch (err) {
+        _setSaveStatus('Save failed');
+        showToast(`Save failed: ${err.message}`, 'error', 6000);
+    } finally {
+        _saving = false;
+        $saveBtns.forEach(b => { b.disabled = false; });
+    }
 }
 
 // ── Export ────────────────────────────────────────────────────────────────────
@@ -961,8 +977,11 @@ async function openEditor(charId) {
     if (charId) {
         const card = state.loadedCharacters[charId];
         const meta = state.characters.find(c => c.id === charId);
-        if (card && meta) {
-            // Seed charOverride from card data
+        if (!card || !meta) {
+            showToast('Character data not found — may have been deleted.', 'error');
+            return;
+        }
+        try {
             if (card.extensions?.underdark) {
                 const ud = card.extensions.underdark;
                 const { ext: cardExt, ...cardCore } = ud;
@@ -980,6 +999,9 @@ async function openEditor(charId) {
                 setCharOverride(charId, { ...mergedCore, ext: mergedExt });
             }
             await populateForm(meta, card, charId);
+        } catch (err) {
+            showToast(`Failed to load character: ${err.message}`, 'error', 6000);
+            console.error('[char-editor] openEditor error:', err);
         }
     }
 

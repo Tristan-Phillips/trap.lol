@@ -21,6 +21,8 @@
 }
 .btn--full { width: 100%; }
 .btn--sm   { padding: 5px 10px; font-size: 0.65rem; }
+.btn--xs   { padding: 3px 8px; font-size: 0.6rem; min-height: unset; }
+.btn--xs svg { width: 11px; height: 11px; }
 .btn svg   { width: 13px; height: 13px; flex-shrink: 0; }
 
 .btn--ghost {

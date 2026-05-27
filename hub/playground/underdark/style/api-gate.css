@@ -721,6 +721,37 @@ a.api-gate__hint:hover { color: rgba(190,41,236,0.8); opacity: 1; text-decoratio
     color: #d88fff;
 }
 
+.api-gate__craft-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+}
+.api-gate__craft-hint {
+    flex: 1;
+    font-family: var(--font-mono, monospace);
+    font-size: 0.6rem;
+    color: rgba(125,110,146,0.55);
+    letter-spacing: 0.03em;
+    line-height: 1.4;
+}
+.api-gate__qc-btn--craft {
+    flex-shrink: 0;
+    background: rgba(190,41,236,0.12);
+    border-color: rgba(190,41,236,0.35);
+    color: rgba(190,41,236,0.95);
+    padding: 5px 13px;
+}
+.api-gate__qc-btn--craft:hover {
+    background: rgba(190,41,236,0.2);
+    border-color: rgba(190,41,236,0.6);
+    color: #e0a0ff;
+}
+.api-gate__qc-btn--craft:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
 .api-gate__qc-panel {
     background: rgba(10,4,20,0.7);
     border: 1px solid rgba(190,41,236,0.2);

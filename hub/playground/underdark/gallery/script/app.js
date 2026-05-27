@@ -208,6 +208,22 @@ async function syncVaultToGallery() {
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// API GALLERY SYNC — fetch non-hidden images from api.trap.lol for each char
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const MEDIA_API_BASE = 'https://api.trap.lol';
+
+// Returns array of {thumbnail, medium, original} for a char — non-hidden only.
+// Falls back to [] on any error (public endpoint, no auth needed).
+async function fetchApiGallery(charId) {
+    try {
+        const r = await fetch(`${MEDIA_API_BASE}/pallet/data/gallery/${encodeURIComponent(charId)}.json`);
+        if (!r.ok) return [];
+        const items = await r.json();
+        return Array.isArray(items) ? items : [];
+    } catch { return []; }
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // BOOT — load all images
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 async function boot() {
@@ -221,6 +237,17 @@ async function boot() {
     const baseTs = Date.now();
     let seqOffset = 0;
     await Promise.all(S.chars.map(async (ch, chIdx) => {
+        // Fetch API gallery in parallel with local data
+        const apiItems = await fetchApiGallery(ch.id);
+
+        // Build a set of all URLs already known locally (to deduplicate)
+        const knownUrls = new Set([
+            ch.avatarRef,
+            ...ch.galleryRefs,
+            // also include resolved wh proxy variants
+            ...[...ch._whFullMap?.values() || []],
+        ].filter(Boolean));
+
         // Deduplicate: if avatarRef appears in galleryRefs, don't show it twice
         const galleryOnly = ch.galleryRefs.filter(r => r !== ch.avatarRef);
         const allRefs = [ch.avatarRef, ...galleryOnly].filter(Boolean);
@@ -243,8 +270,35 @@ async function boot() {
                 isAvatar,
                 ts:       baseTs - chIdx * 10000 - localOffset,
                 tags:     ch.galleryMeta[ref]?.tags || [],
+                source:   'local',
             });
         }));
+
+        // Add API images not already present locally
+        for (const item of apiItems) {
+            const displayUrl = item.medium || item.original || item.thumbnail;
+            const fullUrl    = item.original || item.medium || item.thumbnail;
+            const thumbUrl   = item.thumbnail || displayUrl;
+            if (!displayUrl) continue;
+            // Skip if the URL (or its thumbnail) is already known locally
+            if (knownUrls.has(displayUrl) || knownUrls.has(fullUrl) || knownUrls.has(thumbUrl)) continue;
+            knownUrls.add(displayUrl);
+            allItems.push({
+                url:      displayUrl,
+                fullUrl:  fullUrl,
+                ref:      displayUrl,
+                type:     'image',
+                charId:   ch.id,
+                charName: ch.name,
+                charIdx:  chIdx,
+                idx:      seqOffset,
+                isAvatar: false,
+                ts:       baseTs - chIdx * 10000 - seqOffset++,
+                tags:     [],
+                source:   'api',
+            });
+        }
+
         // Add videos
         ch.videoRefs.forEach((ref, i) => {
             allItems.push({
@@ -258,6 +312,7 @@ async function boot() {
                 isAvatar: false,
                 ts:      baseTs - chIdx * 10000 - seqOffset++,
                 tags:    [],
+                source:  'local',
             });
         });
     }));
@@ -447,7 +502,7 @@ function renderGrid(items, $grid) {
                     <div class="vault-tile__actions">
                         <button class="vault-tile__btn" data-action="open" title="${isVideo ? 'Play' : 'Open'}"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" x2="14" y1="3" y2="10"/><line x1="3" x2="10" y1="21" y2="14"/></svg></button>
                         <button class="vault-tile__btn" data-action="dl" title="Download"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg></button>
-                        ${!item.isAvatar ? `<button class="vault-tile__btn vault-tile__btn--del" data-action="del" title="Delete"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>` : ''}
+                        ${!item.isAvatar && item.source !== 'api' ? `<button class="vault-tile__btn vault-tile__btn--del" data-action="del" title="Delete"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>` : ''}
                     </div>
                 </div>
             </div>`;
@@ -761,6 +816,7 @@ function downloadItem(item) {
 
 async function deleteItem(item) {
     if (item.isAvatar) { showToast('Cannot delete the avatar image — change avatar first', 'warn'); return; }
+    if (item.source === 'api') { showToast('API images are managed from the admin panel', 'warn'); return; }
     const label = item.type === 'video' ? 'video' : 'image';
     if (!confirm(`Remove this ${label} from ${item.charName}'s gallery?`)) return;
 
