@@ -1,3 +1,5 @@
+> ⚠️ **AI SLOP BRANCH** — here be LLM output. Works on my machine. Probably.
+
 # trap.lol
 
 Personal site deployed via GitHub Pages at [trap.lol](https://trap.lol).
